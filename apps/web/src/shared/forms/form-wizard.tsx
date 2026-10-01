@@ -7,6 +7,7 @@ import { useFieldError } from "./field-state";
 import type { CustomField, ExtendedWizardField, WizardField } from "./form-wizard-types";
 
 const TextInputField = lazy(() => import("./fields/text-field"));
+const PasswordInputField = lazy(() => import("./fields/password-field"));
 const TextareaInputField = lazy(() => import("./fields/textarea-field"));
 const SelectInputField = lazy(() => import("./fields/select-field"));
 const AsyncSelectInputField = lazy(() => import("./fields/async-select-field"));
@@ -77,7 +78,9 @@ function WizardFieldSlot<TValues extends FieldValues>({ field, form }: {
   form: UseFormReturn<TValues>;
 }) {
   switch (field.type) {
-    case "text": case "email": case "password": case "number":
+    case "password":
+      return <PasswordInputField field={field} />;
+    case "text": case "email": case "number":
       return <TextInputField field={field} />;
     case "date":
       return <DateInputField field={field} />;

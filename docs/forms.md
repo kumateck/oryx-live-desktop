@@ -79,3 +79,7 @@ Domain-owned editable tables, formulas, and other specialized fields use `type: 
 Use shadcn source components for controls and Tailwind utility classes for field layout. Theme colors and font settings flow through shared CSS variables. Shell CSS must not apply element-wide styles that alter forms in unrelated modules. Prefer one column by default; a detail section can supply responsive grid classes after checking 1366×768 and 1280×720 at display scaling.
 
 The interaction tests in `apps/web/src/shared/forms` and `apps/web/src/shared/date-pickers` cover Zod errors, numeric conversion, basic controls, time values, file selection and image/signature behavior, sync and async selection, paging, search reset, date and range selection, month/year values, overflow calculations, and submission. Before migrating a business form, add tests for its schema, conditional fields, permissions, save failure, and any approval or audit effects.
+
+## Password fields
+
+A field of `type: "password"` renders `PasswordInput` (`shared/forms/password-input.tsx`): the password is hidden by default, with a button to show or hide it. It is hidden again when the form is submitted or the field is disabled, a notice appears while Caps Lock is on, and spell-check and auto-capitalisation are off so a revealed password is not sent to those services. Use `PasswordInput` directly outside a `FormWizard`. Set `autoComplete` to `"new-password"` on forms that set a password; it defaults to `"current-password"`.
