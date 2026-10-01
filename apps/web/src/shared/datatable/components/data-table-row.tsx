@@ -8,6 +8,9 @@ import type { DataTableRow as RowData } from "../lib/columns";
 import { opensRow } from "../lib/row-activation";
 import type { DataTableRowSlot } from "../lib/types";
 
+/** Every second row is tinted so the eye can follow a row across wide tables. */
+export const zebra = "even:bg-muted/40";
+
 export function DataTableRow<TData extends RowData>({ table, row, selection, onRowOpen, className, rowSlot }: {
   table: DataTableEngine<TData>;
   row: DataTableEngineRow<TData>;
@@ -33,5 +36,5 @@ export function DataTableRow<TData extends RowData>({ table, row, selection, onR
     },
   } : {};
   return <TableRow data-state={isSelected ? "selected" : undefined} {...open}
-    className={cn(onRowOpen && "cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2", className)}>{cells}</TableRow>;
+    className={cn(zebra, onRowOpen && "cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2", className)}>{cells}</TableRow>;
 }

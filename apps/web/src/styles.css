@@ -250,3 +250,11 @@ button.rail-link.current:not(.active) { color: var(--text); }
 .header-search.open { width: min(320px, 38vw); }
 .header-search input::-webkit-search-cancel-button { display: none; }
 .header-search-hint { padding: 4px 8px 2px !important; color: var(--soft) !important; font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
+
+/* A page whose table fills the screen: the page itself does not scroll; the table body does,
+   under a fixed header and above a paging footer that is always visible. */
+.content-scroller { container-type: size; }
+.content-inner:has(> .page-fill) { padding-bottom: var(--page-gutter); }
+.page-fill { display: flex; flex-direction: column; gap: 16px; min-width: 0; height: calc(100cqh - 2 * var(--page-gutter)); min-height: 320px; }
+.page-fill > * { flex: none; }
+.page-fill > [aria-busy] { flex: 1 1 0; min-height: 0; }

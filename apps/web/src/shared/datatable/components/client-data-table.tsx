@@ -25,7 +25,7 @@ export function ClientDataTable<TData extends DataTableRow>({
   // A refetch, search, or delete can shrink the list: stay on the nearest valid page instead of
   // jumping back to the first one or showing an empty page.
   const page = clampPage(requestedPage, all.length, pageSize);
-  return <DataTableView {...view} rows={all} sorting={sorting} manualSorting={false} sliceRows
+  return <DataTableView fill={view.maxHeight === undefined} {...view} rows={all} sorting={sorting} manualSorting={false} sliceRows
     onSortingChange={(next) => { setSorting(next); setPage(1); }}
     paging={{ page, pageSize, totalRows: all.length, pageSizes, onPageChange: setPage,
       onPageSizeChange: (size) => { setPageSize(size); setPage(1); } }} />;

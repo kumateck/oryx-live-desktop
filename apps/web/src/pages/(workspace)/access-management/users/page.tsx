@@ -15,7 +15,7 @@ export default function UsersPage() {
   const [open, setOpen] = useState<OpenUserAction | null>(null);
   const onAction = useCallback((action: UserAction, user: UserRow) => setOpen({ action, user }), []);
   if (!list.status) return null;
-  return <section className="min-w-0 space-y-4">
+  return <section className="page-fill">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><p className="eyebrow">ACCESS MANAGEMENT</p><h1 className="text-xl font-semibold">Users</h1></div>
       <div className="flex flex-wrap items-center gap-2">

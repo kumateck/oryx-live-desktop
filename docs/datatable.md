@@ -65,9 +65,15 @@ Pass `sorting` and `onSortingChange` only when the endpoint sorts; otherwise hea
 | The draggable table used the row position as its ID by default and had no working keyboard reordering | IDs are required, duplicates lock reordering, keyboard reordering and screen-reader announcements are wired |
 | Missing paging data from the backend produced `NaN` | `pageMeta` falls back to the requested page and the rows seen |
 
+## Appearance and height
+
+- The header row uses the active accent colour, and every second row is tinted.
+- `ServerDataTable` and `ClientDataTable` fill the screen: give the page's top-level element the `page-fill` class and the table takes the remaining height. Rows scroll inside the table; the header and the paging footer are always visible. Pass `maxHeight` instead for a table inside a dialog or a form.
+- `ListDataTable` and `DraggableDataTable` grow with their rows unless `maxHeight` or `fill` is set.
+
 ## Also available
 
-- `columnToggle` adds a Columns menu for showing and hiding columns; the last visible column cannot be hidden, and `enableHiding: false` keeps a column permanently visible.
+- `columnToggle` (off by default, and not used on the migrated lists) adds a Columns menu for showing and hiding columns; the last visible column cannot be hidden, and `enableHiding: false` keeps a column permanently visible.
 - `maxHeight="24rem"` makes rows scroll inside the table under a fixed header.
 - `EditableComboboxCell` (searchable single choice) and `EditableMultiSelectCell` (searchable multiple choice) join the text, number, and select cells.
 

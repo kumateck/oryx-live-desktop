@@ -8,7 +8,7 @@ import { productDetailPath, productPermissions, productsPath } from "../../../..
 export default function ProductsPage() {
   const list = useProductsList();
   const navigate = useNavigate();
-  return <section className="min-w-0 space-y-4">
+  return <section className="page-fill">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><p className="eyebrow">PRODUCTION</p><h1 className="text-xl font-semibold">Planned products</h1></div>
       <PermissionGuard require={productPermissions.create}><Button asChild size="sm"><Link to={`${productsPath}/create`}>Create</Link></Button></PermissionGuard>

@@ -17,18 +17,20 @@ export function DataTableHead<TData extends DataTableRow>({ table, selection, le
   /** Keeps header cells in view while rows scroll inside a height-limited table. */
   sticky: boolean;
 }) {
-  const stickyHead = sticky ? "sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_var(--border)]" : undefined;
-  return <TableHeader>{table.getHeaderGroups().map((group) => <TableRow key={group.id} className="hover:bg-transparent">
-    {leadingHeader !== null ? <TableHead className={cn("w-10", stickyHead)}>{leadingHeader}</TableHead> : null}
-    {selection ? <TableHead className={cn("w-10", stickyHead)}>
-      <Checkbox aria-label="Select all rows on this page" disabled={!selection.canSelectAny} onCheckedChange={selection.togglePage}
+  // The header carries the active accent, as in Oryx Next, and stays in view while rows scroll.
+  const cell = cn("bg-primary text-primary-foreground", sticky && "sticky top-0 z-10");
+  return <TableHeader>{table.getHeaderGroups().map((group) => <TableRow key={group.id} className="border-0 hover:bg-transparent">
+    {leadingHeader !== null ? <TableHead className={cn("w-10", cell)}>{leadingHeader}</TableHead> : null}
+    {selection ? <TableHead className={cn("w-10", cell)}>
+      <Checkbox className="border-primary-foreground/70 data-[state=checked]:bg-primary-foreground data-[state=checked]:text-primary data-[state=indeterminate]:bg-primary-foreground data-[state=indeterminate]:text-primary"
+        aria-label="Select all rows on this page" disabled={!selection.canSelectAny} onCheckedChange={selection.togglePage}
         checked={selection.pageState === "all" && selection.canSelectAny ? true : selection.pageState === "some" ? "indeterminate" : false} />
     </TableHead> : null}
     {group.headers.map((header) => {
       const direction = header.column.getIsSorted();
       const sortable = header.column.getCanSort();
       const width = header.column.columnDef.size;
-      return <TableHead key={header.id} colSpan={header.colSpan} className={cn("whitespace-normal", stickyHead)}
+      return <TableHead key={header.id} colSpan={header.colSpan} className={cn("whitespace-normal", cell)}
         {...(width ? { style: { width } } : {})}
         {...(sortable ? { "aria-sort": direction ? ariaSort[direction] : "none" as const } : {})}>
         {header.isPlaceholder ? null : sortable

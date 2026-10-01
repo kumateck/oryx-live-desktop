@@ -14,7 +14,7 @@ function SortableRow({ id, className, children }: { id: string; className?: stri
   const { locked, nameOf } = useContext(DragRowsContext);
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: locked });
   return <TableRow ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }}
-    className={cn(isDragging && "relative z-10 bg-muted shadow-sm", className)}>
+    className={cn("even:bg-muted/40", isDragging && "relative z-10 bg-muted shadow-sm", className)}>
     <TableCell className="w-10">
       <button ref={setActivatorNodeRef} type="button" disabled={locked} aria-label={`Reorder ${nameOf(id)}`}
         className="flex size-7 cursor-grab touch-none items-center justify-center rounded text-muted-foreground hover:bg-muted focus-visible:outline-2 active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-40"

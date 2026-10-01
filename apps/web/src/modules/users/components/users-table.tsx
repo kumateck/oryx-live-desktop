@@ -33,7 +33,7 @@ export function UsersTable({ rows, access, onAction, search, paging, loading, re
   ]), [access, onAction]);
 
   return <ServerDataTable label="Users" columns={columns} rows={rows} getRowId={userId} {...paging} loading={loading}
-    refreshing={refreshing} error={error} onRetry={onRetry} columnToggle onRowOpen={(user) => onAction("details", user)}
+    refreshing={refreshing} error={error} onRetry={onRetry} onRowOpen={(user) => onAction("details", user)}
     emptyTitle={search.trim() ? "No users match this search" : inactive ? "No blocked users" : "No users yet"}
     emptyDescription={search.trim() ? "Check the spelling or search by email." : undefined} />;
 }

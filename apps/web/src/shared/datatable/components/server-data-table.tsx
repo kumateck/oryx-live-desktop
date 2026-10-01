@@ -31,7 +31,7 @@ export function ServerDataTable<TData extends DataTableRow>({
   // Rows deleted elsewhere can leave the requested page past the end: ask for the last real page.
   useEffect(() => { if (settled && page !== lastPage) onPageChange(lastPage); }, [settled, page, lastPage, onPageChange]);
   const shown = usePlainColumns(columns, Boolean(sorting && onSortingChange));
-  return <DataTableView {...view} rows={rows ?? none} sliceRows={false} manualSorting columns={shown}
+  return <DataTableView fill={view.maxHeight === undefined} {...view} rows={rows ?? none} sliceRows={false} manualSorting columns={shown}
     sorting={sorting ?? none} onSortingChange={(next) => onSortingChange?.(next)}
     paging={{ page, pageSize, totalRows, pageSizes, onPageChange, onPageSizeChange }} />;
 }

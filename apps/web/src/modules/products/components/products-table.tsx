@@ -52,7 +52,7 @@ export function ProductsTable({ rows, search, paging, loading, refreshing, error
   ]), []);
 
   return <ServerDataTable label="Planned products" columns={columns} rows={rows} getRowId={productId} {...paging} loading={loading}
-    refreshing={refreshing} error={error} onRetry={onRetry} columnToggle onRowOpen={onOpen}
+    refreshing={refreshing} error={error} onRetry={onRetry} onRowOpen={onOpen}
     emptyTitle={search.trim() ? "No products match this search" : "No planned products yet"}
     emptyDescription={search.trim() ? "Check the spelling, or search by code." : undefined} />;
 }

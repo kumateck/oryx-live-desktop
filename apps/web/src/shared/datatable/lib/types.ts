@@ -49,6 +49,11 @@ export interface DataTableCommonProps<TData extends DataTableRow> {
   columnToggle?: boolean | undefined;
   /** CSS height limit, for example "24rem". Rows then scroll inside the table under a fixed header. */
   maxHeight?: string | undefined;
+  /**
+   * Fill the height the page gives the table: rows scroll inside it while the header and the paging
+   * footer stay in view. The page section needs the `page-fill` class. On by default for paged tables.
+   */
+  fill?: boolean | undefined;
 }
 
 export interface DataTableViewProps<TData extends DataTableRow> extends DataTableCommonProps<TData> {

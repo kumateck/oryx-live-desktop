@@ -15,7 +15,7 @@ import { StaleRowsNotice } from "./stale-rows-notice";
 export function DataTableView<TData extends DataTableRow>({
   label, columns, rows, getRowId, sorting, onSortingChange, manualSorting, sliceRows, paging, loading = false, refreshing = false,
   error = null, onRetry, emptyTitle, emptyDescription, selection, onRowOpen, rowClassName, toolbar, footer, rowSlot, className,
-  columnToggle = false, maxHeight,
+  columnToggle = false, maxHeight, fill = false,
 }: DataTableViewProps<TData>) {
   const { table, toggleColumns, setColumnVisible, showAllColumns } = useDataTable({ columns, rows, getRowId, sorting, onSortingChange, manualSorting });
   const sorted = table.getRowModel().rows;
@@ -23,17 +23,19 @@ export function DataTableView<TData extends DataTableRow>({
   const selectionControls = useRowSelection(selection, visible);
   const columnCount = table.getVisibleLeafColumns().length + (selection ? 1 : 0) + (rowSlot ? 1 : 0);
 
-  return <div className={cn("min-w-0 overflow-hidden rounded-lg border bg-card", className)} aria-busy={loading || refreshing}>
-    {toolbar || columnToggle ? <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
+  const scrolls = fill || Boolean(maxHeight);
+  return <div className={cn("min-w-0 overflow-hidden rounded-lg border bg-card", fill && "flex min-h-0 flex-1 flex-col", className)}
+    aria-busy={loading || refreshing}>
+    {toolbar || columnToggle ? <div className="flex flex-none flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
       <div className="min-w-0 flex-1">{toolbar}</div>
       {columnToggle ? <ColumnToggle columns={toggleColumns} onToggle={setColumnVisible} onReset={showAllColumns} /> : null}
     </div> : null}
     {error && visible.length > 0 ? <StaleRowsNotice error={error} onRetry={onRetry} /> : null}
-    <div data-slot="table-container" className={cn("relative w-full overflow-x-auto", maxHeight && "overflow-y-auto")}
-      {...(maxHeight ? { style: { maxHeight } } : {})}>
+    <div data-slot="table-container" className={cn("relative w-full overflow-x-auto", scrolls && "overflow-y-auto", fill && "min-h-0 flex-1")}
+      {...(maxHeight && !fill ? { style: { maxHeight } } : {})}>
       <table className={cn("w-full table-fixed caption-bottom text-sm", refreshing && "opacity-70 transition-opacity")}>
         <caption className="sr-only">{label}</caption>
-        <DataTableHead table={table} selection={selectionControls} leadingHeader={rowSlot ? rowSlot.leadingHeader : null} sticky={Boolean(maxHeight)} />
+        <DataTableHead table={table} selection={selectionControls} leadingHeader={rowSlot ? rowSlot.leadingHeader : null} sticky={scrolls} />
         <DataTableBody table={table} rows={visible} columnCount={columnCount} skeletonRows={Math.min(paging?.pageSize ?? 8, 8)}
           selection={selectionControls} loading={loading} error={error} onRetry={onRetry} emptyTitle={emptyTitle}
           emptyDescription={emptyDescription} onRowOpen={onRowOpen} rowClassName={rowClassName} rowSlot={rowSlot} />

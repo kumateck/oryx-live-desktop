@@ -46,7 +46,7 @@ function ClientExample() {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [search, setSearch] = useState("");
   const rows = useMemo(() => materials.filter((item) => `${item.code} ${item.name}`.toLowerCase().includes(search.toLowerCase())), [search]);
-  return <ClientDataTable label="Materials (client paged)" columns={readColumns} rows={rows} getRowId={materialId} columnToggle
+  return <ClientDataTable label="Materials (client paged)" columns={readColumns} rows={rows} getRowId={materialId}
     selection={{ selected, onChange: setSelected, isSelectable: (item) => item.stock > 0 }}
     onRowOpen={(item) => toast(`Opened ${item.code}`)}
     toolbar={<Input aria-label="Search materials" placeholder="Search materials" className="max-w-xs" value={search} onChange={(event) => setSearch(event.target.value)} />} />;
@@ -109,7 +109,8 @@ if (!root) throw new Error("Missing root element");
 createRoot(root).render(<StrictMode><ThemeProvider>
   <main className="mx-auto max-w-5xl space-y-8 p-6 text-foreground">
     <h1 className="text-xl font-semibold">Data table preview</h1>
-    <Section title="Client paged"><ClientExample /></Section>
+    {/* A fixed-height flex column stands in for a workspace page using the page-fill class. */}
+    <Section title="Client paged, filling a 420px page"><div style={{ display: "flex", flexDirection: "column", height: 420 }}><ClientExample /></div></Section>
     <Section title="Server paged"><ServerExample /></Section>
     <Section title="List with editable cells"><ListExample /></Section>
     <Section title="Draggable"><DraggableExample /></Section>

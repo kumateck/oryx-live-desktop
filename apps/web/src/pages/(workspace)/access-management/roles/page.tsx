@@ -8,7 +8,7 @@ import { useRolesList } from "../../../../modules/roles/hooks/use-roles-list";
 
 export default function RolesPage() {
   const { access, query, parsed, roles } = useRolesList();
-  return <section className="min-w-0 space-y-4">
+  return <section className="page-fill">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><p className="eyebrow">ACCESS MANAGEMENT</p><h1 className="text-xl font-semibold">Roles</h1></div>
       <PermissionGuard require={rolePermissions.create}><Button asChild size="sm"><Link to={`${rolesPath}/create`}>Create role</Link></Button></PermissionGuard>
