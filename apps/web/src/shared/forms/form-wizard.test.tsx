@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useController, useForm } from "react-hook-form";
 import { z } from "zod";
 import { FormWizard, type CustomFieldProps, type WizardField } from "./form-wizard";
+import { InputTypes } from "./input-types";
 
 class ResizeObserverStub implements ResizeObserver {
   observe(): void {}
@@ -28,11 +29,11 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 
 const fields = [
-  { type: "text", name: "name", label: "Name", required: true },
-  { type: "number", name: "age", label: "Age" },
-  { type: "textarea", name: "notes", label: "Notes" },
-  { type: "select", mode: "single", source: "sync", name: "role", label: "Role", options: [{ value: "buyer", label: "Buyer" }, { value: "seller", label: "Seller" }] },
-  { type: "checkbox", name: "approved", label: "Approved" },
+  { type: InputTypes.TEXT, name: "name", label: "Name", required: true },
+  { type: InputTypes.NUMBER, name: "age", label: "Age" },
+  { type: InputTypes.TEXTAREA, name: "notes", label: "Notes" },
+  { type: InputTypes.SELECT, mode: "single", source: "sync", name: "role", label: "Role", options: [{ value: "buyer", label: "Buyer" }, { value: "seller", label: "Seller" }] },
+  { type: InputTypes.CHECKBOX, name: "approved", label: "Approved" },
 ] as const satisfies readonly WizardField<Values>[];
 
 function ExampleForm({ onSubmit }: { onSubmit: (values: Values) => void }) {
@@ -78,7 +79,7 @@ it("loads a domain field on demand and preserves label wiring", async () => {
     const { field } = useController({ name, control });
     return <input id={id} value={String(field.value ?? "")} onChange={field.onChange} aria-describedby={describedBy} />;
   } }));
-  const customFields = [{ type: "custom", name: "notes", label: "Custom notes", description: "Internal use", load }] as const satisfies readonly WizardField<Values>[];
+  const customFields = [{ type: InputTypes.CUSTOM, name: "notes", label: "Custom notes", description: "Internal use", load }] as const satisfies readonly WizardField<Values>[];
 
   function CustomForm() {
     const form = useForm<Values>({ defaultValues: { notes: "Original" } });
@@ -94,7 +95,7 @@ it("loads a domain field on demand and preserves label wiring", async () => {
 it("selects and clears full option objects in a multi-select", async () => {
   const user = userEvent.setup();
   const submit = vi.fn<(values: { roles: { value: string; label: string }[] }) => void>();
-  const multiFields = [{ type: "select", mode: "multiple", source: "sync", name: "roles", label: "Roles",
+  const multiFields = [{ type: InputTypes.SELECT, mode: "multiple", source: "sync", name: "roles", label: "Roles",
     options: [{ value: "buyer", label: "Buyer" }, { value: "seller", label: "Seller" }] }] as const satisfies readonly WizardField<{ roles: { value: string; label: string }[] }>[];
   function MultiForm() {
     const form = useForm<{ roles: { value: string; label: string }[] }>({ defaultValues: { roles: [] } });
@@ -121,7 +122,7 @@ it("keeps selected options across async pages", async () => {
     hasNext: page === 1,
     hasPrevious: page > 1,
   }));
-  const asyncFields = [{ type: "select", mode: "multiple", source: "async", name: "roles", label: "Roles",
+  const asyncFields = [{ type: InputTypes.SELECT, mode: "multiple", source: "async", name: "roles", label: "Roles",
     loadOptions, debounceMs: 0 }] as const satisfies readonly WizardField<{ roles: { value: string; label: string }[] }>[];
   function AsyncForm() {
     const form = useForm<{ roles: { value: string; label: string }[] }>({ defaultValues: { roles: [] } });
@@ -146,7 +147,7 @@ it("submits an async single-select option", async () => {
   const user = userEvent.setup();
   const submit = vi.fn<(values: { role: { value: string; label: string } | null }) => void>();
   const loadOptions = vi.fn(async () => ({ options: [{ value: "buyer", label: "Buyer" }], hasNext: false, hasPrevious: false }));
-  const asyncFields = [{ type: "select", mode: "single", source: "async", name: "role", label: "Role",
+  const asyncFields = [{ type: InputTypes.SELECT, mode: "single", source: "async", name: "role", label: "Role",
     loadOptions, debounceMs: 0 }] as const satisfies readonly WizardField<{ role: { value: string; label: string } | null }>[];
   function AsyncForm() {
     const form = useForm<{ role: { value: string; label: string } | null }>({ defaultValues: { role: null } });

@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { DateRange } from "react-day-picker";
+import type { InputTypes } from "./input-types";
 import type { Control, FieldPath, FieldPathByValue, FieldValues } from "react-hook-form";
 
 interface FieldBase<TValues extends FieldValues, TName extends FieldPath<TValues> = FieldPath<TValues>> {
@@ -12,14 +13,14 @@ interface FieldBase<TValues extends FieldValues, TName extends FieldPath<TValues
 }
 
 export interface TextField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, string | null | undefined>> {
-  type: "text" | "email" | "password";
+  type: typeof InputTypes.TEXT | typeof InputTypes.EMAIL | typeof InputTypes.PASSWORD;
   placeholder?: string;
   autoComplete?: string;
   readOnly?: boolean;
 }
 
 export interface NumberField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, number | null | undefined>> {
-  type: "number";
+  type: typeof InputTypes.NUMBER;
   placeholder?: string;
   min?: number;
   max?: number;
@@ -28,7 +29,7 @@ export interface NumberField<TValues extends FieldValues> extends FieldBase<TVal
 }
 
 export interface TextareaField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, string | null | undefined>> {
-  type: "textarea";
+  type: typeof InputTypes.TEXTAREA;
   placeholder?: string;
   rows?: number;
   readOnly?: boolean;
@@ -43,15 +44,15 @@ interface CalendarBounds {
 }
 
 export interface DateField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, Date | null | undefined>>, CalendarBounds {
-  type: "date";
+  type: typeof InputTypes.DATE;
 }
 
 export interface DateRangeField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, DateRange | null | undefined>>, CalendarBounds {
-  type: "date-range";
+  type: typeof InputTypes.RANGE;
 }
 
 export interface MonthField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, string | null | undefined>> {
-  type: "month";
+  type: typeof InputTypes.MONTH;
   placeholder?: string;
   minMonth?: string;
   maxMonth?: string;
@@ -74,7 +75,7 @@ export interface SelectPage {
 export type SelectLoader = (search: string, page: number, signal: AbortSignal) => Promise<SelectPage>;
 
 interface SelectBase<TValues extends FieldValues, TName extends FieldPath<TValues>> extends FieldBase<TValues, TName> {
-  type: "select";
+  type: typeof InputTypes.SELECT;
   placeholder?: string;
   searchPlaceholder?: string;
 }
@@ -98,27 +99,27 @@ export type SingleSelectField<TValues extends FieldValues> = Extract<SelectField
 export type MultiSelectField<TValues extends FieldValues> = Extract<SelectField<TValues>, { mode: "multiple" }>;
 
 export interface CheckboxField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, boolean | undefined>> {
-  type: "checkbox";
+  type: typeof InputTypes.CHECKBOX;
 }
 
 export interface RadioField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, string | null | undefined>> {
-  type: "radio";
+  type: typeof InputTypes.RADIO;
   options: readonly SelectOption[];
 }
 
 export interface SwitchField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, boolean | undefined>> {
-  type: "switch";
+  type: typeof InputTypes.SWITCH;
 }
 
 export interface SliderField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, number | null | undefined>> {
-  type: "slider";
+  type: typeof InputTypes.SLIDER;
   min: number;
   max: number;
   step?: number;
 }
 
 export interface TimeField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, string | null | undefined>> {
-  type: "time" | "clock" | "moment";
+  type: typeof InputTypes.TIME | typeof InputTypes.CLOCK | typeof InputTypes.MOMENT;
   showDays?: boolean;
   maxDays?: number;
 }
@@ -130,7 +131,7 @@ export interface PersistedAttachment {
 }
 
 interface UploadBase<TValues extends FieldValues, TName extends FieldPath<TValues>> extends FieldBase<TValues, TName> {
-  type: "upload";
+  type: typeof InputTypes.UPLOAD;
   accept?: string;
   maxSizeBytes?: number;
   persisted?: readonly PersistedAttachment[];
@@ -142,14 +143,14 @@ export type UploadField<TValues extends FieldValues> =
   | (UploadBase<TValues, FieldPathByValue<TValues, readonly File[] | undefined>> & { mode: "multiple" });
 
 export interface ImageField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, File | null | undefined>> {
-  type: "image";
+  type: typeof InputTypes.IMAGE;
   existingUrl?: string;
   onRemoveExisting?: () => void;
   maxSizeBytes?: number;
 }
 
 export interface SignatureField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, string | null | undefined>> {
-  type: "signature";
+  type: typeof InputTypes.SIGNATURE;
 }
 
 export interface RichTextReference {
@@ -159,7 +160,7 @@ export interface RichTextReference {
 }
 
 export interface RichTextField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, string | null | undefined>> {
-  type: "richtext";
+  type: typeof InputTypes.RICHTEXT;
   placeholder?: string;
   rows?: number;
   readOnly?: boolean;
@@ -172,18 +173,18 @@ interface LayoutBase {
 }
 
 export interface LabelField extends LayoutBase {
-  type: "label";
+  type: typeof InputTypes.LABEL;
   label: string;
   text?: string;
 }
 
 export interface SpaceField extends LayoutBase {
-  type: "space";
+  type: typeof InputTypes.SPACE;
   size?: "sm" | "md" | "lg";
 }
 
 export interface SubmitField extends LayoutBase {
-  type: "submit";
+  type: typeof InputTypes.SUBMIT;
   label: string;
   disabled?: boolean;
   loading?: boolean;
@@ -201,7 +202,7 @@ export interface CustomFieldProps<TValues extends FieldValues> {
 }
 
 export interface CustomField<TValues extends FieldValues> extends FieldBase<TValues> {
-  type: "custom";
+  type: typeof InputTypes.CUSTOM;
   load: () => Promise<{ default: ComponentType<CustomFieldProps<TValues>> }>;
 }
 

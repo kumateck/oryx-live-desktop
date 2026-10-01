@@ -14,8 +14,8 @@ const schema = z.object({ name: z.string().min(1), active: z.boolean() });
 type Values = z.infer<typeof schema>;
 
 const fields = [
-  { type: "text", name: "name", label: "Name", required: true },
-  { type: "checkbox", name: "active", label: "Active" },
+  { type: InputTypes.TEXT, name: "name", label: "Name", required: true },
+  { type: InputTypes.CHECKBOX, name: "active", label: "Active" },
 ] as const satisfies readonly WizardField<Values>[];
 
 export function ExampleForm() {
@@ -38,14 +38,14 @@ The core imports no field UI eagerly. Text, textarea, sync single select, async 
 
 ## Calendar fields
 
-Use `type: "date"` for a full calendar date (`Date | null`), `type: "date-range"` for a `DateRange | null` with `from` and optional `to`, and `type: "month"` for a month and year (`YYYY-MM` string or `null`). These are separate lazy renderers. Full dates and ranges compose shadcn Calendar and Popover; the month field uses shadcn Select and Popover and never asks for a day. For manufacturing and expiry months, use Zod to require valid `YYYY-MM` values and enforce expiry after manufacturing. The owning module converts full `Date` values to the backend's date format at its API boundary; FormWizard does not serialize dates or add a timezone offset.
+Use `type: InputTypes.DATE` for a full calendar date (`Date | null`), `type: InputTypes.RANGE` for a `DateRange | null` with `from` and optional `to`, and `type: InputTypes.MONTH` for a month and year (`YYYY-MM` string or `null`). These are separate lazy renderers. Full dates and ranges compose shadcn Calendar and Popover; the month field uses shadcn Select and Popover and never asks for a day. For manufacturing and expiry months, use Zod to require valid `YYYY-MM` values and enforce expiry after manufacturing. The owning module converts full `Date` values to the backend's date format at its API boundary; FormWizard does not serialize dates or add a timezone offset.
 
 Calendar fields accept `minDate`, `maxDate`, `fromYear`, and `toYear`. Their navigation defaults to 1900 through 30 years beyond the current year so future expiry dates remain reachable; modules can override that window. A date range stays open for its second endpoint, offers an explicit one-day choice, and provides **New range** when replacing both endpoints. Month fields accept inclusive `minMonth`, `maxMonth`, `fromYear`, and `toYear`; year and month choices outside those limits are disabled. Configure real business limits in the module schema as well as the picker.
 
 ```tsx
 const batchFields = [
-  { type: "month", name: "manufacturingMonth", label: "Manufacturing month" },
-  { type: "month", name: "expiryMonth", label: "Expiry month" },
+  { type: InputTypes.MONTH, name: "manufacturingMonth", label: "Manufacturing month" },
+  { type: InputTypes.MONTH, name: "expiryMonth", label: "Expiry month" },
 ] as const satisfies readonly WizardField<BatchValues>[];
 ```
 
@@ -55,8 +55,8 @@ Selects declare `mode: "single" | "multiple"` and `source: "sync" | "async"`. A 
 
 ```tsx
 const roleFields = [
-  { type: "select", mode: "single", source: "sync", name: "role", label: "Role", options: roles },
-  { type: "select", mode: "multiple", source: "async", name: "teams", label: "Teams", loadOptions: loadTeams },
+  { type: InputTypes.SELECT, mode: "single", source: "sync", name: "role", label: "Role", options: roles },
+  { type: InputTypes.SELECT, mode: "multiple", source: "async", name: "teams", label: "Teams", loadOptions: loadTeams },
 ] as const satisfies readonly WizardField<Values>[];
 ```
 
@@ -74,7 +74,7 @@ The basic controls use shadcn Radio Group, Switch, and Slider. `radio` stores a 
 
 `richtext` stores an HTML string and is a separate lazy renderer backed by Tiptap. Its empty value is `""`. It supports headings, inline styles, lists, links, alignment, tables, and an expanded editing dialog. Legacy Oryx mention and hashtag markup is parsed into typed reference nodes; modules can supply explicit `references` for insertion. The module owns its Zod rule, including whether visually empty HTML is allowed, and must sanitize HTML at the server/display boundary. See [Rich text editor](./rich-text.md).
 
-Domain-owned editable tables, formulas, and other specialized fields use `type: "custom"` with a stable `load: () => import("./fields/my-renderer")` callback. The default export receives typed `name` and `control`, plus `id`, `disabled`, `required`, `invalid`, and `describedBy` for accessible control wiring. Put the callback in the module's field configuration, not in a global registry. A custom renderer should import only its own heavy dependencies. Never copy the eager Oryx Next renderer registry or use loose casts to fit incompatible field values.
+Domain-owned editable tables, formulas, and other specialized fields use `type: InputTypes.CUSTOM` with a stable `load: () => import("./fields/my-renderer")` callback. The default export receives typed `name` and `control`, plus `id`, `disabled`, `required`, `invalid`, and `describedBy` for accessible control wiring. Put the callback in the module's field configuration, not in a global registry. A custom renderer should import only its own heavy dependencies. Never copy the eager Oryx Next renderer registry or use loose casts to fit incompatible field values.
 
 Use shadcn source components for controls and Tailwind utility classes for field layout. Theme colors and font settings flow through shared CSS variables. Shell CSS must not apply element-wide styles that alter forms in unrelated modules. Prefer one column by default; a detail section can supply responsive grid classes after checking 1366×768 and 1280×720 at display scaling.
 
@@ -82,4 +82,18 @@ The interaction tests in `apps/web/src/shared/forms` and `apps/web/src/shared/da
 
 ## Password fields
 
-A field of `type: "password"` renders `PasswordInput` (`shared/forms/password-input.tsx`): the password is hidden by default, with a button to show or hide it. It is hidden again when the form is submitted or the field is disabled, a notice appears while Caps Lock is on, and spell-check and auto-capitalisation are off so a revealed password is not sent to those services. Use `PasswordInput` directly outside a `FormWizard`. Set `autoComplete` to `"new-password"` on forms that set a password; it defaults to `"current-password"`.
+A field of `type: InputTypes.PASSWORD` renders `PasswordInput` (`shared/forms/password-input.tsx`): the password is hidden by default, with a button to show or hide it. It is hidden again when the form is submitted or the field is disabled, a notice appears while Caps Lock is on, and spell-check and auto-capitalisation are off so a revealed password is not sent to those services. Use `PasswordInput` directly outside a `FormWizard`. Set `autoComplete` to `"new-password"` on forms that set a password; it defaults to `"current-password"`.
+
+## Field types
+
+Declare a field's type with the `InputTypes` constant from `shared/forms/input-types.ts` (`type: InputTypes.TEXT`), never a bare string; a test fails the build otherwise. The names match Oryx Next's `InputTypes`, so forms carry over with the same vocabulary.
+
+| Oryx Next | Desktop |
+| --- | --- |
+| `TEXT`, `EMAIL`, `PASSWORD`, `NUMBER`, `TEXTAREA`, `DATE`, `RANGE`, `MONTH`, `TIME`, `CLOCK`, `MOMENT`, `CHECKBOX`, `RADIO`, `SWITCH`, `SLIDER`, `UPLOAD`, `IMAGE`, `SIGNATURE`, `RICHTEXT`, `LABEL`, `SPACE`, `SUBMIT` | Same names |
+| `SELECT` | `SELECT` with `mode: "single"`, `source: "sync"` |
+| `ASYNC_SELECT`, `PAGINATED_SELECT`, `USER_SELECT` | `SELECT` with `mode: "single"`, `source: "async"` |
+| `MULTI`, `MULTIPLE`, `SPECIAL_SELECT` | `SELECT` with `mode: "multiple"`, `source: "sync"` |
+| `ASYNC_MULTI` | `SELECT` with `mode: "multiple"`, `source: "async"` |
+| (none) | `CUSTOM`: a module's own lazily loaded control |
+| `BUTTON`, `COLOR`, `DRAGNDROP`, `Formula`, `NUMBERS`, `OTP`, `PHONE`, `TABLE` | Not built yet; added to the constant when their field is |

@@ -13,11 +13,12 @@ import { departmentTypeFromValue, departmentTypes } from "../lib/role-types";
 import { roleEditSchema, type RoleEditValues, type RoleRow } from "../schemas/role-schema";
 import type { PermissionModule } from "../schemas/permission-schema";
 import { PermissionPicker } from "./permission-picker";
+import { InputTypes } from "@/shared/forms/input-types";
 
 const fields = [
-  { type: "text", name: "name", label: "Role name", required: true },
-  { type: "text", name: "displayName", label: "Display name", required: true },
-  { type: "select", name: "type", label: "Department type", mode: "single", source: "sync", options: departmentTypes, required: true },
+  { type: InputTypes.TEXT, name: "name", label: "Role name", required: true },
+  { type: InputTypes.TEXT, name: "displayName", label: "Display name", required: true },
+  { type: InputTypes.SELECT, name: "type", label: "Department type", mode: "single", source: "sync", options: departmentTypes, required: true },
 ] as const satisfies readonly WizardField<RoleEditValues>[];
 
 export function RoleEditor({ role, assigned, canEdit, canUpdatePermissions }: {

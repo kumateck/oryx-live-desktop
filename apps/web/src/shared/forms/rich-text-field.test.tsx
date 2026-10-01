@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
 import { afterEach, expect, it, vi } from "vitest";
 import { FormWizard, type WizardField } from "./form-wizard";
+import { InputTypes } from "./input-types";
 
 document.elementFromPoint = () => document.body;
 Range.prototype.getBoundingClientRect = () => new DOMRect();
@@ -14,7 +15,7 @@ Range.prototype.getClientRects = () => {
 afterEach(cleanup);
 
 interface Values { remarks: string }
-const fields = [{ type: "richtext", name: "remarks", label: "Remarks", placeholder: "Enter remarks" }] as const satisfies readonly WizardField<Values>[];
+const fields = [{ type: InputTypes.RICHTEXT, name: "remarks", label: "Remarks", placeholder: "Enter remarks" }] as const satisfies readonly WizardField<Values>[];
 
 it("loads the editor only for its field, edits HTML, and follows form reset", async () => {
   const user = userEvent.setup();

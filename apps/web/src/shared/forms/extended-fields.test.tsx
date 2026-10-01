@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
 import { afterEach, expect, it, vi } from "vitest";
 import { FormWizard, type WizardField } from "./form-wizard";
+import { InputTypes } from "./input-types";
 
 class ResizeObserverStub implements ResizeObserver {
   observe(): void {}
@@ -24,14 +25,14 @@ interface Values {
   duration: string | null;
 }
 const fields = [
-  { type: "label", id: "section", label: "Settings", text: "Choose values" },
-  { type: "radio", name: "choice", label: "Choice", options: [{ value: "yes", label: "Yes" }, { value: "no", label: "No" }] },
-  { type: "switch", name: "enabled", label: "Enabled" },
-  { type: "slider", name: "quantity", label: "Quantity", min: 0, max: 10 },
-  { type: "clock", name: "start", label: "Start" },
-  { type: "moment", name: "duration", label: "Duration" },
-  { type: "space", id: "gap", size: "sm" },
-  { type: "submit", id: "save", label: "Save" },
+  { type: InputTypes.LABEL, id: "section", label: "Settings", text: "Choose values" },
+  { type: InputTypes.RADIO, name: "choice", label: "Choice", options: [{ value: "yes", label: "Yes" }, { value: "no", label: "No" }] },
+  { type: InputTypes.SWITCH, name: "enabled", label: "Enabled" },
+  { type: InputTypes.SLIDER, name: "quantity", label: "Quantity", min: 0, max: 10 },
+  { type: InputTypes.CLOCK, name: "start", label: "Start" },
+  { type: InputTypes.MOMENT, name: "duration", label: "Duration" },
+  { type: InputTypes.SPACE, id: "gap", size: "sm" },
+  { type: InputTypes.SUBMIT, id: "save", label: "Save" },
 ] as const satisfies readonly WizardField<Values>[];
 
 it("submits shadcn basic controls, time values, and layout submit", async () => {
@@ -58,8 +59,8 @@ it("keeps the legacy variable-duration option", async () => {
   const user = userEvent.setup();
   const submit = vi.fn<(values: { duration: string | null }) => void>();
   const durationFields = [
-    { type: "moment", name: "duration", label: "Duration" },
-    { type: "submit", id: "save-duration", label: "Save duration" },
+    { type: InputTypes.MOMENT, name: "duration", label: "Duration" },
+    { type: InputTypes.SUBMIT, id: "save-duration", label: "Save duration" },
   ] as const satisfies readonly WizardField<{ duration: string | null }>[];
   function DurationForm() {
     const form = useForm<{ duration: string | null }>({ defaultValues: { duration: null } });
@@ -75,7 +76,7 @@ it("keeps the legacy variable-duration option", async () => {
 it("selects and removes files while respecting type limits", async () => {
   const user = userEvent.setup();
   const submit = vi.fn<(values: { documents: File[] }) => void>();
-  const uploadFields = [{ type: "upload", mode: "multiple", name: "documents", label: "Documents", accept: ".pdf", maxSizeBytes: 10 }] as const satisfies readonly WizardField<{ documents: File[] }>[];
+  const uploadFields = [{ type: InputTypes.UPLOAD, mode: "multiple", name: "documents", label: "Documents", accept: ".pdf", maxSizeBytes: 10 }] as const satisfies readonly WizardField<{ documents: File[] }>[];
   function UploadForm() {
     const form = useForm<{ documents: File[] }>({ defaultValues: { documents: [] } });
     return <form onSubmit={form.handleSubmit(submit)}><FormWizard form={form} fields={uploadFields} /><button type="submit">Save</button></form>;
@@ -96,7 +97,7 @@ it("reports persisted attachment removal without mutating the server value itsel
   const user = userEvent.setup();
   const onPersistedChange = vi.fn();
   const existing = [{ id: "attachment-1", name: "approved.pdf" }];
-  const attachmentFields = [{ type: "upload", mode: "multiple", name: "documents", label: "Documents",
+  const attachmentFields = [{ type: InputTypes.UPLOAD, mode: "multiple", name: "documents", label: "Documents",
     persisted: existing, onPersistedChange }] as const satisfies readonly WizardField<{ documents: File[] }>[];
   function AttachmentForm() {
     const form = useForm<{ documents: File[] }>({ defaultValues: { documents: [] } });
@@ -115,7 +116,7 @@ it("previews an image and submits its File without encoding it during rendering"
   URL.createObjectURL = createUrl;
   URL.revokeObjectURL = revokeUrl;
   const submit = vi.fn<(values: { photo: File | null }) => void>();
-  const imageFields = [{ type: "image", name: "photo", label: "Photo" }] as const satisfies readonly WizardField<{ photo: File | null }>[];
+  const imageFields = [{ type: InputTypes.IMAGE, name: "photo", label: "Photo" }] as const satisfies readonly WizardField<{ photo: File | null }>[];
   function ImageForm() {
     const form = useForm<{ photo: File | null }>({ defaultValues: { photo: null } });
     return <form onSubmit={form.handleSubmit(submit)}><FormWizard form={form} fields={imageFields} /><button type="submit">Save</button></form>;
@@ -137,7 +138,7 @@ it("exports a signature on pointer release and clears it explicitly", async () =
   Object.defineProperty(HTMLCanvasElement.prototype, "getContext", { configurable: true, value: () => context });
   Object.defineProperty(HTMLCanvasElement.prototype, "toDataURL", { configurable: true, value: () => "data:image/png;base64,c2ln" });
   const submit = vi.fn<(values: { signature: string | null }) => void>();
-  const signatureFields = [{ type: "signature", name: "signature", label: "Signature" }] as const satisfies readonly WizardField<{ signature: string | null }>[];
+  const signatureFields = [{ type: InputTypes.SIGNATURE, name: "signature", label: "Signature" }] as const satisfies readonly WizardField<{ signature: string | null }>[];
   function SignatureForm() {
     const form = useForm<{ signature: string | null }>({ defaultValues: { signature: null } });
     return <form onSubmit={form.handleSubmit(submit)}><FormWizard form={form} fields={signatureFields} /><button type="submit">Save</button></form>;

@@ -4,13 +4,14 @@ import { useForm } from "react-hook-form";
 import { afterEach, expect, it, vi } from "vitest";
 import { FormWizard, type WizardField } from "./form-wizard";
 import { PasswordInput } from "./password-input";
+import { InputTypes } from "./input-types";
 
 afterEach(cleanup);
 
 interface Values { email: string; password: string }
 const fields = [
-  { type: "email", name: "email", label: "Email" },
-  { type: "password", name: "password", label: "Password", required: true },
+  { type: InputTypes.EMAIL, name: "email", label: "Email" },
+  { type: InputTypes.PASSWORD, name: "password", label: "Password", required: true },
 ] as const satisfies readonly WizardField<Values>[];
 
 function LoginForm({ onSubmit }: { onSubmit: (values: Values) => void }) {

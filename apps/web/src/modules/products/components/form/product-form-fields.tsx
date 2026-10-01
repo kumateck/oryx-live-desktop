@@ -5,6 +5,7 @@ import type { ProductOptions } from "../../hooks/use-product-options";
 import { divisionOptions } from "../../lib/product-form";
 import type { ProductFormValues } from "../../schemas/product-form-schema";
 import { QuantityHint } from "./quantity-hint";
+import { InputTypes } from "@/shared/forms/input-types";
 
 type Fields = readonly WizardField<ProductFormValues>[];
 const grid = "md:grid-cols-2 xl:grid-cols-3";
@@ -32,37 +33,37 @@ export function ProductFormFields({
   const information = useMemo<Fields>(
     () => [
       {
-        type: "text",
+        type: InputTypes.TEXT,
         name: "name",
         label: "Product name",
         required: true,
         placeholder: "Enter product name",
       },
       {
-        type: "text",
+        type: InputTypes.TEXT,
         name: "code",
         label: "Product code",
         required: true,
         placeholder: "Product code",
       },
       {
-        type: "text",
+        type: InputTypes.TEXT,
         name: "genericName",
         label: "Generic name",
         placeholder: "Enter generic name",
       },
       {
-        type: "select",
+        type: InputTypes.SELECT,
         name: "category",
         label: "Dosage",
         mode: "single",
         source: "sync",
         options: categories,
         required: true,
-        placeholder: "Select category",
+        placeholder: "Select dosage",
       },
       {
-        type: "select",
+        type: InputTypes.SELECT,
         name: "department",
         label: "Department",
         mode: "single",
@@ -72,7 +73,7 @@ export function ProductFormFields({
         placeholder: "Select department",
       },
       {
-        type: "select",
+        type: InputTypes.SELECT,
         name: "division",
         label: "Division",
         mode: "single",
@@ -87,7 +88,7 @@ export function ProductFormFields({
   const quantities = useMemo<Fields>(
     () => [
       {
-        type: "select",
+        type: InputTypes.SELECT,
         name: "baseUom",
         label: "Base unit",
         mode: "single",
@@ -97,7 +98,7 @@ export function ProductFormFields({
         placeholder: "Select unit",
       },
       {
-        type: "number",
+        type: InputTypes.NUMBER,
         name: "baseQuantity",
         label: "Composition unit quantity",
         required: true,
@@ -105,7 +106,7 @@ export function ProductFormFields({
         placeholder: "Quantity per composition unit",
       },
       {
-        type: "number",
+        type: InputTypes.NUMBER,
         name: "fullBatchSize",
         label: "Full batch size",
         required: true,
@@ -118,7 +119,7 @@ export function ProductFormFields({
   const specifications = useMemo<Fields>(
     () => [
       {
-        type: "number",
+        type: InputTypes.NUMBER,
         name: "price",
         label: "Price",
         required: true,
@@ -126,25 +127,25 @@ export function ProductFormFields({
         placeholder: "Enter price",
       },
       {
-        type: "text",
+        type: InputTypes.TEXT,
         name: "filledWeight",
         label: "Filled volume or weight",
         placeholder: "For example 100 ml",
       },
       {
-        type: "text",
+        type: InputTypes.TEXT,
         name: "storageCondition",
         label: "Storage condition",
         placeholder: "Enter storage requirements",
       },
       {
-        type: "text",
+        type: InputTypes.TEXT,
         name: "shelfLife",
         label: "Shelf life",
         placeholder: "For example 24 months",
       },
       {
-        type: "text",
+        type: InputTypes.TEXT,
         name: "actionUse",
         label: "Action and use",
         placeholder: "Enter action and use",
@@ -155,7 +156,7 @@ export function ProductFormFields({
   const compliance = useMemo<Fields>(
     () => [
       {
-        type: "select",
+        type: InputTypes.SELECT,
         name: "equipment",
         label: "Equipment",
         mode: "single",
@@ -164,25 +165,25 @@ export function ProductFormFields({
         placeholder: "Select equipment",
       },
       {
-        type: "text",
+        type: InputTypes.TEXT,
         name: "fdaRegistrationNumber",
         label: "FDA registration number",
         placeholder: "Enter FDA registration number",
       },
       {
-        type: "text",
+        type: InputTypes.TEXT,
         name: "masterFormulaNumber",
         label: "Master formula number",
         placeholder: "Enter master formula number",
       },
       {
-        type: "text",
+        type: InputTypes.TEXT,
         name: "documentNumber",
         label: "Document number",
         placeholder: "Enter document number",
       },
       {
-        type: "number",
+        type: InputTypes.NUMBER,
         name: "revisionNumber",
         label: "Revision number",
         min: 0,
@@ -195,7 +196,7 @@ export function ProductFormFields({
   const claims = useMemo<Fields>(
     () => [
       {
-        type: "richtext",
+        type: InputTypes.RICHTEXT,
         name: "description",
         label: "Label claims",
         placeholder: "Describe the product and its label claims",

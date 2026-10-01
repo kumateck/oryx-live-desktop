@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { afterEach, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { FormWizard, type WizardField } from "./form-wizard";
+import { InputTypes } from "./input-types";
 
 class ResizeObserverStub implements ResizeObserver {
   observe(): void {}
@@ -30,10 +31,10 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 
 const fields = [
-  { type: "month", name: "manufacturingMonth", label: "Manufacturing month" },
-  { type: "month", name: "expiryMonth", label: "Expiry month" },
-  { type: "date", name: "receivedDate", label: "Received date" },
-  { type: "date-range", name: "inspectionRange", label: "Inspection range" },
+  { type: InputTypes.MONTH, name: "manufacturingMonth", label: "Manufacturing month" },
+  { type: InputTypes.MONTH, name: "expiryMonth", label: "Expiry month" },
+  { type: InputTypes.DATE, name: "receivedDate", label: "Received date" },
+  { type: InputTypes.RANGE, name: "inspectionRange", label: "Inspection range" },
 ] as const satisfies readonly WizardField<Values>[];
 
 it("wires month and calendar fields to Zod and submits month-only values", async () => {

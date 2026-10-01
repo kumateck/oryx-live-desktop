@@ -13,10 +13,11 @@ import { audit, clearAccess, rolesPath } from "../lib/permissions";
 import { departmentTypeFromValue, departmentTypes } from "../lib/role-types";
 import { roleCreateSchema, type RoleCreateValues } from "../schemas/role-schema";
 import type { PermissionModule } from "../schemas/permission-schema";
+import { InputTypes } from "@/shared/forms/input-types";
 
 const fields = [
-  { type: "text", name: "name", label: "Role name", required: true, placeholder: "e.g. Quality Analyst" },
-  { type: "select", name: "type", label: "Department type", mode: "single", source: "sync", options: departmentTypes, required: true },
+  { type: InputTypes.TEXT, name: "name", label: "Role name", required: true, placeholder: "e.g. Quality Analyst" },
+  { type: InputTypes.SELECT, name: "type", label: "Department type", mode: "single", source: "sync", options: departmentTypes, required: true },
 ] as const satisfies readonly WizardField<RoleCreateValues>[];
 
 export function CreateRoleForm({ available }: { available: PermissionModule[] }) {

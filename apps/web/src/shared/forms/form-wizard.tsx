@@ -5,6 +5,7 @@ import { FieldFrame } from "./field-frame";
 import { fieldDescription } from "./field-description";
 import { useFieldError } from "./field-state";
 import type { CustomField, ExtendedWizardField, WizardField } from "./form-wizard-types";
+import { InputTypes } from "./input-types";
 
 const TextInputField = lazy(() => import("./fields/text-field"));
 const PasswordInputField = lazy(() => import("./fields/password-field"));
@@ -50,25 +51,25 @@ function ExtendedFieldSlot<TValues extends FieldValues>({ field, form }: {
   form: UseFormReturn<TValues>;
 }) {
   switch (field.type) {
-    case "radio":
+    case InputTypes.RADIO:
       return <RadioInputField field={field} />;
-    case "switch":
+    case InputTypes.SWITCH:
       return <SwitchInputField field={field} />;
-    case "slider":
+    case InputTypes.SLIDER:
       return <SliderInputField field={field} />;
-    case "time": case "clock": case "moment":
+    case InputTypes.TIME: case InputTypes.CLOCK: case InputTypes.MOMENT:
       return <TimeInputField field={field} />;
-    case "upload":
+    case InputTypes.UPLOAD:
       return <UploadInputField field={field} />;
-    case "image":
+    case InputTypes.IMAGE:
       return <ImageInputField field={field} />;
-    case "signature":
+    case InputTypes.SIGNATURE:
       return <SignatureInputField field={field} />;
-    case "richtext":
+    case InputTypes.RICHTEXT:
       return <RichTextInputField field={field} />;
-    case "label": case "space": case "submit":
+    case InputTypes.LABEL: case InputTypes.SPACE: case InputTypes.SUBMIT:
       return <LayoutField field={field} />;
-    case "custom":
+    case InputTypes.CUSTOM:
       return <CustomInputField field={field} form={form} />;
   }
 }
@@ -78,23 +79,23 @@ function WizardFieldSlot<TValues extends FieldValues>({ field, form }: {
   form: UseFormReturn<TValues>;
 }) {
   switch (field.type) {
-    case "password":
+    case InputTypes.PASSWORD:
       return <PasswordInputField field={field} />;
-    case "text": case "email": case "number":
+    case InputTypes.TEXT: case InputTypes.EMAIL: case InputTypes.NUMBER:
       return <TextInputField field={field} />;
-    case "date":
+    case InputTypes.DATE:
       return <DateInputField field={field} />;
-    case "date-range":
+    case InputTypes.RANGE:
       return <DateRangeInputField field={field} />;
-    case "month":
+    case InputTypes.MONTH:
       return <MonthInputField field={field} />;
-    case "textarea":
+    case InputTypes.TEXTAREA:
       return <TextareaInputField field={field} />;
-    case "select":
+    case InputTypes.SELECT:
       if (field.mode === "multiple") return <MultiSelectInputField field={field} />;
       if (field.source === "async") return <AsyncSelectInputField field={field} />;
       return <SelectInputField field={field} />;
-    case "checkbox":
+    case InputTypes.CHECKBOX:
       return <CheckboxInputField field={field} />;
     default:
       return <ExtendedFieldSlot field={field} form={form} />;

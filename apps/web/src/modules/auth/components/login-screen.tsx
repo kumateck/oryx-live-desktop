@@ -13,10 +13,11 @@ import { cn } from "cn";
 import wordmarkUrl from "../../../../../../assets/oryx-wordmark.svg";
 import { returnPath } from "../lib/return-path";
 import { loginSchema, type LoginValues } from "../schemas/login-schema";
+import { InputTypes } from "@/shared/forms/input-types";
 
 const fields = [
-  { type: "email", name: "email", label: "Email address", autoComplete: "username", required: true },
-  { type: "password", name: "password", label: "Password", autoComplete: "current-password", required: true },
+  { type: InputTypes.EMAIL, name: "email", label: "Email address", autoComplete: "username", required: true },
+  { type: InputTypes.PASSWORD, name: "password", label: "Password", autoComplete: "current-password", required: true },
 ] as const satisfies readonly WizardField<LoginValues>[];
 
 function signedOutNotice(reason: SignedOutReason | null): string | null {

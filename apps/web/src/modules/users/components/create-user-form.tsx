@@ -11,6 +11,7 @@ import { usePostApiV1EmployeeUserMutation } from "../api/user-api";
 import { useEmployeeOptions } from "../hooks/use-employee-options";
 import { audit, usersPath } from "../lib/user-access";
 import { createUserSchema, type CreateUserValues, type RoleOption } from "../schemas/user-schema";
+import { InputTypes } from "@/shared/forms/input-types";
 
 export function CreateUserForm({ roles }: { roles: readonly RoleOption[] }) {
   const navigate = useNavigate();
@@ -21,10 +22,10 @@ export function CreateUserForm({ roles }: { roles: readonly RoleOption[] }) {
   const employee = employeeById(useWatch({ control: form.control, name: "employee" })?.value);
 
   const fields = useMemo(() => [
-    { type: "select", name: "employee", label: "Employee", mode: "single", source: "async", loadOptions, required: true,
+    { type: InputTypes.SELECT, name: "employee", label: "Employee", mode: "single", source: "async", loadOptions, required: true,
       placeholder: "Select an employee", searchPlaceholder: "Search employees",
       description: "Only active employees without a user account are listed." },
-    { type: "select", name: "role", label: "Role", mode: "single", source: "sync", required: true, placeholder: "Select a role",
+    { type: InputTypes.SELECT, name: "role", label: "Role", mode: "single", source: "sync", required: true, placeholder: "Select a role",
       options: roles.map((role) => ({ value: role.id, label: role.label })) },
   ] as const satisfies readonly WizardField<CreateUserValues>[], [loadOptions, roles]);
 
