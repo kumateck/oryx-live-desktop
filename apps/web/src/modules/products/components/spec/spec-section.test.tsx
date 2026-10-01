@@ -5,6 +5,7 @@ import { afterEach, expect, it } from "vitest";
 import { ApiProvider } from "../../../../shared/api/api-provider";
 import { SessionProvider } from "../../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../../test/backend";
+import { chooseAction, openMenu } from "../../../../test/menu";
 import { SpecificationSection } from "./spec-section";
 
 afterEach(() => { cleanup(); forgetSession(); });
@@ -35,9 +36,11 @@ function open(permissions: string[]) {
 it("offers the stages without a specification and suggests the next number in the stage's series", async () => {
   const calls = open(["CanCreateProductSpecification"]);
   expect(await screen.findByText("NMP/B/SPC/004")).toBeTruthy();
-  expect(screen.queryByRole("button", { name: "Add bulk" })).toBeNull();
-  expect(screen.queryByRole("button", { name: /^Edit/ })).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Add finished" }));
+  // Without the edit permission a row has no actions.
+  expect(screen.queryByRole("button", { name: /^Actions for/ })).toBeNull();
+  await openMenu("Add specification");
+  expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Finished", "Intermediate"]);
+  fireEvent.click(screen.getByRole("menuitem", { name: "Finished" }));
   const dialog = await screen.findByRole("dialog");
   const number = await within(dialog).findByLabelText(/Specification number/, { selector: "input" });
   await waitFor(() => expect((number as HTMLInputElement).value).toBe("NMP/FP/SPC/010"));
@@ -49,7 +52,8 @@ it("offers the stages without a specification and suggests the next number in th
 
 it("edits a specification keeping its stage, due date and reference", async () => {
   const calls = open(["CanEditProductSpecification"]);
-  fireEvent.click(await screen.findByRole("button", { name: "Edit Bulk specification" }));
+  await chooseAction("Actions for the bulk specification", "Edit");
+  expect(screen.queryByRole("button", { name: "Add specification" })).toBeNull();
   const dialog = await screen.findByRole("dialog");
   expect(within(dialog).getByText(/shared by several products/)).toBeTruthy();
   const revision = await within(dialog).findByLabelText(/^Revision\b(?! date)/, { selector: "input" });

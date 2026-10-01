@@ -5,6 +5,7 @@ import { afterEach, expect, it } from "vitest";
 import { ApiProvider } from "../../../../shared/api/api-provider";
 import { SessionProvider } from "../../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../../test/backend";
+import { chooseAction, openMenu } from "../../../../test/menu";
 import { ArdSection } from "./ard-section";
 
 afterEach(() => { cleanup(); forgetSession(); });
@@ -39,8 +40,12 @@ it("adds a record for a stage that is ready and explains the stage that is not",
   expect(await screen.findByText("Bulk form")).toBeTruthy();
   expect(screen.getByText("Intermediate cannot be added yet: it needs an intermediate specification.")).toBeTruthy();
   // Without the edit permission there is no edit action.
-  expect(screen.queryByRole("button", { name: /^Edit/ })).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Add finished" }));
+  expect(screen.queryByRole("button", { name: /^Actions for/ })).toBeNull();
+  await openMenu("Add analytical raw data");
+  // A stage that is not ready is listed with what it needs, and cannot be chosen.
+  expect(screen.getByRole("menuitem", { name: /Intermediate/ }).getAttribute("aria-disabled")).toBe("true");
+  expect(screen.getByRole("menuitem", { name: /Intermediate/ }).textContent).toContain("Needs an intermediate specification");
+  fireEvent.click(screen.getByRole("menuitem", { name: "Finished" }));
   const dialog = await screen.findByRole("dialog");
   expect(within(dialog).getByText("Finished form")).toBeTruthy();
   const number = await within(dialog).findByLabelText(/Specification number/, { selector: "input" });
@@ -52,10 +57,10 @@ it("adds a record for a stage that is ready and explains the stage that is not",
 
 it("edits a record keeping its analysis type, and never links an unsafe file address", async () => {
   const calls = open(["CanEditProductArd"]);
-  fireEvent.click(await screen.findByRole("button", { name: "Edit Bulk analytical raw data" }));
+  await chooseAction("Actions for the bulk analytical raw data", "Edit");
   const dialog = await screen.findByRole("dialog");
   expect(within(dialog).getByText("method.pdf").closest("a")).toBeNull();
-  expect(screen.queryByRole("button", { name: /^Add (bulk|finished|intermediate)$/ })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Add analytical raw data" })).toBeNull();
   const number = await within(dialog).findByLabelText(/Specification number/, { selector: "input" });
   fireEvent.change(number, { target: { value: "SPEC-B2" } });
   fireEvent.click(within(dialog).getByRole("button", { name: "Save changes" }));

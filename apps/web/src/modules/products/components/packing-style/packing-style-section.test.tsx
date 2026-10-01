@@ -5,6 +5,7 @@ import { afterEach, expect, it } from "vitest";
 import { ApiProvider } from "../../../../shared/api/api-provider";
 import { SessionProvider } from "../../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../../test/backend";
+import { chooseAction, openMenu } from "../../../../test/menu";
 import { PackingStyleSection } from "./packing-style-section";
 
 afterEach(() => { cleanup(); forgetSession(); });
@@ -45,7 +46,7 @@ it("keeps edits as a draft, then saves the whole set with IDs and one default", 
   expect(await screen.findByText("100 ml bottle")).toBeTruthy();
   const save = screen.getByRole("button", { name: "Save packing styles" });
   expect(save.hasAttribute("disabled")).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Remove 100 ml bottle" }));
+  await chooseAction("Actions for 100 ml bottle", "Remove");
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
   await waitFor(() => expect(screen.queryByText("100 ml bottle")).toBeNull());
   expect(screen.getByText("You have changes that are not saved yet.")).toBeTruthy();
@@ -60,7 +61,7 @@ it("keeps edits as a draft, then saves the whole set with IDs and one default", 
 it("shows the server's reason when a style in use cannot be removed, and lets the user discard", async () => {
   open(412);
   expect(await screen.findByText("60 ml bottle")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "Remove 60 ml bottle" }));
+  await chooseAction("Actions for 60 ml bottle", "Remove");
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
   fireEvent.click(screen.getByRole("button", { name: "Save packing styles" }));
   expect((await screen.findByRole("alert")).textContent).toContain("already used in batch packaging records");

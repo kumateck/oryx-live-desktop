@@ -5,6 +5,7 @@ import { afterEach, expect, it } from "vitest";
 import { ApiProvider } from "../../../../shared/api/api-provider";
 import { SessionProvider } from "../../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../../test/backend";
+import { chooseAction, openMenu } from "../../../../test/menu";
 import { PackagingSection } from "./packaging-section";
 
 afterEach(() => { cleanup(); forgetSession(); });
@@ -49,7 +50,7 @@ it("lists the saved materials with entered quantities kept and totals calculated
 
 it("saves the remaining materials as the whole list", async () => {
   const calls = open();
-  fireEvent.click(await screen.findByRole("button", { name: "Remove Carton" }));
+  await chooseAction("Actions for Carton", "Remove");
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
   await waitFor(() => expect(screen.queryByText("Carton")).toBeNull());
   fireEvent.click(screen.getByRole("button", { name: "Save packing materials" }));
@@ -63,7 +64,7 @@ it("saves the remaining materials as the whole list", async () => {
 
 it("refuses to save an empty list, and discards changes on request", async () => {
   const calls = open([packages[1]!]);
-  fireEvent.click(await screen.findByRole("button", { name: "Remove Carton" }));
+  await chooseAction("Actions for Carton", "Remove");
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
   fireEvent.click(await screen.findByRole("button", { name: "Save packing materials" }));
   expect((await screen.findByRole("alert")).textContent).toBe("Add at least one packing material.");

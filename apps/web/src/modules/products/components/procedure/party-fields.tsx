@@ -1,6 +1,7 @@
 import { useFieldArray, useWatch, type UseFormReturn } from "react-hook-form";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Shield, Trash2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DropdownButton } from "@/shared/actions";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
@@ -41,10 +42,10 @@ export function PartyFields({ form, users, roles, ard }: { form: Form; users: re
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div><h3 className="text-sm font-semibold">Responsible users and roles</h3>
         <p className="text-xs text-muted-foreground">Who carries out this step, and the instruction each one follows.</p></div>
-      <div className="flex gap-2">
-        <Button type="button" size="sm" variant="outline" onClick={() => add("user")}><Plus />Add user</Button>
-        <Button type="button" size="sm" variant="outline" onClick={() => add("role")}><Plus />Add role</Button>
-      </div>
+      <DropdownButton label="Add responsible" icon={Plus} items={[
+        { id: "user", label: "User", icon: User, onSelect: () => add("user") },
+        { id: "role", label: "Role", icon: Shield, onSelect: () => add("role") },
+      ]} />
     </div>
     {parties.fields.length === 0 ? <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">Nobody is assigned yet.</p>
       : <ul className="space-y-2">{parties.fields.map((field, index) => <PartyRow key={field.id} form={form} index={index} users={users} roles={roles} ard={ard}

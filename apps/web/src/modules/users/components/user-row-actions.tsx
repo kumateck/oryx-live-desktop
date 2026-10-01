@@ -1,6 +1,5 @@
-import { Ban, Eye, MoreHorizontal, RotateCcw, UserCog } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Ban, Eye, RotateCcw, UserCog } from "lucide-react";
+import { TableMenu } from "@/shared/actions";
 import type { UserAccess } from "../hooks/use-user-access";
 import type { UserRow } from "../schemas/user-schema";
 
@@ -12,14 +11,11 @@ export function UserRowActions({ user, access, onAction }: {
   onAction: (action: UserAction, user: UserRow) => void;
 }) {
   const canToggle = user.isDisabled ? access.unblock : access.block;
-  return <DropdownMenu>
-    <DropdownMenuTrigger asChild><Button type="button" size="icon-sm" variant="ghost" aria-label={`Actions for ${user.name}`}><MoreHorizontal /></Button></DropdownMenuTrigger>
-    <DropdownMenuContent align="end">
-      <DropdownMenuItem onSelect={() => onAction("details", user)}><Eye className="size-4" />User details</DropdownMenuItem>
-      {access.edit ? <DropdownMenuItem onSelect={() => onAction("role", user)}><UserCog className="size-4" />Change role</DropdownMenuItem> : null}
-      {canToggle ? <DropdownMenuItem onSelect={() => onAction("toggle", user)}>
-        {user.isDisabled ? <><RotateCcw className="size-4" />Unblock user</> : <><Ban className="size-4" />Block user</>}
-      </DropdownMenuItem> : null}
-    </DropdownMenuContent>
-  </DropdownMenu>;
+  return <TableMenu label={`Actions for ${user.name}`} items={[
+    { id: "details", label: "User details", icon: Eye, onSelect: () => onAction("details", user) },
+    access.edit && { id: "role", label: "Change role", icon: UserCog, onSelect: () => onAction("role", user) },
+    canToggle && (user.isDisabled
+      ? { id: "toggle", label: "Unblock user", icon: RotateCcw, separated: true, onSelect: () => onAction("toggle", user) }
+      : { id: "toggle", label: "Block user", icon: Ban, destructive: true, separated: true, onSelect: () => onAction("toggle", user) }),
+  ]} />;
 }

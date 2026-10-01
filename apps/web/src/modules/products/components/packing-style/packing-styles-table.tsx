@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { ListDataTable, dataTableColumns } from "@/shared/datatable";
 import type { PackingStyle } from "../../lib/packing-styles";
 
@@ -27,10 +27,10 @@ export function PackingStylesTable({ styles, loading, error, onRetry, onEdit, on
     column.display({ id: "units", header: "Units", cell: ({ row }) =>
       <ul className="space-y-0.5">{row.original.units.map((unit, index) => <li key={index}>{unit.quantity} {unit.uom.label}</li>)}</ul> }),
     column.accessor((style) => style.description || dash, { id: "description", header: "Description" }),
-    column.display({ id: "actions", header: () => <span className="sr-only">Actions</span>, size: 90, cell: ({ row }) => <span className="flex gap-1">
-      <Button type="button" size="icon-sm" variant="ghost" aria-label={`Edit ${row.original.name}`} onClick={() => onEdit(row.original)}><Pencil /></Button>
-      <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove ${row.original.name}`} onClick={() => onRemove(row.original)}><Trash2 /></Button>
-    </span> }),
+    column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.name}`} items={[
+      { id: "edit", label: "Edit", icon: Pencil, onSelect: () => onEdit(row.original) },
+      { id: "remove", label: "Remove", icon: Trash2, destructive: true, onSelect: () => onRemove(row.original) },
+    ]} /> }),
   ]), [onEdit, onRemove]);
   return <ListDataTable label="Packing styles" columns={columns} rows={styles} getRowId={(style) => style.key} loading={loading} error={error}
     onRetry={onRetry} emptyTitle="No packing styles yet" emptyDescription="Add the ways this product is packed, then save." />;

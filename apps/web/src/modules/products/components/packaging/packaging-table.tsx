@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { ListDataTable, dataTableColumns } from "@/shared/datatable";
 import { formatQuantityNumber } from "@/shared/units/quantity";
 import { packagingTotal, type PackagingLine } from "../../lib/packaging";
@@ -27,10 +27,10 @@ export function PackagingLinesTable({ lines, loading, error, onRetry, onEdit, on
     column.accessor((line) => formatQuantityNumber(line.prescribedQuantity, "entered"), { id: "prescribed", header: "Prescribed qty", size: 120 }),
     column.accessor((line) => formatQuantityNumber(line.packingExcessMargin, "entered"), { id: "allowance", header: "Allowance", size: 100 }),
     column.accessor((line) => formatQuantityNumber(packagingTotal(line), "calculated"), { id: "total", header: "Total qty", size: 100 }),
-    column.display({ id: "actions", header: () => <span className="sr-only">Actions</span>, size: 90, cell: ({ row }) => <span className="flex gap-1">
-      <Button type="button" size="icon-sm" variant="ghost" aria-label={`Edit ${row.original.material.label}`} onClick={() => onEdit(row.original)}><Pencil /></Button>
-      <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove ${row.original.material.label}`} onClick={() => onRemove(row.original)}><Trash2 /></Button>
-    </span> }),
+    column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.material.label}`} items={[
+      { id: "edit", label: "Edit", icon: Pencil, onSelect: () => onEdit(row.original) },
+      { id: "remove", label: "Remove", icon: Trash2, destructive: true, onSelect: () => onRemove(row.original) },
+    ]} /> }),
   ]), [onEdit, onRemove]);
   return <ListDataTable label="Packing materials" columns={columns} rows={lines} getRowId={(line) => line.key} loading={loading} error={error}
     onRetry={onRetry} emptyTitle="No packing materials yet" emptyDescription="Add the materials this product is packed in, then save." />;

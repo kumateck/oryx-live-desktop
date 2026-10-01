@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { DraggableDataTable, dataTableColumns } from "@/shared/datatable";
 import type { ProcedureStep } from "../../lib/procedure";
 import { PartySummary } from "./party-summary";
@@ -28,10 +28,10 @@ export function ProcedureTable({ steps, loading, error, onRetry, onReorder, onEd
       cell: ({ getValue }) => <div className="break-words">{getValue()}</div> }),
     column.accessor((step) => step.estimatedTime || "–", { id: "time", header: "Estimated time", size: 140 }),
     column.display({ id: "parties", header: "Responsible", cell: ({ row }) => <PartySummary parties={row.original.parties} operation={row.original.operation.label} /> }),
-    column.display({ id: "actions", header: () => <span className="sr-only">Actions</span>, size: 90, cell: ({ row }) => <span className="flex gap-1">
-      <Button type="button" size="icon-sm" variant="ghost" aria-label={`Edit ${row.original.operation.label}`} onClick={() => onEdit(row.original)}><Pencil /></Button>
-      <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove ${row.original.operation.label}`} onClick={() => onRemove(row.original)}><Trash2 /></Button>
-    </span> }),
+    column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.operation.label}`} items={[
+      { id: "edit", label: "Edit", icon: Pencil, onSelect: () => onEdit(row.original) },
+      { id: "remove", label: "Remove", icon: Trash2, destructive: true, onSelect: () => onRemove(row.original) },
+    ]} /> }),
   ]), [onEdit, onRemove]);
   return <DraggableDataTable label="Procedure" columns={columns} rows={steps} getRowId={(step) => step.key} loading={loading} error={error}
     onRetry={onRetry} disabled={disabled} describeRow={(step) => step.operation.label} onReorder={(next) => onReorder(next)}

@@ -5,6 +5,7 @@ import { afterEach, expect, it } from "vitest";
 import { ApiProvider } from "../../../../shared/api/api-provider";
 import { SessionProvider } from "../../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../../test/backend";
+import { chooseAction, openMenu } from "../../../../test/menu";
 import { ProcedureSection } from "./procedure-section";
 
 afterEach(() => { cleanup(); forgetSession(); });
@@ -45,7 +46,7 @@ it("lists the steps with who is responsible and saves the remaining steps renumb
   expect(within(row).getByText("2 hours")).toBeTruthy();
   expect(within(row).getByRole("button", { name: "Responsible for Testing: 1 user, 1 role" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Copy to products" })).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "Remove Testing" }));
+  await chooseAction("Actions for Testing", "Remove");
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
   await waitFor(() => expect(screen.queryByText("Testing")).toBeNull());
   // Only a saved procedure can be copied.
@@ -61,7 +62,7 @@ it("explains what a new step is missing before adding it", async () => {
   await screen.findByText("Testing");
   fireEvent.click(screen.getByRole("button", { name: "Add step" }));
   const dialog = await screen.findByRole("dialog");
-  fireEvent.click(within(dialog).getByRole("button", { name: "Add role" }));
+  await chooseAction("Add responsible", "Role");
   expect(await within(dialog).findByText("Role 1")).toBeTruthy();
   fireEvent.click(within(dialog).getByRole("button", { name: "Add step" }));
   expect(await within(dialog).findByText("Choose an operation")).toBeTruthy();
@@ -75,7 +76,7 @@ it("explains what a new step is missing before adding it", async () => {
 
 it("refuses to save an empty procedure", async () => {
   const calls = open([routes[1]!]);
-  fireEvent.click(await screen.findByRole("button", { name: "Remove Packing" }));
+  await chooseAction("Actions for Packing", "Remove");
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
   fireEvent.click(await screen.findByRole("button", { name: "Save procedure" }));
   expect((await screen.findByRole("alert")).textContent).toBe("Add at least one step.");

@@ -5,6 +5,7 @@ import { afterEach, expect, it } from "vitest";
 import { ApiProvider } from "../../../../shared/api/api-provider";
 import { SessionProvider } from "../../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../../test/backend";
+import { chooseAction, openMenu } from "../../../../test/menu";
 import { BomSection } from "./bom-section";
 
 afterEach(() => { cleanup(); forgetSession(); });
@@ -42,7 +43,7 @@ it("shows the formula scaled to a batch and saves the remaining lines as the nex
   expect(screen.getByText("30 kg")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Reorder Albendazole" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Save bill of materials" }).hasAttribute("disabled")).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Remove Albendazole" }));
+  await chooseAction("Actions for Albendazole", "Remove");
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
   await waitFor(() => expect(screen.queryByText("Albendazole")).toBeNull());
   // Archiving is offered only for the saved formula, not while there are unsaved changes.
@@ -56,7 +57,7 @@ it("shows the formula scaled to a batch and saves the remaining lines as the nex
 
 it("refuses to save an empty formula and explains why", async () => {
   const calls = open({ version: 1, isActive: true, billOfMaterial: { items: [bom.billOfMaterial.items[0]] } });
-  fireEvent.click(await screen.findByRole("button", { name: "Remove Albendazole" }));
+  await chooseAction("Actions for Albendazole", "Remove");
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
   fireEvent.click(await screen.findByRole("button", { name: "Save bill of materials" }));
   expect((await screen.findByRole("alert")).textContent).toBe("Add at least one material.");

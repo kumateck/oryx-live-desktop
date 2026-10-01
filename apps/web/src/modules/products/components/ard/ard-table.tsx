@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { Paperclip, Pencil } from "lucide-react";
 import { Link } from "react-router";
-import { Button } from "@/components/ui/button";
+import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { ListDataTable, dataTableColumns } from "@/shared/datatable";
 import { ardStageLabel } from "../../lib/ard";
+import { productArdPermissions } from "../../lib/product-access";
 import type { SavedArd } from "../../schemas/ard-schema";
 
 const column = dataTableColumns<SavedArd>();
@@ -14,8 +15,7 @@ export function ArdTable({ ards, loading, error, onRetry, onEdit }: {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
-  /** Absent for users who may not edit analytical raw data. */
-  onEdit: ((ard: SavedArd) => void) | null;
+  onEdit: (ard: SavedArd) => void;
 }) {
   const columns = useMemo(() => column.columns([
     column.accessor((ard) => ardStageLabel(ard.stage), { id: "stage", header: "Stage", size: 120 }),
@@ -25,8 +25,8 @@ export function ArdTable({ ards, loading, error, onRetry, onEdit }: {
     column.accessor((ard) => ard.form?.name || dash, { id: "form", header: "Template form" }),
     column.accessor((ard) => ard.attachments.length, { id: "files", header: "Files", size: 80, cell: ({ row }) => row.original.attachments.length
       ? <span className="inline-flex items-center gap-1"><Paperclip className="size-3.5 text-muted-foreground" />{row.original.attachments.length}</span> : dash }),
-    ...(onEdit ? [column.display({ id: "actions", header: () => <span className="sr-only">Actions</span>, size: 60, cell: ({ row }) =>
-      <Button type="button" size="icon-sm" variant="ghost" aria-label={`Edit ${ardStageLabel(row.original.stage)} analytical raw data`} onClick={() => onEdit(row.original)}><Pencil /></Button> })] : []),
+    column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for the ${ardStageLabel(row.original.stage).toLowerCase()} analytical raw data`}
+      items={[{ id: "edit", label: "Edit", icon: Pencil, require: productArdPermissions.edit, onSelect: () => onEdit(row.original) }]} /> }),
   ]), [onEdit]);
   return <ListDataTable label="Analytical raw data" columns={columns} rows={ards} getRowId={(ard) => ard.id} loading={loading} error={error} onRetry={onRetry}
     emptyTitle="No analytical raw data yet" emptyDescription="Add one for each test stage the product is tested at." />;
