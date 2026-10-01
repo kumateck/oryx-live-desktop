@@ -26,6 +26,9 @@ export function useDataTable<TData extends DataTableRow>({ columns, rows, getRow
     data,
     getRowId,
     manualSorting,
+    // The engine gives every column 150px unless told otherwise. A column that declares no size
+    // should instead take the room the sized columns leave, so the default is "no width".
+    defaultColumn: { size: 0, minSize: 0 },
     // One order for every column: ascending, descending, then unsorted.
     sortDescFirst: false,
     enableSortingRemoval: true,
