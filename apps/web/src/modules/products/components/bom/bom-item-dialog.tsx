@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
 import { toLargestUnit } from "@/shared/units/quantity";
@@ -53,17 +53,19 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
   const perBatch = toLargestUnit(batchQuantity(typeof quantity === "number" ? quantity : null, compositionSize, batchSize), facts?.unit.symbol, "calculated");
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+    <DialogContent className="sm:max-w-2xl">
       <DialogHeader><DialogTitle>{editing ? "Edit material" : "Add material"}</DialogTitle>
         <DialogDescription>Changes are kept on this page until you save the bill of materials.</DialogDescription></DialogHeader>
-      <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="min-w-0 space-y-4">
-        <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
-        {facts ? <dl className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-md bg-muted/50 p-3 text-sm">
-          <dt className="text-muted-foreground">Unit</dt><dd>{facts.unit.symbol || "Not set"}</dd>
-          <dt className="text-muted-foreground">Function</dt><dd className="break-words">{facts.category || "–"}</dd>
-          <dt className="text-muted-foreground">Specification</dt><dd className="break-words">{facts.specification || "–"}</dd>
-          <dt className="text-muted-foreground">Per full batch</dt><dd>{perBatch?.text ?? "–"}</dd>
-        </dl> : null}
+      <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+        <DialogBody className="space-y-4">
+          <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
+          {facts ? <dl className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-md bg-muted/50 p-3 text-sm">
+            <dt className="text-muted-foreground">Unit</dt><dd>{facts.unit.symbol || "Not set"}</dd>
+            <dt className="text-muted-foreground">Function</dt><dd className="break-words">{facts.category || "–"}</dd>
+            <dt className="text-muted-foreground">Specification</dt><dd className="break-words">{facts.specification || "–"}</dd>
+            <dt className="text-muted-foreground">Per full batch</dt><dd>{perBatch?.text ?? "–"}</dd>
+          </dl> : null}
+        </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
           <Button type="submit">{editing ? "Update material" : "Add material"}</Button>

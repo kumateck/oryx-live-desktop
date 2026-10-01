@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
@@ -47,16 +47,18 @@ export function PackingStyleDialog({ editing, styles, packingUnits, allUnits, fu
   });
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+    <DialogContent className="sm:max-w-2xl">
       <DialogHeader><DialogTitle>{editing ? "Edit packing style" : "Add packing style"}</DialogTitle>
         <DialogDescription>Changes are kept on this page until you save the packing styles.</DialogDescription></DialogHeader>
-      <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="min-w-0 space-y-4">
-        <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
-        {suggestion !== null && suggestion !== form.getValues("expectedYield") ? <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          A full batch fills about {new Intl.NumberFormat("en-US").format(suggestion)} base packs.
-          <Button type="button" size="xs" variant="outline" onClick={() => form.setValue("expectedYield", suggestion, { shouldDirty: true, shouldValidate: true })}>Use as expected yield</Button>
-        </p> : null}
-        <PackingUnitsEditor control={form.control} errors={form.formState.errors} units={allUnits} />
+      <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+        <DialogBody className="space-y-4">
+          <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
+          {suggestion !== null && suggestion !== form.getValues("expectedYield") ? <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            A full batch fills about {new Intl.NumberFormat("en-US").format(suggestion)} base packs.
+            <Button type="button" size="xs" variant="outline" onClick={() => form.setValue("expectedYield", suggestion, { shouldDirty: true, shouldValidate: true })}>Use as expected yield</Button>
+          </p> : null}
+          <PackingUnitsEditor control={form.control} errors={form.formState.errors} units={allUnits} />
+        </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
           <Button type="submit">{editing ? "Update style" : "Add style"}</Button>

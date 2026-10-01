@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
@@ -51,16 +51,18 @@ export function PackagingItemDialog({ editing, lines, packingStyles, onSubmit, o
   const code = facts?.code ?? (editing && editing.material.value === material?.value ? editing.code : "");
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+    <DialogContent className="sm:max-w-2xl">
       <DialogHeader><DialogTitle>{editing ? "Edit packing material" : "Add packing material"}</DialogTitle>
         <DialogDescription>Changes are kept on this page until you save the packing materials.</DialogDescription></DialogHeader>
-      <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="min-w-0 space-y-4">
-        <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
-        {material?.value ? <dl className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-md bg-muted/50 p-3 text-sm">
-          <dt className="text-muted-foreground">Code</dt><dd>{code || "–"}</dd>
-          {facts ? <><dt className="text-muted-foreground">Specification</dt><dd className="break-words">{facts.specification || "–"}</dd></> : null}
-          <dt className="text-muted-foreground">Total quantity</dt><dd>{total !== null && Number.isFinite(total) ? formatQuantityNumber(total, "calculated") : "–"}</dd>
-        </dl> : null}
+      <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+        <DialogBody className="space-y-4">
+          <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
+          {material?.value ? <dl className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-md bg-muted/50 p-3 text-sm">
+            <dt className="text-muted-foreground">Code</dt><dd>{code || "–"}</dd>
+            {facts ? <><dt className="text-muted-foreground">Specification</dt><dd className="break-words">{facts.specification || "–"}</dd></> : null}
+            <dt className="text-muted-foreground">Total quantity</dt><dd>{total !== null && Number.isFinite(total) ? formatQuantityNumber(total, "calculated") : "–"}</dd>
+          </dl> : null}
+        </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
           <Button type="submit">{editing ? "Update material" : "Add material"}</Button>

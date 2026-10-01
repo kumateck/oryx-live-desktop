@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
@@ -53,13 +53,15 @@ export function SpecificationDialog({ target, state, onClose }: { target: Specif
   const submit = form.handleSubmit(async (values) => { if (await state.save(values, target)) onClose(); });
 
   return <Dialog open onOpenChange={(open) => { if (!open && !state.saving) onClose(); }}>
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl">
+    <DialogContent className="sm:max-w-3xl">
       <DialogHeader><DialogTitle>{saved ? "Edit" : "Add"} {ardStageLabel(stage).toLowerCase()} specification</DialogTitle>
         <DialogDescription>{saved ? "A specification number shared by several products is updated for all of them."
           : "The specification's test parameters are filled in by Quality Control after it is created."}</DialogDescription></DialogHeader>
-      <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="min-w-0 space-y-4">
-        <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
-        {state.message ? <p role="alert" className="text-sm text-destructive">{state.message}</p> : null}
+      <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+        <DialogBody className="space-y-4">
+          <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
+          {state.message ? <p role="alert" className="text-sm text-destructive">{state.message}</p> : null}
+        </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" disabled={state.saving} onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={state.saving}>{state.saving ? <><Spinner />Saving…</> : saved ? "Save changes" : "Add specification"}</Button>

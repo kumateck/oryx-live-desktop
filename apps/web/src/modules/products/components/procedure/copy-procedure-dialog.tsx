@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
@@ -31,23 +31,25 @@ export function CopyProcedureDialog({ productId, steps, onClose }: { productId: 
   };
 
   return <Dialog open onOpenChange={(open) => { if (!open && !copier.copying) onClose(); }}>
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+    <DialogContent className="sm:max-w-2xl">
       <DialogHeader><DialogTitle>Copy procedure to other products</DialogTitle>
         <DialogDescription>{review ? "Check the products and steps, then confirm." : "Choose the products that should get this procedure."}</DialogDescription></DialogHeader>
-      {copier.outcomes ? <div className="space-y-2 text-sm">
-        <p>{copier.outcomes.length - failed.length} of {copier.outcomes.length} products were updated.</p>
-        <ul role="alert" className="space-y-1">{failed.map((item) => <li key={item.product} className="break-words text-destructive">{item.product}: {item.error}</li>)}</ul>
-      </div> : review ? <div className="space-y-3 text-sm">
-        <p className="rounded-md border border-destructive/40 bg-destructive/5 p-3">This replaces the whole existing procedure of each product below. It cannot be undone.</p>
-        {dropsArd ? <p className="text-muted-foreground">Analytical raw data belongs to this product and is not copied. Set it on each product's ATR instruction afterwards.</p> : null}
-        <div className="grid gap-3 md:grid-cols-2">
-          <div><h3 className="mb-1 font-medium">Products ({targets.length})</h3>
-            <ul className="max-h-60 space-y-1 overflow-y-auto">{targets.map((item) => <li key={item.value} className="break-words">{item.label}</li>)}</ul></div>
-          <div><h3 className="mb-1 font-medium">Steps ({steps.length})</h3>
-            <ol className="max-h-60 list-decimal space-y-1 overflow-y-auto pl-5">{steps.map((step) => <li key={step.key} className="break-words">{step.operation.label}
-              <span className="text-muted-foreground"> · {step.isCritical ? "Critical" : "Automated"}</span></li>)}</ol></div>
-        </div>
-      </div> : <FormWizard form={form} fields={fields} />}
+      <DialogBody className="space-y-4">
+        {copier.outcomes ? <div className="space-y-2 text-sm">
+          <p>{copier.outcomes.length - failed.length} of {copier.outcomes.length} products were updated.</p>
+          <ul role="alert" className="space-y-1">{failed.map((item) => <li key={item.product} className="break-words text-destructive">{item.product}: {item.error}</li>)}</ul>
+        </div> : review ? <div className="space-y-3 text-sm">
+          <p className="rounded-md border border-destructive/40 bg-destructive/5 p-3">This replaces the whole existing procedure of each product below. It cannot be undone.</p>
+          {dropsArd ? <p className="text-muted-foreground">Analytical raw data belongs to this product and is not copied. Set it on each product's ATR instruction afterwards.</p> : null}
+          <div className="grid gap-3 md:grid-cols-2">
+            <div><h3 className="mb-1 font-medium">Products ({targets.length})</h3>
+              <ul className="max-h-60 space-y-1 overflow-y-auto">{targets.map((item) => <li key={item.value} className="break-words">{item.label}</li>)}</ul></div>
+            <div><h3 className="mb-1 font-medium">Steps ({steps.length})</h3>
+              <ol className="max-h-60 list-decimal space-y-1 overflow-y-auto pl-5">{steps.map((step) => <li key={step.key} className="break-words">{step.operation.label}
+                <span className="text-muted-foreground"> · {step.isCritical ? "Critical" : "Automated"}</span></li>)}</ol></div>
+          </div>
+        </div> : <FormWizard form={form} fields={fields} />}
+      </DialogBody>
       <DialogFooter>
         {copier.outcomes ? <Button type="button" onClick={onClose}>Close</Button> : <>
           <Button type="button" variant="outline" disabled={copier.copying} onClick={() => review ? setReview(false) : onClose()}>{review ? "Back" : "Cancel"}</Button>

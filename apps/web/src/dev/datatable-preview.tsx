@@ -4,6 +4,7 @@ import { StrictMode, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/sonner";
 import {
@@ -106,6 +107,18 @@ function DraggableExample() {
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root element");
+function DialogExample() {
+  const [open, setOpen] = useState(false);
+  return <>
+    <Button type="button" variant="outline" onClick={() => setOpen(true)}>Open long dialog</Button>
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="sm:max-w-3xl">
+      <DialogHeader><DialogTitle>Long dialog</DialogTitle><DialogDescription>The header and footer stay in view; only the rows scroll.</DialogDescription></DialogHeader>
+      <DialogBody><ListDataTable label="Materials" columns={readColumns.slice(0, 3)} rows={materials.slice(0, 40)} getRowId={(row) => row.id} /></DialogBody>
+      <DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Close</Button></DialogFooter>
+    </DialogContent></Dialog>
+  </>;
+}
+
 createRoot(root).render(<StrictMode><ThemeProvider>
   <main className="mx-auto max-w-5xl space-y-8 p-6 text-foreground">
     <h1 className="text-xl font-semibold">Data table preview</h1>
@@ -114,6 +127,7 @@ createRoot(root).render(<StrictMode><ThemeProvider>
     <Section title="Server paged"><ServerExample /></Section>
     <Section title="List with editable cells"><ListExample /></Section>
     <Section title="Draggable"><DraggableExample /></Section>
+    <Section title="Dialog with fixed header and footer"><DialogExample /></Section>
   </main>
   <Toaster position="bottom-right" closeButton />
 </ThemeProvider></StrictMode>);

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
 import type { ProcedureOptions } from "../../hooks/use-procedure-options";
@@ -38,14 +38,16 @@ export function StepDialog({ editing, steps, options, onSubmit, onClose }: {
   });
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-4xl">
+    <DialogContent className="sm:max-w-4xl">
       <DialogHeader><DialogTitle>{editing ? "Edit step" : "Add step"}</DialogTitle>
         <DialogDescription>Changes are kept on this page until you save the procedure.</DialogDescription></DialogHeader>
-      <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="min-w-0 space-y-4">
-        {options.error ? <p role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">{options.error}
-          <Button type="button" size="sm" variant="outline" onClick={options.retry}>Retry</Button></p> : null}
-        <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
-        <PartyFields form={form} users={options.users} roles={options.roles} ard={options.ard} />
+      <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+        <DialogBody className="space-y-4">
+          {options.error ? <p role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">{options.error}
+            <Button type="button" size="sm" variant="outline" onClick={options.retry}>Retry</Button></p> : null}
+          <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
+          <PartyFields form={form} users={options.users} roles={options.roles} ard={options.ard} />
+        </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
           <Button type="submit">{editing ? "Update step" : "Add step"}</Button>
