@@ -82,6 +82,21 @@ Shared pieces added: `shared/codes` (code rules), `shared/navigation/unsaved-cha
 
 Backend behavior worth knowing (unchanged, shared with Oryx Next): saving a bill of materials deletes the product's earlier versions before adding the new one, so the detail page's "Outdated BOMs" is empty after any save; only an archived formula that has not been saved over remains.
 
+## Packing materials
+
+`/production/products/:id/edit/packaging`. Kept from Oryx Next: the fields (component material, packing style, prescribed quantity, packing allowance), the rule that a material is listed once for all packing styles or once per style, and saving the whole list in one request.
+
+Improved:
+
+- **Nothing the page does not edit is lost.** The backend deletes every packing material and re-adds what is sent. Oryx Next sent only its own fields, so a line's thickness, other standards, linked material, and substitutes were erased by any save. The desktop sends them back unchanged.
+- **Edits are a draft until saved**, with "Discard changes" and a warning before leaving with unsaved changes.
+- **The table appears at once.** Oryx Next waited for one specification request per line before showing anything. Here each specification cell fills in on its own, and a material just chosen shows the number it came with.
+- **Conflicts are explained on the material field** in the dialog (already listed, listed for all styles, listed per style) rather than in a toast.
+- **Quantities follow the units rule:** prescribed quantity and allowance are shown as entered; the total is calculated and capped at four decimals.
+- **The allowance cannot be negative and the prescribed quantity must be above zero**, checked before the line is added.
+- **Only saved packing styles can be chosen**, since a line needs the style's ID. With none saved the field says so.
+- **An empty list cannot be saved**, with the reason on the page. **After saving the user stays on the page**; Oryx Next jumped to Procedure.
+
 ## Not yet migrated
 
-Six edit sections (specification, packing materials, procedure, STP, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet.
+Five edit sections (specification, procedure, STP, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet.

@@ -17,6 +17,10 @@ export const productApi = productsApi.enhanceEndpoints({
     putApiV1ProductByProductIdBomArchive: { invalidatesTags: (_result, error, arg) => error ? [] : [
       { type: "ProductBom", id: arg.productId }, { type: "Product", id: arg.productId },
     ] },
+    getApiV1ProductByProductIdPackages: { providesTags: (_result, _error, arg) => [{ type: "ProductPackages", id: arg.productId }] },
+    postApiV1ProductByProductIdPackages: { invalidatesTags: (_result, error, arg) => error ? [] : [
+      { type: "ProductPackages", id: arg.productId }, { type: "Product", id: arg.productId },
+    ] },
     getApiV1ProductByProductIdPacking: { providesTags: (_result, _error, arg) => [{ type: "ProductPacking", id: arg.productId }] },
     postApiV1ProductByProductIdPacking: { invalidatesTags: (_result, error, arg) => error ? [] : [
       { type: "ProductPacking", id: arg.productId }, { type: "Product", id: arg.productId },
@@ -37,6 +41,7 @@ export const {
   useGetApiV1ProductQuery, useGetApiV1ProductByProductIdQuery, useGetApiV1ProductByProductIdRoutesQuery,
   usePostApiV1ProductMutation, usePutApiV1ProductByProductIdMutation, useGetApiV1ProductEquipmentAllQuery,
   useGetApiV1ProductByProductIdPackingQuery, usePostApiV1ProductByProductIdPackingMutation,
+  useGetApiV1ProductByProductIdPackagesQuery, usePostApiV1ProductByProductIdPackagesMutation,
   useGetApiV1ProductByProductIdBomQuery, usePutApiV1ProductByProductIdBomArchiveMutation,
 } = productApi;
 export const { usePostApiV1VerificationMutation } = verificationApi;
@@ -45,6 +50,7 @@ export const {
   useGetApiV1ProductStpsByProductIdProductQuery,
   useGetApiV1ProductSpecificationsProductByIdQuery,
   useGetApiV1ProductArdProductByProductIdQuery,
+  useGetApiV1MaterialSpecificationsMaterialByMaterialIdQuery,
 } = analyticalApi;
 // Reference lists the product form chooses from.
 export const { useGetApiV1DepartmentQuery } = identityApi;

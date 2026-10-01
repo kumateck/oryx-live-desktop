@@ -53,8 +53,8 @@ it("suggests the next product code and explains what is missing before anything 
   await waitFor(() => expect((code as HTMLInputElement).value).toBe("NL-048"));
   fireEvent.click(screen.getByRole("button", { name: "Create product" }));
   expect(await screen.findByText("Enter the product name")).toBeTruthy();
-  expect(screen.getByText("Choose a category")).toBeTruthy();
-  expect(screen.getByText("Enter the full batch size")).toBeTruthy();
+  expect(await screen.findByText("Choose a category")).toBeTruthy();
+  expect(await screen.findByText("Enter the full batch size")).toBeTruthy();
   expect(calls.some((call) => call.method === "POST" && call.path === "/api/v1/product")).toBe(false);
 });
 

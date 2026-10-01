@@ -48,6 +48,9 @@ export const routes: RouteObject[] = [
               { path: "info", Component: Outlet, children: [
                 { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/products/[id]/edit/info/page")).default }) }
               ] },
+              { path: "packaging", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/products/[id]/edit/packaging/page")).default }) }
+              ] },
               { path: "packing-style", Component: Outlet, children: [
                 { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/products/[id]/edit/packing-style/page")).default }) }
               ] }
