@@ -156,6 +156,21 @@ Improved:
 - **Files are filtered by type when chosen**, and a saved file is only shown as a link when its address is a web address.
 - **A load failure shows the reason with Retry.**
 
+## Specification
+
+`/production/products/:id/edit/spec`. One specification per test stage, with its number, revision, effective and revision dates, what it supersedes, the template form, and notes. Kept from Oryx Next: the list, one per stage, the fields, the suggested number (`BMP` or `NMP` by division, then `B`, `FP`, or `IPC` by stage, then `SPC` and a three-digit serial), the revision-date rule, and the separate permissions (`CanCreateProductSpecification`, `CanEditProductSpecification`).
+
+Improved:
+
+- **Editing keeps the due date and reference.** Oryx Next reset the due date to tomorrow on every edit and sent no reference.
+- **The edit dialog says the change is shared.** The backend updates every specification with the same number, across products.
+- **Required fields are marked.** Oryx Next required revision and supersedes without marking them.
+- **The suggested number does not overwrite one the user typed**, and a product with no division simply gets no suggestion.
+- **The form opens in a dialog over the list**, with the server's reason shown in it if saving fails. **The edit action is hidden without the edit permission.**
+- **The list shows the template** each stage uses, since analytical raw data depends on it.
+
+Not carried over: after saving, Oryx Next goes to a Quality Control screen where the specification's test parameters are filled in, and the specification number opens a Quality Control detail page. Those belong to the Quality Control module, which is not migrated yet; until then that step is done in Oryx Next, on the same data.
+
 ## Not yet migrated
 
-One edit section (specification) and the print preview. In the edit area they are listed but cannot be opened yet.
+The product print preview.

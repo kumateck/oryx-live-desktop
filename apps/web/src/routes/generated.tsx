@@ -63,6 +63,9 @@ export const routes: RouteObject[] = [
               { path: "procedure", Component: Outlet, children: [
                 { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/products/[id]/edit/procedure/page")).default }) }
               ] },
+              { path: "spec", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/products/[id]/edit/spec/page")).default }) }
+              ] },
               { path: "stp", Component: Outlet, children: [
                 { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/products/[id]/edit/stp/page")).default }) }
               ] }
