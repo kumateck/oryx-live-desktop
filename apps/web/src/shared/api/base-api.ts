@@ -25,6 +25,6 @@ export const api = createApi({
     }
     return result;
   },
-  tagTypes: ["Role", "RoleList", "UserList"],
+  tagTypes: ["Role", "RoleList", "UserList", "ProductList"],
   endpoints: () => ({}),
 });

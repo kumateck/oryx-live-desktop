@@ -12,7 +12,7 @@ it("signs in through the existing login endpoint and builds the session from use
   const { fetcher } = stubBackend({ permissions: ["CanViewRoles"] });
   const session = await loginSession("ada@example.com", "password");
   expect(session).toEqual({
-    user: { id: userId, name: "Ada Mensah", email: "ada@example.com", department: "Quality", avatar: null },
+    user: { id: userId, name: "Ada Mensah", email: "ada@example.com", department: "Quality", departmentId: "558da105-a506-44a9-8ff5-8d005a54f294", departmentType: 0, avatar: null },
     permissions: ["CanViewRoles"],
   });
   const [path, request] = fetcher.mock.calls[0] ?? [];

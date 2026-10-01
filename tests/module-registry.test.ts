@@ -49,3 +49,12 @@ test("rejects route access declared outside its module or twice", () => {
   const rule = { pattern: "/inventory/stock/:id", access: { kind: "authenticated" } } as const;
   assert.throws(() => validateModuleRegistry([{ ...inventory, routes: [rule, rule] }]), /Duplicate route access/);
 });
+
+test("requires the department type a rule names, in addition to its permissions", () => {
+  const rule = { kind: "all", permissions: ["plan.view"], departmentType: 0 } as const;
+  const user = (departmentType: 0 | 1 | 2 | null) => ({ state: "authenticated", permissions: new Set(["plan.view"]), departmentType }) as const;
+  assert.equal(canAccess(rule, user(0)), true);
+  assert.equal(canAccess(rule, user(1)), false);
+  assert.equal(canAccess(rule, user(null)), false);
+  assert.equal(canAccess({ kind: "all", permissions: ["plan.view"] }, user(1)), true);
+});

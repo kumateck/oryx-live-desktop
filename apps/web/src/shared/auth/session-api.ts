@@ -7,7 +7,7 @@ const refreshPath = "/api/v1/auth/login-with-refresh-token";
 const audit = { Module: "Authentication", SubModule: "Login" };
 const avatarPath = /^\/api\/v1\/file\/avatar\/[^/?#\\]+$/;
 
-export interface SessionUser { id: string; name: string; email: string | null; department: string | null; avatar: string | null }
+export interface SessionUser { id: string; name: string; email: string | null; department: string | null; departmentId: string | null; departmentType: 0 | 1 | 2 | null; avatar: string | null }
 export interface SessionView { user: SessionUser; permissions: string[] }
 export type SessionFailure = "credentials" | "disabled" | "throttled" | "server" | "network" | "invalid-response";
 
@@ -40,7 +40,11 @@ const userSchema = z.object({
   email: z.string().nullish(),
   isDisabled: z.boolean().default(false),
   avatar: z.string().nullish(),
-  department: z.object({ name: z.string().nullish() }).nullish(),
+  department: z.object({
+    id: z.uuid().nullish(),
+    name: z.string().nullish(),
+    type: z.union([z.literal(0), z.literal(1), z.literal(2)]).nullish(),
+  }).nullish(),
 });
 const permissionsSchema = z.array(z.object({
   isActive: z.boolean().default(true),
@@ -160,6 +164,8 @@ async function loadSession(userId: string, signal?: AbortSignal): Promise<Sessio
       name: `${user.data.firstName ?? ""} ${user.data.lastName ?? ""}`.trim(),
       email: user.data.email ?? null,
       department: user.data.department?.name ?? null,
+      departmentId: user.data.department?.id ?? null,
+      departmentType: user.data.department?.type ?? null,
       avatar: sameOriginAvatar(user.data.avatar),
     },
     permissions: grantedPermissions(permissions.data),
