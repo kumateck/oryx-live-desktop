@@ -12,6 +12,10 @@ export const productApi = productsApi.enhanceEndpoints({
     getApiV1ProductByProductId: { providesTags: (_result, _error, arg) => [{ type: "Product", id: arg.productId }] },
     postApiV1Product: { invalidatesTags: (_result, error) => error ? [] : [list] },
     putApiV1ProductByProductId: { invalidatesTags: (_result, error, arg) => error ? [] : [list, { type: "Product", id: arg.productId }] },
+    getApiV1ProductByProductIdPacking: { providesTags: (_result, _error, arg) => [{ type: "ProductPacking", id: arg.productId }] },
+    postApiV1ProductByProductIdPacking: { invalidatesTags: (_result, error, arg) => error ? [] : [
+      { type: "ProductPacking", id: arg.productId }, { type: "Product", id: arg.productId },
+    ] },
   },
 });
 
@@ -27,6 +31,7 @@ export const verificationApi = authApi.enhanceEndpoints({
 export const {
   useGetApiV1ProductQuery, useGetApiV1ProductByProductIdQuery, useGetApiV1ProductByProductIdRoutesQuery,
   usePostApiV1ProductMutation, usePutApiV1ProductByProductIdMutation, useGetApiV1ProductEquipmentAllQuery,
+  useGetApiV1ProductByProductIdPackingQuery, usePostApiV1ProductByProductIdPackingMutation,
 } = productApi;
 export const { usePostApiV1VerificationMutation } = verificationApi;
 // Quality documents attached to a product, shown on its detail page.

@@ -56,6 +56,18 @@ Shared pieces added for later modules: `shared/detail` (`DetailGroup`, `DetailIt
 
 Shared pieces added: `shared/codes` (code rules), `shared/navigation/unsaved-changes.tsx`, `shared/skeleton`.
 
+## Edit: packing style
+
+`/production/products/:id/edit/packing-style`. The backend replaces a product's whole set of packing styles in one request, so adding, editing, and removing are kept as a draft on the page until "Save packing styles"; the page says when there are unsaved changes, can discard them, and asks before the user leaves.
+
+- **A renamed style is updated, not replaced.** The backend matches a style by ID, or by label when no ID is sent. Oryx Next sends no ID, so renaming makes the backend add a new style and delete the old one, which it refuses when the old one is used in batch packaging records. The desktop sends the ID.
+- **Labels must be unique**, since unsaved styles are matched by label.
+- **Exactly one default.** Marking a style default clears the others; removing the default hands it to the first remaining style.
+- **Expected yield is suggested, not overwritten.** The dialog offers "A full batch fills about N base packs" with a button to use it. Oryx Next recalculated the field whenever the dialog opened, replacing a yield that had been entered by hand.
+- **Packing units** need at least one row, a unit and a positive quantity in each, and no unit twice; their order is saved.
+- **Removal is confirmed**, and the dialog says the backend refuses styles used in batch packaging records; its reason is shown if the save fails.
+- **If units of measure cannot be loaded**, the page says so with Retry, and adding is disabled rather than offering empty pickers.
+
 ## Not yet migrated
 
-The other eight edit sections (specification, packing style, bill of materials, packing materials, procedure, STP, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet; they total about 8,000 lines in Oryx Next and are the next work for this module.
+Seven edit sections (specification, bill of materials, packing materials, procedure, STP, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet.
