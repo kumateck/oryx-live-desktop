@@ -8,7 +8,7 @@ import { audit, productEntity } from "../lib/product-access";
 import type { ProductRow } from "../schemas/product-schema";
 
 /** Marks a product as checked by quality. Shown only to users who may verify, and only while unchecked. */
-export function VerifyProductButton({ product }: { product: ProductRow }) {
+export function VerifyProductButton({ product }: { product: Pick<ProductRow, "id" | "name" | "isVerified"> }) {
   const [verify, mutation] = usePostApiV1VerificationMutation();
   if (product.isVerified) return null;
   const run = async () => {

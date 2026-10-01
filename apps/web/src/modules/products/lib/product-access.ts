@@ -2,9 +2,12 @@
 export const productsPath = "/production/products";
 export const productDetailPath = (id: string) => `${productsPath}/${id}/details`;
 
+export const productEditPath = (id: string) => `${productsPath}/${id}/edit/info`;
+
 export const productPermissions = {
   view: "CanViewPlannedProducts",
   create: "CanCreateNewProductionPlan",
+  edit: "CanEditProductionPlan",
   verify: "CanVerifyProduct",
 } as const;
 

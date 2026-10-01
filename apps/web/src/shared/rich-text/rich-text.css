@@ -13,3 +13,13 @@
 .oryx-rich-text .tiptap th { background: var(--muted); }
 .oryx-rich-text .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--muted-foreground); pointer-events: none; float: left; height: 0; }
 .oryx-rich-text .oryx-rich-reference { color: var(--primary); font-weight: 550; }
+
+/* Read-only display of saved rich text (RichTextView). */
+.rich-text-content > :first-child { margin-top: 0; }
+.rich-text-content > :last-child { margin-bottom: 0; }
+.rich-text-content p { margin: 0 0 0.4em; }
+.rich-text-content ul, .rich-text-content ol { margin: 0 0 0.4em; padding-left: 1.25em; }
+.rich-text-content ul { list-style: disc; }
+.rich-text-content ol { list-style: decimal; }
+.rich-text-content table { width: 100%; border-collapse: collapse; }
+.rich-text-content th, .rich-text-content td { padding: 4px 6px; border: 1px solid var(--border); text-align: left; }
