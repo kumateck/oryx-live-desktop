@@ -9,7 +9,7 @@ import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { SessionRequestError } from "@/shared/auth/session-api";
 import { useSession, type SignedOutReason } from "@/shared/auth/session-provider";
 import { useTheme } from "@/shared/theme/theme-provider";
-import { cn } from "cn";
+import sideImageUrl from "../../../../../../assets/login-side.jpg";
 import wordmarkUrl from "../../../../../../assets/oryx-wordmark.svg";
 import { returnPath } from "../lib/return-path";
 import { loginSchema, type LoginValues } from "../schemas/login-schema";
@@ -87,14 +87,8 @@ export function LoginScreen() {
           </p>
         </div>
       </div>
-      <div aria-hidden="true" className={cn("login-art relative hidden min-h-[520px] overflow-hidden md:block",
-        theme.resolved === "dark" ? "bg-[#202020]" : "bg-[#f1f1f1]")}>
-        <div className="absolute inset-0 opacity-50 [background-image:linear-gradient(to_right,color-mix(in_oklab,var(--border)_55%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_55%,transparent)_1px,transparent_1px)] [background-size:48px_48px]" />
-        <div className="absolute left-1/2 top-1/2 size-64 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border/70" />
-        <div className="absolute left-1/2 top-1/2 size-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border/70" />
-        <div className="absolute left-1/2 top-1/2 size-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border/80 bg-card shadow-sm" />
-        <span className="absolute left-1/2 top-1/2 block h-8 w-20 -translate-x-1/2 -translate-y-1/2 bg-[var(--brand)] opacity-80 [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
-          style={{ maskImage: `url("${wordmarkUrl}")` }} />
+      <div className="relative hidden min-h-[520px] md:block">
+        <img src={sideImageUrl} alt="" decoding="async" className="absolute inset-0 size-full object-cover object-left" />
       </div>
     </section>
   </main>;
