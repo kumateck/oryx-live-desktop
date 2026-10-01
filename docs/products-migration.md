@@ -68,6 +68,20 @@ Shared pieces added: `shared/codes` (code rules), `shared/navigation/unsaved-cha
 - **Removal is confirmed**, and the dialog says the backend refuses styles used in batch packaging records; its reason is shown if the save fails.
 - **If units of measure cannot be loaded**, the page says so with Retry, and adding is disabled rather than offering empty pickers.
 
+## Edit: bill of materials
+
+`/production/products/:id/edit/bom`. The formula's raw materials in step order, on the draggable table: drag a row (or use the keyboard) to change its step. Add and edit open a dialog; everything is a draft until "Save bill of materials", which creates the next version.
+
+- **A material's unit, function, and specification are shown as soon as it is chosen**, with its quantity for a full batch. The specification number comes with the material; Oryx Next made one extra request per line to fetch it every time the page loaded.
+- **A material can be in the formula once**, cannot be its own substitute, and needs a unit of measure; each problem is explained in the dialog.
+- **An empty formula cannot be saved**, and the reason is shown on the page rather than in a passing toast.
+- **Steps are numbered by position when saving**, so the saved order always matches what is on screen.
+- **Archive asks first** and says what it does: the product is left with no active formula. It is offered only for the saved formula, not while there are unsaved changes.
+- **A product with no formula shows an empty list**, not an error.
+- **After saving the user stays on the page.** Oryx Next jumped to the packing materials section.
+
+Backend behavior worth knowing (unchanged, shared with Oryx Next): saving a bill of materials deletes the product's earlier versions before adding the new one, so the detail page's "Outdated BOMs" is empty after any save; only an archived formula that has not been saved over remains.
+
 ## Not yet migrated
 
-Seven edit sections (specification, bill of materials, packing materials, procedure, STP, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet.
+Six edit sections (specification, packing materials, procedure, STP, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet.
