@@ -1,0 +1,54 @@
+// @vitest-environment jsdom
+import { configureStore } from "@reduxjs/toolkit";
+import { afterEach, expect, it } from "vitest";
+import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
+import { onSessionExpired } from "../auth/session-events";
+import { tokenStore } from "../auth/token-store";
+import { api } from "./base-api";
+
+afterEach(forgetSession);
+
+const probeApi = api.injectEndpoints({ overrideExisting: true, endpoints: (build) => ({
+  sessionProbe: build.query<void, void>({ query: () => "/api/v1/role" }),
+}) });
+
+function probe() {
+  const store = configureStore({ reducer: { [api.reducerPath]: api.reducer },
+    middleware: (defaults) => defaults().concat(api.middleware) });
+  return store.dispatch(probeApi.endpoints.sessionProbe.initiate(undefined, { forceRefetch: true }));
+}
+
+function requestsTo(fetcher: ReturnType<typeof stubBackend>["fetcher"], path: string) {
+  return fetcher.mock.calls.map(([input]) => input instanceof Request ? input : null)
+    .filter((request): request is Request => request !== null && new URL(request.url).pathname === path);
+}
+
+it("renews the access token and repeats a request the backend rejected", async () => {
+  const { fetcher } = stubBackend({ profileStatus: 401 });
+  rememberSession();
+  let expired = 0;
+  const unsubscribe = onSessionExpired(() => { expired += 1; });
+  let calls = 0;
+  const original = fetcher.getMockImplementation();
+  fetcher.mockImplementation(async (input, init) => {
+    if (input instanceof Request && new URL(input.url).pathname === "/api/v1/role") return new Response(calls++ === 0 ? null : "[]", { status: calls === 1 ? 401 : 200 });
+    return original ? original(input, init) : new Response(null, { status: 500 });
+  });
+  const result = await probe();
+  unsubscribe();
+  expect(result.isSuccess).toBe(true);
+  expect(expired).toBe(0);
+  expect(requestsTo(fetcher, "/api/v1/role").map((request) => request.headers.get("Authorization"))).toEqual([null, "Bearer access-renewed"]);
+  expect(tokenStore.refreshToken()).toBe("refresh-renewed");
+});
+
+it("expires the workspace when the session cannot be renewed", async () => {
+  const { fetcher } = stubBackend({ profileStatus: 401, refreshStatus: 400 });
+  rememberSession();
+  let expired = 0;
+  const unsubscribe = onSessionExpired(() => { expired += 1; });
+  await probe();
+  unsubscribe();
+  expect(expired).toBe(1);
+  expect(requestsTo(fetcher, "/api/v1/role")).toHaveLength(1);
+});

@@ -1,0 +1,23 @@
+.header-actions { display: flex; flex: none; align-items: center; gap: 8px; }
+.header-action, .header-avatar { position: relative; width: 34px; height: 34px; border-radius: 9px; background: var(--card); color: var(--text); }
+.header-action:hover, .header-avatar:hover { background: var(--hover); }
+.header-avatar { overflow: hidden; font-size: 12px; }
+.header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.header-search { position: relative; display: flex; align-items: center; width: 36px; height: 34px; border: 1px solid var(--border); border-radius: 9px; background: var(--card); transition: width 180ms ease; }
+.header-search.open { width: min(250px, 32vw); }
+.header-search input { width: 0; min-width: 0; height: 30px; flex: 1; padding: 0; border: 0; box-shadow: none; opacity: 0; transition: opacity 120ms ease; }
+.header-search.open input { padding-left: 10px; opacity: 1; }
+.header-search button { flex: none; width: 33px; height: 30px; }
+.header-search-results { position: absolute; z-index: 20; top: calc(100% + 8px); right: 0; min-width: 220px; padding: 8px; border: 1px solid var(--border); border-radius: 9px; background: var(--card); box-shadow: 0 12px 32px #0003; }
+.header-search-results a, .header-search-results span { display: block; padding: 7px 8px; border-radius: 6px; color: var(--text); text-decoration: none; }
+.header-search-results a:hover { background: var(--hover); }
+.notification-count { position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 8px; background: var(--brand); color: #fff; font-size: 10px; line-height: 16px; text-align: center; }
+.notification-list { min-height: 120px; overflow-y: auto; padding: 12px 16px; }
+.notification-list > p, .notification-item p, .notification-item time, .account-subtitle { color: var(--text-muted); }
+.notification-item { display: flex; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.notification-item p { margin: 4px 0; }
+.notification-item time { font-size: 12px; }
+.account-subtitle { display: block; margin-top: 3px; font-size: 12px; font-weight: 400; white-space: normal; }
+@media (max-width: 650px) { .header-actions { gap: 4px; } .header-search.open { width: min(170px, 31vw); } .header-title, .header-divider { display: none; } }
+@media (prefers-reduced-motion: reduce) { .header-search, .header-search input { transition: none; } }
+:root[data-motion="on"] .header-search, :root[data-motion="on"] .header-search input { transition: none; }
