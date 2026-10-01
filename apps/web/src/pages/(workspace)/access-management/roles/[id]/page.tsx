@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { FormPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useGetApiV1RoleByIdQuery } from "../../../../../modules/roles/api/role-api";
 import { DeleteRoleDialog } from "../../../../../modules/roles/components/delete-role-dialog";
@@ -23,7 +23,7 @@ export default function RoleDetailPage() {
       <div className="flex gap-2"><Button asChild size="sm" variant="outline"><Link to={rolesPath}>Back to roles</Link></Button>
         {access.delete && role?.success && !role.data.isManager ? <DeleteRoleDialog id={role.data.id} name={role.data.displayName} /> : null}</div></div>
     {role?.success && role.data.isManager ? <p className="text-sm text-muted-foreground">This managed role cannot be renamed or deleted.</p> : null}
-    {query.isLoading ? <p role="status" className="flex items-center gap-2"><Spinner />Loading role…</p> :
+    {query.isLoading ? <FormPageSkeleton label="Loading role" sections={[3, 6]} columns="lg:grid-cols-2" /> :
       query.error || !role?.success || !assigned?.success ?
         <div role="alert" className="space-y-2"><p>{apiErrorMessage(query.error)}</p>
           <Button variant="outline" size="sm" onClick={() => void query.refetch()}>Retry</Button></div> :

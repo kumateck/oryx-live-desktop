@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { Skeleton, SkeletonRegion } from "@/shared/skeleton/skeleton";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { usePutApiV1UserRoleByIdMutation } from "../api/user-api";
 import { useRoleOptions } from "../hooks/use-role-options";
@@ -29,7 +30,7 @@ export function ChangeRoleDialog({ user, onClose }: { user: UserRow; onClose: ()
     <DialogContent>
       <DialogHeader><DialogTitle>Change role</DialogTitle>
         <DialogDescription>{user.name}{user.email ? ` · ${user.email}` : ""}. A user has one role; it decides what they can see and do.</DialogDescription></DialogHeader>
-      {loading ? <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />Loading roles…</p> :
+      {loading ? <SkeletonRegion label="Loading roles"><Skeleton className="h-9 w-full" /></SkeletonRegion> :
         error ? <div role="alert" className="space-y-2 text-sm"><p>Roles could not be loaded. {error}</p>
           <Button type="button" size="sm" variant="outline" onClick={retry}>Retry</Button></div> :
           <Select value={roleName} onValueChange={setRoleName} disabled={mutation.isLoading}>

@@ -1,6 +1,8 @@
 import { analyticalApi } from "@/shared/api/generated/analytical";
 import { authApi } from "@/shared/api/generated/auth";
+import { identityApi } from "@/shared/api/generated/identity";
 import { productsApi } from "@/shared/api/generated/products";
+import { settingsApi } from "@/shared/api/generated/settings";
 
 const list = { type: "ProductList" as const, id: "all" };
 
@@ -8,6 +10,8 @@ export const productApi = productsApi.enhanceEndpoints({
   endpoints: {
     getApiV1Product: { providesTags: [list] },
     getApiV1ProductByProductId: { providesTags: (_result, _error, arg) => [{ type: "Product", id: arg.productId }] },
+    postApiV1Product: { invalidatesTags: (_result, error) => error ? [] : [list] },
+    putApiV1ProductByProductId: { invalidatesTags: (_result, error, arg) => error ? [] : [list, { type: "Product", id: arg.productId }] },
   },
 });
 
@@ -20,7 +24,10 @@ export const verificationApi = authApi.enhanceEndpoints({
   },
 });
 
-export const { useGetApiV1ProductQuery, useGetApiV1ProductByProductIdQuery, useGetApiV1ProductByProductIdRoutesQuery } = productApi;
+export const {
+  useGetApiV1ProductQuery, useGetApiV1ProductByProductIdQuery, useGetApiV1ProductByProductIdRoutesQuery,
+  usePostApiV1ProductMutation, usePutApiV1ProductByProductIdMutation, useGetApiV1ProductEquipmentAllQuery,
+} = productApi;
 export const { usePostApiV1VerificationMutation } = verificationApi;
 // Quality documents attached to a product, shown on its detail page.
 export const {
@@ -28,3 +35,6 @@ export const {
   useGetApiV1ProductSpecificationsProductByIdQuery,
   useGetApiV1ProductArdProductByProductIdQuery,
 } = analyticalApi;
+// Reference lists the product form chooses from.
+export const { useGetApiV1DepartmentQuery } = identityApi;
+export const { usePostApiV1CollectionMutation, usePostApiV1CollectionUomPaginatedMutation } = settingsApi;

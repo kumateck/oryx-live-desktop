@@ -1,6 +1,7 @@
 import { FileX2, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/shared/skeleton/skeleton";
 
 const skeletonWidths = ["w-3/4", "w-1/2", "w-2/3", "w-5/6"] as const;
 
@@ -8,7 +9,7 @@ const skeletonWidths = ["w-3/4", "w-1/2", "w-2/3", "w-5/6"] as const;
 export function DataTableSkeleton({ columns, rows }: { columns: number; rows: number }) {
   return Array.from({ length: rows }, (_, row) => <TableRow key={row} aria-hidden="true" className="hover:bg-transparent">
     {Array.from({ length: columns }, (_, column) => <TableCell key={column}>
-      <span className={`block h-4 animate-pulse rounded bg-muted motion-reduce:animate-none ${skeletonWidths[(row + column) % skeletonWidths.length]}`} />
+      <Skeleton className={`h-4 ${skeletonWidths[(row + column) % skeletonWidths.length]}`} />
     </TableCell>)}
   </TableRow>);
 }

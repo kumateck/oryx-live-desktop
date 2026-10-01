@@ -23,7 +23,6 @@ export function ProductSummary({ product }: { product: ProductDetail }) {
       <DetailItem label="Division" value={divisionLabel(product.division)} />
       <DetailItem label="Document number" value={product.documentNumber} />
       <DetailItem label="Revision number" value={product.revisionNumber} />
-      <DetailItem label="Label claim" value={product.labelClaim ? <RichTextView html={product.labelClaim} /> : null} />
     </DetailGroup>
     <DetailGroup title="Storage and regulatory">
       <DetailItem label="Storage condition" value={product.storageCondition} />
@@ -50,9 +49,10 @@ export function ProductSummary({ product }: { product: ProductDetail }) {
       <DetailItem label="Secondary pack" value={product.secondaryPackDescription} />
       <DetailItem label="Tertiary pack" value={product.tertiaryPackDescription} />
     </DetailGroup>
-    {product.description ? <section className="min-w-0 rounded-lg border bg-card p-4">
-      <h2 className="mb-2 text-sm font-semibold">Description</h2>
-      <RichTextView html={product.description} className="text-sm" />
+    {/* The product form saves label claims in the description field. */}
+    {product.description || product.labelClaim ? <section className="min-w-0 rounded-lg border bg-card p-4">
+      <h2 className="mb-2 text-sm font-semibold">Label claims</h2>
+      <RichTextView html={product.description ?? product.labelClaim} className="text-sm" />
     </section> : null}
   </div>;
 }

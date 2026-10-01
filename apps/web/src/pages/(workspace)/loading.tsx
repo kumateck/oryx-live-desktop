@@ -1,3 +1,5 @@
+import { PageSkeleton } from "../../shared/skeleton/page-skeletons";
+
 export default function WorkspaceLoading() {
-  return <div className="page-state">Loading workspace…</div>;
+  return <PageSkeleton label="Loading workspace" />;
 }

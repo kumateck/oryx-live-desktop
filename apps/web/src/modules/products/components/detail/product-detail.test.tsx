@@ -12,7 +12,7 @@ afterEach(() => { cleanup(); forgetSession(); });
 const id = "658da105-a506-44a9-8ff5-8d005a54f294";
 const product = { id, code: "NL-047", name: "Wormee 4 Suspension", category: { name: "Syrup" }, division: 1, baseQuantity: 5, fullBatchSize: 1_500_000,
   baseUoM: { name: "Millilitre", symbol: "ml" }, shelfLife: "24 months", isVerified: false, createdAt: "2026-01-02T10:00:00Z", createdBy: { name: "Ada" },
-  labelClaim: "<p>Each 5 ml contains <strong>albendazole</strong></p><script>bad()</script>",
+  description: "<p>Each 5 ml contains <strong>albendazole</strong></p><script>bad()</script>",
   currentBillOfMaterial: { version: 3, isActive: true, effectiveDate: "2026-02-01T00:00:00Z",
     billOfMaterial: { items: [{ id: "a1", order: 1, material: { name: "Albendazole", code: "RM-001" }, baseQuantity: 100, baseUoM: { symbol: "mg" } }] } },
   outdatedBillOfMaterials: [{ version: 2, isActive: false, billOfMaterial: { items: [{ id: "b1", order: 1, material: { name: "Old sugar", code: "RM-009" }, baseQuantity: 1, baseUoM: { symbol: "g" } }] } }],

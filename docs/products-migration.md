@@ -26,7 +26,6 @@ Differences: the department filter is required, so a user without a department s
 ### Improvements over Oryx Next
 
 - **Outdated BOMs show their materials.** Oryx Next listed only the version header for each.
-- **"Label claim" shows the label claim.** Oryx Next showed the description in that row.
 - **The ARD tab's STP column shows the STP number.** Oryx Next printed the test stage under that heading; stage now has its own column.
 - **Packaging rows are numbered from 1**, not 0.
 - **Saved rich text is rebuilt from an allowlist of elements** (`RichTextView`), so scripts, event handlers, and unsafe links in stored content cannot run.
@@ -39,6 +38,24 @@ Differences: the department filter is required, so a user without a department s
 
 Shared pieces added for later modules: `shared/detail` (`DetailGroup`, `DetailItem`, `Tabs`, `useTabParam`), `shared/format` (dates, words), `shared/rich-text/rich-text-view.tsx`.
 
+## Create and edit
+
+`/production/products/create` (`CanCreateNewProductionPlan`) and `/production/products/:id/edit/info` (`CanEditProductionPlan`), both for production departments. They share one form: product information, units and quantities, specifications, manufacturing and compliance, and label claims.
+
+### What Oryx Next does, and what changed
+
+- **Quantities are entered in the base unit, and the form now says so.** Oryx Next's code converts the batch size from the largest unit before saving, but it looks the unit up by the picker's label ("Millilitre (ml)") instead of its symbol, so the conversion never runs and the number is saved as typed. The desktop keeps that saved meaning and shows a live line under the fields: "Enter quantities in ml. Full batch: 1,500 L. That is 300,000 composition units per batch."
+- **The full batch cannot be smaller than one composition unit**, and quantities and price must be greater than zero.
+- **The product code is suggested once, not overwritten.** It comes from the configured rule and the count of existing products. "Suggest again" re-reads it. Two people creating at once can be offered the same code; the backend decides whether it is accepted, and its message is shown.
+- **After creating, the user lands on the new product**, where its other records are added. Oryx Next went back to the previous page.
+- **Leaving with unsaved changes asks first** (links, sidebar, back, closing the window). Oryx Next discarded edits silently.
+- **The edit form starts from the saved product in one step** and keeps what the user typed after a save. Oryx Next set 20 fields one by one after loading and refetched after saving.
+- **If the form's lists fail to load, the page says so and offers Retry.** Oryx Next logged the error and showed empty pickers.
+- **Empty optional text is sent as empty, never as the text "undefined"**; a missing price or department is left blank for the user rather than filled with zero.
+- **Label claims** are saved in the product's description field, as in Oryx Next, and the detail page shows them under that name.
+
+Shared pieces added: `shared/codes` (code rules), `shared/navigation/unsaved-changes.tsx`, `shared/skeleton`.
+
 ## Not yet migrated
 
-Create (`/production/products/create`), the edit tabs (info, BOM, packaging, packing order, packing style, spec, STP, procedure, ARD), and the print preview. Their links open the "not in the desktop app yet" page until built.
+The other eight edit sections (specification, packing style, bill of materials, packing materials, procedure, STP, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet; they total about 8,000 lines in Oryx Next and are the next work for this module.

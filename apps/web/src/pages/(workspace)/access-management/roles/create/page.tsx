@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { FormPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { CreateRoleForm } from "../../../../../modules/roles/components/create-role-form";
 import { useGetApiV1PermissionModulesQuery } from "../../../../../modules/roles/api/role-api";
@@ -16,7 +16,7 @@ export default function CreateRolePage() {
     <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">ACCESS MANAGEMENT</p>
       <h1 className="text-xl font-semibold">Create role</h1></div>
       <Button asChild variant="outline" size="sm"><Link to={rolesPath}>Back to roles</Link></Button></div>
-    {query.isLoading ? <p role="status" className="flex items-center gap-2"><Spinner />Loading permissions…</p> :
+    {query.isLoading ? <FormPageSkeleton label="Loading permissions" sections={[2, 6]} columns="lg:grid-cols-2" /> :
       query.error || !catalog?.success ? <div role="alert" className="space-y-2"><p>{apiErrorMessage(query.error)}</p>
         <Button variant="outline" onClick={() => void query.refetch()}>Retry</Button></div> :
         <CreateRoleForm available={catalog.data} />}
