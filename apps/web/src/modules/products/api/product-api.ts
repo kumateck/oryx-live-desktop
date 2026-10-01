@@ -17,6 +17,7 @@ export const productApi = productsApi.enhanceEndpoints({
     putApiV1ProductByProductIdBomArchive: { invalidatesTags: (_result, error, arg) => error ? [] : [
       { type: "ProductBom", id: arg.productId }, { type: "Product", id: arg.productId },
     ] },
+    putApiV1ProductPackageDescriptionByProductId: { invalidatesTags: (_result, error, arg) => error ? [] : [{ type: "Product", id: arg.productId }] },
     getApiV1ProductByProductIdRoutes: { providesTags: (_result, _error, arg) => [{ type: "ProductRoutes", id: arg.productId }] },
     postApiV1ProductByProductIdRoutes: { invalidatesTags: (_result, error, arg) => error ? [] : [
       { type: "ProductRoutes", id: arg.productId }, { type: "Product", id: arg.productId },
@@ -46,7 +47,7 @@ export const {
   usePostApiV1ProductMutation, usePutApiV1ProductByProductIdMutation, useGetApiV1ProductEquipmentAllQuery,
   useGetApiV1ProductByProductIdPackingQuery, usePostApiV1ProductByProductIdPackingMutation,
   useGetApiV1ProductByProductIdPackagesQuery, usePostApiV1ProductByProductIdPackagesMutation,
-  usePostApiV1ProductByProductIdRoutesMutation, useLazyGetApiV1ProductQuery,
+  usePutApiV1ProductPackageDescriptionByProductIdMutation, usePostApiV1ProductByProductIdRoutesMutation, useLazyGetApiV1ProductQuery,
   useGetApiV1ProductByProductIdBomQuery, usePutApiV1ProductByProductIdBomArchiveMutation,
 } = productApi;
 export const { usePostApiV1VerificationMutation } = verificationApi;

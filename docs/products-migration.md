@@ -132,6 +132,17 @@ Improved:
 
 Reviewing, approving, and editing the document online are done in Quality Control and are not part of this page.
 
+## Packing order
+
+`/production/products/:id/edit/packing-order`. Three rich-text instructions (primary, secondary, tertiary pack), all needed, saved together. Kept from Oryx Next: the fields and the endpoint.
+
+Improved:
+
+- **The page opens ready to edit.** Oryx Next showed a read-only view with Save disabled until "Edit" was pressed, and "Done" hid the editors while keeping unsaved text in the form.
+- **Empty is judged by what a reader would see.** Oryx Next accepted `<p> </p>` or an empty list as a description; only exactly `<p></p>` was refused.
+- **Each message names its pack**, a load failure shows the reason with Retry (Oryx Next left the page blank), and leaving with unsaved changes asks first. "Discard changes" returns to what is saved.
+- **Each field says what the pack level means.**
+
 ## Not yet migrated
 
-Three edit sections (specification, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet.
+Two edit sections (specification, ARD) and the print preview. In the edit area they are listed but cannot be opened yet.
