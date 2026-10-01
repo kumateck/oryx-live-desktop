@@ -97,3 +97,12 @@ Declare a field's type with the `InputTypes` constant from `shared/forms/input-t
 | `ASYNC_MULTI` | `SELECT` with `mode: "multiple"`, `source: "async"` |
 | (none) | `CUSTOM`: a module's own lazily loaded control |
 | `BUTTON`, `COLOR`, `DRAGNDROP`, `Formula`, `NUMBERS`, `OTP`, `PHONE`, `TABLE` | Not built yet; added to the constant when their field is |
+
+## Async selects
+
+A `SELECT` field with `source: "async"` loads its options page by page from `loadOptions(search, page, signal)`. The picker is a popover with its own search box:
+
+- The field shows the chosen option's label. Opening it starts with an empty search; the chosen option is ticked in the list, or pinned under "Selected" when it is on another page or outside the search.
+- Previous and Next are always present and keep focus in the search box, so paging never closes the list. While a page loads, the previous options stay on screen, dimmed.
+- Enter in the search box picks the highlighted option; it never submits the surrounding form. Arrow keys move the highlight.
+- Keep the `loadOptions` function stable (`useCallback`/`useMemo`): the options reload whenever the function changes.

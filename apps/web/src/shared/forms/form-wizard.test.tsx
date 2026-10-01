@@ -160,3 +160,54 @@ it("submits an async single-select option", async () => {
   await waitFor(() => expect(submit.mock.calls[0]?.[0].role).toEqual({ value: "buyer", label: "Buyer" }));
   expect(loadOptions).toHaveBeenCalled();
 });
+
+it("pages an async select without closing it or submitting the form, and keeps the choice in view", async () => {
+  const user = userEvent.setup();
+  const submit = vi.fn();
+  const pages: Record<number, { value: string; label: string }[]> = {
+    1: [{ value: "a", label: "RMA001 - Acetic acid" }, { value: "b", label: "RMA002 - Aerosil" }],
+    2: [{ value: "c", label: "RMA003 - Alginic acid" }],
+  };
+  const loadOptions = vi.fn(async (search: string, page: number) => ({
+    options: (pages[page] ?? []).filter((option) => option.label.toLowerCase().includes(search.toLowerCase())),
+    hasNext: page === 1 && !search, hasPrevious: page > 1,
+  }));
+  type Values = { material: { value: string; label: string } | null };
+  const asyncFields = [{ type: InputTypes.SELECT, mode: "single", source: "async", name: "material", label: "Material", required: true,
+    loadOptions, debounceMs: 0, placeholder: "Select a material" }] as const satisfies readonly WizardField<Values>[];
+  function AsyncForm() {
+    const form = useForm<Values>({ defaultValues: { material: null } });
+    return <form onSubmit={form.handleSubmit(submit)}><FormWizard form={form} fields={asyncFields} /><button type="submit">Save</button></form>;
+  }
+  render(<AsyncForm />);
+  const trigger = await screen.findByRole("combobox", { name: /Material/ });
+  expect(trigger.textContent).toBe("Select a material");
+  await user.click(trigger);
+  expect(await screen.findByRole("option", { name: "RMA001 - Acetic acid" })).toBeTruthy();
+
+  // Next loads the following page in the same open list; nothing is submitted.
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  expect(await screen.findByRole("option", { name: "RMA003 - Alginic acid" })).toBeTruthy();
+  expect(screen.getByRole("listbox", { name: "Material" })).toBeTruthy();
+  expect(submit).not.toHaveBeenCalled();
+  expect(screen.getByRole("textbox", { name: "Search Material" })).toBe(document.activeElement);
+  await user.click(screen.getByRole("button", { name: "Previous" }));
+  await user.click(await screen.findByRole("option", { name: "RMA002 - Aerosil" }));
+
+  // The choice is shown in the field, and stays in view when reopened on another page or search.
+  await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+  expect(trigger.textContent).toBe("RMA002 - Aerosil");
+  await user.click(trigger);
+  expect((await screen.findByRole("option", { name: "RMA002 - Aerosil" })).getAttribute("aria-selected")).toBe("true");
+  await user.type(screen.getByRole("textbox", { name: "Search Material" }), "acetic");
+  expect(await screen.findByText("Selected")).toBeTruthy();
+  expect(screen.getByRole("option", { name: "RMA002 - Aerosil" }).getAttribute("aria-selected")).toBe("true");
+
+  // Enter picks the highlighted option instead of submitting the form.
+  await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(2));
+  await user.keyboard("{Enter}");
+  await waitFor(() => expect(trigger.textContent).toBe("RMA001 - Acetic acid"));
+  expect(submit).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(submit.mock.calls[0]?.[0]).toEqual({ material: { value: "a", label: "RMA001 - Acetic acid" } }));
+});

@@ -7,13 +7,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupButton } from "@/components/ui/input-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Spinner } from "@/components/ui/spinner";
 import { FieldFrame } from "../field-frame";
 import { fieldDescription } from "../field-description";
 import { isSelectOption } from "../select-option";
 import { usePagedSelectOptions } from "../use-paged-select-options";
 import { useVisibleSelectLabels } from "../use-visible-select-labels";
 import type { MultiSelectField, SelectOption } from "../form-wizard-types";
+import { OptionPager } from "./option-pager";
 
 interface SelectionProps {
   field: MultiSelectField<FieldValues>;
@@ -27,26 +27,24 @@ interface OptionsProps extends SelectionProps {
 }
 
 function MultiSelectOptions({ field, selected, onChange, open, search }: OptionsProps) {
-  if (field.source === "async") return <AsyncOptions key={search} field={field} selected={selected} onChange={onChange}
-    open={open} search={search} />;
+  if (field.source === "async") return <AsyncOptions field={field} selected={selected} onChange={onChange} open={open} search={search} />;
   const options = field.options.filter((option) => option.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   return <OptionList options={options} selected={selected} onChange={onChange} />;
 }
 
 function AsyncOptions({ field, selected, onChange, open, search }: OptionsProps & { field: MultiSelectField<FieldValues> & { source: "async" } }) {
-  const [page, setPage] = useState(1);
+  // The page belongs to a search: a new search starts at page 1 without remounting the list.
+  const [position, setPosition] = useState({ search, page: 1 });
+  const page = position.search === search ? position.page : 1;
+  const setPage = (next: number) => setPosition({ search, page: next });
   const [revision, setRevision] = useState(0);
   const result = usePagedSelectOptions(field.loadOptions, open, search, page, revision, field.debounceMs);
   return <>
-    {result.loading ? <div className="flex items-center gap-2 px-2 py-3 text-muted-foreground"><Spinner />Loading options…</div> : null}
     {result.error ? <div className="flex items-center justify-between gap-2 px-2 py-2 text-destructive">Could not load options
       <Button type="button" size="xs" variant="ghost" onClick={() => setRevision((value) => value + 1)}>Retry</Button>
-    </div> : null}
-    {!result.loading && !result.error ? <><OptionList options={result.options} selected={selected} onChange={onChange} />
-      <div className="flex justify-end gap-1 border-t border-border pt-1">
-        <Button type="button" size="xs" variant="ghost" disabled={!result.hasPrevious} onClick={() => setPage((value) => Math.max(1, value - 1))}>Previous</Button>
-        <Button type="button" size="xs" variant="ghost" disabled={!result.hasNext} onClick={() => setPage((value) => value + 1)}>Next</Button>
-      </div></> : null}
+    </div> : result.loading && !result.stale ? null
+      : <div className={result.stale ? "opacity-60" : undefined} aria-busy={result.loading}><OptionList options={result.options} selected={selected} onChange={onChange} /></div>}
+    <OptionPager page={page} hasPrevious={result.hasPrevious} hasNext={result.hasNext} loading={result.loading} onPageChange={setPage} />
   </>;
 }
 
