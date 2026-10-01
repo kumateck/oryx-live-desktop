@@ -116,6 +116,22 @@ Improved:
 
 Backend behavior worth knowing (unchanged): saving deletes every step and re-adds the list, keeping one step per operation. Step resources are not returned by the read endpoint and neither app sends them, so they do not survive a save.
 
+## STP
+
+`/production/products/:id/edit/stp`. A product has at most one standard test procedure: an STP number, an optional summary, and a controlled .docx document with versions. Kept from Oryx Next: the fields, the suggested number (`QCD/STP/FP/` and a three-digit serial), a document required for a new STP, a reason required to replace an approved document, and no replacement while the document is under review.
+
+Improved:
+
+- **The current document is shown**: file name, version, status, who added it and when. Oryx Next showed only an empty file picker, so it was not clear whether anything was attached.
+- **A real load failure is not mistaken for "no STP".** Oryx Next treated every error as a product without one and offered a blank create form. The desktop treats only "not found" that way; anything else shows the reason and Retry.
+- **A half-finished save is explained.** The details and the document are two requests. If the document upload fails, the message says the details were saved and gives the server's reason; saving again updates the same STP and retries the upload.
+- **The new STP's ID is read back from the product** before the upload. Oryx Next parsed the create response, whose shape does not match the contract.
+- **The suggested number does not overwrite one the user typed.**
+- **The file type is checked when chosen and again on save**, and the reason-for-change message appears on its own field.
+- **Leaving with unsaved changes asks first.**
+
+Reviewing, approving, and editing the document online are done in Quality Control and are not part of this page.
+
 ## Not yet migrated
 
-Four edit sections (specification, STP, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet.
+Three edit sections (specification, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet.
