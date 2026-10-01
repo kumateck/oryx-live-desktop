@@ -43,6 +43,14 @@ A rule is `authenticated`, `all` of a list, or `some` of a list. An empty list n
 
 The icon rail lists the Oryx Next sidebar groups the user may see; the sidebar shows the selected group's entries, with headings that collapse. `bun run nav:import` regenerates `apps/web/src/modules/navigation/catalog.generated.ts` from the Oryx Next sidebar, so titles, addresses, and permission keys stay identical while both applications exist. An entry is shown when the user holds any of its permission keys; a heading with nothing visible under it, and a group with nothing visible, are hidden. Group icons are chosen in `group-icons.ts`; a new group fails the type check until it has one. Addresses are the same as in Oryx Next (Roles is `/access-management/roles`). A destination whose screen has not been moved yet opens a page saying so. The header search covers the same visible entries.
 
+## Page headings and breadcrumbs
+
+Nested pages (create, detail, edit) start with `PageHeader` from `shared/navigation/page-header.tsx`: a title and a breadcrumb. With nothing else on the right, the breadcrumb sits there, level with the title; when the page has actions they take the right side and the breadcrumb moves above the title. Pages with a richer heading use `PageBreadcrumbs` on its own.
+
+The start of the trail (group, heading, list page) comes from the sidebar entry the address belongs to, so it always matches the navigation. The page adds the rest: `crumbs={[{ label: product.name, to: detailPath }, { label: "Edit" }]}`. Only real pages are links; a `null` label shows a placeholder while the name loads; long names are truncated with the full name on hover.
+
+Oryx Next builds its breadcrumb from the address segments, which links to addresses that are not pages (`/production`, `/production/products/<id>`) and shows record IDs as "Details".
+
 ## Feedback messages
 
 Sonner (the shadcn `Toaster`, mounted once in `main.tsx` and following the Oryx light/dark profile) reports the outcome of an action: saved, submitted, deleted, or refused, with the server's explanation as the description. Import `toast` from `sonner` directly. Keep a message inline, not in a toast, when the user must read it to continue: form validation, login failures, a page that failed to load, and errors inside an open dialog.

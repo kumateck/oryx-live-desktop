@@ -77,3 +77,27 @@ export function navigationPages(groups: readonly NavigationGroup[]): NavigationM
   for (const group of groups) for (const item of group.items) visit(item, group.label);
   return [...pages.values()];
 }
+
+export interface NavigationCrumb { readonly label: string; readonly path?: string }
+
+/**
+ * Where a page sits in the navigation: its group, any headings above it, and the sidebar entry
+ * itself. Only the entry is a page, so only it carries a path; group and headings are plain text.
+ */
+export function navigationTrail(groups: readonly NavigationGroup[], pathname: string, search = ""): NavigationCrumb[] {
+  const active = activeNavigation(groups, pathname, search);
+  const group = groups.find((item) => item.id === active?.groupId);
+  if (!active || !group) return [];
+  const crumbs: NavigationCrumb[] = [{ label: group.label }];
+  let level: readonly NavigationItem[] = group.items;
+  for (const id of [...active.trail, active.itemId]) {
+    const item = level.find((candidate) => candidate.id === id);
+    if (!item) break;
+    // A heading and its first entry often share a name ("Dashboard" over "Overview" is fine, "Users" over "Users" is noise).
+    if (crumbs[crumbs.length - 1]?.label !== item.label) {
+      crumbs.push(id === active.itemId && item.path ? { label: item.label, path: item.path.split("?")[0] ?? item.path } : { label: item.label });
+    }
+    level = item.children ?? [];
+  }
+  return crumbs;
+}

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { navigationCatalog } from "../apps/web/src/modules/navigation/catalog.generated.ts";
 import {
-  activeNavigation, navigationPages, visibleNavigation, type NavigationGroup,
+  activeNavigation, navigationPages, navigationTrail, visibleNavigation, type NavigationGroup,
 } from "../apps/web/src/modules/navigation/navigation-model.ts";
 
 const groups: readonly NavigationGroup[] = [
@@ -62,4 +62,11 @@ test("the imported Oryx Next catalog is well formed", () => {
   };
   for (const group of navigationCatalog) for (const item of group.items) visit(item);
   assert.equal(activeNavigation(navigationCatalog, "/access-management/roles/create")?.groupId, "it-support");
+});
+
+test("gives a page's place in the navigation, linking only the entry that is a page", () => {
+  assert.deepEqual(navigationTrail(groups, "/qc/specifications/42/edit"), [{ label: "Quality Control" }, { label: "Specifications", path: "/qc/specifications" }]);
+  assert.deepEqual(navigationTrail(groups, "/qc/tests", "?type=1"), [{ label: "Quality Control" }, { label: "Testing" }, { label: "Packaging", path: "/qc/tests" }]);
+  assert.deepEqual(navigationTrail(groups, "/nowhere"), []);
+  assert.deepEqual(navigationTrail(navigationCatalog, "/access-management/users/create").map((crumb) => crumb.label), ["IT Support", "User Management", "Manage Users Directory"]);
 });

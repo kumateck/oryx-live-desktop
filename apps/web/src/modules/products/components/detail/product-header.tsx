@@ -1,10 +1,11 @@
-import { ArrowLeft, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
+import { PageBreadcrumbs } from "@/shared/navigation/page-breadcrumbs";
 import { formatDateTime } from "@/shared/format/dates";
-import { divisionLabel, productEditPath, productPermissions, productsPath } from "../../lib/product-access";
+import { divisionLabel, productEditPath, productPermissions } from "../../lib/product-access";
 import type { ProductDetail } from "../../schemas/product-detail-schema";
 import { QualityBadge, VerifyProductButton } from "../verify-product-button";
 
@@ -13,7 +14,7 @@ export function ProductHeader({ product }: { product: ProductDetail }) {
   const division = divisionLabel(product.division);
   return <header className="min-w-0 space-y-3">
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <Button asChild size="sm" variant="ghost"><Link to={productsPath}><ArrowLeft />Planned products</Link></Button>
+      <PageBreadcrumbs items={[{ label: product.name ?? "Unnamed product" }]} />
       <div className="flex flex-wrap items-center gap-2">
         <PermissionGuard require={productPermissions.verify}><VerifyProductButton product={product} /></PermissionGuard>
         <PermissionGuard require={productPermissions.edit}>
