@@ -5,7 +5,7 @@ export const productEditTabs = [
   { id: "packing-style", label: "Packing style", ready: true },
   { id: "bom", label: "Bill of materials", ready: true },
   { id: "packaging", label: "Packing materials", ready: true },
-  { id: "procedure", label: "Procedure", ready: false },
+  { id: "procedure", label: "Procedure", ready: true },
   { id: "stp", label: "STP", ready: false },
   { id: "ard", label: "ARD", ready: false },
   { id: "packing-order", label: "Packing order", ready: false },

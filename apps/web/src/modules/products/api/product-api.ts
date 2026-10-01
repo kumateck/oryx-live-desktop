@@ -17,6 +17,10 @@ export const productApi = productsApi.enhanceEndpoints({
     putApiV1ProductByProductIdBomArchive: { invalidatesTags: (_result, error, arg) => error ? [] : [
       { type: "ProductBom", id: arg.productId }, { type: "Product", id: arg.productId },
     ] },
+    getApiV1ProductByProductIdRoutes: { providesTags: (_result, _error, arg) => [{ type: "ProductRoutes", id: arg.productId }] },
+    postApiV1ProductByProductIdRoutes: { invalidatesTags: (_result, error, arg) => error ? [] : [
+      { type: "ProductRoutes", id: arg.productId }, { type: "Product", id: arg.productId },
+    ] },
     getApiV1ProductByProductIdPackages: { providesTags: (_result, _error, arg) => [{ type: "ProductPackages", id: arg.productId }] },
     postApiV1ProductByProductIdPackages: { invalidatesTags: (_result, error, arg) => error ? [] : [
       { type: "ProductPackages", id: arg.productId }, { type: "Product", id: arg.productId },
@@ -42,6 +46,7 @@ export const {
   usePostApiV1ProductMutation, usePutApiV1ProductByProductIdMutation, useGetApiV1ProductEquipmentAllQuery,
   useGetApiV1ProductByProductIdPackingQuery, usePostApiV1ProductByProductIdPackingMutation,
   useGetApiV1ProductByProductIdPackagesQuery, usePostApiV1ProductByProductIdPackagesMutation,
+  usePostApiV1ProductByProductIdRoutesMutation, useLazyGetApiV1ProductQuery,
   useGetApiV1ProductByProductIdBomQuery, usePutApiV1ProductByProductIdBomArchiveMutation,
 } = productApi;
 export const { usePostApiV1VerificationMutation } = verificationApi;
@@ -54,7 +59,7 @@ export const {
 } = analyticalApi;
 // Reference lists the product form chooses from.
 export const { useGetApiV1DepartmentQuery } = identityApi;
-export const { usePostApiV1CollectionMutation, usePostApiV1CollectionUomPaginatedMutation } = settingsApi;
+export const { usePostApiV1CollectionMutation, usePostApiV1CollectionUomPaginatedMutation, useGetApiV1CollectionOperationsQuery } = settingsApi;
 
 // Saving a bill of materials is a materials endpoint; it changes the product it belongs to.
 export const bomApi = materialsApi.enhanceEndpoints({

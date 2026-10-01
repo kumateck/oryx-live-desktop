@@ -97,6 +97,25 @@ Improved:
 - **Only saved packing styles can be chosen**, since a line needs the style's ID. With none saved the field says so.
 - **An empty list cannot be saved**, with the reason on the page. **After saving the user stays on the page**; Oryx Next jumped to Procedure.
 
+## Procedure
+
+`/production/products/:id/edit/procedure`. Kept from Oryx Next: steps made of an operation, work centers, estimated time, a critical/automated flag, and responsible users and roles with an instruction each; drag to reorder; one operation per procedure; the rule that an automated step cannot carry a main instruction; copying the procedure to other products.
+
+Improved:
+
+- **A responsible party must be complete.** Oryx Next accepted a row with no user or role chosen and silently dropped it when saving. The desktop asks for the user or role and the instruction, and refuses the same person with the same instruction twice.
+- **Analytical raw data stays with ATR.** It is offered only for the ATR instruction and is cleared when the instruction changes; Oryx Next kept sending a value left over from an earlier choice.
+- **Copying does not leak this product's analytical raw data** onto other products; the review step says so. Oryx Next copied the IDs as they were.
+- **Copying says what it does.** The backend replaces the target's whole procedure, so the confirm button reads "Replace procedure on N products" under a warning. Each failure is listed with the server's reason, not only the product name.
+- **Only the saved procedure can be copied**, so another product never receives steps this one does not have yet.
+- **Edits are a draft until saved**, with "Discard changes" and a warning before leaving. The step order is renumbered from the rows on screen when saving.
+- **Validation messages appear on the fields** when the step is submitted; the Add button is not silently disabled.
+- **Load failures are shown with Retry.** Oryx Next logged them to the console and showed an empty table, which a save would then have written over the real procedure.
+- **A product without a department** gets an explanation (operations are listed by department) instead of an empty operation list.
+- **After saving the user stays on the page**; Oryx Next jumped to STP.
+
+Backend behavior worth knowing (unchanged): saving deletes every step and re-adds the list, keeping one step per operation. Step resources are not returned by the read endpoint and neither app sends them, so they do not survive a save.
+
 ## Not yet migrated
 
-Five edit sections (specification, procedure, STP, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet.
+Four edit sections (specification, STP, ARD, packing order) and the print preview. In the edit area they are listed but cannot be opened yet.

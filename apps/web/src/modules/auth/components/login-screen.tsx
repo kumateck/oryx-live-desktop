@@ -87,7 +87,7 @@ export function LoginScreen() {
           </p>
         </div>
       </div>
-      <div className="relative hidden min-h-[520px] md:block">
+      <div className="relative hidden min-h-[520px] md:order-first md:block">
         <img src={sideImageUrl} alt="" decoding="async" className="absolute inset-0 size-full object-cover object-left" />
       </div>
     </section>
