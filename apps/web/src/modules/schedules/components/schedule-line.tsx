@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useWatch, type UseFormReturn } from "react-hook-form";
-import { Trash2 } from "lucide-react";
+import { Trash2, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
@@ -11,12 +11,15 @@ import type { ScheduleOptions } from "../hooks/use-schedule-options";
 import { audit } from "../lib/schedule-access";
 import { batchQuantity, batchSizes } from "../lib/schedule-products";
 import type { ScheduleFormValues } from "../schemas/schedule-schema";
+import { ForecastDialog, type ForecastRequest } from "./forecast-dialog";
 
 const none: readonly SelectOption[] = [];
 
 /** One product on a new schedule: which product, how many batches, and how each batch is sized and packed. */
 export function ScheduleLine({ form, index, options, onRemove }: { form: UseFormReturn<ScheduleFormValues>; index: number; options: ScheduleOptions; onRemove: (() => void) | null }) {
-  const [product, sizeType, count] = useWatch({ control: form.control, name: [`products.${index}.product`, `products.${index}.sizeType`, `products.${index}.count`] });
+  const [product, sizeType, count, chosenPacking, market] = useWatch({ control: form.control,
+    name: [`products.${index}.product`, `products.${index}.sizeType`, `products.${index}.count`, `products.${index}.packing`, `products.${index}.market`] });
+  const [forecast, setForecast] = useState<ForecastRequest | null>(null);
   const productId = product?.value;
   const packing = useGetApiV1ProductByProductIdPackingQuery({ ...audit, productId: productId ?? "" }, { skip: !productId });
   const styles = packing.data;
@@ -46,14 +49,22 @@ export function ScheduleLine({ form, index, options, onRemove }: { form: UseForm
   const facts = options.facts(productId);
   const quantity = batchQuantity(facts, sizeType?.value);
   const batches = typeof count === "number" && Number.isInteger(count) && count > 0 ? count : null;
+  // The forecast needs to know what is being made and how much of it.
+  const forecastBlocked = !product ? "Choose a product to see its forecast" : !chosenPacking ? "Choose a packing style to see the forecast" : !batches ? "Enter the number of batches to see the forecast" : "";
   return <li className="space-y-2 rounded-md border p-3">
     <div className="flex items-center justify-between gap-2">
       <span className="text-sm font-medium">Product {index + 1}</span>
-      {onRemove ? <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove product ${index + 1}`} onClick={onRemove}><Trash2 /></Button> : null}
+      <span className="flex items-center gap-2">
+        {forecastBlocked ? <span className="text-xs text-muted-foreground">{forecastBlocked}</span> : null}
+        <Button type="button" size="sm" variant="outline" disabled={Boolean(forecastBlocked)} aria-label={`Material forecast for product ${index + 1}`}
+          onClick={() => { if (product && chosenPacking && batches) setForecast({ product, packing: chosenPacking, sizeType, count: batches, market: market?.label ?? null }); }}><TrendingUp />Forecast</Button>
+        {onRemove ? <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove product ${index + 1}`} onClick={onRemove}><Trash2 /></Button> : null}
+      </span>
     </div>
     <FormWizard form={form} fields={fields} className="md:grid-cols-2 xl:grid-cols-6" />
     {productId ? <p className="text-xs text-muted-foreground">{quantity === null
       ? <span className="text-destructive">This product has no full batch size, so it cannot be scheduled. Set it on the product first.</span>
       : <>Each batch: {toLargestUnit(quantity, facts?.unit, "calculated")?.text ?? quantity}{batches && batches > 1 ? ` · ${batches} batches: ${toLargestUnit(quantity * batches, facts?.unit, "calculated")?.text ?? quantity * batches}` : ""}</>}</p> : null}
+    {forecast ? <ForecastDialog request={forecast} onClose={() => setForecast(null)} /> : null}
   </li>;
 }

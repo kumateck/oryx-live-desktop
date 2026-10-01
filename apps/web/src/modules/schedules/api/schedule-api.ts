@@ -14,7 +14,7 @@ export const scheduleApi = productionApi.enhanceEndpoints({
 });
 
 export const {
-  useGetApiV1ProductionScheduleQuery, useGetApiV1ProductionScheduleByScheduleIdQuery,
+  useGetApiV1ProductionScheduleQuery, useGetApiV1ProductionScheduleForecastQuery, useGetApiV1ProductionScheduleByScheduleIdQuery,
   usePostApiV1ProductionScheduleMutation, usePutApiV1ProductionScheduleByScheduleIdMutation,
 } = scheduleApi;
 // What a schedule's product lines choose from.

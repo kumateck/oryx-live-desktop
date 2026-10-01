@@ -25,11 +25,23 @@ Improved:
 - **Market types failing to load does not block the form**; the field is optional and the page says why it is empty.
 - **Leaving with unsaved changes asks first.**
 
+### Material forecast
+
+Each product line has a Forecast button. It shows what the chosen batches need of every raw and packaging material against warehouse stock, using the same endpoint as Oryx Next.
+
+- **Short materials are listed first, with how much is missing.** Oryx Next showed "Unavailable" with no amount.
+- **A line above the tables says how many materials are short**, or that there is enough of everything.
+- **Reserved stock is shown.** The server returns it but does not deduct it when deciding availability; Oryx Next did not show it.
+- **The button says what it is waiting for** (product, packing style, batch count) instead of showing an error after it is pressed.
+- **A failed load shows the reason with Retry.** Oryx Next showed two empty tables.
+- **Materials that are neither raw nor packaging are still listed.** Oryx Next dropped them.
+
+The server counts a material as available only when usable stock is more than what is needed, so exactly enough is shown as short with "nothing to spare".
+
 ## Not yet migrated
 
 - Schedule details, with each product's materials, stock, and purchase and stock requisitions. Rows in the list do not open anything yet.
 - Adding products to and removing products from an existing schedule.
-- The material forecast on a product line.
 - Product flow and product requisition pages.
 - The monthly report.
 
