@@ -74,6 +74,17 @@ export const routes: RouteObject[] = [
           { path: "create", Component: Outlet, children: [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/products/create/page")).default }) }
           ] }
+        ] },
+        { path: "schedules", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/schedules/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { path: "edit", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/schedules/[id]/edit/page")).default }) }
+            ] }
+          ] },
+          { path: "create", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/schedules/create/page")).default }) }
+          ] }
         ] }
       ] },
       { path: "settings", Component: Outlet, children: [
