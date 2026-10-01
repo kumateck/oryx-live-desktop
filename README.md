@@ -24,7 +24,7 @@ bun run dev:web
 
 Use `bun install --frozen-lockfile` in CI. The root override pins `@electron/node-gyp` to its published Electron package because the transitive Git archive in `@electron/rebuild` prevents a reliable frozen Bun install.
 
-Set `ORYX_DEV_API_ORIGIN` to the backend address before running `bun run dev:web`; requests to `/api` are proxied there. HTTPS and loopback addresses are accepted. A plain-HTTP remote address sends passwords and tokens unencrypted and is refused unless `ORYX_DEV_ALLOW_INSECURE_API=1` is also set. A missing API origin leaves the UI runnable without a backend proxy.
+Copy `apps/web/.env.example` to `apps/web/.env` (ignored by git); it points `ORYX_DEV_API_ORIGIN` at the shared backend `http://164.90.142.68:8086`. `bun run dev:web` proxies requests to `/api` there; requests to `/api` are proxied there. HTTPS and loopback addresses are accepted. A plain-HTTP remote address sends passwords and tokens unencrypted and is refused unless `ORYX_DEV_ALLOW_INSECURE_API=1` is also set. A missing API origin leaves the UI runnable without a backend proxy.
 
 In another terminal, run `bun run dev:desktop`. On the connection screen, use `http://127.0.0.1:5173` only for local development. A packaged app requires trusted HTTPS. `bun run build:web` creates `apps/web/dist` for the customer server; the server must serve `index.html` for client-side routes and keep the hashed assets of prior releases during refresh transitions.
 
