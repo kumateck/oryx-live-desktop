@@ -143,6 +143,19 @@ Improved:
 - **Each message names its pack**, a load failure shows the reason with Retry (Oryx Next left the page blank), and leaving with unsaved changes asks first. "Discard changes" returns to what is saved.
 - **Each field says what the pack level means.**
 
+## ARD
+
+`/production/products/:id/edit/ard`. A product has one analytical raw data record per test stage (bulk, finished, intermediate). A new one takes its STP from the product and its template form and specification number from that stage's specification. Kept from Oryx Next: the list, one record per stage, the create and edit fields, file attachments, and the separate permissions (`CanCreateProductArd`, `CanEditProductArd`).
+
+Improved:
+
+- **Editing no longer fails or loses data.** The backend overwrites every field on update and refuses a changed analysis type. Oryx Next sent neither the analysis type nor the COA items, so editing a commercial-COA record was refused and editing any record cleared its COA items. The desktop sends both back unchanged.
+- **What a stage is missing is said on the page** ("Finished cannot be added yet: it needs a template form on the finished specification"). Oryx Next opened a dialog that then showed one general error.
+- **The edit action is hidden without the edit permission**, like the add action.
+- **A failed file upload is reported as such.** The record is saved first; if attaching fails the message says the record was saved and the files were not.
+- **Files are filtered by type when chosen**, and a saved file is only shown as a link when its address is a web address.
+- **A load failure shows the reason with Retry.**
+
 ## Not yet migrated
 
-Two edit sections (specification, ARD) and the print preview. In the edit area they are listed but cannot be opened yet.
+One edit section (specification) and the print preview. In the edit area they are listed but cannot be opened yet.

@@ -12,6 +12,9 @@ export const productPermissions = {
   verify: "CanVerifyProduct",
 } as const;
 
+/** Analytical raw data has its own permissions: editing a product does not grant them. */
+export const productArdPermissions = { create: "CanCreateProductArd", edit: "CanEditProductArd" } as const;
+
 export const audit = { module: "Production", subModule: "Planning" } as const;
 
 /** The verification endpoint's entity number for a product. */

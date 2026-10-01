@@ -66,7 +66,7 @@ it("edits a product's information from its saved values and saves only when aske
   expect(screen.getByRole("link", { name: "Info" }).getAttribute("aria-current")).toBe("page");
   expect(screen.getByRole("link", { name: "Bill of materials" }).getAttribute("href")).toBe(`/production/products/${id}/edit/bom`);
   // Sections not built yet are listed but cannot be opened.
-  expect(screen.getByText("ARD").getAttribute("aria-disabled")).toBe("true");
+  expect(screen.getByText("Specification").getAttribute("aria-disabled")).toBe("true");
   expect(screen.getByRole("status").textContent).toContain("Full batch: 1,500 L");
   fireEvent.change(name, { target: { value: "Wormee 4 Suspension" } });
   fireEvent.click(screen.getByRole("button", { name: "Save changes" }));

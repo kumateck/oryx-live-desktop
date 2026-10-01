@@ -7,6 +7,6 @@ export const productEditTabs = [
   { id: "packaging", label: "Packing materials", ready: true },
   { id: "procedure", label: "Procedure", ready: true },
   { id: "stp", label: "STP", ready: true },
-  { id: "ard", label: "ARD", ready: false },
+  { id: "ard", label: "ARD", ready: true },
   { id: "packing-order", label: "Packing order", ready: true },
 ] as const;
