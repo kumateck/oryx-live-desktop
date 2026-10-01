@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { pageMeta, useServerTable } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
+import { usePageSearch } from "@/shared/search/page-search";
 import { useGetApiV1UserQuery } from "../api/user-api";
 import { allowedStatuses, audit, disabledFilter, resolveStatus, statusFromParam, statusToParam, type UserStatus } from "../lib/user-access";
 import { userListSchema, type UserRow } from "../schemas/user-schema";
@@ -16,8 +16,9 @@ export function useUsersList() {
   const [params, setParams] = useSearchParams();
   const statuses = allowedStatuses(access);
   const status = resolveStatus(statusFromParam(params.get("status")), statuses);
-  const table = useServerTable({ pageSize: 30 });
-  const search = useDebouncedValue(table.search.trim());
+  const [busy, setBusy] = useState(false);
+  const search = usePageSearch("users", busy);
+  const table = useServerTable({ pageSize: 30, resetKey: `${status ?? ""}|${search}` });
 
   const query = useGetApiV1UserQuery(
     { ...audit, page: table.page, pageSize: table.pageSize, searchQuery: search, isActive: status ? disabledFilter(status) : false },
@@ -29,9 +30,10 @@ export function useUsersList() {
   const error = query.error ? apiErrorMessage(query.error)
     : parsed && !parsed.success ? "The server returned user records the app could not read." : null;
 
+  useEffect(() => { setBusy(query.isFetching); }, [query.isFetching]);
+
   const setStatus = (next: UserStatus) => {
     setParams((current) => { const copy = new URLSearchParams(current); copy.set("status", statusToParam(next)); return copy; });
-    table.onPageChange(1);
   };
 
   return {
@@ -39,8 +41,7 @@ export function useUsersList() {
     loading: query.isLoading,
     refreshing: query.isFetching && !query.isLoading,
     retry: () => { void query.refetch(); },
-    search: table.search,
-    onSearchChange: table.onSearchChange,
+    search,
     // The requested page, so paging controls respond at once while the previous rows stay on screen.
     paging: { page: table.page, pageSize: table.pageSize, totalRows: meta.totalRows, onPageChange: table.onPageChange, onPageSizeChange: table.onPageSizeChange },
   };

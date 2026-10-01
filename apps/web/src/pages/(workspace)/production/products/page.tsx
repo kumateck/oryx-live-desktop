@@ -13,7 +13,7 @@ export default function ProductsPage() {
       <div><p className="eyebrow">PRODUCTION</p><h1 className="text-xl font-semibold">Planned products</h1></div>
       <PermissionGuard require={productPermissions.create}><Button asChild size="sm"><Link to={`${productsPath}/create`}>Create</Link></Button></PermissionGuard>
     </div>
-    <ProductsTable rows={list.rows} search={list.search} onSearchChange={list.onSearchChange} paging={list.paging} loading={list.loading}
+    <ProductsTable rows={list.rows} search={list.search} paging={list.paging} loading={list.loading}
       refreshing={list.refreshing} error={list.error} onRetry={list.retry} onOpen={(product) => void navigate(productDetailPath(product.id))} />
   </section>;
 }

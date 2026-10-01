@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet, useNavigation as useRouteProgress } from "react-router";
 import wordmarkUrl from "../../../../../assets/oryx-wordmark.svg";
 import { useNavigation } from "../../modules/navigation/use-navigation";
+import { PageSearchProvider } from "../../shared/search/page-search";
 import { HeaderActions } from "./header-actions";
 import { RouteAccess } from "./route-access";
 import { WorkspaceNavigation } from "./workspace-navigation";
@@ -13,6 +14,7 @@ export function WorkspaceShell() {
   const title = groups.find((group) => group.id === active?.groupId)?.label ?? "Workspace";
 
   return (
+    <PageSearchProvider>
     <div className={`workspace ${sidebarOpen ? "sidebar-open" : ""}`}>
       <header className="app-header">
         <button className="icon-button" type="button" aria-label={sidebarOpen ? "Close navigation" : "Open navigation"}
@@ -39,5 +41,6 @@ export function WorkspaceShell() {
         <span role="status">{progress.state === "idle" ? "Ready" : "Opening page…"}</span>
       </footer>
     </div>
+    </PageSearchProvider>
   );
 }

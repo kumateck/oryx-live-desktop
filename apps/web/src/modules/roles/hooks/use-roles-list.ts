@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { usePageSearch } from "@/shared/search/page-search";
 import { z } from "zod";
 import { useGetApiV1RoleQuery } from "../api/role-api";
 import { audit } from "../lib/permissions";
@@ -9,11 +10,11 @@ const emptyRoles: z.infer<typeof roleRowSchema>[] = [];
 
 export function useRolesList() {
   const access = useRoleAccess();
-  const [search, setSearch] = useState("");
+  const search = usePageSearch("roles");
   const query = useGetApiV1RoleQuery(audit, { skip: !access.view });
   const parsed = useMemo(() => query.data ? z.array(roleRowSchema).safeParse(query.data) : null, [query.data]);
   const roles = parsed?.success ? parsed.data : emptyRoles;
   const filtered = useMemo(() => roles.filter((role) =>
-    `${role.name} ${role.displayName}`.toLowerCase().includes(search.toLowerCase().trim())), [roles, search]);
-  return { access, query, parsed, roles: filtered, search, setSearch };
+    `${role.name} ${role.displayName}`.toLowerCase().includes(search.toLowerCase())), [roles, search]);
+  return { access, query, parsed, roles: filtered, search };
 }

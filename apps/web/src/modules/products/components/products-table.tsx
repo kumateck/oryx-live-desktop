@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
-import { Input } from "@/components/ui/input";
 import { ServerDataTable, dataTableColumns } from "@/shared/datatable";
 import { toLargestUnit } from "@/shared/units/quantity";
 import { divisionLabel, productDetailPath, productPermissions } from "../lib/product-access";
@@ -20,7 +19,6 @@ function Stacked({ top, bottom }: { top: string; bottom: string }) {
 export interface ProductsTableProps {
   rows: readonly ProductRow[];
   search: string;
-  onSearchChange: (search: string) => void;
   paging: { page: number; pageSize: number; totalRows: number; onPageChange: (page: number) => void; onPageSizeChange: (pageSize: number) => void };
   loading: boolean;
   refreshing: boolean;
@@ -29,7 +27,7 @@ export interface ProductsTableProps {
   onOpen: (product: ProductRow) => void;
 }
 
-export function ProductsTable({ rows, search, onSearchChange, paging, loading, refreshing, error, onRetry, onOpen }: ProductsTableProps) {
+export function ProductsTable({ rows, search, paging, loading, refreshing, error, onRetry, onOpen }: ProductsTableProps) {
   const columns = useMemo(() => column.columns([
     column.accessor((product) => product.name ?? dash, { id: "product", header: "Product", cell: ({ row }) =>
       <div className="min-w-0 space-y-0.5">
@@ -56,7 +54,5 @@ export function ProductsTable({ rows, search, onSearchChange, paging, loading, r
   return <ServerDataTable label="Planned products" columns={columns} rows={rows} getRowId={productId} {...paging} loading={loading}
     refreshing={refreshing} error={error} onRetry={onRetry} columnToggle onRowOpen={onOpen}
     emptyTitle={search.trim() ? "No products match this search" : "No planned products yet"}
-    emptyDescription={search.trim() ? "Check the spelling, or search by code." : undefined}
-    toolbar={<Input type="search" aria-label="Search products" placeholder="Search by name or code" className="max-w-xs"
-      value={search} onChange={(event) => onSearchChange(event.target.value)} />} />;
+    emptyDescription={search.trim() ? "Check the spelling, or search by code." : undefined} />;
 }

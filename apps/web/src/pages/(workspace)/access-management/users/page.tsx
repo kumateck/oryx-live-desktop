@@ -23,7 +23,7 @@ export default function UsersPage() {
         <PermissionGuard require={userPermissions.create}><Button asChild size="sm"><Link to={`${usersPath}/create`}>Create user</Link></Button></PermissionGuard>
       </div>
     </div>
-    <UsersTable rows={list.rows} access={list.access} onAction={onAction} search={list.search} onSearchChange={list.onSearchChange}
+    <UsersTable rows={list.rows} access={list.access} onAction={onAction} search={list.search}
       paging={list.paging} loading={list.loading} refreshing={list.refreshing} error={list.error} onRetry={list.retry}
       inactive={list.status === "inactive"} />
     <UserDialogs open={open} onClose={() => setOpen(null)} />

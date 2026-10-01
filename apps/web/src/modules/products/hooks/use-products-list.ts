@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCurrentUser } from "@/shared/auth/session-provider";
 import { pageMeta, useServerTable } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
+import { usePageSearch } from "@/shared/search/page-search";
 import { useGetApiV1ProductQuery } from "../api/product-api";
 import { audit } from "../lib/product-access";
 import { productListSchema, type ProductRow } from "../schemas/product-schema";
@@ -14,8 +14,9 @@ const noProducts: ProductRow[] = [];
 export function useProductsList() {
   const access = useProductAccess();
   const user = useCurrentUser();
-  const table = useServerTable({ pageSize: 50 });
-  const search = useDebouncedValue(table.search.trim());
+  const [busy, setBusy] = useState(false);
+  const search = usePageSearch("planned products", busy);
+  const table = useServerTable({ pageSize: 50, resetKey: search });
   // Without a department the backend would return every department's products; show none instead.
   const departmentId = user?.departmentId ?? null;
 
@@ -30,13 +31,14 @@ export function useProductsList() {
     : query.error ? apiErrorMessage(query.error)
       : parsed && !parsed.success ? "The server returned product records the app could not read." : null;
 
+  useEffect(() => { setBusy(query.isFetching); }, [query.isFetching]);
+
   return {
     access, rows, error,
     loading: Boolean(departmentId) && query.isLoading,
     refreshing: query.isFetching && !query.isLoading,
     retry: () => { void query.refetch(); },
-    search: table.search,
-    onSearchChange: table.onSearchChange,
+    search,
     paging: { page: table.page, pageSize: table.pageSize, totalRows: meta.totalRows, onPageChange: table.onPageChange, onPageSizeChange: table.onPageSizeChange },
   };
 }

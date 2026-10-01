@@ -246,3 +246,6 @@ button.rail-link.current:not(.active) { color: var(--text); }
 .sidebar-section-chevron { flex: none; width: 14px; height: 14px; color: var(--soft); }
 .sidebar-section[open] > summary .sidebar-section-chevron { transform: rotate(90deg); }
 .header-search-results a small { display: block; color: var(--text-muted); font-size: 11px; }
+.header-search.open { width: min(320px, 38vw); }
+.header-search input::-webkit-search-cancel-button { display: none; }
+.header-search-hint { padding: 4px 8px 2px !important; color: var(--soft) !important; font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
