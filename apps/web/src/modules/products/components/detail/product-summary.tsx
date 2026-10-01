@@ -1,13 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { DetailGroup, DetailItem } from "@/shared/detail/detail-list";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
-import { toLargestUnit } from "@/shared/units/quantity";
+import { formatQuantityNumber, toLargestUnit } from "@/shared/units/quantity";
 import { divisionLabel } from "../../lib/product-access";
 import type { ProductDetail } from "../../schemas/product-detail-schema";
 
 function price(product: ProductDetail): string | null {
   if (product.price === null) return null;
-  const amount = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(product.price);
+  // An entered amount: shown exactly as saved.
+  const amount = formatQuantityNumber(product.price, "entered");
   return product.priceUoM ? `${amount} per ${product.priceUoM}` : amount;
 }
 

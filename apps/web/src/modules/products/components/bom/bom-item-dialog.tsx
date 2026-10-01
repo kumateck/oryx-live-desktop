@@ -50,7 +50,7 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
     if (!facts?.unit.id) { form.setError("material", { message: "This material has no unit of measure. Set one on the material first." }); return; }
     onSubmit(values, facts);
   });
-  const perBatch = toLargestUnit(batchQuantity(typeof quantity === "number" ? quantity : null, compositionSize, batchSize), facts?.unit.symbol);
+  const perBatch = toLargestUnit(batchQuantity(typeof quantity === "number" ? quantity : null, compositionSize, batchSize), facts?.unit.symbol, "calculated");
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
     <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">

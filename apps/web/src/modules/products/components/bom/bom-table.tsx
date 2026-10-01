@@ -32,7 +32,7 @@ export function BomLinesTable({ lines, compositionSize, batchSize, loading, erro
     </div> }),
     column.accessor((line) => line.specification || dash, { id: "spec", header: "Spec ref" }),
     column.accessor((line) => toLargestUnit(line.baseQuantity, line.unit.symbol)?.text ?? dash, { id: "unit", header: "Unit qty" }),
-    column.accessor((line) => toLargestUnit(batchQuantity(line.baseQuantity, compositionSize, batchSize), line.unit.symbol)?.text ?? dash, { id: "batch", header: "Batch qty" }),
+    column.accessor((line) => toLargestUnit(batchQuantity(line.baseQuantity, compositionSize, batchSize), line.unit.symbol, "calculated")?.text ?? dash, { id: "batch", header: "Batch qty" }),
     column.accessor((line) => line.category || dash, { id: "function", header: "Function" }),
     column.accessor((line) => line.grade || dash, { id: "grade", header: "Grade", size: 90 }),
     column.display({ id: "actions", header: () => <span className="sr-only">Actions</span>, size: 90, cell: ({ row }) => <span className="flex gap-1">

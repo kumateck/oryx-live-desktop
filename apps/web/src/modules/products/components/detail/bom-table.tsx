@@ -15,7 +15,7 @@ export function BomTable({ bom, product }: { bom: ProductBom; product: ProductDe
     column.accessor((item) => item.material?.code ?? dash, { id: "code", header: "Code", size: 130 }),
     column.accessor((item) => item.material?.name ?? dash, { id: "material", header: "Material" }),
     column.accessor((item) => toLargestUnit(item.baseQuantity, item.baseUoM)?.text ?? dash, { id: "unit", header: "Unit quantity" }),
-    column.accessor((item) => toLargestUnit(batchQuantity(item.baseQuantity, product.baseQuantity, product.fullBatchSize), item.baseUoM)?.text ?? dash,
+    column.accessor((item) => toLargestUnit(batchQuantity(item.baseQuantity, product.baseQuantity, product.fullBatchSize), item.baseUoM, "calculated")?.text ?? dash,
       { id: "batch", header: "Batch quantity" }),
   ]), [product.baseQuantity, product.fullBatchSize]);
   const effective = formatDate(bom.effectiveDate);

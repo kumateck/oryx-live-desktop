@@ -1,5 +1,5 @@
 import { useWatch, type Control } from "react-hook-form";
-import { toLargestUnit } from "@/shared/units/quantity";
+import { formatQuantityNumber, toLargestUnit } from "@/shared/units/quantity";
 import type { ProductFormValues } from "../../schemas/product-form-schema";
 
 /**
@@ -17,6 +17,6 @@ export function QuantityHint({ control, unitSymbol }: { control: Control<Product
     Enter quantities in {symbol}.
     {compositionText ? ` Composition unit: ${compositionText}.` : ""}
     {batchText ? ` Full batch: ${batchText}.` : ""}
-    {units !== null && Number.isFinite(units) ? ` That is ${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(units)} composition units per batch.` : ""}
+    {units !== null && Number.isFinite(units) ? ` That is ${formatQuantityNumber(units, "calculated")} composition units per batch.` : ""}
   </p>;
 }
