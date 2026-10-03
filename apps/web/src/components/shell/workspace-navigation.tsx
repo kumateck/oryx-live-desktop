@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { ChevronRight, Circle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import type { NavigationGroupId } from "../../modules/navigation/catalog.generated";
 import { groupIcons } from "../../modules/navigation/group-icons";
 import type { ActiveNavigation, NavigationGroup, NavigationItem } from "../../modules/navigation/navigation-model";
@@ -14,7 +15,7 @@ function Entry({ item, active, depth }: { item: NavigationItem; active: ActiveNa
   if (!item.children) return item.path ? <Link to={item.path} aria-current={current ? "page" : undefined}
     className={`sidebar-link ${current ? "active" : ""}`} style={{ paddingLeft: 10 + depth * 12 }}>{item.label}</Link> : null;
   return <details className="sidebar-section" open={active?.trail.includes(item.id) || current || undefined}>
-    <summary style={{ paddingLeft: 10 + depth * 12 }}><ChevronRight aria-hidden="true" className="sidebar-section-chevron" />{item.label}</summary>
+    <summary style={{ paddingLeft: 10 + depth * 12 }}><span className="min-w-0 flex-1">{item.label}</span><ChevronRight aria-hidden="true" className="sidebar-section-chevron" /></summary>
     {item.path ? <Link to={item.path} aria-current={current ? "page" : undefined}
       className={`sidebar-link ${current ? "active" : ""}`} style={{ paddingLeft: 22 + depth * 12 }}>{item.label} overview</Link> : null}
     {item.children.map((child) => <Entry key={child.id} item={child} active={active} depth={depth + 1} />)}
@@ -38,9 +39,16 @@ export function WorkspaceNavigation({ groups, active, pathname, sidebarOpen, onO
       {groups.map((group) => {
         const Icon = isGroupId(group.id) ? groupIcons[group.id] : Circle;
         const isSelected = group.id === selected?.id;
-        return <button key={group.id} type="button" title={group.label} aria-label={group.label} aria-pressed={isSelected}
-          className={`rail-link ${isSelected ? "active" : ""} ${active?.groupId === group.id ? "current" : ""}`}
-          onClick={() => { setPicked({ at: pathname, id: group.id }); onOpenSidebar(); }}><Icon aria-hidden="true" size={19} /></button>;
+        return <Tooltip key={group.id}>
+          <TooltipTrigger asChild>
+            <button type="button" aria-label={group.label} aria-pressed={isSelected}
+              className={`rail-link ${isSelected ? "active" : ""} ${active?.groupId === group.id ? "current" : ""}`}
+              onClick={() => { setPicked({ at: pathname, id: group.id }); onOpenSidebar(); }}>
+              <Icon aria-hidden="true" size={19} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={6}>{group.label}</TooltipContent>
+        </Tooltip>;
       })}
     </nav>
     {sidebarOpen && selected ? <aside className="module-sidebar" aria-label={`${selected.label} navigation`}>

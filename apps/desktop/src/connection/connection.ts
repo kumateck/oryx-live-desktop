@@ -1,14 +1,9 @@
 import type { ConnectionBridge } from "../bridge";
-import wordmarkUrl from "../../../../assets/oryx-wordmark.svg";
-import "./style.css";
 
 const form = document.querySelector<HTMLFormElement>("#site-form");
 const input = document.querySelector<HTMLInputElement>("#site-url");
 const message = document.querySelector<HTMLParagraphElement>("#message");
-const logo = document.querySelector<HTMLElement>("#brand-logo");
-if (!form || !input || !message || !logo) throw new Error("Connection form is incomplete");
-logo.style.maskImage = `url("${wordmarkUrl}")`;
-logo.style.webkitMaskImage = `url("${wordmarkUrl}")`;
+if (!form || !input || !message) throw new Error("Connection form is incomplete");
 
 const bridge: ConnectionBridge = window.oryxConnection;
 void bridge.getStatus().then((status) => {

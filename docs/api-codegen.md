@@ -26,7 +26,7 @@ Sign-in and session restore call the existing auth endpoints directly and valida
 
 1. Check `docs/api-untyped-operations.md`. If an operation the module needs is listed, its response type has to be declared on the backend before a strict hook exists; until then, define that one endpoint by hand in the module's `api/` file with a Zod-validated response. After a backend update, run `bun run api:export` and `bun run api:generate` and review the changed paths.
 2. A new backend controller tag must be added to a domain in `scripts/api-domains.ts`. Add a new domain only when no existing one fits; keep a domain to what one area of the ERP loads together.
-3. Put cache tags and invalidation in the module's handwritten `api/` file with `enhanceEndpoints`, and register new tag types in `base-api.ts`. Do not edit generated output or invalidate every ERP query after one mutation.
+3. Put cache tags and invalidation in the module's handwritten `api/` file with `enhanceEndpoints`. Register module-owned tags through its `addTagTypes` option (as in configuration collections); use `base-api.ts` for tags shared across modules. Do not edit generated output or invalidate every ERP query after one mutation.
 4. Import hooks only from that `api/` file, inside lazy module routes, so the shell and login path never load a domain's endpoints. Validate critical nullable transport fields before rendering or mutating.
 5. Run `bun run check` and the web build.
 

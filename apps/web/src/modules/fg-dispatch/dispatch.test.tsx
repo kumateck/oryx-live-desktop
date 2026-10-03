@@ -1,0 +1,110 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { createMemoryRouter, RouterProvider } from "react-router";
+import { afterEach, expect, it } from "vitest";
+import AllocationRoute from "../../pages/(workspace)/crm/allocations/[id]/page";
+import AllocationsRoute from "../../pages/(workspace)/crm/allocations/page";
+import ProformaInvoiceRoute from "../../pages/(workspace)/crm/proforma-invoice/[id]/page";
+import { ApiProvider } from "../../shared/api/api-provider";
+import { SessionProvider } from "../../shared/auth/session-provider";
+import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
+import { openMenu } from "../../test/menu";
+import { agreementFor, nextStep, packingGroups, packingRows, priceLines, proformaNumber, totalsByCurrency } from "./lib/dispatch";
+
+HTMLElement.prototype.hasPointerCapture = () => false;
+HTMLElement.prototype.setPointerCapture = () => {};
+HTMLElement.prototype.releasePointerCapture = () => {};
+HTMLElement.prototype.scrollIntoView = () => {};
+afterEach(() => { cleanup(); forgetSession(); });
+
+it("orders the steps to the customer, groups a packing list and prices lines at the agreement in effect", () => {
+  const at = (approved: boolean, loadedAt: string | null, hasWaybill: boolean, deliveredAt: string | null = null) => ({ approved, loadedAt, hasWaybill, deliveredAt });
+  expect([nextStep(at(false, null, false)), nextStep(at(true, null, false)), nextStep(at(true, "2026-10-01", false)), nextStep(at(true, "2026-10-01", true)), nextStep(at(true, "2026-10-01", true, "2026-10-02"))]).toEqual([null, "load", "waybill", "deliver", null]);
+  const source = (quantity: number, batch: string, perShipper = 100) => ({ quantity, batch, made: null, expires: null, packing: "10 x 10", perShipper });
+  const rows = packingRows([{ name: "Zinc", sources: [source(40, "B-9", 0)] }, { name: "Dicnac", sources: [source(250, "B-10"), source(120, "B-2")] }]);
+  expect(rows.map((row) => [row.product, row.batch, row.shippers, row.loose])).toEqual([["Dicnac", "B-2", 1, 20], ["Dicnac", "B-10", 2, 50], ["Zinc", "B-9", 0, 40]]);
+  // Only a product packed from more than one batch gets a subtotal.
+  expect(packingGroups(rows).map((group) => group.subtotal)).toEqual([370, null]);
+  const agreement = (id: string, price: number, from: string, to: string | null, symbol = "GHS") => ({ id, productId: "p1", productPackingId: "k1", agreedPrice: price, currency: { id: symbol, name: symbol, symbol }, effectiveFrom: from, effectiveTo: to });
+  const agreements = [agreement("old", 2, "2026-01-01T00:00:00Z", "2026-06-30T23:59:59Z"), agreement("new", 3, "2026-07-01T00:00:00Z", null, "USD")];
+  expect([agreementFor(agreements, "p1", "k1", "2026-03-01T00:00:00Z")?.id, agreementFor(agreements, "p1", "k1", "2026-09-01T00:00:00Z")?.id, agreementFor(agreements, "p1", "k9", "2026-09-01T00:00:00Z")]).toEqual(["old", "new", null]);
+  const line = (key: string, productId: string, quantity: number, listPrice: number | null) => ({ key, productId, productName: key, genericName: null, code: null, packingId: "k1", quantity, listPrice });
+  const priced = priceLines([line("a", "p1", 10, 9), line("b", "p2", 5, 4)], agreements, "2026-09-01T00:00:00Z", "GHS");
+  expect(priced.map((item) => [item.unitPrice, item.currency, item.source])).toEqual([[3, "USD", "agreement"], [4, "GHS", "default"]]);
+  // One total per currency, never added together.
+  expect(totalsByCurrency(priced)).toEqual([{ currency: "USD", amount: 30 }, { currency: "GHS", amount: 20 }]);
+  expect(proformaNumber(7, 2026)).toBe("PFIN/FGP/26/008");
+});
+
+const allocation = (extra: object = {}) => ({ id: "a-1", approved: true, loadedAt: null, deliveredAt: null, createdAt: "2026-10-01T09:00:00Z", hasInvoice: false, hasWayBill: false,
+  productionOrder: { id: "o-1", code: "PO-9", customer: { id: "c-1", name: "Acme Pharmacy", email: "buy@acme.test", address: "Accra", currency: { symbol: "GHS" } } },
+  products: [{ product: { id: "p1", name: "Dicnac 100", code: "FP-1", price: 9 }, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 },
+    fulfilledQuantities: [{ quantity: 250, batchPackagingRecord: { batchNumber: "B-10", expiryDate: "2028-01-31T00:00:00Z" } }, { quantity: 120, batchPackagingRecord: { batchNumber: "B-2" } }] }], ...extra });
+interface Call { method: string; path: string; search: string; body?: unknown }
+function open(address: string, permissions: string[], record: object = allocation()) {
+  const backend = stubBackend({ permissions });
+  rememberSession();
+  const calls: Call[] = [];
+  const session = backend.fetcher.getMockImplementation();
+  backend.fetcher.mockImplementation(async (input, init) => {
+    if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
+    const url = new URL(input.url);
+    calls.push({ method: input.method, path: url.pathname, search: url.search, ...(input.method !== "GET" ? { body: await input.clone().json().catch(() => null) } : {}) });
+    if (url.pathname === "/api/v1/production-orders/allocate" && input.method === "GET") return Response.json({ data: [record], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
+    if (url.pathname === "/api/v1/production-orders/allocate/a-1") return Response.json(record);
+    if (url.pathname === "/api/v1/production-orders/load/a-1") return new Response(null, { status: 204 });
+    if (url.pathname === "/api/v1/customers/c-1/pricing-agreements") return Response.json([{ id: "ag", productId: "p1", productName: "Dicnac 100", productPackingId: "k1", productPackingName: "10 x 10", agreedPrice: 3, currency: { id: "cur", name: "Ghana cedi", symbol: "GHS" }, effectiveFrom: "2026-01-01T00:00:00Z" }]);
+    if (url.pathname === "/api/v1/configuration/ProformaInvoice/count") return Response.json(7);
+    if (url.pathname === "/api/v1/production-orders/proforma-invoice" && input.method === "POST") return Response.json("pi-1");
+    if (url.pathname === "/api/v1/production-orders/proforma-invoice/pi-1") return Response.json({ id: "pi-1", code: "PFIN/FGP/26/008", status: 0, createdAt: "2026-10-01T10:00:00Z", allocateProductionOrder: record, products: [{ id: "l1", product: { id: "p1", name: "Dicnac 100", code: "FP-1", price: 9 }, quantity: 370 }] });
+    return new Response(null, { status: 404 });
+  });
+  const router = createMemoryRouter([{ path: "/crm/allocations", element: <AllocationsRoute /> }, { path: "/crm/allocations/:id", element: <AllocationRoute /> }, { path: "/crm/proforma-invoice/:id", element: <ProformaInvoiceRoute /> }], { initialEntries: [address] });
+  render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
+  return { calls, router };
+}
+const writes = (calls: readonly Call[]) => calls.filter((call) => call.method !== "GET").map((call) => `${call.method} ${call.path}`);
+
+it("lists packing lists and allocations behind their own permissions and loads an allocation only after confirming", async () => {
+  const user = userEvent.setup();
+  open("/crm/allocations?type=1", ["CanViewPackingList"]);
+  // Allocations need the invoice permission; the packing list permission does not open them.
+  await waitFor(() => expect(screen.queryByText("Acme Pharmacy")).toBeNull());
+  cleanup();
+  const { calls } = open("/crm/allocations?type=1", ["CanViewInvoice"]);
+  expect(await screen.findByText("Acme Pharmacy")).toBeTruthy();
+  expect(calls.find((call) => call.path === "/api/v1/production-orders/allocate")?.search).toContain("approved=true");
+  await openMenu("Actions for order PO-9");
+  await user.click(await screen.findByRole("menuitem", { name: "Mark as loaded" }));
+  expect(writes(calls)).toEqual([]);
+  await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Mark as loaded" }));
+  await waitFor(() => expect(writes(calls)).toEqual(["PUT /api/v1/production-orders/load/a-1"]));
+}, 20_000);
+
+it("raises a proforma invoice only when Generate is pressed, at the customer's agreed price", async () => {
+  const user = userEvent.setup();
+  const { calls, router } = open("/crm/allocations/a-1", ["CanViewInvoice", "CanGenerateProformaInvoice", "CanViewProformaInvoice"]);
+  expect(await screen.findByText("Subtotal · Dicnac 100")).toBeTruthy();
+  expect(screen.getByText("3 / 70")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Generate proforma invoice" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(await within(dialog).findByText("Agreed price")).toBeTruthy();
+  expect(within(dialog).getAllByText("GHS 1,110.00").length).toBeGreaterThan(0);
+  expect(await within(dialog).findByText(/PFIN\/FGP\/\d\d\/008/)).toBeTruthy();
+  expect(writes(calls)).toEqual([]);
+  await user.click(within(dialog).getByRole("button", { name: "Generate proforma invoice" }));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/crm/proforma-invoice/pi-1"));
+  expect(calls.find((call) => call.method === "POST")?.body).toMatchObject({ allocateProductionOrderId: "a-1", products: [{ productId: "p1", quantity: 370 }] });
+  expect(await screen.findByRole("button", { name: "Send to customer" }).catch(() => null)).toBeNull();
+}, 20_000);
+
+it("will not invoice an allocation that is still waiting for approval", async () => {
+  const user = userEvent.setup();
+  open("/crm/allocations/a-1", ["CanViewPackingList", "CanGenerateProformaInvoice"], allocation({ approved: false }));
+  expect(await screen.findByText(/waiting for approval. It can be invoiced/)).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Generate proforma invoice" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(await within(dialog).findByText(/waiting for its own approval/)).toBeTruthy();
+  expect((within(dialog).getByRole("button", { name: "Generate proforma invoice" }) as HTMLButtonElement).disabled).toBe(true);
+});

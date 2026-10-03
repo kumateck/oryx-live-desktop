@@ -32,13 +32,27 @@ export function clearAccess(modules: readonly PermissionModule[]): PermissionMod
   }));
 }
 
+/**
+ * The catalogue with pending changes applied. Modules and permissions that no change touches are returned as the
+ * same objects, so a list showing them does not redraw when one switch elsewhere is flipped.
+ */
 export function applyAccessOverrides(modules: readonly PermissionModule[], overrides: Readonly<Record<string, boolean>>): PermissionModule[] {
   return modules.map((module) => {
-    const children = module.children.map((child) => ({ ...child,
-      types: child.key in overrides ? overrides[child.key] ? ["Access"] : [] : child.types,
-    }));
-    return { ...module, children, isActive: children.some((child) => child.types.length > 0) };
+    let touched = false;
+    const children = module.children.map((child) => {
+      if (!(child.key in overrides)) return child;
+      touched = true;
+      return { ...child, types: overrides[child.key] ? ["Access"] : [] };
+    });
+    return touched ? { ...module, children, isActive: children.some((child) => child.types.length > 0) } : module;
   });
+}
+
+/** What a set of pending changes grants and takes away, by name, for review before saving. */
+export function describeChanges(base: readonly PermissionModule[], overrides: Readonly<Record<string, boolean>>): { granted: string[]; revoked: string[] } {
+  const granted: string[] = [], revoked: string[] = [];
+  for (const module of base) for (const child of module.children) if (child.key in overrides) (overrides[child.key] ? granted : revoked).push(`${module.module} › ${child.name || child.key}`);
+  return { granted, revoked };
 }
 
 export function accessOverrides(base: readonly PermissionModule[], changed: readonly PermissionModule[]): Record<string, boolean> {

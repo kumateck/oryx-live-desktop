@@ -2,7 +2,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { afterEach, expect, it } from "vitest";
 import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
-import { onSessionExpired } from "../auth/session-events";
+import { onPermissionDenied, onSessionExpired } from "../auth/session-events";
 import { tokenStore } from "../auth/token-store";
 import { api } from "./base-api";
 
@@ -10,6 +10,7 @@ afterEach(forgetSession);
 
 const probeApi = api.injectEndpoints({ overrideExisting: true, endpoints: (build) => ({
   sessionProbe: build.query<void, void>({ query: () => "/api/v1/role" }),
+  forbiddenWriteProbe: build.mutation<void, void>({ query: () => ({ url: "/api/v1/role", method: "POST" }) }),
 }) });
 
 function probe() {
@@ -40,6 +41,27 @@ it("renews the access token and repeats a request the backend rejected", async (
   expect(expired).toBe(0);
   expect(requestsTo(fetcher, "/api/v1/role").map((request) => request.headers.get("Authorization"))).toEqual([null, "Bearer access-renewed"]);
   expect(tokenStore.refreshToken()).toBe("refresh-renewed");
+});
+
+it("refreshes access after a forbidden mutation without retrying it or expiring the session", async () => {
+  const { fetcher } = stubBackend();
+  rememberSession();
+  const original = fetcher.getMockImplementation();
+  fetcher.mockImplementation(async (input, init) => input instanceof Request
+    ? new Response(null, { status: 403 })
+    : original ? original(input, init) : new Response(null, { status: 500 }));
+  let denied = 0;
+  let expired = 0;
+  const unsubscribeDenied = onPermissionDenied(() => { denied += 1; });
+  const unsubscribeExpired = onSessionExpired(() => { expired += 1; });
+  const store = configureStore({ reducer: { [api.reducerPath]: api.reducer }, middleware: (defaults) => defaults().concat(api.middleware) });
+  try {
+    const result = await store.dispatch(probeApi.endpoints.forbiddenWriteProbe.initiate());
+    expect(result).toMatchObject({ error: { status: 403 } });
+    expect(requestsTo(fetcher, "/api/v1/role")).toHaveLength(1);
+    expect(denied).toBe(1);
+    expect(expired).toBe(0);
+  } finally { unsubscribeDenied(); unsubscribeExpired(); store.dispatch(api.util.resetApiState()); }
 });
 
 it("expires the workspace when the session cannot be renewed", async () => {

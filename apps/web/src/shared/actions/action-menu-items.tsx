@@ -2,6 +2,8 @@ import { Fragment } from "react";
 import { Link } from "react-router";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import type { ActionItem } from "./action-items";
+import { useAccess } from "../auth/use-access";
+import { useVisibleActions } from "./use-visible-actions";
 
 function ItemBody({ item }: { item: ActionItem }) {
   const Icon = item.icon;
@@ -16,13 +18,19 @@ function ItemBody({ item }: { item: ActionItem }) {
 
 /** The entries of an action menu. Shared by the row menu and the dropdown button so both behave the same. */
 export function ActionMenuItems({ items }: { items: readonly ActionItem[] }) {
-  return items.map((item, index) => <Fragment key={item.id}>
+  const { allowsNow } = useAccess();
+  const visible = useVisibleActions(items);
+  const allowed = (item: ActionItem) => !item.disabled && allowsNow(item.require ?? { kind: "authenticated" });
+  return visible.map((item, index) => <Fragment key={item.id}>
     {item.separated && index > 0 ? <DropdownMenuSeparator /> : null}
     {item.to !== undefined
       // The link is the menu item itself, so Enter, click, and "open in new tab" all work.
       ? <DropdownMenuItem asChild variant={item.destructive ? "destructive" : "default"} {...(item.disabled ? { disabled: true } : {})}>
-        <Link to={item.to}><ItemBody item={item} /></Link></DropdownMenuItem>
-      : <DropdownMenuItem variant={item.destructive ? "destructive" : "default"} {...(item.disabled ? { disabled: true } : {})} onSelect={item.onSelect}>
+        <Link to={item.to} onClick={(event) => { if (!allowed(item)) event.preventDefault(); }}><ItemBody item={item} /></Link></DropdownMenuItem>
+      : <DropdownMenuItem variant={item.destructive ? "destructive" : "default"} {...(item.disabled ? { disabled: true } : {})} onSelect={(event) => {
+        if (!allowed(item)) { event.preventDefault(); return; }
+        item.onSelect();
+      }}>
         <ItemBody item={item} /></DropdownMenuItem>}
   </Fragment>);
 }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { navigationCatalog } from "../apps/web/src/modules/navigation/catalog.generated.ts";
+import { collectionViewPermissions } from "../apps/web/src/modules/collection-configurations/lib/collections.ts";
 import {
   activeNavigation, navigationPages, navigationTrail, visibleNavigation, type NavigationGroup,
 } from "../apps/web/src/modules/navigation/navigation-model.ts";
@@ -64,9 +65,34 @@ test("the imported Oryx Next catalog is well formed", () => {
   assert.equal(activeNavigation(navigationCatalog, "/access-management/roles/create")?.groupId, "it-support");
 });
 
+test("supplier and manufacturer directories belong to Procurement with their own permissions", () => {
+  for (const [path, permission, itemId] of [
+    ["/settings/suppliers", "CanViewVendors", "procurement.suppliers"],
+    ["/settings/manufacturers", "CanViewManufacturers", "procurement.manufacturers"],
+    ["/procurement/supplier-compliance", "CanViewSupplierCertifications", "procurement.supplier-compliance"],
+  ] as const) {
+    const visible = visibleNavigation(navigationCatalog, user(permission));
+    assert.equal(activeNavigation(visible, path)?.groupId, "procurement");
+    assert.equal(activeNavigation(visible, `${path}/record/edit`)?.itemId, itemId);
+    assert.equal(visible.some((group) => group.id === "system-settings"), false);
+    assert.equal(navigationPages(visible).filter((page) => page.path === path).length, 1);
+  }
+  const supplierOnly = visibleNavigation(navigationCatalog, user("CanViewVendors"));
+  assert.equal(activeNavigation(supplierOnly, "/settings/manufacturers"), null);
+  assert.deepEqual(navigationTrail(navigationCatalog, "/settings/suppliers/record/relationship").map((crumb) => crumb.label), ["Procurement", "Suppliers"]);
+});
+
 test("gives a page's place in the navigation, linking only the entry that is a page", () => {
   assert.deepEqual(navigationTrail(groups, "/qc/specifications/42/edit"), [{ label: "Quality Control" }, { label: "Specifications", path: "/qc/specifications" }]);
-  assert.deepEqual(navigationTrail(groups, "/qc/tests", "?type=1"), [{ label: "Quality Control" }, { label: "Testing" }, { label: "Packaging", path: "/qc/tests" }]);
+  assert.deepEqual(navigationTrail(groups, "/qc/tests", "?type=1"), [{ label: "Quality Control" }, { label: "Testing" }, { label: "Packaging", path: "/qc/tests?type=1" }]);
   assert.deepEqual(navigationTrail(groups, "/nowhere"), []);
   assert.deepEqual(navigationTrail(navigationCatalog, "/access-management/users/create").map((crumb) => crumb.label), ["IT Support", "User Management", "Manage Users Directory"]);
+});
+
+test("collection navigation is available to each collection's independent viewer", () => {
+  for (const permission of collectionViewPermissions) {
+    const visible = visibleNavigation(navigationCatalog, user(permission));
+    assert.equal(activeNavigation(visible, "/settings/config")?.itemId, "system-settings.configuration-collections", permission);
+  }
+  assert.equal(activeNavigation(visibleNavigation(navigationCatalog, user()), "/settings/config"), null);
 });

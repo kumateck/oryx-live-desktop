@@ -1,3 +1,5 @@
+import { productPermissions } from "../lib/product-access";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
@@ -22,10 +24,13 @@ export function useBom(productId: string, compositionSize: number | null, batchS
   const saved = useMemo(() => parsed?.success ? fromSavedBom(parsed.data) : none, [parsed]);
   const [draft, setDraft] = useState<BomLine[] | null>(null);
   const [message, setMessage] = useState("");
+  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.edit], departmentType: 0 });
   const lines = draft ?? saved;
   const problems = bomProblems(lines);
 
   const saveAll = async () => {
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return; }
     setMessage("");
     if (problems.length) { setMessage(problems.join(" ")); return; }
     const result = await save({ ...bomAudit, domainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest: toBomRequest(productId, lines, compositionSize, batchSize) });
@@ -34,6 +39,8 @@ export function useBom(productId: string, compositionSize: number | null, batchS
     toast.success("Bill of materials saved");
   };
   const archiveActive = async () => {
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return false; }
     setMessage("");
     const result = await archive({ ...bomAudit, productId });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return false; }

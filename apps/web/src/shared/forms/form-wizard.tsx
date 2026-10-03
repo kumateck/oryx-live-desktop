@@ -17,6 +17,7 @@ const CheckboxInputField = lazy(() => import("./fields/checkbox-field"));
 const DateInputField = lazy(() => import("./fields/date-field"));
 const DateRangeInputField = lazy(() => import("./fields/date-range-field"));
 const MonthInputField = lazy(() => import("./fields/month-field"));
+const MonthRangeInputField = lazy(() => import("./fields/month-range-field"));
 const RadioInputField = lazy(() => import("./fields/radio-field"));
 const SwitchInputField = lazy(() => import("./fields/switch-field"));
 const SliderInputField = lazy(() => import("./fields/slider-field"));
@@ -89,6 +90,8 @@ function WizardFieldSlot<TValues extends FieldValues>({ field, form }: {
       return <DateRangeInputField field={field} />;
     case InputTypes.MONTH:
       return <MonthInputField field={field} />;
+    case InputTypes.MONTH_RANGE:
+      return <MonthRangeInputField field={field} />;
     case InputTypes.TEXTAREA:
       return <TextareaInputField field={field} />;
     case InputTypes.SELECT:

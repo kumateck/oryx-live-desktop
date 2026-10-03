@@ -37,3 +37,22 @@ it("shows placeholders while the record name is loading", () => {
   expect(screen.queryByRole("heading")).toBeNull();
   expect(crumbs()).toEqual(["IT Support", "Access Management", "Manage Roles", ""]);
 });
+
+it("shows an explicitly supplied list parent once on create, detail, and edit pages", () => {
+  for (const suffix of ["create", "record", "record/edit"]) {
+    const view = open(`/settings/manufacturers/${suffix}`, <PageHeader title="Manufacturer"
+      crumbs={[{ label: "Manufacturers", to: "/settings/manufacturers" }, { label: "Manufacturer" }]} />);
+    expect(crumbs()).toEqual(["Procurement", "Manufacturers", "Manufacturer"]);
+    expect(within(screen.getByRole("navigation", { name: "breadcrumb" })).getAllByRole("link")
+      .map((link) => link.getAttribute("href")).filter(Boolean)).toEqual(["/settings/manufacturers"]);
+    view.unmount();
+  }
+});
+
+it("keeps record names that happen to match the list parent", () => {
+  open("/settings/suppliers/record", <PageHeader title="Suppliers"
+    crumbs={[{ label: "Suppliers", to: "/settings/suppliers" }, { label: "Suppliers" }]} />);
+  expect(crumbs()).toEqual(["Procurement", "Suppliers", "Suppliers"]);
+  expect(within(screen.getByRole("navigation", { name: "breadcrumb" })).getAllByRole("listitem")[2]
+    ?.querySelector("[aria-current='page']")).toBeTruthy();
+});

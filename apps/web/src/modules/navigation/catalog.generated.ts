@@ -161,7 +161,7 @@ export const navigationCatalog = [
           },
           {
             "id": "main.dashboard.production-health-dashboard",
-            "label": "Production Health Dashboard",
+            "label": "Production Health",
             "path": "/production-health-dashboard",
             "permissions": [
               "CanViewPlannedProducts"
@@ -239,13 +239,27 @@ export const navigationCatalog = [
     "label": "Procurement",
     "items": [
       {
+        "id": "procurement.suppliers",
+        "label": "Suppliers",
+        "path": "/settings/suppliers",
+        "permissions": [
+          "CanViewVendors"
+        ]
+      },
+      {
+        "id": "procurement.manufacturers",
+        "label": "Manufacturers",
+        "path": "/settings/manufacturers",
+        "permissions": [
+          "CanViewManufacturers"
+        ]
+      },
+      {
         "id": "procurement.supplier-compliance",
         "label": "Supplier compliance",
         "path": "/procurement/supplier-compliance",
         "permissions": [
-          "CanViewSupplierCertifications",
-          "CanViewSupplierPerformance",
-          "CanViewSupplierSpend"
+          "CanViewSupplierCertifications"
         ]
       },
       {
@@ -610,7 +624,7 @@ export const navigationCatalog = [
           },
           {
             "id": "warehouse-management.material-requests.extra-material-requisitions",
-            "label": "Extra Material Requisitions",
+            "label": "Extra Material Requests",
             "path": "/warehouse/extra-material",
             "permissions": [
               "CanIssuePackagingMaterialRequisitions"
@@ -634,7 +648,7 @@ export const navigationCatalog = [
           },
           {
             "id": "warehouse-management.material-requests.about-to-expire-materials",
-            "label": "About To Expire Materials",
+            "label": "Expiring Materials",
             "path": "/warehouse/about-to-expire-materials",
             "permissions": [
               "CanViewAboutToExpireMaterials"
@@ -777,7 +791,7 @@ export const navigationCatalog = [
           },
           {
             "id": "production-planning.requisition.create-purchase-requisitions",
-            "label": "Create Purchase Requisitions",
+            "label": "New Requisition",
             "path": "/production/requisition/create",
             "permissions": [
               "CanViewRawMaterialRequisitionsForCreation",
@@ -894,7 +908,7 @@ export const navigationCatalog = [
       },
       {
         "id": "quality-control.standardtest-procedures",
-        "label": "StandardTest Procedures",
+        "label": "Test Procedures",
         "permissions": [
           "CanViewRawMaterialStps",
           "CanViewPackagingMaterialStps",
@@ -1017,7 +1031,7 @@ export const navigationCatalog = [
           },
           {
             "id": "quality-control.qc-worksheets.import-worksheet-templates",
-            "label": "Import Worksheet Templates",
+            "label": "Import Templates",
             "path": "/qc/worksheets/templates/import",
             "permissions": [
               "CanImportQcWorksheetTemplates"
@@ -1464,7 +1478,7 @@ export const navigationCatalog = [
         "children": [
           {
             "id": "inventory-and-stores.procurement.purchase-requisition-sourcing",
-            "label": "Purchase Requisition Sourcing",
+            "label": "Requisition Sourcing",
             "path": "/extrals/procurement/purchase-requisition-sourcing",
             "permissions": [
               "CanViewPurchaseRequisitionsSourcing"
@@ -1480,7 +1494,7 @@ export const navigationCatalog = [
           },
           {
             "id": "inventory-and-stores.procurement.vendor-quotation-requests",
-            "label": "Vendor Quotation Requests",
+            "label": "Supplier Quote Requests",
             "path": "/extrals/procurement/vendor-quotations",
             "permissions": [
               "CanViewQuotationRequestsForTrustedVendors"
@@ -1573,7 +1587,7 @@ export const navigationCatalog = [
           },
           {
             "id": "inventory-and-stores.service.service-quotation-response",
-            "label": "Service Quotation Response",
+            "label": "Service Quote Responses",
             "path": "/extrals/service-quotation-response",
             "permissions": [
               "CanViewServicesQuotationResponses"
@@ -1641,7 +1655,7 @@ export const navigationCatalog = [
           },
           {
             "id": "human-resource.employee-management.department-employee-export",
-            "label": "Department Employee Export",
+            "label": "Export Department Staff",
             "path": "/hr/department-employee-export",
             "permissions": [
               "CanExportDepartmentEmployee"
@@ -1770,7 +1784,7 @@ export const navigationCatalog = [
           },
           {
             "id": "human-resource.shift-scheduling.shift-schedule-report-upload",
-            "label": "Shift Schedule Report Upload",
+            "label": "Upload Shift Reports",
             "path": "/hr/shift-schedule-upload",
             "permissions": [
               "CanViewShiftScheduleReportUpload"
@@ -1934,7 +1948,7 @@ export const navigationCatalog = [
     "items": [
       {
         "id": "system-settings.system-configuration",
-        "label": "System Configuration",
+        "label": "General",
         "path": "/settings",
         "permissions": [
           "CanViewProductCategories",
@@ -1962,7 +1976,6 @@ export const navigationCatalog = [
           "CanViewApprovals",
           "CanViewSignatureSettings",
           "CanViewChangePassword",
-          "CanViewManufacturers",
           "CanViewWarehouses",
           "CanViewLocations",
           "CanViewRacks",
@@ -1981,7 +1994,7 @@ export const navigationCatalog = [
       },
       {
         "id": "system-settings.configuration-collections",
-        "label": "Configuration Collections",
+        "label": "Collections",
         "path": "/settings/config",
         "permissions": [
           "CanViewProductCategories",
@@ -1989,18 +2002,19 @@ export const navigationCatalog = [
           "CanViewPackageCategories",
           "CanViewItemCategory",
           "CanViewEquipmentCategory",
-          "CanViewMaterialTypes",
-          "CanViewUomStyle",
-          "CanViewPackageStyle",
-          "CanViewProductState",
           "CanViewResources",
           "CanViewOperations",
           "CanViewWorkCenters",
+          "CanViewSite",
+          "CanViewMaterialTypes",
+          "CanViewUnitOfMeasure",
+          "CanViewPackageStyle",
+          "CanViewProductState",
           "CanViewCountries",
+          "CanViewShiftCategories",
           "CanViewPaymentTerms",
           "CanViewDeliveryModes",
-          "CanViewCharges",
-          "CanViewThreshold"
+          "CanViewCharges"
         ]
       },
       {
@@ -2013,9 +2027,8 @@ export const navigationCatalog = [
       },
       {
         "id": "system-settings.inventory-configuration",
-        "label": "Inventory Configuration",
+        "label": "Inventory",
         "permissions": [
-          "CanViewManufacturers",
           "CanViewWarehouses",
           "CanViewLocations",
           "CanViewRacks",
@@ -2025,14 +2038,6 @@ export const navigationCatalog = [
           "CanViewUnitOfMeasure"
         ],
         "children": [
-          {
-            "id": "system-settings.inventory-configuration.manufacturers",
-            "label": "Manufacturers",
-            "path": "/settings/manufacturers",
-            "permissions": [
-              "CanViewManufacturers"
-            ]
-          },
           {
             "id": "system-settings.inventory-configuration.warehouses",
             "label": "Warehouses",
@@ -2093,7 +2098,7 @@ export const navigationCatalog = [
       },
       {
         "id": "system-settings.organization-configuration",
-        "label": "Organization Configuration",
+        "label": "Organization",
         "permissions": [
           "CanViewDepartments",
           "CanViewWorkingDays",
@@ -2144,7 +2149,7 @@ export const navigationCatalog = [
       },
       {
         "id": "system-settings.full-procedures-areas",
-        "label": "Full Procedures Areas",
+        "label": "Procedure Areas",
         "path": "/settings/full-procedures/areas",
         "permissions": [
           "CanViewQuestionTemplates"

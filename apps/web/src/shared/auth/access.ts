@@ -12,11 +12,21 @@ export type AccessRule =
   | ({ readonly kind: "all"; readonly permissions: readonly string[] } & RuleBase)
   | ({ readonly kind: "some"; readonly permissions: readonly string[] } & RuleBase);
 
+export type PermissionRequirement = string | AccessRule;
+
+export function requirementRule(requirement: PermissionRequirement): AccessRule {
+  return typeof requirement === "string" ? { kind: "all", permissions: [requirement] } : requirement;
+}
+
+export function allowsRequirement(requirement: PermissionRequirement, context: AccessContext): boolean {
+  return canAccess(requirementRule(requirement), context);
+}
+
 export type AccessContext =
   | { readonly state: "anonymous" }
   | { readonly state: "authenticated"; readonly permissions: ReadonlySet<string>; readonly departmentType?: DepartmentType | null };
 
-/** Navigation and route visibility only. The backend remains the authority for every action. */
+/** Shared route, navigation, and action policy. The backend remains the authority for every request. */
 export function canAccess(rule: AccessRule, context: AccessContext): boolean {
   if (context.state === "anonymous") return false;
   if (rule.departmentType !== undefined && context.departmentType !== rule.departmentType) return false;

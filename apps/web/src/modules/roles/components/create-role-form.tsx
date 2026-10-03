@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { usePostApiV1RoleMutation } from "../api/role-api";
 import { PermissionPicker } from "./permission-picker";
-import { audit, clearAccess, rolesPath } from "../lib/permissions";
+import { audit, clearAccess, rolesPath, rolePermissions } from "../lib/permissions";
 import { departmentTypeFromValue, departmentTypes } from "../lib/role-types";
 import { roleCreateSchema, type RoleCreateValues } from "../schemas/role-schema";
 import type { PermissionModule } from "../schemas/permission-schema";
@@ -24,10 +25,13 @@ export function CreateRoleForm({ available }: { available: PermissionModule[] })
   const navigate = useNavigate();
   const [permissions, setPermissions] = useState(() => clearAccess(available));
   const [message, setMessage] = useState("");
+  const permission = usePermissionAction(rolePermissions.create);
   const [createRole, mutation] = usePostApiV1RoleMutation();
   const form = useForm<RoleCreateValues>({ resolver: zodResolver(roleCreateSchema), defaultValues: { name: "" } });
   const submit = form.handleSubmit(async (values) => {
     setMessage("");
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return; }
     const result = await createRole({ ...audit, domainEntitiesRolesCreateRoleRequest: {
       name: values.name, type: departmentTypeFromValue(values.type.value), permissions,
     } });
@@ -44,6 +48,6 @@ export function CreateRoleForm({ available }: { available: PermissionModule[] })
     </div>
     {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
     <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => void navigate(rolesPath)}>Cancel</Button>
-      <Button type="submit" disabled={mutation.isLoading}>{mutation.isLoading ? <><Spinner />Creating…</> : "Create role"}</Button></div>
+      <Button type="submit" disabled={!permission.allowed || mutation.isLoading}>{mutation.isLoading ? <><Spinner />Creating…</> : "Create role"}</Button></div>
   </form>;
 }

@@ -6,5 +6,5 @@ import type { ActionEntry, ActionItem } from "./action-items";
 export function useVisibleActions(items: readonly ActionEntry[]): ActionItem[] {
   const access = useAccess();
   return useMemo(() => items.filter((item): item is ActionItem => Boolean(item)
-    && (!item || !item.require || (typeof item.require === "string" ? access.has(item.require) : access.can(item.require)))), [items, access]);
+    && Boolean(item && access.allows(item.require ?? { kind: "authenticated" }))), [items, access]);
 }

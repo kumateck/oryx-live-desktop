@@ -2,7 +2,7 @@
 
 ## Delivery boundary
 
-The customer server serves the React SPA and API at one trusted HTTPS origin. The installed Electron shell stores only that origin in its user-data directory and loads it in a sandboxed renderer. UI and shell releases follow separate paths. The initial scaffold does not implement either release pipeline yet.
+The customer server serves the React SPA and API at one configured HTTP or HTTPS origin. Installed clients support intranet HTTP, as requested on 2026-10-02; HTTPS remains preferred and requires a trusted certificate. The installed Electron shell stores only that origin in its user-data directory and loads it in a sandboxed renderer. UI and shell releases follow separate paths. The initial scaffold does not implement either release pipeline yet.
 
 ## Route convention
 
@@ -16,8 +16,25 @@ Each business module has a small typed manifest in `apps/web/src/modules/<module
 
 ## Security boundary
 
-The connection view is local. It can set a site origin through a narrow preload bridge. The main process accepts configuration IPC only from that view. The remote customer site receives the same preload bundle, but main rejects its configuration requests. Remote navigation and new windows are restricted; renderer Node integration is off, context isolation and sandboxing are on, and permission requests are denied by default. The customer server must supply a restrictive production Content Security Policy and trusted certificate.
+The connection view is local. It can set a site origin through a narrow preload bridge. The main process accepts configuration IPC only from that view. The remote customer site receives the same preload bundle, but main rejects its configuration requests. Remote navigation and new windows are restricted; renderer Node integration is off, context isolation and sandboxing are on, and permission requests are denied by default. The customer server must supply a restrictive production Content Security Policy; HTTPS deployments must supply a trusted certificate. HTTP does not encrypt session traffic; allowing it does not disable certificate validation or Chromium security protections.
 
 ## Current limits
 
 The current UI is a layout foundation, not a migrated ERP workflow. A desktop-session flow and its first generated RTK Query hooks exist, but the full backend OpenAPI export, business-module data integration, live update safety, MinIO shell update feed, and notification gateway remain implementation gates. Do not use the foundation build for production customer work.
+
+## Desktop menu bar and server connection
+
+The desktop shell loads the **Oryx web application**; the web application talks to the backend API. The address entered on the setup page is the web application's, never the backend's. An address that answers but is not the web application (it has no `<meta name="application-name" content="Oryx Live">`) is refused with a message.
+
+The menu bar (`apps/desktop/src/menu.ts`) carries what the shell itself can do:
+
+| Menu | Item | Does |
+| --- | --- | --- |
+| Server | Connected to … | Shows the saved address. |
+| Server | Reconnect (Ctrl/Cmd+Shift+R) | Loads the saved server again. |
+| Server | Change Server… (Ctrl/Cmd+Shift+S) | Back to the setup page with the address filled in. |
+| Server | Forget Server… | After confirming: removes the saved address and the sign-in kept for it. |
+| File | Print… | Prints the open page. |
+| Go | Back, Forward, Home | Moves within the connected server only. |
+
+In development the setup page is served on port 5273, so port 5173 stays free for `bun run dev:web`. The saved address is `site-url.txt` in the app's user-data folder.

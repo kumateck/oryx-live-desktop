@@ -95,7 +95,7 @@ export function navigationTrail(groups: readonly NavigationGroup[], pathname: st
     if (!item) break;
     // A heading and its first entry often share a name ("Dashboard" over "Overview" is fine, "Users" over "Users" is noise).
     if (crumbs[crumbs.length - 1]?.label !== item.label) {
-      crumbs.push(id === active.itemId && item.path ? { label: item.label, path: item.path.split("?")[0] ?? item.path } : { label: item.label });
+      crumbs.push(id === active.itemId && item.path ? { label: item.label, path: item.path } : { label: item.label });
     }
     level = item.children ?? [];
   }

@@ -3,7 +3,7 @@
 * { box-sizing: border-box; }
 body { display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 24px; }
 .connection-card { width: min(100%, 420px); padding: 34px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
-.brand-logo { width: 130px; height: 62px; background: var(--brand); mask-repeat: no-repeat; mask-position: left center; mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: left center; -webkit-mask-size: contain; }
+.brand-logo { width: 130px; height: 62px; background: var(--brand); mask-image: url("../../../../assets/oryx-wordmark.svg"); mask-repeat: no-repeat; mask-position: left center; mask-size: contain; -webkit-mask-image: url("../../../../assets/oryx-wordmark.svg"); -webkit-mask-repeat: no-repeat; -webkit-mask-position: left center; -webkit-mask-size: contain; }
 h1 { margin: 22px 0 8px; font-size: 21px; line-height: 1.25; letter-spacing: -.02em; }
 p { margin: 0 0 23px; color: var(--muted); }
 form { display: grid; gap: 9px; }

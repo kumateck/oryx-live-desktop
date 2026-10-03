@@ -1,3 +1,5 @@
+import { productPermissions } from "../lib/product-access";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
@@ -19,9 +21,12 @@ export function usePackingStyles(productId: string) {
   const saved = useMemo(() => parsed?.success ? fromSaved(parsed.data) : none, [parsed]);
   const [draft, setDraft] = useState<PackingStyle[] | null>(null);
   const [message, setMessage] = useState("");
+  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.edit], departmentType: 0 });
   const styles = draft ?? saved;
 
   const saveAll = async () => {
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return; }
     setMessage("");
     const result = await save({ ...audit, productId, body: toPackingRequest(styles) });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }

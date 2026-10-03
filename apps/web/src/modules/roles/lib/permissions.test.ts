@@ -30,3 +30,17 @@ it("toggles one permission and keeps its module active only while access remains
   expect(granted[0]?.children?.[1]?.types).toEqual([]);
   expect(toggleAccess(granted, "CanViewRoles")[0]?.isActive).toBe(false);
 });
+
+it("leaves untouched modules and permissions as the same objects, and lists what a change grants and removes", async () => {
+  const { applyAccessOverrides, describeChanges } = await import("./permissions");
+  const { setAccessForKeys } = await import("./permission-groups");
+  const { permissionFixture } = await import("./permission-fixtures");
+  const applied = applyAccessOverrides(permissionFixture, { edit: true });
+  expect(applied[1]).toBe(permissionFixture[1]);
+  expect(applied[0]!.children[0]).toBe(permissionFixture[0]!.children[0]);
+  expect(applied[0]!.children[1]!.types).toEqual(["Access"]);
+  // Granting what is already granted changes nothing at all.
+  expect(setAccessForKeys(permissionFixture, new Set(["view"]), true)[0]).toBe(permissionFixture[0]);
+  expect(setAccessForKeys(permissionFixture, new Set(["pay"]), false)[1]!.isActive).toBe(false);
+  expect(describeChanges(permissionFixture, { edit: true, pay: false })).toEqual({ granted: ["Procurement › Edit suppliers"], revoked: ["Finance › Pay invoices"] });
+});

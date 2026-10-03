@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; object-src 'none'; base-uri 'none'" />
     <title>Connect to Oryx</title>
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <main class="connection-card">
       <div id="brand-logo" class="brand-logo" role="img" aria-label="Oryx"></div>
       <h1>Connect to your Oryx server</h1>
-      <p>Enter the trusted HTTPS address supplied by your site administrator.</p>
+      <p>Enter the address your Oryx web application is served from, as supplied by your site administrator. This is not the backend API address. HTTP and HTTPS are supported.</p>
       <form id="site-form">
         <label for="site-url">Server address</label>
-        <input id="site-url" type="url" required autocomplete="url" spellcheck="false" placeholder="https://192.0.2.10" />
+        <input id="site-url" type="url" required autocomplete="url" spellcheck="false" placeholder="http://oryx-server" />
         <button type="submit">Connect</button>
       </form>
       <p id="message" class="message" role="alert"></p>

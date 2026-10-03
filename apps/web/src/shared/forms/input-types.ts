@@ -18,6 +18,7 @@ export const InputTypes = {
   LABEL: "label",
   MOMENT: "moment",
   MONTH: "month",
+  MONTH_RANGE: "monthrange",
   NUMBER: "number",
   PASSWORD: "password",
   RADIO: "radio",

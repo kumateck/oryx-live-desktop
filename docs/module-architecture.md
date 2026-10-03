@@ -39,6 +39,14 @@ No module imports another module's internal component, hook, or utility path. Sh
 
 The route generator remains the source of URL matching. Manifests describe navigation and access, not another route table. Detail routes can be absent from navigation while still belonging to a module. A future validation step should check manifest paths against generated routes and require an explicit module owner for migrated business routes. Navigation visibility never substitutes for backend authorization.
 
+`PageHeader` / `PageBreadcrumbs` infer the navigation ancestors and accept record/action crumbs. An explicitly supplied first parent with the same destination replaces the inferred parent and its descendants; it is shown once. The explicit link can add filters to a generic parent, but must preserve any query constraints on the inferred parent (for selected queues or material types). Equal labels alone are never collapsed because a record may share its parent's name.
+
+The module icon rail shows each group's display name on hover and keyboard focus using the shared shadcn Tooltip, portalled to the right so the scrolling rail cannot clip it. Icons retain accessible names and pressed state; Escape dismisses the tooltip. The root TooltipProvider uses a 200ms hover delay. The shared source follows [shadcn's Radix Tooltip](https://ui.shadcn.com/docs/components/radix/tooltip) and uses the already installed Radix dependency.
+
+`WorkspaceHeader` owns the logo, shadcn panel toggle, divider, title, and header actions. Shared shell width variables align the divider to the sidebar/content boundary and the title to the content gutter while navigation is expanded. The wordmark stays visible in every navigation state, including narrow windows. Collapsed navigation reserves a compact 136px header brand area for the logo and panel toggle; the title follows it without overlapping the logo.
+
+Expandable navigation entries place their chevrons at the right edge. Desktop label overrides live in `scripts/import-navigation.ts`, so re-importing Oryx Next navigation retains concise names (for example General, Collections, Inventory, Organization and Procedure Areas) while preserving route addresses, IDs and permission requirements. Avoid cutting off labels just to make them fit; use concise, meaningful names and allow wrapping for unusual lengths or larger text settings.
+
 ## Performance at 27 modules
 
 Route pages and layouts are lazy imports. The small manifests may load at startup; module implementations and domain API endpoint chunks load when a route needs them. Keep the core shell, session, navigation, and error UI independent of large generated API files. A module should split expensive editors, reports, charts, and secondary detail sections further. Measure initial bundle, first route, route transitions, and memory on target laptops before setting budgets.

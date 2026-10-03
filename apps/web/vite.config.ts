@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 // Dev server settings come from apps/web/.env (see .env.example) or the shell environment.
 const env = { ...loadEnv(process.env.NODE_ENV ?? "development", fileURLToPath(new URL(".", import.meta.url)), "ORYX_"), ...process.env };
 const apiOrigin = env.ORYX_DEV_API_ORIGIN || undefined;
+// The notification gateway (apps/gateway) during development. Without it the app falls back to checking for notifications on a timer.
+const gatewayOrigin = env.ORYX_DEV_GATEWAY_ORIGIN || undefined;
 if (apiOrigin) {
   const address = new URL(apiOrigin);
   const local = ["localhost", "127.0.0.1", "[::1]"].includes(address.hostname);
@@ -26,11 +28,9 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    ...(apiOrigin ? { proxy: {
-      "/api": {
-        target: apiOrigin,
-        changeOrigin: true,
-      },
+    ...(apiOrigin || gatewayOrigin ? { proxy: {
+      ...(apiOrigin ? { "/api": { target: apiOrigin, changeOrigin: true } } : {}),
+      ...(gatewayOrigin ? { "/realtime": { target: gatewayOrigin, changeOrigin: true, ws: true } } : {}),
     } } : {}),
   },
   build: { outDir: "dist", sourcemap: false },

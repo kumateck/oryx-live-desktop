@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { useEffect } from "react";
+import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, expect, it } from "vitest";
 import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
 import { SessionProvider } from "../../shared/auth/session-provider";
@@ -26,9 +27,49 @@ it("opens a route once the matching permission is held", async () => {
   expect(await screen.findByText("Page content")).toBeTruthy();
 });
 
-it("leaves routes outside any module to the signed-in workspace", async () => {
+it("lets the user refresh access after an administrator grants the page permission", async () => {
+  const backend = stubBackend({ permissions: [] });
+  rememberSession();
+  render(<SessionProvider><MemoryRouter initialEntries={["/access-management/roles/create"]}>
+    <RouteAccess><p>Page content</p></RouteAccess>
+  </MemoryRouter></SessionProvider>);
+  await screen.findByRole("alert");
+  backend.set({ permissions: ["CanCreateRole"] });
+  fireEvent.click(screen.getByRole("button", { name: "Refresh access" }));
+  expect(await screen.findByText("Page content")).toBeTruthy();
+});
+
+it("allows explicitly declared personal settings without ERP permissions", async () => {
   open("/settings/appearance", []);
   expect(await screen.findByText("Page content")).toBeTruthy();
+});
+
+it("denies an undeclared child of authenticated settings before mounting it", async () => {
+  open("/settings/future-admin-tool", []);
+  expect(await screen.findByRole("alert")).toBeTruthy();
+  expect(screen.queryByText("Page content")).toBeNull();
+});
+
+it("denies a route without an owning module", async () => {
+  open("/future-admin-tool", []);
+  expect(await screen.findByRole("alert")).toBeTruthy();
+  expect(screen.queryByText("Page content")).toBeNull();
+});
+
+it("redirects to an allowed tab before its page can mount and fetch", async () => {
+  const mounted: string[] = [];
+  function Page() {
+    const { search, hash } = useLocation();
+    useEffect(() => { mounted.push(search); }, [search]);
+    return <p>Loaded {search}{hash}</p>;
+  }
+  stubBackend({ permissions: ["CanViewLocalQuotation"] });
+  rememberSession();
+  render(<SessionProvider><MemoryRouter initialEntries={["/procurement/quotations?type=0&page=9&search=Acme#summary"]}>
+    <RouteAccess><Page /></RouteAccess>
+  </MemoryRouter></SessionProvider>);
+  await screen.findByText("Loaded ?type=1&search=Acme#summary");
+  expect(mounted).toEqual(["?type=1&search=Acme"]);
 });
 
 it("blocks a production-only page for a user outside production departments", async () => {

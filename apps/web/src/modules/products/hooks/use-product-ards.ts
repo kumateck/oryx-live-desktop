@@ -1,3 +1,6 @@
+import { productArdPermissions } from "../lib/product-access";
+import { useAccess } from "@/shared/auth/use-access";
+import { permissionDeniedMessage } from "@/shared/auth/use-permission-action";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
@@ -22,6 +25,7 @@ export function useProductArds(productId: string) {
   const [upload] = useUploadArdAttachmentsMutation();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const { allowsNow } = useAccess();
 
   // A product with none of these yet answers 404; that is an empty list, not a failure.
   const listMissing = notFound(list.error);
@@ -34,6 +38,8 @@ export function useProductArds(productId: string) {
 
   /** Saves an ARD, then its new attachments. Returns true when everything asked for was saved. */
   const save = async (values: ArdFormValues, target: { saved: SavedArd } | { source: ArdSource }): Promise<boolean> => {
+    const require = "saved" in target ? productArdPermissions.edit : productArdPermissions.create;
+    if (!allowsNow(require)) { setMessage(permissionDeniedMessage); return false; }
     setMessage(""); setSaving(true);
     try {
       let id: string | null;
@@ -50,6 +56,7 @@ export function useProductArds(productId: string) {
       }
       const files = values.attachments ?? [];
       if (files.length > 0) {
+        if (!allowsNow(require)) { setMessage(`The analytical record was saved. ${permissionDeniedMessage} Its files were not attached.`); return false; }
         const uploaded = id ? await upload({ ardId: id, files }) : null;
         if (!uploaded || "error" in uploaded) {
           toast.warning(`The record was saved, but its files were not attached${uploaded && "error" in uploaded ? `: ${apiErrorMessage(uploaded.error)}` : "."} Edit the record to attach them again.`);

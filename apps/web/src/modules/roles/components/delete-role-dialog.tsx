@@ -6,19 +6,25 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Spinner } from "@/components/ui/spinner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useDeleteApiV1RoleByIdMutation, useLazyGetApiV1RoleCheckByIdQuery } from "../api/role-api";
-import { audit, rolesPath } from "../lib/permissions";
+import { audit, rolesPath, rolePermissions } from "../lib/permissions";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 
 export function DeleteRoleDialog({ id, name }: { id: string; name: string }) {
   const navigate = useNavigate();
+  const permission = usePermissionAction(rolePermissions.delete);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [checkRole, check] = useLazyGetApiV1RoleCheckByIdQuery();
   const [removeRole, removal] = useDeleteApiV1RoleByIdMutation();
   const remove = async () => {
     setMessage("");
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return; }
     const usage = await checkRole({ ...audit, id }, false);
     if (usage.error) { setMessage(apiErrorMessage(usage.error)); return; }
     if (usage.data?.hasUsers) { setMessage("This role is assigned to users. Reassign them before deleting it."); return; }
+    const revoked = permission.check();
+    if (revoked) { setMessage(revoked); return; }
     const result = await removeRole({ ...audit, id });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     setOpen(false);
@@ -32,7 +38,7 @@ export function DeleteRoleDialog({ id, name }: { id: string; name: string }) {
     </DialogHeader>
       {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
       <DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-        <Button type="button" variant="destructive" disabled={check.isFetching || removal.isLoading} onClick={() => void remove()}>
+        <Button type="button" variant="destructive" disabled={!permission.allowed || check.isFetching || removal.isLoading} onClick={() => void remove()}>
           {check.isFetching || removal.isLoading ? <><Spinner />Checking…</> : "Delete role"}</Button></DialogFooter>
     </DialogContent>
   </Dialog>;

@@ -11,7 +11,7 @@ interface ActionBase {
   disabled?: boolean;
   /** Why the action is disabled, shown under its label so the user is not left guessing. */
   disabledReason?: string;
-  /** A permission key, or a rule combining several. Without it the user never sees the action. */
+  /** A permission key or compound rule. Omission is reserved for actions available to every signed-in user. */
   require?: string | AccessRule;
   /** Draws a divider above this action, to set a group apart. */
   separated?: boolean;

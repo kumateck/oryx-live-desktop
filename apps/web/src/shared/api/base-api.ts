@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { refreshTokens } from "../auth/session-api";
-import { notifySessionExpired } from "../auth/session-events";
+import { notifyPermissionDenied, notifySessionExpired } from "../auth/session-events";
 import { tokenStore } from "../auth/token-store";
 
 const request = fetchBaseQuery({
@@ -23,8 +23,10 @@ export const api = createApi({
       if (renewed) result = await request(args, context, extraOptions);
       if (!renewed || result.error?.status === 401) notifySessionExpired();
     }
+    // Never repeat a forbidden mutation. Refresh the session so routes and actions reflect the server's decision.
+    if (result.error?.status === 403) notifyPermissionDenied();
     return result;
   },
-  tagTypes: ["Role", "RoleList", "UserList", "ProductList", "Product", "ProductPacking", "ProductBom", "ProductPackages", "ProductRoutes", "ProductStp", "StpDocument", "ProductArd", "ProductSpecification", "ScheduleList", "Schedule"],
+  tagTypes: ["Designations", "LeaveTypes", "ShiftTypes", "ShiftCategories", "ShiftSchedules", "WorkingHoursPolicies", "Equipment", "QcEquipment", "CodeSettings", "Departments", "Holidays", "WorkingDays", "Uoms", "Role", "RoleList", "UserList", "ProductList", "Product", "ProductPacking", "ProductBom", "ProductPackages", "ProductRoutes", "ProductStp", "StpDocument", "ProductArd", "ProductSpecification", "ScheduleList", "Schedule", "ScheduleBatch", "Activity", "ActivityBoard", "BatchRecords", "StockOnShelves", "SupplierList", "Supplier", "ManufacturerList", "Manufacturer", "RequisitionList", "Requisition", "QuotationRequests", "QuotationResponses", "PriceComparison", "PurchaseOrderList", "PurchaseOrder", "StorageRacks", "StorageShelves", "DistributedStock", "ShipmentInvoices", "Shipments", "BillingSheets", "MaterialDistribution", "Receiving", "Grns", "PendingApprovals", "StockIssue", "StockTransfers", "MaterialList", "MaterialReturns", "StockAdjustments", "SwapRequests", "ProductAllocation", "Notifications", "Tickets", "Customers", "ProductionOrders", "FinishedGoods"],
   endpoints: () => ({}),
 });

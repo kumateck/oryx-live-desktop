@@ -1,3 +1,5 @@
+import { productPermissions } from "../lib/product-access";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
@@ -26,6 +28,7 @@ export function useProductStp(productId: string) {
   const [loadCount] = useLazyGetApiV1ConfigurationByModelTypeCountQuery();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.edit], departmentType: 0 });
   const refetchStp = stpQuery.refetch;
 
   const suggestNumber = useCallback(async () => {
@@ -35,6 +38,8 @@ export function useProductStp(productId: string) {
 
   /** Saves the STP, then its document. Returns true when everything asked for was saved. */
   const save = async (values: StpFormValues): Promise<boolean> => {
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return false; }
     setMessage(""); setSaving(true);
     try {
       const details = { stpNumber: values.stpNumber, description: values.description ?? "" };
@@ -50,6 +55,8 @@ export function useProductStp(productId: string) {
       }
       if (values.document) {
         if (!id) { setMessage("The STP was saved, but the app could not find it to attach the document. Reload the page and attach the document again."); return false; }
+        const revoked = permission.check();
+        if (revoked) { setMessage(`The STP details were saved. ${revoked} The document was not uploaded.`); return false; }
         const uploaded = await upload({ ...audit, ownerType, ownerId: id, file: values.document, ...(values.reasonForChange ? { reasonForChange: values.reasonForChange } : {}) });
         if ("error" in uploaded) { setMessage(`The STP details were saved, but the document was not uploaded: ${apiErrorMessage(uploaded.error)}`); return false; }
       }

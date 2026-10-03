@@ -1,3 +1,4 @@
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -9,7 +10,7 @@ import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { UnsavedChangesGuard } from "@/shared/navigation/unsaved-changes";
 import { usePostApiV1ProductMutation } from "../../api/product-api";
 import type { ProductOptions } from "../../hooks/use-product-options";
-import { audit, productDetailPath, productsPath } from "../../lib/product-access";
+import { audit, productPermissions, productDetailPath, productsPath } from "../../lib/product-access";
 import { toProductRequest } from "../../lib/product-form";
 import { productFormSchema, type ProductFormValues } from "../../schemas/product-form-schema";
 import { FormActions } from "./form-shell";
@@ -36,7 +37,10 @@ export function CreateProductForm({ options }: { options: ProductOptions }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once, when the rule becomes available
   }, [code.ready]);
 
+  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.create], departmentType: 0 });
   const submit = form.handleSubmit(async (values) => {
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return; }
     setMessage("");
     const result = await createProduct({ ...audit, domainEntitiesProductsCreateProductRequest: toProductRequest(values) });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }

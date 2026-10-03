@@ -8,7 +8,8 @@ import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useSession } from "@/shared/auth/session-provider";
 import { usePutApiV1PermissionRoleByRoleIdMutation, usePutApiV1RoleByIdMutation } from "../api/role-api";
-import { accessOverrides, applyAccessOverrides, audit } from "../lib/permissions";
+import { accessOverrides, applyAccessOverrides, audit, rolePermissions } from "../lib/permissions";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { departmentTypeFromValue, departmentTypes } from "../lib/role-types";
 import { roleEditSchema, type RoleEditValues, type RoleRow } from "../schemas/role-schema";
 import type { PermissionModule } from "../schemas/permission-schema";
@@ -30,6 +31,8 @@ export function RoleEditor({ role, assigned, canEdit, canUpdatePermissions }: {
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
   const permissions = useMemo(() => applyAccessOverrides(assigned, overrides), [assigned, overrides]);
   const { refresh } = useSession();
+  const editAccess = usePermissionAction(rolePermissions.edit);
+  const permissionAccess = usePermissionAction(rolePermissions.updatePermissions);
   const [updateRole, roleMutation] = usePutApiV1RoleByIdMutation();
   const [updatePermissions, permissionMutation] = usePutApiV1PermissionRoleByRoleIdMutation();
   const form = useForm<RoleEditValues>({ resolver: zodResolver(roleEditSchema), defaultValues: {
@@ -38,6 +41,8 @@ export function RoleEditor({ role, assigned, canEdit, canUpdatePermissions }: {
   } });
 
   const saveDetails = form.handleSubmit(async (values) => {
+    const denied = editAccess.check();
+    if (denied) { toast.error(denied); return; }
     const result = await updateRole({ ...audit, id: role.id, domainEntitiesRolesUpdateRoleRequest: {
       name: values.name, displayName: values.displayName, type: departmentTypeFromValue(values.type.value),
     } });
@@ -46,6 +51,8 @@ export function RoleEditor({ role, assigned, canEdit, canUpdatePermissions }: {
   });
 
   const savePermissions = async () => {
+    const denied = permissionAccess.check();
+    if (denied) { toast.error(denied); return; }
     const result = await updatePermissions({ ...audit, roleId: role.id, body: permissions });
     if ("error" in result) { toast.error("Permissions were not saved", { description: apiErrorMessage(result.error) }); return; }
     setOverrides({});

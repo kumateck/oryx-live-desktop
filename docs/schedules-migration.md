@@ -8,7 +8,12 @@ Module: `apps/web/src/modules/schedules`. Pages under `/production/schedules`. S
 | --- | --- |
 | List | `/production/schedules` |
 | Create | `/production/schedules/create` |
+| View | `/production/schedules/:id/details` |
 | Edit dates and remarks | `/production/schedules/:id/edit` |
+| Add products | `/production/schedules/:id/products/add` |
+| Remove products | `/production/schedules/:id/products/remove` |
+
+A row in the list opens the schedule. The row menu and the "Manage schedule" button on the schedule page offer the same actions, each behind its own permission (`CanEditProductSchedule`, `CanAddProductsToProductSchedule`, `CanRemoveProductsFromProductSchedule`). On an ended schedule they stay listed, switched off, with the reason.
 
 Kept from Oryx Next: the list columns (code, products, start, end), batches of the same product and size counted together, the create form (code, dates, remarks, and product lines with batch count, batch size, packing style, and market type), one schedule product per batch, the batch quantity taken from the product's full batch size (halved for a half batch), and an ended schedule being closed to changes.
 
@@ -38,11 +43,46 @@ Each product line has a Forecast button. It shows what the chosen batches need o
 
 The server counts a material as available only when usable stock is more than what is needed, so exactly enough is shown as short with "nothing to spare".
 
+## View
+
+One page for the schedule and all its batches. Kept from Oryx Next: the schedule's dates and remarks, each batch's status, product facts, raw and packaging material tables, and starting production when the materials are there.
+
+Improved:
+
+- **Batches are a list beside the open batch**, grouped by product, each with its state. Oryx Next used two rows of scrolling tabs (products, then batches) with arrow buttons.
+- **The open batch is in the address** (`?batch=`), so it survives a reload and can be linked. Oryx Next always reopened the first batch.
+- **One request per batch opened.** Oryx Next loaded the production run of every batch of the product to label the tabs.
+- **One rule for "enough stock".** A material is covered by what is reserved for the batch plus warehouse stock not reserved by any batch. Oryx Next used that rule for the Start button but a different subtraction for the stock column, so the two could disagree.
+- **Short materials are listed first with how much is missing**, and the page says how many are short and why Start is off.
+- **Start production asks first**, and says the batch can no longer be removed afterwards. It stays off until both material lists have loaded.
+- **A material listed twice** (a substitute beside its parent) keeps both rows.
+- **A batch not started before the schedule ended** is marked as such and cannot be started.
+
+## Add products
+
+The same product lines as on the create form, with the forecast. Kept: what is already on the schedule is shown above the form.
+
+- **The form holds only product lines.** Oryx Next reused the whole schedule form with a hidden placeholder code and today's dates to get past validation.
+- **Returns to the schedule**, where the new batches are, and says how many were added.
+- All the product-line improvements from Create apply (packing style follows the product, batch quantities shown, at least one batch).
+
+## Remove products
+
+Batches grouped by product, size, packing style, and market. Kept: tick batches, or "take off N" to select the first N removable ones; batches in production or cancelled are locked.
+
+- **Removal is confirmed**, listing exactly which batches go.
+- **Batches are named** by batch number where they have one; Oryx Next called them "Row 1", "Row 2".
+- **A refused batch shows the server's reason and stays selected.** Oryx Next reported only a count of failures and cleared the selection.
+- **"Take off N" replaces the group's selection** and can be cleared. In Oryx Next each press added to it.
+- **Requests go one at a time**, so the server is not sent many deletes for one schedule at once.
+
 ## Not yet migrated
 
-- Schedule details, with each product's materials, stock, and purchase and stock requisitions. Rows in the list do not open anything yet.
-- Adding products to and removing products from an existing schedule.
+A running batch opens its production board from the schedule page; see `production-board-migration.md`.
+
+- The purchase requisition raised from a batch that is short of materials.
+- The breakdown of a material's stock in other warehouses ("All other stock" shows the total only).
 - Product flow and product requisition pages.
 - The monthly report.
 
-Backend behavior worth knowing (unchanged, shared with Oryx Next): the update endpoint accepts only the dates and remarks; the code and products sent with it are ignored.
+Backend behavior worth knowing (unchanged, shared with Oryx Next): the update endpoint accepts only the dates and remarks; the code and products sent with it are ignored. A batch that has started cannot be removed.

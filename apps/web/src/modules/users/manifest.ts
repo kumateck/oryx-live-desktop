@@ -1,6 +1,9 @@
 import type { ModuleManifest } from "../contract";
+import { permissionTabs } from "../../shared/auth/permission-tabs";
+import { userPermissions } from "./lib/user-access";
 
 export const manifest = {
+  query: permissionTabs({ 0: userPermissions.viewActive, 1: userPermissions.viewInactive }, "status"),
   id: "users",
   label: "Users",
   root: "/access-management/users",

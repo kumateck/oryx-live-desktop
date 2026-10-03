@@ -3,6 +3,8 @@ import { logoutSession } from "../shared/auth/session-api";
 import { tokenStore } from "../shared/auth/token-store";
 
 export const userId = "258da105-a506-44a9-8ff5-8d005a54f294";
+/** The signed-in user of the stubbed session. */
+export const testUserId = userId;
 
 interface BackendOptions {
   permissions?: string[];

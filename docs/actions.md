@@ -12,7 +12,7 @@ column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row 
   <TableMenu label={`Actions for ${row.original.name}`} items={[
     { id: "edit", label: "Edit", icon: Pencil, require: permissions.edit, onSelect: () => onEdit(row.original) },
     { id: "open", label: "Open record", icon: Eye, to: detailPath(row.original.id) },
-    canRemove && { id: "remove", label: "Remove", icon: Trash2, destructive: true, separated: true, onSelect: () => onRemove(row.original) },
+    canRemove && { id: "remove", label: "Remove", icon: Trash2, destructive: true, separated: true, require: permissions.remove, onSelect: () => onRemove(row.original) },
   ]} /> })
 
 <DropdownButton label="Add specification" icon={Plus} items={stages.map((stage) =>
@@ -26,7 +26,7 @@ column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row 
 | `id`, `label` | Required. `id` is unique within the menu. |
 | `onSelect` or `to` | Run something, or open a page. One or the other. |
 | `icon` | A Lucide icon. |
-| `require` | A permission key or an access rule. Without it the user never sees the item. Each action has its own key. |
+| `require` | A permission key or an access rule. Omission means an authenticated personal/local action. Every ERP write must specify its key. |
 | `disabled`, `disabledReason` | Shown but not selectable, with the reason under the label. |
 | `destructive` | Shown in red, for removing or blocking. |
 | `separated` | A divider above the item. |
@@ -53,8 +53,12 @@ Improved:
 - **A disabled item says why.**
 - **Dividers are placed by the caller**, not drawn between every item.
 - **Opening the menu does not trigger the row's click.**
-- **Permissions are checked once**; Oryx Next filtered the items and then wrapped each in a guard again.
+- **Permissions are shared with route guards and checked again on selection**, so an open menu cannot invoke a retained action after access is revoked.
 
 ## Testing
 
 `src/test/menu.ts` has `openMenu(name)` and `chooseAction(menuName, actionName)`. The menu opens on pointer down, which a plain click does not send in jsdom.
+
+## Confirmation and submission
+
+`ConfirmActionDialog` and `ConfirmDeleteDialog` require `require={permissions.remove}` (or an all/some/department rule). They recheck access before calling the mutation and display permission loss while open. Direct form handlers use `usePermissionAction(requirement).check()` inside the validated submit callback and before each subsequent write. Preserve workflow and record-state checks. See [session and access](session-and-access.md) for the contract and examples.

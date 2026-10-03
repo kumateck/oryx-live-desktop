@@ -52,3 +52,45 @@ export function toLargestUnit(value: number | null | undefined, baseSymbol: stri
   const best = [...family].reverse().find((step) => Math.abs(inSmallest) >= step.factor) ?? family[0];
   return best ? show(inSmallest / best.factor, best.symbol) : show(value, symbol);
 }
+
+function familyOf(symbol: string | null | undefined) {
+  const wanted = symbol?.trim().toLowerCase() ?? "";
+  return families.find((steps) => steps.some((step) => step.symbol.toLowerCase() === wanted)) ?? null;
+}
+
+/** The units a quantity in `symbol` can be entered in: its whole family (mg, g, kg), or just itself for a counted unit. */
+export function relatedUnits(symbol: string | null | undefined): string[] {
+  const family = familyOf(symbol);
+  return family ? family.map((step) => step.symbol) : symbol?.trim() ? [symbol.trim()] : [];
+}
+
+/** A quantity entered in `symbol`, in the smallest unit of its family, which is how quantities are stored. A counted unit is unchanged. */
+export function toSmallestUnit(value: number, symbol: string | null | undefined): number {
+  const step = familyOf(symbol)?.find((item) => item.symbol.toLowerCase() === symbol?.trim().toLowerCase());
+  return step ? clean(value * step.factor) : value;
+}
+
+/** A stored quantity (smallest unit of its family) expressed in `symbol`. A counted unit is unchanged. */
+export function fromSmallestUnit(value: number, symbol: string | null | undefined): number {
+  const step = familyOf(symbol)?.find((item) => item.symbol.toLowerCase() === symbol?.trim().toLowerCase());
+  return step ? clean(value / step.factor) : value;
+}
+
+/** Whether a unit measures volume (ml, L) as opposed to mass or a count. */
+export function isVolumeUnit(symbol: string | null | undefined): boolean {
+  return familyOf(symbol) === volume;
+}
+
+/**
+ * A quantity in one unit expressed in another unit of the same family (2 kg in g is 2,000).
+ * Null when the two units cannot be converted into each other: different families, or a counted unit that is not the same one.
+ */
+export function convertUnit(value: number, from: string | null | undefined, to: string | null | undefined): number | null {
+  const source = from?.trim().toLowerCase() ?? "";
+  const target = to?.trim().toLowerCase() ?? "";
+  if (!source || !target) return null;
+  if (source === target) return value;
+  const family = familyOf(from);
+  if (!family || family !== familyOf(to)) return null;
+  return fromSmallestUnit(toSmallestUnit(value, from), to);
+}

@@ -22,7 +22,7 @@ For the desktop application, each ERP module also owns a small typed manifest un
 
 ## Architecture
 
-- Keep Electron main and preload small. The renderer is a React SPA served by the customer's server over trusted HTTPS. Expose only narrowly scoped, typed native actions through preload; validate IPC origin and input.
+- Keep Electron main and preload small. The renderer is a React SPA served by the customer's configured HTTP or HTTPS origin; installed clients support intranet HTTP. HTTPS certificates must still be trusted. Expose only narrowly scoped, typed native actions through preload; validate IPC origin and input.
 - Use React Router file routing generated from route files. Keep route paths, layout nesting, loading/error boundaries, and imports deterministic. Do not maintain a second manual route list.
 - Retain RTK Query and generated OpenAPI DTOs/hooks. Put handwritten API behavior, cache policy, and transformations outside generated files. Do not edit generated output manually.
 - Before adding an API hook, inspect `docs/api-codegen.md` and the backend controller contract. Generate domain-scoped RTK Query endpoints from a versioned OpenAPI file, run `bun run api:check`, and reject untyped generated fallbacks. Keep operation IDs stable and avoid importing every domain endpoint into the shell.
@@ -59,6 +59,10 @@ For the desktop application, each ERP module also owns a small typed manifest un
 - Ensure keyboard navigation, visible focus, accessible labels, readable text, and usable controls at display scaling. Motion must be subtle and respect reduced-motion preferences.
 
 ## ERP integrity and security
+
+- Guard every ERP page through its module manifest before its data hooks mount. Declare specific create/edit/department rules and per-choice query access when a tab has separate permissions. Personal authenticated roots must explicitly declare their children. Keep the workspace route coverage test and targeted deny/allow tests passing.
+- Use `PermissionGuard` and action-item `require` for visibility, plus `usePermissionAction(requirement).check()` immediately before a mutation inside the validated submit callback. Recheck after asynchronous preflight work and before every later write in multi-stage or bulk actions. Shared confirmations require an explicit requirement. Permission checks never replace ownership, assignment, record-state, stock, or approval gates.
+- Use existing backend permission keys; do not invent keys, infer permissions from role names, or add an implicit administrator bypass. An omitted menu requirement is only for authenticated personal/local actions. A backend 403 refreshes access without retrying the refused mutation. Client guards are UX and defensive checks; backend authorization remains authoritative. See `docs/session-and-access.md`.
 
 - Preserve backend authority for permissions and regulated actions. Never bypass approval gates, silently change quality/production/logistics status, or omit audit records for sensitive operations.
 - Keep inventory and financial events traceable. Verify reconciliation and reporting effects when a workflow changes.

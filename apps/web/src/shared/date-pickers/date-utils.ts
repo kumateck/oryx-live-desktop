@@ -56,3 +56,19 @@ export function formatMonthYear(value: string): string {
 export function isMonthAllowed(value: string, minMonth?: string, maxMonth?: string): boolean {
   return parseMonthYear(value) !== null && (!minMonth || value >= minMonth) && (!maxMonth || value <= maxMonth);
 }
+
+/** A period of whole months, both included, each as "YYYY-MM". */
+export interface MonthRange { from: string; to: string }
+
+export function formatMonthRange(range: MonthRange): string {
+  const short = (value: string) => { const parsed = parseMonthYear(value); return parsed ? new Date(parsed.year, parsed.month - 1, 1).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : value; };
+  return range.from === range.to ? short(range.from) : `${short(range.from)} – ${short(range.to)}`;
+}
+
+/** The first and last calendar days of a period of months, or null when it is not a real period. */
+export function monthRangeDays(range: MonthRange | null | undefined): { from: Date; to: Date } | null {
+  const first = parseMonthYear(range?.from);
+  const last = parseMonthYear(range?.to);
+  if (!first || !last || (range?.to ?? "") < (range?.from ?? "")) return null;
+  return { from: new Date(first.year, first.month - 1, 1), to: new Date(last.year, last.month, 0) };
+}

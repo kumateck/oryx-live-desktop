@@ -6,16 +6,18 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { usePostApiV1EmployeeUserMutation } from "../api/user-api";
 import { useEmployeeOptions } from "../hooks/use-employee-options";
-import { audit, usersPath } from "../lib/user-access";
+import { audit, usersPath, userPermissions } from "../lib/user-access";
 import { createUserSchema, type CreateUserValues, type RoleOption } from "../schemas/user-schema";
 import { InputTypes } from "@/shared/forms/input-types";
 
 export function CreateUserForm({ roles }: { roles: readonly RoleOption[] }) {
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
+  const permission = usePermissionAction(userPermissions.create);
   const [createUser, mutation] = usePostApiV1EmployeeUserMutation();
   const { loadOptions, employeeById } = useEmployeeOptions();
   const form = useForm<CreateUserValues>({ resolver: zodResolver(createUserSchema) });
@@ -31,6 +33,8 @@ export function CreateUserForm({ roles }: { roles: readonly RoleOption[] }) {
 
   const submit = form.handleSubmit(async (values) => {
     setMessage("");
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return; }
     const result = await createUser({ ...audit, domainEntitiesEmployeesEmployeeUserDto: { employeeId: values.employee.value, roleId: values.role.value } });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success(`A user account was created for ${values.employee.label}`);
@@ -48,7 +52,7 @@ export function CreateUserForm({ roles }: { roles: readonly RoleOption[] }) {
     {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
     <div className="flex justify-end gap-2">
       <Button type="button" variant="outline" disabled={mutation.isLoading} onClick={() => void navigate(usersPath)}>Cancel</Button>
-      <Button type="submit" disabled={mutation.isLoading}>{mutation.isLoading ? <><Spinner />Creating…</> : "Create user"}</Button>
+      <Button type="submit" disabled={!permission.allowed || mutation.isLoading}>{mutation.isLoading ? <><Spinner />Creating…</> : "Create user"}</Button>
     </div>
   </form>;
 }

@@ -5,6 +5,7 @@ import { routes } from "./routes/generated";
 import { ThemeProvider } from "./shared/theme/theme-provider";
 import { SessionProvider } from "./shared/auth/session-provider";
 import { Toaster } from "./components/ui/sonner";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { GlobalErrorBoundary } from "./shared/errors/global-error-boundary";
 import "./styles.css";
 
@@ -14,6 +15,6 @@ if (!root) throw new Error("Missing root element");
 const router = createBrowserRouter(routes);
 createRoot(root).render(
   <StrictMode>
-    <GlobalErrorBoundary><ThemeProvider><SessionProvider><RouterProvider router={router} /></SessionProvider><Toaster position="bottom-right" closeButton /></ThemeProvider></GlobalErrorBoundary>
+    <GlobalErrorBoundary><ThemeProvider><TooltipProvider delayDuration={200}><SessionProvider><RouterProvider router={router} /></SessionProvider><Toaster position="bottom-right" closeButton /></TooltipProvider></ThemeProvider></GlobalErrorBoundary>
   </StrictMode>,
 );

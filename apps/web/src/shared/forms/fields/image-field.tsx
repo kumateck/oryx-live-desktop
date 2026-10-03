@@ -42,7 +42,7 @@ export default function ImageInputField({ field }: { field: ImageField<FieldValu
           onBlur={control.onBlur} disabled={field.disabled} aria-required={field.required} aria-invalid={Boolean(error || selectionError)}
           aria-describedby={fieldDescription(id, field.description, error)} className="sr-only" />
       </label>
-      {source ? <div className="space-y-1"><img src={source} alt={`${field.label} preview`} className="size-32 rounded-lg object-cover" />
+      {source ? <div className="space-y-1"><img src={source} alt={`${field.label} preview`} className={field.previewFit === "contain" ? "size-32 rounded-lg bg-white object-contain" : "size-32 rounded-lg object-cover"} />
         {file || field.onRemoveExisting ? <Button type="button" size="xs" variant="ghost" disabled={field.disabled}
           onClick={() => { if (file) control.onChange(null); else field.onRemoveExisting?.(); }}>Remove image</Button> : null}</div> : null}
     </div>

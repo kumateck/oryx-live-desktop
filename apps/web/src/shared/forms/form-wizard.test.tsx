@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,6 +48,21 @@ function ExampleForm({ onSubmit }: { onSubmit: (values: Values) => void }) {
 }
 
 afterEach(cleanup);
+
+it("preserves a selected option when the native form bridge emits an empty value", async () => {
+  const user = userEvent.setup();
+  const submit = vi.fn<(values: Values) => void>();
+  const { container } = render(<ExampleForm onSubmit={submit} />);
+  await user.type(await screen.findByRole("textbox", { name: "Name" }), "Ada");
+  await user.clear(screen.getByRole("spinbutton", { name: "Age" }));
+  await user.type(screen.getByRole("spinbutton", { name: "Age" }), "24");
+  const nativeSelect = container.querySelector("select[name=role]");
+  expect(nativeSelect).not.toBeNull();
+  if (!nativeSelect) throw new Error("The select form bridge is missing");
+  fireEvent.change(nativeSelect, { target: { value: "" } });
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(submit.mock.calls[0]?.[0].role).toEqual({ value: "buyer", label: "Buyer" }));
+});
 
 it("validates and submits only the declared fields", async () => {
   const user = userEvent.setup();

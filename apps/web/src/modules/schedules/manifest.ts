@@ -11,6 +11,8 @@ export const manifest = {
   access: { kind: "all", permissions: ["CanViewProductSchedules"], ...production },
   routes: [
     { pattern: "/production/schedules/create", access: { kind: "all", permissions: ["CanCreateProductSchedule"], ...production } },
+    { pattern: "/production/schedules/:id/products/add", access: { kind: "all", permissions: ["CanAddProductsToProductSchedule"], ...production } },
+    { pattern: "/production/schedules/:id/products/remove", access: { kind: "all", permissions: ["CanRemoveProductsFromProductSchedule"], ...production } },
     { pattern: "/production/schedules/:id/edit", access: { kind: "all", permissions: ["CanEditProductSchedule"], ...production } },
   ],
 } satisfies ModuleManifest<"schedules", "/production/schedules">;

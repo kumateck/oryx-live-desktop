@@ -6,7 +6,9 @@ import type { DateRange } from "react-day-picker";
 import { afterEach, expect, it } from "vitest";
 import { DatePicker } from "./date-picker";
 import { DateRangePicker } from "./date-range-picker";
+import type { MonthRange } from "./date-utils";
 import { MonthYearPicker } from "./month-year-picker";
+import { MonthYearRangePicker } from "./month-year-range-picker";
 
 class ResizeObserverStub implements ResizeObserver {
   observe(): void {}
@@ -80,4 +82,24 @@ it("selects month and year without inventing a day", async () => {
   await user.click(screen.getByRole("option", { name: "June" }));
   await user.click(screen.getByRole("button", { name: "Apply" }));
   expect(screen.getByRole("status").textContent).toBe("2026-06");
+});
+
+function MonthRangeExample() {
+  const [value, setValue] = useState<MonthRange | null>({ from: "2026-05", to: "2026-05" });
+  return <><MonthYearRangePicker id="expiring" label="Expiring" value={value} onChange={setValue} fromYear={2025} toYear={2028} />
+    <output>{value ? `${value.from}..${value.to}` : "empty"}</output></>;
+}
+
+it("selects a period of months and refuses one that runs backwards", async () => {
+  const user = userEvent.setup();
+  render(<MonthRangeExample />);
+  await user.click(screen.getByRole("button", { name: "Expiring" }));
+  await user.click(screen.getByRole("combobox", { name: "To month" }));
+  await user.click(screen.getByRole("option", { name: "March" }));
+  expect(screen.getByRole("alert").textContent).toBe("The last month cannot be before the first.");
+  expect((screen.getByRole("button", { name: "Apply" }) as HTMLButtonElement).disabled).toBe(true);
+  await user.click(screen.getByRole("combobox", { name: "To month" }));
+  await user.click(screen.getByRole("option", { name: "August" }));
+  await user.click(screen.getByRole("button", { name: "Apply" }));
+  expect(screen.getByRole("status").textContent).toBe("2026-05..2026-08");
 });

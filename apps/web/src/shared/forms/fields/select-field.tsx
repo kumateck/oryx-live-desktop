@@ -16,7 +16,12 @@ export default function SelectInputField({ field }: {
   const selected = isSelectOption(control.value) ? control.value : null;
   return <FieldFrame id={id} label={field.label} required={field.required} description={field.description} error={error} className={field.className}>
     <Select name={control.name} value={selected?.value ?? ""}
-      onValueChange={(value) => control.onChange(field.options.find((option) => option.value === value) ?? null)}
+      onValueChange={(value) => {
+        // Radix's native form bridge can emit an empty value while async options mount.
+        // Only a real option selection changes this field; form.reset/setValue still clear it.
+        const option = field.options.find((item) => item.value === value);
+        if (option) control.onChange(option);
+      }}
       onOpenChange={(open) => { if (!open) control.onBlur(); }} disabled={field.disabled ?? false}>
       <SelectTrigger id={id} ref={control.ref} className="w-full" aria-required={field.required} aria-invalid={Boolean(error)}
         aria-describedby={fieldDescription(id, field.description, error)}>

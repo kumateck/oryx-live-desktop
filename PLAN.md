@@ -31,7 +31,7 @@ Oryx has roughly 27 ERP modules. The desktop structure must scale by module owne
 | Area | Direction |
 | --- | --- |
 | Desktop runtime | Electron Forge, with a small main process and a sandboxed, context-isolated renderer. |
-| UI delivery | Hosted React SPA loaded over a trusted HTTPS connection to the customer server; no Next.js runtime. |
+| UI delivery | Hosted React SPA loaded from the customer's HTTP or HTTPS origin; intranet HTTP is supported in installed clients; no Next.js runtime. |
 | Routing | React Router 8.4.0, pinned initially, with an Oryx file-route generator in this repository. Upgrade React, React DOM, Node, and build tools to compatible versions. |
 | Data access | Retain RTK Query and the OpenAPI-generated DTOs and hooks. Improve generation, cache rules, and code splitting before considering a query-library change. |
 | Deployment | Build on the customer server from the selected `main` commit; publish a versioned SPA build and switch the active version only after validation. |
@@ -51,7 +51,8 @@ Oryx has roughly 27 ERP modules. The desktop structure must scale by module owne
 
 ```text
 Customer server
-  ├─ HTTPS entry point: versioned React SPA, API, notifications, update feed
+  ├─ HTTP/HTTPS entry point: versioned React SPA, API, notifications
+  ├─ HTTPS update feed: signed shell releases
   ├─ .NET backend: authentication, authorization, audit, business workflows
   ├─ notification gateway: broker consumer → authenticated client events
   └─ private MinIO: signed shell artifacts and immutable release files
@@ -61,7 +62,7 @@ Client computer
        └─ sandboxed React SPA: routes, detail views, existing lists, RTK Query
 ```
 
-The server address is site configuration, not a vendor-cloud constant. The site endpoint must present a certificate trusted by client computers, including the IP address in the certificate when users connect by IP. The app must not disable web security to work around certificate errors. If the server is unreachable, the shell shows a clear connection/retry screen without implying that work was saved.
+The server address is site configuration, not a vendor-cloud constant. Per the user's 2026-10-02 deployment clarification, installed clients accept HTTP and HTTPS frontend origins for customer intranets. HTTPS remains preferred; its certificate must be trusted by client computers and cover the hostname or IP clients use. The app must not disable web security or certificate validation. If the server is unreachable, the shell shows a clear connection/retry screen without implying that work was saved.
 
 The remote renderer receives only narrowly scoped native capabilities through preload. Main-process IPC validates the sender origin and arguments; navigation and new windows are restricted to approved destinations. Shell releases are signed. The backend remains the authority for permissions and regulated actions.
 
@@ -79,7 +80,7 @@ Exit: a route inventory and measured baseline exist; the first pilot workflow is
 ### 1. Shell and live-UI proof
 
 1. Create the Electron Forge shell, preload contract, and site-address configuration.
-2. Build a minimal React SPA and serve it from a test customer server over trusted HTTPS.
+2. Build a minimal React SPA and serve it from a test customer server over HTTP or trusted HTTPS.
 3. Verify packaged startup, connection failure/retry, direct navigation, login, one generated query and mutation, one notification, and one native action.
 4. Measure cold start, UI load, memory, route transition, and error recovery on target-class laptops.
 
@@ -146,6 +147,10 @@ Generated hooks now cover every backend domain for operations with a strict cont
 Users is the second migrated module (`docs/users-migration.md`), built on the shared server-paged table. Roles is the first module pilot. It exercises generated identity hooks, permission-aware navigation, a searchable and paginated list, one-record detail loading, role creation and edits, permission assignment, guarded deletion, targeted cache invalidation, audit headers, and failure/retry states. See `docs/roles-migration.md`. This is a migration pattern, not a claim that the overall ERP detail redesign is complete. Visual acceptance on customer laptops, live server authentication, and installed-shell compatibility remain exit gates before broad migration.
 
 ## Decisions to close before broad migration
+
+Configuration collections now have a desktop workspace at `/settings/config`, covering the 18 existing collections with independent permissions, on-demand forms, scoped query caching, and complete unit editing. Resource/payment-term edits remain gated by incomplete read contracts, and country writes are unsupported. See `docs/collection-configurations-migration.md` for integration coverage and existing backend limitations. Live authenticated and customer-screen acceptance remain outstanding.
+
+Alerts, approval workflows, Sites, signature settings, and password change now have dedicated desktop routes. Editors preserve mixed recipients, stage order/required flags, and complete TimeSpan values. Signature uploads verify stored bytes before confirmation; password changes use the self-service endpoint and require explicit success. Existing backend password/delegation defects and live visual acceptance remain outstanding; see `docs/settings-migration.md`. Breadcrumbs merge explicit parents with the inferred navigation trail and retain queue/filter parameters.
 
 - Which client OS/architectures ship first, and which current customer laptop configuration is the minimum target?
 - What trusted HTTPS certificate and site-address provisioning process will be used when customers access the server by IP?

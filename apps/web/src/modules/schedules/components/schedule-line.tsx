@@ -10,13 +10,13 @@ import { useGetApiV1ProductByProductIdPackingQuery } from "../api/schedule-api";
 import type { ScheduleOptions } from "../hooks/use-schedule-options";
 import { audit } from "../lib/schedule-access";
 import { batchQuantity, batchSizes } from "../lib/schedule-products";
-import type { ScheduleFormValues } from "../schemas/schedule-schema";
+import type { ScheduleLinesFormValues } from "../schemas/schedule-schema";
 import { ForecastDialog, type ForecastRequest } from "./forecast-dialog";
 
 const none: readonly SelectOption[] = [];
 
-/** One product on a new schedule: which product, how many batches, and how each batch is sized and packed. */
-export function ScheduleLine({ form, index, options, onRemove }: { form: UseFormReturn<ScheduleFormValues>; index: number; options: ScheduleOptions; onRemove: (() => void) | null }) {
+/** One product being scheduled: which product, how many batches, and how each batch is sized and packed. */
+export function ScheduleLine({ form, index, options, onRemove }: { form: UseFormReturn<ScheduleLinesFormValues>; index: number; options: ScheduleOptions; onRemove: (() => void) | null }) {
   const [product, sizeType, count, chosenPacking, market] = useWatch({ control: form.control,
     name: [`products.${index}.product`, `products.${index}.sizeType`, `products.${index}.count`, `products.${index}.packing`, `products.${index}.market`] });
   const [forecast, setForecast] = useState<ForecastRequest | null>(null);
@@ -36,7 +36,7 @@ export function ScheduleLine({ form, index, options, onRemove }: { form: UseForm
 
   const loadProducts = options.loadProducts;
   const markets = options.markets;
-  const fields = useMemo((): WizardField<ScheduleFormValues>[] => [
+  const fields = useMemo((): WizardField<ScheduleLinesFormValues>[] => [
     { type: InputTypes.SELECT, name: `products.${index}.product`, label: "Product", mode: "single", source: "async", loadOptions: loadProducts, required: true,
       placeholder: "Select a product", searchPlaceholder: "Search by name or code", className: "xl:col-span-2" },
     { type: InputTypes.NUMBER, name: `products.${index}.count`, label: "Batches", required: true, min: 1, step: 1 },

@@ -53,6 +53,9 @@ it("lists schedules with their batches counted, their state, and only the action
   expect(screen.getByText("No products")).toBeTruthy();
   expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
   await openMenu("Actions for PS-0007");
+  // Each action has its own permission: this user may view and edit, but not add or remove products.
+  expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["View", "Edit dates and remarks"]);
+  expect(screen.getByRole("menuitem", { name: "View" }).getAttribute("href")).toBe(`/production/schedules/${upcoming.id}/details`);
   expect(screen.getByRole("menuitem", { name: "Edit dates and remarks" }).getAttribute("href")).toBe(`/production/schedules/${upcoming.id}/edit`);
   cleanup();
 });

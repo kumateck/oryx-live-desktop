@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { DateRange } from "react-day-picker";
+import type { MonthRange } from "@/shared/date-pickers/date-utils";
 import type { InputTypes } from "./input-types";
 import type { Control, FieldPath, FieldPathByValue, FieldValues } from "react-hook-form";
 
@@ -53,6 +54,15 @@ export interface DateRangeField<TValues extends FieldValues> extends FieldBase<T
 
 export interface MonthField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, string | null | undefined>> {
   type: typeof InputTypes.MONTH;
+  placeholder?: string;
+  minMonth?: string;
+  maxMonth?: string;
+  fromYear?: number;
+  toYear?: number;
+}
+
+export interface MonthRangeField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, MonthRange | null | undefined>> {
+  type: typeof InputTypes.MONTH_RANGE;
   placeholder?: string;
   minMonth?: string;
   maxMonth?: string;
@@ -147,6 +157,7 @@ export interface ImageField<TValues extends FieldValues> extends FieldBase<TValu
   existingUrl?: string;
   onRemoveExisting?: () => void;
   maxSizeBytes?: number;
+  previewFit?: "cover" | "contain";
 }
 
 export interface SignatureField<TValues extends FieldValues> extends FieldBase<TValues, FieldPathByValue<TValues, string | null | undefined>> {
@@ -213,6 +224,7 @@ export type WizardField<TValues extends FieldValues> =
   | DateField<TValues>
   | DateRangeField<TValues>
   | MonthField<TValues>
+  | MonthRangeField<TValues>
   | SelectField<TValues>
   | CheckboxField<TValues>
   | RadioField<TValues>
@@ -230,7 +242,7 @@ export type WizardField<TValues extends FieldValues> =
 
 export type CoreWizardField<TValues extends FieldValues> =
   | TextField<TValues> | NumberField<TValues> | TextareaField<TValues>
-  | DateField<TValues> | DateRangeField<TValues> | MonthField<TValues>
+  | DateField<TValues> | DateRangeField<TValues> | MonthField<TValues> | MonthRangeField<TValues>
   | SelectField<TValues> | CheckboxField<TValues>;
 
 export type ExtendedWizardField<TValues extends FieldValues> = Exclude<WizardField<TValues>, CoreWizardField<TValues>>;

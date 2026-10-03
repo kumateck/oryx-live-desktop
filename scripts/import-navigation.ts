@@ -2,6 +2,7 @@
 // Run with `bun run nav:import` while both applications are maintained side by side.
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { collectionViewPermissions } from "../apps/web/src/modules/collection-configurations/lib/collections.ts";
 
 interface SourceItem {
   title: string;
@@ -23,6 +24,26 @@ if (!Array.isArray(groups) || groups.length === 0) throw new Error(`No sidebar g
 
 const slug = (value: string) => value.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
+// Concise desktop labels. Preserve IDs, paths and permission keys from the source tree.
+const labels: Readonly<Record<string, string>> = {
+  "System Configuration": "General",
+  "Configuration Collections": "Collections",
+  "Inventory Configuration": "Inventory",
+  "Organization Configuration": "Organization",
+  "Full Procedures Areas": "Procedure Areas",
+  "StandardTest Procedures": "Test Procedures",
+  "Production Health Dashboard": "Production Health",
+  "Extra Material Requisitions": "Extra Material Requests",
+  "About To Expire Materials": "Expiring Materials",
+  "Create Purchase Requisitions": "New Requisition",
+  "Import Worksheet Templates": "Import Templates",
+  "Purchase Requisition Sourcing": "Requisition Sourcing",
+  "Vendor Quotation Requests": "Supplier Quote Requests",
+  "Service Quotation Response": "Service Quote Responses",
+  "Department Employee Export": "Export Department Staff",
+  "Shift Schedule Report Upload": "Upload Shift Reports",
+};
+
 function convert(item: SourceItem, parentId: string, seen: Set<string>): CatalogItem {
   let id = `${parentId}.${slug(item.title)}`;
   for (let copy = 2; seen.has(id); copy += 1) id = `${parentId}.${slug(item.title)}-${copy}`;
@@ -33,7 +54,7 @@ function convert(item: SourceItem, parentId: string, seen: Set<string>): Catalog
   const children = (item.items ?? item.children ?? []).map((child) => convert(child, id, seen));
   if (!item.url && children.length === 0) throw new Error(`${id} has neither a path nor children.`);
   return {
-    id, label: item.title,
+    id, label: labels[item.title] ?? item.title,
     ...(item.url ? { path: item.url } : {}),
     ...(permissions.length ? { permissions: [...new Set(permissions)] } : {}),
     ...(children.length ? { children } : {}),
@@ -47,6 +68,38 @@ const catalog = groups.map((group) => {
   seen.add(id);
   return { id, label: group.title, items: group.menu.map((item) => convert(item, id, seen)) };
 });
+
+// Supplier and manufacturer directories belong to Procurement in the desktop sidebar.
+// Keep their existing addresses so saved links and record actions continue to work.
+const settings = catalog.find((group) => group.id === "system-settings");
+const inventory = settings?.items.find((item) => item.id === "system-settings.inventory-configuration");
+if (!inventory?.children) throw new Error("Inventory Configuration navigation group is missing.");
+const manufacturerIndex = inventory.children.findIndex((item) => item.path === "/settings/manufacturers");
+if (manufacturerIndex < 0) throw new Error("Manufacturers navigation entry is missing.");
+const [manufacturers] = inventory.children.splice(manufacturerIndex, 1);
+if (!manufacturers) throw new Error("Manufacturers navigation entry could not be moved.");
+const directoryPermissions = new Set(["CanViewVendors", "CanViewManufacturers"]);
+if (inventory.permissions) inventory.permissions = inventory.permissions.filter((permission) => !directoryPermissions.has(permission));
+const settingsRoot = settings?.items.find((item) => item.id === "system-settings.system-configuration");
+if (settingsRoot?.permissions) settingsRoot.permissions = settingsRoot.permissions.filter((permission) => !directoryPermissions.has(permission));
+const procurement = catalog.find((group) => group.id === "procurement");
+if (!procurement) throw new Error("Procurement navigation group is missing.");
+procurement.items.unshift(
+  { id: "procurement.suppliers", label: "Suppliers", path: "/settings/suppliers", permissions: ["CanViewVendors"] },
+  { ...manufacturers, id: "procurement.manufacturers" },
+);
+
+// The compliance page calls certificate endpoints; the source sidebar's broader group
+// also includes performance/spend viewers, who would see a link they cannot open.
+const compliance = procurement.items.find((item) => item.id === "procurement.supplier-compliance");
+if (!compliance) throw new Error("Supplier compliance navigation entry is missing.");
+compliance.permissions = ["CanViewSupplierCertifications"];
+
+// Every supported collection is independently accessible, including units, sites,
+// and shifts. Keep the catalog and module guard on the same permission contract.
+const collectionsEntry = settings?.items.find((item) => item.path === "/settings/config");
+if (!collectionsEntry) throw new Error("Configuration Collections navigation entry is missing.");
+collectionsEntry.permissions = [...collectionViewPermissions];
 
 await writeFile(output, `// Generated by scripts/import-navigation.ts from the Oryx Next sidebar. Do not edit.
 import type { NavigationGroup } from "./navigation-model.ts";

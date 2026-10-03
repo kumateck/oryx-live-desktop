@@ -1,13 +1,13 @@
 # Oryx Live Desktop
 
-Electron Forge shell plus a separately deployed React application for Oryx customer servers. The shell connects to a site-specific trusted HTTPS origin. The React app is built and served by that customer server; ordinary UI releases therefore do not require reinstalling clients.
+Electron Forge shell plus a separately deployed React application for Oryx customer servers. The shell connects to a site-specific HTTP or HTTPS frontend origin. The React app is built and served by that customer server; ordinary UI releases therefore do not require reinstalling clients.
 
 This repository is in the first module stage. It has a typed file-route generator, compact workspace, configurable appearance, desktop connection screen, sign-in against the existing Oryx backend (the same one Oryx Next uses, unchanged), the backend's published OpenAPI contract, and strictly typed generated hooks for 20 API domains (1,078 of 1,324 backend operations; the rest are listed in `docs/api-untyped-operations.md`). Roles and Users are the migrated modules. Most ERP routes, live notification data, and native updates are **not yet integrated**. See [PLAN.md](PLAN.md) for the sequence and open decisions.
 
 ## Requirements
 
 - Node.js 22.22 or newer; Bun 1.3.14 for package management.
-- A customer server with a trusted HTTPS certificate for the address clients use. When clients use an IP address, that IP must be present in the certificate.
+- A customer server serving the Oryx frontend over HTTP or HTTPS. Intranet HTTP is supported in installed clients. For HTTPS, the certificate must be trusted and cover the hostname or IP clients use.
 - macOS or Windows for Electron development. Windows installer verification must run on Windows.
 
 ## Development
@@ -26,7 +26,11 @@ Use `bun install --frozen-lockfile` in CI. The root override pins `@electron/nod
 
 Copy `apps/web/.env.example` to `apps/web/.env` (ignored by git); it points `ORYX_DEV_API_ORIGIN` at the shared backend `http://164.90.142.68:8086`. `bun run dev:web` proxies requests to `/api` there; requests to `/api` are proxied there. HTTPS and loopback addresses are accepted. A plain-HTTP remote address sends passwords and tokens unencrypted and is refused unless `ORYX_DEV_ALLOW_INSECURE_API=1` is also set. A missing API origin leaves the UI runnable without a backend proxy.
 
-In another terminal, run `bun run dev:desktop`. On the connection screen, use `http://127.0.0.1:5173` only for local development. A packaged app requires trusted HTTPS. `bun run build:web` creates `apps/web/dist` for the customer server; the server must serve `index.html` for client-side routes and keep the hashed assets of prior releases during refresh transitions.
+In another terminal, run `bun run dev:desktop`. On the connection screen, enter the frontend origin: `http://127.0.0.1:5173` for local development, or your customer's HTTP/HTTPS web application address. Do not enter the backend API address; the frontend proxies `/api` to the backend. HTTP sends session traffic without transport encryption, so HTTPS remains preferred when available. `bun run build:web` creates `apps/web/dist` for the customer server; the server must serve `index.html` for client-side routes and keep the hashed assets of prior releases during refresh transitions.
+
+Desktop sources and Forge/Vite configuration use TypeScript with ES module imports. Forge emits the main process as `.vite/build/main.cjs` and the sandboxed preload as `.vite/build/preload.cjs`; keep these filenames aligned with `package.json` and the window's preload path. The explicit CommonJS extensions avoid conflict with the desktop package's `"type": "module"`. A sandboxed Electron preload requires CommonJS ([Electron module support](https://www.electronjs.org/docs/latest/tutorial/esm)). After changing build configuration, stop the previous Forge process and restart `bun run dev:desktop`.
+
+The local connection view links its stylesheet directly and keeps its wordmark as an external asset so both load under its restrictive Content Security Policy. Its setup URL is canonicalized before exact IPC sender validation (including the development server's trailing slash).
 
 ## Repository layout
 

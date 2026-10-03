@@ -18,13 +18,14 @@
     "api:export": "bun scripts/export-openapi.ts",
     "api:generate": "bun scripts/generate-api.ts",
     "api:check": "bun scripts/generate-api.ts --check",
-    "test": "node --test tests/*.test.ts && bun run --filter @oryx/web test",
-    "typecheck": "tsc --noEmit -p tsconfig.json && bun run --filter @oryx/web typecheck && bun run --filter @oryx/desktop typecheck",
+    "test": "node --test tests/*.test.ts && bun run --filter @oryx/gateway test && bun run --filter @oryx/web test",
+    "typecheck": "tsc --noEmit -p tsconfig.json && bun run --filter @oryx/web typecheck && bun run --filter @oryx/desktop typecheck && bun run --filter @oryx/gateway typecheck",
     "build:web": "bun run routes:generate && bun run --filter @oryx/web build",
     "dev:web": "bun run routes:generate && bun run --filter @oryx/web dev",
     "dev:desktop": "bun run --filter @oryx/desktop start",
     "check": "bun run routes:check && bun run api:check && bun run test && bun run typecheck",
-    "nav:import": "bun scripts/import-navigation.ts"
+    "nav:import": "bun scripts/import-navigation.ts",
+    "dev:gateway": "bun run --filter @oryx/gateway start"
   },
   "devDependencies": {
     "@rtk-query/codegen-openapi": "^2.2.0",

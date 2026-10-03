@@ -1,3 +1,6 @@
+import { productSpecificationPermissions } from "../lib/product-access";
+import { useAccess } from "@/shared/auth/use-access";
+import { permissionDeniedMessage } from "@/shared/auth/use-permission-action";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useSession } from "@/shared/auth/session-provider";
@@ -26,6 +29,7 @@ export function useProductSpecifications(productId: string, division: number | n
   const [loadCount] = useLazyGetApiV1ConfigurationByModelTypeCountQuery();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const { allowsNow } = useAccess();
 
   // A product with no specifications answers 404; that is an empty list, not a failure.
   const missing = Boolean(list.error && "status" in list.error && list.error.status === 404);
@@ -53,6 +57,8 @@ export function useProductSpecifications(productId: string, division: number | n
   }, [division, loadCount]);
 
   const save = async (values: SpecificationFormValues, target: SpecificationTarget): Promise<boolean> => {
+    const require = "saved" in target ? productSpecificationPermissions.edit : productSpecificationPermissions.create;
+    if (!allowsNow(require)) { setMessage(permissionDeniedMessage); return false; }
     setMessage("");
     if (!("saved" in target) && !userId) { setMessage("Your session could not be identified. Sign in again and retry."); return false; }
     setSaving(true);

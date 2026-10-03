@@ -6,20 +6,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton, SkeletonRegion } from "@/shared/skeleton/skeleton";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { usePutApiV1UserRoleByIdMutation } from "../api/user-api";
 import { useRoleOptions } from "../hooks/use-role-options";
-import { audit } from "../lib/user-access";
+import { audit, userPermissions } from "../lib/user-access";
 import type { UserRow } from "../schemas/user-schema";
 
 export function ChangeRoleDialog({ user, onClose }: { user: UserRow; onClose: () => void }) {
   const { roles, loading, error, retry } = useRoleOptions();
   const [roleName, setRoleName] = useState(user.role?.name ?? "");
   const [message, setMessage] = useState("");
+  const permission = usePermissionAction(userPermissions.edit);
   const [updateRole, mutation] = usePutApiV1UserRoleByIdMutation();
   const unchanged = roleName === (user.role?.name ?? "");
 
   const save = async () => {
     setMessage("");
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return; }
     const result = await updateRole({ ...audit, id: user.id, domainEntitiesRolesUpdateUserRoleRequest: { roleNames: [roleName] } });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success(`${user.name}'s role was changed`);
@@ -40,7 +44,7 @@ export function ChangeRoleDialog({ user, onClose }: { user: UserRow; onClose: ()
       {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
       <DialogFooter>
         <Button type="button" variant="outline" disabled={mutation.isLoading} onClick={onClose}>Cancel</Button>
-        <Button type="button" disabled={mutation.isLoading || unchanged || !roleName || Boolean(error)} onClick={() => void save()}>
+        <Button type="button" disabled={!permission.allowed || mutation.isLoading || unchanged || !roleName || Boolean(error)} onClick={() => void save()}>
           {mutation.isLoading ? <><Spinner />Saving…</> : "Save role"}</Button>
       </DialogFooter>
     </DialogContent>
