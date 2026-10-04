@@ -33,7 +33,7 @@ export function WorkspaceOverview() {
           <ul className="grid gap-2 sm:grid-cols-2">
             {open.map((dashboard) => (
               <li key={dashboard.id}>
-                <Link to={dashboard.root} className="flex items-center gap-2 rounded-lg border bg-card p-3 text-sm font-medium hover:border-primary focus-visible:outline-2">
+                <Link to={dashboard.root} className="flex items-center gap-2 rounded-card border border-surface-border bg-card p-3 text-sm font-medium hover:border-primary focus-visible:outline-2">
                   <ChartNoAxesCombined aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />{dashboard.label}
                 </Link>
               </li>

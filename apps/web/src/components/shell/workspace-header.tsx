@@ -22,7 +22,7 @@ export function WorkspaceHeader({ title, sidebarOpen, onToggleSidebar, groups }:
       <Tooltip>
         <TooltipTrigger asChild>
           <Button variant="ghost" size="icon-sm" className="icon-button" type="button"
-            aria-label={toggleLabel} aria-expanded={sidebarOpen} onClick={onToggleSidebar}>
+            aria-label={toggleLabel} aria-expanded={sidebarOpen} aria-controls="module-navigation" onClick={onToggleSidebar}>
             <PanelLeft aria-hidden="true" className="size-[18px]" />
           </Button>
         </TooltipTrigger>

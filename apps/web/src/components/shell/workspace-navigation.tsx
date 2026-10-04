@@ -51,8 +51,8 @@ export function WorkspaceNavigation({ groups, active, pathname, sidebarOpen, onO
         </Tooltip>;
       })}
     </nav>
-    {sidebarOpen && selected ? <aside className="module-sidebar" aria-label={`${selected.label} navigation`}>
-      <div className="sidebar-heading">{selected.label}</div>
+    {sidebarOpen && selected ? <aside id="module-navigation" className="module-sidebar" aria-label={`${selected.label} navigation`}>
+      <div className="sidebar-heading"><h2>{selected.label}</h2></div>
       <div className="sidebar-items" key={selected.id}>
         {selected.items.map((item) => <Entry key={item.id} item={item} active={active} depth={0} />)}
       </div>

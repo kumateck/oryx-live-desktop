@@ -1,0 +1,9 @@
+/* Crisp surface geometry shared by the shell, cards and shadcn controls. */
+:root {
+  --radius: 6px;
+  --card-radius: 8px;
+  --radius-panel: 10px;
+  --surface-border: color-mix(in srgb, var(--canvas) 88%, var(--text));
+  --panel-divider: var(--border);
+  --empty-text: var(--text-muted);
+}

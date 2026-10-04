@@ -45,6 +45,8 @@ The module icon rail shows each group's display name on hover and keyboard focus
 
 `WorkspaceHeader` owns the logo, shadcn panel toggle, divider, title, and header actions. Shared shell width variables align the divider to the sidebar/content boundary and the title to the content gutter while navigation is expanded. The wordmark stays visible in every navigation state, including narrow windows. Collapsed navigation reserves a compact 136px header brand area for the logo and panel toggle; the title follows it without overlapping the logo.
 
+The shell uses a 56px icon rail with 36px controls and 10px side padding. The secondary sidebar is 296px wide, reducing to 264px below 1100px and 240px below 850px; the existing narrow-window behavior hides it below 650px. A separated 64px heading and independently scrolling entries keep navigation clear. Shared surface geometry in `shared/theme/surfaces.css` uses 6px control, 8px card, and 10px panel radii, with quiet outer borders and a visible sidebar/content divider. Theme-derived colors continue to respect saved appearance profiles and contrast.
+
 Expandable navigation entries place their chevrons at the right edge. Desktop label overrides live in `scripts/import-navigation.ts`, so re-importing Oryx Next navigation retains concise names (for example General, Collections, Inventory, Organization and Procedure Areas) while preserving route addresses, IDs and permission requirements. Avoid cutting off labels just to make them fit; use concise, meaningful names and allow wrapping for unusual lengths or larger text settings.
 
 ## Performance at 27 modules
