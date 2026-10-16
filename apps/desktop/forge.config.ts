@@ -1,12 +1,11 @@
 import type { ForgeConfig } from "@electron-forge/shared-types";
-import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 
 const config: ForgeConfig = {
-  packagerConfig: { asar: true, executableName: "OryxLiveDesktop" },
+  // The extension is chosen per platform: build/icon.ico on Windows, build/icon.icns on macOS.
+  packagerConfig: { asar: true, executableName: "OryxLiveDesktop", icon: "build/icon", appBundleId: "com.kumateck.oryx-live-desktop" },
   makers: [
-    new MakerSquirrel({ name: "OryxLiveDesktop" }, ["win32"]),
     new MakerZIP({}, ["darwin"]),
   ],
   plugins: [

@@ -106,6 +106,7 @@ jobs:
 
             docker rm -f "${{ env.GATEWAY_CONTAINER }}" >/dev/null 2>&1 || true
             docker run -d --init --restart always --net sail \
+              --add-host host.docker.internal:host-gateway \
               --name "${{ env.GATEWAY_CONTAINER }}" \
               --env ORYX_API_ORIGIN="${{ env.API_ORIGIN }}" \
               --env ORYX_GATEWAY_ALLOWED_ORIGINS="${{ env.SITE_ORIGIN }}" \
@@ -117,6 +118,7 @@ jobs:
 
             docker rm -f "${{ env.WEB_CONTAINER }}" >/dev/null 2>&1 || true
             docker run -d --restart always --net sail \
+              --add-host host.docker.internal:host-gateway \
               -p "${{ env.HOST_PORT }}:80" \
               --name "${{ env.WEB_CONTAINER }}" \
               --env ORYX_API_ORIGIN="${{ env.API_ORIGIN }}" \
@@ -127,6 +129,24 @@ jobs:
             sleep 3
             docker ps --filter "name=oryx-live" --format '{{.Names}} {{.Status}}'
             docker image prune -f
+
+            # What the site can reach. Prints only names, networks, ports and HTTP status lines.
+            set +e
+            echo "== containers publishing the backend and broker ports"
+            docker ps --filter publish=8086 --format '8086: {{.Names}} on {{.Networks}} ({{.Ports}})'
+            docker ps --filter publish=5672 --format '5672: {{.Names}} on {{.Networks}} ({{.Ports}})'
+            docker ps --format '{{.Names}} on {{.Networks}}' | grep -iE 'rabbit|backend|api|oryx' | grep -v oryx-live
+            for target in "${{ env.API_ORIGIN }}" http://host.docker.internal:8086; do
+              echo "== web container to $target"
+              docker exec "${{ env.WEB_CONTAINER }}" wget -q -S -O /dev/null -T 8 "$target/api/v1/user/authenticated" 2>&1 | grep -m1 HTTP || echo "no answer"
+            done
+            echo "== through the site"
+            curl -s -o /dev/null -m 15 -w "%{http_code}\n" "http://127.0.0.1:${{ env.HOST_PORT }}/api/v1/user/authenticated"
+            sleep 5
+            echo "== gateway"
+            docker logs --tail 6 "${{ env.GATEWAY_CONTAINER }}" 2>&1
+            command -v ufw >/dev/null && ufw status 2>/dev/null | head -25
+            exit 0
 
   installer:
     runs-on: windows-latest
@@ -140,12 +160,55 @@ jobs:
         with:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
-      - run: bun run --filter @oryx/desktop make
+      - name: Build the installer (NSIS)
+        run: bun run --filter @oryx/desktop make:windows
       - name: Name the installer
         shell: bash
         run: |
           mkdir -p downloads
-          cp apps/desktop/out/make/squirrel.windows/x64/*.exe downloads/OryxLiveDesktop-Setup.exe
+          cp apps/desktop/out/make/nsis/OryxLiveDesktop-Setup.exe downloads/
+      # Installs as a tester would, then opens the app twice: fresh (the connection page) and pointed at the site.
+      - name: Install and launch
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Start-Process (Resolve-Path downloads/OryxLiveDesktop-Setup.exe) -ArgumentList '/S' -Wait
+          Start-Sleep 3
+          Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue | Stop-Process -Force
+          $exe = Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter OryxLiveDesktop.exe | Select-Object -First 1
+          if (-not $exe) { throw 'The installer did not install OryxLiveDesktop.exe' }
+          "Installed: $($exe.FullName)"
+          $shortcuts = @((Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Oryx Live Desktop.lnk'), (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Oryx Live Desktop.lnk'))
+          foreach ($link in $shortcuts) { if (-not (Test-Path $link)) { throw "Missing shortcut: $link" }; "Shortcut: $link" }
+          New-Item -ItemType Directory shots -Force | Out-Null
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          function Launch([string] $name, [scriptblock] $ok) {
+            Start-Process $exe.FullName | Out-Null
+            Start-Sleep 20
+            $window = Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue | Where-Object MainWindowTitle | Select-Object -First 1
+            try {
+              $bounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+              $bitmap = New-Object System.Drawing.Bitmap $bounds.Width, $bounds.Height
+              [System.Drawing.Graphics]::FromImage($bitmap).CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size)
+              $bitmap.Save("shots/$name.png")
+            } catch { "Screenshot failed: $_" }
+            Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep 2
+            if (-not $window) { throw "${name}: the app shows no window" }
+            "${name}: window titled '$($window.MainWindowTitle)'"
+            if (-not (& $ok $window.MainWindowTitle)) { throw "${name}: unexpected window '$($window.MainWindowTitle)'" }
+          }
+          Launch 'first-launch' { param($title) $title -eq 'Connect to Oryx' }
+          $config = Join-Path $env:APPDATA 'Oryx Live Desktop'
+          New-Item -ItemType Directory $config -Force | Out-Null
+          Set-Content -NoNewline -Path (Join-Path $config 'site-url.txt') -Value '${{ env.SITE_ORIGIN }}'
+          Launch 'connected' { param($title) $title -ne 'Connect to Oryx' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-launch-screenshots
+          path: shots/
+          retention-days: 14
       - uses: actions/upload-artifact@v4
         with:
           name: windows-installer

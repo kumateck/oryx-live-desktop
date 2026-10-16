@@ -15,7 +15,17 @@ Push to `testing` (or run **Deploy testing site** from the Actions tab) and `.gi
 1. runs `bun run check` (on CI, web tests get a 30-second timeout and a failing one is retried twice, since the runners are slower);
 2. builds two images from `deploy/Dockerfile` and pushes them to GitHub's registry: `ghcr.io/kumateck/oryx-live-web` (nginx serving `apps/web/dist`) and `ghcr.io/kumateck/oryx-live-gateway` (`apps/gateway`). The workflow's own token pushes them, and the server pulls with it during the deploy, then signs out;
 3. over SSH, replaces the `oryx-live-gateway` and `oryx-live-web` containers on the `sail` network, publishing the web container on port 3011;
-4. builds the Windows installer on a Windows runner (`electron-forge make`, Squirrel) and copies it to `~/oryx-live/downloads` on the server, which the web container serves at `/downloads/`.
+4. builds the Windows installer on a Windows runner and copies it to `~/oryx-live/downloads` on the server, which the web container serves at `/downloads/`. Before publishing, the runner installs it silently, checks the Start-menu and desktop shortcuts, and opens the app twice: fresh (it must show **Connect to Oryx**) and pointed at the site (it must leave the connection page). Screenshots of both are kept as the run's `windows-launch-screenshots` artifact.
+
+The deploy step then prints what the site can reach (the containers publishing ports 8086 and 5672, the backend status from inside the web container, and the gateway's last log lines) so a broken connection is visible in the run log.
+
+## The Windows installer
+
+`bun run --filter @oryx/desktop make:windows` (on Windows) packages the shell with Electron Forge, then wraps it in an NSIS installer with electron-builder (`apps/desktop/electron-builder.config.cjs`), as `vipex_app` does: an installer wizard that lets the user choose the folder, installs per user without administrator rights, creates Start-menu and desktop shortcuts, and offers to open the app at the end. The output is `apps/desktop/out/make/nsis/OryxLiveDesktop-Setup.exe`, published under the same name so the download link never changes.
+
+Icons come from the Oryx mark (`assets/oryx-mark.png`, taken from Oryx Next's logo): `apps/desktop/build/icon.ico` (Windows executable and installer), `icon.icns` (macOS), and the web favicons and `site.webmanifest` in `apps/web/public`.
+
+The connection page is built by Vite into `apps/desktop/.vite/renderer/main_window`; `vite.renderer.config.ts` sets that output explicitly, because its `root` is `src/connection` and the default output would land outside the packaged app (the first Squirrel installer opened a window with nothing to show).
 
 The web container passes `/api` to the backend and `/realtime` (with WebSocket upgrade) to the gateway, so the browser and the desktop shell reach everything on one origin. `index.html` is always revalidated and hashed assets are cached for a year. A tab left open across a deploy may fail to load a page it had not opened yet; reloading fixes it.
 
@@ -26,12 +36,12 @@ The workflow uses the server secrets of `oryx-next`'s deploy workflows, under th
 ### For testers
 
 - **Browser:** open the address above in Chrome or Edge and sign in with an Oryx account.
-- **Windows app:** download and run the installer. It is not code-signed yet, so Windows SmartScreen warns on first run (**More info → Run anyway**). On the connection screen, enter `http://164.90.142.68:3011`. Web releases reach the installed app without reinstalling; a new installer is only needed when the desktop shell changes.
+- **Windows app:** download and run the installer, choose where to install, and finish; it opens the app and leaves a desktop shortcut. It is not code-signed yet, so Windows SmartScreen warns first (**More info → Run anyway**). On the connection screen, enter `http://164.90.142.68:3011`. Web releases reach the installed app without reinstalling; a new installer is only needed when the desktop shell changes.
 
 ### Known limits
 
 - Plain HTTP: passwords and tokens cross the network unencrypted, as they already do for the Oryx Next demo. Put the site behind HTTPS (a domain and a certificate) before real data or customers use it.
-- The installer is unsigned and has no automatic shell updates yet (`PLAN.md`, site deployment and shell updates).
+- The installer is unsigned and has no automatic shell updates yet; reinstalling from the link upgrades it in place (`PLAN.md`, site deployment and shell updates).
 - Build the desktop shell with Node 22 or 24. On Node 26, Electron Packager stops silently while extracting Electron and produces nothing.
 
 ## Building the images yourself
