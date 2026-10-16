@@ -18,6 +18,8 @@ COPY apps/gateway/package.json apps/gateway/
 RUN bun install --frozen-lockfile
 
 FROM deps AS web-build
+# The web typecheck (part of the build) needs more than Node's default heap.
+ENV NODE_OPTIONS=--max-old-space-size=6144
 COPY . .
 RUN bun run build:web
 

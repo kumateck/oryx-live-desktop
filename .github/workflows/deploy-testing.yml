@@ -35,6 +35,9 @@ jobs:
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
       - run: bun run check
+        env:
+          # The web typecheck needs more than Node's default heap on a runner.
+          NODE_OPTIONS: --max-old-space-size=6144
 
   images:
     runs-on: ubuntu-latest
