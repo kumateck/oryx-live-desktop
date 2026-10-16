@@ -17,7 +17,7 @@ Push to `testing` (or run **Deploy testing site** from the Actions tab) and `.gi
 3. over SSH, replaces the `oryx-live-gateway` and `oryx-live-web` containers on the `sail` network, publishing the web container on port 3011;
 4. builds the Windows installer on a Windows runner and copies it to `~/oryx-live/downloads` on the server, which the web container serves at `/downloads/`. Before publishing, the runner installs it silently, checks the Start-menu and desktop shortcuts, and opens the app twice: fresh (it must show **Connect to Oryx**) and pointed at the site (it must leave the connection page). Screenshots of both are kept as the run's `windows-launch-screenshots` artifact.
 
-The deploy step then prints what the site can reach (the containers publishing ports 8086 and 5672, the backend status from inside the web container, and the gateway's last log lines) so a broken connection is visible in the run log.
+Containers on that server cannot reach it through its own public address, so the deploy step finds a route to the backend and to RabbitMQ before starting anything, testing from the `sail` network as the containers will: the container publishing the port (by name), then the server itself through the network's gateway address ("localhost" as seen from a container), then the public address. It uses the first that answers, and stops without touching the running site if none reaches the backend. After starting, it checks `/api` through the site and fails the run if the backend does not answer.
 
 ## The Windows installer
 

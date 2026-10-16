@@ -104,49 +104,68 @@ jobs:
             docker network inspect sail >/dev/null 2>&1 || docker network create sail
             mkdir -p "$HOME/oryx-live/downloads"
 
+            # Containers cannot always reach the server through its own public address, so find the route that works,
+            # testing from the sail network exactly as the site's containers will: the backend's own container first,
+            # then the server itself (the network's gateway address, i.e. "localhost" from a container), then the public address.
+            CHECK_IMAGE="${{ env.GATEWAY_IMAGE }}:$TAG"
+            reach() { docker run --rm --net sail "$CHECK_IMAGE" node -e "$1" "$2" >/dev/null 2>&1; }
+            HTTP_OK='fetch(process.argv[1] + "/api/v1/user/authenticated", { signal: AbortSignal.timeout(6000) }).then(() => process.exit(0), () => process.exit(1))'
+            TCP_OK='const [h, p] = process.argv[1].split(":"); const s = require("node:net").connect(Number(p), h); s.setTimeout(5000, () => process.exit(1)); s.on("connect", () => process.exit(0)); s.on("error", () => process.exit(1))'
+            # name:port of each container on the sail network that publishes host port $1
+            published() {
+              for name in $(docker ps --filter "publish=$1" --format '{{.Names}}'); do
+                docker inspect "$name" --format '{{range $net, $v := .NetworkSettings.Networks}}{{$net}} {{end}}' | grep -qw sail || continue
+                inner=$(docker port "$name" | grep -E ":$1\$" | head -n 1 | cut -d/ -f1)
+                [ -n "$inner" ] && echo "$name:$inner"
+              done
+            }
+            SERVER=$(docker network inspect sail --format '{{range .IPAM.Config}}{{.Gateway}} {{end}}' | awk '{print $1}')
+
+            API_UPSTREAM=""
+            for candidate in $(published 8086 | sed 's#^#http://#') "http://$SERVER:8086" "${{ env.API_ORIGIN }}"; do
+              if reach "$HTTP_OK" "$candidate"; then API_UPSTREAM="$candidate"; break; fi
+              echo "backend: no answer at $candidate"
+            done
+            if [ -z "$API_UPSTREAM" ]; then echo "The backend cannot be reached from the sail network; the running site is left as it is."; exit 1; fi
+            echo "backend: using $API_UPSTREAM"
+
+            BROKER_PORT="${RABBITMQ_HOST##*:}"; BROKER_NAME="${RABBITMQ_HOST%:*}"
+            if [ "$BROKER_PORT" = "$RABBITMQ_HOST" ]; then BROKER_PORT=5672; BROKER_NAME="$RABBITMQ_HOST"; fi
+            BROKER=""
+            for candidate in "$BROKER_NAME:$BROKER_PORT" $(published "$BROKER_PORT") "$SERVER:$BROKER_PORT"; do
+              if reach "$TCP_OK" "$candidate"; then BROKER="$candidate"; break; fi
+              echo "broker: no answer at $candidate"
+            done
+            if [ -z "$BROKER" ]; then echo "broker: unreachable; live notifications fall back to checking every minute"; BROKER="$RABBITMQ_HOST"; else echo "broker: using $BROKER"; fi
+
             docker rm -f "${{ env.GATEWAY_CONTAINER }}" >/dev/null 2>&1 || true
             docker run -d --init --restart always --net sail \
-              --add-host host.docker.internal:host-gateway \
               --name "${{ env.GATEWAY_CONTAINER }}" \
-              --env ORYX_API_ORIGIN="${{ env.API_ORIGIN }}" \
+              --env ORYX_API_ORIGIN="$API_UPSTREAM" \
               --env ORYX_GATEWAY_ALLOWED_ORIGINS="${{ env.SITE_ORIGIN }}" \
               --env ORYX_GATEWAY_ALLOW_INSECURE=1 \
-              --env RABBITMQ_HOST="$RABBITMQ_HOST" \
+              --env RABBITMQ_HOST="$BROKER" \
               --env RABBITMQ_DEFAULT_USER=root \
               --env RABBITMQ_DEFAULT_PASS="$RABBITMQ_PASS" \
               "${{ env.GATEWAY_IMAGE }}:$TAG"
 
             docker rm -f "${{ env.WEB_CONTAINER }}" >/dev/null 2>&1 || true
             docker run -d --restart always --net sail \
-              --add-host host.docker.internal:host-gateway \
               -p "${{ env.HOST_PORT }}:80" \
               --name "${{ env.WEB_CONTAINER }}" \
-              --env ORYX_API_ORIGIN="${{ env.API_ORIGIN }}" \
+              --env ORYX_API_ORIGIN="$API_UPSTREAM" \
               --env ORYX_GATEWAY_UPSTREAM="${{ env.GATEWAY_CONTAINER }}:4100" \
               --volume "$HOME/oryx-live/downloads:/srv/downloads:ro" \
               "${{ env.WEB_IMAGE }}:$TAG"
 
-            sleep 3
+            docker image prune -f >/dev/null
+            sleep 8
             docker ps --filter "name=oryx-live" --format '{{.Names}} {{.Status}}'
-            docker image prune -f
-
-            # What the site can reach. Prints only names, networks, ports and HTTP status lines.
-            set +e
-            echo "== containers publishing the backend and broker ports"
-            docker ps --filter publish=8086 --format '8086: {{.Names}} on {{.Networks}} ({{.Ports}})'
-            docker ps --filter publish=5672 --format '5672: {{.Names}} on {{.Networks}} ({{.Ports}})'
-            docker ps --format '{{.Names}} on {{.Networks}}' | grep -iE 'rabbit|backend|api|oryx' | grep -v oryx-live
-            for target in "${{ env.API_ORIGIN }}" http://host.docker.internal:8086; do
-              echo "== web container to $target"
-              docker exec "${{ env.WEB_CONTAINER }}" wget -q -S -O /dev/null -T 8 "$target/api/v1/user/authenticated" 2>&1 | grep -m1 HTTP || echo "no answer"
-            done
-            echo "== through the site"
-            curl -s -o /dev/null -m 15 -w "%{http_code}\n" "http://127.0.0.1:${{ env.HOST_PORT }}/api/v1/user/authenticated"
-            sleep 5
-            echo "== gateway"
-            docker logs --tail 6 "${{ env.GATEWAY_CONTAINER }}" 2>&1
-            command -v ufw >/dev/null && ufw status 2>/dev/null | head -25
-            exit 0
+            STATUS=$(curl -s -o /dev/null -m 15 -w "%{http_code}" "http://127.0.0.1:${{ env.HOST_PORT }}/api/v1/user/authenticated")
+            echo "site to backend: HTTP $STATUS"
+            echo "gateway: $(curl -s -m 10 "http://127.0.0.1:${{ env.HOST_PORT }}/realtime/health")"
+            # Any answer from the backend (401 without a sign-in) means the site reaches it.
+            case "$STATUS" in 000|502|504) echo "The site cannot reach the backend."; exit 1;; esac
 
   installer:
     runs-on: windows-latest
