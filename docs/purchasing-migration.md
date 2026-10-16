@@ -153,9 +153,13 @@ The server does not say which lines are still open. A line counts as open only w
 
 Supplier invoices, shipments, billing sheets, material distribution and receiving are in [inbound-logistics-migration.md](inbound-logistics-migration.md).
 
-## Not migrated yet
+## Cancelling an order
 
-- Cancelling an order.
+New: Oryx Next never called the server's cancel endpoint (`DELETE purchase-order/{id}/cancel`). **Cancel order** on the order page (`components/cancel-order-dialog.tsx`):
+
+- Offered until a shipment invoice has been raised against the order (not when partly or fully invoiced, or already cancelled). The server checks nothing and would cancel an invoiced order.
+- The server has no permission for cancelling (any signed-in user may call it), so the app asks for the permission to revise orders of that kind (`CanReviseForeignPurchaseOrder` / `CanReviseLocalPurchaseOrder`).
+- The confirmation says the order can no longer be checked, approved, sent or invoiced; that a sent order's supplier must be told; and that its lines are **not** returned for sourcing, which the server does not do.
 
 ## Tests
 

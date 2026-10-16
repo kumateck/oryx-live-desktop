@@ -21,3 +21,11 @@ export function apiErrorMessage(error: FetchBaseQueryError | SerializedError | u
   }
   return error.message || "The request could not be completed.";
 }
+
+const codeSchema = z.object({ errors: z.array(z.object({ code: z.string() })).min(1) });
+/** The server's error code (such as "FormAssignee.NotFound"), for the few places that act on a particular failure. */
+export function apiErrorCode(error: FetchBaseQueryError | SerializedError | undefined): string | null {
+  if (!error || !("status" in error)) return null;
+  const parsed = codeSchema.safeParse(error.data);
+  return parsed.success ? parsed.data.errors[0]?.code ?? null : null;
+}

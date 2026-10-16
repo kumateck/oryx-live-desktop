@@ -55,4 +55,4 @@ Appearance behavior and the Oryx accent list are in [docs/appearance.md](docs/ap
 
 `bun run routes:check` ensures generated routes are current and enforces the 200-line page limit. `bun run api:check` checks generated API drift, rejects untyped output, and fails on a backend tag with no domain. `bun run test` covers route collisions/nesting, appearance tokens, session behavior, role permissions and table paging, and server URL validation. `bun run typecheck` checks application and generated TypeScript. `bun run build:web` builds the hosted SPA. The `AGENTS.md` guide defines ownership, business safeguards, and verification requirements for later migration work.
 
-No packaged-app or customer-server deployment has been validated yet; those are explicit phase gates in `PLAN.md`.
+A testing site and Windows installer are deployed from the `testing` branch; see [docs/deployment.md](docs/deployment.md). Customer-server deployment and signed shell updates remain phase gates in `PLAN.md`.

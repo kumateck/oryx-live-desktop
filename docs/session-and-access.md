@@ -109,5 +109,18 @@ Sonner (the shadcn `Toaster`, mounted once in `main.tsx` and following the Oryx 
 ## Not covered yet
 
 - The backend has no login rate limit or account lockout, and no endpoint to revoke a refresh token on sign-out. These are backend matters shared with Oryx Next.
-- In the installed shell, the refresh token should move from `sessionStorage` to operating-system protected storage through the preload bridge. Until then a restart of the app requires signing in again.
-- Forgot/reset password, department switching, and avatar upload exist in Oryx Next and are not migrated.
+
+## Kept sign-in in the installed app
+
+The shell keeps the refresh token encrypted by the operating system (`apps/desktop/src/session-vault.ts`, Electron `safeStorage`), in `session.bin` in the app's user data folder, so a restart does not ask for a sign-in until the server ends the session.
+
+- Only the top page of the connected server can read or keep it (`session:load` / `session:save`, checked in `main.ts`); the setup page and frames are refused. It is tied to the server's origin and forgotten when the server address changes or the server is forgotten.
+- Each new refresh token is kept as the server issues it (the server replaces it on every renewal); signing out, or the server ending the session, removes it.
+- Without OS encryption (on Linux without a keyring Electron uses a fixed key, which protects nothing), nothing is kept and the session lasts as long as the window.
+- The web app uses it through `window.oryxSession` in `shared/auth/token-store.ts`; in a browser it is absent and nothing changes.
+
+## Account
+
+- **Forgot password** `/forgot-password` and **reset password** `/reset-password?key=` (`modules/auth`). The server emails a link to `/reset-password` on the origin the request came from, which is this app's site. The same answer is given whether or not an account uses the address (the server says when none does; that is not passed on). The reset page also takes the emailed link pasted in, for when the email opens on another computer. New passwords are checked against the server's rules (8 characters, a digit, a capital letter, a symbol; `shared/auth/password-rules.ts`, also used by change password), and a 200 answer without `success: true` is a refusal.
+- **Photo** on the Account page (`shared/auth/avatar-form.tsx`). The upload endpoint swallows failures and answers 204, so the stored photo is read back and compared before it is reported as saved (`shared/images/stored-image.ts`, shared with the signature page). The photo is stored under the same name each time, so the app adds a version to its address after a change.
+- **Switch department** in the account menu and on the Account page (`shared/auth/department-switch-dialog.tsx`), shown only to the roles the server allows (`Warehouse Manager`, `admin`, `super`, from the profile's roles); Oryx Next showed it to four departments named in its code, whose users the server could then refuse. Production departments are offered, as in Oryx Next. The server saves the change on the account, so it applies in every window until switched back; the dialog says so. Everything read for the old department is discarded and the session is read again.

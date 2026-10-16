@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { passwordFailure } from "./password-rules";
 import { tokenStore } from "./token-store";
 
 // Same endpoints Oryx Next uses; the desktop adds nothing to the backend.
@@ -7,7 +8,7 @@ const refreshPath = "/api/v1/auth/login-with-refresh-token";
 const audit = { Module: "Authentication", SubModule: "Login" };
 const avatarPath = /^\/api\/v1\/file\/avatar\/[^/?#\\]+$/;
 
-export interface SessionUser { id: string; name: string; email: string | null; department: string | null; departmentId: string | null; departmentType: 0 | 1 | 2 | null; avatar: string | null }
+export interface SessionUser { id: string; name: string; email: string | null; department: string | null; departmentId: string | null; departmentType: 0 | 1 | 2 | null; avatar: string | null; roles: string[] }
 export interface SessionView { user: SessionUser; permissions: string[] }
 export type SessionFailure = "credentials" | "disabled" | "throttled" | "server" | "network" | "invalid-response";
 
@@ -45,6 +46,7 @@ const userSchema = z.object({
     name: z.string().nullish(),
     type: z.union([z.literal(0), z.literal(1), z.literal(2)]).nullish(),
   }).nullish(),
+  roles: z.array(z.object({ name: z.string().nullish() })).nullish(),
 });
 const permissionsSchema = z.array(z.object({
   isActive: z.boolean().default(true),
@@ -125,6 +127,8 @@ let refreshing: Promise<boolean> | null = null;
  */
 export function refreshTokens(signal?: AbortSignal): Promise<boolean> {
   refreshing ??= (async () => {
+    // After a restart of the installed app, the sign-in the shell kept is the only one there is.
+    await tokenStore.restore();
     const refreshToken = tokenStore.refreshToken();
     if (!refreshToken) return false;
     const response = await send(refreshPath, {
@@ -167,6 +171,7 @@ async function loadSession(userId: string, signal?: AbortSignal): Promise<Sessio
       departmentId: user.data.department?.id ?? null,
       departmentType: user.data.department?.type ?? null,
       avatar: sameOriginAvatar(user.data.avatar),
+      roles: (user.data.roles ?? []).flatMap((role) => role.name ? [role.name] : []),
     },
     permissions: grantedPermissions(permissions.data),
   };
@@ -195,4 +200,38 @@ export async function loginSession(email: string, password: string): Promise<Ses
 export function logoutSession(): void {
   tokenStore.clear();
   currentUserId = null;
+}
+
+const resetAudit = { Module: "Authentication", SubModule: "Forgot Password" };
+
+/**
+ * Asks the server to email a password reset link. The server says when no account uses the address;
+ * that is not passed on, so this page cannot be used to find out who has an account.
+ */
+export async function requestPasswordReset(email: string): Promise<void> {
+  const response = await send("/api/v1/auth/forgot-password", { method: "POST", headers: { "Content-Type": "application/json", ...resetAudit }, body: JSON.stringify({ email }) });
+  if (response.ok || response.status === 404) return;
+  throw new SessionRequestError(response.status === 429 ? "throttled" : "server", response.status);
+}
+
+/**
+ * Sets a new password with the key from a reset email. Resolves the reason it was refused, or null once the
+ * server confirms it: the server answers 200 with `success: false` when the password itself is refused.
+ */
+export async function setPasswordWithKey(key: string, password: string, confirmPassword: string): Promise<string | null> {
+  const response = await send("/api/v1/auth/set-password", { method: "POST", headers: { "Content-Type": "application/json", ...resetAudit },
+    body: JSON.stringify({ token: key, password, confirmPassword }) });
+  if (response.ok) return passwordFailure(await json(response) as Parameters<typeof passwordFailure>[0]);
+  const problem = problemSchema.safeParse(await json(response));
+  const code = problem.success ? problem.data.errors[0]?.code : null;
+  if (code === "Token.Expired") return "This reset link has expired; links last two days. Ask for a new one.";
+  if (code === "Token.NotFound" || response.status === 404) return "This reset link is not valid. Ask for a new one.";
+  if (response.status === 429) return failureMessages.throttled;
+  return failureMessages.server;
+}
+
+// The server lets only these roles move themselves to another department; the names are its own.
+const departmentSwitchRoles = new Set(["Warehouse Manager", "admin", "super"]);
+export function maySwitchDepartment(user: Pick<SessionUser, "roles"> | null): boolean {
+  return Boolean(user?.roles.some((role) => departmentSwitchRoles.has(role)));
 }

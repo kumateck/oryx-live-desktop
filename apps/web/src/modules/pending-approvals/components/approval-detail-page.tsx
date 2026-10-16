@@ -37,6 +37,7 @@ function Detail({ type, id }: { type: string; id: string }) {
       actions={<>{has(approvalPermissions.reject) ? <Button type="button" variant="outline" className="text-destructive" disabled={block !== null} onClick={() => setDecision("reject")}><X />Reject</Button> : null}
         {has(approvalPermissions.approve) ? <Button type="button" disabled={block !== null} onClick={() => setDecision("approve")}><Check />Approve</Button> : null}</>} />
     {block ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">{block}</p> : null}
+    {approval.onBehalfOf ? <p role="status" className="rounded-md border border-sky-500/50 bg-sky-500/10 p-3 text-sm">This request waits for {approval.onBehalfOf}, who delegated their approvals to you. Your decision is recorded as theirs, with a note that you made it.</p> : null}
     {rejected ? <p role="status" className="rounded-md border border-destructive/50 bg-destructive/5 p-3 text-sm">This request was rejected earlier by {rejected.by ?? "an approver"} and has been sent again. Their reason is in the history below.</p> : null}
     <KeyFacts>
       <KeyFact label="Request" value={label} note={approval.code ?? undefined} />
@@ -44,7 +45,7 @@ function Detail({ type, id }: { type: string; id: string }) {
       <KeyFact label="Requested on" value={formatDateTime(approval.createdAt) ?? "–"} />
       <KeyFact label="Earlier decisions" value={approval.logs.length === 0 ? "None" : String(approval.logs.length)} note={approval.logs.length === 0 ? "You are the first approver" : undefined} />
     </KeyFacts>
-    <section aria-label={`${label} details`} className="space-y-3"><h2 className="text-sm font-semibold">{label} details</h2><ApprovalContent type={type} id={id} supplierId={approval.supplierId} /></section>
+    <section aria-label={`${label} details`} className="space-y-3"><h2 className="text-sm font-semibold">{label} details</h2><ApprovalContent type={type} id={id} supplierId={approval.supplierId} rejection={rejected ? { reason: rejected.comments, code: approval.code } : null} /></section>
     <section className="space-y-3"><h2 className="text-sm font-semibold">Approval history</h2><ActivityTimeline logs={approval.logs} /></section>
     {decision ? <DecisionDialog approval={approval} decision={decision} onClose={() => setDecision(null)} onDone={() => { setDecision(null); void navigate(back); }} /> : null}
   </article>;

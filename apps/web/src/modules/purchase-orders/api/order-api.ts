@@ -11,12 +11,14 @@ export const orderApi = procurementApi.enhanceEndpoints({
     putApiV1ProcurementPurchaseOrderByPurchaseOrderId: { invalidatesTags: changed },
     putApiV1ProcurementPurchaseOrderCheckByPurchaseOrderId: { invalidatesTags: changed },
     putApiV1ProcurementPurchaseOrderByPurchaseOrderIdRevise: { invalidatesTags: changed },
+    deleteApiV1ProcurementPurchaseOrderByPurchaseOrderIdCancel: { invalidatesTags: changed },
     // Refreshed even when it fails: the server marks the order as sent before it emails it.
     postApiV1ProcurementPurchaseOrderByPurchaseOrderId: { invalidatesTags: (_result, _error, arg) => [list, one(arg.purchaseOrderId)] },
   },
 });
 export const { useGetApiV1ProcurementPurchaseOrderByPurchaseOrderIdQuery, usePutApiV1ProcurementPurchaseOrderByPurchaseOrderIdMutation,
-  usePutApiV1ProcurementPurchaseOrderCheckByPurchaseOrderIdMutation, usePutApiV1ProcurementPurchaseOrderByPurchaseOrderIdReviseMutation, usePostApiV1ProcurementPurchaseOrderByPurchaseOrderIdMutation } = orderApi;
+  usePutApiV1ProcurementPurchaseOrderCheckByPurchaseOrderIdMutation, usePutApiV1ProcurementPurchaseOrderByPurchaseOrderIdReviseMutation, usePostApiV1ProcurementPurchaseOrderByPurchaseOrderIdMutation,
+  useDeleteApiV1ProcurementPurchaseOrderByPurchaseOrderIdCancelMutation } = orderApi;
 
 /** The other suppliers' quotes for one material of an order. Read fresh each time: what it lists changes as lines are moved. */
 export const { useGetApiV1RequisitionSourceMaterialPriceComparisonByMaterialQuery, useGetApiV1RequisitionSourceMaterialPriceComparisonQuery,

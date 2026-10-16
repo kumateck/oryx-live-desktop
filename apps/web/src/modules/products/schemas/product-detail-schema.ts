@@ -11,8 +11,14 @@ const list = <T extends z.ZodType>(schema: T) => z.array(schema).nullish().trans
 const person = z.object({ firstName: text, lastName: text }).nullish()
   .transform((value) => value ? `${value.firstName ?? ""} ${value.lastName ?? ""}`.trim() || null : null);
 
+// The bill of materials carries each material's category (its function in the product) and specification number.
+const bomMaterial = z.object({
+  id: text, name: text, code: text,
+  materialCategory: z.object({ name: text }).nullish().transform((value) => value?.name ?? null),
+  specification: z.object({ specificationNumber: text }).nullish().transform((value) => value?.specificationNumber ?? null),
+}).nullish().transform((value) => value ? { id: value.id, name: value.name, code: value.code, category: value.materialCategory, specificationNumber: value.specification } : null);
 const bomItem = z.object({
-  id: text, order: num, material: item, baseQuantity: num, baseUoM: symbol, grade: text, casNumber: text,
+  id: text, order: num, material: bomMaterial, baseQuantity: num, baseUoM: symbol, grade: text, casNumber: text,
 });
 const bom = z.object({
   version: num, effectiveDate: text, isActive: flag,

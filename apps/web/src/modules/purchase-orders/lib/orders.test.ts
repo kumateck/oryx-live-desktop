@@ -91,3 +91,9 @@ it("moves a line to another supplier only when one quoted and no comparison is o
   expect(takeLineOff(1, line)).toEqual([{ type: 1, purchaseOrderItemId: "l1" }]);
   expect(awardLine(line, candidates[0]!)).toEqual([{ supplierId: "s2", sourceRequisitionId: "sr-s2", items: [{ materialId: "m1", uomId: "u-mg", quantity: 25_000_000, price: 11, priceUoM: "kg", currencyId: "c-usd" }] }]);
 });
+
+it("allows cancelling until the order is invoiced", async () => {
+  const { mayCancelOrder } = await import("./purchase-order-access");
+  expect([0, 4, 6, 7, 10].every(mayCancelOrder)).toBe(true);
+  expect([8, 9, 11, 12].some(mayCancelOrder)).toBe(false);
+});

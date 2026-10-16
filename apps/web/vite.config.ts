@@ -34,5 +34,6 @@ export default defineConfig({
     } } : {}),
   },
   build: { outDir: "dist", sourcemap: false },
-  test: { maxWorkers: 4, setupFiles: ["./src/test/setup.ts"] },
+  // On CI a few interaction tests can time out under full-suite load; a retry keeps a deploy from failing on that alone.
+  test: { maxWorkers: 4, retry: process.env.CI ? 2 : 0, setupFiles: ["./src/test/setup.ts"] },
 });

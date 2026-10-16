@@ -18,5 +18,8 @@
 | Quotation request | Quotation request dialog (blank price columns for the supplier) |
 | Proforma invoice request | Proforma request dialog |
 | Purchase order | Order review dialogs and the order page (with charges, total in words and signature lines) |
+| Batch manufacturing record head | Product page |
+| Monthly production plan | Production schedules, Monthly report |
+| Certificate of analysis (preview) | Pending approval of analytical raw data |
 
 In `oryx-next`, "Print" on a quotation request, proforma request or approved order also sent the email. Here printing and sending are separate buttons.

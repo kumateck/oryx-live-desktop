@@ -14,7 +14,7 @@ const product = { id, code: "NL-047", name: "Wormee 4 Suspension", category: { n
   baseUoM: { name: "Millilitre", symbol: "ml" }, shelfLife: "24 months", isVerified: false, createdAt: "2026-01-02T10:00:00Z", createdBy: { name: "Ada" },
   description: "<p>Each 5 ml contains <strong>albendazole</strong></p><script>bad()</script>",
   currentBillOfMaterial: { version: 3, isActive: true, effectiveDate: "2026-02-01T00:00:00Z",
-    billOfMaterial: { items: [{ id: "a1", order: 1, material: { name: "Albendazole", code: "RM-001" }, baseQuantity: 100, baseUoM: { symbol: "mg" } }] } },
+    billOfMaterial: { items: [{ id: "a1", order: 1, material: { name: "Albendazole", code: "RM-001", materialCategory: { name: "Active" }, specification: { specificationNumber: "SPEC-RM-001" } }, grade: "BP", baseQuantity: 100, baseUoM: { symbol: "mg" } }] } },
   outdatedBillOfMaterials: [{ version: 2, isActive: false, billOfMaterial: { items: [{ id: "b1", order: 1, material: { name: "Old sugar", code: "RM-009" }, baseQuantity: 1, baseUoM: { symbol: "g" } }] } }],
   packages: [{ id: "p1", material: { name: "Bottle", code: "PM-1" }, prescribedQuantity: 1000, packingExcessMargin: 20 }], packings: [] };
 
@@ -70,4 +70,17 @@ it("says so when the product does not exist", async () => {
   open(["CanViewPlannedProducts"], undefined, 404);
   await waitFor(() => expect(screen.getByRole("heading", { name: "This product could not be found" })).toBeTruthy());
   expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+});
+
+it("prints the product as the head of a batch manufacturing record", async () => {
+  open(["CanViewPlannedProducts"]);
+  fireEvent.click(await screen.findByRole("button", { name: "Print" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(dialog.textContent).toContain("Batch manufacturing record");
+  expect(dialog.textContent).toContain("SPEC-RM-001");
+  expect(dialog.textContent).toContain("Active");
+  // Batch facts are lines to fill in, not the product's creation details.
+  expect(dialog.textContent).toContain("Issued byIssued to");
+  await waitFor(() => expect(dialog.textContent).toContain("Mixing"));
+  expect((screen.getAllByRole("button", { name: "Print" }).at(-1) as HTMLButtonElement).disabled).toBe(false);
 });

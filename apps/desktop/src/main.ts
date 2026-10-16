@@ -1,9 +1,10 @@
-import { app, BrowserWindow, dialog, ipcMain, session } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, safeStorage, session, type IpcMainInvokeEvent } from "electron";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { buildMenu } from "./menu";
 import { parseSiteUrl } from "./site-config";
+import { createSessionVault, type Cipher } from "./session-vault";
 import type { SiteStatus } from "./bridge";
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
@@ -16,6 +17,24 @@ let connectionError = "";
 
 function configPath(): string {
   return path.join(app.getPath("userData"), "site-url.txt");
+}
+
+/**
+ * OS encryption for the kept sign-in. On Linux without a keyring Electron falls back to a fixed key
+ * ("basic_text"), which protects nothing, so the sign-in is not kept there.
+ */
+function osCipher(): Cipher | null {
+  if (!safeStorage.isEncryptionAvailable()) return null;
+  if (process.platform === "linux" && safeStorage.getSelectedStorageBackend() === "basic_text") return null;
+  return { encrypt: (plain) => safeStorage.encryptString(plain), decrypt: (sealed) => safeStorage.decryptString(sealed) };
+}
+let vault: ReturnType<typeof createSessionVault>;
+
+/** Only the top page of the connected server may read or keep its sign-in; never the setup page or a frame. */
+function assertSitePage(event: IpcMainInvokeEvent): string {
+  const frame = event.senderFrame;
+  if (!siteUrl || !frame || frame !== window.webContents.mainFrame || frame.origin !== siteUrl) throw new Error("The sign-in is available only to the connected server's pages.");
+  return siteUrl;
 }
 
 function assertConnectionPage(senderUrl: string): void {
@@ -72,6 +91,7 @@ async function forgetServer(): Promise<void> {
     message: `Forget ${siteUrl}?`, detail: "You will be signed out of this server and asked for a server address again. Nothing on the server is changed." });
   if (answer.response !== 1) return;
   await rm(configPath(), { force: true });
+  await vault.forget();
   await session.defaultSession.clearStorageData();
   siteUrl = "";
   connectionError = "";
@@ -115,6 +135,13 @@ async function createWindow(): Promise<void> {
 
 app.whenReady().then(async () => {
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+  vault = createSessionVault(path.join(app.getPath("userData"), "session.bin"), osCipher);
+  ipcMain.handle("session:load", (event): Promise<string | null> => vault.load(assertSitePage(event)));
+  ipcMain.handle("session:save", (event, token: unknown): Promise<void> => {
+    const origin = assertSitePage(event);
+    if (token !== null && typeof token !== "string") throw new Error("Invalid sign-in.");
+    return vault.save(origin, token);
+  });
   ipcMain.handle("site:get-status", (event): SiteStatus => {
     assertConnectionPage(event.senderFrame?.url ?? "");
     return status();
@@ -122,7 +149,10 @@ app.whenReady().then(async () => {
   ipcMain.handle("site:set-url", async (event, value: string): Promise<SiteStatus> => {
     assertConnectionPage(event.senderFrame?.url ?? "");
     if (typeof value !== "string") throw new Error("Invalid server address.");
-    siteUrl = parseSiteUrl(value);
+    const next = parseSiteUrl(value);
+    // A sign-in belongs to one server; it is not carried to another.
+    if (next !== siteUrl) await vault.forget();
+    siteUrl = next;
     await writeFile(configPath(), siteUrl, { mode: 0o600 });
     connectionError = "";
     refreshMenu();

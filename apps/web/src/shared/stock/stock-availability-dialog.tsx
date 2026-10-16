@@ -7,9 +7,8 @@ import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDate } from "@/shared/format/dates";
 import { PageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { toLargestUnit } from "@/shared/units/quantity";
-import { useGetApiV1MaterialByMaterialIdStockAcrossWarehousesQuery, useGetApiV1MaterialByMaterialIdStockPipelineQuery } from "../api/stock-api";
-import { createAudit } from "../lib/requisition-access";
-import { pipelineSchema, warehouseStockSchema, type WarehouseStock } from "../schemas/stock-schema";
+import { useGetApiV1MaterialByMaterialIdStockAcrossWarehousesQuery, useGetApiV1MaterialByMaterialIdStockPipelineQuery } from "./stock-api";
+import { pipelineSchema, warehouseStockSchema, type WarehouseStock } from "./stock-schema";
 
 type Tab = "current" | "incoming";
 const tabs = [{ id: "current" as const, label: "Held now" }, { id: "incoming" as const, label: "On its way in" }];
@@ -20,10 +19,13 @@ function Problem({ message, onRetry }: { message: string; onRetry: () => void })
 }
 
 /** Where else the company holds a material, and what is already on order: what to check before buying more. */
-export function StockAvailabilityDialog({ material, onClose }: { material: { id: string; name: string; code: string | null; unit: string | null }; onClose: () => void }) {
+export interface StockMaterial { id: string; name: string; code: string | null; unit: string | null }
+
+/** `audit` names the screen the dialog is opened from, for the server's audit trail. */
+export function StockAvailabilityDialog({ material, audit, onClose }: { material: StockMaterial; audit: { module: string; subModule: string }; onClose: () => void }) {
   const [tab, setTab] = useState<Tab>("current");
-  const stock = useGetApiV1MaterialByMaterialIdStockAcrossWarehousesQuery({ ...createAudit, materialId: material.id });
-  const pipeline = useGetApiV1MaterialByMaterialIdStockPipelineQuery({ ...createAudit, materialId: material.id });
+  const stock = useGetApiV1MaterialByMaterialIdStockAcrossWarehousesQuery({ ...audit, materialId: material.id });
+  const pipeline = useGetApiV1MaterialByMaterialIdStockPipelineQuery({ ...audit, materialId: material.id });
   const stores = useMemo(() => { const parsed = warehouseStockSchema.safeParse(stock.data ?? null); return parsed.success ? parsed.data : []; }, [stock.data]);
   const incoming = useMemo(() => { const parsed = pipelineSchema.safeParse(pipeline.data ?? null); return parsed.success ? parsed.data : []; }, [pipeline.data]);
   const show = (value: number, unit: string | null = material.unit) => toLargestUnit(value, unit, "calculated")?.text ?? String(value);

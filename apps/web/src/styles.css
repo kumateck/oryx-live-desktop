@@ -292,6 +292,8 @@ button.rail-link.current:not(.active) { color: var(--text); }
 .print-table small { display: block; color: #555; font-size: 10px; }
 .print-empty { color: #555; text-align: center; }
 .print-note { margin: 12px 0 0; color: #333; }
+.print-section { margin: 16px 0 0; font-size: 12px; font-weight: 700; }
+.print-blank { display: block; height: 16px; border-bottom: 1px solid #111; }
 .print-signatures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; margin-top: 44px; font-size: 11px; }
 .print-signatures span { display: block; margin-bottom: 4px; border-bottom: 1px solid #111; height: 28px; }
 .print-footer { margin-top: 20px; padding-top: 6px; border-top: 1px solid #bbb; color: #666; font-size: 10px; }

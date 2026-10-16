@@ -10,7 +10,7 @@ interface Group { title: string; icon: LucideIcon; roots: readonly string[] }
 export const settingsGroups: readonly Group[] = [
   { title: "General settings", icon: Settings, roots: ["/settings/config", "/settings/code-settings", "/settings/questions", "/settings/templates", "/settings/appearance", "/settings/alert"] },
   { title: "User account", icon: User, roots: ["/settings/approvals", "/settings/signature", "/settings/change-password", "/settings/account"] },
-  { title: "Inventory", icon: Package, roots: ["/settings/manufacturers", "/settings/suppliers", "/settings/warehouses", "/settings/locations", "/settings/racks", "/settings/shelves", "/settings/equipments", "/settings/qc-equipments", "/settings/uom", "/settings/sites"] },
+  { title: "Inventory", icon: Package, roots: ["/settings/manufacturers", "/settings/suppliers", "/settings/warehouses", "/settings/locations", "/settings/racks", "/settings/shelves", "/settings/equipments", "/settings/qc-equipments", "/settings/uom", "/settings/sites", "/settings/upload-center"] },
   { title: "Organisation", icon: Building2, roots: ["/settings/departments", "/settings/working-days", "/settings/holidays", "/settings/shift-types", "/settings/shift-schedule", "/settings/shift-categories", "/settings/working-hours-policy"] },
 ];
 

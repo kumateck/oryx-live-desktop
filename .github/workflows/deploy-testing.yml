@@ -1,0 +1,158 @@
+name: Deploy testing site
+
+# Builds the web app and notification gateway images and the Windows installer from the testing branch,
+# and runs them on the shared server beside oryx-next. See docs/deployment.md.
+on:
+  push:
+    branches: [testing]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-testing
+  cancel-in-progress: false
+
+env:
+  WEB_IMAGE: kumateck/oryx-live-web
+  GATEWAY_IMAGE: kumateck/oryx-live-gateway
+  WEB_CONTAINER: oryx-live-web
+  GATEWAY_CONTAINER: oryx-live-gateway
+  HOST_PORT: "3010"
+  SITE_ORIGIN: http://164.90.142.68:3010
+  API_ORIGIN: http://164.90.142.68:8086
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      - run: bun run check
+
+  images:
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          target: web
+          push: true
+          tags: ${{ env.WEB_IMAGE }}:${{ github.sha }},${{ env.WEB_IMAGE }}:testing
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          target: gateway
+          push: true
+          tags: ${{ env.GATEWAY_IMAGE }}:${{ github.sha }},${{ env.GATEWAY_IMAGE }}:testing
+          cache-from: type=gha,scope=gateway
+          cache-to: type=gha,scope=gateway,mode=max
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: images
+    steps:
+      - name: Run the containers
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST }}
+          RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
+          TAG: ${{ github.sha }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: DOCKER_USERNAME,DOCKER_PASSWORD,RABBITMQ_HOST,RABBITMQ_PASS,TAG
+          script: |
+            set -e
+            printf '%s' "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
+            docker network inspect sail >/dev/null 2>&1 || docker network create sail
+            docker pull "${{ env.WEB_IMAGE }}:$TAG"
+            docker pull "${{ env.GATEWAY_IMAGE }}:$TAG"
+            mkdir -p "$HOME/oryx-live/downloads"
+
+            docker rm -f "${{ env.GATEWAY_CONTAINER }}" >/dev/null 2>&1 || true
+            docker run -d --init --restart always --net sail \
+              --name "${{ env.GATEWAY_CONTAINER }}" \
+              --env ORYX_API_ORIGIN="${{ env.API_ORIGIN }}" \
+              --env ORYX_GATEWAY_ALLOWED_ORIGINS="${{ env.SITE_ORIGIN }}" \
+              --env ORYX_GATEWAY_ALLOW_INSECURE=1 \
+              --env RABBITMQ_HOST="$RABBITMQ_HOST" \
+              --env RABBITMQ_DEFAULT_USER=root \
+              --env RABBITMQ_DEFAULT_PASS="$RABBITMQ_PASS" \
+              "${{ env.GATEWAY_IMAGE }}:$TAG"
+
+            docker rm -f "${{ env.WEB_CONTAINER }}" >/dev/null 2>&1 || true
+            docker run -d --restart always --net sail \
+              -p "${{ env.HOST_PORT }}:80" \
+              --name "${{ env.WEB_CONTAINER }}" \
+              --env ORYX_API_ORIGIN="${{ env.API_ORIGIN }}" \
+              --env ORYX_GATEWAY_UPSTREAM="${{ env.GATEWAY_CONTAINER }}:4100" \
+              --volume "$HOME/oryx-live/downloads:/srv/downloads:ro" \
+              "${{ env.WEB_IMAGE }}:$TAG"
+
+            sleep 3
+            docker ps --filter "name=oryx-live" --format '{{.Names}} {{.Status}}'
+            docker image prune -f
+
+  installer:
+    runs-on: windows-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run --filter @oryx/desktop make
+      - name: Name the installer
+        shell: bash
+        run: |
+          mkdir -p downloads
+          cp apps/desktop/out/make/squirrel.windows/x64/*.exe downloads/OryxLiveDesktop-Setup.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: downloads/OryxLiveDesktop-Setup.exe
+          retention-days: 14
+
+  publish-installer:
+    runs-on: ubuntu-latest
+    needs: [installer, deploy]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-installer
+          path: downloads
+      - name: Copy it to the site
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: downloads/OryxLiveDesktop-Setup.exe
+          target: oryx-live

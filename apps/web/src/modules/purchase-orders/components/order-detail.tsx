@@ -1,4 +1,5 @@
-import { FilePenLine, FileText } from "lucide-react";
+import { useState } from "react";
+import { Ban, FilePenLine, FileText } from "lucide-react";
 import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,9 @@ import { PrintButton } from "@/shared/print/print-button";
 import { formatMoney } from "@/shared/procurement/price";
 import { SupplierSummary } from "@/shared/procurement/supplier-summary";
 import { supplierTypeLabels, type SupplierType } from "@/shared/procurement/supplier-type";
-import { orderListPath, orderStatus, reviseOrderPath, reviseOrderPermissions } from "../lib/purchase-order-access";
+import { cancelOrderPermissions, mayCancelOrder, orderListPath, orderStatus, reviseOrderPath, reviseOrderPermissions } from "../lib/purchase-order-access";
 import { describeChange, revisionKind } from "../lib/revisions";
+import { CancelOrderDialog } from "./cancel-order-dialog";
 import { OrderStatusBadge } from "./order-status-badge";
 import { OrderTerms, OrderTotals } from "./order-terms";
 
@@ -31,9 +33,12 @@ export function OrderDetail({ order, type }: { order: PurchaseOrder; type: Suppl
   const currency = order.supplier.currency;
   const { has } = useAccess();
   const mayRevise = order.status === orderStatus.sent && has(reviseOrderPermissions[type]);
+  const mayCancel = mayCancelOrder(order.status) && has(cancelOrderPermissions[type]);
+  const [cancelling, setCancelling] = useState(false);
   return <article className="min-w-0 space-y-4">
     <PageHeader title={order.code} crumbs={[{ label: "Order list", to: `${orderListPath}?type=${type}` }, { label: order.code }]}
       actions={<>{mayRevise ? <Button asChild variant="outline"><Link to={reviseOrderPath(order.id, type)}><FilePenLine />Revise order</Link></Button> : null}
+        {mayCancel ? <Button type="button" variant="outline" className="text-destructive" onClick={() => setCancelling(true)}><Ban />Cancel order</Button> : null}
         <PrintButton size="default" preview={(close) => <PurchaseOrderPrint order={order} title="Purchase order" type={type} onClose={close} />} /></>} />
     <div className="flex flex-wrap items-center gap-2"><OrderStatusBadge status={order.status} /><Badge variant="outline">{supplierTypeLabels[type]} supplier</Badge>
       {order.revised ? <Badge variant="outline">Revision {order.revisionNumber}</Badge> : null}</div>
@@ -61,5 +66,6 @@ export function OrderDetail({ order, type }: { order: PurchaseOrder; type: Suppl
               <TableCell>{text.before}</TableCell><TableCell>{text.after}</TableCell></TableRow>; })}</TableBody></Table>
       </section>)}</div> : null}
     </Tabs>
+    {cancelling ? <CancelOrderDialog order={order} type={type} onClose={() => setCancelling(false)} /> : null}
   </article>;
 }

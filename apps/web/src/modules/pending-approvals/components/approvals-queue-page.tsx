@@ -11,6 +11,7 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { useGetApiV1ApprovalMyPendingDocumentCountsQuery, useGetApiV1ApprovalMyPendingQuery, useGetApiV1ApprovalMyPendingStatsQuery } from "../api/approval-api";
 import { approvalListPath, approvalPath, approvalsPath, audit, decidedElsewhere, documentLabel, isReadable, waitingDocuments } from "../lib/approval-documents";
 import { approvalRowsSchema, countsSchema, type PendingApproval } from "../schemas/approval-schema";
+import { DelegationPanel } from "./delegation-panel";
 
 /** How many documents of each type wait for the user. The full count is asked first; the older one covers a server without it. */
 function useCounts() {
@@ -34,6 +35,9 @@ const column = dataTableColumns<PendingApproval>();
 const columns = column.columns([
   column.accessor((row) => row.code ?? "", { id: "code", header: "Document", cell: ({ row }) => <span className="break-words font-medium">{row.original.code ?? "No number"}</span> }),
   column.accessor((row) => row.requestedBy ?? "", { id: "requestedBy", header: "Requested by", cell: ({ row }) => row.original.requestedBy ?? "–" }),
+  // A request reached through a delegation says whose it is.
+  column.accessor((row) => row.onBehalfOf ?? "", { id: "for", header: "Waiting for", size: 180, cell: ({ row }) => row.original.onBehalfOf
+    ? <Badge variant="outline" className="whitespace-normal">For {row.original.onBehalfOf}</Badge> : <span className="text-muted-foreground">You</span> }),
   column.accessor((row) => row.department ?? "", { id: "department", header: "Department", cell: ({ row }) => row.original.department ?? "–" }),
   column.accessor((row) => row.createdAt ?? "", { id: "requested", header: "Requested on", size: 160, cell: ({ row }) => formatDate(row.original.createdAt) ?? "–" }),
   column.accessor((row) => row.logs.length, { id: "stage", header: "Earlier decisions", size: 170, cell: ({ row }) => row.original.logs.length === 0 ? <span className="text-muted-foreground">You are first</span> : `${row.original.logs.length} recorded` }),
@@ -70,5 +74,6 @@ export function ApprovalsQueuePage() {
     {state.loading ? <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />Loading…</p> : null}
     {state.error ? <p role="alert" className="text-sm text-destructive">{state.error} <Button type="button" size="sm" variant="link" onClick={state.retry}>Retry</Button></p> : null}
     {documents.length > 0 ? <DocumentCards documents={documents} /> : null}
+    <DelegationPanel />
   </section>;
 }

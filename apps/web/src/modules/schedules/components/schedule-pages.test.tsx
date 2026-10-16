@@ -40,6 +40,9 @@ function open(address: string, options: { end?: number; rawFor?: Record<string, 
     if (path.startsWith("/api/v1/production-schedule/activity/start/")) return Response.json("act-2", { status: 201 });
     const removed = /^\/api\/v1\/production-schedule\/product\/(.+)$/.exec(path);
     if (removed && input.method === "DELETE") return options.refuse?.includes(removed[1] ?? "") ? Response.json({ errors: [{ code: "ProductionSchedule.Validation", description: "Cannot remove a product that has already started production" }] }, { status: 422 }) : new Response(null, { status: 204 });
+    if (path === "/api/v1/material/Sugar/stock/across-warehouses") return Response.json([{ warehouse: { id: "w1", name: "Main store", type: 0 }, stockQuantity: 4000, expiredQuantity: 1000 },
+      { warehouse: { id: "w2", name: "Liquids floor", type: 3 }, stockQuantity: 200 }]);
+    if (path === "/api/v1/material/Sugar/stock/pipeline") return Response.json([]);
     if (path === "/api/v1/customers") return Response.json({ data: [] });
     if (path === "/api/v1/configuration/by-model-type/Requisition") return Response.json({ prefix: "PR-", namingType: 0, minimumNameLength: 4, maximumNameLength: 6 });
     if (path === "/api/v1/configuration/Requisition/count") return Response.json(7);
@@ -137,4 +140,14 @@ it("does not offer to raise a requisition to someone who may not create one", as
   open(`/production/schedules/${id}/details?batch=b3`, { rawFor: { b3: [{ material: { id: "m-salt", name: "Salt" }, materialDepartment: { uoM: { id: "u-g", symbol: "g" } }, quantityNeeded: 500, quantityOnHand: 100, status: 0 }] } });
   expect(await screen.findByText(/1 material is short/)).toBeTruthy();
   expect(screen.queryByRole("button", { name: /Raise purchase requisition/ })).toBeNull();
+});
+
+it("shows where a material's other stock is, store by store", async () => {
+  open(`/production/schedules/${id}/details?batch=b2`, { rawFor: { b2: [{ ...material("Sugar", 500, 100), material: { id: "Sugar", name: "Sugar", code: "C-Sugar", totalStock: 4200 } }] } });
+  fireEvent.click(await screen.findByRole("button", { name: "Stock of Sugar in every store" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(await within(dialog).findByText("Main store")).toBeTruthy();
+  expect(within(dialog).getByText("Liquids floor")).toBeTruthy();
+  expect(within(dialog).getAllByText("3 kg").length).toBeGreaterThan(0);
+  expect(within(dialog).getByText("Production floors")).toBeTruthy();
 });

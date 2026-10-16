@@ -46,7 +46,8 @@ function open(address: string, permissions: string[], options: { type?: number; 
       revisions: [{ revisionNumber: 1, items: [{ type: 3, material: { name: "Maize starch" }, quantity: 25_000_000, quantityBefore: 20_000_000, price: 12, priceBefore: 11, priceUoM: "kg", priceUoMBefore: "kg", uoM: { symbol: "mg" } }] }] });
     if (path === "/api/v1/procurement/purchase-order/po1" && input.method === "POST") return (options.sendStatus ?? 204) === 204 ? new Response(null, { status: 204 })
       : Response.json({ errors: [{ code: "Supplier.Quotation", description: "The mail server refused the message." }] }, { status: 400 });
-    if (path === "/api/v1/procurement/purchase-order/po1" || path === "/api/v1/procurement/purchase-order/check/po1" || path === "/api/v1/procurement/purchase-order/po1/revise") return new Response(null, { status: 204 });
+    if (path === "/api/v1/procurement/purchase-order/po1" || path === "/api/v1/procurement/purchase-order/check/po1" || path === "/api/v1/procurement/purchase-order/po1/revise"
+      || path === "/api/v1/procurement/purchase-order/po1/cancel") return new Response(null, { status: 204 });
     const starchQuotes = [{ material: { id: "m1", name: "Maize starch" }, uoM: { id: "u-mg", symbol: "mg" }, quantity: 25_000_000, supplierQuotation: [
       { supplier: supplier(0), sourceRequisition: { id: "sr1" }, price: 12, priceUoM: "kg" }, { supplier: { ...supplier(0), id: "s2", name: "Bolt Trading" }, sourceRequisition: { id: "sr2" }, price: 11, priceUoM: "kg" }] }];
     if (path === "/api/v1/requisition/source/material/price-comparison/by-material") return Response.json(starchQuotes);
@@ -299,3 +300,19 @@ it("adds a line from what the supplier supplies, saved with the revision", async
   await waitFor(() => expect(writes(calls)).toHaveLength(1));
   expect(writes(calls)[0]?.body).toEqual([{ type: 2, materialId: "m9", uoMId: "u-kg", quantity: 50, price: 3, priceUoM: "kg", currencyId: "c-usd" }]);
 }, 20_000);
+
+it("cancels an order only with the revise permission for its kind, after saying what cancelling does", async () => {
+  const user = userEvent.setup();
+  open("/procurement/purchase-orders/po1?type=0", ["CanViewForeignPurchaseOrder"]);
+  expect(await screen.findByText("Revision 1")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Cancel order" })).toBeNull();
+  cleanup();
+  const { calls } = open("/procurement/purchase-orders/po1?type=0", ["CanViewForeignPurchaseOrder", "CanReviseForeignPurchaseOrder"]);
+  await user.click(await screen.findByRole("button", { name: "Cancel order" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(dialog.textContent).toContain("already gone to Acme Chemicals");
+  expect(dialog.textContent).toContain("2 lines stay with the order");
+  expect(writes(calls)).toEqual([]);
+  await user.click(within(dialog).getByRole("button", { name: "Cancel order" }));
+  await waitFor(() => expect(writes(calls).map((call) => [call.method, call.path])).toEqual([["DELETE", "/api/v1/procurement/purchase-order/po1/cancel"]]));
+});
