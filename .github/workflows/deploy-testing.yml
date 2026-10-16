@@ -17,8 +17,8 @@ env:
   GATEWAY_IMAGE: ghcr.io/kumateck/oryx-live-gateway
   WEB_CONTAINER: oryx-live-web
   GATEWAY_CONTAINER: oryx-live-gateway
-  HOST_PORT: "3010"
-  SITE_ORIGIN: http://164.90.142.68:3010
+  HOST_PORT: "3011"
+  SITE_ORIGIN: http://164.90.142.68:3011
   API_ORIGIN: http://164.90.142.68:8086
 
 jobs:
