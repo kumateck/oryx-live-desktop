@@ -12,7 +12,7 @@ The `testing` branch deploys a site for people to try the app, on the same serve
 
 Push to `testing` (or run **Deploy testing site** from the Actions tab) and `.github/workflows/deploy-testing.yml`:
 
-1. runs `bun run check` (on CI, a failing web test is retried twice, since a few interaction tests can time out under full-suite load);
+1. runs `bun run check` (on CI, web tests get a 30-second timeout and a failing one is retried twice, since the runners are slower);
 2. builds two images from `deploy/Dockerfile` and pushes them to Docker Hub: `kumateck/oryx-live-web` (nginx serving `apps/web/dist`) and `kumateck/oryx-live-gateway` (`apps/gateway`);
 3. over SSH, replaces the `oryx-live-gateway` and `oryx-live-web` containers on the `sail` network, publishing the web container on port 3010;
 4. builds the Windows installer on a Windows runner (`electron-forge make`, Squirrel) and copies it to `~/oryx-live/downloads` on the server, which the web container serves at `/downloads/`.

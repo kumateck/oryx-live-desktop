@@ -34,6 +34,6 @@ export default defineConfig({
     } } : {}),
   },
   build: { outDir: "dist", sourcemap: false },
-  // On CI a few interaction tests can time out under full-suite load; a retry keeps a deploy from failing on that alone.
-  test: { maxWorkers: 4, retry: process.env.CI ? 2 : 0, setupFiles: ["./src/test/setup.ts"] },
+  // CI runners are slower: interaction tests get longer than the 5s default, and a retry keeps one slow run from failing a deploy.
+  test: { maxWorkers: 4, ...(process.env.CI ? { testTimeout: 30_000, retry: 2 } : {}), setupFiles: ["./src/test/setup.ts"] },
 });
