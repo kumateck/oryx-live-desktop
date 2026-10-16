@@ -2,6 +2,8 @@
   "name": "@oryx/desktop",
   "productName": "Oryx Live Desktop",
   "version": "0.1.0",
+  "description": "Desktop shell for the Oryx ERP",
+  "author": "Kumateck",
   "private": true,
   "type": "module",
   "main": ".vite/build/main.cjs",

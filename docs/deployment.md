@@ -13,7 +13,7 @@ The `testing` branch deploys a site for people to try the app, on the same serve
 Push to `testing` (or run **Deploy testing site** from the Actions tab) and `.github/workflows/deploy-testing.yml`:
 
 1. runs `bun run check` (on CI, web tests get a 30-second timeout and a failing one is retried twice, since the runners are slower);
-2. builds two images from `deploy/Dockerfile` and pushes them to Docker Hub: `kumateck/oryx-live-web` (nginx serving `apps/web/dist`) and `kumateck/oryx-live-gateway` (`apps/gateway`);
+2. builds two images from `deploy/Dockerfile` and pushes them to GitHub's registry: `ghcr.io/kumateck/oryx-live-web` (nginx serving `apps/web/dist`) and `ghcr.io/kumateck/oryx-live-gateway` (`apps/gateway`). The workflow's own token pushes them, and the server pulls with it during the deploy, then signs out;
 3. over SSH, replaces the `oryx-live-gateway` and `oryx-live-web` containers on the `sail` network, publishing the web container on port 3010;
 4. builds the Windows installer on a Windows runner (`electron-forge make`, Squirrel) and copies it to `~/oryx-live/downloads` on the server, which the web container serves at `/downloads/`.
 
@@ -21,7 +21,7 @@ The web container passes `/api` to the backend and `/realtime` (with WebSocket u
 
 ### Repository secrets
 
-The workflow uses the same secrets as `oryx-next`'s deploy workflows. Add them under the repository's **Settings → Secrets and variables → Actions**: `DOCKER_USERNAME`, `DOCKER_PASSWORD`, `SSH_HOST`, `SSH_PORT`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `RABBITMQ_HOST`, `RABBITMQ_PASS`.
+The workflow uses the server secrets of `oryx-next`'s deploy workflows, under the repository's **Settings → Secrets and variables → Actions**: `SSH_HOST`, `SSH_PORT`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `RABBITMQ_HOST`, `RABBITMQ_PASS`. Images go to GitHub's registry, so no Docker Hub account is used.
 
 ### For testers
 
