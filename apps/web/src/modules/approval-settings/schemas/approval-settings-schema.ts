@@ -10,6 +10,18 @@ export const approvalRecordSchema = z.object({ id: z.string().min(1), itemType: 
   .refine((value) => new Set(value.approvalStages.map((stage) => stage.order)).size === value.approvalStages.length, "Stage orders must be distinct");
 export type ApprovalConfiguration = z.infer<typeof approvalRecordSchema>;
 export const approvalsPageSchema = settingsPageSchema(approvalRecordSchema);
+/** The page as sent, each workflow still unchecked, so that one malformed workflow does not hide the others. */
+export const approvalsListSchema = settingsPageSchema(z.looseObject({ itemType: z.string().nullish() }));
+export function readApprovalRows(rows: readonly z.infer<typeof approvalsListSchema>["data"][number][]): { rows: ApprovalConfiguration[]; unreadable: string[] } {
+  const read: ApprovalConfiguration[] = [];
+  const unreadable: string[] = [];
+  for (const row of rows) {
+    const parsed = approvalRecordSchema.safeParse(row);
+    if (parsed.success) read.push(parsed.data);
+    else unreadable.push(row.itemType ? approvalDocumentLabel(row.itemType) : "Unnamed document");
+  }
+  return { rows: read, unreadable };
+}
 const stageSchema = z.object({ type: z.enum(["Role", "User"]), role: optionSchema.nullable(), user: optionSchema.nullable(), required: z.boolean() })
   .superRefine((value, context) => {
     const name = value.type === "Role" ? "role" : "user";

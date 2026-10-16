@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formsApi } from "@/shared/api/generated/forms";
+import { qcGrnFormsApi } from "../api/qc-grn-api";
 import { MaterialSummary } from "@/shared/ard-view/templates/sumary/material";
 import { useCurrentUser } from "@/shared/auth/session-provider";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
@@ -40,7 +40,7 @@ export function BatchAssignPage() {
   const route = useBatchRoute();
   const navigate = useNavigate();
   const sheet = useBatchWorksheet(route.batchId, { assignees: false });
-  const [assign, assigning] = formsApi.usePostApiV1FormAssigneesMutation();
+  const [assign, assigning] = qcGrnFormsApi.usePostApiV1FormAssigneesMutation();
   const permission = usePermissionAction(qcPermissions.test[route.kind]);
   const nextSerial = useNextSerial();
   const submit = async (assignments: FieldAssignment[]): Promise<string | null> => {

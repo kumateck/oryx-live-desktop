@@ -31,6 +31,7 @@ export function ApprovalConfigurationsWorkspace() {
     </SettingsHeader>
     <Input className="w-full sm:w-72" aria-label="Search approval workflows" placeholder="Search workflows…" value={state.search} onChange={(event) => state.setSearch(event.target.value)} />
     <p className="text-xs text-muted-foreground">Timed delegation is unavailable: the current server does not persist delegation requests.</p>
+    {state.unreadable.length ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">{state.unreadable.join(", ")} {state.unreadable.length === 1 ? "has a workflow" : "have workflows"} with a stage that names no approver or repeats an order, so {state.unreadable.length === 1 ? "it is" : "they are"} not listed. Recreate {state.unreadable.length === 1 ? "it" : "them"} to route those documents.</p> : null}
     <ApprovalConfigurationsTable label="Approval workflows" rows={state.rows} {...state.paging} loading={state.loading} refreshing={state.refreshing} error={state.error} onRetry={state.retry} onEdit={edit} onRemove={setDeleting} />
     {deleting ? <ConfirmActionDialog require={"CanDeleteApprovals"} title="Remove approval workflow" description={`Remove the ${approvalDocumentLabel(deleting.itemType)} workflow? This changes routing for documents that use this policy.`} confirmLabel="Remove workflow" busyLabel="Removing…" onConfirm={confirm} onClose={() => setDeleting(null)} /> : null}
   </section>;

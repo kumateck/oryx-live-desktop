@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, safeStorage, session, type IpcMainInvokeEvent } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, safeStorage, session, shell, type IpcMainInvokeEvent } from "electron";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -119,7 +119,12 @@ async function createWindow(): Promise<void> {
       nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true,
     },
   });
-  window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  // The app never opens windows of its own. A web link meant for a new window (an attachment's "Open in browser")
+  // goes to the system browser instead; any other kind of address is refused.
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    try { if (["http:", "https:"].includes(new URL(url).protocol)) void shell.openExternal(url); } catch { /* not an address */ }
+    return { action: "deny" };
+  });
   window.webContents.on("will-navigate", (event, destination) => {
     let allowed = destination === connectionPageUrl;
     try { allowed ||= Boolean(siteUrl && new URL(destination).origin === siteUrl); }

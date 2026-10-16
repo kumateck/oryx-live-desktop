@@ -27,7 +27,7 @@ Icons come from the Oryx mark (`assets/oryx-mark.png`, taken from Oryx Next's lo
 
 The connection page is built by Vite into `apps/desktop/.vite/renderer/main_window`; `vite.renderer.config.ts` sets that output explicitly, because its `root` is `src/connection` and the default output would land outside the packaged app (the first Squirrel installer opened a window with nothing to show).
 
-The web container passes `/api` to the backend and `/realtime` (with WebSocket upgrade) to the gateway, so the browser and the desktop shell reach everything on one origin. `index.html` is always revalidated and hashed assets are cached for a year. A tab left open across a deploy may fail to load a page it had not opened yet; reloading fixes it.
+The web container passes `/api` to the backend and `/realtime` (with WebSocket upgrade) to the gateway, so the browser and the desktop shell reach everything on one origin. It forwards the browser's own `Host` to the backend, because the backend writes attachment, avatar and signature links from it; without that they would name the backend's container and not open. `index.html` is always revalidated and hashed assets are cached for a year. A tab left open across a deploy may fail to load a page it had not opened yet; reloading fixes it.
 
 ### Repository secrets
 

@@ -28,5 +28,11 @@ export const api = createApi({
     return result;
   },
   tagTypes: ["Designations", "LeaveTypes", "ShiftTypes", "ShiftCategories", "ShiftSchedules", "WorkingHoursPolicies", "Equipment", "QcEquipment", "CodeSettings", "Departments", "Holidays", "WorkingDays", "Uoms", "Role", "RoleList", "UserList", "ProductList", "Product", "ProductPacking", "ProductBom", "ProductPackages", "ProductRoutes", "ProductStp", "StpDocument", "ProductArd", "ProductSpecification", "ScheduleList", "Schedule", "ScheduleBatch", "Activity", "ActivityBoard", "BatchRecords", "StockOnShelves", "SupplierList", "Supplier", "ManufacturerList", "Manufacturer", "RequisitionList", "Requisition", "QuotationRequests", "QuotationResponses", "PriceComparison", "PurchaseOrderList", "PurchaseOrder", "StorageRacks", "StorageShelves", "DistributedStock", "ShipmentInvoices", "Shipments", "BillingSheets", "MaterialDistribution", "Receiving", "Grns", "PendingApprovals", "StockIssue", "StockTransfers", "MaterialList", "MaterialReturns", "StockAdjustments", "SwapRequests", "ProductAllocation", "Notifications", "Tickets", "Customers", "ProductionOrders", "FinishedGoods"],
+  // Records change on the server through other people and other pages, so a page always re-reads its data when it
+  // opens, when the window comes back into focus, and after a lost connection returns, rather than showing what was
+  // cached earlier in the session. Identical requests made at the same moment are still shared.
+  refetchOnMountOrArgChange: true,
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
   endpoints: () => ({}),
 });

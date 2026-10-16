@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { approvalDefaults, approvalFormSchema, approvalPayload, approvalRecordSchema, newApprovalStage } from "./approval-settings-schema";
+import { approvalDefaults, approvalFormSchema, approvalPayload, approvalRecordSchema, approvalsListSchema, newApprovalStage, readApprovalRows } from "./approval-settings-schema";
 const role = { id: "role-one", name: "QA" };
 export const sampleApproval = { id: "approval-one", itemType: "PurchaseOrder", escalationDuration: "1.02:03:04.1234567", approvalStages: [
   { role, user: null, required: true, order: 2 }, { role: null, user: { id: "user-one", name: "Ada" }, required: false, order: 1 },
@@ -23,4 +23,11 @@ it("requires one role for regulated routing and rejects missing or ambiguous sta
 it("keeps legacy document keys without silently replacing the document type", () => {
   const record = approvalRecordSchema.parse({ ...sampleApproval, itemType: "LegacyDocument" });
   expect(approvalPayload(approvalDefaults(record)).itemType).toBe("LegacyDocument");
+});
+it("lists the readable workflows and names one whose stages cannot be read, instead of failing the page", () => {
+  const broken = { id: "stock", itemType: "Stock", escalationDuration: "00:00:00", approvalStages: [{ user: null, role: null, required: true, order: 0 }] };
+  const page = approvalsListSchema.parse({ data: [sampleApproval, broken], totalRecordCount: 2 });
+  const read = readApprovalRows(page.data);
+  expect(read.rows.map((row) => row.id)).toEqual(["approval-one"]);
+  expect(read.unreadable).toHaveLength(1);
 });

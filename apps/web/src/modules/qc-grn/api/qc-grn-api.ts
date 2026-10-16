@@ -28,6 +28,8 @@ export const qcGrnFormsApi = formsApi.enhanceEndpoints({ addTagTypes: ["QcGrns",
   getApiV1FormAssigneesMaterialBatchByMaterialBatchId: { providesTags: (_result, _error, arg) => [batch(arg.materialBatchId)] },
   getApiV1FormResponsesMaterialBatchByMaterialBatchId: { providesTags: (_result, _error, arg) => [batch(arg.materialBatchId)] },
   postApiV1FormGenerateCertificateByMaterialBatchId: { invalidatesTags: (_result, error, arg) => fresh(arg.materialBatchId)(_result, error) },
+  // Assigning analysts moves the batch to "Test assigned", where it can be started.
+  postApiV1FormAssignees: { invalidatesTags: (_result, error, arg) => { const id = arg.domainEntitiesFormsRequestCreateFormAssigneeRequest.materialBatchId; return id ? fresh(id)(_result, error) : []; } },
 } });
 export const qcBatchTag = batch;
 export const qcGrnsTag = grns;

@@ -5,7 +5,10 @@ import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { useGetApiV1ProcurementShipmentInvoiceByIdQuery } from "@/modules/shipment-invoices/api/invoice-api";
 import { InvoiceLinesTable } from "@/modules/shipment-invoices/components/invoice-lines-table";
+import { audit as invoiceAudit } from "@/modules/shipment-invoices/lib/invoice-access";
+import { invoiceSchema } from "@/modules/shipment-invoices/schemas/invoice-schema";
 import { useGetApiV1ProcurementShipmentDocumentQuery } from "@/modules/shipment-documents/api/shipment-api";
 import { shipmentStatus } from "@/modules/shipment-documents/lib/shipment-kinds";
 import { shipmentRowsSchema } from "@/modules/shipment-documents/schemas/shipment-schema";
@@ -48,7 +51,10 @@ export function CreateBillingSheetForm() {
   void form.formState.errors;
   const chosen = useWatch({ control: form.control, name: "invoice" });
   const shipment = waiting.find((item) => item.invoice?.id === chosen?.value) ?? null;
-  const invoice = shipment?.invoice ?? null;
+  // The shipment list carries only the invoice's own fields; its materials, value and orders come with the invoice itself.
+  const detail = useGetApiV1ProcurementShipmentInvoiceByIdQuery({ ...invoiceAudit, id: chosen?.value ?? "" }, { skip: !chosen?.value });
+  const full = useMemo(() => { const parsed = invoiceSchema.safeParse(detail.currentData ?? null); return parsed.success ? parsed.data : null; }, [detail.currentData]);
+  const invoice = full ?? shipment?.invoice ?? null;
   const supplierCurrency = useMemo(() => collections.currencies.find((item) => item.value === invoice?.supplier.currencyId) ?? null, [collections.currencies, invoice?.supplier.currencyId]);
 
   const options = useMemo(() => waiting.flatMap((item) => item.invoice ? [{ value: item.invoice.id, label: `${item.invoice.code} · ${item.invoice.supplier.name} · shipment ${item.code}` }] : []), [waiting]);
@@ -113,7 +119,9 @@ export function CreateBillingSheetForm() {
     <section className="space-y-3 rounded-lg border bg-card p-4"><FormWizard form={form} fields={fields} />
       {invoice ? <><SupplierSummary supplier={invoice.supplier} />
         <p className="text-sm">Invoice value <span className="font-semibold">{invoice.total === null ? "not available" : formatMoney(invoice.total, invoice.currency)}</span> · {invoice.items.length} {invoice.items.length === 1 ? "material" : "materials"} · purchase orders {invoice.orders.join(", ") || "–"}</p></> : null}</section>
-    {invoice ? <section className="space-y-2"><h2 className="text-sm font-semibold">Shipment invoice items</h2><InvoiceLinesTable label="Materials on the invoice" lines={invoice.items} currency={invoice.currency} /></section> : null}
+    {invoice ? <section className="space-y-2"><h2 className="text-sm font-semibold">Shipment invoice items</h2>
+      {detail.isFetching && !full ? <p className="text-sm text-muted-foreground">Loading the invoice's materials…</p> : detail.error ? <p role="alert" className="text-sm text-destructive">The invoice's materials could not be loaded. {apiErrorMessage(detail.error)}</p> : null}
+      <InvoiceLinesTable label="Materials on the invoice" lines={invoice.items} currency={invoice.currency} /></section> : null}
     <SheetDetailsFields form={form} styles={collections.packageStyles} loading={collections.loading} />
     <ChargesEditor form={form} charges={collections.charges} currencies={collections.currencies} loading={collections.loading} defaultCurrency={supplierCurrency} />
     <section className="rounded-lg border bg-card p-4"><FormWizard form={form} fields={papers} /></section>
