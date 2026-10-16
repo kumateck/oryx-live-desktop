@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1DamagedGoodsApiResponse,
       PostApiV1DamagedGoodsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "damaged-good", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/damaged-goods`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1DamagedGoodsApiResponse,
       GetApiV1DamagedGoodsApiArg
     >({
+      providesTags: [{ type: "damaged-good", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/damaged-goods`,
         headers: {
@@ -36,6 +38,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1DamagedGoodsByIdApiResponse,
       GetApiV1DamagedGoodsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "damaged-good", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/damaged-goods/${queryArg.id}`,
         headers: {
@@ -48,6 +51,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1DamagedGoodsByIdApiResponse,
       PutApiV1DamagedGoodsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "damaged-good", id: "LIST" }, { type: "damaged-good", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/damaged-goods/${queryArg.id}`,
         method: "PUT",
@@ -62,6 +66,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1DamagedGoodsByIdApiResponse,
       DeleteApiV1DamagedGoodsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "damaged-good", id: "LIST" }, { type: "damaged-good", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/damaged-goods/${queryArg.id}`,
         method: "DELETE",
@@ -75,6 +80,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RequisitionApiResponse,
       PostApiV1RequisitionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "requisition", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/requisition`,
         method: "POST",
@@ -89,6 +95,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionApiResponse,
       GetApiV1RequisitionApiArg
     >({
+      providesTags: [{ type: "requisition", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/requisition`,
         headers: {
@@ -108,6 +115,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionDepartmentApiResponse,
       GetApiV1RequisitionDepartmentApiArg
     >({
+      providesTags: [{ type: "requisition/department", id: "LIST" }, { type: "requisition", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/department`,
         headers: {
@@ -128,6 +136,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionByRequisitionIdApiResponse,
       GetApiV1RequisitionByRequisitionIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "requisition", id: queryArg.requisitionId }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/${queryArg.requisitionId}`,
         headers: {
@@ -140,6 +149,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionByRequisitionIdAlternativeBatchesApiResponse,
       GetApiV1RequisitionByRequisitionIdAlternativeBatchesApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "requisition", id: queryArg.requisitionId }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/${queryArg.requisitionId}/alternative-batches`,
         headers: {
@@ -166,6 +176,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RequisitionIssueTrialRequisitionByRequisitionIdApiResponse,
       PostApiV1RequisitionIssueTrialRequisitionByRequisitionIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "requisition/issue-trial-requisition", id: "LIST" }, { type: "requisition", id: "LIST" }, { type: "requisition/issue-trial-requisition", id: queryArg.requisitionId }]),
       query: (queryArg) => ({
         url: `/api/v1/requisition/issue-trial-requisition/${queryArg.requisitionId}`,
         method: "POST",
@@ -179,6 +190,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RequisitionSourceApiResponse,
       PostApiV1RequisitionSourceApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/requisition/source`,
         method: "POST",
@@ -193,6 +205,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionSourceApiResponse,
       GetApiV1RequisitionSourceApiArg
     >({
+      providesTags: [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/source`,
         headers: {
@@ -210,6 +223,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionSourceBySourceRequisitionIdApiResponse,
       GetApiV1RequisitionSourceBySourceRequisitionIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "requisition/source", id: queryArg.sourceRequisitionId }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/${queryArg.sourceRequisitionId}`,
         headers: {
@@ -222,6 +236,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1RequisitionSourceBySourceRequisitionIdApiResponse,
       PutApiV1RequisitionSourceBySourceRequisitionIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }, { type: "requisition/source", id: queryArg.sourceRequisitionId }]),
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/${queryArg.sourceRequisitionId}`,
         method: "PUT",
@@ -236,6 +251,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1RequisitionSourceBySourceRequisitionIdApiResponse,
       DeleteApiV1RequisitionSourceBySourceRequisitionIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }, { type: "requisition/source", id: queryArg.sourceRequisitionId }]),
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/${queryArg.sourceRequisitionId}`,
         method: "DELETE",
@@ -249,6 +265,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionSourceItemsApiResponse,
       GetApiV1RequisitionSourceItemsApiArg
     >({
+      providesTags: [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/items`,
         headers: {
@@ -266,6 +283,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionSourceSupplierApiResponse,
       GetApiV1RequisitionSourceSupplierApiArg
     >({
+      providesTags: [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/supplier`,
         headers: {
@@ -284,6 +302,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionSourceSupplierBySupplierIdApiResponse,
       GetApiV1RequisitionSourceSupplierBySupplierIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "requisition/source", id: queryArg.supplierId }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/supplier/${queryArg.supplierId}`,
         headers: {
@@ -296,6 +315,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionPendingBySupplierIdApiResponse,
       GetApiV1RequisitionPendingBySupplierIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "requisition/pending", id: queryArg.supplierId }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/pending/${queryArg.supplierId}`,
         headers: {
@@ -308,6 +328,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RequisitionSourceSupplierBySupplierIdSendQuotationApiResponse,
       PostApiV1RequisitionSourceSupplierBySupplierIdSendQuotationApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }, { type: "requisition/source", id: queryArg.supplierId }]),
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/supplier/${queryArg.supplierId}/send-quotation`,
         method: "POST",
@@ -321,6 +342,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionSourceSupplierQuotationApiResponse,
       GetApiV1RequisitionSourceSupplierQuotationApiArg
     >({
+      providesTags: [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/supplier/quotation`,
         headers: {
@@ -367,6 +389,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionSourceMaterialPriceComparisonApiResponse,
       GetApiV1RequisitionSourceMaterialPriceComparisonApiArg
     >({
+      providesTags: [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/material/price-comparison`,
         headers: {
@@ -382,6 +405,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RequisitionSourceMaterialPriceComparisonByMaterialApiResponse,
       GetApiV1RequisitionSourceMaterialPriceComparisonByMaterialApiArg
     >({
+      providesTags: [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/material/price-comparison/by-material`,
         headers: {
@@ -400,6 +424,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RequisitionSourceQuotationProcessPurchaseOrderApiResponse,
       PostApiV1RequisitionSourceQuotationProcessPurchaseOrderApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "requisition/source", id: "LIST" }, { type: "requisition", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/requisition/source/quotation/process-purchase-order`,
         method: "POST",
@@ -417,6 +442,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1StockAdjustmentApiResponse,
       PostApiV1StockAdjustmentApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "stock-adjustment", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/stock-adjustment`,
         method: "POST",
@@ -431,6 +457,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1StockAdjustmentApiResponse,
       GetApiV1StockAdjustmentApiArg
     >({
+      providesTags: [{ type: "stock-adjustment", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/stock-adjustment`,
         headers: {
@@ -450,6 +477,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1StockAdjustmentByIdApiResponse,
       GetApiV1StockAdjustmentByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stock-adjustment", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/stock-adjustment/${queryArg.id}`,
         headers: {
@@ -462,6 +490,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1WarehouseApiResponse,
       PostApiV1WarehouseApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "warehouse", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse`,
         method: "POST",
@@ -476,6 +505,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseApiResponse,
       GetApiV1WarehouseApiArg
     >({
+      providesTags: [{ type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse`,
         headers: {
@@ -494,6 +524,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseByWarehouseIdApiResponse,
       GetApiV1WarehouseByWarehouseIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse", id: queryArg.warehouseId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/${queryArg.warehouseId}`,
         headers: {
@@ -506,6 +537,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1WarehouseByWarehouseIdApiResponse,
       PutApiV1WarehouseByWarehouseIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse", id: "LIST" }, { type: "warehouse", id: queryArg.warehouseId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/${queryArg.warehouseId}`,
         method: "PUT",
@@ -520,6 +552,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1WarehouseByWarehouseIdApiResponse,
       DeleteApiV1WarehouseByWarehouseIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse", id: "LIST" }, { type: "warehouse", id: queryArg.warehouseId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/${queryArg.warehouseId}`,
         method: "DELETE",
@@ -533,6 +566,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseDepartmentByDepartmentIdApiResponse,
       GetApiV1WarehouseDepartmentByDepartmentIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/department", id: queryArg.departmentId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/department/${queryArg.departmentId}`,
         headers: {
@@ -545,6 +579,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1WarehouseByWarehouseIdLocationApiResponse,
       PostApiV1WarehouseByWarehouseIdLocationApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse", id: "LIST" }, { type: "warehouse", id: queryArg.warehouseId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/${queryArg.warehouseId}/location`,
         method: "POST",
@@ -559,6 +594,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseLocationByLocationIdApiResponse,
       GetApiV1WarehouseLocationByLocationIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/location", id: queryArg.locationId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/location/${queryArg.locationId}`,
         headers: {
@@ -571,6 +607,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1WarehouseLocationByLocationIdApiResponse,
       PutApiV1WarehouseLocationByLocationIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse/location", id: "LIST" }, { type: "warehouse", id: "LIST" }, { type: "warehouse/location", id: queryArg.locationId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/location/${queryArg.locationId}`,
         method: "PUT",
@@ -585,6 +622,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1WarehouseLocationByLocationIdApiResponse,
       DeleteApiV1WarehouseLocationByLocationIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse/location", id: "LIST" }, { type: "warehouse", id: "LIST" }, { type: "warehouse/location", id: queryArg.locationId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/location/${queryArg.locationId}`,
         method: "DELETE",
@@ -598,6 +636,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseLocationApiResponse,
       GetApiV1WarehouseLocationApiArg
     >({
+      providesTags: [{ type: "warehouse/location", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/location`,
         headers: {
@@ -616,6 +655,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1WarehouseByLocationIdRackApiResponse,
       PostApiV1WarehouseByLocationIdRackApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse", id: "LIST" }, { type: "warehouse", id: queryArg.locationId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/${queryArg.locationId}/rack`,
         method: "POST",
@@ -630,6 +670,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseRackByRackIdApiResponse,
       GetApiV1WarehouseRackByRackIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/rack", id: queryArg.rackId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/rack/${queryArg.rackId}`,
         headers: {
@@ -642,6 +683,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1WarehouseRackByRackIdApiResponse,
       PutApiV1WarehouseRackByRackIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse/rack", id: "LIST" }, { type: "warehouse", id: "LIST" }, { type: "warehouse/rack", id: queryArg.rackId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/rack/${queryArg.rackId}`,
         method: "PUT",
@@ -656,6 +698,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1WarehouseRackByRackIdApiResponse,
       DeleteApiV1WarehouseRackByRackIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse/rack", id: "LIST" }, { type: "warehouse", id: "LIST" }, { type: "warehouse/rack", id: queryArg.rackId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/rack/${queryArg.rackId}`,
         method: "DELETE",
@@ -669,6 +712,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseRackApiResponse,
       GetApiV1WarehouseRackApiArg
     >({
+      providesTags: [{ type: "warehouse/rack", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/rack`,
         headers: {
@@ -687,6 +731,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseRackByDepartmentApiResponse,
       GetApiV1WarehouseRackByDepartmentApiArg
     >({
+      providesTags: [{ type: "warehouse/rack", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/rack/by-department`,
         headers: {
@@ -702,6 +747,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseRackByDepartmentSummaryApiResponse,
       GetApiV1WarehouseRackByDepartmentSummaryApiArg
     >({
+      providesTags: [{ type: "warehouse/rack", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/rack/by-department/summary`,
         headers: {
@@ -717,6 +763,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1WarehouseByRackIdShelfApiResponse,
       PostApiV1WarehouseByRackIdShelfApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse", id: "LIST" }, { type: "warehouse", id: queryArg.rackId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/${queryArg.rackId}/shelf`,
         method: "POST",
@@ -731,6 +778,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseShelfByShelfIdApiResponse,
       GetApiV1WarehouseShelfByShelfIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/shelf", id: queryArg.shelfId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/shelf/${queryArg.shelfId}`,
         headers: {
@@ -743,6 +791,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1WarehouseShelfByShelfIdApiResponse,
       PutApiV1WarehouseShelfByShelfIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse/shelf", id: "LIST" }, { type: "warehouse", id: "LIST" }, { type: "warehouse/shelf", id: queryArg.shelfId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/shelf/${queryArg.shelfId}`,
         method: "PUT",
@@ -757,6 +806,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1WarehouseShelfByShelfIdApiResponse,
       DeleteApiV1WarehouseShelfByShelfIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse/shelf", id: "LIST" }, { type: "warehouse", id: "LIST" }, { type: "warehouse/shelf", id: queryArg.shelfId }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/shelf/${queryArg.shelfId}`,
         method: "DELETE",
@@ -770,6 +820,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseShelfApiResponse,
       GetApiV1WarehouseShelfApiArg
     >({
+      providesTags: [{ type: "warehouse/shelf", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/shelf`,
         headers: {
@@ -788,6 +839,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseShelfByDepartmentApiResponse,
       GetApiV1WarehouseShelfByDepartmentApiArg
     >({
+      providesTags: [{ type: "warehouse/shelf", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/shelf/by-department`,
         headers: {
@@ -803,6 +855,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseByWarehouseIdShelvesByMaterialAndMaterialIdApiResponse,
       GetApiV1WarehouseByWarehouseIdShelvesByMaterialAndMaterialIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse", id: queryArg.warehouseId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/${queryArg.warehouseId}/shelves/by-material/${queryArg.materialId}`,
         headers: {
@@ -838,6 +891,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseRackByRackIdShelvesApiResponse,
       GetApiV1WarehouseRackByRackIdShelvesApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/rack", id: queryArg.rackId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/rack/${queryArg.rackId}/shelves`,
         headers: {
@@ -855,6 +909,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseByWarehouseIdShelvesApiResponse,
       GetApiV1WarehouseByWarehouseIdShelvesApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse", id: queryArg.warehouseId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/${queryArg.warehouseId}/shelves`,
         headers: {
@@ -872,6 +927,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseByWarehouseIdArrivalLocationApiResponse,
       GetApiV1WarehouseByWarehouseIdArrivalLocationApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse", id: queryArg.warehouseId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/${queryArg.warehouseId}/arrival-location`,
         headers: {
@@ -884,6 +940,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseDistributedRequisitionMaterialsApiResponse,
       GetApiV1WarehouseDistributedRequisitionMaterialsApiArg
     >({
+      providesTags: [{ type: "warehouse/distributed-requisition-material", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/distributed-requisition-materials`,
         headers: {
@@ -903,6 +960,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseFinishedGoodsDetailsApiResponse,
       GetApiV1WarehouseFinishedGoodsDetailsApiArg
     >({
+      providesTags: [{ type: "warehouse/finished-goods-detail", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/finished-goods-details`,
         headers: {
@@ -920,6 +978,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseStockTransferDetailsApiResponse,
       GetApiV1WarehouseStockTransferDetailsApiArg
     >({
+      providesTags: [{ type: "warehouse/stock-transfer-detail", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/stock-transfer-details`,
         headers: {
@@ -938,6 +997,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseDistributedMaterialByIdApiResponse,
       GetApiV1WarehouseDistributedMaterialByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/distributed-material", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/distributed-material/${queryArg.id}`,
         headers: {
@@ -950,6 +1010,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseChecklistByIdApiResponse,
       GetApiV1WarehouseChecklistByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/checklist", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/checklist/${queryArg.id}`,
         headers: {
@@ -975,6 +1036,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1WarehouseDistributedMaterialMaterialBatchApiResponse,
       PostApiV1WarehouseDistributedMaterialMaterialBatchApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "warehouse/distributed-material", id: "LIST" }, { type: "warehouse", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/distributed-material/material-batch`,
         method: "POST",
@@ -1002,6 +1064,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseGrnByIdApiResponse,
       GetApiV1WarehouseGrnByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/grn", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/grn/${queryArg.id}`,
         headers: {
@@ -1014,6 +1077,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseGrnsApiResponse,
       GetApiV1WarehouseGrnsApiArg
     >({
+      providesTags: [{ type: "warehouse/grn", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/grns`,
         headers: {
@@ -1033,6 +1097,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseGrnsQcApiResponse,
       GetApiV1WarehouseGrnsQcApiArg
     >({
+      providesTags: [{ type: "warehouse/grn", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/grns/qc`,
         headers: {
@@ -1053,6 +1118,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseBincardinformationByMaterialIdAndDepartmentIdApiResponse,
       GetApiV1WarehouseBincardinformationByMaterialIdAndDepartmentIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/bincardinformation", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/bincardinformation/${queryArg.materialId}/${queryArg.departmentId}`,
         headers: {
@@ -1071,6 +1137,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseBincardinformationByProductIdProductApiResponse,
       GetApiV1WarehouseBincardinformationByProductIdProductApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/bincardinformation", id: queryArg.productId }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/bincardinformation/${queryArg.productId}/product`,
         headers: {
@@ -1088,6 +1155,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1WarehouseSwapApiResponse,
       PostApiV1WarehouseSwapApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "warehouse/swap", id: "LIST" }, { type: "warehouse", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/swap`,
         method: "POST",
@@ -1102,6 +1170,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseSwapApiResponse,
       GetApiV1WarehouseSwapApiArg
     >({
+      providesTags: [{ type: "warehouse/swap", id: "LIST" }, { type: "warehouse", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/swap`,
         headers: {
@@ -1124,6 +1193,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WarehouseSwapByIdApiResponse,
       GetApiV1WarehouseSwapByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "warehouse/swap", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/warehouse/swap/${queryArg.id}`,
         headers: {
@@ -1136,6 +1206,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1WarehouseSwapByIdApproveApiResponse,
       PutApiV1WarehouseSwapByIdApproveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "warehouse/swap", id: "LIST" }, { type: "warehouse", id: "LIST" }, { type: "warehouse/swap", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/warehouse/swap/${queryArg.id}/approve`,
         method: "PUT",

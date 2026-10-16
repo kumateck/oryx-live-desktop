@@ -12,9 +12,10 @@ import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import type { SelectLoader, SelectOption } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
+import { addTags } from "@/shared/api/add-tags";
 
 const { useGetApiV1ApprovalUsersWithPendingQuery, usePostApiV1ApprovalTransferRightsMutation } = approvalsApi.enhanceEndpoints({
-  endpoints: { getApiV1ApprovalUsersWithPending: { providesTags: [{ type: "PendingApprovals", id: "all" }] }, postApiV1ApprovalTransferRights: { invalidatesTags: (_result, error) => error ? [] : ["PendingApprovals"] } } });
+  endpoints: { getApiV1ApprovalUsersWithPending: (definition) => { definition.providesTags = addTags(definition.providesTags, [{ type: "PendingApprovals", id: "all" }]); }, postApiV1ApprovalTransferRights: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["PendingApprovals"]); } } });
 const { useLazyGetApiV1UserQuery } = identityApi;
 const audit = { module: "Quality Assurance", subModule: "Approval Rights Transfer" } as const;
 

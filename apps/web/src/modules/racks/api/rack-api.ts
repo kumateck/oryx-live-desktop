@@ -1,4 +1,5 @@
 import { warehouseApi } from "@/shared/api/generated/warehouse";
+import { addTags } from "@/shared/api/add-tags";
 
 const racks = { type: "StorageRacks" as const, id: "all" };
 const shelves = { type: "StorageShelves" as const, id: "all" };
@@ -8,16 +9,16 @@ const changed = (_result: unknown, error: unknown) => error ? [] : [racks, shelv
 
 export const rackApi = warehouseApi.enhanceEndpoints({
   endpoints: {
-    getApiV1WarehouseRack: { providesTags: [racks] },
-    getApiV1WarehouseLocation: { providesTags: [racks] },
-    getApiV1WarehouseShelf: { providesTags: [shelves] },
-    getApiV1WarehouseShelfByShelfId: { providesTags: [shelves, stock] },
-    postApiV1WarehouseByLocationIdRack: { invalidatesTags: changed },
-    putApiV1WarehouseRackByRackId: { invalidatesTags: changed },
-    deleteApiV1WarehouseRackByRackId: { invalidatesTags: changed },
-    postApiV1WarehouseByRackIdShelf: { invalidatesTags: changed },
-    putApiV1WarehouseShelfByShelfId: { invalidatesTags: changed },
-    deleteApiV1WarehouseShelfByShelfId: { invalidatesTags: changed },
+    getApiV1WarehouseRack: (definition) => { definition.providesTags = addTags(definition.providesTags, [racks]); },
+    getApiV1WarehouseLocation: (definition) => { definition.providesTags = addTags(definition.providesTags, [racks]); },
+    getApiV1WarehouseShelf: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves]); },
+    getApiV1WarehouseShelfByShelfId: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves, stock]); },
+    postApiV1WarehouseByLocationIdRack: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    putApiV1WarehouseRackByRackId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    deleteApiV1WarehouseRackByRackId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    postApiV1WarehouseByRackIdShelf: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    putApiV1WarehouseShelfByShelfId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    deleteApiV1WarehouseShelfByShelfId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
   },
 });
 export const {

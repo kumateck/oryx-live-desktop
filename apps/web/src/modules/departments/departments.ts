@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { identityApi } from "@/shared/api/generated/identity";
+import { addTags } from "@/shared/api/add-tags";
 
 export const departmentPermissions = { view: "CanViewDepartments", add: "CanCreateNewDepartment", edit: "CanEditDepartment", remove: "CanDeleteDepartment" } as const;
 export const departmentAudit = { module: "Settings", subModule: "Departments" } as const;
@@ -9,8 +10,8 @@ export const departmentTypeLabel = (type: number) => departmentTypes.find((item)
 
 const list = { type: "Departments" as const, id: "all" };
 const changed = (_result: unknown, error: unknown) => error ? [] : [list];
-export const departmentApi = identityApi.enhanceEndpoints({ endpoints: { getApiV1Department: { providesTags: [list] }, postApiV1Department: { invalidatesTags: changed },
-  putApiV1DepartmentByDepartmentId: { invalidatesTags: changed }, deleteApiV1DepartmentByDepartmentId: { invalidatesTags: changed } } });
+export const departmentApi = identityApi.enhanceEndpoints({ endpoints: { getApiV1Department: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, postApiV1Department: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+  putApiV1DepartmentByDepartmentId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, deleteApiV1DepartmentByDepartmentId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); } } });
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 export const departmentRowsSchema = z.array(z.object({ id: z.string().nullish(), code: text, name: text, description: text, type: z.number().nullish(), division: z.union([z.literal(0), z.literal(1)]).nullish().catch(null),

@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementManufacturerApiResponse,
       PostApiV1ProcurementManufacturerApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/manufacturer", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/manufacturer`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementManufacturerApiResponse,
       GetApiV1ProcurementManufacturerApiArg
     >({
+      providesTags: [{ type: "procurement/manufacturer", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/manufacturer`,
         headers: {
@@ -36,6 +38,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementManufacturerByManufacturerIdApiResponse,
       GetApiV1ProcurementManufacturerByManufacturerIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/manufacturer", id: queryArg.manufacturerId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/manufacturer/${queryArg.manufacturerId}`,
         headers: {
@@ -48,6 +51,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementManufacturerByManufacturerIdApiResponse,
       PutApiV1ProcurementManufacturerByManufacturerIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/manufacturer", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/manufacturer", id: queryArg.manufacturerId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/manufacturer/${queryArg.manufacturerId}`,
         method: "PUT",
@@ -62,6 +66,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProcurementManufacturerByManufacturerIdApiResponse,
       DeleteApiV1ProcurementManufacturerByManufacturerIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/manufacturer", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/manufacturer", id: queryArg.manufacturerId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/manufacturer/${queryArg.manufacturerId}`,
         method: "DELETE",
@@ -75,6 +80,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementManufacturerMaterialByMaterialIdApiResponse,
       GetApiV1ProcurementManufacturerMaterialByMaterialIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/manufacturer", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/manufacturer/material/${queryArg.materialId}`,
         headers: {
@@ -87,6 +93,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementSupplierApiResponse,
       PostApiV1ProcurementSupplierApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/supplier", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/supplier`,
         method: "POST",
@@ -101,6 +108,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementSupplierApiResponse,
       GetApiV1ProcurementSupplierApiArg
     >({
+      providesTags: [{ type: "procurement/supplier", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/supplier`,
         headers: {
@@ -118,6 +126,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementSupplierBySupplierIdApiResponse,
       GetApiV1ProcurementSupplierBySupplierIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/supplier", id: queryArg.supplierId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/supplier/${queryArg.supplierId}`,
         headers: {
@@ -130,6 +139,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementSupplierBySupplierIdApiResponse,
       PutApiV1ProcurementSupplierBySupplierIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/supplier", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/supplier", id: queryArg.supplierId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/supplier/${queryArg.supplierId}`,
         method: "PUT",
@@ -144,6 +154,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProcurementSupplierBySupplierIdApiResponse,
       DeleteApiV1ProcurementSupplierBySupplierIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/supplier", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/supplier", id: queryArg.supplierId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/supplier/${queryArg.supplierId}`,
         method: "DELETE",
@@ -157,6 +168,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementSupplierBySupplierIdStatusApiResponse,
       PutApiV1ProcurementSupplierBySupplierIdStatusApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/supplier", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/supplier", id: queryArg.supplierId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/supplier/${queryArg.supplierId}/status`,
         method: "PUT",
@@ -171,6 +183,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementSupplierMaterialByMaterialIdApiResponse,
       GetApiV1ProcurementSupplierMaterialByMaterialIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/supplier", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/supplier/material/${queryArg.materialId}`,
         headers: {
@@ -183,6 +196,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementSupplierByMaterialIdAndTypeApiResponse,
       GetApiV1ProcurementSupplierByMaterialIdAndTypeApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/supplier", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/supplier/${queryArg.materialId}/${queryArg["type"]}`,
         headers: {
@@ -195,6 +209,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementPurchaseOrderApiResponse,
       PostApiV1ProcurementPurchaseOrderApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/purchase-order", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order`,
         method: "POST",
@@ -209,6 +224,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementPurchaseOrderApiResponse,
       GetApiV1ProcurementPurchaseOrderApiArg
     >({
+      providesTags: [{ type: "procurement/purchase-order", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order`,
         headers: {
@@ -228,6 +244,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementPurchaseOrderByPurchaseOrderIdApiResponse,
       GetApiV1ProcurementPurchaseOrderByPurchaseOrderIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/purchase-order", id: queryArg.purchaseOrderId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order/${queryArg.purchaseOrderId}`,
         headers: {
@@ -240,6 +257,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementPurchaseOrderByPurchaseOrderIdApiResponse,
       PostApiV1ProcurementPurchaseOrderByPurchaseOrderIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/purchase-order", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/purchase-order", id: queryArg.purchaseOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order/${queryArg.purchaseOrderId}`,
         method: "POST",
@@ -254,6 +272,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementPurchaseOrderByPurchaseOrderIdApiResponse,
       PutApiV1ProcurementPurchaseOrderByPurchaseOrderIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/purchase-order", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/purchase-order", id: queryArg.purchaseOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order/${queryArg.purchaseOrderId}`,
         method: "PUT",
@@ -268,6 +287,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProcurementPurchaseOrderByPurchaseOrderIdApiResponse,
       DeleteApiV1ProcurementPurchaseOrderByPurchaseOrderIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/purchase-order", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/purchase-order", id: queryArg.purchaseOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order/${queryArg.purchaseOrderId}`,
         method: "DELETE",
@@ -308,6 +328,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementPurchaseOrderFirstStepByPurchaseOrderIdApiResponse,
       PutApiV1ProcurementPurchaseOrderFirstStepByPurchaseOrderIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/purchase-order", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/purchase-order", id: queryArg.purchaseOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order/first-step/${queryArg.purchaseOrderId}`,
         method: "PUT",
@@ -322,6 +343,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProcurementPurchaseOrderByPurchaseOrderIdCancelApiResponse,
       DeleteApiV1ProcurementPurchaseOrderByPurchaseOrderIdCancelApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/purchase-order", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/purchase-order", id: queryArg.purchaseOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order/${queryArg.purchaseOrderId}/cancel`,
         method: "DELETE",
@@ -335,6 +357,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementPurchaseOrderByPurchaseOrderIdReviseApiResponse,
       PutApiV1ProcurementPurchaseOrderByPurchaseOrderIdReviseApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/purchase-order", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/purchase-order", id: queryArg.purchaseOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order/${queryArg.purchaseOrderId}/revise`,
         method: "PUT",
@@ -349,6 +372,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementPurchaseOrderCheckByPurchaseOrderIdApiResponse,
       PutApiV1ProcurementPurchaseOrderCheckByPurchaseOrderIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/purchase-order", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/purchase-order", id: queryArg.purchaseOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order/check/${queryArg.purchaseOrderId}`,
         method: "PUT",
@@ -362,6 +386,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementPurchaseOrderInvoiceApiResponse,
       PostApiV1ProcurementPurchaseOrderInvoiceApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/purchase-order-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order-invoice`,
         method: "POST",
@@ -376,6 +401,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementPurchaseOrderInvoiceApiResponse,
       GetApiV1ProcurementPurchaseOrderInvoiceApiArg
     >({
+      providesTags: [{ type: "procurement/purchase-order-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order-invoice`,
         headers: {
@@ -394,6 +420,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementPurchaseOrderInvoiceByInvoiceIdApiResponse,
       GetApiV1ProcurementPurchaseOrderInvoiceByInvoiceIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/purchase-order-invoice", id: queryArg.invoiceId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order-invoice/${queryArg.invoiceId}`,
         headers: {
@@ -406,6 +433,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementPurchaseOrderInvoiceByInvoiceIdApiResponse,
       PutApiV1ProcurementPurchaseOrderInvoiceByInvoiceIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/purchase-order-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/purchase-order-invoice", id: queryArg.invoiceId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order-invoice/${queryArg.invoiceId}`,
         method: "PUT",
@@ -420,6 +448,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProcurementPurchaseOrderInvoiceByInvoiceIdApiResponse,
       DeleteApiV1ProcurementPurchaseOrderInvoiceByInvoiceIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/purchase-order-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/purchase-order-invoice", id: queryArg.invoiceId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order-invoice/${queryArg.invoiceId}`,
         method: "DELETE",
@@ -433,6 +462,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementBillingSheetApiResponse,
       PostApiV1ProcurementBillingSheetApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/billing-sheet", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/billing-sheet`,
         method: "POST",
@@ -447,6 +477,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementBillingSheetApiResponse,
       GetApiV1ProcurementBillingSheetApiArg
     >({
+      providesTags: [{ type: "procurement/billing-sheet", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/billing-sheet`,
         headers: {
@@ -465,6 +496,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementBillingSheetByBillingSheetIdApiResponse,
       GetApiV1ProcurementBillingSheetByBillingSheetIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/billing-sheet", id: queryArg.billingSheetId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/billing-sheet/${queryArg.billingSheetId}`,
         headers: {
@@ -477,6 +509,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementBillingSheetByBillingSheetIdApiResponse,
       PutApiV1ProcurementBillingSheetByBillingSheetIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/billing-sheet", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/billing-sheet", id: queryArg.billingSheetId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/billing-sheet/${queryArg.billingSheetId}`,
         method: "PUT",
@@ -491,6 +524,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProcurementBillingSheetByBillingSheetIdApiResponse,
       DeleteApiV1ProcurementBillingSheetByBillingSheetIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/billing-sheet", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/billing-sheet", id: queryArg.billingSheetId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/billing-sheet/${queryArg.billingSheetId}`,
         method: "DELETE",
@@ -504,6 +538,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementBillingSheetInvoiceByInvoiceIdApiResponse,
       GetApiV1ProcurementBillingSheetInvoiceByInvoiceIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/billing-sheet", id: queryArg.invoiceId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/billing-sheet/invoice/${queryArg.invoiceId}`,
         headers: {
@@ -516,6 +551,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementBillingSheetChargeApiResponse,
       PutApiV1ProcurementBillingSheetChargeApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/billing-sheet", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/billing-sheet/charge`,
         method: "PUT",
@@ -530,6 +566,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementBillingSheetChargeByBillingSheetIdApiResponse,
       PostApiV1ProcurementBillingSheetChargeByBillingSheetIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/billing-sheet", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/billing-sheet", id: queryArg.billingSheetId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/billing-sheet/charge/${queryArg.billingSheetId}`,
         method: "POST",
@@ -544,6 +581,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementShipmentDocumentApiResponse,
       PostApiV1ProcurementShipmentDocumentApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/shipment-document", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-document`,
         method: "POST",
@@ -558,6 +596,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementShipmentDocumentApiResponse,
       GetApiV1ProcurementShipmentDocumentApiArg
     >({
+      providesTags: [{ type: "procurement/shipment-document", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-document`,
         headers: {
@@ -576,6 +615,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementShipmentDocumentByShipmentDocumentIdApiResponse,
       GetApiV1ProcurementShipmentDocumentByShipmentDocumentIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/shipment-document", id: queryArg.shipmentDocumentId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-document/${queryArg.shipmentDocumentId}`,
         headers: {
@@ -588,6 +628,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementShipmentDocumentByShipmentDocumentIdApiResponse,
       PutApiV1ProcurementShipmentDocumentByShipmentDocumentIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/shipment-document", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/shipment-document", id: queryArg.shipmentDocumentId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-document/${queryArg.shipmentDocumentId}`,
         method: "PUT",
@@ -602,6 +643,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProcurementShipmentDocumentByShipmentDocumentIdApiResponse,
       DeleteApiV1ProcurementShipmentDocumentByShipmentDocumentIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/shipment-document", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/shipment-document", id: queryArg.shipmentDocumentId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-document/${queryArg.shipmentDocumentId}`,
         method: "DELETE",
@@ -615,6 +657,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementWaybillApiResponse,
       PostApiV1ProcurementWaybillApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/waybill", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/waybill`,
         method: "POST",
@@ -629,6 +672,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementWaybillApiResponse,
       GetApiV1ProcurementWaybillApiArg
     >({
+      providesTags: [{ type: "procurement/waybill", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/waybill`,
         headers: {
@@ -647,6 +691,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementWaybillByWaybillIdApiResponse,
       GetApiV1ProcurementWaybillByWaybillIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/waybill", id: queryArg.waybillId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/waybill/${queryArg.waybillId}`,
         headers: {
@@ -659,6 +704,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementWaybillByWaybillIdApiResponse,
       PutApiV1ProcurementWaybillByWaybillIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/waybill", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/waybill", id: queryArg.waybillId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/waybill/${queryArg.waybillId}`,
         method: "PUT",
@@ -673,6 +719,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProcurementWaybillByWaybillIdApiResponse,
       DeleteApiV1ProcurementWaybillByWaybillIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/waybill", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/waybill", id: queryArg.waybillId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/waybill/${queryArg.waybillId}`,
         method: "DELETE",
@@ -700,6 +747,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementShipmentsByShipmentIdStatusApiResponse,
       PutApiV1ProcurementShipmentsByShipmentIdStatusApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/shipment", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/shipment", id: queryArg.shipmentId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipments/${queryArg.shipmentId}/status`,
         method: "PUT",
@@ -714,6 +762,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementShipmentDocumentArrivedApiResponse,
       GetApiV1ProcurementShipmentDocumentArrivedApiArg
     >({
+      providesTags: [{ type: "procurement/shipment-document", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-document/arrived`,
         headers: {
@@ -731,6 +780,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementShipmentInvoiceApiResponse,
       PostApiV1ProcurementShipmentInvoiceApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/shipment-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-invoice`,
         method: "POST",
@@ -745,6 +795,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementShipmentInvoiceApiResponse,
       GetApiV1ProcurementShipmentInvoiceApiArg
     >({
+      providesTags: [{ type: "procurement/shipment-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-invoice`,
         headers: {
@@ -762,6 +813,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementShipmentInvoiceByIdApiResponse,
       GetApiV1ProcurementShipmentInvoiceByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/shipment-invoice", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-invoice/${queryArg.id}`,
         headers: {
@@ -774,6 +826,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementShipmentInvoiceUnattachedApiResponse,
       GetApiV1ProcurementShipmentInvoiceUnattachedApiArg
     >({
+      providesTags: [{ type: "procurement/shipment-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-invoice/unattached`,
         headers: {
@@ -799,6 +852,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementShipmentInvoiceByShipmentInvoiceIdApiResponse,
       PutApiV1ProcurementShipmentInvoiceByShipmentInvoiceIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/shipment-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/shipment-invoice", id: queryArg.shipmentInvoiceId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-invoice/${queryArg.shipmentInvoiceId}`,
         method: "PUT",
@@ -813,6 +867,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProcurementShipmentInvoiceByShipmentInvoiceIdApiResponse,
       DeleteApiV1ProcurementShipmentInvoiceByShipmentInvoiceIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/shipment-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/shipment-invoice", id: queryArg.shipmentInvoiceId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-invoice/${queryArg.shipmentInvoiceId}`,
         method: "DELETE",
@@ -826,6 +881,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementShipmentInvoicePaidByShipmentInvoiceIdApiResponse,
       PutApiV1ProcurementShipmentInvoicePaidByShipmentInvoiceIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/shipment-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/shipment-invoice", id: queryArg.shipmentInvoiceId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-invoice/paid/${queryArg.shipmentInvoiceId}`,
         method: "PUT",
@@ -842,6 +898,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementShipmentInvoicePaidMultipleApiResponse,
       PutApiV1ProcurementShipmentInvoicePaidMultipleApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/shipment-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-invoice/paid/multiple`,
         method: "PUT",
@@ -859,6 +916,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementShipmentDiscrepancyApiResponse,
       PostApiV1ProcurementShipmentDiscrepancyApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/shipment-discrepancy", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-discrepancy`,
         method: "POST",
@@ -873,6 +931,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyIdApiResponse,
       GetApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/shipment-discrepancy", id: queryArg.shipmentDiscrepancyId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/shipment-discrepancy/${queryArg.shipmentDiscrepancyId}`,
         headers: {
@@ -914,6 +973,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementPurchaseOrderNotLinkedApiResponse,
       GetApiV1ProcurementPurchaseOrderNotLinkedApiArg
     >({
+      providesTags: [{ type: "procurement/purchase-order", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order/not-linked`,
         headers: {
@@ -926,6 +986,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementPurchaseOrderSupplierBySupplierIdNotLinkedApiResponse,
       GetApiV1ProcurementPurchaseOrderSupplierBySupplierIdNotLinkedApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/purchase-order", id: queryArg.supplierId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/purchase-order/supplier/${queryArg.supplierId}/not-linked`,
         headers: {
@@ -938,6 +999,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementMaterialsByPurchaseOrdersApiResponse,
       PostApiV1ProcurementMaterialsByPurchaseOrdersApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/material", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/materials/by-purchase-orders`,
         method: "POST",
@@ -965,6 +1027,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementSupplierBySupplierIdMaterialAndMaterialIdApiResponse,
       GetApiV1ProcurementSupplierBySupplierIdMaterialAndMaterialIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/supplier", id: queryArg.supplierId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/supplier/${queryArg.supplierId}/material/${queryArg.materialId}`,
         headers: {
@@ -977,6 +1040,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementSupplierBySupplierIdMaterialApiResponse,
       GetApiV1ProcurementSupplierBySupplierIdMaterialApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/supplier", id: queryArg.supplierId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/supplier/${queryArg.supplierId}/material`,
         headers: {
@@ -989,6 +1053,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementDistributeMaterialApiResponse,
       PostApiV1ProcurementDistributeMaterialApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/distribute-material", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/distribute-material`,
         method: "POST",
@@ -1003,6 +1068,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementDistributeMaterialApiResponse,
       GetApiV1ProcurementDistributeMaterialApiArg
     >({
+      providesTags: [{ type: "procurement/distribute-material", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/distribute-material`,
         headers: {
@@ -1023,6 +1089,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementDistributeMaterialByDistributeMaterialIdApiResponse,
       GetApiV1ProcurementDistributeMaterialByDistributeMaterialIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/distribute-material", id: queryArg.distributeMaterialId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/distribute-material/${queryArg.distributeMaterialId}`,
         headers: {

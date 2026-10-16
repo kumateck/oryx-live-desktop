@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { settingsApi } from "@/shared/api/generated/settings";
+import { addTags } from "@/shared/api/add-tags";
 
 const unread = { type: "Notifications" as const, id: "unread" };
 const all = { type: "Notifications" as const, id: "all" };
@@ -7,9 +8,9 @@ export const notificationAudit = { module: "Notifications", subModule: "In-app" 
 
 export const notificationApi = settingsApi.enhanceEndpoints({
   endpoints: {
-    getApiV1AlertNotifications: { providesTags: (_result, _error, arg) => [arg.unreadOnly ? unread : all] },
+    getApiV1AlertNotifications: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [arg.unreadOnly ? unread : all]); },
     // The unread list is corrected in place when one is marked read; the full list is read again.
-    putApiV1AlertByIdMarkAsRead: { invalidatesTags: (_result, error) => error ? [] : [all] },
+    putApiV1AlertByIdMarkAsRead: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [all]); },
   },
 });
 export const { useGetApiV1AlertNotificationsQuery, usePutApiV1AlertByIdMarkAsReadMutation } = notificationApi;

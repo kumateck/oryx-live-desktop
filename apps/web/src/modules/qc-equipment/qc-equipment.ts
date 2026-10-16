@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { qcApi } from "@/shared/api/generated/qc";
+import { addTags } from "@/shared/api/add-tags";
 
 export const qcEquipmentPermissions = { view: "CanViewQcEquipment", add: "CanCreateQcEquipment", edit: "CanEditQcEquipmentDetails", remove: "CanDeleteQcEquipment" } as const;
 export const qcEquipmentAudit = { module: "Settings", subModule: "Equipment" } as const;
@@ -10,8 +11,8 @@ export const qualificationLabel = (status: number | null) => status === null ? n
 
 const list = { type: "QcEquipment" as const, id: "all" };
 const changed = (_result: unknown, error: unknown) => error ? [] : [list];
-export const qcEquipmentApi = qcApi.enhanceEndpoints({ endpoints: { getApiV1QcEquipment: { providesTags: [list] }, getApiV1QcEquipmentById: { providesTags: [list] }, postApiV1QcEquipment: { invalidatesTags: changed },
-  putApiV1QcEquipmentById: { invalidatesTags: changed }, deleteApiV1QcEquipmentById: { invalidatesTags: changed } } });
+export const qcEquipmentApi = qcApi.enhanceEndpoints({ endpoints: { getApiV1QcEquipment: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, getApiV1QcEquipmentById: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, postApiV1QcEquipment: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+  putApiV1QcEquipmentById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, deleteApiV1QcEquipmentById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); } } });
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const status = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]).nullish().catch(null);

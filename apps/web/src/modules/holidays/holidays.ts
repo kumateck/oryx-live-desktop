@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { settingsApi } from "@/shared/api/generated/settings";
+import { addTags } from "@/shared/api/add-tags";
 
 export const holidayPermissions = { view: "CanViewHolidays", add: "CanCreateHoliday", edit: "CanEditHoliday", remove: "CanDeleteHoliday" } as const;
 export const holidayAudit = { module: "Settings", subModule: "Holidays" } as const;
 const list = { type: "Holidays" as const, id: "all" };
 const changed = (_result: unknown, error: unknown) => error ? [] : [list];
-export const holidayApi = settingsApi.enhanceEndpoints({ endpoints: { getApiV1Holidays: { providesTags: [list] }, postApiV1Holidays: { invalidatesTags: changed }, putApiV1HolidaysById: { invalidatesTags: changed }, deleteApiV1HolidaysById: { invalidatesTags: changed } } });
+export const holidayApi = settingsApi.enhanceEndpoints({ endpoints: { getApiV1Holidays: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, postApiV1Holidays: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, putApiV1HolidaysById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, deleteApiV1HolidaysById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); } } });
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const row = z.object({ id: z.string().nullish(), name: text, date: text, description: text });

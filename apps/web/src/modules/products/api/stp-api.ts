@@ -1,14 +1,15 @@
 import { analyticalApi } from "@/shared/api/generated/analytical";
 import { settingsApi } from "@/shared/api/generated/settings";
 import { stpDocumentApi, stpDocumentExtraApi } from "@/shared/stp/stp-document-api";
+import { addTags } from "@/shared/api/add-tags";
 
 const byProduct = { type: "ProductStp" as const, id: "by-product" };
 
 export const stpApi = analyticalApi.enhanceEndpoints({
   endpoints: {
-    getApiV1ProductStpsByProductIdProduct: { providesTags: [byProduct] },
-    postApiV1ProductStps: { invalidatesTags: (_result, error) => error ? [] : [byProduct] },
-    putApiV1ProductStpsById: { invalidatesTags: (_result, error) => error ? [] : [byProduct] },
+    getApiV1ProductStpsByProductIdProduct: (definition) => { definition.providesTags = addTags(definition.providesTags, [byProduct]); },
+    postApiV1ProductStps: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [byProduct]); },
+    putApiV1ProductStpsById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [byProduct]); },
   },
 });
 

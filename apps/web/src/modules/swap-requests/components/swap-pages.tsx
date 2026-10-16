@@ -18,11 +18,12 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { approveBlock, audit, decidePermissions, readDirection, swapPath, swapRowsSchema, swapSchema, swapStatusLabels, swapsPath, type Direction, type Swap } from "../swaps";
+import { addTags } from "@/shared/api/add-tags";
 
 const tag = { type: "SwapRequests" as const, id: "all" };
 const decided = (_result: unknown, error: unknown) => error ? [] : [tag, "StockOnShelves" as const, "StockIssue" as const, "Requisition" as const];
 const { useGetApiV1WarehouseSwapQuery, useGetApiV1WarehouseSwapByIdQuery, usePutApiV1WarehouseSwapByIdApproveMutation } = warehouseApi.enhanceEndpoints({ endpoints: {
-  getApiV1WarehouseSwap: { providesTags: [tag] }, getApiV1WarehouseSwapById: { providesTags: [tag] }, putApiV1WarehouseSwapByIdApprove: { invalidatesTags: decided } } });
+  getApiV1WarehouseSwap: (definition) => { definition.providesTags = addTags(definition.providesTags, [tag]); }, getApiV1WarehouseSwapById: (definition) => { definition.providesTags = addTags(definition.providesTags, [tag]); }, putApiV1WarehouseSwapByIdApprove: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, decided); } } });
 /** The server's reject action is not in its published contract, so it is declared here. */
 const { useRejectSwapMutation } = api.injectEndpoints({ endpoints: (build) => ({ rejectSwap: build.mutation<void, { id: string; module: string; subModule: string }>({
   query: ({ id, module, subModule }) => ({ url: `/api/v1/warehouse/swap/${id}/reject`, method: "PUT", headers: { Module: module, SubModule: subModule } }), invalidatesTags: decided }) }) });

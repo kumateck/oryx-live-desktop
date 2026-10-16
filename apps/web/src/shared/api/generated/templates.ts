@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1TemplateAreasCatalogApiResponse,
       GetApiV1TemplateAreasCatalogApiArg
     >({
+      providesTags: [{ type: "template-area/catalog", id: "LIST" }, { type: "template-area", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/template-areas/catalog`,
         headers: {
@@ -17,6 +18,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1TemplateAreasApiResponse,
       GetApiV1TemplateAreasApiArg
     >({
+      providesTags: [{ type: "template-area", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/template-areas`,
         headers: {
@@ -32,6 +34,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1TemplateAreasApiResponse,
       PostApiV1TemplateAreasApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "template-area", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/template-areas`,
         method: "POST",
@@ -46,6 +49,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1TemplateAreasByIdApiResponse,
       GetApiV1TemplateAreasByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "template-area", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/template-areas/${queryArg.id}`,
         headers: {
@@ -58,6 +62,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1TemplateAreasByIdApiResponse,
       PutApiV1TemplateAreasByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "template-area", id: "LIST" }, { type: "template-area", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/template-areas/${queryArg.id}`,
         method: "PUT",
@@ -72,6 +77,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1TemplateAreasByIdActiveApiResponse,
       PutApiV1TemplateAreasByIdActiveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "template-area", id: "LIST" }, { type: "template-area", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/template-areas/${queryArg.id}/active`,
         method: "PUT",
@@ -86,6 +92,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1TemplateQuestionsAreaByAreaIdApiResponse,
       GetApiV1TemplateQuestionsAreaByAreaIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "template-question/area", id: queryArg.areaId }],
       query: (queryArg) => ({
         url: `/api/v1/template-questions/area/${queryArg.areaId}`,
         headers: {
@@ -98,6 +105,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1TemplateQuestionsByQuestionIdApiResponse,
       GetApiV1TemplateQuestionsByQuestionIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "template-question", id: queryArg.questionId }],
       query: (queryArg) => ({
         url: `/api/v1/template-questions/${queryArg.questionId}`,
         headers: {
@@ -110,6 +118,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1TemplateQuestionsApiResponse,
       PostApiV1TemplateQuestionsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "template-question", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/template-questions`,
         method: "POST",

@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormApiResponse,
       PostApiV1FormApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "form", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/form`,
         method: "POST",
@@ -16,6 +17,7 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     getApiV1Form: build.query<GetApiV1FormApiResponse, GetApiV1FormApiArg>({
+      providesTags: [{ type: "form", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/form`,
         headers: {
@@ -40,6 +42,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormByFormIdApiResponse,
       GetApiV1FormByFormIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "form", id: queryArg.formId }],
       query: (queryArg) => ({
         url: `/api/v1/form/${queryArg.formId}`,
         headers: {
@@ -52,6 +55,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1FormByFormIdApiResponse,
       PutApiV1FormByFormIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form", id: "LIST" }, { type: "form", id: queryArg.formId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/${queryArg.formId}`,
         method: "PUT",
@@ -66,6 +70,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1FormByFormIdApiResponse,
       DeleteApiV1FormByFormIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form", id: "LIST" }, { type: "form", id: queryArg.formId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/${queryArg.formId}`,
         method: "DELETE",
@@ -79,6 +84,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormSectionApiResponse,
       GetApiV1FormSectionApiArg
     >({
+      providesTags: [{ type: "form/section", id: "LIST" }, { type: "form", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/form/section`,
         headers: {
@@ -103,6 +109,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1FormByFormIdMetadataApiResponse,
       PutApiV1FormByFormIdMetadataApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form", id: "LIST" }, { type: "form", id: queryArg.formId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/${queryArg.formId}/metadata`,
         method: "PUT",
@@ -117,6 +124,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormByFormIdSectionApiResponse,
       PostApiV1FormByFormIdSectionApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form", id: "LIST" }, { type: "form", id: queryArg.formId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/${queryArg.formId}/section`,
         method: "POST",
@@ -131,6 +139,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1FormSectionBySectionIdApiResponse,
       PutApiV1FormSectionBySectionIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form/section", id: "LIST" }, { type: "form", id: "LIST" }, { type: "form/section", id: queryArg.sectionId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/section/${queryArg.sectionId}`,
         method: "PUT",
@@ -145,6 +154,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1FormSectionBySectionIdApiResponse,
       DeleteApiV1FormSectionBySectionIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form/section", id: "LIST" }, { type: "form", id: "LIST" }, { type: "form/section", id: queryArg.sectionId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/section/${queryArg.sectionId}`,
         method: "DELETE",
@@ -158,6 +168,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormSectionBySectionIdFieldApiResponse,
       PostApiV1FormSectionBySectionIdFieldApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form/section", id: "LIST" }, { type: "form", id: "LIST" }, { type: "form/section", id: queryArg.sectionId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/section/${queryArg.sectionId}/field`,
         method: "POST",
@@ -172,6 +183,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1FormFieldByFieldIdApiResponse,
       PutApiV1FormFieldByFieldIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form/field", id: "LIST" }, { type: "form", id: "LIST" }, { type: "form/field", id: queryArg.fieldId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/field/${queryArg.fieldId}`,
         method: "PUT",
@@ -186,6 +198,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1FormFieldByFieldIdApiResponse,
       DeleteApiV1FormFieldByFieldIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form/field", id: "LIST" }, { type: "form", id: "LIST" }, { type: "form/field", id: queryArg.fieldId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/field/${queryArg.fieldId}`,
         method: "DELETE",
@@ -199,6 +212,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormByFormIdReviewerApiResponse,
       PostApiV1FormByFormIdReviewerApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form", id: "LIST" }, { type: "form", id: queryArg.formId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/${queryArg.formId}/reviewer`,
         method: "POST",
@@ -213,6 +227,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1FormByFormIdReviewerAndReviewerUserIdApiResponse,
       DeleteApiV1FormByFormIdReviewerAndReviewerUserIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form", id: "LIST" }, { type: "form", id: queryArg.formId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/${queryArg.formId}/reviewer/${queryArg.reviewerUserId}`,
         method: "DELETE",
@@ -226,6 +241,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormResponsesDraftApiResponse,
       PostApiV1FormResponsesDraftApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "form/response", id: "LIST" }, { type: "form", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/form/responses/draft`,
         method: "POST",
@@ -240,6 +256,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormResponsesFinalizeByResponseIdApiResponse,
       PostApiV1FormResponsesFinalizeByResponseIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form/response", id: "LIST" }, { type: "form", id: "LIST" }, { type: "form/response", id: queryArg.responseId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/responses/finalize/${queryArg.responseId}`,
         method: "POST",
@@ -253,6 +270,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormResponsesApiResponse,
       PostApiV1FormResponsesApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "form/response", id: "LIST" }, { type: "form", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/form/responses`,
         method: "POST",
@@ -267,6 +285,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormResponsesSectionApiResponse,
       PostApiV1FormResponsesSectionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "form/response", id: "LIST" }, { type: "form", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/form/responses/section`,
         method: "POST",
@@ -285,6 +304,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1FormResponsesSectionApiResponse,
       PutApiV1FormResponsesSectionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "form/response", id: "LIST" }, { type: "form", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/form/responses/section`,
         method: "PUT",
@@ -303,6 +323,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormResponsesByFormResponseIdApiResponse,
       GetApiV1FormResponsesByFormResponseIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "form/response", id: queryArg.formResponseId }],
       query: (queryArg) => ({
         url: `/api/v1/form/responses/${queryArg.formResponseId}`,
         headers: {
@@ -315,6 +336,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormQuestionApiResponse,
       PostApiV1FormQuestionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "form/question", id: "LIST" }, { type: "form", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/form/question`,
         method: "POST",
@@ -329,6 +351,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormQuestionApiResponse,
       GetApiV1FormQuestionApiArg
     >({
+      providesTags: [{ type: "form/question", id: "LIST" }, { type: "form", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/form/question`,
         headers: {
@@ -350,6 +373,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormQuestionByQuestionIdApiResponse,
       GetApiV1FormQuestionByQuestionIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "form/question", id: queryArg.questionId }],
       query: (queryArg) => ({
         url: `/api/v1/form/question/${queryArg.questionId}`,
         headers: {
@@ -362,6 +386,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1FormQuestionByQuestionIdApiResponse,
       PutApiV1FormQuestionByQuestionIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form/question", id: "LIST" }, { type: "form", id: "LIST" }, { type: "form/question", id: queryArg.questionId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/question/${queryArg.questionId}`,
         method: "PUT",
@@ -376,6 +401,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1FormQuestionByQuestionIdApiResponse,
       DeleteApiV1FormQuestionByQuestionIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form/question", id: "LIST" }, { type: "form", id: "LIST" }, { type: "form/question", id: queryArg.questionId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/question/${queryArg.questionId}`,
         method: "DELETE",
@@ -389,6 +415,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormGenerateCertificateByMaterialBatchIdApiResponse,
       PostApiV1FormGenerateCertificateByMaterialBatchIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form/generate-certificate", id: "LIST" }, { type: "form", id: "LIST" }, { type: "form/generate-certificate", id: queryArg.materialBatchId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/generate-certificate/${queryArg.materialBatchId}`,
         method: "POST",
@@ -418,6 +445,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormResponsesMaterialBatchByMaterialBatchIdApiResponse,
       GetApiV1FormResponsesMaterialBatchByMaterialBatchIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "form/response", id: queryArg.materialBatchId }],
       query: (queryArg) => ({
         url: `/api/v1/form/responses/material-batch/${queryArg.materialBatchId}`,
         headers: {
@@ -430,6 +458,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormResponsesBmrByBatchManufacturingRecordIdApiResponse,
       GetApiV1FormResponsesBmrByBatchManufacturingRecordIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "form/response", id: queryArg.batchManufacturingRecordId }],
       query: (queryArg) => ({
         url: `/api/v1/form/responses/bmr/${queryArg.batchManufacturingRecordId}`,
         headers: {
@@ -471,6 +500,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormWithResponsesMaterialBatchByMaterialBatchIdApiResponse,
       GetApiV1FormWithResponsesMaterialBatchByMaterialBatchIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "form/with-response", id: queryArg.materialBatchId }],
       query: (queryArg) => ({
         url: `/api/v1/form/with-responses/material-batch/${queryArg.materialBatchId}`,
         headers: {
@@ -483,6 +513,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormWithResponsesBmrByBatchManufacturingRecordIdApiResponse,
       GetApiV1FormWithResponsesBmrByBatchManufacturingRecordIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "form/with-response", id: queryArg.batchManufacturingRecordId }],
       query: (queryArg) => ({
         url: `/api/v1/form/with-responses/bmr/${queryArg.batchManufacturingRecordId}`,
         headers: {
@@ -495,6 +526,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormAssigneesDraftApiResponse,
       PostApiV1FormAssigneesDraftApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "form/assignee", id: "LIST" }, { type: "form", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/form/assignees/draft`,
         method: "POST",
@@ -509,6 +541,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormAssigneesFinalizeByFormAssigneeIdApiResponse,
       PostApiV1FormAssigneesFinalizeByFormAssigneeIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "form/assignee", id: "LIST" }, { type: "form", id: "LIST" }, { type: "form/assignee", id: queryArg.formAssigneeId }]),
       query: (queryArg) => ({
         url: `/api/v1/form/assignees/finalize/${queryArg.formAssigneeId}`,
         method: "POST",
@@ -522,6 +555,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormAssigneesReassignApiResponse,
       PostApiV1FormAssigneesReassignApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "form/assignee", id: "LIST" }, { type: "form", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/form/assignees/reassign`,
         method: "POST",
@@ -536,6 +570,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FormAssigneesApiResponse,
       PostApiV1FormAssigneesApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "form/assignee", id: "LIST" }, { type: "form", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/form/assignees`,
         method: "POST",
@@ -550,6 +585,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormAssigneesMaterialBatchByMaterialBatchIdApiResponse,
       GetApiV1FormAssigneesMaterialBatchByMaterialBatchIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "form/assignee", id: queryArg.materialBatchId }],
       query: (queryArg) => ({
         url: `/api/v1/form/assignees/material-batch/${queryArg.materialBatchId}`,
         headers: {
@@ -566,6 +602,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormAssigneesBmrByBmrIdApiResponse,
       GetApiV1FormAssigneesBmrByBmrIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "form/assignee", id: queryArg.bmrId }],
       query: (queryArg) => ({
         url: `/api/v1/form/assignees/bmr/${queryArg.bmrId}`,
         headers: {
@@ -582,6 +619,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormResponseApiResponse,
       GetApiV1FormResponseApiArg
     >({
+      providesTags: [{ type: "form/response", id: "LIST" }, { type: "form", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/form/response`,
         headers: {
@@ -602,6 +640,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FormFormAssigneeApiResponse,
       GetApiV1FormFormAssigneeApiArg
     >({
+      providesTags: [{ type: "form/form-assignee", id: "LIST" }, { type: "form", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/form/form-assignee`,
         headers: {

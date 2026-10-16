@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1AttendanceRecordsDailySummaryApiResponse,
       GetApiV1AttendanceRecordsDailySummaryApiArg
     >({
+      providesTags: [{ type: "attendance-record/daily-summary", id: "LIST" }, { type: "attendance-record", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/attendance-records/daily-summary`,
         headers: {
@@ -21,6 +22,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1AttendanceRecordsGeneralSummaryApiResponse,
       GetApiV1AttendanceRecordsGeneralSummaryApiArg
     >({
+      providesTags: [{ type: "attendance-record/general-summary", id: "LIST" }, { type: "attendance-record", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/attendance-records/general-summary`,
         headers: {
@@ -33,6 +35,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1DesignationApiResponse,
       PostApiV1DesignationApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "designation", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/designation`,
         method: "POST",
@@ -47,6 +50,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1DesignationApiResponse,
       GetApiV1DesignationApiArg
     >({
+      providesTags: [{ type: "designation", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/designation`,
         headers: {
@@ -65,6 +69,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1DesignationByIdApiResponse,
       GetApiV1DesignationByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "designation", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/designation/${queryArg.id}`,
         headers: {
@@ -77,6 +82,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1DesignationByIdApiResponse,
       PutApiV1DesignationByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "designation", id: "LIST" }, { type: "designation", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/designation/${queryArg.id}`,
         method: "PUT",
@@ -91,6 +97,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1DesignationByIdApiResponse,
       DeleteApiV1DesignationByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "designation", id: "LIST" }, { type: "designation", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/designation/${queryArg.id}`,
         method: "DELETE",
@@ -104,6 +111,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1DesignationDepartmentByIdApiResponse,
       GetApiV1DesignationDepartmentByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "designation/department", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/designation/department/${queryArg.id}`,
         headers: {
@@ -116,6 +124,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1EmployeeApiResponse,
       PostApiV1EmployeeApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "employee", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/employee`,
         method: "POST",
@@ -130,6 +139,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1EmployeeApiResponse,
       GetApiV1EmployeeApiArg
     >({
+      providesTags: [{ type: "employee", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/employee`,
         headers: {
@@ -153,6 +163,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1EmployeeUserApiResponse,
       PostApiV1EmployeeUserApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "employee/user", id: "LIST" }, { type: "employee", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/employee/user`,
         method: "POST",
@@ -167,6 +178,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1EmployeeAvatarByIdApiResponse,
       PostApiV1EmployeeAvatarByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "employee/avatar", id: "LIST" }, { type: "employee", id: "LIST" }, { type: "employee/avatar", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/employee/avatar/${queryArg.id}`,
         method: "POST",
@@ -181,6 +193,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1EmployeeDepartmentsByIdApiResponse,
       GetApiV1EmployeeDepartmentsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "employee/department", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/employee/departments/${queryArg.id}`,
         headers: {
@@ -193,6 +206,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1EmployeeByShiftScheduleIdAvailableApiResponse,
       GetApiV1EmployeeByShiftScheduleIdAvailableApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "employee", id: queryArg.shiftScheduleId }],
       query: (queryArg) => ({
         url: `/api/v1/employee/${queryArg.shiftScheduleId}/available`,
         headers: {
@@ -208,6 +222,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1EmployeeByIdApiResponse,
       GetApiV1EmployeeByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "employee", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/employee/${queryArg.id}`,
         headers: {
@@ -220,6 +235,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1EmployeeByIdApiResponse,
       PutApiV1EmployeeByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "employee", id: "LIST" }, { type: "employee", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/employee/${queryArg.id}`,
         method: "PUT",
@@ -234,6 +250,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1EmployeeByIdApiResponse,
       DeleteApiV1EmployeeByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "employee", id: "LIST" }, { type: "employee", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/employee/${queryArg.id}`,
         method: "DELETE",
@@ -247,6 +264,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1EmployeeByIdAssignApiResponse,
       PutApiV1EmployeeByIdAssignApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "employee", id: "LIST" }, { type: "employee", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/employee/${queryArg.id}/assign`,
         method: "PUT",
@@ -261,6 +279,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1EmployeeByIdChangeTypeApiResponse,
       PutApiV1EmployeeByIdChangeTypeApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "employee", id: "LIST" }, { type: "employee", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/employee/${queryArg.id}/change-type`,
         method: "PUT",
@@ -277,6 +296,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1EmployeeByIdStatusApiResponse,
       PutApiV1EmployeeByIdStatusApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "employee", id: "LIST" }, { type: "employee", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/employee/${queryArg.id}/status`,
         method: "PUT",
@@ -291,6 +311,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1EmployeeEmailByIdApiResponse,
       PutApiV1EmployeeEmailByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "employee/email", id: "LIST" }, { type: "employee", id: "LIST" }, { type: "employee/email", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/employee/email/${queryArg.id}`,
         method: "PUT",
@@ -307,6 +328,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1LeaveEntitlementApiResponse,
       PostApiV1LeaveEntitlementApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "leave-entitlement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-entitlement`,
         method: "POST",
@@ -321,6 +343,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1LeaveEntitlementApiResponse,
       GetApiV1LeaveEntitlementApiArg
     >({
+      providesTags: [{ type: "leave-entitlement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/leave-entitlement`,
         headers: {
@@ -338,6 +361,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1LeaveEntitlementByIdApiResponse,
       GetApiV1LeaveEntitlementByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "leave-entitlement", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/leave-entitlement/${queryArg.id}`,
         headers: {
@@ -350,6 +374,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1LeaveEntitlementByIdApiResponse,
       PutApiV1LeaveEntitlementByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "leave-entitlement", id: "LIST" }, { type: "leave-entitlement", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-entitlement/${queryArg.id}`,
         method: "PUT",
@@ -364,6 +389,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1LeaveEntitlementByIdApiResponse,
       DeleteApiV1LeaveEntitlementByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "leave-entitlement", id: "LIST" }, { type: "leave-entitlement", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-entitlement/${queryArg.id}`,
         method: "DELETE",
@@ -377,6 +403,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1LeaveRequestApiResponse,
       PostApiV1LeaveRequestApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "leave-request", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-request`,
         method: "POST",
@@ -391,6 +418,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1LeaveRequestApiResponse,
       GetApiV1LeaveRequestApiArg
     >({
+      providesTags: [{ type: "leave-request", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/leave-request`,
         headers: {
@@ -411,6 +439,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1LeaveRequestByIdApiResponse,
       GetApiV1LeaveRequestByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "leave-request", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/leave-request/${queryArg.id}`,
         headers: {
@@ -423,6 +452,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1LeaveRequestByIdApiResponse,
       PutApiV1LeaveRequestByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "leave-request", id: "LIST" }, { type: "leave-request", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-request/${queryArg.id}`,
         method: "PUT",
@@ -437,6 +467,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1LeaveRequestByIdApiResponse,
       DeleteApiV1LeaveRequestByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "leave-request", id: "LIST" }, { type: "leave-request", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-request/${queryArg.id}`,
         method: "DELETE",
@@ -450,6 +481,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1LeaveRequestRecallApiResponse,
       PutApiV1LeaveRequestRecallApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "leave-request/recall", id: "LIST" }, { type: "leave-request", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-request/recall`,
         method: "PUT",
@@ -464,6 +496,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1LeaveRequestByLeaveRequestIdReapplyApiResponse,
       PutApiV1LeaveRequestByLeaveRequestIdReapplyApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "leave-request", id: "LIST" }, { type: "leave-request", id: queryArg.leaveRequestId }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-request/${queryArg.leaveRequestId}/reapply`,
         method: "PUT",
@@ -478,6 +511,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1LeaveRequestByIdCancelApiResponse,
       PostApiV1LeaveRequestByIdCancelApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "leave-request", id: "LIST" }, { type: "leave-request", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-request/${queryArg.id}/cancel`,
         method: "POST",
@@ -491,6 +525,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1LeaveTypeApiResponse,
       PostApiV1LeaveTypeApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "leave-type", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-type`,
         method: "POST",
@@ -505,6 +540,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1LeaveTypeApiResponse,
       GetApiV1LeaveTypeApiArg
     >({
+      providesTags: [{ type: "leave-type", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/leave-type`,
         headers: {
@@ -523,6 +559,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1LeaveTypeByIdApiResponse,
       GetApiV1LeaveTypeByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "leave-type", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/leave-type/${queryArg.id}`,
         headers: {
@@ -535,6 +572,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1LeaveTypeByIdApiResponse,
       PutApiV1LeaveTypeByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "leave-type", id: "LIST" }, { type: "leave-type", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-type/${queryArg.id}`,
         method: "PUT",
@@ -549,6 +587,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1LeaveTypeByIdApiResponse,
       DeleteApiV1LeaveTypeByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "leave-type", id: "LIST" }, { type: "leave-type", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/leave-type/${queryArg.id}`,
         method: "DELETE",
@@ -562,6 +601,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1OvertimeRequestsApiResponse,
       PostApiV1OvertimeRequestsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "overtime-request", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/overtime-requests`,
         method: "POST",
@@ -576,6 +616,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1OvertimeRequestsApiResponse,
       GetApiV1OvertimeRequestsApiArg
     >({
+      providesTags: [{ type: "overtime-request", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/overtime-requests`,
         headers: {
@@ -595,6 +636,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1OvertimeRequestsByIdApiResponse,
       GetApiV1OvertimeRequestsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "overtime-request", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/overtime-requests/${queryArg.id}`,
         headers: {
@@ -607,6 +649,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1OvertimeRequestsByIdApiResponse,
       PutApiV1OvertimeRequestsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "overtime-request", id: "LIST" }, { type: "overtime-request", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/overtime-requests/${queryArg.id}`,
         method: "PUT",
@@ -621,6 +664,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1OvertimeRequestsByIdApiResponse,
       DeleteApiV1OvertimeRequestsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "overtime-request", id: "LIST" }, { type: "overtime-request", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/overtime-requests/${queryArg.id}`,
         method: "DELETE",
@@ -634,6 +678,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ShiftCategoryApiResponse,
       PostApiV1ShiftCategoryApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "shift-category", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-category`,
         method: "POST",
@@ -648,6 +693,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ShiftCategoryApiResponse,
       GetApiV1ShiftCategoryApiArg
     >({
+      providesTags: [{ type: "shift-category", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/shift-category`,
         headers: {
@@ -665,6 +711,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ShiftCategoryByIdApiResponse,
       GetApiV1ShiftCategoryByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "shift-category", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/shift-category/${queryArg.id}`,
         headers: {
@@ -677,6 +724,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ShiftCategoryByIdApiResponse,
       PutApiV1ShiftCategoryByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "shift-category", id: "LIST" }, { type: "shift-category", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-category/${queryArg.id}`,
         method: "PUT",
@@ -691,6 +739,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ShiftCategoryByIdApiResponse,
       DeleteApiV1ShiftCategoryByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "shift-category", id: "LIST" }, { type: "shift-category", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-category/${queryArg.id}`,
         method: "DELETE",
@@ -704,6 +753,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ShiftSchedulesApiResponse,
       PostApiV1ShiftSchedulesApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "shift-schedule", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-schedules`,
         method: "POST",
@@ -718,6 +768,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ShiftSchedulesApiResponse,
       GetApiV1ShiftSchedulesApiArg
     >({
+      providesTags: [{ type: "shift-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/shift-schedules`,
         headers: {
@@ -737,6 +788,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ShiftSchedulesByIdApiResponse,
       GetApiV1ShiftSchedulesByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "shift-schedule", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/shift-schedules/${queryArg.id}`,
         headers: {
@@ -749,6 +801,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ShiftSchedulesByIdApiResponse,
       PutApiV1ShiftSchedulesByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "shift-schedule", id: "LIST" }, { type: "shift-schedule", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-schedules/${queryArg.id}`,
         method: "PUT",
@@ -763,6 +816,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ShiftSchedulesByIdApiResponse,
       DeleteApiV1ShiftSchedulesByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "shift-schedule", id: "LIST" }, { type: "shift-schedule", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-schedules/${queryArg.id}`,
         method: "DELETE",
@@ -776,6 +830,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ShiftSchedulesDepartmentByIdApiResponse,
       GetApiV1ShiftSchedulesDepartmentByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "shift-schedule/department", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/shift-schedules/department/${queryArg.id}`,
         headers: {
@@ -788,6 +843,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ShiftSchedulesByScheduleIdViewApiResponse,
       GetApiV1ShiftSchedulesByScheduleIdViewApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "shift-schedule", id: queryArg.scheduleId }],
       query: (queryArg) => ({
         url: `/api/v1/shift-schedules/${queryArg.scheduleId}/view`,
         headers: {
@@ -804,6 +860,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ShiftSchedulesByScheduleIdDayApiResponse,
       GetApiV1ShiftSchedulesByScheduleIdDayApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "shift-schedule", id: queryArg.scheduleId }],
       query: (queryArg) => ({
         url: `/api/v1/shift-schedules/${queryArg.scheduleId}/day`,
         headers: {
@@ -819,6 +876,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ShiftSchedulesByIdUpdateScheduleApiResponse,
       PutApiV1ShiftSchedulesByIdUpdateScheduleApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "shift-schedule", id: "LIST" }, { type: "shift-schedule", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-schedules/${queryArg.id}/update-schedule`,
         method: "PUT",
@@ -833,6 +891,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ShiftSchedulesAssignImportApiResponse,
       PostApiV1ShiftSchedulesAssignImportApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "shift-schedule/assign", id: "LIST" }, { type: "shift-schedule", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-schedules/assign/import`,
         method: "POST",
@@ -851,6 +910,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ShiftTypeApiResponse,
       PostApiV1ShiftTypeApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "shift-type", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-type`,
         method: "POST",
@@ -865,6 +925,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ShiftTypeApiResponse,
       GetApiV1ShiftTypeApiArg
     >({
+      providesTags: [{ type: "shift-type", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/shift-type`,
         headers: {
@@ -882,6 +943,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ShiftTypeByIdApiResponse,
       GetApiV1ShiftTypeByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "shift-type", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/shift-type/${queryArg.id}`,
         headers: {
@@ -894,6 +956,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ShiftTypeByIdApiResponse,
       PutApiV1ShiftTypeByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "shift-type", id: "LIST" }, { type: "shift-type", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-type/${queryArg.id}`,
         method: "PUT",
@@ -908,6 +971,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ShiftTypeByIdApiResponse,
       DeleteApiV1ShiftTypeByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "shift-type", id: "LIST" }, { type: "shift-type", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/shift-type/${queryArg.id}`,
         method: "DELETE",
@@ -921,6 +985,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1StaffRequisitionsApiResponse,
       PostApiV1StaffRequisitionsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "staff-requisition", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/staff-requisitions`,
         method: "POST",
@@ -935,6 +1000,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1StaffRequisitionsApiResponse,
       GetApiV1StaffRequisitionsApiArg
     >({
+      providesTags: [{ type: "staff-requisition", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/staff-requisitions`,
         headers: {
@@ -956,6 +1022,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1StaffRequisitionsByIdApiResponse,
       GetApiV1StaffRequisitionsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "staff-requisition", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/staff-requisitions/${queryArg.id}`,
         headers: {
@@ -968,6 +1035,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1StaffRequisitionsByIdApiResponse,
       PutApiV1StaffRequisitionsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "staff-requisition", id: "LIST" }, { type: "staff-requisition", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/staff-requisitions/${queryArg.id}`,
         method: "PUT",
@@ -982,6 +1050,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1StaffRequisitionsByIdApiResponse,
       DeleteApiV1StaffRequisitionsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "staff-requisition", id: "LIST" }, { type: "staff-requisition", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/staff-requisitions/${queryArg.id}`,
         method: "DELETE",

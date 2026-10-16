@@ -1,5 +1,6 @@
 import { api } from "@/shared/api/base-api";
 import { procurementApi } from "@/shared/api/generated/procurement";
+import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "Shipments" as const, id: "all" };
 // A delivery takes its invoice out of those waiting, and its arrival feeds material distribution.
@@ -7,13 +8,13 @@ const changed = (_result: unknown, error: unknown) => error ? [] : [list, { type
 
 export const shipmentApi = procurementApi.enhanceEndpoints({
   endpoints: {
-    getApiV1ProcurementShipmentDocument: { providesTags: [list] },
-    getApiV1ProcurementShipmentDocumentByShipmentDocumentId: { providesTags: [list] },
-    getApiV1ProcurementWaybill: { providesTags: [list] },
-    getApiV1ProcurementWaybillByWaybillId: { providesTags: [list] },
-    postApiV1ProcurementShipmentDocument: { invalidatesTags: changed },
-    postApiV1ProcurementWaybill: { invalidatesTags: changed },
-    putApiV1ProcurementShipmentsByShipmentIdStatus: { invalidatesTags: changed },
+    getApiV1ProcurementShipmentDocument: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    getApiV1ProcurementShipmentDocumentByShipmentDocumentId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    getApiV1ProcurementWaybill: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    getApiV1ProcurementWaybillByWaybillId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    postApiV1ProcurementShipmentDocument: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    postApiV1ProcurementWaybill: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    putApiV1ProcurementShipmentsByShipmentIdStatus: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
   },
 });
 

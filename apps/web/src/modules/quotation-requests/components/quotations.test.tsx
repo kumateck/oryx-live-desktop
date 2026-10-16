@@ -248,7 +248,7 @@ async function fillProforma(user: ReturnType<typeof userEvent.setup>) {
   const dialog = await screen.findByRole("dialog");
   await user.click(within(dialog).getByRole("button", { name: "Record proforma invoice" }));
   expect(await within(dialog).findByText("Enter the proforma invoice number")).toBeTruthy();
-  expect(within(dialog).getByText("Attach the proforma invoice")).toBeTruthy();
+  expect(await within(dialog).findByText("Attach the proforma invoice")).toBeTruthy();
   await user.type(within(dialog).getByRole("textbox", { name: /Proforma invoice number/ }), "PFI-778");
   await user.click(within(dialog).getByRole("combobox", { name: /Terms of payment/ }));
   await user.click(await screen.findByRole("option", { name: "30 days" }));

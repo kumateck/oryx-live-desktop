@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { qcApi } from "@/shared/api/generated/qc";
+import { addTags } from "@/shared/api/add-tags";
 
 export const aiExtractionPermission = "CanManageAiWorksheetExtractionSettings";
 export const aiExtractionAudit = { module: "Quality Control", subModule: "QC AI Extraction Settings" } as const;
@@ -9,9 +10,9 @@ export type Provider = 0 | 1;
 const settingsTag = { type: "QcAiExtractionSettings" as const, id: "all" };
 export const aiExtractionApi = qcApi.enhanceEndpoints({ addTagTypes: ["QcAiExtractionSettings"],
   endpoints: {
-    getApiV1QcAiExtractionSettings: { providesTags: [settingsTag] },
-    putApiV1QcAiExtractionSettingsByProviderKey: { invalidatesTags: (_result, error) => error ? [] : [settingsTag] },
-    putApiV1QcAiExtractionSettingsActive: { invalidatesTags: (_result, error) => error ? [] : [settingsTag] },
+    getApiV1QcAiExtractionSettings: (definition) => { definition.providesTags = addTags(definition.providesTags, [settingsTag]); },
+    putApiV1QcAiExtractionSettingsByProviderKey: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [settingsTag]); },
+    putApiV1QcAiExtractionSettingsActive: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [settingsTag]); },
   },
 });
 

@@ -1,5 +1,6 @@
 import { api } from "@/shared/api/base-api";
 import { procurementApi } from "@/shared/api/generated/procurement";
+import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "BillingSheets" as const, id: "all" };
 // A sheet, and each payment on it, decides whether its shipment can leave the port.
@@ -7,14 +8,14 @@ const changed = (_result: unknown, error: unknown) => error ? [] : [list, { type
 
 export const billingApi = procurementApi.enhanceEndpoints({
   endpoints: {
-    getApiV1ProcurementBillingSheet: { providesTags: [list] },
-    getApiV1ProcurementBillingSheetByBillingSheetId: { providesTags: [list] },
-    getApiV1ProcurementBillingSheetInvoiceByInvoiceId: { providesTags: [list] },
-    postApiV1ProcurementBillingSheet: { invalidatesTags: changed },
-    putApiV1ProcurementBillingSheetByBillingSheetId: { invalidatesTags: changed },
-    deleteApiV1ProcurementBillingSheetByBillingSheetId: { invalidatesTags: changed },
-    putApiV1ProcurementBillingSheetCharge: { invalidatesTags: changed },
-    postApiV1ProcurementBillingSheetChargeByBillingSheetId: { invalidatesTags: changed },
+    getApiV1ProcurementBillingSheet: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    getApiV1ProcurementBillingSheetByBillingSheetId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    getApiV1ProcurementBillingSheetInvoiceByInvoiceId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    postApiV1ProcurementBillingSheet: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    putApiV1ProcurementBillingSheetByBillingSheetId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    deleteApiV1ProcurementBillingSheetByBillingSheetId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    putApiV1ProcurementBillingSheetCharge: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+    postApiV1ProcurementBillingSheetChargeByBillingSheetId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
   },
 });
 

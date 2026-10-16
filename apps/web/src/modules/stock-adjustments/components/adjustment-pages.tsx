@@ -24,11 +24,12 @@ import { adjustmentFormSchema, adjustmentPath, adjustmentPermissions, adjustment
   recordAdjustmentFormSchema, recordAdjustmentRequest, suggestedNumber, targetLabel, targetTabs, type Adjustment, type AdjustmentFormValues, type AdjustmentTarget, type RecordAdjustmentFormValues } from "../adjustments";
 import { AdjustmentLines } from "./adjustment-lines";
 import { RecordLines } from "./record-lines";
+import { addTags } from "@/shared/api/add-tags";
 
 const tag = { type: "StockAdjustments" as const, id: "all" };
-const { useGetApiV1StockAdjustmentQuery, usePostApiV1StockAdjustmentMutation } = warehouseApi.enhanceEndpoints({ endpoints: { getApiV1StockAdjustment: { providesTags: [tag] }, getApiV1StockAdjustmentById: { providesTags: [tag] },
+const { useGetApiV1StockAdjustmentQuery, usePostApiV1StockAdjustmentMutation } = warehouseApi.enhanceEndpoints({ endpoints: { getApiV1StockAdjustment: (definition) => { definition.providesTags = addTags(definition.providesTags, [tag]); }, getApiV1StockAdjustmentById: (definition) => { definition.providesTags = addTags(definition.providesTags, [tag]); },
   // An adjustment with no approval workflow is applied at once, so shelves may change; otherwise it joins the approvers' queue.
-  postApiV1StockAdjustment: { invalidatesTags: (_result, error) => error ? [] : [tag, "StockOnShelves", "PendingApprovals"] } } });
+  postApiV1StockAdjustment: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [tag, "StockOnShelves", "PendingApprovals"]); } } });
 
 const column = dataTableColumns<Adjustment>();
 const columns = column.columns([

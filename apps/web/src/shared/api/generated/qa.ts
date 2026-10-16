@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QaQualityAuditsApiResponse,
       PostApiV1QaQualityAuditsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QaQualityAuditsApiResponse,
       GetApiV1QaQualityAuditsApiArg
     >({
+      providesTags: [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits`,
         headers: {
@@ -38,6 +40,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaQualityAuditsByIdApiResponse,
       PutApiV1QaQualityAuditsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/quality-audit", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits/${queryArg.id}`,
         method: "PUT",
@@ -52,6 +55,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QaQualityAuditsByIdApiResponse,
       GetApiV1QaQualityAuditsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qa/quality-audit", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits/${queryArg.id}`,
         headers: {
@@ -64,6 +68,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaQualityAuditsByIdStartApiResponse,
       PutApiV1QaQualityAuditsByIdStartApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/quality-audit", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits/${queryArg.id}/start`,
         method: "PUT",
@@ -77,6 +82,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QaQualityAuditsByIdChecklistResponsesApiResponse,
       PostApiV1QaQualityAuditsByIdChecklistResponsesApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/quality-audit", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits/${queryArg.id}/checklist-responses`,
         method: "POST",
@@ -91,6 +97,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QaQualityAuditsByIdFindingsApiResponse,
       PostApiV1QaQualityAuditsByIdFindingsApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/quality-audit", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits/${queryArg.id}/findings`,
         method: "POST",
@@ -105,6 +112,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QaQualityAuditsFindingsByFindingIdCorrectiveActionApiResponse,
       PostApiV1QaQualityAuditsFindingsByFindingIdCorrectiveActionApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/quality-audit", id: queryArg.findingId }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits/findings/${queryArg.findingId}/corrective-action`,
         method: "POST",
@@ -119,6 +127,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaQualityAuditsCorrectiveActionsByCapaIdStatusApiResponse,
       PutApiV1QaQualityAuditsCorrectiveActionsByCapaIdStatusApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/quality-audit", id: queryArg.capaId }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits/corrective-actions/${queryArg.capaId}/status`,
         method: "PUT",
@@ -148,6 +157,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaQualityAuditsByIdSubmitForClosureApiResponse,
       PutApiV1QaQualityAuditsByIdSubmitForClosureApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/quality-audit", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits/${queryArg.id}/submit-for-closure`,
         method: "PUT",
@@ -162,6 +172,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaQualityAuditsByIdCloseApiResponse,
       PutApiV1QaQualityAuditsByIdCloseApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/quality-audit", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits/${queryArg.id}/close`,
         method: "PUT",
@@ -176,6 +187,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QaQualityAuditsChecklistTemplatesApiResponse,
       GetApiV1QaQualityAuditsChecklistTemplatesApiArg
     >({
+      providesTags: [{ type: "qa/quality-audit", id: "LIST" }, { type: "qa", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qa/quality-audits/checklist-templates`,
         headers: {

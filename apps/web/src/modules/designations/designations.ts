@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { hrApi } from "@/shared/api/generated/hr";
+import { addTags } from "@/shared/api/add-tags";
 
 export const designationPermissions = { view: "CanViewDesignation", add: "CanCreateDesignation", edit: "CanEditDesignation", remove: "CanDeleteDesignation" } as const;
 export const leaveTypePermissions = { view: "CanViewLeaveType", add: "CanCreateLeaveType", edit: "CanEditLeaveType", remove: "CanDeleteLeaveType" } as const;
@@ -11,8 +12,8 @@ const designations = { type: "Designations" as const, id: "all" }, leaveTypes = 
 const designationChanged = (_result: unknown, error: unknown) => error ? [] : [designations, leaveTypes];
 const leaveTypeChanged = (_result: unknown, error: unknown) => error ? [] : [leaveTypes];
 export const staffSetupApi = hrApi.enhanceEndpoints({ endpoints: {
-  getApiV1Designation: { providesTags: [designations] }, postApiV1Designation: { invalidatesTags: designationChanged }, putApiV1DesignationById: { invalidatesTags: designationChanged }, deleteApiV1DesignationById: { invalidatesTags: designationChanged },
-  getApiV1LeaveType: { providesTags: [leaveTypes] }, postApiV1LeaveType: { invalidatesTags: leaveTypeChanged }, putApiV1LeaveTypeById: { invalidatesTags: leaveTypeChanged }, deleteApiV1LeaveTypeById: { invalidatesTags: leaveTypeChanged } } });
+  getApiV1Designation: (definition) => { definition.providesTags = addTags(definition.providesTags, [designations]); }, postApiV1Designation: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, designationChanged); }, putApiV1DesignationById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, designationChanged); }, deleteApiV1DesignationById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, designationChanged); },
+  getApiV1LeaveType: (definition) => { definition.providesTags = addTags(definition.providesTags, [leaveTypes]); }, postApiV1LeaveType: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, leaveTypeChanged); }, putApiV1LeaveTypeById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, leaveTypeChanged); }, deleteApiV1LeaveTypeById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, leaveTypeChanged); } } });
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const named = z.object({ id: z.string().nullish(), name: text });

@@ -31,3 +31,22 @@ Sign-in and session restore call the existing auth endpoints directly and valida
 5. Run `bun run check` and the web build.
 
 The first identity slice is Roles. Its mutation headers identify `Access Management / Manage Roles` for audit, matching Oryx Next.
+
+## Cache tags
+
+A save must refresh what it changed, wherever it is shown, and nothing else. `bun run api:generate` tags every generated endpoint from its URL (`scripts/api-cache-tags.ts`), so no endpoint is ever left untagged and new backend operations are covered as soon as they are generated.
+
+| Endpoint | Tags |
+| --- | --- |
+| Query without a path parameter (a list), e.g. `GET /warehouse/grns` | provides `warehouse/grn:LIST` and `warehouse:LIST` |
+| Query with a path parameter (a record or something of it), e.g. `GET /procurement/shipment-document/{id}/material-distribution` | provides `procurement/shipment-document:{id}` |
+| Mutation, e.g. `PUT /warehouse/grn/{id}` | invalidates `warehouse/grn:LIST`, `warehouse:LIST`, and `warehouse/grn:{id}` when the path names a record; nothing when the save failed |
+
+A resource is the first two literal path segments, singular (`grns` and `grn` are one resource); its family is the first. The tag types are generated into `generated/cache-tag-types.ts`. Generation fails if an endpoint's URL cannot be read.
+
+Two rules keep this precise:
+
+- **Modules add tags; they never replace them.** In `enhanceEndpoints`, use the function form with `addTags` (`shared/api/add-tags.ts`): `name: (definition) => { definition.providesTags = addTags(definition.providesTags, [...]); }`. The object form `name: { providesTags: … }` would drop the generated tags, and a test (`tests/api-cache-tags.test.ts`) fails on it.
+- **Effects a URL cannot show are declared once**, in `shared/api/cache-effects.ts`: deciding an approval refreshes the document decided (by model type and id), and assigning, sampling or starting a test refreshes its batch, its goods receipt note and the test-request lists. Add a row there when a save changes a record under another URL.
+
+Changes made elsewhere (another user, another window, Oryx Next) cannot be seen by tags. A page reads its data again when it opens on data older than 30 seconds, when the window regains focus, and after a reconnect (`shared/api/base-api.ts`). Live updates of other people's changes are proposed in `docs/proposals/entity-changed-events.md`.

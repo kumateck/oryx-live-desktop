@@ -1,20 +1,21 @@
 import { hrApi } from "@/shared/api/generated/hr";
 import { identityApi } from "@/shared/api/generated/identity";
+import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "UserList" as const, id: "all" };
 
 export const userApi = identityApi.enhanceEndpoints({
   endpoints: {
-    getApiV1User: { providesTags: [list] },
-    putApiV1UserRoleById: { invalidatesTags: (_result, error) => error ? [] : [list] },
-    putApiV1UserToggleDisableById: { invalidatesTags: (_result, error) => error ? [] : [list] },
+    getApiV1User: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    putApiV1UserRoleById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list]); },
+    putApiV1UserToggleDisableById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list]); },
   },
 });
 
 // Creating a user account for an employee is an HR endpoint; it changes the user list.
 export const employeeUserApi = hrApi.enhanceEndpoints({
   endpoints: {
-    postApiV1EmployeeUser: { invalidatesTags: (_result, error) => error ? [] : [list] },
+    postApiV1EmployeeUser: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list]); },
   },
 });
 

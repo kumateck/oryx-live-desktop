@@ -1,13 +1,14 @@
 import { api } from "@/shared/api/base-api";
 import { warehouseApi } from "@/shared/api/generated/warehouse";
 import type { MoveRequest } from "../lib/move-stock";
+import { addTags } from "@/shared/api/add-tags";
 
 const shelves = { type: "StockOnShelves" as const, id: "all" };
 
 export const locationApi = warehouseApi.enhanceEndpoints({
   endpoints: {
-    getApiV1WarehouseRackByRackId: { providesTags: [shelves] },
-    getApiV1WarehouseRackByDepartmentSummary: { providesTags: [shelves] },
+    getApiV1WarehouseRackByRackId: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves]); },
+    getApiV1WarehouseRackByDepartmentSummary: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves]); },
   },
 });
 export const { useGetApiV1WarehouseRackByRackIdQuery, useGetApiV1WarehouseRackByDepartmentSummaryQuery } = locationApi;

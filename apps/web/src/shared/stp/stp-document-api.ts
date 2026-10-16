@@ -2,6 +2,7 @@ import { z } from "zod";
 import { api } from "@/shared/api/base-api";
 import { analyticalApi } from "@/shared/api/generated/analytical";
 import { stpDocumentSchema, type StpDocument, type StpOwnerType } from "./stp-document";
+import { addTags } from "@/shared/api/add-tags";
 
 export const stpAudit = { module: "Quality Assurance", subModule: "Standard Test Procedure" } as const;
 
@@ -11,10 +12,10 @@ const byDocument = (documentId: string) => ({ type: "StpDocument" as const, id: 
 const changed = (_result: unknown, error: unknown, arg: { documentId: string }) => error ? [] : [byDocument(arg.documentId)];
 
 export const stpDocumentApi = analyticalApi.enhanceEndpoints({ endpoints: {
-  getApiV1StpDocumentsByOwnerTypeAndOwnerId: { providesTags: (result, _error, arg) => [byOwner(arg.ownerId), ...(result?.id ? [byDocument(result.id)] : [])] },
-  postApiV1StpDocumentsDocumentsByDocumentIdSubmitReview: { invalidatesTags: changed },
-  postApiV1StpDocumentsDocumentsByDocumentIdApprove: { invalidatesTags: changed },
-  postApiV1StpDocumentsDocumentsByDocumentIdReject: { invalidatesTags: changed },
+  getApiV1StpDocumentsByOwnerTypeAndOwnerId: (definition) => { definition.providesTags = addTags(definition.providesTags, (result, _error, arg) => [byOwner(arg.ownerId), ...(result?.id ? [byDocument(result.id)] : [])]); },
+  postApiV1StpDocumentsDocumentsByDocumentIdSubmitReview: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+  postApiV1StpDocumentsDocumentsByDocumentIdApprove: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+  postApiV1StpDocumentsDocumentsByDocumentIdReject: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
 } });
 
 const signature = z.object({ password: z.string(), meaning: z.string() });

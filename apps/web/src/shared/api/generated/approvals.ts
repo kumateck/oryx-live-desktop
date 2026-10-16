@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ApprovalUsersWithPendingApiResponse,
       GetApiV1ApprovalUsersWithPendingApiArg
     >({
+      providesTags: [{ type: "approval/users-with-pending", id: "LIST" }, { type: "approval", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/approval/users-with-pending`,
         headers: {
@@ -17,6 +18,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ApprovalApiResponse,
       PostApiV1ApprovalApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "approval", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/approval`,
         method: "POST",
@@ -31,6 +33,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ApprovalApiResponse,
       GetApiV1ApprovalApiArg
     >({
+      providesTags: [{ type: "approval", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/approval`,
         headers: {
@@ -48,6 +51,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ApprovalDelegateApiResponse,
       PostApiV1ApprovalDelegateApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "approval/delegate", id: "LIST" }, { type: "approval", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/approval/delegate`,
         method: "POST",
@@ -62,6 +66,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ApprovalTransferRightsApiResponse,
       PostApiV1ApprovalTransferRightsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "approval/transfer-right", id: "LIST" }, { type: "approval", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/approval/transfer-rights`,
         method: "POST",
@@ -76,6 +81,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ApprovalByApprovalIdApiResponse,
       GetApiV1ApprovalByApprovalIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "approval", id: queryArg.approvalId }],
       query: (queryArg) => ({
         url: `/api/v1/approval/${queryArg.approvalId}`,
         headers: {
@@ -88,6 +94,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ApprovalByApprovalIdApiResponse,
       PutApiV1ApprovalByApprovalIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "approval", id: "LIST" }, { type: "approval", id: queryArg.approvalId }]),
       query: (queryArg) => ({
         url: `/api/v1/approval/${queryArg.approvalId}`,
         method: "PUT",
@@ -102,6 +109,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ApprovalByApprovalIdApiResponse,
       DeleteApiV1ApprovalByApprovalIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "approval", id: "LIST" }, { type: "approval", id: queryArg.approvalId }]),
       query: (queryArg) => ({
         url: `/api/v1/approval/${queryArg.approvalId}`,
         method: "DELETE",
@@ -115,6 +123,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ApprovalByModelTypeAndModelIdApiResponse,
       GetApiV1ApprovalByModelTypeAndModelIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "approval", id: queryArg.modelType }],
       query: (queryArg) => ({
         url: `/api/v1/approval/${queryArg.modelType}/${queryArg.modelId}`,
         headers: {
@@ -127,6 +136,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ApprovalMyPendingByModelTypeAndModelIdApiResponse,
       GetApiV1ApprovalMyPendingByModelTypeAndModelIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "approval/my-pending", id: queryArg.modelType }],
       query: (queryArg) => ({
         url: `/api/v1/approval/my-pending/${queryArg.modelType}/${queryArg.modelId}`,
         headers: {
@@ -139,6 +149,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ApprovalApproveByModelTypeAndModelIdApiResponse,
       PostApiV1ApprovalApproveByModelTypeAndModelIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "approval/approve", id: "LIST" }, { type: "approval", id: "LIST" }, { type: "approval/approve", id: queryArg.modelType }]),
       query: (queryArg) => ({
         url: `/api/v1/approval/approve/${queryArg.modelType}/${queryArg.modelId}`,
         method: "POST",
@@ -153,6 +164,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ApprovalRejectByModelTypeAndModelIdApiResponse,
       PostApiV1ApprovalRejectByModelTypeAndModelIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "approval/reject", id: "LIST" }, { type: "approval", id: "LIST" }, { type: "approval/reject", id: queryArg.modelType }]),
       query: (queryArg) => ({
         url: `/api/v1/approval/reject/${queryArg.modelType}/${queryArg.modelId}`,
         method: "POST",
@@ -167,6 +179,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ApprovalMyPendingApiResponse,
       GetApiV1ApprovalMyPendingApiArg
     >({
+      providesTags: [{ type: "approval/my-pending", id: "LIST" }, { type: "approval", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/approval/my-pending`,
         headers: {
@@ -183,6 +196,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ApprovalMyPendingStatsApiResponse,
       GetApiV1ApprovalMyPendingStatsApiArg
     >({
+      providesTags: [{ type: "approval/my-pending", id: "LIST" }, { type: "approval", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/approval/my-pending/stats`,
         headers: {
@@ -195,6 +209,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ApprovalMyPendingDocumentCountsApiResponse,
       GetApiV1ApprovalMyPendingDocumentCountsApiArg
     >({
+      providesTags: [{ type: "approval/my-pending", id: "LIST" }, { type: "approval", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/approval/my-pending/document-counts`,
         headers: {
@@ -207,6 +222,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ApprovalMyPendingRevisionsApiResponse,
       GetApiV1ApprovalMyPendingRevisionsApiArg
     >({
+      providesTags: [{ type: "approval/my-pending", id: "LIST" }, { type: "approval", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/approval/my-pending/revisions`,
         headers: {

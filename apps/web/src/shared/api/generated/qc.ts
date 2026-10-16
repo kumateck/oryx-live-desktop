@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcInstrumentsApiResponse,
       GetApiV1QcInstrumentsApiArg
     >({
+      providesTags: [{ type: "qc/instrument", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/instruments`,
         headers: {
@@ -22,6 +23,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcInstrumentsByIdApiResponse,
       GetApiV1QcInstrumentsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/instrument", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/instruments/${queryArg.id}`,
         headers: {
@@ -34,6 +36,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcInstrumentsByIdCalibrationApiResponse,
       PutApiV1QcInstrumentsByIdCalibrationApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/instrument", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/instrument", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/instruments/${queryArg.id}/calibration`,
         method: "PUT",
@@ -48,6 +51,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcInstrumentsCalibrationDueApiResponse,
       GetApiV1QcInstrumentsCalibrationDueApiArg
     >({
+      providesTags: [{ type: "qc/instrument", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/instruments/calibration-due`,
         headers: {
@@ -63,6 +67,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcAiExtractionSettingsApiResponse,
       GetApiV1QcAiExtractionSettingsApiArg
     >({
+      providesTags: [{ type: "qc/ai-extraction-setting", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/ai-extraction-settings`,
         headers: {
@@ -75,6 +80,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcAiExtractionSettingsByProviderKeyApiResponse,
       PutApiV1QcAiExtractionSettingsByProviderKeyApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/ai-extraction-setting", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/ai-extraction-setting", id: queryArg.provider }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/ai-extraction-settings/${queryArg.provider}/key`,
         method: "PUT",
@@ -89,6 +95,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcAiExtractionSettingsActiveApiResponse,
       PutApiV1QcAiExtractionSettingsActiveApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/ai-extraction-setting", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/ai-extraction-settings/active`,
         method: "PUT",
@@ -103,6 +110,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsCertificatesApiResponse,
       GetApiV1QcWorksheetsCertificatesApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/certificates`,
         headers: {
@@ -124,6 +132,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsCertificatesByIdApiResponse,
       GetApiV1QcWorksheetsCertificatesByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/certificates/${queryArg.id}`,
         headers: {
@@ -136,6 +145,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsCertificatesByIdIssueApiResponse,
       PostApiV1QcWorksheetsCertificatesByIdIssueApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/certificates/${queryArg.id}/issue`,
         method: "POST",
@@ -149,6 +159,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsCertificatesByIdReviseApiResponse,
       PostApiV1QcWorksheetsCertificatesByIdReviseApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/certificates/${queryArg.id}/revise`,
         method: "POST",
@@ -163,6 +174,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcEquipmentApiResponse,
       PostApiV1QcEquipmentApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc-equipment", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc-equipment`,
         method: "POST",
@@ -177,6 +189,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcEquipmentApiResponse,
       GetApiV1QcEquipmentApiArg
     >({
+      providesTags: [{ type: "qc-equipment", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc-equipment`,
         headers: {
@@ -194,6 +207,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcEquipmentAllApiResponse,
       GetApiV1QcEquipmentAllApiArg
     >({
+      providesTags: [{ type: "qc-equipment/all", id: "LIST" }, { type: "qc-equipment", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc-equipment/all`,
         headers: {
@@ -206,6 +220,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcEquipmentByIdApiResponse,
       GetApiV1QcEquipmentByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc-equipment", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc-equipment/${queryArg.id}`,
         headers: {
@@ -218,6 +233,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcEquipmentByIdApiResponse,
       PutApiV1QcEquipmentByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc-equipment", id: "LIST" }, { type: "qc-equipment", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc-equipment/${queryArg.id}`,
         method: "PUT",
@@ -232,6 +248,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1QcEquipmentByIdApiResponse,
       DeleteApiV1QcEquipmentByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc-equipment", id: "LIST" }, { type: "qc-equipment", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc-equipment/${queryArg.id}`,
         method: "DELETE",
@@ -245,6 +262,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcEquipmentCalibrationDueApiResponse,
       GetApiV1QcEquipmentCalibrationDueApiArg
     >({
+      providesTags: [{ type: "qc-equipment/calibration-due", id: "LIST" }, { type: "qc-equipment", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc-equipment/calibration-due`,
         headers: {
@@ -260,6 +278,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsMonitoringProgramsSamplingPointsApiResponse,
       GetApiV1QcWorksheetsMonitoringProgramsSamplingPointsApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs/sampling-points`,
         headers: {
@@ -276,6 +295,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsMonitoringProgramsSamplingPointsApiResponse,
       PostApiV1QcWorksheetsMonitoringProgramsSamplingPointsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs/sampling-points`,
         method: "POST",
@@ -290,6 +310,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsMonitoringProgramsSamplingPointsByIdApiResponse,
       GetApiV1QcWorksheetsMonitoringProgramsSamplingPointsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs/sampling-points/${queryArg.id}`,
         headers: {
@@ -302,6 +323,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcWorksheetsMonitoringProgramsSamplingPointsByIdApiResponse,
       PutApiV1QcWorksheetsMonitoringProgramsSamplingPointsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs/sampling-points/${queryArg.id}`,
         method: "PUT",
@@ -316,6 +338,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1QcWorksheetsMonitoringProgramsSamplingPointsByIdApiResponse,
       DeleteApiV1QcWorksheetsMonitoringProgramsSamplingPointsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs/sampling-points/${queryArg.id}`,
         method: "DELETE",
@@ -329,6 +352,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsMonitoringProgramsApiResponse,
       GetApiV1QcWorksheetsMonitoringProgramsApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs`,
         headers: {
@@ -347,6 +371,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsMonitoringProgramsApiResponse,
       PostApiV1QcWorksheetsMonitoringProgramsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs`,
         method: "POST",
@@ -361,6 +386,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsMonitoringProgramsByIdApiResponse,
       GetApiV1QcWorksheetsMonitoringProgramsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs/${queryArg.id}`,
         headers: {
@@ -373,6 +399,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcWorksheetsMonitoringProgramsByIdApiResponse,
       PutApiV1QcWorksheetsMonitoringProgramsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs/${queryArg.id}`,
         method: "PUT",
@@ -387,6 +414,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsMonitoringProgramsByIdPauseApiResponse,
       PostApiV1QcWorksheetsMonitoringProgramsByIdPauseApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs/${queryArg.id}/pause`,
         method: "POST",
@@ -400,6 +428,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsMonitoringProgramsByIdResumeApiResponse,
       PostApiV1QcWorksheetsMonitoringProgramsByIdResumeApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs/${queryArg.id}/resume`,
         method: "POST",
@@ -413,6 +442,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsMonitoringProgramsScanApiResponse,
       PostApiV1QcWorksheetsMonitoringProgramsScanApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/monitoring-programs/scan`,
         method: "POST",
@@ -426,6 +456,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsOosCasesApiResponse,
       GetApiV1QcWorksheetsOosCasesApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/oos-cases`,
         headers: {
@@ -444,6 +475,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsOosCasesByIdApiResponse,
       GetApiV1QcWorksheetsOosCasesByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/oos-cases/${queryArg.id}`,
         headers: {
@@ -456,6 +488,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsOosCasesByIdStartInvestigationApiResponse,
       PostApiV1QcWorksheetsOosCasesByIdStartInvestigationApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/oos-cases/${queryArg.id}/start-investigation`,
         method: "POST",
@@ -469,6 +502,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcWorksheetsOosCasesByIdInvestigationApiResponse,
       PutApiV1QcWorksheetsOosCasesByIdInvestigationApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/oos-cases/${queryArg.id}/investigation`,
         method: "PUT",
@@ -483,6 +517,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsOosCasesByIdAuthorizeRetestApiResponse,
       PostApiV1QcWorksheetsOosCasesByIdAuthorizeRetestApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/oos-cases/${queryArg.id}/authorize-retest`,
         method: "POST",
@@ -497,6 +532,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsOosCasesByIdEscalateApiResponse,
       PostApiV1QcWorksheetsOosCasesByIdEscalateApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/oos-cases/${queryArg.id}/escalate`,
         method: "POST",
@@ -511,6 +547,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsOosCasesByIdDispositionApiResponse,
       PostApiV1QcWorksheetsOosCasesByIdDispositionApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/oos-cases/${queryArg.id}/disposition`,
         method: "POST",
@@ -525,6 +562,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsSamplingPointGroupsApiResponse,
       GetApiV1QcWorksheetsSamplingPointGroupsApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/sampling-point-groups`,
         headers: {
@@ -540,6 +578,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsSamplingPointGroupsApiResponse,
       PostApiV1QcWorksheetsSamplingPointGroupsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/sampling-point-groups`,
         method: "POST",
@@ -554,6 +593,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsSamplingPointGroupsByIdApiResponse,
       GetApiV1QcWorksheetsSamplingPointGroupsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/sampling-point-groups/${queryArg.id}`,
         headers: {
@@ -566,6 +606,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcWorksheetsSamplingPointGroupsByIdApiResponse,
       PutApiV1QcWorksheetsSamplingPointGroupsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/sampling-point-groups/${queryArg.id}`,
         method: "PUT",
@@ -580,6 +621,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1QcWorksheetsSamplingPointGroupsByIdApiResponse,
       DeleteApiV1QcWorksheetsSamplingPointGroupsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/sampling-point-groups/${queryArg.id}`,
         method: "DELETE",
@@ -593,6 +635,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsSpecificationsApiResponse,
       GetApiV1QcWorksheetsSpecificationsApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications`,
         headers: {
@@ -612,6 +655,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsSpecificationsApiResponse,
       PostApiV1QcWorksheetsSpecificationsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications`,
         method: "POST",
@@ -626,6 +670,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsSpecificationsByIdApiResponse,
       GetApiV1QcWorksheetsSpecificationsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications/${queryArg.id}`,
         headers: {
@@ -638,6 +683,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcWorksheetsSpecificationsByIdApiResponse,
       PutApiV1QcWorksheetsSpecificationsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications/${queryArg.id}`,
         method: "PUT",
@@ -652,6 +698,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsSpecificationsByIdAvailableFieldsApiResponse,
       GetApiV1QcWorksheetsSpecificationsByIdAvailableFieldsApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications/${queryArg.id}/available-fields`,
         headers: {
@@ -664,6 +711,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsSpecificationsByIdCreateNewVersionApiResponse,
       PostApiV1QcWorksheetsSpecificationsByIdCreateNewVersionApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications/${queryArg.id}/create-new-version`,
         method: "POST",
@@ -677,6 +725,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsSpecificationsByIdSubmitForReviewApiResponse,
       PostApiV1QcWorksheetsSpecificationsByIdSubmitForReviewApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications/${queryArg.id}/submit-for-review`,
         method: "POST",
@@ -690,6 +739,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsSpecificationsByIdApproveApiResponse,
       PostApiV1QcWorksheetsSpecificationsByIdApproveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications/${queryArg.id}/approve`,
         method: "POST",
@@ -704,6 +754,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsSpecificationsByIdRejectApiResponse,
       PostApiV1QcWorksheetsSpecificationsByIdRejectApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications/${queryArg.id}/reject`,
         method: "POST",
@@ -718,6 +769,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsSpecificationsByIdMakeEffectiveApiResponse,
       PostApiV1QcWorksheetsSpecificationsByIdMakeEffectiveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications/${queryArg.id}/make-effective`,
         method: "POST",
@@ -731,6 +783,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsSpecificationsByIdSupersedeApiResponse,
       PostApiV1QcWorksheetsSpecificationsByIdSupersedeApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/specifications/${queryArg.id}/supersede`,
         method: "POST",
@@ -745,6 +798,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcSpecificationProposalsApiResponse,
       PostApiV1QcSpecificationProposalsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/specification-proposal", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/specification-proposals`,
         method: "POST",
@@ -759,6 +813,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcSpecificationProposalsApiResponse,
       GetApiV1QcSpecificationProposalsApiArg
     >({
+      providesTags: [{ type: "qc/specification-proposal", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/specification-proposals`,
         headers: {
@@ -775,6 +830,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcSpecificationProposalsByIdApiResponse,
       GetApiV1QcSpecificationProposalsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/specification-proposal", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/specification-proposals/${queryArg.id}`,
         headers: {
@@ -787,6 +843,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcSpecificationProposalsDraftApiResponse,
       PostApiV1QcSpecificationProposalsDraftApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/specification-proposal", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/specification-proposals/draft`,
         method: "POST",
@@ -801,6 +858,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcSpecificationProposalsApplyApiResponse,
       PostApiV1QcSpecificationProposalsApplyApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/specification-proposal", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/specification-proposals/apply`,
         method: "POST",
@@ -815,6 +873,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcSpecificationProposalsByIdDismissApiResponse,
       PostApiV1QcSpecificationProposalsByIdDismissApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/specification-proposal", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/specification-proposal", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/specification-proposals/${queryArg.id}/dismiss`,
         method: "POST",
@@ -829,6 +888,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsStpsApiResponse,
       GetApiV1QcWorksheetsStpsApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps`,
         headers: {
@@ -847,6 +907,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsStpsApiResponse,
       PostApiV1QcWorksheetsStpsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps`,
         method: "POST",
@@ -861,6 +922,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsStpsByIdApiResponse,
       GetApiV1QcWorksheetsStpsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps/${queryArg.id}`,
         headers: {
@@ -873,6 +935,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcWorksheetsStpsByIdApiResponse,
       PutApiV1QcWorksheetsStpsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps/${queryArg.id}`,
         method: "PUT",
@@ -887,6 +950,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsStpsByIdCreateNewVersionApiResponse,
       PostApiV1QcWorksheetsStpsByIdCreateNewVersionApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps/${queryArg.id}/create-new-version`,
         method: "POST",
@@ -900,6 +964,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsStpsByIdSubmitForReviewApiResponse,
       PostApiV1QcWorksheetsStpsByIdSubmitForReviewApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps/${queryArg.id}/submit-for-review`,
         method: "POST",
@@ -913,6 +978,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsStpsByIdApproveApiResponse,
       PostApiV1QcWorksheetsStpsByIdApproveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps/${queryArg.id}/approve`,
         method: "POST",
@@ -927,6 +993,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsStpsByIdRejectApiResponse,
       PostApiV1QcWorksheetsStpsByIdRejectApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps/${queryArg.id}/reject`,
         method: "POST",
@@ -941,6 +1008,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsStpsByIdMakeEffectiveApiResponse,
       PostApiV1QcWorksheetsStpsByIdMakeEffectiveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps/${queryArg.id}/make-effective`,
         method: "POST",
@@ -954,6 +1022,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsStpsByIdSupersedeApiResponse,
       PostApiV1QcWorksheetsStpsByIdSupersedeApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps/${queryArg.id}/supersede`,
         method: "POST",
@@ -968,6 +1037,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsStpsImportApiResponse,
       PostApiV1QcWorksheetsStpsImportApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/stps/import`,
         method: "POST",
@@ -981,6 +1051,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsTestRequestsApiResponse,
       GetApiV1QcWorksheetsTestRequestsApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/test-requests`,
         headers: {
@@ -1002,6 +1073,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTestRequestsApiResponse,
       PostApiV1QcWorksheetsTestRequestsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/test-requests`,
         method: "POST",
@@ -1016,6 +1088,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsTestRequestsByIdApiResponse,
       GetApiV1QcWorksheetsTestRequestsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/test-requests/${queryArg.id}`,
         headers: {
@@ -1028,6 +1101,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTestRequestsByIdSubjectsApiResponse,
       PostApiV1QcWorksheetsTestRequestsByIdSubjectsApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/test-requests/${queryArg.id}/subjects`,
         method: "POST",
@@ -1042,6 +1116,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTestRequestsByIdRecordSampleApiResponse,
       PostApiV1QcWorksheetsTestRequestsByIdRecordSampleApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/test-requests/${queryArg.id}/record-sample`,
         method: "POST",
@@ -1056,6 +1131,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsWaterQualityPeriodsApiResponse,
       GetApiV1QcWorksheetsWaterQualityPeriodsApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/water-quality/periods`,
         headers: {
@@ -1072,6 +1148,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsWaterQualityPeriodsByIdApiResponse,
       GetApiV1QcWorksheetsWaterQualityPeriodsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/water-quality/periods/${queryArg.id}`,
         headers: {
@@ -1084,6 +1161,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsWaterQualityPeriodsByIdActivateApiResponse,
       PostApiV1QcWorksheetsWaterQualityPeriodsByIdActivateApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/water-quality/periods/${queryArg.id}/activate`,
         method: "POST",
@@ -1098,6 +1176,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsWaterQualityPeriodsByIdHoldApiResponse,
       PostApiV1QcWorksheetsWaterQualityPeriodsByIdHoldApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/water-quality/periods/${queryArg.id}/hold`,
         method: "POST",
@@ -1112,6 +1191,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsWaterQualityUsesApiResponse,
       PostApiV1QcWorksheetsWaterQualityUsesApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/water-quality/uses`,
         method: "POST",
@@ -1126,6 +1206,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsApprovalsMyPendingApiResponse,
       GetApiV1QcWorksheetsApprovalsMyPendingApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/approvals/my-pending`,
         headers: {
@@ -1138,6 +1219,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsApprovalsByEntityTypeAndEntityIdApiResponse,
       GetApiV1QcWorksheetsApprovalsByEntityTypeAndEntityIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.entityType }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/approvals/${queryArg.entityType}/${queryArg.entityId}`,
         headers: {
@@ -1150,6 +1232,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsInstancesByIdApiResponse,
       GetApiV1QcWorksheetsInstancesByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/instances/${queryArg.id}`,
         headers: {
@@ -1162,6 +1245,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsInstancesMyWorkApiResponse,
       GetApiV1QcWorksheetsInstancesMyWorkApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/instances/my-work`,
         headers: {
@@ -1177,6 +1261,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsInstancesAwaitingReviewApiResponse,
       GetApiV1QcWorksheetsInstancesAwaitingReviewApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/instances/awaiting-review`,
         headers: {
@@ -1192,6 +1277,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsInstancesByIdAssignApiResponse,
       PostApiV1QcWorksheetsInstancesByIdAssignApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/instances/${queryArg.id}/assign`,
         method: "POST",
@@ -1206,6 +1292,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsInstancesByIdReassignApiResponse,
       PostApiV1QcWorksheetsInstancesByIdReassignApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/instances/${queryArg.id}/reassign`,
         method: "POST",
@@ -1220,6 +1307,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsInstancesByIdStartApiResponse,
       PostApiV1QcWorksheetsInstancesByIdStartApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/instances/${queryArg.id}/start`,
         method: "POST",
@@ -1233,6 +1321,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcWorksheetsInstancesByIdValuesApiResponse,
       PutApiV1QcWorksheetsInstancesByIdValuesApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/instances/${queryArg.id}/values`,
         method: "PUT",
@@ -1247,6 +1336,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsInstancesByIdSubmitApiResponse,
       PostApiV1QcWorksheetsInstancesByIdSubmitApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/instances/${queryArg.id}/submit`,
         method: "POST",
@@ -1260,6 +1350,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsInstancesByIdReviewApiResponse,
       PostApiV1QcWorksheetsInstancesByIdReviewApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/instances/${queryArg.id}/review`,
         method: "POST",
@@ -1274,6 +1365,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsInstancesByIdReturnForCorrectionApiResponse,
       PostApiV1QcWorksheetsInstancesByIdReturnForCorrectionApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/instances/${queryArg.id}/return-for-correction`,
         method: "POST",
@@ -1288,6 +1380,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsTemplatesApiResponse,
       GetApiV1QcWorksheetsTemplatesApiArg
     >({
+      providesTags: [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates`,
         headers: {
@@ -1306,6 +1399,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTemplatesApiResponse,
       PostApiV1QcWorksheetsTemplatesApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates`,
         method: "POST",
@@ -1320,6 +1414,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWorksheetsTemplatesByIdApiResponse,
       GetApiV1QcWorksheetsTemplatesByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/worksheet", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates/${queryArg.id}`,
         headers: {
@@ -1332,6 +1427,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QcWorksheetsTemplatesByIdApiResponse,
       PutApiV1QcWorksheetsTemplatesByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates/${queryArg.id}`,
         method: "PUT",
@@ -1346,6 +1442,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTemplatesByIdCreateNewVersionApiResponse,
       PostApiV1QcWorksheetsTemplatesByIdCreateNewVersionApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates/${queryArg.id}/create-new-version`,
         method: "POST",
@@ -1359,6 +1456,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTemplatesByIdSubmitForReviewApiResponse,
       PostApiV1QcWorksheetsTemplatesByIdSubmitForReviewApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates/${queryArg.id}/submit-for-review`,
         method: "POST",
@@ -1372,6 +1470,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTemplatesByIdApproveApiResponse,
       PostApiV1QcWorksheetsTemplatesByIdApproveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates/${queryArg.id}/approve`,
         method: "POST",
@@ -1386,6 +1485,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTemplatesByIdRejectApiResponse,
       PostApiV1QcWorksheetsTemplatesByIdRejectApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates/${queryArg.id}/reject`,
         method: "POST",
@@ -1400,6 +1500,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTemplatesByIdMakeEffectiveApiResponse,
       PostApiV1QcWorksheetsTemplatesByIdMakeEffectiveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates/${queryArg.id}/make-effective`,
         method: "POST",
@@ -1413,6 +1514,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTemplatesByIdSupersedeApiResponse,
       PostApiV1QcWorksheetsTemplatesByIdSupersedeApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates/${queryArg.id}/supersede`,
         method: "POST",
@@ -1427,6 +1529,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QcWorksheetsTemplatesImportApiResponse,
       PostApiV1QcWorksheetsTemplatesImportApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qc/worksheets/templates/import`,
         method: "POST",
@@ -1440,6 +1543,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QcWaterQualityCertificatesApiResponse,
       GetApiV1QcWaterQualityCertificatesApiArg
     >({
+      providesTags: [{ type: "qc/water-quality", id: "LIST" }, { type: "qc", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qc/water-quality/certificates`,
         headers: {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { api } from "@/shared/api/base-api";
 import { productionApi } from "@/shared/api/generated/production";
+import { addTags } from "@/shared/api/add-tags";
 
 export const notesPath = "/warehouse/finished-goods-transfer-notes";
 export const notePath = (id: string) => `${notesPath}/${id}`;
@@ -48,8 +49,8 @@ export const approveSchema = (noteLike: { total: number; perShipper: number }) =
 export interface ApproveValues { shippers: number; loose: number; notes: string }
 
 const list = { type: "FinishedGoods" as const, id: "all" };
-export const noteApi = productionApi.enhanceEndpoints({ endpoints: { getApiV1ProductionScheduleFinishedGoodsTransferNote: { providesTags: [list] }, getApiV1ProductionScheduleFinishedGoodsTransferNoteById: { providesTags: [list] },
-  getApiV1ProductionScheduleApprovedProducts: { providesTags: [list] }, getApiV1ProductionScheduleApprovedProductsByProductId: { providesTags: [list] } } });
+export const noteApi = productionApi.enhanceEndpoints({ endpoints: { getApiV1ProductionScheduleFinishedGoodsTransferNote: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, getApiV1ProductionScheduleFinishedGoodsTransferNoteById: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+  getApiV1ProductionScheduleApprovedProducts: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, getApiV1ProductionScheduleApprovedProductsByProductId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); } } });
 export const { useGetApiV1ProductionScheduleFinishedGoodsTransferNoteQuery, useGetApiV1ProductionScheduleFinishedGoodsTransferNoteByIdQuery, useGetApiV1ProductionScheduleApprovedProductsQuery, useGetApiV1ProductionScheduleApprovedProductsByProductIdQuery } = noteApi;
 /** The server's approve action has no typed response in its contract, so it is declared here. */
 export const { useApproveTransferNoteMutation } = api.injectEndpoints({ endpoints: (build) => ({ approveTransferNote: build.mutation<void, { id: string; quantityReceived: number; notes: string | null }>({

@@ -1,16 +1,17 @@
 import { api } from "@/shared/api/base-api";
 import { warehouseApi } from "@/shared/api/generated/warehouse";
+import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "Receiving" as const, id: "all" };
 const grns = { type: "Grns" as const, id: "all" };
 
 export const receivingApi = warehouseApi.enhanceEndpoints({
   endpoints: {
-    getApiV1WarehouseDistributedRequisitionMaterials: { providesTags: [list] },
-    getApiV1WarehouseDistributedMaterialById: { providesTags: [list] },
-    getApiV1WarehouseDistributedMaterialByDistributedMaterialIdChecklist: { providesTags: [list] },
-    getApiV1WarehouseGrns: { providesTags: [grns] },
-    getApiV1WarehouseGrnById: { providesTags: [grns] },
+    getApiV1WarehouseDistributedRequisitionMaterials: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    getApiV1WarehouseDistributedMaterialById: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    getApiV1WarehouseDistributedMaterialByDistributedMaterialIdChecklist: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    getApiV1WarehouseGrns: (definition) => { definition.providesTags = addTags(definition.providesTags, [grns]); },
+    getApiV1WarehouseGrnById: (definition) => { definition.providesTags = addTags(definition.providesTags, [grns]); },
   },
 });
 

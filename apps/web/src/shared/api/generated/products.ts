@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductApiResponse,
       PostApiV1ProductApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "product", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/product`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductApiResponse,
       GetApiV1ProductApiArg
     >({
+      providesTags: [{ type: "product", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product`,
         headers: {
@@ -40,6 +42,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductByProductIdApiResponse,
       GetApiV1ProductByProductIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product", id: queryArg.productId }],
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}`,
         headers: {
@@ -52,6 +55,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductByProductIdApiResponse,
       PutApiV1ProductByProductIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product", id: "LIST" }, { type: "product", id: queryArg.productId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}`,
         method: "PUT",
@@ -66,6 +70,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductByProductIdApiResponse,
       DeleteApiV1ProductByProductIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product", id: "LIST" }, { type: "product", id: queryArg.productId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}`,
         method: "DELETE",
@@ -79,6 +84,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductCategoriesApiResponse,
       GetApiV1ProductCategoriesApiArg
     >({
+      providesTags: [{ type: "product/category", id: "LIST" }, { type: "product", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product/categories`,
         headers: {
@@ -91,6 +97,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductPackageDescriptionByProductIdApiResponse,
       PutApiV1ProductPackageDescriptionByProductIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product/package-description", id: "LIST" }, { type: "product", id: "LIST" }, { type: "product/package-description", id: queryArg.productId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/package-description/${queryArg.productId}`,
         method: "PUT",
@@ -105,6 +112,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductByProductIdBomApiResponse,
       GetApiV1ProductByProductIdBomApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product", id: queryArg.productId }],
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}/bom`,
         headers: {
@@ -117,6 +125,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductByProductIdRoutesApiResponse,
       PostApiV1ProductByProductIdRoutesApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product", id: "LIST" }, { type: "product", id: queryArg.productId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}/routes`,
         method: "POST",
@@ -131,6 +140,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductByProductIdRoutesApiResponse,
       GetApiV1ProductByProductIdRoutesApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product", id: queryArg.productId }],
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}/routes`,
         headers: {
@@ -143,6 +153,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductRoutesByRouteIdApiResponse,
       GetApiV1ProductRoutesByRouteIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product/route", id: queryArg.routeId }],
       query: (queryArg) => ({
         url: `/api/v1/product/routes/${queryArg.routeId}`,
         headers: {
@@ -155,6 +166,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductRoutesByRouteIdApiResponse,
       DeleteApiV1ProductRoutesByRouteIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product/route", id: "LIST" }, { type: "product", id: "LIST" }, { type: "product/route", id: queryArg.routeId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/routes/${queryArg.routeId}`,
         method: "DELETE",
@@ -168,6 +180,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductByProductIdPackagesApiResponse,
       PostApiV1ProductByProductIdPackagesApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product", id: "LIST" }, { type: "product", id: queryArg.productId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}/packages`,
         method: "POST",
@@ -182,6 +195,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductByProductIdPackagesApiResponse,
       GetApiV1ProductByProductIdPackagesApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product", id: queryArg.productId }],
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}/packages`,
         headers: {
@@ -194,6 +208,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductByProductIdPackingApiResponse,
       PostApiV1ProductByProductIdPackingApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product", id: "LIST" }, { type: "product", id: queryArg.productId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}/packing`,
         method: "POST",
@@ -208,6 +223,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductByProductIdPackingApiResponse,
       GetApiV1ProductByProductIdPackingApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product", id: queryArg.productId }],
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}/packing`,
         headers: {
@@ -220,6 +236,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductPackagesByProductPackageIdApiResponse,
       GetApiV1ProductPackagesByProductPackageIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product/package", id: queryArg.productPackageId }],
       query: (queryArg) => ({
         url: `/api/v1/product/packages/${queryArg.productPackageId}`,
         headers: {
@@ -232,6 +249,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductPackagesByProductPackageIdApiResponse,
       PutApiV1ProductPackagesByProductPackageIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product/package", id: "LIST" }, { type: "product", id: "LIST" }, { type: "product/package", id: queryArg.productPackageId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/packages/${queryArg.productPackageId}`,
         method: "PUT",
@@ -246,6 +264,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductPackagesByProductPackageIdApiResponse,
       DeleteApiV1ProductPackagesByProductPackageIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product/package", id: "LIST" }, { type: "product", id: "LIST" }, { type: "product/package", id: queryArg.productPackageId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/packages/${queryArg.productPackageId}`,
         method: "DELETE",
@@ -259,6 +278,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductByProductIdFinishedApiResponse,
       PostApiV1ProductByProductIdFinishedApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product", id: "LIST" }, { type: "product", id: queryArg.productId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}/finished`,
         method: "POST",
@@ -273,6 +293,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductByProductIdBomArchiveApiResponse,
       PutApiV1ProductByProductIdBomArchiveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product", id: "LIST" }, { type: "product", id: queryArg.productId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/${queryArg.productId}/bom/archive`,
         method: "PUT",
@@ -286,6 +307,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductEquipmentApiResponse,
       PostApiV1ProductEquipmentApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "product/equipment", id: "LIST" }, { type: "product", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/product/equipment`,
         method: "POST",
@@ -300,6 +322,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductEquipmentApiResponse,
       GetApiV1ProductEquipmentApiArg
     >({
+      providesTags: [{ type: "product/equipment", id: "LIST" }, { type: "product", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product/equipment`,
         headers: {
@@ -317,6 +340,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductEquipmentByEquipmentIdApiResponse,
       GetApiV1ProductEquipmentByEquipmentIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product/equipment", id: queryArg.equipmentId }],
       query: (queryArg) => ({
         url: `/api/v1/product/equipment/${queryArg.equipmentId}`,
         headers: {
@@ -329,6 +353,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductEquipmentByEquipmentIdApiResponse,
       PutApiV1ProductEquipmentByEquipmentIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product/equipment", id: "LIST" }, { type: "product", id: "LIST" }, { type: "product/equipment", id: queryArg.equipmentId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/equipment/${queryArg.equipmentId}`,
         method: "PUT",
@@ -343,6 +368,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductEquipmentByEquipmentIdApiResponse,
       DeleteApiV1ProductEquipmentByEquipmentIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product/equipment", id: "LIST" }, { type: "product", id: "LIST" }, { type: "product/equipment", id: queryArg.equipmentId }]),
       query: (queryArg) => ({
         url: `/api/v1/product/equipment/${queryArg.equipmentId}`,
         method: "DELETE",
@@ -356,6 +382,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductEquipmentAllApiResponse,
       GetApiV1ProductEquipmentAllApiArg
     >({
+      providesTags: [{ type: "product/equipment", id: "LIST" }, { type: "product", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product/equipment/all`,
         headers: {
@@ -368,6 +395,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductDownloadStockApiResponse,
       GetApiV1ProductDownloadStockApiArg
     >({
+      providesTags: [{ type: "product/download", id: "LIST" }, { type: "product", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product/download/stock`,
         headers: {
@@ -384,6 +412,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductDownloadApiResponse,
       GetApiV1ProductDownloadApiArg
     >({
+      providesTags: [{ type: "product/download", id: "LIST" }, { type: "product", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product/download`,
         headers: {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { settingsApi } from "@/shared/api/generated/settings";
 import { generateCode } from "@/shared/codes/generate-code";
+import { addTags } from "@/shared/api/add-tags";
 
 export const codePermissions = { view: "CanViewCodeSettings", add: "CanCreateNewCodes", edit: "CanEditCodeSettings", remove: "CanDeleteCodeSettings" } as const;
 export const codeAudit = { module: "Settings", subModule: "Code Settings" } as const;
@@ -18,8 +19,8 @@ export const namingTypeLabel = (value: number) => namingTypeOptions.find((item) 
 
 const list = { type: "CodeSettings" as const, id: "all" };
 const changed = (_result: unknown, error: unknown) => error ? [] : [list];
-export const codeApi = settingsApi.enhanceEndpoints({ endpoints: { getApiV1Configuration: { providesTags: [list] }, getApiV1ConfigurationByModelTypeByModelType: { providesTags: [list] }, postApiV1Configuration: { invalidatesTags: changed },
-  putApiV1ConfigurationByConfigurationId: { invalidatesTags: changed }, deleteApiV1ConfigurationByConfigurationId: { invalidatesTags: changed } } });
+export const codeApi = settingsApi.enhanceEndpoints({ endpoints: { getApiV1Configuration: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, getApiV1ConfigurationByModelTypeByModelType: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, postApiV1Configuration: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+  putApiV1ConfigurationByConfigurationId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, deleteApiV1ConfigurationByConfigurationId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); } } });
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 export const codeRowsSchema = z.array(z.object({ id: z.string().nullish(), modelType: text, prefix: text, namingType: z.number().nullish(), minimumNameLength: z.number().nullish(), maximumNameLength: z.number().nullish() })).nullish()

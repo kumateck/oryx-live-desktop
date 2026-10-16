@@ -1,12 +1,13 @@
 import { api } from "@/shared/api/base-api";
 import { procurementApi } from "@/shared/api/generated/procurement";
+import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "MaterialDistribution" as const, id: "all" };
 
 export const distributionApi = procurementApi.enhanceEndpoints({
   endpoints: {
-    getApiV1ProcurementShipmentDocumentArrived: { providesTags: [list, { type: "Shipments", id: "all" }] },
-    getApiV1ProcurementShipmentDocumentByShipmentDocumentIdMaterialDistribution: { providesTags: [list] },
+    getApiV1ProcurementShipmentDocumentArrived: (definition) => { definition.providesTags = addTags(definition.providesTags, [list, { type: "Shipments", id: "all" }]); },
+    getApiV1ProcurementShipmentDocumentByShipmentDocumentIdMaterialDistribution: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
   },
 });
 
