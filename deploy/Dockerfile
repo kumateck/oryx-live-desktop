@@ -27,7 +27,8 @@ RUN bun run build:web
 FROM nginx:1.27-alpine AS web
 COPY deploy/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=web-build /app/apps/web/dist /usr/share/nginx/html
-RUN mkdir -p /srv/downloads
+COPY --chmod=755 deploy/keep-assets.sh /docker-entrypoint.d/40-keep-assets.sh
+RUN mkdir -p /srv/downloads /srv/assets
 
 # The notification gateway (apps/gateway), with only its own runtime dependencies.
 FROM ${NODE_IMAGE} AS gateway-deps

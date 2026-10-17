@@ -102,7 +102,7 @@ jobs:
             docker pull "${{ env.GATEWAY_IMAGE }}:$TAG"
             docker logout ghcr.io
             docker network inspect sail >/dev/null 2>&1 || docker network create sail
-            mkdir -p "$HOME/oryx-live/downloads"
+            mkdir -p "$HOME/oryx-live/downloads" "$HOME/oryx-live/assets"
 
             # Containers cannot always reach the server through its own public address, so find the route that works,
             # testing from the sail network exactly as the site's containers will: the backend's own container first,
@@ -156,6 +156,7 @@ jobs:
               --env ORYX_API_ORIGIN="$API_UPSTREAM" \
               --env ORYX_GATEWAY_UPSTREAM="${{ env.GATEWAY_CONTAINER }}:4100" \
               --volume "$HOME/oryx-live/downloads:/srv/downloads:ro" \
+              --volume "$HOME/oryx-live/assets:/srv/assets" \
               "${{ env.WEB_IMAGE }}:$TAG"
 
             docker image prune -f >/dev/null
@@ -166,6 +167,10 @@ jobs:
             echo "gateway: $(curl -s -m 10 "http://127.0.0.1:${{ env.HOST_PORT }}/realtime/health")"
             # Any answer from the backend (401 without a sign-in) means the site reaches it.
             case "$STATUS" in 000|502|504) echo "The site cannot reach the backend."; exit 1;; esac
+            # The page's own code must be served from the kept assets folder.
+            ENTRY=$(curl -s -m 10 "http://127.0.0.1:${{ env.HOST_PORT }}/" | grep -o 'assets/index-[^"]*\.js' | head -n 1)
+            if [ -z "$ENTRY" ] || ! curl -fs -o /dev/null -m 10 "http://127.0.0.1:${{ env.HOST_PORT }}/$ENTRY"; then echo "The site does not serve its assets."; exit 1; fi
+            echo "assets: $(ls "$HOME/oryx-live/assets" | wc -l) files kept"
 
   installer:
     runs-on: windows-latest

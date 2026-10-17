@@ -44,8 +44,10 @@ server {
     add_header Cache-Control "no-cache";
   }
 
-  # Hashed build output never changes under the same name.
+  # Hashed build output never changes under the same name. Served from /srv/assets, which keeps earlier releases'
+  # files (deploy/keep-assets.sh), so a window opened before a release can still load its pages.
   location /assets/ {
+    root /srv;
     try_files $uri =404;
     add_header Cache-Control "public, max-age=31536000, immutable";
   }

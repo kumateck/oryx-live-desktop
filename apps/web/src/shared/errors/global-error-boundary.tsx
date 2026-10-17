@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { isRouteErrorResponse, useRouteError } from "react-router";
 import { reportApplicationError } from "./report-error";
+import { useReloadForNewRelease } from "./use-reload-for-new-release";
 
 interface Props { children: ReactNode }
 interface State { failed: boolean }
@@ -23,6 +24,8 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 export function GlobalRouteError() {
   const error = useRouteError();
   const message = isRouteErrorResponse(error) && error.status === 404 ? "Page not found." : "This page could not be opened.";
+  const reloading = useReloadForNewRelease(error instanceof Error ? error : null);
+  if (reloading) return <div className="boot-state" role="status">Oryx was updated. Loading the new version…</div>;
   if (error instanceof Error) reportApplicationError(error, "route");
   return <div className="fatal-error" role="alert"><h1>{message}</h1><button type="button" onClick={() => window.location.reload()}>Retry</button></div>;
 }

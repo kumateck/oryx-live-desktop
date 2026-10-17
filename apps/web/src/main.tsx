@@ -7,11 +7,13 @@ import { SessionProvider } from "./shared/auth/session-provider";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { GlobalErrorBoundary } from "./shared/errors/global-error-boundary";
+import { reloadOnStaleBuild } from "./shared/errors/stale-build";
 import "./styles.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root element");
 
+reloadOnStaleBuild();
 const router = createBrowserRouter(routes);
 createRoot(root).render(
   <StrictMode>
