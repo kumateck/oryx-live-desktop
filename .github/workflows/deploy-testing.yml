@@ -167,10 +167,16 @@ jobs:
             echo "gateway: $(curl -s -m 10 "http://127.0.0.1:${{ env.HOST_PORT }}/realtime/health")"
             # Any answer from the backend (401 without a sign-in) means the site reaches it.
             case "$STATUS" in 000|502|504) echo "The site cannot reach the backend."; exit 1;; esac
-            # The page's own code must be served from the kept assets folder.
-            ENTRY=$(curl -s -m 10 "http://127.0.0.1:${{ env.HOST_PORT }}/" | grep -o 'assets/index-[^"]*\.js' | head -n 1)
-            if [ -z "$ENTRY" ] || ! curl -fs -o /dev/null -m 10 "http://127.0.0.1:${{ env.HOST_PORT }}/$ENTRY"; then echo "The site does not serve its assets."; exit 1; fi
-            echo "assets: $(ls "$HOME/oryx-live/assets" | wc -l) files kept"
+            # Every file the page loads must be served with exactly the content this release built.
+            SITE="http://127.0.0.1:${{ env.HOST_PORT }}"
+            FILES=$(curl -s -m 10 "$SITE/" | grep -oE '/assets/[^"]+\.(js|css)' | sort -u)
+            if [ -z "$FILES" ]; then echo "The site's page names no assets."; exit 1; fi
+            for file in $FILES; do
+              served=$(curl -fs -m 10 "$SITE$file" | sha256sum | cut -d' ' -f1)
+              built=$(docker exec "${{ env.WEB_CONTAINER }}" sha256sum "/usr/share/nginx/html$file" | cut -d' ' -f1)
+              if [ "$served" != "$built" ]; then echo "The site serves $file with the wrong content."; exit 1; fi
+            done
+            echo "assets: $(echo "$FILES" | wc -l) checked; $(ls "$HOME/oryx-live/assets" | wc -l) files kept"
 
   installer:
     runs-on: windows-latest
