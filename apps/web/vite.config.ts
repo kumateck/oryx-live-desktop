@@ -9,6 +9,7 @@ const env = { ...loadEnv(process.env.NODE_ENV ?? "development", fileURLToPath(ne
 const apiOrigin = env.ORYX_DEV_API_ORIGIN || undefined;
 // The notification gateway (apps/gateway) during development. Without it the app falls back to checking for notifications on a timer.
 const gatewayOrigin = env.ORYX_DEV_GATEWAY_ORIGIN || undefined;
+const cacheGeneration = 2;
 if (apiOrigin) {
   const address = new URL(apiOrigin);
   const local = ["localhost", "127.0.0.1", "[::1]"].includes(address.hostname);
@@ -33,7 +34,11 @@ export default defineConfig({
       ...(gatewayOrigin ? { "/realtime": { target: gatewayOrigin, changeOrigin: true, ws: true } } : {}),
     } } : {}),
   },
-  build: { outDir: "dist", sourcemap: false },
+  build: { outDir: "dist", sourcemap: false, rolldownOptions: { output: {
+    // Build files are cached by browsers as never changing. Raise this to give every file a new name when cached copies
+    // must be discarded: generation 2 replaces files a broken deploy served empty on 2026-10-16.
+    entryFileNames: `assets/[name]-[hash]-g${cacheGeneration}.js`, chunkFileNames: `assets/[name]-[hash]-g${cacheGeneration}.js`, assetFileNames: `assets/[name]-[hash]-g${cacheGeneration}[extname]`,
+  } } },
   // CI runners are slower: interaction tests get longer than the 5s default, and a retry keeps one slow run from failing a deploy.
   test: { maxWorkers: 4, ...(process.env.CI ? { testTimeout: 30_000, retry: 2 } : {}), setupFiles: ["./src/test/setup.ts"] },
 });
