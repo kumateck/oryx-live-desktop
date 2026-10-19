@@ -35,11 +35,11 @@ it("renders formula readings and equations on approval and certificate without c
   const router = createMemoryRouter([{ path: "/qa/pending-approvals/:type/:id", element: <PendingApprovalPage /> }], { initialEntries: ["/qa/pending-approvals/Response/doc-1"] });
   const { container } = render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   expect(await screen.findByText("0.5%")).toBeTruthy();
-  expect(await screen.findByText("10.04%")).toBeTruthy();
-  expect(screen.getByText("7.17%")).toBeTruthy();
-  expect(screen.getByRole("table", { name: "Tests, results and specifications" }).textContent).not.toContain('"tableData"');
+  expect(await screen.findAllByText("10.04%")).toBeTruthy();
+  expect(screen.getAllByText("7.17%")).toBeTruthy();
+  expect(container.textContent).not.toContain('"tableData"');
   expect(container.textContent).not.toContain("Unrelated result");
-  expect(container.querySelector("tbody td[colspan='3']")).toBeTruthy();
+  expect(screen.getByText("Test & Observations")).toBeTruthy();
   expect(container.querySelector("input, textarea")).toBeNull();
   await userEvent.click(screen.getByRole("button", { name: "Certificate of analysis" }));
   const preview = await screen.findByRole("dialog");
@@ -53,7 +53,7 @@ it("preserves authoritative results and never recalculates a governed answer", a
   const recorded = answersByField(ardAnswersSchema.parse([{ ...formulaAnswers[1], formulaGoverned: true, formulaResultFinalized: true,
     formulaExecutionId: "execution-1", formulaDisplayResultsJson: JSON.stringify([{ key: "Assay", value: "99.87", unit: "%" }]) }]));
   render(<ArdResultsTable sections={sections()} recorded={recorded} />);
-  expect(await screen.findByText("99.87 %")).toBeTruthy();
+  expect(await screen.findAllByText("99.87 %")).toBeTruthy();
   expect(screen.queryByText("10.04%")).toBeNull();
   expect(screen.queryByText("Stored authoritative draft result — not finalized")).toBeNull();
 });
@@ -61,7 +61,7 @@ it("preserves authoritative results and never recalculates a governed answer", a
 it("shows absent authoritative results instead of using legacy input values", async () => {
   const recorded = answersByField(ardAnswersSchema.parse([{ ...formulaAnswers[1], formulaGoverned: true }]));
   render(<ArdResultsTable sections={sections()} recorded={recorded} />);
-  expect(await screen.findByText("Authoritative formula result unavailable.")).toBeTruthy();
+  expect(await screen.findAllByText("Authoritative formula result unavailable.")).toBeTruthy();
   expect(screen.queryByText("10.04%")).toBeNull();
 });
 

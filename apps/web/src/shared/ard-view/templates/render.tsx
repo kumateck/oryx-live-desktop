@@ -1,3 +1,5 @@
+import StoredFormulaResult from "@/shared/ard-view/raw-data/print/stored-formula-result";
+import { isGovernedFormulaResponse } from "@/shared/ard-view/raw-data/governed-formula-result";
 import { getCompactFormulaEvaluations } from "@/shared/ard-view/raw-data/print/formula-evaluation";
 import { parsedResponseValueOnly } from "@/shared/ard-view/raw-data/print/question-renderers/parsers/value";
 import { renderPrintStoredResponseValue } from "@/shared/ard-view/raw-data/print/question-view";
@@ -14,7 +16,8 @@ export const renderSpecificationResult = (
   response: FormResponseDto,
   templateField: FormFieldDto,
 ) => {
-  const questionType = sanitizeNumber(templateField.question?.type);
+  if (isGovernedFormulaResponse(response)) return <StoredFormulaResult response={response} />;
+  const questionType = sanitizeNumber(templateField.question?.type ?? response.formField?.question?.type);
   if (questionType !== sanitizeNumber(QuestionType.Formula)) {
     return renderPrintStoredResponseValue(response, templateField);
   }
@@ -26,7 +29,7 @@ export const renderSpecificationResult = (
   const hasAverage = compact.average !== null;
   const entries = compact.entries.filter((entry) => entry.result !== null);
 
-  if (!hasAverage && !entries.length) return <span>-</span>;
+  if (!hasAverage && !entries.length) return <span className="text-muted-foreground">Result unavailable</span>;
 
   if (hasAverage) {
     return (
@@ -45,7 +48,7 @@ export const renderSpecificationResult = (
     <div className="space-y-1 text-sm">
       {entries.map((entry, index) => (
         <div key={`${entry.label}-${index}`} className="flex gap-2">
-          {/* <span className="font-semibold">{entry.label}:</span> */}
+          {entries.length > 1 ? <span className="font-semibold">{entry.label}:</span> : null}
           <span>
             {formatCompactFormulaResult(
               entry.result,

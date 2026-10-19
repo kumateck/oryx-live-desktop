@@ -89,19 +89,19 @@ const TestSpecification: React.FC<ProductTestTableProps> = ({
   return (
     <div className="w-full p-1">
       <div className="overflow-x-auto">
-        <table className="w-full table-fixed border-collapse border-2 border-black">
+        <table className="w-full table-fixed border-collapse border-2 border-border print:border-black">
           <thead>
             <tr className="bg-muted">
-              <th className="border border-black px-3 py-2 text-center font-bold text-base w-[5%]">
+              <th className="border border-border print:border-black px-3 py-2 text-center font-bold text-base w-[5%]">
                 No.
               </th>
-              <th className="border border-black px-3 py-2 text-center font-bold text-base w-[28%]">
+              <th className="border border-border print:border-black px-3 py-2 text-center font-bold text-base w-[28%]">
                 Test
               </th>
-              <th className="border border-black px-3 py-2 text-center font-bold text-base w-[25%]">
+              <th className="border border-border print:border-black px-3 py-2 text-center font-bold text-base w-[25%]">
                 Result / Observation
               </th>
-              <th className="border border-black px-3 py-2 text-center font-bold text-base w-[42%]">
+              <th className="border border-border print:border-black px-3 py-2 text-center font-bold text-base w-[42%]">
                 Specification
               </th>
             </tr>
@@ -111,10 +111,10 @@ const TestSpecification: React.FC<ProductTestTableProps> = ({
               if (row.type === "group") {
                 return (
                   <tr key={`group-${row.name}`}>
-                    <td className="border border-black px-3 py-2 text-center align-top">
+                    <td className="border border-border print:border-black px-3 py-2 text-center align-top">
                       {index + 1}
                     </td>
-                    <td className="border border-black px-3 py-2 align-top">
+                    <td className="border border-border print:border-black px-3 py-2 align-top">
                       <div className="mb-1 whitespace-nowrap font-semibold">
                         {row.name}
                       </div>
@@ -132,7 +132,7 @@ const TestSpecification: React.FC<ProductTestTableProps> = ({
                         ))}
                       </div>
                     </td>
-                    <td className="border border-black px-3 py-2 text-center align-top italic">
+                    <td className="border border-border print:border-black px-3 py-2 text-center align-top italic">
                       <div aria-hidden="true">&nbsp;</div>
                       <div className="space-y-5">
                         {row.sections.map((section) => (
@@ -147,7 +147,7 @@ const TestSpecification: React.FC<ProductTestTableProps> = ({
                         ))}
                       </div>
                     </td>
-                    <td className="border border-black px-3 py-2 align-top">
+                    <td className="border border-border print:border-black px-3 py-2 align-top">
                       <div aria-hidden="true">&nbsp;</div>
                       <div className="space-y-5">
                         {row.sections.map((section) => (
@@ -171,20 +171,20 @@ const TestSpecification: React.FC<ProductTestTableProps> = ({
 
               return (
                 <tr key={section.id} className="">
-                  <td className="border border-black px-3 py-2 text-center align-top">
+                  <td className="border border-border print:border-black px-3 py-2 text-center align-top">
                     {index + 1}
                   </td>
-                  <td className="border border-black px-3 py-2 align-top">
+                  <td className="border border-border print:border-black px-3 py-2 align-top">
                     <div className="whitespace-nowrap">
                       <RichTextView
                         html={sanitizeString(section.name)}
                       />
                     </div>
                   </td>
-                  <td className="border border-black px-3 py-2 text-center align-top italic">
+                  <td className="border border-border print:border-black px-3 py-2 text-center align-top italic">
                     {noResponse ? "" : result}
                   </td>
-                  <td className="border border-black px-3 py-2 align-top">
+                  <td className="border border-border print:border-black px-3 py-2 align-top">
                     <RichTextView
                       html={sanitizeString(section.description)}
                     />

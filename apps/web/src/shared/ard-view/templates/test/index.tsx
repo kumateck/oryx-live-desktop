@@ -48,13 +48,13 @@ const TestDetailedViewEnhanced: React.FC<TestDetailedViewEnhancedProps> = ({
 
   return (
     <div className="p-1">
-      <table className="w-full border-collapse border-2 border-black">
+      <table className="w-full border-collapse border-2 border-border print:border-black">
         <thead>
           <tr className="bg-muted">
-            <th className="border border-black px-3 py-2 text-left font-bold text-base w-[10%]">
+            <th className="border border-border print:border-black px-3 py-2 text-left font-bold text-base w-[10%]">
               No.
             </th>
-            <th className="border border-black px-3 py-2 text-left font-bold text-base w-[90%]">
+            <th className="border border-border print:border-black px-3 py-2 text-left font-bold text-base w-[90%]">
               Test & Observations
             </th>
           </tr>
@@ -82,10 +82,10 @@ const TestDetailedViewEnhanced: React.FC<TestDetailedViewEnhancedProps> = ({
               <React.Fragment key={section.id}>
                 {/* Section Header Row */}
                 <tr className="">
-                  <td className="border border-black px-3 py-2 text-left align-top font-normal">
+                  <td className="border border-border print:border-black px-3 py-2 text-left align-top font-normal">
                     {sectionIndex + 1}
                   </td>
-                  <td className="border border-black px-3 py-2 align-top">
+                  <td className="border border-border print:border-black px-3 py-2 align-top">
                     <div className="flex items-start justify-between gap-4">
                       <div className="font-bold text-base">
                         <RichTextView
@@ -116,8 +116,8 @@ const TestDetailedViewEnhanced: React.FC<TestDetailedViewEnhancedProps> = ({
 
                 {/* Questions and Answers Row */}
                 <tr className="">
-                  <td className="border border-black px-3 py-2"></td>
-                  <td className="border border-black px-3 py-2">
+                  <td className="border border-border print:border-black px-3 py-2"></td>
+                  <td className="border border-border print:border-black px-3 py-2">
                     <div className="py-2 min-h-25">
                       {fields
                         .filter(

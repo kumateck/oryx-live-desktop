@@ -165,7 +165,7 @@ const FormulaPrintWorksheet = ({
                     value: entry.result,
                     percentageResults: parsed.percentageResults,
                     decimalPlaces: parsed.decimalPlaces,
-                  }),
+                  }) ?? "Result unavailable",
                 }}
               />
             </div>

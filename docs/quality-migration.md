@@ -166,3 +166,7 @@ Material stock, product stock, attendance and shift schedule uploads, each tab b
 Also confirmed dead and not ported: `/complete-test` (nothing links to it).
 
 Not verified in a running app: signed-in pages cannot be opened in the Browser pane here, so this was checked with `bun run check` (typecheck, 957 web tests, route and API checks) and the production build.
+
+## COA rendering consistency
+
+The QA approval worksheet and material/product COA previews use the same shared formula decoding and result helpers. Approval shows the Next-derived specification summary followed by detailed observations; the COA shows compact results with sample labels. Missing readings stay unavailable instead of being displayed as zero, and governed values come from server-stored authoritative results. Commercial/routine issued pages and their print previews display frozen rich text and stored result values; input-only historical snapshots expose the recorded inputs without inventing a final calculation. See `docs/coa-approval-formulas-2026-10-19.md`.

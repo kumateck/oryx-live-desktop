@@ -1,4 +1,9 @@
-import { sanitizeNumber, sanitizeString } from "@/shared/ard-view/legacy";
+import { z } from "zod";
+import { FormulaType } from "@/shared/questions/question-types";
+import { evaluationSettings } from "@/shared/formula/ui/types/evaluate/settings";
+import { normalizeFormulaResponse } from "./normalize-formula-response";
+import { storedFormulaEvaluations } from "./stored-formula-evaluations";
+import { sanitizeString } from "@/shared/ard-view/legacy";
 import { calculateStats } from "@/shared/formula/ui/types/utils";
 import { ExpressionExtract } from "@/shared/formula/ui/types/expression/universal/types";
 import {
@@ -12,124 +17,6 @@ import {
 } from "@/shared/formula/compute/formula-compute";
 import { toDisplayedFormulaResult } from "./compact-formula-result";
 import { getSimpleFormulaEvaluation } from "./simple-formula-evaluation";
-
-type EvalEntry = {
-  label: string;
-  result: number | null;
-};
-const toNumberOrNull = (value: unknown): number | null => {
-  const num = sanitizeNumber(value);
-  return Number.isFinite(num) ? num : null;
-};
-const asObject = (value: unknown): Record<string, unknown> | null => {
-  if (!value || typeof value !== "object") return null;
-  return value as Record<string, unknown>;
-};
-const parseJsonMaybe = (value: unknown): unknown => {
-  if (typeof value !== "string") return value;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    return value;
-  }
-};
-const unwrapFormulaPayload = (
-  value: unknown,
-  depth = 0,
-): Record<string, unknown> | null => {
-  if (depth > 3) return asObject(value);
-  const parsed = parseJsonMaybe(value);
-  const obj = asObject(parsed);
-  if (!obj) return null;
-
-  const nested = obj.value;
-  if (nested && (typeof nested === "string" || typeof nested === "object")) {
-    const nestedParsed = parseJsonMaybe(nested);
-    const nestedObj = asObject(nestedParsed);
-    if (nestedObj) return unwrapFormulaPayload(nestedObj, depth + 1);
-  }
-
-  return obj;
-};
-const toEvalItem = (item: unknown, index: number): EvalEntry | null => {
-  const obj = asObject(item);
-  if (!obj) return null;
-  const result = toNumberOrNull(obj.result);
-  const sampleLabel = String(obj.sample ?? "").trim();
-  const sampleIndex = toNumberOrNull(obj.sampleIndex);
-  const label = sampleLabel
-    ? sampleLabel
-    : sampleIndex !== null
-      ? `Sample ${sampleIndex + 1}`
-      : `Sample ${index + 1}`;
-  return { label, result };
-};
-const fromResultsArray = (value: unknown): EvalEntry[] => {
-  if (!Array.isArray(value)) return [];
-  return value
-    .map((item, index) => toEvalItem(item, index))
-    .filter((item): item is EvalEntry => Boolean(item));
-};
-const fromSampleResultsObject = (value: unknown): EvalEntry[] => {
-  const obj = asObject(value);
-  if (!obj) return [];
-  return Object.entries(obj)
-    .map(([key, raw]) => {
-      const result = toNumberOrNull(raw);
-      const sampleNumber = Number(key.replace(/\D/g, ""));
-      const label = Number.isFinite(sampleNumber)
-        ? `Sample ${sampleNumber}`
-        : key;
-      return { label, result };
-    })
-    .filter((item) => item.result !== null);
-};
-
-const RESULT_KEY_PATTERN = /result|content|assay|purity|yield|average|avg/i;
-
-const fromScalarResultFields = (
-  payload: Record<string, unknown>,
-): EvalEntry[] => {
-  const resultKeys = [
-    "result",
-    "finalResult",
-    "calculatedResult",
-    "calculatedValue",
-    "content",
-    "assay",
-    "purity",
-    "yield",
-  ];
-
-  return resultKeys
-    .map((key): EvalEntry | null => {
-      if (!(key in payload)) return null;
-      const result = toNumberOrNull(payload[key]);
-      if (result === null) return null;
-      return { label: key, result };
-    })
-    .filter((item): item is EvalEntry => Boolean(item));
-};
-
-const fromManualVarsObject = (value: unknown): EvalEntry[] => {
-  const obj = asObject(value);
-  if (!obj) return [];
-
-  return Object.entries(obj)
-    .map(([key, raw]): EvalEntry | null => {
-      const item = asObject(raw);
-      if (!item) return null;
-
-      const result = toNumberOrNull(item.evaluated ?? item.value);
-      if (result === null || !RESULT_KEY_PATTERN.test(key)) return null;
-
-      const label = sanitizeString(item.label) || key;
-      return { label, result };
-    })
-    .filter((item): item is EvalEntry => Boolean(item));
-};
 
 const getTableVars = (headers: string[], data: string[][]) => {
   const stats = headers.map((_header, colIdx) => {
@@ -198,52 +85,21 @@ const getCalculatedFormulaEvaluations = (
   };
 };
 
-export const getCompactFormulaEvaluations = (
-  response: unknown,
-  settings?: string | null,
-) => {
-  const simple = getSimpleFormulaEvaluation(response, settings);
-  if (simple) return simple;
-
-  const calculated = getCalculatedFormulaEvaluations(response, settings);
-  if (calculated) return calculated;
-
-  const payload = unwrapFormulaPayload(response);
-  if (!payload)
-    return {
-      entries: [] as EvalEntry[],
-      average: null as number | null,
-      decimalPlaces: undefined as number | "" | undefined,
-      percentageResults: false,
-    };
-
-  const entries = [
-    ...fromScalarResultFields(payload),
-    ...fromResultsArray(payload.results),
-    ...fromResultsArray(payload.evaluations),
-    ...fromResultsArray(payload.expressionEvaluations),
-    ...fromResultsArray(payload.sampleResults),
-    ...fromSampleResultsObject(payload.sampleResults),
-    ...fromManualVarsObject(payload.manualVars),
-  ];
-
-  const seen = new Set<string>();
-  const deduped = entries.filter((entry) => {
-    const key = `${entry.label}:${entry.result}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-
-  const average =
-    toNumberOrNull(payload.averageResult) ??
-    toNumberOrNull(payload.average) ??
-    toNumberOrNull(payload.avg);
-
-  return {
-    entries: deduped,
-    average,
-    decimalPlaces: undefined,
-    percentageResults: false,
-  };
+export const getCompactFormulaEvaluations = (response: unknown, settings?: string | null) => {
+  const definition = evaluationSettings(sanitizeString(settings));
+  const normalized = typeof response === "string" ? normalizeFormulaResponse(response) : response;
+  if (definition) {
+    if (definition.type === FormulaType.Simple) {
+      const simple = getSimpleFormulaEvaluation(normalized, definition.settings);
+      if (simple) return simple;
+      // Missing inputs are unresolved, even if a stale result was saved alongside them.
+      return { entries: [], average: null, decimalPlaces: undefined, percentageResults: false };
+    }
+    if (definition.type === FormulaType.Universal) {
+      const calculated = getCalculatedFormulaEvaluations(normalized, definition.settings);
+      if (calculated) return calculated;
+    }
+  }
+  const json = z.json().safeParse(normalized);
+  return storedFormulaEvaluations(json.success ? json.data : null);
 };

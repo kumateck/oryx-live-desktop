@@ -1,7 +1,7 @@
 import type { ArdResultField } from "../schemas/ard-result-schema";
 
 /** A recorded answer on analytical raw data: its text, and whether the analyst marked it as complying. */
-export interface RecordedAnswer { responseId?: string | null | undefined; value: string | null; complies?: boolean | null | undefined; formField?: ArdResultField | null | undefined; formulaGoverned?: boolean | null | undefined; formulaResultFinalized?: boolean | null | undefined; formulaExecutionId?: string | null | undefined; formulaDisplayResultsJson?: string | null | undefined }
+export interface RecordedAnswer { responseId?: string | null | undefined; value: string | null; complies?: boolean | null | undefined; formField?: ArdResultField | null | undefined; attachments?: readonly { name: string | null; link: string | null }[] | null | undefined; formulaGoverned?: boolean | null | undefined; formulaResultFinalized?: boolean | null | undefined; formulaExecutionId?: string | null | undefined; formulaDisplayResultsJson?: string | null | undefined }
 
 /** The answer recorded for each field. Where a field was answered more than once, the last answer with a value stands. */
 export function answersByField<T extends RecordedAnswer>(responses: readonly T[]): Map<string, T> {

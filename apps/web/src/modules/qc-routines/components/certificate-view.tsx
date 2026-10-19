@@ -1,3 +1,5 @@
+import { CertificateResult } from "./certificate-result";
+import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import { useState } from "react";
 import { Droplets, Printer } from "lucide-react";
 import { Link } from "react-router";
@@ -24,8 +26,8 @@ function CertificateSheet({ certificate, heading, subtitle, showPoint }: { certi
       : <table className="w-full border-collapse"><thead><tr className="bg-neutral-100 text-left text-xs">
         <th className={cell}>Analysis</th>{showPoint ? <th className={cell}>Point / area</th> : null}<th className={cell}>Test</th><th className={cell}>Specification</th><th className={cell}>Result</th><th className={cell}>Reference</th></tr></thead>
         <tbody>{rows.map((row) => <tr key={row.key}><td className={cell}>{analysisLabel(row.analysisType)}{row.group ? <span className="block text-xs">{row.group}</span> : null}</td>
-          {showPoint ? <td className={cell}>{row.sampleIdentity ?? "–"}</td> : null}<td className={cell}>{row.label}</td><td className={cell}>{row.specification || "–"}</td>
-          <td className={cell}>{row.result}{row.unit ? ` ${row.unit}` : ""}</td><td className={cell}>{row.reference || "–"}</td></tr>)}</tbody></table>}
+          {showPoint ? <td className={cell}>{row.sampleIdentity ?? "–"}</td> : null}<td className={cell}><RichTextView html={row.label} /></td><td className={cell}><RichTextView html={row.specification || "–"} /></td>
+          <td className={cell}><CertificateResult value={row.result} unit={row.unit} /></td><td className={cell}>{row.reference || "–"}</td></tr>)}</tbody></table>}
     <p className="text-xs">Issued {formatDateTime(certificate.issuedAt) ?? "–"}. This certificate is a fixed copy of the approved reportable results.</p>
   </div>;
 }

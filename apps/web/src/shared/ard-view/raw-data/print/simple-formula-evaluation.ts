@@ -33,7 +33,7 @@ export const getSimpleFormulaEvaluation = (
   }
 
   const rawResult = safeEval(substituted, {});
-  if (rawResult === null) return null;
+  if (rawResult === null || !Number.isFinite(rawResult)) return null;
 
   return {
     entries: [
