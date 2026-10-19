@@ -1,3 +1,5 @@
+import { useId } from "react";
+import { Input } from "@/components/ui/input";
 import type {
   ExpressionExtract,
   LabeledInputField,
@@ -5,7 +7,7 @@ import type {
 } from "./types";
 
 const INPUT_CLASS =
-  "min-w-0 flex-1 rounded-none border-0 border-b border-border bg-background px-2 py-1.5 text-sm text-foreground transition-all focus:rounded focus:border focus:border-border focus:outline-none focus:ring-1 focus:ring-info/40";
+  "min-w-0 flex-1 rounded-none border-0 border-b border-border bg-background px-2 py-1.5 text-sm text-foreground transition-colors focus:rounded focus:border focus:border-border focus:outline-none focus:ring-1 focus:ring-info/40";
 
 const Heading = ({ children }: { children: React.ReactNode }) => (
   <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
@@ -23,11 +25,13 @@ const InputRow = ({
   label: string;
   onChange: (value: string) => void;
   value: string;
-}) => (
-  <label htmlFor={id} className="flex flex-col gap-1 sm:flex-row sm:gap-2">
+}) => {
+  const prefix = useId();
+  return (
+  <label htmlFor={`${prefix}-${id}`} className="flex flex-col gap-1 @xl/worksheet:flex-row @xl/worksheet:gap-2">
     <span className="text-sm text-foreground">{label}:</span>
-    <input
-      id={id}
+    <Input
+      id={`${prefix}-${id}`}
       type="text"
       inputMode="decimal"
       value={value}
@@ -36,7 +40,8 @@ const InputRow = ({
       aria-label={label}
     />
   </label>
-);
+  );
+};
 
 interface WorksheetInputsProps {
   headers: string[];
@@ -66,16 +71,16 @@ export const WorksheetInputs = ({
   standardInputs,
 }: WorksheetInputsProps) => (
   <div className="space-y-6">
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <section className="space-y-3">
+    {Object.keys(parsed.constants ?? {}).length > 0 || manualVarKeys.length > 0 ? <div className="grid grid-cols-1 gap-6 @3xl/worksheet:grid-cols-2">
+      {Object.keys(parsed.constants ?? {}).length > 0 ? <section className="min-w-0 space-y-3">
         <Heading>Constants</Heading>
         {Object.entries(parsed.constants || {}).map(([key, value]) => (
           <div key={key} className="text-sm text-foreground">
             {key}: {value}
           </div>
         ))}
-      </section>
-      <section className="space-y-3">
+      </section> : null}
+      {manualVarKeys.length > 0 ? <section className="min-w-0 space-y-3">
         <Heading>Manual Variables</Heading>
         {manualVarKeys.map((key) => {
           const variable = manualVars[key] || {
@@ -93,10 +98,10 @@ export const WorksheetInputs = ({
             />
           );
         })}
-      </section>
-    </div>
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <section className="space-y-3">
+      </section> : null}
+    </div> : null}
+    {standardInputs.length > 0 || sampleInputs.some((sample) => sample.length > 0) ? <div className="grid grid-cols-1 gap-6 @3xl/worksheet:grid-cols-2">
+      {standardInputs.length > 0 ? <section className="min-w-0 space-y-3">
         <Heading>
           {parsed.firstColumnPurpose === "blank"
             ? "Blank"
@@ -116,8 +121,8 @@ export const WorksheetInputs = ({
             onChange={(value) => onStandardInputChange(index, value)}
           />
         ))}
-      </section>
-      <section className="space-y-3">
+      </section> : null}
+      {sampleInputs.some((sample) => sample.length > 0) ? <section className="min-w-0 space-y-3">
         <Heading>Sample Inputs</Heading>
         {sampleInputs.flatMap((sample, sampleIndex) =>
           sample.map((input, inputIndex) => (
@@ -132,7 +137,7 @@ export const WorksheetInputs = ({
             />
           )),
         )}
-      </section>
-    </div>
+      </section> : null}
+    </div> : null}
   </div>
 );

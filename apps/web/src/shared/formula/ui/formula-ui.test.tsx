@@ -11,8 +11,9 @@ const universal = JSON.stringify({ type: 3, expression: ":sample1Avg / :standard
 
 describe("formula builders and evaluators", () => {
   for (const [name, option] of [["simple", simple], ["uniformity", uniformity], ["universal", universal]] as const) {
-    it(`renders the ${name} evaluator for an analyst`, () => {
+    it(`renders the ${name} evaluator for an analyst`, async () => {
       const { container } = render(<TheAduseiEvaluation option={option} value="" onChange={() => {}} showMetaPanels={false} />);
+      await screen.findByText(name === "simple" ? "Manual Variables" : name === "universal" ? "Calculations" : "Uniformity of Weight", { exact: false });
       expect(container.textContent?.length).toBeGreaterThan(0);
     });
   }
@@ -24,4 +25,9 @@ describe("formula builders and evaluators", () => {
     }
     expect(screen.queryByText("Unsupported")).toBeNull();
   });
+});
+
+ it("explains an unreadable definition instead of showing an empty formula", () => {
+  render(<TheAduseiEvaluation option="broken" />);
+  expect(screen.getByRole("alert").textContent).toContain("template owner");
 });

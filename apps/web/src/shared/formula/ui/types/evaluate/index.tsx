@@ -1,72 +1,21 @@
-import { FormulaTypes } from "@/shared/formula/ui/legacy";
-import { formulaPreview as extractFormulaPreview } from "@/shared/formula/formula-preview";
-import { useMemo } from "react";
-import { ExpressionExtract, TheAduseiEvaluateProps } from "../type";
-import { SimpleEvaluate } from "../expression/simple";
-import { UniformityOfWeightEvaluate } from "../expression/uniformity";
-import { AuthorizedUniversalEvaluate } from "../expression/universal/authorized-evaluate/evaluate";
+import { lazy, Suspense, useMemo } from "react";
+import { FormulaType } from "@/shared/questions/question-types";
+import type { TheAduseiEvaluateProps } from "../type";
+import { evaluationSettings } from "./settings";
 
-// import ComplexEvaluate from "./complex";
-// import SimpleEvaluate from "./simple";
+// Import the evaluator directly: opening an answer must not also load the formula builders.
+const Simple = lazy(() => import("../expression/simple/evaluate").then((module) => ({ default: module.SimpleEvaluate })));
+const Uniformity = lazy(() => import("../expression/uniformity/evaluate").then((module) => ({ default: module.UniformityOfWeightEvaluate })));
+const Universal = lazy(() => import("../expression/universal/authorized-evaluate/evaluate").then((module) => ({ default: module.AuthorizedUniversalEvaluate })));
 
-export const TheAduseiEvaluation = ({
-  onChange,
-  value,
-  option,
-  showMetaPanels = true,
-}: TheAduseiEvaluateProps) => {
-  const parsed = useMemo<ExpressionExtract | null>(() => {
-    try {
-      if (!option || option.trim() === "") return null;
-      return JSON.parse(option) as ExpressionExtract;
-    } catch (e) {
-      console.error("[ComplexEvaluate] Failed to parse option JSON:", e);
-      return null;
-    }
-  }, [option]);
-  const type = parsed ? extractFormulaPreview(option).type : null;
-
-  const renderFormula = (type: FormulaTypes | null) => {
-    switch (type) {
-      case FormulaTypes.Simple:
-        return (
-          <SimpleEvaluate onChange={onChange} value={value} settings={option} />
-        );
-      case FormulaTypes.Uniformity:
-        return (
-          <UniformityOfWeightEvaluate
-            onChange={onChange}
-            value={value}
-            settings={option}
-          />
-        );
-      // case FormulaTypes.Complex:
-      //   return (
-      //     <ComplexEvaluate
-      //       onChange={onChange}
-      //       value={value}
-      //       settings={option}
-      //     />
-      //   );
-      case FormulaTypes.Universal:
-        return (
-          <AuthorizedUniversalEvaluate
-            onChange={onChange}
-            value={value}
-            settings={option}
-            showMetaPanels={showMetaPanels}
-          />
-        );
-      default:
-        return (
-          <UniformityOfWeightEvaluate
-            onChange={onChange}
-            value={value}
-            settings={option}
-          />
-        );
-    }
-  };
-
-  return renderFormula(type);
-};
+export function TheAduseiEvaluation({ option, showMetaPanels = true, ...props }: TheAduseiEvaluateProps) {
+  const definition = useMemo(() => evaluationSettings(option), [option]);
+  if (!definition) return <p role="alert" className="rounded-md border border-destructive/30 p-3 text-sm text-destructive">
+    This formula definition could not be loaded. Ask the template owner to check its configuration before entering results.
+  </p>;
+  return <Suspense fallback={<div role="status" className="rounded-md border p-4 text-sm text-muted-foreground">Loading calculation fields…</div>}>
+    {definition.type === FormulaType.Simple ? <Simple {...props} settings={definition.settings} />
+      : definition.type === FormulaType.Uniformity ? <Uniformity {...props} settings={definition.settings} />
+        : <Universal {...props} settings={definition.settings} showMetaPanels={showMetaPanels} />}
+  </Suspense>;
+}

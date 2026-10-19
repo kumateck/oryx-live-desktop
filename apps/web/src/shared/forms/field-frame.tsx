@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+
+import { RichTextView } from "@/shared/rich-text/rich-text-view";
 
 interface FieldFrameProps {
   id: string;
@@ -17,7 +19,7 @@ export function FieldFrame({ id, label, description, error, required, className,
       {label}{required ? <span className="ml-1 text-destructive" aria-hidden="true">*</span> : null}
     </FieldLabel>
     {children}
-    {description ? <FieldDescription id={`${id}-description`}>{description}</FieldDescription> : null}
+    {description ? <div id={`${id}-description`} data-slot="field-description" className="text-sm leading-normal text-muted-foreground"><RichTextView html={description} /></div> : null}
     {error ? <FieldError id={`${id}-error`}>{error}</FieldError> : null}
   </Field>;
 }

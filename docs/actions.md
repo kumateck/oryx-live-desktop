@@ -62,3 +62,7 @@ Improved:
 ## Confirmation and submission
 
 `ConfirmActionDialog` and `ConfirmDeleteDialog` require `require={permissions.remove}` (or an all/some/department rule). They recheck access before calling the mutation and display permission loss while open. Direct form handlers use `usePermissionAction(requirement).check()` inside the validated submit callback and before each subsequent write. Preserve workflow and record-state checks. See [session and access](session-and-access.md) for the contract and examples.
+
+## Destructive colors
+
+Destructive menu entries apply the theme's red `text-destructive` color explicitly to both the icon and label, in addition to the menu item's destructive variant. This keeps row and grouped delete actions visibly distinct in light and dark themes, including keyboard focus. Permission requirements and confirmation behavior still belong to the existing action contract.

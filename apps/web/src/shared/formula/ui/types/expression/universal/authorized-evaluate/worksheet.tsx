@@ -40,9 +40,9 @@ interface WorksheetProps {
 }
 
 export const Worksheet = (props: WorksheetProps) => (
-  <div className="space-y-6">
+  <div className="@container/worksheet min-w-0 space-y-6">
     <WorksheetInputs {...props} />
-    <WorksheetTable {...props} />
+    {props.headers.length > 0 && props.data.length > 0 ? <WorksheetTable {...props} /> : null}
     <WorksheetCalculations
       averageResult={props.averageResult}
       expression={normalizeFormulaExpressionText(props.parsed.expression)}

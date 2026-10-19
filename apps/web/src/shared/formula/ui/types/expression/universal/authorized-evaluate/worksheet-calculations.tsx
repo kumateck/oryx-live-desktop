@@ -21,7 +21,7 @@ export const WorksheetCalculations = ({
   percentageResults,
   results,
 }: WorksheetCalculationsProps) => (
-  <section className="space-y-3">
+  <section className="min-w-0 space-y-3 overflow-x-auto">
     <div className="flex items-center justify-between gap-3">
       <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
         Calculations
