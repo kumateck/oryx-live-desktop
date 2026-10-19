@@ -21,5 +21,5 @@ export const formatFormulaEquationResult = ({
     minimumFractionDigits: digits,
   });
 
-  return percentageResults ? `${formatted}\\%` : formatted;
+  return percentageResults ? `${formatted}%` : formatted;
 };

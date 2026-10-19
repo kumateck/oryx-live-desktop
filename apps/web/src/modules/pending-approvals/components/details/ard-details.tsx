@@ -11,7 +11,8 @@ import { DetailGroup, DetailItem } from "@/shared/detail/detail-list";
 import { formatDate, formatMonthYear } from "@/shared/format/dates";
 import { useAccess } from "@/shared/auth/use-access";
 import { PrintButton } from "@/shared/print/print-button";
-import { RichTextView } from "@/shared/rich-text/rich-text-view";
+import { ArdResultsTable } from "./ard-results-table";
+import { ardAnswersSchema as answers, ardFormSchema as formSchema } from "../../schemas/ard-result-schema";
 import { answerFails, answersByField } from "../../lib/ard-results";
 import { audit } from "../../lib/approval-documents";
 import { ArdCertificate } from "./ard-certificate";
@@ -26,11 +27,7 @@ const { useGetApiV1ProductionScheduleManufacturingByBatchManufacturingRecordIdQu
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const item = z.object({ id: z.string().nullish(), name: text, code: text }).nullish();
 const person = z.object({ firstName: text, lastName: text }).nullish();
-const answer = z.object({ responseId: z.string().nullish(), value: text, complies: z.boolean().nullish(), formField: z.object({ id: z.string().nullish() }).nullish() });
-const answers = z.array(answer).nullish().transform((value) => value ?? []);
 const responseSchema = z.object({ form: item, materialBatch: item, batchManufacturingRecord: item, formResponses: answers, checkedBy: person, checkedAt: z.string().nullish(), productionActivityStepId: z.string().nullish(), approved: z.boolean().nullish() });
-const formSchema = z.object({ sections: z.array(z.object({ id: z.string().nullish(), name: text, description: text, groupName: text, order: z.number().nullish(),
-  fields: z.array(z.object({ id: z.string().nullish(), rank: z.number().nullish(), question: z.object({ label: text }).nullish() })).nullish() })).nullish() });
 const materialSchema = z.object({ arNumber: text, grnNumber: text, specNumber: text, stpNumber: text, supplier: item, manufacturer: item, sampledDate: z.string().nullish(), sampledBy: person, quantityReceived: z.number().nullish(), quantitySampled: z.number().nullish(),
   materialBatch: z.object({ batchNumber: text, material: item, uoM: z.object({ symbol: text }).nullish(), manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), analysedDate: z.string().nullish() }).nullish() });
 const batchSchema = z.object({ batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), productionScheduleProduct: z.object({ product: item }).nullish() });
@@ -88,8 +85,8 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
   const atrQuery = useGetApiV1QaAnalyticalTestsActivityStepByActivityStepIdQuery(stepId ? { ...audit, activityStepId: stepId } : skipToken);
   const atr = useParsed(atrSchema, atrQuery.data);
   const coaTarget = materialBatchId ? { materialBatchId } : atr?.id ? { analyticalTestRequestId: atr.id } : null;
-  const certificateSections = sections.map((section) => ({ id: section.id, name: section.name, description: section.description,
-    fields: [...(section.fields ?? [])].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0)).map((field) => ({ id: field.id, label: field.question?.label ?? null })) }));
+  const certificateSections = sections.map((section) => ({ id: section.id, name: section.name, description: section.description, groupName: section.groupName,
+    fields: [...(section.fields ?? [])].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0)) }));
 
   return <DetailState {...state} loading={loading} value={response} label="analytical raw data">{(data) => { const unit = material?.materialBatch?.uoM?.symbol;
     const isMaterial = Boolean(materialBatchId);
@@ -123,16 +120,6 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
       {data.checkedAt || data.checkedBy ? <p className="text-sm text-muted-foreground">Checked {[formatDate(data.checkedAt), fullName(data.checkedBy)].filter(Boolean).join(" by ")}.</p> : null}
       {sections.length === 0 ? <p role="alert" className="rounded-md border border-destructive/50 p-3 text-sm">The tests on this data sheet could not be read, so the results cannot be laid out.</p> : <>
         <p role="status" className={`rounded-md border p-3 text-sm ${failures > 0 ? "border-destructive/50 bg-destructive/5" : "bg-muted/50"}`}>{failures > 0 ? `${failures} ${failures === 1 ? "result does" : "results do"} not comply with the specification.` : "No result is recorded as not complying."}</p>
-        <div className="overflow-x-auto rounded-lg border"><table className="w-full min-w-[720px] text-sm"><caption className="sr-only">Tests, results and specifications</caption>
-          <thead><tr className="border-b bg-muted/50 text-left text-xs text-muted-foreground"><th scope="col" className="w-12 p-2.5 font-medium">No.</th><th scope="col" className="w-[28%] p-2.5 font-medium">Test</th>
-            <th scope="col" className="w-[30%] p-2.5 font-medium">Result</th><th scope="col" className="p-2.5 font-medium">Specification</th></tr></thead>
-          <tbody>{sections.map((section, index) => { const fields = [...(section.fields ?? [])].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
-            return <tr key={section.id ?? index} className="border-b align-top last:border-0"><td className="p-2.5 text-muted-foreground">{index + 1}</td>
-              <td className="p-2.5">{section.groupName ? <div className="text-xs text-muted-foreground">{section.groupName}</div> : null}<RichTextView html={section.name} className="font-medium" /></td>
-              <td className="p-2.5"><ul className="space-y-1">{fields.map((field, position) => { const entry = field.id ? recorded.get(field.id) : undefined; const bad = answerFails(entry);
-                return <li key={field.id ?? position} className={bad ? "text-destructive" : undefined}>{fields.length > 1 && field.question?.label ? <span className="text-muted-foreground">{field.question.label}: </span> : null}
-                  {entry?.value ? <RichTextView html={entry.value} className="inline" /> : <span className="text-muted-foreground">No result</span>}</li>; })}
-                {fields.length === 0 ? <li className="text-muted-foreground">No result</li> : null}</ul></td>
-              <td className="p-2.5">{section.description ? <RichTextView html={section.description} /> : <span className="text-muted-foreground">–</span>}</td></tr>; })}</tbody></table></div></>}
+        <ArdResultsTable sections={certificateSections} recorded={recorded} /></>}
     </div>; }}</DetailState>;
 }

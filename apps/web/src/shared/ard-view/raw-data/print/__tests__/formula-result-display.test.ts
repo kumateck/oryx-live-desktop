@@ -10,14 +10,14 @@ describe("formatFormulaEquationResult", () => {
         percentageResults: true,
         decimalPlaces: 2,
       }),
-    ).toBe("35.38\\%");
+    ).toBe("35.38%");
     expect(
       formatFormulaEquationResult({
         value: 0.10483333333333333,
         percentageResults: true,
         decimalPlaces: 2,
       }),
-    ).toBe("10.48\\%");
+    ).toBe("10.48%");
   });
 
   it("keeps missing results empty", () => {

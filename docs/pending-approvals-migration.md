@@ -42,7 +42,7 @@ Where the app already has the document's page, the same components are used (ord
 
 Notes on particular documents:
 
-- **Analytical raw data** shows each test with its result beside its specification, counts the results that do not comply, and shows only the answers of the data sheet being approved (a batch can carry answers from other sheets). The certificate of analysis preview and starting an out-of-specification investigation are not here.
+- **Analytical raw data** shows each test with its result beside its specification, counts the results that do not comply, and shows only the answers of the data sheet being approved (a batch can carry answers from other sheets). The certificate preview and OOS investigation actions are described below.
 - **Supplier pricing agreement** shows the proposed price beside the current one and the difference between them, and says when approving would archive the agreement.
 - **Technology transfer** is shown with its project and the formula being transferred.
 - Customer quotation, pricing proposal, payroll run and performance review are read from endpoints the server publishes without a response type, so they are declared by hand in `api/evidence-api.ts`.
@@ -124,3 +124,13 @@ Built with a backend change in `oryx-backend` (the old `POST approval/delegate` 
 ## Tests
 
 `modules/approval-settings/components/workflows.test.tsx` covers the workflow rules, the list, edit, create and delete, and the transfer page. `modules/pending-approvals/components/approvals.test.tsx`: naming and routing of document types, the reason rule, counts and their fallback, the list filter, the detail page (document, history, sanitised text), reject and approve request bodies, documents that cannot be decided here, a request not waiting for the user, and every readable document laid out from full and from empty data.
+
+## Formula evidence in COA approvals (2026-10-19)
+
+Analytical raw-data approvals and their certificate preview share `ArdResultsTable`. A formula answer gets a full-width calculation row beneath its test/specification, rather than showing serialized response JSON inside the narrow result column. Ordinary observations keep their existing presentation and compliance treatment.
+
+The local read schemas retain `question.type`, `question.options[].name`, response-side question metadata, and the existing `formulaGoverned`, `formulaResultFinalized`, `formulaExecutionId`, and `formulaDisplayResultsJson` fields. No endpoint or mutation contract changes. Formula settings returned with an answer take precedence; otherwise the template supplies the definition. Legacy wrapped settings are normalized before the existing read-only preview renders the readings and equations. Approval previews never use the debug formula override.
+
+Governed answers display only the server-stored authoritative results, including their draft/finalized indication. Missing authoritative values show an explicit unavailable message and never fall back to browser recalculation. Non-governed answers reuse the existing simple/universal/uniformity previews. Missing formula settings show a configuration message instead of raw JSON. Percentage results render a normal `%` in the native math renderer. Shared worksheet summaries stack at narrow widths and omit empty groups.
+
+Existing response-ID filtering, recorded compliance flags, approval/rejection/OOS permissions, transitions, and audit responsibilities are unchanged. Rendering and opening the certificate preview perform no writes. Integration coverage includes both surfaces, two sample calculations, missing settings/readings, response metadata, governed results, and isolation from other documents' answers.
