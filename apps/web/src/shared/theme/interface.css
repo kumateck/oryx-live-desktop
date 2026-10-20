@@ -1,0 +1,75 @@
+/* Interface typography is independent of rem-based layout and browser zoom. */
+:root {
+  --ui-font-size: 12px;
+  --heading-font-size: 14px;
+  --ui-line-height: 18px;
+  --heading-line-height: 20px;
+  --control-height: 30px;
+  --control-height-sm: 28px;
+  --control-height-xs: 24px;
+  --control-height-lg: 36px;
+  --card-padding: 12px;
+  --layout-gap: 12px;
+  --table-cell-y: 6px;
+  --table-cell-x: 10px;
+  --page-padding: 16px;
+  --nav-item-y: 6px;
+  --settings-row-height: 46px;
+}
+
+@theme inline {
+  --font-sans: var(--ui-font-family);
+  --text-xs: var(--ui-font-size);
+  --text-xs--line-height: var(--ui-line-height);
+  --text-sm: var(--ui-font-size);
+  --text-sm--line-height: var(--ui-line-height);
+  --text-base: var(--ui-font-size);
+  --text-base--line-height: var(--ui-line-height);
+  --text-lg: var(--heading-font-size);
+  --text-lg--line-height: var(--heading-line-height);
+  --text-xl: var(--heading-font-size);
+  --text-xl--line-height: var(--heading-line-height);
+  --text-2xl: var(--heading-font-size);
+  --text-2xl--line-height: var(--heading-line-height);
+  --text-3xl: var(--heading-font-size);
+  --text-3xl--line-height: var(--heading-line-height);
+  --text-4xl: var(--heading-font-size);
+  --text-4xl--line-height: var(--heading-line-height);
+  --text-heading: var(--heading-font-size);
+  --text-heading--line-height: var(--heading-line-height);
+  --spacing-control: var(--control-height);
+  --spacing-control-sm: var(--control-height-sm);
+  --spacing-control-xs: var(--control-height-xs);
+  --spacing-control-lg: var(--control-height-lg);
+  --spacing-card: var(--card-padding);
+  --spacing-layout: var(--layout-gap);
+  --spacing-cell-x: var(--table-cell-x);
+  --spacing-cell-y: var(--table-cell-y);
+}
+
+/* Scope application headings; authored rich text and printed documents keep their own scale. */
+@media screen {
+  .content-inner :where(h1, h2, h3, h4):not(:where(.rich-text-content *, .tiptap *, .print-sheet *)),
+  [data-slot="dialog-title"], [data-slot="sheet-title"], [data-slot="popover-title"] {
+    font-size: var(--heading-font-size);
+    line-height: var(--heading-line-height);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+}
+
+.ui-card { border-radius: var(--card-radius); padding: var(--card-padding); }
+.ui-card-flush { border-radius: var(--card-radius); }
+.ui-card-heading { font-size: var(--heading-font-size); line-height: var(--heading-line-height); }
+
+::selection { background: var(--selected); color: var(--text); }
+:root { scrollbar-color: var(--border) transparent; scrollbar-width: thin; }
+[data-slot="input"], [data-slot="textarea"] { caret-color: var(--text); }
+[data-slot="table-cell"] { font-variant-numeric: tabular-nums; }
+
+@media (pointer: coarse) {
+  [data-slot="button"], [data-slot="input"], [data-slot="select-trigger"] {
+    min-height: var(--touch-target);
+  }
+  [data-slot="button"][data-size^="icon"] { min-width: var(--touch-target); }
+}

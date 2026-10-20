@@ -17,12 +17,12 @@ export function DataTableHead<TData extends DataTableRow>({ table, selection, le
   /** Keeps header cells in view while rows scroll inside a height-limited table. */
   sticky: boolean;
 }) {
-  // The header carries the active accent, as in Oryx Next, and stays in view while rows scroll.
-  const cell = cn("bg-primary text-primary-foreground", sticky && "sticky top-0 z-10");
+  // Quiet, opaque headers keep dense columns legible while rows scroll beneath them.
+  const cell = cn("bg-muted text-foreground", sticky && "sticky top-0 z-10");
   return <TableHeader>{table.getHeaderGroups().map((group) => <TableRow key={group.id} className="border-0 hover:bg-transparent">
     {leadingHeader !== null ? <TableHead className={cn("w-10", cell)}>{leadingHeader}</TableHead> : null}
     {selection ? <TableHead className={cn("w-10", cell)}>
-      <Checkbox className="border-primary-foreground/70 data-[state=checked]:bg-primary-foreground data-[state=checked]:text-primary data-[state=indeterminate]:bg-primary-foreground data-[state=indeterminate]:text-primary"
+      <Checkbox className="border-muted-foreground"
         aria-label="Select all rows on this page" disabled={!selection.canSelectAny} onCheckedChange={selection.togglePage}
         checked={selection.pageState === "all" && selection.canSelectAny ? true : selection.pageState === "some" ? "indeterminate" : false} />
     </TableHead> : null}

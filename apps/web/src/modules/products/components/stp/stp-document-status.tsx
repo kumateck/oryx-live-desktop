@@ -1,3 +1,4 @@
+import { StpVersionFile } from "@/shared/stp/stp-version-file";
 import { FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/shared/format/dates";
@@ -11,7 +12,7 @@ export function StpDocumentStatus({ document }: { document: StpDocument | null }
   return <div className="space-y-2 rounded-md border p-3 text-sm">
     <div className="flex flex-wrap items-center gap-2">
       <FileText className="size-4 shrink-0 text-muted-foreground" />
-      <span className="min-w-0 break-words font-medium">{version?.fileName?.trim() || "Controlled document"}</span>
+      <span className="min-w-0 break-words font-medium">{version?.id ? <StpVersionFile documentId={document.id} version={{ ...version, id: version.id }} /> : version?.fileName?.trim() || "Controlled document"}</span>
       {version?.versionNumber ? <span className="text-muted-foreground">version {version.versionNumber}</span> : null}
       <Badge variant={document.status === 2 ? "default" : "secondary"}>{documentStatusLabel(document.status)}</Badge>
     </div>

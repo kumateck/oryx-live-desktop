@@ -8,3 +8,6 @@ coverage/
 .env
 .env.*
 !.env.example
+
+# Reproducibly extracted from the checked-in Craft bundles.
+apps/web/public/viewers/

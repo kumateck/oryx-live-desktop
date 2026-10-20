@@ -1,0 +1,22 @@
+{
+  "upstream": "https://github.com/storytold/wordcraft",
+  "revision": "eae242176108d328c5dd81fbc10370c51ab90706",
+  "adapter": "4e72646339709832f0546173bbd15a275f8b6bfce3d97f549266d4b7b981dc64",
+  "archive": "77c63330ea69e8cf07e0ff45279ffe619140884ec072cc4fdbfcb24d45d24ee8",
+  "rust": "1.95.0",
+  "wasmBindgen": "0.2.129",
+  "policy": "readonly-v1",
+  "artifacts": {
+    "dodo-wordcraft.js": "f7b89bc7a1ee8d627b98f2f4a8a32417833d4b2129ba44c3f51cf790ba19e67e",
+    "dodo-wordcraft_bg.wasm": "ac94f4c076f8368c728f315b78856df0908773f6a53db9e094f9ca9d8ec25bd6"
+  },
+  "readonlyPatches": {
+    "readonly-00-engine-lib.rs.patch": "3ab7b9f181234a31a69f16585439427bf5b626f81206c0664dc3693c4335c9df",
+    "readonly-01-engine-readonly.rs.patch": "b955d7e6934013a63fcb8724da0de67b8c430576cc0cc2b7742524843a792b91",
+    "readonly-02-engine-session.rs.patch": "0dc1ec104a2e37d776d6a122a8bcc2286517ffef5004dd6491be145c0bfdf674",
+    "readonly-03-ui-egui-canvas.rs.patch": "044e9991a2c3f8ae39544c853fcced139e85f7b52e5fb85e761bbe6c0fab3c22",
+    "readonly-04-ui-egui-keys.rs.patch": "770ec78aac058bdde3a647c0508cacb90de3435ee156747a0a532e56428f9c80",
+    "readonly-05-ui-egui-lib.rs.patch": "aae581b9757414ccb41a8727fa0b5e69f475e0138f3fecd3e8cf8634ad864a84",
+    "readonly-06-ui-egui-readonly.rs.patch": "8fef00f21ccf65ce77ec08ff6cba93603f2cf5f982201d8f64ef7d917f303bf8"
+  }
+}

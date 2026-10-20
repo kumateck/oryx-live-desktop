@@ -52,6 +52,15 @@ server {
     add_header Cache-Control "public, max-age=31536000, immutable";
   }
 
+  # Pinned document engines must resolve as files, never the SPA's HTML fallback.
+  # Keep older engine revisions on the same persistent volume as app chunks.
+  location /viewers/ {
+    root /srv/assets;
+    try_files $uri =404;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+    add_header X-Content-Type-Options "nosniff";
+  }
+
   # Client-side routes all load index.html, which is always revalidated so a new release is picked up.
   location / {
     try_files $uri /index.html;

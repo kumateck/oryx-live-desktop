@@ -953,7 +953,7 @@ export const UniversalEvaluate: React.FC<Props> = ({
                               :{k}
                             </span>
                             {displayLabel && displayLabel !== k && (
-                              <span className="text-[10px] text-muted-foreground italic">
+                              <span className="text-sm text-muted-foreground italic">
                                 ({displayLabel})
                               </span>
                             )}
@@ -966,7 +966,7 @@ export const UniversalEvaluate: React.FC<Props> = ({
                             )}
                           </span>
                         </div>
-                        <label className="text-[10px] font-medium text-muted-foreground">
+                        <label className="text-sm font-medium text-muted-foreground">
                           Raw / Expression:
                         </label>
                         <input
@@ -980,7 +980,7 @@ export const UniversalEvaluate: React.FC<Props> = ({
                         />
                         {mv.evaluated !== null && (
                           <div className="flex items-center justify-between bg-muted border border-border rounded px-2 py-1">
-                            <span className="text-[10px] font-medium text-success">
+                            <span className="text-sm font-medium text-success">
                               Evaluated:
                             </span>
                             <span className="text-xs font-bold text-success">
@@ -1039,7 +1039,7 @@ export const UniversalEvaluate: React.FC<Props> = ({
                           {res.sample}
                         </span>
                         <div className="flex items-center gap-1.5 bg-background border border-border rounded px-2.5 py-1 shadow-sm">
-                          <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                          <span className="text-sm font-semibold text-muted-foreground uppercase">
                             Result
                           </span>
                           <span className="text-sm font-bold text-success">
@@ -1049,7 +1049,7 @@ export const UniversalEvaluate: React.FC<Props> = ({
                       </div>
                       <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 w-full">
                         <div className="bg-background border border-border rounded p-2 min-w-0">
-                          <div className="text-[10px] text-muted-foreground font-semibold mb-1">
+                          <div className="text-sm text-muted-foreground font-semibold mb-1">
                             Formula:
                           </div>
                           <div className="text-xs font-mono bg-muted/30 p-1.5 rounded-sm border border-border/60">
@@ -1059,7 +1059,7 @@ export const UniversalEvaluate: React.FC<Props> = ({
                           </div>
                         </div>
                         <div className="bg-background border border-border rounded p-2 min-w-0">
-                          <div className="text-[10px] text-success font-semibold mb-1">
+                          <div className="text-sm text-success font-semibold mb-1">
                             With Values:
                           </div>
                           <div className="text-xs font-mono bg-muted/30 p-1.5 rounded-sm border border-border/60">
@@ -1140,7 +1140,7 @@ export const UniversalEvaluate: React.FC<Props> = ({
                               key={inputIndex}
                               className="flex items-center gap-2"
                             >
-                              <label className="text-[10px] font-medium text-muted-foreground min-w-[80px]">
+                              <label className="text-sm font-medium text-muted-foreground min-w-[80px]">
                                 {input.label}:
                               </label>
                               <div className="flex-1 flex items-center gap-2">
@@ -1194,13 +1194,13 @@ export const UniversalEvaluate: React.FC<Props> = ({
                             className="border-r border-border p-1.5 bg-muted/30 min-w-[140px]"
                           >
                             <div className="flex items-center justify-between mb-1">
-                              <div className="text-[10px] text-muted-foreground font-semibold">
+                              <div className="text-sm text-muted-foreground font-semibold">
                                 {String.fromCharCode(65 + c)}
                               </div>
                             </div>
                             <div className="relative">{h}</div>
                             {parsed?.columnExpressions?.[c]?.error && (
-                              <div className="text-[9px] text-destructive mt-0.5 truncate">
+                              <div className="text-sm text-destructive mt-0.5 truncate">
                                 {parsed?.columnExpressions?.[c].error}
                               </div>
                             )}

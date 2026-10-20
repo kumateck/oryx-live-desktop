@@ -1,0 +1,96 @@
+diff --git a/crates/ui-egui/src/chrome.rs b/crates/ui-egui/src/chrome.rs
+index d81cf8c..f583aea 100644
+--- a/crates/ui-egui/src/chrome.rs
++++ b/crates/ui-egui/src/chrome.rs
+@@ -24,7 +24,7 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+             }
+             ui.horizontal_centered(|ui| {
+                 ui.spacing_mut().item_spacing.x = 4.0;
+-                if icons::button(ui, "house", 28.0, app.active.is_none() && !app.combine_showing(), tl!("Home")).clicked() {
++                if app.workspace_save.is_none() && icons::button(ui, "house", 28.0, app.active.is_none() && !app.combine_showing(), tl!("Home")).clicked() {
+                     app.active = None;
+                     app.combine_tab.focused = false;
+                 }
+@@ -118,7 +118,7 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+                 }
+                 ui.add_space(4.0);
+                 let tip = crate::commands::command_tip(ui.ctx(), tl!("Open a PDF ({key})"), "file.open");
+-                if widgets::ghost_button(ui, "plus", tl!("Open")).on_hover_text(tip).clicked() {
++                if app.workspace_save.is_none() && widgets::ghost_button(ui, "plus", tl!("Open")).on_hover_text(tip).clicked() {
+                     app.open_dialog();
+                 }
+                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+@@ -134,7 +134,7 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+                         app.dialog = Some(Dialog::Shortcuts);
+                     }
+                     // One click to the community, from anywhere in the app.
+-                    if widgets::ghost_button(ui, "messages-square", "Discord").on_hover_text(pdfcraft_engine::links::DISCORD).clicked() {
++                    if app.workspace_save.is_none() && widgets::ghost_button(ui, "messages-square", "Discord").on_hover_text(pdfcraft_engine::links::DISCORD).clicked() {
+                         app.execute("help.discord");
+                     }
+                 });
+@@ -284,6 +284,7 @@ pub fn mode_bar(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+                 for (mode, label) in
+                     [(Mode::AllTools, "All tools"), (Mode::Read, "Read"), (Mode::Edit, "Edit"), (Mode::Convert, "Convert"), (Mode::Sign, "E-Sign")]
+                 {
++                    if app.workspace_save.is_some() && matches!(mode, Mode::Convert | Mode::Sign) { continue; }
+                     if widgets::mode_tab(ui, tl!(label), app.mode == mode).clicked() {
+                         app.select_mode(mode);
+                     }
+@@ -293,7 +294,7 @@ pub fn mode_bar(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+                     let has_doc = app.active.is_some();
+                     ui.add_enabled_ui(has_doc, |ui| {
+                         let tip = crate::commands::command_tip(ui.ctx(), tl!("Print ({key})"), "print.dialog");
+-                        if icons::button(ui, "printer", 32.0, false, &tip).clicked() {
++                        if app.workspace_save.is_none() && icons::button(ui, "printer", 32.0, false, &tip).clicked() {
+                             app.run_command("print.dialog");
+                         }
+                         if icons::button(ui, "save", 32.0, false, tl!("Save (M4)")).clicked() {
+diff --git a/crates/ui-egui/src/palette.rs b/crates/ui-egui/src/palette.rs
+index f11e1c1..74d4aac 100644
+--- a/crates/ui-egui/src/palette.rs
++++ b/crates/ui-egui/src/palette.rs
+@@ -52,6 +52,7 @@ pub fn show(app: &mut PdfCraftApp, ctx: &egui::Context) {
+     let mut hits: Vec<(usize, Hit)> = Vec::new();
+     let active = app.active_ids().map(|(_, id)| id);
+     for spec in pdfcraft_engine::commands::COMMANDS {
++        if app.workspace_save.is_some() && !crate::workspace::allowed(spec.id) { continue; }
+         let label = pdfcraft_engine::commands::current_label(spec, &app.session, active);
+         let translated = crate::i18n::command_label(&label);
+         if let Some(s) = score(&translated, &q).or_else(|| score(&label, &q)).or_else(|| score(spec.id, &q).map(|s| s + 50)) {
+@@ -72,6 +73,7 @@ pub fn show(app: &mut PdfCraftApp, ctx: &egui::Context) {
+         }
+     }
+     for g in TOOL_GROUPS {
++        if app.workspace_save.is_some() && !crate::workspace::group(g.id) { continue; }
+         if let Some(s) = score(tl!(g.label), &q).or_else(|| score(g.label, &q)) {
+             hits.push((
+                 s,
+@@ -87,6 +89,7 @@ pub fn show(app: &mut PdfCraftApp, ctx: &egui::Context) {
+         }
+         for sec in g.sections {
+             for i in sec.items {
++                if app.workspace_save.is_some() && !crate::workspace::allowed(i.command) { continue; }
+                 if pdfcraft_engine::commands::command(i.command).is_some() {
+                     continue; // listed above as a command
+                 }
+diff --git a/crates/ui-egui/src/panels.rs b/crates/ui-egui/src/panels.rs
+index b4127ec..0899d0e 100644
+--- a/crates/ui-egui/src/panels.rs
++++ b/crates/ui-egui/src/panels.rs
+@@ -60,6 +60,7 @@ fn all_tools(app: &mut PdfCraftApp, ui: &mut egui::Ui, t: &Tokens) {
+     egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
+         let shown = if app.all_tools_expanded { TOOL_GROUPS.len() } else { COLLAPSED_TOOLS.min(TOOL_GROUPS.len()) };
+         for g in &TOOL_GROUPS[..shown] {
++            if app.workspace_save.is_some() && !crate::workspace::group(g.id) { continue; }
+             if tool_row(ui, t, g).clicked() {
+                 app.left = LeftPanel::Tool(g.id);
+             }
+@@ -174,6 +175,7 @@ fn tool_detail(app: &mut PdfCraftApp, ui: &mut egui::Ui, t: &Tokens, g: &'static
+         for s in g.sections {
+             widgets::section_title(ui, tl!(s.title));
+             for item in s.items {
++                if app.workspace_save.is_some() && !crate::workspace::allowed(item.command) { continue; }
+                 if g.id == "fill_sign" && (item.command.starts_with("sign.fill.signature") || item.command.starts_with("sign.fill.initials")) {
+                     continue;
+                 }

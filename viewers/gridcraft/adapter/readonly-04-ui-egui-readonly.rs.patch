@@ -1,0 +1,75 @@
+--- /dev/null
++++ b/crates/ui-egui/src/readonly.rs
+@@ -0,0 +1,72 @@
++//! Minimal attachment viewer, preserving the workbook renderer and navigation.
++use crate::SheetApp;
++use serde_json::json;
++
++pub fn show(app: &mut SheetApp, ui: &mut egui::Ui) {
++    egui::Panel::top("attachment-toolbar").show(ui, |ui| {
++        ui.horizontal_wrapped(|ui| {
++            ui.strong("Read-only");
++            let mut zoom = app.session.active().and_then(|d| d.wb.active()).map_or(100.0, |s| s.zoom as f32);
++            if ui.add(egui::Slider::new(&mut zoom, 25.0..=300.0).text("Zoom %")).changed() {
++                let _ = app.run("view.zoom", json!({"percent":zoom}));
++                app.after_engine();
++            }
++            let mut query = ui.ctx().data_mut(|d| d.get_temp::<String>(egui::Id::new("attachment-find")).unwrap_or_default());
++            ui.add(egui::TextEdit::singleline(&mut query).hint_text("Find in sheet").desired_width(160.0));
++            ui.ctx().data_mut(|d| d.insert_temp(egui::Id::new("attachment-find"), query.clone()));
++            if ui.button("Find next").clicked() && !query.is_empty() {
++                let _ = app.run("edit.find", json!({"what":query}));
++                app.after_engine();
++            }
++        });
++    });
++    egui::Panel::bottom("attachment-sheets").show(ui, |ui| {
++        let sheets: Vec<_> = app.session.active().map(|d| d.wb.sheets.iter().enumerate()
++            .filter(|(_, s)| s.visibility == gridcraft_engine::model::Visibility::Visible)
++            .map(|(i,s)| (i,s.name.clone(),i == d.wb.active_sheet)).collect()).unwrap_or_default();
++        egui::ScrollArea::horizontal().show(ui, |ui| { ui.horizontal(|ui| {
++            for (index, name, active) in sheets {
++                if ui.selectable_label(active, name).clicked() {
++                    let _ = app.run("sheet.activate", json!({"sheet":index}));
++                    app.after_engine();
++                }
++            }
++        }); });
++    });
++    let t = crate::theme::Tokens::get(ui.ctx());
++    egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.grid_bg)).show(ui, |ui| crate::grid::show(app, ui));
++}
++
++fn copy(app: &mut SheetApp, ctx: &egui::Context) {
++    if let Ok(result) = app.session.run("edit.copy", json!({})) {
++        if let Some(text) = result.get("text").and_then(|t| t.as_str()) { ctx.copy_text(text.to_owned()); }
++    }
++}
++
++pub fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &crate::grid::Geo, sh: &gridcraft_engine::model::Sheet) {
++    if (resp.clicked() || resp.dragged()) && let Some(pos) = resp.interact_pointer_pos() && geo.cells.contains(pos) {
++        resp.request_focus();
++        let cell = geo.cell_at(sh, pos).a1();
++        let anchor = app.session.active().map(|d| d.selection.anchor.a1()).unwrap_or_else(|| cell.clone());
++        let range = if resp.dragged() || ui.input(|i| i.modifiers.shift) { format!("{anchor}:{cell}") } else { cell };
++        let _ = app.session.run("selection.set", json!({"range":range}));
++    }
++    if resp.has_focus() {
++        for event in ui.input(|i| i.events.clone()) {
++            match event {
++                egui::Event::Copy => copy(app, ui.ctx()),
++                egui::Event::Key { key, pressed:true, modifiers, .. } => {
++                    let (dr, dc) = match key {
++                        egui::Key::ArrowUp => (-1,0), egui::Key::ArrowDown => (1,0),
++                        egui::Key::ArrowLeft => (0,-1), egui::Key::ArrowRight => (0,1),
++                        egui::Key::A if modifiers.command => { let _ = app.session.run("edit.selectAll", json!({})); continue; }
++                        _ => continue,
++                    };
++                    let _ = app.session.run("selection.move", json!({"dr":dr,"dc":dc,"extend":modifiers.shift}));
++                    app.after_engine();
++                }
++                _ => {}
++            }
++        }
++    }
++}

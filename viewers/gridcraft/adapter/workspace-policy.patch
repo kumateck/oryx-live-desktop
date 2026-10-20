@@ -1,0 +1,80 @@
+diff --git a/crates/ui-egui/src/backstage.rs b/crates/ui-egui/src/backstage.rs
+index 922baab..bff43ea 100644
+--- a/crates/ui-egui/src/backstage.rs
++++ b/crates/ui-egui/src/backstage.rs
+@@ -968,11 +968,13 @@ fn options(app: &mut SheetApp, ui: &mut Ui) {
+         app.run_or_alert("options.autoComplete", json!({"on": autocomplete}));
+     }
+     ui.add_space(18.0);
++    if app.services.workspace_save.is_none() {
+     section(ui, lang, "Options|Save");
+     let mut autosave = app.grid.autosave();
+     if ui.checkbox(&mut autosave, lang.tr("Save .xlsx workbooks automatically after every change")).changed() {
+         app.grid.toggle_autosave();
+     }
++    }
+     let Some(calc) = app.session.active().map(|d| d.wb.calc.clone()) else { return };
+     ui.add_space(18.0);
+     section(ui, lang, "Formulas");
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index f96cdac..08f779d 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -164,6 +164,8 @@ pub struct Notice {
+ /// Host services the platform shell provides (file pickers, opening URLs).
+ #[derive(Default)]
+ pub struct Services {
++    /// Workspace host: request a durable checkpoint of the assigned workbook.
++    pub workspace_save: Option<Box<dyn Fn()>>,
+     /// Desktop: discover configured printers on a worker.
+     pub printers: Option<printing::Discover>,
+     /// Desktop: submit the PDF with the chosen settings on a worker.
+@@ -351,6 +353,19 @@ impl SheetApp {
+     }
+ 
+     fn run_command(&mut self, id: &str, params: Json) -> Result<Json, String> {
++        if self.services.workspace_save.is_some() {
++            if matches!(id, "file.new" | "file.open" | "file.close" | "file.saveAs" | "view.newWindow" | "window.activate") {
++                return Err("Use Workspace Documents to create, open, duplicate or export another workbook.".into());
++            }
++            if id == "file.save" {
++                if !self.commit_edit(0, 0, false, false) {
++                    return Err("The current cell edit could not be committed.".into());
++                }
++                self.store_view_state();
++                if let Some(save) = &self.services.workspace_save { save(); }
++                return Ok(Json::Null);
++            }
++        }
+         if matches!(id, "file.save" | "file.saveAs" | "file.saveBytes") {
+             self.store_view_state();
+         }
+@@ -1146,7 +1161,7 @@ impl SheetApp {
+         }
+         self.perf.last = now;
+         // AutoSave: save workbooks that have a file shortly after they change.
+-        if self.grid.autosave
++        if self.grid.autosave && self.services.workspace_save.is_none()
+             && self.editor.is_none()
+             && self.text_box_editor.is_none()
+             && now - self.grid.last_autosave > 2000.0
+diff --git a/crates/ui-egui/src/ribbon.rs b/crates/ui-egui/src/ribbon.rs
+index 9c6d89e..d75806e 100644
+--- a/crates/ui-egui/src/ribbon.rs
++++ b/crates/ui-egui/src/ribbon.rs
+@@ -51,6 +51,7 @@ pub fn title_bar(app: &mut SheetApp, ui: &mut Ui) {
+         }
+         ui.horizontal_centered(|ui| {
+             ui.add_space(TITLE_LEFT_PAD);
++            if app.services.workspace_save.is_none() {
+             // AutoSave toggle (saves after each change when the workbook has a file).
+             ui.label(egui::RichText::new("AutoSave").font(theme::ui_font(12.5)).color(t.text_dim));
+             let on = app.grid.autosave();
+@@ -62,6 +63,7 @@ pub fn title_bar(app: &mut SheetApp, ui: &mut Ui) {
+             if resp.on_hover_text("AutoSave: save after every change (workbooks saved to a file)").clicked() {
+                 app.grid.toggle_autosave();
+             }
++            }
+             ui.add_space(6.0);
+             let __k = icon_button(ui, Icon::Home, t.text_dim, "Home", vec2(26.0, ch));
+             control_keytip(app, ui, &__k, "start");

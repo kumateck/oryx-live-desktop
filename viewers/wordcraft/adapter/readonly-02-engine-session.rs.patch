@@ -1,0 +1,37 @@
+--- a/crates/engine/src/session.rs
++++ b/crates/engine/src/session.rs
+@@ -331,6 +331,8 @@
+ 
+ /// An editing session.
+ pub struct Session {
++    /// Host policy: never permits document mutations or file operations.
++    pub read_only: bool,
+     pub doc: Document,
+     pub sel: Selection,
+     pub view: ViewState,
+@@ -591,6 +593,7 @@
+         let start = doc.start_of(StoryRef::Body);
+         let bib_style = doc_bib_style(&doc);
+         Session {
++            read_only: false,
+             doc,
+             sel: Selection::caret(start),
+             view: ViewState::default(),
+@@ -1035,6 +1038,7 @@
+     /// whether a snapshot must cover it.
+     pub fn edit_snapshot(&self) -> EditSnapshot {
+         let Session {
++            read_only: _,
+             doc,
+             sel,
+             view: _,
+@@ -1165,6 +1169,9 @@
+     /// control channel). Mutating commands are undoable; a failed command leaves the document as
+     /// it was; a panic inside a command becomes an error.
+     pub fn run(&mut self, id: &str, params: &Value) -> Result<Value, CmdError> {
++        if self.read_only && !crate::readonly::allowed(id) {
++            return Err(CmdError::Disabled("Attachments are read-only".into()));
++        }
+         let join = std::mem::take(&mut self.join_next);
+         let reg = self.registry.clone();
+         let Some(spec) = reg.get(id) else { return Err(CmdError::Unknown(id.to_string())) };

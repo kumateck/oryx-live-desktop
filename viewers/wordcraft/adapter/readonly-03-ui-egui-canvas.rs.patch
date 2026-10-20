@@ -1,0 +1,39 @@
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -1465,6 +1465,10 @@
+     crate::a11y::expose(app, ui.ctx(), resp.id, &layout, &rects, area);
+     // The buttons that start or stop middle-click scrolling don't also click the page.
+     let middle_gesture = app.canvas.auto_scroll.blocks_input();
++    if app.session.read_only {
++        if !middle_gesture { mouse(app, ui, &resp, &rects, &layout, geo.scale); }
++        return;
++    }
+     // Double-click the space between two pages (or the line between them) to hide or show it.
+     if resp.double_clicked()
+         && app.session.view.mode == wordcraft_layout::ViewMode::Print
+@@ -2093,6 +2097,25 @@
+ }
+ 
+ fn mouse(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect], layout: &DocLayout, scale: f32) {
++    if app.session.read_only {
++        if let Some(p) = resp.interact_pointer_pos()
++            && let Some((page, x, y)) = page_at(rects, layout, scale, p)
++            && let Some(pos) = layout.hit(page, x, y, app.session.sel.focus.story)
++        {
++            if ui.input(|i| i.pointer.primary_pressed()) && resp.contains_pointer() {
++                if ui.input(|i| i.modifiers.shift) { app.session.sel.focus = pos; }
++                else { app.session.sel = wordcraft_engine::Selection::caret(pos); }
++                app.canvas.dragging = true;
++            } else if app.canvas.dragging && ui.input(|i| i.pointer.primary_down()) {
++                app.session.sel.focus = pos;
++            }
++            if resp.double_clicked() { let _ = app.run("select.word", json!({})); }
++            if resp.triple_clicked() { let _ = app.run("select.paragraph", json!({})); }
++            app.session.page_hint = page;
++        }
++        if !ui.input(|i| i.pointer.primary_down()) { app.canvas.dragging = false; }
++        return;
++    }
+     // A pen or the eraser (Draw tab) owns the pointer.
+     if crate::ink::pointer(app, ui, resp, rects, layout, scale) {
+         return;

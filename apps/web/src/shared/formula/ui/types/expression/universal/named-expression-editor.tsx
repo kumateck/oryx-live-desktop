@@ -69,7 +69,7 @@ export default function NamedExpressionEditor({
                 <div className="flex flex-wrap items-center gap-2">
                   <code className="font-semibold text-info">:{item.key}</code>
                   <span className="text-sm">{item.label}</span>
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-sm">
                     {item.scope === NamedExpressionScope.PerSample
                       ? "per sample"
                       : "global"}

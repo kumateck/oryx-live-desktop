@@ -88,3 +88,9 @@ Goods received notes with their batches and each batch's standing with quality c
 A batch's manufacturing and expiry dates are a month and a year everywhere: on the checklist form (month picker), and on every list, detail page and print that shows them (`formatMonthYear` in `shared/format/dates.ts`, "Jun 2028"). `oryx-next` asked for and showed a full date.
 
 The server keeps full dates, so a month is saved as its first day for manufacture and its **last day** for expiry: a batch marked 06/2028 can be used until 30 June 2028. Retest dates, certificate validity and free-time dates are unchanged (full dates).
+
+## Quarantine GRN parity (2026-10-20)
+
+The GRN detail now uses all backend batch status values, including **Approved (8)**, and shows allocated, distributed, and retest fields. Its **Distribute** action offers approved materials and a warehouse allocation review using the existing endpoint and audit headers from Oryx Next. Raw/packaging permissions, fresh stock checks, failure handling and the existing backend concurrency/authorization limitation are described in [workflows.md](workflows.md); API assumptions are in [services.md](services.md).
+
+Regression coverage: `modules/quarantine-area/lib/distribution-plan.test.ts` and `components/distribution.test.tsx` cover the status contract, allocation/request identity, units, shortfalls, real route access, writes/audit headers, stale approval, duplicate clicks, permission revocation, and server/offline failures. Receiving regression tests also run against the shared batch schema.

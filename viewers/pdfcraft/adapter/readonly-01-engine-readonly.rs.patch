@@ -1,0 +1,44 @@
+--- /dev/null
++++ b/crates/engine/tests/readonly.rs
+@@ -0,0 +1,41 @@
++//! Oryx policy regression: original bytes and form values survive refused edits.
++use std::sync::Arc;
++use pdfcraft_cos::{Dict, Document, Object, SaveOptions, write_incremental};
++use pdfcraft_engine::{Edit, EditError, Session};
++use pdfcraft_forms::{FieldValue, NewField, add_field, set_value};
++
++#[test]
++fn attachment_pdf_keeps_original_form_and_refuses_edit_save_undo() {
++    let mut doc = Document::new_empty();
++    let pages = doc.get(doc.root().unwrap()).as_dict().unwrap().reference(b"Pages").unwrap();
++    let mut page = Dict::new();
++    page.set(b"Type".to_vec(), Object::name("Page"));
++    page.set(b"Parent".to_vec(), Object::Ref(pages));
++    page.set(b"MediaBox".to_vec(), Object::Array(vec![0.into(), 0.into(), 600.into(), 800.into()]));
++    let reference = doc.add(page);
++    doc.update_dict(pages, |d| {
++        d.set(b"Kids".to_vec(), Object::Array(vec![Object::Ref(reference)]));
++        d.set(b"Count".to_vec(), Object::Int(1));
++    }).unwrap();
++    add_field(&mut doc, 0, [10.0, 40.0, 90.0, 60.0], &NewField::Text { multiline:false }, Some("name")).unwrap();
++    set_value(&mut doc, "name", &FieldValue::Text("Original value".into())).unwrap();
++    let bytes = Arc::new(write_incremental(&doc, &SaveOptions::default()).unwrap());
++    let mut session = Session::default();
++    session.read_only = true;
++    session.set_javascript(false);
++    let id = session.open("form.pdf", None, bytes.clone(), None).unwrap();
++    assert!(!session.get(id).unwrap().editable());
++    assert_eq!(session.get(id).unwrap().form.len(), 1);
++    assert!(matches!(session.apply(id, Edit::DeletePages { pages: vec![0] }), Err(EditError::ReadOnly(_))));
++    assert!(matches!(session.apply(id, Edit::SetFieldValue { name: "name".into(), value: FieldValue::Text("Changed".into()) }), Err(EditError::ReadOnly(_))));
++    assert!(matches!(session.undo(id), Err(EditError::ReadOnly(_))));
++    assert!(matches!(session.redo(id), Err(EditError::ReadOnly(_))));
++    assert!(matches!(session.save_bytes(id), Err(EditError::ReadOnly(_))));
++    assert!(matches!(session.save_full_bytes(id), Err(EditError::ReadOnly(_))));
++    assert!(matches!(session.mark_saved(id, Arc::new(vec![]), None), Err(EditError::ReadOnly(_))));
++    let document = session.get(id).unwrap();
++    assert_eq!(document.bytes, bytes);
++    assert_eq!(document.form[0].value, vec!["Original value"]);
++    assert_eq!(document.info.pages.len(), 1);
++    assert!(!document.dirty);
++}

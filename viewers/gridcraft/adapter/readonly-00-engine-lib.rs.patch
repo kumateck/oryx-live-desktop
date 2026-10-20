@@ -1,0 +1,28 @@
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -9,6 +9,7 @@
+ pub mod catalog;
+ pub mod cf;
+ mod clip_html;
++pub mod readonly;
+ pub mod cmd;
+ pub mod display;
+ pub mod fill;
+@@ -229,6 +230,7 @@
+ 
+ #[derive(Default)]
+ pub struct Session {
++    pub read_only: bool,
+     docs: Vec<DocState>,
+     active: usize,
+     pub clipboard: Option<Clipboard>,
+@@ -316,6 +318,9 @@
+     /// Runs a command by id. Undoable commands record a history step when the workbook changed.
+     /// Panics inside commands are caught and reported; the workbook is restored.
+     pub fn execute(&mut self, id: &str, params: Json) -> Result<Json> {
++        if self.read_only && !readonly::allowed(id) {
++            return Err(EngineError::Disabled(id.into(), "Attachments are read-only".into()));
++        }
+         let spec = find_command(id).ok_or_else(|| EngineError::UnknownCommand(id.to_string()))?;
+         if let Err(why) = (spec.enabled)(self) {
+             return Err(EngineError::Disabled(id.to_string(), why));

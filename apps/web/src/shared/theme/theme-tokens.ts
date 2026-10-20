@@ -4,10 +4,10 @@ export type FontChoice = "system" | "sans" | "serif" | "mono";
 export interface ThemeProfile { background: string; foreground: string; accent: AccentName; font: FontChoice }
 
 const families: Record<FontChoice, string> = {
-  system: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", sans-serif',
-  sans: 'Arial, Helvetica, sans-serif',
-  serif: 'Georgia, "Times New Roman", serif',
-  mono: 'ui-monospace, SFMono-Regular, Consolas, monospace',
+  system: "var(--font-family-system)",
+  sans: "var(--font-family-sans)",
+  serif: "var(--font-family-serif)",
+  mono: "var(--font-family-mono)",
 };
 
 export function fontFamily(choice: FontChoice): string { return families[choice]; }
@@ -39,11 +39,11 @@ export function createPalette(profile: ThemeProfile, mode: "light" | "dark", con
     "--border": surface(mode === "dark" ? 0.13 : 0.09),
     "--surface-border": surface(mode === "dark" ? 0.10 : 0.075),
     "--panel-divider": surface(mode === "dark" ? 0.13 : 0.12),
-    "--empty-text": mix(background, foreground, mode === "dark" ? 0.40 : 0.50),
+    "--empty-text": mix(background, foreground, mode === "dark" ? 0.65 : 0.62),
     "--hover": surface(mode === "dark" ? 0.13 : 0.055),
     "--selected": surface(mode === "dark" ? 0.14 : 0.07),
-    "--text-muted": mix(background, foreground, mode === "dark" ? 0.7 : 0.56),
-    "--soft": mix(background, foreground, mode === "dark" ? 0.53 : 0.45),
+    "--text-muted": mix(background, foreground, mode === "dark" ? 0.7 : 0.62),
+    "--soft": mix(background, foreground, mode === "dark" ? 0.65 : 0.62),
     "--focus": mode === "dark" ? "#89AFF0" : "#477CC6",
     "--background": background,
     "--foreground": foreground,
@@ -55,7 +55,7 @@ export function createPalette(profile: ThemeProfile, mode: "light" | "dark", con
     "--secondary": surface(mode === "dark" ? 0.12 : 0.07),
     "--secondary-foreground": foreground,
     "--muted": surface(mode === "dark" ? 0.13 : 0.055),
-    "--muted-foreground": mix(background, foreground, mode === "dark" ? 0.7 : 0.56),
+    "--muted-foreground": mix(background, foreground, mode === "dark" ? 0.7 : 0.62),
     "--accent": surface(mode === "dark" ? 0.14 : 0.07),
     "--accent-foreground": foreground,
     "--input": surface(mode === "dark" ? 0.16 : 0.09),

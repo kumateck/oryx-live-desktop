@@ -988,7 +988,7 @@ const ExpressionPanel: React.FC<Props> = ({
                       {res.sample}
                     </span>
                     <div className="flex items-center gap-1.5 bg-background border border-border rounded px-2.5 py-1 shadow-sm">
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                      <span className="text-sm font-semibold text-muted-foreground uppercase">
                         Result
                       </span>
                       <span className="text-sm font-bold text-success">
@@ -997,7 +997,7 @@ const ExpressionPanel: React.FC<Props> = ({
                     </div>
                   </div>
                   <div className="bg-background border border-border rounded p-2 mb-2">
-                    <div className="text-[10px] text-muted-foreground font-semibold mb-1">
+                    <div className="text-sm text-muted-foreground font-semibold mb-1">
                       Formula:
                     </div>
                     <div className="text-xs font-mono bg-muted/30 p-1.5 rounded-sm border border-border/60">
@@ -1140,7 +1140,7 @@ const ExpressionPanel: React.FC<Props> = ({
                         :{item.key}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-muted-foreground group-hover:text-info">
+                        <span className="text-sm text-muted-foreground group-hover:text-info">
                           {item.label}
                         </span>
                         {item.isTemplate && (
@@ -1190,7 +1190,7 @@ const ExpressionPanel: React.FC<Props> = ({
                           className="border-r border-border p-1.5 bg-muted/30 min-w-[160px]"
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <div className="text-[10px] text-muted-foreground font-semibold">
+                            <div className="text-sm text-muted-foreground font-semibold">
                               {String.fromCharCode(65 + c)}
                             </div>
                             <div className="flex gap-1">
@@ -1241,7 +1241,7 @@ const ExpressionPanel: React.FC<Props> = ({
                             )}
                           </div>
                           {columnExpressions[c]?.error && (
-                            <div className="text-[9px] text-destructive mt-0.5 truncate">
+                            <div className="text-sm text-destructive mt-0.5 truncate">
                               {columnExpressions[c].error}
                             </div>
                           )}

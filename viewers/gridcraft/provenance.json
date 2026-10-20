@@ -1,0 +1,20 @@
+{
+  "upstream": "https://github.com/storytold/gridcraft",
+  "revision": "d9d09f0baa912e88c5111107903fc8c640214b57",
+  "adapter": "5c236bd04e80efe658446c0379248ed70f610edfa4e4b8bc85324a2838e69885",
+  "archive": "ebe7de1f6905f02c85493c58b711bd99011641683cad7e9e26685df6a5728191",
+  "rust": "1.95.0",
+  "wasmBindgen": "0.2.129",
+  "policy": "readonly-v1",
+  "artifacts": {
+    "dodo-gridcraft.js": "081fcc6e5b9d16c68954fe5545ad5ac5ced0c82e25df2ade7376ef2d7e582d5b",
+    "dodo-gridcraft_bg.wasm": "a0809faf84b22fa316b7b47b93bd769a7f74f1651e5aa226ee89e069dee71712"
+  },
+  "readonlyPatches": {
+    "readonly-00-engine-lib.rs.patch": "92f9e3dac00decd6b649529fafa1586672d34565f00ef7720189b3964f4c1e69",
+    "readonly-01-engine-readonly.rs.patch": "0bb84b68de7e5341c4540efce2cb81583c4a898dc7dd223cb3dfa3dfd3db7962",
+    "readonly-02-ui-egui-grid.rs.patch": "c354c92ab7baab47550f519ac9a7c9b4695b7e9d2eff82e8fc43d68013500bcc",
+    "readonly-03-ui-egui-lib.rs.patch": "fda9d64b58daa8f280afbb3d23cea755a2a2e8447c7687abbe2f1a746fd481df",
+    "readonly-04-ui-egui-readonly.rs.patch": "8097c2963ad936337d7fbd722b471b7573e8de368bc600f91b8a420b271452c9"
+  }
+}

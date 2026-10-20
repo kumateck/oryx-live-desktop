@@ -36,13 +36,13 @@ export function Tabs<TId extends string>({ label, tabs, active, onSelect, childr
     onSelect(next.id);
     document.getElementById(`${base}-tab-${next.id}`)?.focus();
   };
-  return <div className="min-w-0 rounded-lg border bg-card">
-    <div role="tablist" aria-label={label} className="flex flex-wrap gap-x-5 gap-y-1 border-b px-4">
+  return <div className="min-w-0 ui-card-flush border bg-card">
+    <div role="tablist" aria-label={label} className="flex flex-wrap gap-x-5 gap-y-1 border-b px-card">
       {tabs.map((tab) => <button key={tab.id} id={`${base}-tab-${tab.id}`} type="button" role="tab" aria-selected={tab.id === active}
         aria-controls={`${base}-panel`} tabIndex={tab.id === active ? 0 : -1} onClick={() => onSelect(tab.id)} onKeyDown={move}
         className={cn("-mb-px border-b-2 py-2.5 text-sm font-medium focus-visible:outline-2",
           tab.id === active ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>{tab.label}</button>)}
     </div>
-    <div id={`${base}-panel`} role="tabpanel" aria-labelledby={`${base}-tab-${active}`} className="min-w-0 p-4">{children}</div>
+    <div id={`${base}-panel`} role="tabpanel" aria-labelledby={`${base}-tab-${active}`} className="min-w-0 p-card">{children}</div>
   </div>;
 }

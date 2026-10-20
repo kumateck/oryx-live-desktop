@@ -107,8 +107,8 @@ const SummaryItem: React.FC<{ label: string; value: string }> = ({
   value,
 }) => (
   <div className="flex items-center justify-between bg-muted/30 border border-border rounded px-2 py-1">
-    <span className="text-[11px] text-muted-foreground">{label}</span>
-    <span className="text-[12px] font-medium text-foreground">{value}</span>
+    <span className="text-sm text-muted-foreground">{label}</span>
+    <span className="text-sm font-medium text-foreground">{value}</span>
   </div>
 );
 
@@ -436,7 +436,7 @@ export const UniformityOfWeightConfig: React.FC<
           <Section
             title="Compact Summary"
             right={
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 Only these settings are saved.
               </div>
             }
@@ -471,7 +471,7 @@ export const UniformityOfWeightConfig: React.FC<
           <Section
             title="Deviation Preview"
             right={
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calculator className="w-3.5 h-3.5" />
                 Expressions show live nominal substitution
               </div>

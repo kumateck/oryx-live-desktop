@@ -1,0 +1,21 @@
+{
+  "upstream": "https://github.com/storytold/pdfcraft",
+  "revision": "53a5880386789fc3531e54f6e6ffdef9a8e41f1a",
+  "adapter": "1775057c4c9eb33b257b1d3d9dde4d79e7e043bb61a4fd106c345664b8fe63d5",
+  "archive": "6ec9aaa6119e39cc8bb4f3b287dcf188c5c7967ae5d611e577d6b2158195438f",
+  "rust": "1.95.0",
+  "wasmBindgen": "0.2.129",
+  "policy": "readonly-v1",
+  "artifacts": {
+    "dodo-pdfcraft.js": "853852dca19fa11adcd289c57e78971b86074a4288657aa094c530d904ebac0e",
+    "dodo-pdfcraft_bg.wasm": "e8b379d0f28b6b5461308f4d4debacac33973a5c581fd2e05513679825bea6f5"
+  },
+  "readonlyPatches": {
+    "readonly-00-engine-lib.rs.patch": "bdad021e031f707c39262667734155a3f938cfc007c93e651c1f2f74ede7e8c3",
+    "readonly-01-engine-readonly.rs.patch": "d4e326d4e7b7db97390fac9246c709bfe61366a6102d8f78ea2b9664c1fd40ef",
+    "readonly-02-ui-egui-canvas.rs.patch": "7221aed5907a341d8bcd11493e3fdcfa60a13c20fed3baff09a3a1b113da4cb2",
+    "readonly-03-ui-egui-commands.rs.patch": "7358b87cf8859a1f63bb60edbefe3794886ea0ce86d18681cb8fb865822ba752",
+    "readonly-04-ui-egui-lib.rs.patch": "7e6d8cd7b567deffa82a895e47c1773d1b039e0c3d32dc43c5a883c05bd6f9d6",
+    "readonly-05-ui-egui-readonly.rs.patch": "4bb7ced528ac01517084efbdef72ff50be29efadc25e578a64274f34df7ddf76"
+  }
+}

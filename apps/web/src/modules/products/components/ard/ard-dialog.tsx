@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Paperclip } from "lucide-react";
+import { AttachmentList } from "@/shared/attachments/attachment-list";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
@@ -15,7 +15,6 @@ const fields = [
   { type: InputTypes.UPLOAD, name: "attachments", label: "Attach files", mode: "multiple", accept: ardAttachmentTypes, description: "Images, PDF, Word, or Excel files." },
 ] as const satisfies readonly WizardField<ArdFormValues>[];
 
-const safeLink = (link: string | null | undefined) => link && /^https?:\/\//i.test(link) ? link : null;
 
 export type ArdTarget = { saved: SavedArd } | { source: ArdSource };
 
@@ -47,14 +46,7 @@ export function ArdDialog({ target, saving, message, onSave, onClose }: {
             <dt className="text-muted-foreground">Template form</dt><dd className="break-words">{facts.form || "–"}</dd>
           </dl> : null}
           <FormWizard form={form} fields={fields} />
-          {saved?.attachments.length ? <div className="space-y-1 rounded-md border p-3 text-sm">
-            <p className="font-medium">Files already attached</p>
-            <ul className="space-y-1">{saved.attachments.map((file, index) => { const link = safeLink(file.link); return <li key={file.id ?? index} className="flex items-center gap-2">
-              <Paperclip className="size-3.5 shrink-0 text-muted-foreground" />
-              {link ? <a className="min-w-0 break-words text-primary underline-offset-2 hover:underline" href={link} target="_blank" rel="noreferrer">{file.name || "Unnamed file"}</a>
-                : <span className="min-w-0 break-words">{file.name || "Unnamed file"}</span>}
-            </li>; })}</ul>
-          </div> : null}
+          {saved?.attachments.length ? <AttachmentList title="Files already attached" files={saved.attachments.map((file, index) => ({ id: file.id ?? `attachment-${index}`, name: file.name || "Unnamed file", link: file.link ?? null }))} /> : null}
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>
         <DialogFooter>

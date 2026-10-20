@@ -1,3 +1,5 @@
+import { AttachmentOpener } from "@/shared/attachments/attachment-opener";
+import { AttachmentPreviewButton } from "@/shared/attachments/attachment-preview-button";
 import { sanitizeString } from "@/shared/ard-view/legacy";
 import { FormResponseDto } from "@/shared/ard-view/dto";
 import { FileSpreadsheet, FileText, Presentation, File } from "lucide-react";
@@ -58,16 +60,17 @@ export const renderPrintAttachments = (
                 }`}
               />
             )}
+            {!isSignature ? <AttachmentPreviewButton file={{ id: file.id ?? `${name}-${index}`, name, link: link || null }} /> : null}
             {!image && (
               <div className="flex gap-2 items-center">
-                <span className="inline-flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-0.5 text-[9px] font-semibold print:border-slate-400 print:bg-slate-100">
+                <span className="inline-flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-0.5 text-document-9 font-semibold print:border-slate-400 print:bg-slate-100">
                   {(() => {
                     const Icon = fileTypeIcon(name);
                     return <Icon className="h-3 w-3" />;
                   })()}
                   {fileTypeLabel(name)}
                 </span>
-                <span>{name}</span>
+                <span className="print:hidden"><AttachmentOpener file={{ id: file.id ?? `${name}-${index}`, name, link: link || null }} /></span><span className="hidden print:inline">{name}</span>
               </div>
             )}
           </div>

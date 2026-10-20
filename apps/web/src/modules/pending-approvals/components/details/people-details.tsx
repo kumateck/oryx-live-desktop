@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { FileText } from "lucide-react";
+import { AttachmentList } from "@/shared/attachments/attachment-list";
 import { z } from "zod";
 import { hrApi } from "@/shared/api/generated/hr";
 import { servicesApi } from "@/shared/api/generated/services";
@@ -19,7 +19,6 @@ const amount = z.number().nullish().transform((value) => typeof value === "numbe
 const named = z.object({ name: text }).nullish();
 const employee = z.object({ id: z.string().nullish(), firstName: text, lastName: text, staffNumber: text, department: named, designation: named });
 const days = (value: number | null) => value === null ? null : `${formatQuantityNumber(value, "calculated")} ${value === 1 ? "day" : "days"}`;
-const safeLink = (link: string | null) => link && /^https?:\/\//i.test(link) ? link : null;
 function useParsed<T>(schema: z.ZodType<T>, data: unknown): T | null {
   return useMemo(() => { const parsed = schema.safeParse(data ?? null); return parsed.success ? parsed.data : null; }, [schema, data]);
 }
@@ -49,9 +48,7 @@ export function LeaveRequestDetails({ id }: { id: string }) {
       </div>
       {after !== null && after < 0 ? <p role="note" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">The paid days asked for are {days(-after)} more than the balance.</p> : null}
       <Written title="Justification" html={leave.justification} />
-      {leave.attachments?.length ? <ul aria-label="Attachments" className="space-y-2">{leave.attachments.map((file, index) => { const link = safeLink(file.link);
-        return <li key={file.id ?? index} className="flex items-center gap-2 rounded-md border p-3 text-sm"><FileText className="size-4 shrink-0 text-muted-foreground" />
-          {link ? <a className="min-w-0 break-all text-primary underline-offset-2 hover:underline" href={link} target="_blank" rel="noreferrer">{file.name ?? "Attachment"}</a> : <span className="min-w-0 break-all">{file.name ?? "Attachment"}</span>}</li>; })}</ul> : null}
+      {leave.attachments?.length ? <AttachmentList title="Attachments" files={leave.attachments.map((file, index) => ({ id: file.id ?? `attachment-${index}`, name: file.name ?? "Attachment", link: file.link }))} /> : null}
     </div>; }}</DetailState>;
 }
 
@@ -107,5 +104,6 @@ export function JobRequestDetails({ id }: { id: string }) {
       <DetailItem label="Issued by" value={fullName(job.issuedBy)} /><DetailItem label="Issued on" value={formatDate(job.dateOfIssue)} /><DetailItem label="Wanted by" value={formatDate(job.preferredCompletionDate)} />
       <DetailItem label="Handled" value={job.handlingType === null || job.handlingType === undefined ? null : handling[job.handlingType]} /></DetailGroup>
     <Written title="Work to be done" html={job.descriptionOfWork} />
+    {job.attachments?.length ? <AttachmentList title="Attachments" files={job.attachments.map((file, index) => ({ id: file.id ?? `attachment-${index}`, name: file.name ?? "Attachment", link: file.link }))} /> : null}
   </div>}</DetailState>;
 }

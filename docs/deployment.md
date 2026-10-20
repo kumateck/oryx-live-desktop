@@ -52,3 +52,9 @@ docker build -f deploy/Dockerfile --target gateway -t oryx-live-gateway .
 ```
 
 The web image needs `ORYX_API_ORIGIN` (the backend origin) and `ORYX_GATEWAY_UPSTREAM` (`host:port` of the gateway on the Docker network). The gateway's variables are listed in `docs/notifications.md`; in the image it listens on `0.0.0.0:4100`.
+
+## Attachment engine assets
+
+The web build includes pinned PDFCraft, WordCraft and GridCraft assets under `/viewers/`. Nginx serves these paths directly with immutable caching and 404 for missing files; they must never resolve to `index.html`. The startup retention script validates all three JS/WASM pairs and their WASM headers before copying app chunks and engine revisions/notices onto the existing `~/oryx-live/assets` volume. Older engine revisions share the 30-day retention policy, so open windows keep their matching runtime after an update. An incomplete engine release fails startup visibly.
+
+The shipment attachment audit found port 3011 serving the legacy direct-iframe viewer and HTML for a missing engine. Publishing the corrected web image/configuration is required; no shell reinstall is needed. See [attachment-audit.md](attachment-audit.md) for evidence, coverage and acceptance limits.

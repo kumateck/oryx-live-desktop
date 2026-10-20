@@ -1,0 +1,129 @@
+diff --git a/crates/engine/src/js.rs b/crates/engine/src/js.rs
+index d636c30..19187f3 100644
+--- a/crates/engine/src/js.rs
++++ b/crates/engine/src/js.rs
+@@ -168,7 +168,8 @@ impl crate::Document {
+ impl Session {
+     /// Preferences ▸ JavaScript ▸ Enable Acrobat JavaScript (on by default).
+     pub fn set_javascript(&mut self, on: bool) {
+-        self.js_off = !on;
++        let _ = on;
++        self.js_off = true;
+     }
+ 
+     pub fn javascript(&self) -> bool {
+diff --git a/crates/ui-egui/src/commands.rs b/crates/ui-egui/src/commands.rs
+index 52a5727..fdb8e0a 100644
+--- a/crates/ui-egui/src/commands.rs
++++ b/crates/ui-egui/src/commands.rs
+@@ -80,6 +80,9 @@ impl PdfCraftApp {
+     /// Whether a registered command can run now. The engine judges the document (security,
+     /// contents, undo history); view state it can't see is checked here.
+     pub(crate) fn command_enabled(&self, spec: &CommandSpec) -> bool {
++        if self.workspace_save.is_some() && !crate::workspace::allowed(spec.id) {
++            return false;
++        }
+         // Undo and Redo act on the Combine files list while its tab shows.
+         if self.combine_showing() && matches!(spec.needs, commands::Needs::Undo | commands::Needs::Redo) {
+             return self.combine_can_undo(spec.needs == commands::Needs::Undo);
+@@ -104,6 +107,10 @@ impl PdfCraftApp {
+     }
+ 
+     fn execute_unguarded(&mut self, id: &str) -> bool {
++        if self.workspace_save.is_some() && !crate::workspace::allowed(id) {
++            self.notify("This operation is unavailable in the offline editor. Use Workspace Documents for file operations.");
++            return false;
++        }
+         let Some(spec) = commands::command(id) else { return false };
+         if !self.command_enabled(spec) {
+             let why = match spec.needs {
+@@ -636,6 +643,7 @@ impl PdfCraftApp {
+ /// Render a top-level menu's registered commands (with live labels, shortcuts and enablement).
+ pub(crate) fn registry_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui, menu: &str) {
+     for spec in commands::menu(menu) {
++        if app.workspace_save.is_some() && !crate::workspace::allowed(spec.id) { continue; }
+         let label = commands::current_label(spec, &app.session, app.active_ids().map(|(_, id)| id));
+         let label = crate::i18n::menu_label(spec.id, &label);
+         // Open Recent is a submenu of the live recent list, not one action: disabled while the
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 479e5b6..3136bca 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -116,6 +116,7 @@ pub mod ui_scale;
+ pub mod updates;
+ mod wheel_pager;
+ mod widgets;
++mod workspace;
+ 
+ use pdfcraft_engine::{DocId, Session};
+ 
+@@ -459,6 +460,7 @@ pub struct PdfCraftApp {
+     pub os_events: Option<OsEventsFn>,
+     /// Save delivers to the embedding page instead of downloading (web, see [`HostSaveFn`]).
+     pub host_save: Option<HostSaveFn>,
++    pub workspace_save: Option<Box<dyn Fn()>>,
+     /// Reports unsaved work to the embedding page (web, see [`HostDirtyFn`]).
+     pub host_dirty: Option<HostDirtyFn>,
+     /// A pending "save changes?" question (closing a dirty tab or quitting).
+@@ -744,6 +746,7 @@ impl PdfCraftApp {
+             unsaved_flag: Default::default(),
+             os_events: None,
+             host_save: None,
++            workspace_save: None,
+             host_dirty: None,
+             close_request: None,
+             save_override: None,
+@@ -898,6 +901,9 @@ impl PdfCraftApp {
+     }
+ 
+     fn open_bytes_with_focus(&mut self, name: &str, path: Option<String>, bytes: Vec<u8>, activate: bool) -> Result<(), String> {
++        if self.workspace_save.is_some() && !self.views.is_empty() {
++            return Err("Open another PDF from Workspace Documents.".into());
++        }
+         // Images and text files become new, unsaved PDFs (Create a PDF).
+         let active = self.active;
+         if let Some(r) = self.open_converted(name, &bytes) {
+@@ -1072,6 +1078,10 @@ impl PdfCraftApp {
+ 
+     /// Save an attachment to disk, or open a PDF attachment in a new tab.
+     pub fn attachment_action(&mut self, doc: DocId, index: usize, open: bool) {
++        if self.workspace_save.is_some() {
++            self.notify("Attachment export is unavailable in the offline editor.");
++            return;
++        }
+         let Some(d) = self.session.get(doc) else { return };
+         let Some(att) = d.info.attachments.get(index).cloned() else { return };
+         let data = pdfcraft_render::attachment_data(&d.bytes, d.password.as_deref(), &att);
+@@ -1155,6 +1165,10 @@ impl PdfCraftApp {
+     }
+ 
+     pub fn open_dialog(&mut self) {
++        if self.workspace_save.is_some() {
++            self.notify("Open another PDF from Workspace Documents.");
++            return;
++        }
+         self.startup_superseded = true;
+         #[cfg(not(target_arch = "wasm32"))]
+         self.pick(
+@@ -1188,6 +1202,10 @@ impl PdfCraftApp {
+     }
+ 
+     pub fn close_tab(&mut self, index: usize) {
++        if self.workspace_save.is_some() {
++            self.notify("Close the editor window to return to Workspace Documents.");
++            return;
++        }
+         if index >= self.views.len() {
+             return;
+         }
+@@ -1223,6 +1241,10 @@ impl PdfCraftApp {
+     /// Open a web link in the system browser (a new tab on the web). Only for PdfCraft's own
+     /// links; an address that came from a document goes through [`Self::request_document_url`].
+     pub fn open_url(&mut self, url: &str) {
++        if self.workspace_save.is_some() {
++            self.notify("External navigation is disabled in this offline editor.");
++            return;
++        }
+         if let Some(ctx) = &self.ctx {
+             ctx.open_url(egui::OpenUrl::new_tab(url));
+         }

@@ -1,0 +1,31 @@
+--- /dev/null
++++ b/crates/engine/src/readonly.rs
+@@ -0,0 +1,28 @@
++//! Attachment commands are denied by default, including non-undoable mutations.
++pub fn allowed(id: &str) -> bool {
++    matches!(id, "selection.set" | "selection.move" | "selection.next"
++        | "selection.currentRegion" | "selection.row" | "selection.column" | "edit.selectAll"
++        |
++        "sheet.activate" | "view.zoom" | "view.zoom100" | "edit.copy" | "edit.find")
++}
++#[cfg(test)]
++mod tests {
++    use crate::Session;
++    use serde_json::json;
++    #[test]
++    fn attachment_refuses_mutation_and_file_operations() {
++        let mut s = Session::new();
++        s.new_workbook();
++        s.read_only = true;
++        let before = s.active().unwrap().wb.clone();
++        for id in ["cell.set", "edit.cut", "edit.paste", "edit.undo", "sheet.add", "view.gridlines", "file.save", "file.open", "edit.replace"] {
++            assert!(s.execute(id, json!({"cell":"A1", "value":"Changed"})).is_err(), "{id}");
++        }
++        assert_eq!(s.active().unwrap().wb, before);
++        assert!(!s.active().unwrap().is_dirty());
++        assert!(s.execute("selection.set", json!({"cell":"A1"})).is_ok());
++        assert!(s.execute("edit.copy", json!({})).is_ok());
++        assert!(s.execute("sheet.activate", json!({"sheet":0})).is_ok());
++        assert!(!s.active().unwrap().is_dirty());
++    }
++}

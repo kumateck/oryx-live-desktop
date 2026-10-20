@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Ban, FilePenLine, FileText } from "lucide-react";
+import { Ban, FilePenLine } from "lucide-react";
 import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PurchaseOrderLines } from "@/modules/proforma-requests/components/purchase-order-lines";
 import { PurchaseOrderPrint } from "@/modules/proforma-requests/components/purchase-order-print";
 import type { PurchaseOrder } from "@/modules/proforma-requests/schemas/purchase-order-schema";
+import { AttachmentList } from "@/shared/attachments/attachment-list";
 import { useAccess } from "@/shared/auth/use-access";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { Tabs, useTabParam } from "@/shared/detail/tabs";
@@ -23,7 +24,6 @@ import { OrderStatusBadge } from "./order-status-badge";
 import { OrderTerms, OrderTotals } from "./order-terms";
 
 type Tab = "lines" | "attachments" | "revisions";
-const safeLink = (link: string | null) => link && /^https?:\/\//i.test(link) ? link : null;
 
 /** One purchase order: who it is with, what it is for, what it costs, and how it has changed. */
 export function OrderDetail({ order, type }: { order: PurchaseOrder; type: SupplierType }) {
@@ -53,10 +53,7 @@ export function OrderDetail({ order, type }: { order: PurchaseOrder; type: Suppl
     <OrderTerms order={order} />
     <Tabs label="Order records" tabs={tabs} active={active} onSelect={select}>
       {active === "lines" ? <div className="space-y-4"><PurchaseOrderLines order={order} />{order.recorded.grandTotal !== null ? <OrderTotals order={order} type={type} /> : null}</div> : null}
-      {active === "attachments" ? order.attachments.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">Nothing is attached to this order.</p>
-        : <ul className="space-y-2">{order.attachments.map((file) => { const link = safeLink(file.link);
-          return <li key={file.id} className="flex items-center gap-2 rounded-md border p-3 text-sm"><FileText className="size-4 shrink-0 text-muted-foreground" />
-            {link ? <a className="min-w-0 break-all text-primary underline-offset-2 hover:underline" href={link} target="_blank" rel="noreferrer">{file.name}</a> : <span className="min-w-0 break-all">{file.name}</span>}</li>; })}</ul> : null}
+      {active === "attachments" ? <AttachmentList title="Attachments" files={order.attachments} empty="Nothing is attached to this order." /> : null}
       {active === "revisions" ? <div className="space-y-4">{order.revisions.map((revision) => <section key={revision.number} className="space-y-2">
         <h3 className="text-sm font-semibold">Revision {revision.number} <span className="font-normal text-muted-foreground">{formatDate(revision.date) ?? ""}</span></h3>
         <Table><TableHeader><TableRow><TableHead>Change</TableHead><TableHead>Material</TableHead><TableHead>Before</TableHead><TableHead>After</TableHead></TableRow></TableHeader>

@@ -1,3 +1,5 @@
+import { BatchStatus } from "@/shared/material-batches/batch-status";
+export { BatchStatus, batchStatusLabels } from "@/shared/material-batches/batch-status";
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 
 export const qcGrnPath = "/qc/goods-receipt-note";
@@ -19,9 +21,6 @@ export const qcPermissions = {
   completeRetest: byKind("CanCompleteRetestRawMaterial", "CanCompleteRetestPackagingMaterial"),
 } as const;
 
-/** Where a batch stands. The numbers are the server's. */
-export const BatchStatus = { Received: 0, Quarantine: 1, Testing: 2, Available: 3, Rejected: 4, Retest: 5, Frozen: 6, Consumed: 7, Approved: 8, TestTaken: 9, Checked: 10, Sampled: 11, TestAssigned: 12 } as const;
-export const batchStatusLabels: Record<number, string> = { 0: "Received", 1: "Quarantine", 2: "Testing", 3: "Available", 4: "Rejected", 5: "Retest", 6: "Frozen", 7: "Consumed", 8: "Approved", 9: "Test taken", 10: "Checked", 11: "Sampled", 12: "Test assigned" };
 export const grnStatusLabels: Record<number, string> = { 0: "Pending", 1: "Partly done", 2: "Completed" };
 
 export type BatchAction = "sample" | "assign" | "start" | "continue" | "reassign" | "assignments" | "check" | "requestRetest" | "completeRetest" | "print";

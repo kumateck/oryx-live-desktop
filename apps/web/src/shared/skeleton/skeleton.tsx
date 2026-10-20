@@ -17,7 +17,7 @@ const widths = ["w-3/4", "w-1/2", "w-2/3", "w-5/6"] as const;
 
 /** A card of label and value lines, shaped like a `DetailGroup`. */
 export function DetailGroupSkeleton({ rows = 5 }: { rows?: number }) {
-  return <div className="space-y-3 rounded-lg border bg-card p-4">
+  return <div className="space-y-3 ui-card border bg-card">
     <Skeleton className="h-4 w-32" />
     {Array.from({ length: rows }, (_, index) => <div key={index} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-3">
       <Skeleton className="h-3.5 w-20" /><Skeleton className={cn("h-3.5", widths[index % widths.length])} />
@@ -27,7 +27,7 @@ export function DetailGroupSkeleton({ rows = 5 }: { rows?: number }) {
 
 /** A card of form fields, shaped like one section of a `FormWizard` form. */
 export function FormSectionSkeleton({ fields = 6, columns = "md:grid-cols-2 xl:grid-cols-3" }: { fields?: number; columns?: string }) {
-  return <div className="space-y-3 rounded-lg border bg-card p-4">
+  return <div className="space-y-3 ui-card border bg-card">
     <Skeleton className="h-4 w-40" />
     <div className={cn("grid grid-cols-1 gap-4", columns)}>
       {Array.from({ length: fields }, (_, index) => <div key={index} className="space-y-2"><Skeleton className="h-3.5 w-24" /><Skeleton className="h-9 w-full" /></div>)}

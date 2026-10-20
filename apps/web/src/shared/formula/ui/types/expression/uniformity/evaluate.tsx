@@ -150,8 +150,8 @@ const ReadonlyPill: React.FC<{ label: string; value: string }> = ({
   value,
 }) => (
   <div className="flex items-center gap-2">
-    <div className="text-[11px] text-muted-foreground">{label}</div>
-    <div className="text-[12px] font-medium border border-border rounded px-2 py-0.5 bg-muted/30">
+    <div className="text-sm text-muted-foreground">{label}</div>
+    <div className="text-sm font-medium border border-border rounded px-2 py-0.5 bg-muted/30">
       {value}
     </div>
   </div>
@@ -561,16 +561,16 @@ export const UniformityOfWeightEvaluate: React.FC<Props> = ({
                     className="grid bg-muted/30 border border-border rounded-md overflow-hidden"
                     style={{ gridTemplateColumns: "56px 1fr 1fr 1fr" }}
                   >
-                    <div className="px-2 py-1 text-[11px] font-semibold text-foreground border-b border-border text-center">
+                    <div className="px-2 py-1 text-sm font-semibold text-foreground border-b border-border text-center">
                       #
                     </div>
-                    <div className="px-2 py-1 text-[11px] font-semibold text-foreground border-b border-border">
+                    <div className="px-2 py-1 text-sm font-semibold text-foreground border-b border-border">
                       Caps wt
                     </div>
-                    <div className="px-2 py-1 text-[11px] font-semibold text-foreground border-b border-border">
+                    <div className="px-2 py-1 text-sm font-semibold text-foreground border-b border-border">
                       Shell wt
                     </div>
-                    <div className="px-2 py-1 text-[11px] font-semibold text-foreground border-b border-border text-center">
+                    <div className="px-2 py-1 text-sm font-semibold text-foreground border-b border-border text-center">
                       Content wt
                     </div>
                   </div>
@@ -599,7 +599,7 @@ export const UniformityOfWeightEvaluate: React.FC<Props> = ({
                       className="grid items-center"
                       style={{ gridTemplateColumns: "56px 1fr 1fr 1fr" }}
                     >
-                      <div className="px-2 py-1 text-center text-[11px] font-semibold text-muted-foreground bg-muted/30">
+                      <div className="px-2 py-1 text-center text-sm font-semibold text-muted-foreground bg-muted/30">
                         #{i + 1}
                       </div>
                       <div className="p-1">
@@ -639,7 +639,7 @@ export const UniformityOfWeightEvaluate: React.FC<Props> = ({
                         />
                       </div>
                       <div className="px-2 py-1 text-center">
-                        <span className="inline-block text-[12px] px-1.5 py-0.5 rounded border border-border bg-muted/30 text-foreground min-w-[64px]">
+                        <span className="inline-block text-sm px-1.5 py-0.5 rounded border border-border bg-muted/30 text-foreground min-w-[64px]">
                           {toFixedSmart(content, decimalPlaces)}
                         </span>
                       </div>
@@ -735,7 +735,7 @@ export const UniformityOfWeightEvaluate: React.FC<Props> = ({
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {ensureArrayLen(inputs.indWts, sampleCount).map((val, i, arr) => (
                 <div key={`ind-${i}`} className="flex items-center gap-2">
-                  <Label className="text-[11px] min-w-[46px]">#{i + 1}</Label>
+                  <Label className="text-sm min-w-[46px]">#{i + 1}</Label>
                   <Input
                     type="text"
                     inputMode="decimal"

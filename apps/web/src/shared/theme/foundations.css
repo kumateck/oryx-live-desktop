@@ -1,0 +1,96 @@
+/* The only fixed interface measurements. Components consume these tokens. */
+:root {
+  --layout-font-size: 14px;
+  --font-family-system: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --font-family-sans: Arial, Helvetica, sans-serif;
+  --font-family-serif: Georgia, "Times New Roman", serif;
+  --ui-font-family: var(--font-family-system);
+  --mono-font-family: var(--font-family-mono);
+  --shell-header-height: max(48px, calc(var(--ui-line-height) + 16px));
+  --shell-footer-height: max(29px, calc(var(--ui-line-height) + 10px));
+  --touch-target: 44px;
+  --space-unit: 1px;
+  --density-scale: 1;
+  --stroke-width: 1px;
+  --focus-width: 2px;
+  --radius-full: 9999px;
+  --icon-size-sm: 17px;
+  --icon-size-md: 18px;
+  --icon-size-lg: 23px;
+  --elevation-popover: 0 12px 32px color-mix(in srgb, var(--text) 15%, transparent);
+  --space-0: calc(0 * var(--space-unit) * var(--density-scale));
+  --space-1: calc(1 * var(--space-unit) * var(--density-scale));
+  --space-2: calc(2 * var(--space-unit) * var(--density-scale));
+  --space-3: calc(3 * var(--space-unit) * var(--density-scale));
+  --space-4: calc(4 * var(--space-unit) * var(--density-scale));
+  --space-5: calc(5 * var(--space-unit) * var(--density-scale));
+  --space-6: calc(6 * var(--space-unit) * var(--density-scale));
+  --space-7: calc(7 * var(--space-unit) * var(--density-scale));
+  --space-8: calc(8 * var(--space-unit) * var(--density-scale));
+  --space-9: calc(9 * var(--space-unit) * var(--density-scale));
+  --space-10: calc(10 * var(--space-unit) * var(--density-scale));
+  --space-12: calc(12 * var(--space-unit) * var(--density-scale));
+  --space-14: calc(14 * var(--space-unit) * var(--density-scale));
+  --space-15: calc(15 * var(--space-unit) * var(--density-scale));
+  --space-16: calc(16 * var(--space-unit) * var(--density-scale));
+  --space-20: calc(20 * var(--space-unit) * var(--density-scale));
+  --space-22: calc(22 * var(--space-unit) * var(--density-scale));
+  --space-24: calc(24 * var(--space-unit) * var(--density-scale));
+  --space-28: calc(28 * var(--space-unit) * var(--density-scale));
+  --space-40: calc(40 * var(--space-unit) * var(--density-scale));
+  --space-48: calc(48 * var(--space-unit) * var(--density-scale));
+  --size-1: 1px;
+  --size-12: 12px;
+  --size-14: 14px;
+  --size-15: 15px;
+  --size-16: 16px;
+  --size-18: 18px;
+  --size-20: 20px;
+  --size-27: 27px;
+  --size-30: 30px;
+  --size-33: 33px;
+  --size-34: 34px;
+  --size-36: 36px;
+  --size-56: 56px;
+  --size-62: 62px;
+  --size-120: 120px;
+  --size-150: 150px;
+  --size-160: 160px;
+  --size-170: 170px;
+  --size-220: 220px;
+  --size-240: 240px;
+  --size-250: 250px;
+  --size-264: 264px;
+  --size-296: 296px;
+  --size-320: 320px;
+  --size-400: 400px;
+  --size-420: 420px;
+  --size-500: 500px;
+  --size-600: 600px;
+  --size-650: 650px;
+  --size-760: 760px;
+  --size-850: 850px;
+  --size-1100: 1100px;
+}
+
+@theme inline {
+  --spacing: calc(3.5 * var(--space-unit) * var(--density-scale));
+  --font-mono: var(--mono-font-family);
+  --radius-xs: calc(var(--radius) * 0.4);
+  --shadow-xs: 0 1px 2px color-mix(in srgb, var(--text) 5%, transparent);
+  --shadow-sm: 0 2px 4px color-mix(in srgb, var(--text) 8%, transparent);
+  --shadow-md: 0 4px 12px color-mix(in srgb, var(--text) 10%, transparent);
+  --shadow-lg: var(--elevation-popover);
+}
+
+@utility rounded { border-radius: var(--radius-sm); }
+
+/* Breakpoints resolve at build time; runtime CSS variables cannot drive media queries. */
+@theme {
+  --breakpoint-preview: 400px;
+  --breakpoint-settings: 600px;
+  --breakpoint-shell-mobile: 650px;
+  --breakpoint-shell-narrow: 850px;
+  --breakpoint-shell-medium: 1100px;
+}

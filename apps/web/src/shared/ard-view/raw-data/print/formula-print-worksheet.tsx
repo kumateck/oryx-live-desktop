@@ -67,7 +67,7 @@ const FormulaPrintWorksheet = ({
     {(headers.length > 0 || data.length > 0) && (
       <div className="space-y-1">
         <div className="font-semibold uppercase tracking-wide">Data Table</div>
-        <table className="w-full border-collapse text-[10px]">
+        <table className="w-full border-collapse text-document-10">
           <thead>
             <tr>
               <th className="border border-border print:border-slate-300 px-1 py-1 text-left">

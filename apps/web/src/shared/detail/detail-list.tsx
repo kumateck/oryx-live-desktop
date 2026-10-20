@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 /** A titled group of label and value pairs on a record page. */
 export function DetailGroup({ title, children }: { title: string; children: ReactNode }) {
-  return <section className="min-w-0 rounded-lg border bg-card p-4">
+  return <section className="min-w-0 ui-card border bg-card">
     <h2 className="mb-2 text-sm font-semibold">{title}</h2>
     <dl className="divide-y">{children}</dl>
   </section>;

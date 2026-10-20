@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { ListDataTable, dataTableColumns } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDate } from "@/shared/format/dates";
 import { daysUntil, dueState, dueText } from "@/shared/format/due-dates";
+import { CertificationFiles } from "./certification-files";
 import { CertificationDialog } from "./certification-dialog";
 import { certificationTypes } from "./certification-types";
 import { PanelHeading } from "./panel-frame";
@@ -30,6 +31,7 @@ export default function CertificationsPanel({ supplierId }: { supplierId: string
   const canManage = useAccess().has(manage);
   const query = useGetCertificationsQuery(supplierId);
   const [remove] = useDeleteCertificationMutation();
+  const [viewing, setViewing] = useState<Certification | null>(null);
   const [editing, setEditing] = useState<Certification | "new" | null>(null);
   const [removing, setRemoving] = useState<Certification | null>(null);
   // Those needing attention first: expired, then the soonest to expire.
@@ -42,6 +44,7 @@ export default function CertificationsPanel({ supplierId }: { supplierId: string
     column.accessor("expiryDate", { header: "Expires", size: 190, cell: ({ row }) => <Validity expiryDate={row.original.expiryDate} /> }),
     column.accessor((record) => record.attachments.length, { id: "files", header: "Files", size: 80, cell: ({ row }) => row.original.attachments.length || "–" }),
     column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for certificate ${row.original.certificateNumber}`} items={[
+      ...(row.original.attachments.length ? [{ id: "files", label: "View attachments", icon: Paperclip, require: "CanViewSupplierCertifications", onSelect: () => setViewing(row.original) }] : []),
       { id: "edit", label: "Edit", icon: Pencil, require: manage, onSelect: () => setEditing(row.original) },
       { id: "remove", label: "Remove", icon: Trash2, destructive: true, require: manage, onSelect: () => setRemoving(row.original) },
     ]} /> }),
@@ -53,6 +56,7 @@ export default function CertificationsPanel({ supplierId }: { supplierId: string
     <ListDataTable label="Certifications" columns={columns} rows={rows} getRowId={(record) => record.id} loading={query.isLoading}
       error={query.error ? apiErrorMessage(query.error) : null} onRetry={() => { void query.refetch(); }}
       emptyTitle="No certifications recorded" emptyDescription={canManage ? "Add the supplier's GMP, ISO, or other certificates to track when they expire." : undefined} />
+    {viewing ? <CertificationFiles record={viewing} onClose={() => setViewing(null)} /> : null}
     {editing ? <CertificationDialog key={editing === "new" ? "new" : editing.id} supplierId={supplierId} {...(editing === "new" ? {} : { record: editing })}
       open onOpenChange={(open) => { if (!open) setEditing(null); }} /> : null}
     {removing ? <ConfirmActionDialog require={manage} title={`Remove certificate ${removing.certificateNumber}?`} description="The certificate is removed from this supplier's record. This cannot be undone."

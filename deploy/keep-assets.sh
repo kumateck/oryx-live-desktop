@@ -1,19 +1,38 @@
 #!/bin/sh
-# Run by the nginx image at start-up (/docker-entrypoint.d). Keeps every release's hashed files in /srv/assets, a folder
-# kept across deploys, so a window opened before a release can still load the pages it has not opened yet.
-# Files no release has shipped for 30 days are removed.
-#
-# Written for BusyBox (nginx:alpine): plain `cp -r` of each entry; no `cp -a src/. dst/`, which BusyBox does not copy.
+# Nginx startup: retain hashed app chunks and pinned viewer assets across releases.
+# Optional roots let the same copy/validation run be exercised with temporary fixtures.
 set -eu
-release=/usr/share/nginx/html/assets
-kept=/srv/assets
-mkdir -p "$kept"
-# Copy this release's files over any earlier copy. Copying (not preserving times) also marks them current for pruning.
-for entry in "$release"/*; do cp -r "$entry" "$kept/"; done
-# Every file of this release must now be served with its full content.
-(cd "$release" && find . -type f) | while read -r file; do
-  cmp -s "$release/$file" "$kept/$file" || { echo "keep-assets: $file was not copied" >&2; exit 1; }
+release=${1:-/usr/share/nginx/html}
+kept=${2:-/srv/assets}
+viewers="$release/viewers"
+
+# A release without its local rendering engines must not start and show blank previews.
+for engine in wordcraft pdfcraft gridcraft; do
+  found=0
+  for directory in "$viewers/$engine-"*; do
+    [ -d "$directory" ] || continue
+    js="$directory/dodo-$engine.js"
+    wasm="$directory/dodo-${engine}_bg.wasm"
+    [ -s "$js" ] && [ -s "$wasm" ] || { echo "keep-assets: missing $engine engine" >&2; exit 1; }
+    magic=$(od -An -tx1 -N4 "$wasm" | tr -d ' \n')
+    [ "$magic" = 0061736d ] || { echo "keep-assets: invalid $engine WASM" >&2; exit 1; }
+    found=1
+  done
+  [ "$found" = 1 ] || { echo "keep-assets: missing $engine directory" >&2; exit 1; }
 done
-# Empty files are never valid build output (an earlier version of this script left some).
+
+copy_tree() {
+  source=$1
+  destination=$2
+  mkdir -p "$destination"
+  # BusyBox cp copies each entry; do not use the historically broken `cp -a src/. dst/`.
+  for entry in "$source"/*; do cp -r "$entry" "$destination/"; done
+  (cd "$source" && find . -type f) | while read -r file; do
+    cmp -s "$source/$file" "$destination/$file" || { echo "keep-assets: $file was not copied" >&2; exit 1; }
+  done
+}
+copy_tree "$release/assets" "$kept"
+copy_tree "$viewers" "$kept/viewers"
+# Copying without preserving timestamps marks current-release files fresh for retention.
 find "$kept" -type f -size 0 -delete
 find "$kept" -type f -mtime +30 -delete

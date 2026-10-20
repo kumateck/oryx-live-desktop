@@ -90,7 +90,7 @@ export default function DecimalPolicyFields({
         Decimal policy
       </legend>
       <FormWizard form={form} fields={wizardFields} className="grid gap-3" />
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Input scale is validated first, table statistics are rounded before
         expression evaluation, and final results use their own controlled scale.
       </p>

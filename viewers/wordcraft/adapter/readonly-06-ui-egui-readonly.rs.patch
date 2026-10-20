@@ -1,0 +1,50 @@
+--- /dev/null
++++ b/crates/ui-egui/src/readonly.rs
+@@ -0,0 +1,47 @@
++//! Oryx attachment chrome: no editor, save, share or export entry points.
++use crate::WordApp;
++use serde_json::json;
++
++pub fn show(app: &mut WordApp, ui: &mut egui::Ui) {
++    egui::Panel::top("attachment-toolbar").show(ui, |ui| {
++        ui.horizontal_wrapped(|ui| {
++            ui.strong("Read-only");
++            ui.separator();
++            let mut zoom = app.session.view.zoom * 100.0;
++            if ui.add(egui::Slider::new(&mut zoom, 25.0..=300.0).text("Zoom %")).changed() {
++                let _ = app.execute("view.zoom", json!({"value": zoom}));
++            }
++            let mut query = ui.ctx().data_mut(|d| d.get_temp::<String>(egui::Id::new("attachment-find")).unwrap_or_default());
++            ui.add(egui::TextEdit::singleline(&mut query).hint_text("Find in document").desired_width(160.0));
++            ui.ctx().data_mut(|d| d.insert_temp(egui::Id::new("attachment-find"), query.clone()));
++            if ui.button("Find").clicked() && !query.is_empty() {
++                let _ = app.execute("edit.find", json!({"text":query}));
++                app.canvas.scroll_to_caret = true;
++            }
++            if ui.button("Previous").clicked() { let _ = app.execute("edit.findPrevious", json!({})); app.canvas.scroll_to_caret = true; }
++            if ui.button("Next").clicked() { let _ = app.execute("edit.findNext", json!({})); app.canvas.scroll_to_caret = true; }
++        });
++    });
++    let t = crate::theme::Tokens::get(ui.ctx());
++    egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.canvas)).show(ui, |ui| crate::canvas::show(app, ui));
++}
++
++pub fn keys(app: &mut WordApp, ctx: &egui::Context, events: &[egui::Event]) {
++    for event in events {
++        match event {
++            egui::Event::Copy => ctx.copy_text(app.session.selected_text()),
++            egui::Event::Key { key, pressed: true, modifiers, .. } => {
++                let id = match key {
++                    egui::Key::ArrowLeft => "caret.left", egui::Key::ArrowRight => "caret.right",
++                    egui::Key::ArrowUp => "caret.up", egui::Key::ArrowDown => "caret.down",
++                    egui::Key::Home => "caret.home", egui::Key::End => "caret.end",
++                    egui::Key::A if modifiers.command => "select.all",
++                    _ => continue,
++                };
++                let _ = app.execute(id, json!({"extend":modifiers.shift}));
++                app.canvas.scroll_to_caret = true;
++            }
++            _ => {}
++        }
++    }
++}

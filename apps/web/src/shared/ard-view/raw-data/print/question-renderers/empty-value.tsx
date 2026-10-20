@@ -49,7 +49,7 @@ export const renderEmptyValue = (
 
     case QuestionType.Datepicker:
       return (
-        <span className="text-[12px] text-foreground print:text-black">
+        <span className="text-document-12 text-foreground print:text-black">
           ____/____/________
         </span>
       );

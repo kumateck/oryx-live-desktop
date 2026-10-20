@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { batchRowsSchema } from "@/shared/material-batches/received-batch";
+export { batchRowsSchema, type ReceivedBatch } from "@/shared/material-batches/received-batch";
 import { batchDatesIssue } from "@/shared/batch-dates/batch-dates";
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 import type { ReceivingStatus } from "../lib/receiving";
@@ -36,17 +38,6 @@ export const deliveredRowsSchema = z.array(delivered).nullish().transform((value
 export type DeliveredMaterial = z.infer<typeof deliveredRowsSchema>[number];
 
 const date = z.string().nullish().transform((value) => value && new Date(value).getFullYear() >= 1900 ? value : null);
-const batch = z.object({ id: z.string().nullish(), batchNumber: text, numberOfContainers: amount, quantityPerContainer: amount, totalQuantity: amount, uoM: unit, containerPackageStyle: z.object({ name: text }).nullish(),
-  manufacturingDate: date, expiryDate: date, retestDate: date, status: z.number().nullish(), material: z.object({ name: text, code: text }).nullish(), manufacturerName: text, supplierName: text,
-  checklist: z.object({ shipmentInvoice: z.object({ code: text }).nullish(), manufacturer: z.object({ name: text }).nullish(), supplier: z.object({ name: text }).nullish() }).nullish(),
-  sampleWeights: z.array(z.object({ srNumber: text, grossWeight: amount })).nullish() });
-const readBatch = (entry: z.infer<typeof batch>, index: number) => ({ id: entry.id ?? `batch-${index}`, number: entry.batchNumber, containers: entry.numberOfContainers, perContainer: entry.quantityPerContainer, total: entry.totalQuantity,
-  unit: entry.uoM?.symbol ?? null, style: entry.containerPackageStyle?.name ?? null, made: entry.manufacturingDate, expires: entry.expiryDate, retest: entry.retestDate, status: entry.status ?? null,
-  materialName: entry.material?.name ?? null, materialCode: entry.material?.code ?? null, manufacturer: real(entry.manufacturerName ?? entry.checklist?.manufacturer?.name ?? null), supplier: entry.supplierName ?? entry.checklist?.supplier?.name ?? null,
-  invoice: entry.checklist?.shipmentInvoice?.code ?? null, weights: (entry.sampleWeights ?? []).map((weight, position) => ({ serial: weight.srNumber ?? String(position + 1), gross: weight.grossWeight })) });
-export const batchRowsSchema = z.array(batch).nullish().transform((value) => (value ?? []).map(readBatch));
-export type ReceivedBatch = z.infer<typeof batchRowsSchema>[number];
-
 /** The record of how a delivery looked when it was checked in, and the batches it came in. */
 export const checklistSchema = z.object({ checkedAt: date, certificateOfAnalysisDelivered: z.boolean().nullish(), visibleLabelling: z.boolean().nullish(), intactnessStatus: z.number().nullish(), consignmentCarrierStatus: z.number().nullish(),
   material: z.object({ name: text, code: text }).nullish(), supplier: z.object({ name: text }).nullish(), manufacturer: z.object({ name: text }).nullish(), shipmentInvoice: z.object({ code: text }).nullish(), materialBatches: batchRowsSchema,

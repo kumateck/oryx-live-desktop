@@ -1,3 +1,4 @@
+import { AttachmentList } from "@/shared/attachments/attachment-list";
 import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
@@ -129,6 +130,7 @@ export function MaterialArdDialog({ kind, editing, onClose }: { kind: MaterialKi
               <DetailItem label="Template" value={source.spec?.form?.name} />
             </dl> : null}
           {source && source !== "loading" && !ready ? <p role="alert" className="text-sm text-destructive">This material needs {missingText(source)} before its analytical raw data can be {editing ? "saved" : "created"}.</p> : null}
+          {editing?.attachments.length ? <AttachmentList title="Files already attached" files={editing.attachments} /> : null}
           <FormWizard form={form} fields={fields.slice(editing ? 0 : 1)} />
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>

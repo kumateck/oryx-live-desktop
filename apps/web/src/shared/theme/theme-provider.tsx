@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { createInterfaceTokens } from "./interface-tokens";
 import { createPalette, fontFamily, type ThemeProfile } from "./theme-tokens";
 import { defaultThemeSettings, readSettings, saveSettings, type ResolvedTheme, type ThemeSettings } from "./theme-settings";
 
@@ -39,7 +40,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.dataset.smoothing = settings.fontSmoothing ? "on" : "off";
     root.dataset.translucent = settings.translucentSidebar ? "on" : "off";
     root.style.fontFamily = fontFamily(profile.font);
-    root.style.fontSize = `${settings.uiFontSize}px`;
+    root.dataset.density = settings.density;
+    root.style.setProperty("--ui-font-family", fontFamily(profile.font));
+    for (const [name, value] of Object.entries(createInterfaceTokens(settings))) {
+      root.style.setProperty(name, value);
+    }
     root.style.setProperty("--code-font-size", `${settings.codeFontSize}px`);
     root.style.setProperty("--content-font", fontFamily(settings.contentFont));
     root.style.setProperty("--code-font", fontFamily(settings.codeFont));

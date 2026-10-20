@@ -30,7 +30,7 @@ export function DataTableView<TData extends DataTableRow>({
   // left for them, so the table is never laid out narrower than every column needs; it scrolls sideways instead.
   const minWidth = table.getVisibleLeafColumns().reduce((sum, column) => sum + (column.columnDef.size || flexibleColumnWidth), 0) + (selection ? 40 : 0) + (rowSlot ? 40 : 0);
   const scrolls = fill || Boolean(maxHeight);
-  return <div className={cn("min-w-0 overflow-hidden rounded-lg border bg-card", fill && "flex min-h-0 flex-1 flex-col", className)}
+  return <div className={cn("min-w-0 overflow-hidden ui-card-flush border bg-card", fill && "flex min-h-0 flex-1 flex-col", className)}
     aria-busy={loading || refreshing}>
     {toolbar || columnToggle ? <div className="flex flex-none flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
       <div className="min-w-0 flex-1">{toolbar}</div>

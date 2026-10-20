@@ -38,11 +38,11 @@ function render(node: MathNode, key: string): ReactNode {
   switch (node.type) {
     case "ConstantNode": return <span key={key}>{String((node as unknown as { value: unknown }).value)}</span>;
     case "SymbolNode": return <span key={key}>{variable((node as unknown as { name: string }).name)}</span>;
-    case "ParenthesisNode": return <span key={key} className="inline-flex items-center"><span className="text-[1.15em]">(</span>{render((node as unknown as { content: MathNode }).content, `${key}c`)}<span className="text-[1.15em]">)</span></span>;
+    case "ParenthesisNode": return <span key={key} className="inline-flex items-center"><span className="text-math-parenthesis">(</span>{render((node as unknown as { content: MathNode }).content, `${key}c`)}<span className="text-math-parenthesis">)</span></span>;
     case "OperatorNode": {
       const operator = node as unknown as { fn: string; args: MathNode[] };
       const [left, right] = operator.args;
-      if (operator.fn === "divide" && left && right) return <span key={key} className="mx-0.5 inline-flex flex-col items-center align-middle text-[0.92em] leading-tight">
+      if (operator.fn === "divide" && left && right) return <span key={key} className="mx-0.5 inline-flex flex-col items-center align-middle text-math-fraction leading-tight">
         <span className="px-1">{render(left, `${key}n`)}</span><span className="w-full border-t border-current" /><span className="px-1">{render(right, `${key}d`)}</span></span>;
       if (operator.fn === "pow" && left && right) return <span key={key}>{render(left, `${key}b`)}<sup>{render(right, `${key}e`)}</sup></span>;
       if (operator.args.length === 1 && left) return <span key={key}>{symbols[operator.fn] ?? operator.fn}{render(left, `${key}u`)}</span>;

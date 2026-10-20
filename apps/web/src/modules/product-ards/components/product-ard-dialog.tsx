@@ -1,3 +1,4 @@
+import { AttachmentList } from "@/shared/attachments/attachment-list";
 import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
@@ -139,6 +140,7 @@ export function ProductArdDialog({ editing, onClose }: { editing: ArdRecord | nu
         <DialogBody className="space-y-4">
           {editing ? <dl className="divide-y rounded-md border px-3"><DetailItem label="Product" value={editing.item?.name} /><DetailItem label="Stage" value={testStageLabel(editing.stage)} />
             <DetailItem label="STP" value={editing.stp?.number} /></dl> : null}
+          {editing?.attachments.length ? <AttachmentList title="Files already attached" files={editing.attachments} /> : null}
           <FormWizard form={form} fields={fields} />
           {templateForm === "loading" ? <p className="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />Looking up the product's specification…</p>
             : <dl className="divide-y rounded-md border px-3"><DetailItem label="Template" value={templateForm?.name ?? (stp || editing ? "No specification template for this stage" : null)} /></dl>}

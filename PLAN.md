@@ -14,7 +14,7 @@ List pages retain the existing datatable and workflow behavior. Detail pages are
 
 Use the Codex desktop screenshot as a reference for compact proportions, clear hierarchy, and quiet surfaces. Codex lets users change its UI font, so the screenshot does not identify one exact font to copy. On customer Windows laptops, use the native system UI font (Segoe UI/Segoe UI Variable through `system-ui`); use the native system font on macOS, with a sans-serif fallback. Keep code, IDs, and tabular numbers in appropriate monospace or tabular styles only where they improve scanning.
 
-Initial design tokens for the pilot are a 14px/20px body, 12–13px supporting text, 16px section headings, and 18–20px page titles; a 4/8/12/16/24px spacing scale; 32–36px controls; and compact header/footer heights. These are starting values, not a claim about Codex's exact pixels. Validate them at 1366×768 and 1280×720 with Windows 125% and 150% scaling. Increase density by removing redundant containers and whitespace, never by making essential content or actions unreadable.
+The workspace design system defaults to a 12px/18px body and 14px/20px headings; compact cards use 12px padding and controls start at 30px. Settings → Appearance exposes independent body/header sizes and compact/comfortable density, persisted on this device. See `docs/design-system.md`. These are starting values, not a claim about Codex's exact pixels. Validate them at 1366×768 and 1280×720 with Windows 125% and 150% scaling. Increase density by removing redundant containers and whitespace, never by making essential content or actions unreadable.
 
 Shell refinement (2026-10-04): align Live with the V2 visual foundation using a 56px rail with padded 36px items, a 296px secondary sidebar with responsive widths, separated sidebar headings, 8px cards, 10px panels, and quieter theme-derived borders. Existing authentication, permissions, routes, search, notifications, and business workflows retain their behavior.
 
@@ -27,6 +27,12 @@ Route pages must remain at or below 200 physical lines. They compose reusable do
 Each migrated detail workflow should have a thin route page and domain-owned pieces: components for sections and interactions, hooks for query/mutation and local interaction behavior, pure functions for mapping and formatting, schemas for validation, and handwritten types where the generated contract is insufficient. Shared UI primitives and cross-domain functions belong in common modules. Keep module boundaries explicit so no single extracted hook or component becomes the new oversized page.
 
 Oryx has roughly 27 ERP modules. The desktop structure must scale by module ownership: small typed manifests for module identity, navigation and permission requirements; lazy route modules; domain-local sections/hooks/schemas/API adapters; and explicit shared contracts for cross-module behavior. The existing `oryx-next` permission navigation has 16 top-level groups, which are not a one-to-one module inventory. Reconcile the actual 27 module boundaries before broad migration. See `docs/module-architecture.md` for the proposed layout and rules.
+
+## Attachment viewer integration (2026-10-20)
+
+Reuse Dodo Workspace's pinned WordCraft, PDFCraft and GridCraft WASM engines for DOCX, PDF and XLSX attachments. This is a preview of an existing file, not a document library or editing/synchronization workflow: MinIO remains authoritative and the viewer has no upload/save capability. Engine controls may change the temporary in-memory view; those changes are explicitly discarded when closed. Do not acknowledge an engine save as successful.
+
+Keep the integration in the hosted web application. Load one engine only on demand, after a bounded file read/validation. Each engine runs in an opaque-origin iframe (`sandbox=allow-scripts`, without same-origin, navigation, forms, downloads or popup privileges), with a restrictive CSP and an assigned-file message bridge. Only the current attachment bytes and pinned engine bytes enter the frame; no bearer token, MinIO credentials, source URL or native bridge is exposed. Attachment access continues through the existing file links/API. Ordinary builds verify and extract checked-in bundles with all notices; they do not need Rust or a runtime CDN.
 
 ## Decisions already made
 

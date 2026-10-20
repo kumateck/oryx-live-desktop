@@ -31,12 +31,12 @@ export const FormulaCard: React.FC<FormulaCardProps> = ({
         </div>
         <div className="flex items-center gap-1.5">
           {subtitle && (
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-document-10 text-muted-foreground">
               {subtitle}
             </span>
           )}
           {showPercentage && (
-            <span className="text-[10px] bg-muted text-foreground font-bold px-1 py-0.5 rounded">
+            <span className="text-document-10 bg-muted text-foreground font-bold px-1 py-0.5 rounded">
               %
             </span>
           )}
@@ -54,7 +54,7 @@ export const FormulaCard: React.FC<FormulaCardProps> = ({
       </div>
 
       {showFootnote && (
-        <div className="mt-1.5 flex items-start gap-1.5 text-[10px] text-muted-foreground bg-muted border border-border rounded px-2 py-1">
+        <div className="mt-1.5 flex items-start gap-1.5 text-document-10 text-muted-foreground bg-muted border border-border rounded px-2 py-1">
           <svg
             className="w-3 h-3 text-warning shrink-0 mt-0.5"
             fill="none"

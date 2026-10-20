@@ -1,3 +1,4 @@
+import { StpVersionFile } from "./stp-version-file";
 import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
@@ -71,7 +72,7 @@ export function StpDialog({ title, itemLabel, saved, linked, document, loadItems
         <DialogBody className="space-y-4">
           {document ? <div className="flex flex-wrap items-center gap-2 rounded-md border p-3 text-sm"><span>Current document</span>
             <Badge variant={document.status === DocumentStatus.Approved ? "default" : "secondary"}>{documentStatusLabel(document.status)}</Badge>
-            {document.versions[0] ? <span className="text-muted-foreground">version {document.versions[0].versionNumber}{document.versions[0].fileName ? `, ${document.versions[0].fileName}` : ""}</span> : null}
+            {document.versions[0] ? <><span className="text-muted-foreground">version {document.versions[0].versionNumber}</span><StpVersionFile documentId={document.id} version={document.versions[0]} /></> : null}
             {locked ? <p className="w-full text-xs text-muted-foreground">The document is under review and cannot be replaced until the review is completed or rejected.</p> : null}</div> : null}
           <FormWizard form={form} fields={fields} />
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}

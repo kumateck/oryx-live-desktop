@@ -22,7 +22,7 @@ test("surface tones follow a customized background and contrast setting", () => 
   assert.equal(low["--canvas"], "#102030");
   assert.equal(high["--primary"], accentColor("teal", "dark"));
   assert.notEqual(low["--border"], high["--border"]);
-  assert.match(fontFamily("system"), /system-ui/);
+  assert.equal(fontFamily("system"), "var(--font-family-system)");
 });
 
 test("accent list matches the seventeen Oryx Next theme colors", () => {

@@ -1,0 +1,18 @@
+--- a/crates/ui-egui/src/commands.rs
++++ b/crates/ui-egui/src/commands.rs
+@@ -80,6 +80,7 @@
+     /// Whether a registered command can run now. The engine judges the document (security,
+     /// contents, undo history); view state it can't see is checked here.
+     pub(crate) fn command_enabled(&self, spec: &CommandSpec) -> bool {
++        if self.session.read_only && !crate::readonly::allowed(spec.id) { return false; }
+         if self.workspace_save.is_some() && !crate::workspace::allowed(spec.id) {
+             return false;
+         }
+@@ -97,6 +98,7 @@
+     /// Last-resort guard (AGENTS.md §4): a command that panics is reported and the app, with its
+     /// open documents, keeps running. Edits are applied to a copy, so the document is unchanged.
+     pub fn execute(&mut self, id: &str) -> bool {
++        if self.session.read_only && !crate::readonly::allowed(id) { return false; }
+         match pdfcraft_engine::guard(|| self.execute_unguarded(id)) {
+             Ok(done) => done,
+             Err(m) => {

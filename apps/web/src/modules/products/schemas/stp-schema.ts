@@ -21,7 +21,7 @@ export const stpDocumentSchema = z.object({
   id: z.string().min(1),
   status: z.number().nullish().transform((value) => value ?? 0),
   versions: z.array(z.object({
-    versionNumber: z.number().nullish(), fileName: z.string().nullish(), isEffective: z.boolean().nullish(), isSuperseded: z.boolean().nullish(),
+    id: z.string().nullish(), versionNumber: z.number().nullish(), fileName: z.string().nullish(), isEffective: z.boolean().nullish(), isSuperseded: z.boolean().nullish(),
     createdByName: z.string().nullish(), createdAt: z.string().nullish(),
   })).nullish().transform((value) => value ?? []),
 }).nullish().transform((value) => value ?? null);

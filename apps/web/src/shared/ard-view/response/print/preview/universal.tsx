@@ -181,7 +181,7 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
       {/* Expression + Constants + Manual Vars */}
       <div className="bg-card border border-border rounded p-2">
         <div className="flex items-center justify-between pb-1 mb-1 border-b border-border">
-          <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">
+          <h3 className="text-document-11 font-bold text-foreground uppercase tracking-wider">
             Expression
           </h3>
         </div>
@@ -189,14 +189,14 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
           <div className="w-full">
             <ExpressionRenderer
               print
-              className="text-[11px] font-mono p-1"
+              className="text-document-11 font-mono p-1"
               expression={normalizeFormulaExpressionText(parsed?.expression)}
               option={{ append100: parsed?.percentageResults, result: null }}
             />
           </div>
           {Object.keys(parsed?.constants || {}).length > 0 && (
             <div className="mt-2 w-full">
-              <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-1">
+              <h4 className="text-document-11 font-bold text-foreground uppercase tracking-wider mb-1">
                 Constants
               </h4>
               <div className="grid grid-cols-2 gap-1.5">
@@ -205,10 +205,10 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                     key={key}
                     className="flex items-center justify-between bg-muted border border-border rounded px-2 py-1"
                   >
-                    <span className="text-[11px] font-semibold text-info">
+                    <span className="text-document-11 font-semibold text-info">
                       :{key}
                     </span>
-                    <span className="text-[11px] font-semibold">= {value}</span>
+                    <span className="text-document-11 font-semibold">= {value}</span>
                   </div>
                 ))}
               </div>
@@ -218,7 +218,7 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
 
         {manualVarKeys.length > 0 && (
           <div className="mt-2">
-            <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-1">
+            <h4 className="text-document-11 font-bold text-foreground uppercase tracking-wider mb-1">
               Manual Variables
             </h4>
             <div className="grid grid-cols-2 gap-1.5">
@@ -239,23 +239,23 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-bold text-info">
+                        <span className="text-document-11 font-bold text-info">
                           :{k}
                         </span>
                         {displayLabel && displayLabel !== k && (
-                          <span className="text-[10px] text-muted-foreground italic">
+                          <span className="text-document-10 text-muted-foreground italic">
                             ({displayLabel})
                           </span>
                         )}
                       </div>
                       {mv.evaluated !== null && (
-                        <span className="text-[9px] bg-muted text-success border border-border rounded-full px-2 py-0.5">
+                        <span className="text-document-9 bg-muted text-success border border-border rounded-full px-2 py-0.5">
                           = {String(mv.evaluated)}
                         </span>
                       )}
                     </div>
                     {/* Static display: raw value, not an input */}
-                    <span className="bg-card border border-border rounded px-2 py-1 text-[11px] text-foreground tabular-nums">
+                    <span className="bg-card border border-border rounded px-2 py-1 text-document-11 text-foreground tabular-nums">
                       {mv.raw !== "" ? (
                         mv.raw
                       ) : (
@@ -273,18 +273,18 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
       {/* Expressions Evaluation */}
       <div className="bg-card border border-border rounded p-2">
         <div className="flex items-center justify-between pb-1 mb-1 border-b border-border">
-          <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">
+          <h3 className="text-document-11 font-bold text-foreground uppercase tracking-wider">
             Expressions Evaluation
           </h3>
         </div>
         {/* {parsed?.averageAllResults && averageResult !== null && (
           <div className="mb-2 bg-muted border border-border rounded p-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-info">
+              <span className="text-document-11 font-bold text-info">
                 Average of All Results
               </span>
               <div className="flex items-center gap-2 bg-card border border-border rounded px-2 py-1">
-                <span className="text-[10px] font-semibold text-info uppercase">
+                <span className="text-document-10 font-semibold text-info uppercase">
                   Avg
                 </span>
                 <span className="text-sm font-bold text-info">
@@ -296,26 +296,26 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
         )} */}
         <div className="space-y-2">
           {results.length === 0 ? (
-            <div className="text-[11px] text-muted-foreground italic py-1 text-center">
+            <div className="text-document-11 text-muted-foreground italic py-1 text-center">
               No results to display.
             </div>
           ) : (
             results.map((res) => (
               <div key={res.sample} className=" p-2">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-foreground">
+                  <span className="text-document-11 font-bold text-foreground">
                     {res.sample}
                   </span>
                 </div>
                 <div className="flex gap-2 justify-between w-full">
                   <div className="bg-card border border-border rounded p-2 mb-2 w-full">
-                    <div className="text-[9px] text-muted-foreground font-semibold mb-1">
+                    <div className="text-document-9 text-muted-foreground font-semibold mb-1">
                       With Values:
                     </div>
-                    <div className="text-[11px] font-mono bg-muted p-1 rounded border border-border">
+                    <div className="text-document-11 font-mono bg-muted p-1 rounded border border-border">
                       <ExpressionRenderer
                         print
-                        className="text-[11px] font-mono p-1"
+                        className="text-document-11 font-mono p-1"
                         expression={res.substitutedExpression}
                         option={{
                           append100: parsed?.percentageResults,
@@ -324,7 +324,7 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                       />
                     </div>
                     {res.result !== null && (
-                      <div className="text-right text-[11px] text-success font-semibold mt-1">
+                      <div className="text-right text-document-11 text-success font-semibold mt-1">
                         = {formatNumber(res.result)}
                       </div>
                     )}
@@ -341,16 +341,16 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
         parsed?.standardInTable &&
         standardInputs.length > 0 && (
           <div className="bg-card border border-border rounded p-2">
-            <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-2">
+            <h3 className="text-document-11 font-bold text-foreground uppercase tracking-wider mb-2">
               {PURPOSE_LABEL[parsed.firstColumnPurpose || "standard"]} Inputs
             </h3>
             <div className="space-y-1.5">
               {standardInputs.map((input) => (
                 <div key={input.key} className="flex items-center gap-2">
-                  <label className="text-[11px] font-medium text-foreground min-w-[120px]">
+                  <label className="text-document-11 font-medium text-foreground min-w-[120px]">
                     {input.label}:
                   </label>
-                  <span className="flex-1 bg-muted border border-border rounded px-2 py-1 text-[11px] text-foreground tabular-nums">
+                  <span className="flex-1 bg-muted border border-border rounded px-2 py-1 text-document-11 text-foreground tabular-nums">
                     {input.value || (
                       <span className="text-muted-foreground italic">—</span>
                     )}
@@ -365,7 +365,7 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
       {parsed?.sampleInput &&
         sanitizeNumber(parsed?.sampleInputs?.length) > 0 && (
           <div className="bg-card border border-border rounded p-2">
-            <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-2">
+            <h3 className="text-document-11 font-bold text-foreground uppercase tracking-wider mb-2">
               Sample Inputs
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -375,7 +375,7 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                   className="border border-border rounded p-2"
                 >
                   <div className="flex items-center justify-between mb-1 pb-1 border-b border-border">
-                    <h4 className="text-[11px] font-bold text-foreground">
+                    <h4 className="text-document-11 font-bold text-foreground">
                       {headers[
                         sampleIndex + (parsed?.standardInTable ? 1 : 0)
                       ] || `Sample ${sampleIndex + 1}`}
@@ -384,10 +384,10 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                   <div className="space-y-1.5">
                     {sample.map((input, inputIndex) => (
                       <div key={inputIndex} className="flex items-center gap-2">
-                        <label className="text-[10px] font-medium text-muted-foreground min-w-[80px]">
+                        <label className="text-document-10 font-medium text-muted-foreground min-w-[80px]">
                           {input.label}:
                         </label>
-                        <span className="flex-1 bg-muted border border-border rounded px-2 py-1 text-[11px] text-foreground tabular-nums">
+                        <span className="flex-1 bg-muted border border-border rounded px-2 py-1 text-document-11 text-foreground tabular-nums">
                           {input.value || (
                             <span className="text-muted-foreground italic">
                               —
@@ -406,20 +406,20 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
       {/* Data Table — static display */}
       {/* <div className="bg-card border border-border rounded p-2 w-full">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">
+          <h3 className="text-document-11 font-bold text-foreground uppercase tracking-wider">
             Data Table
           </h3>
         </div>
         <div className="overflow-x-auto border border-border rounded">
           {headers.length === 0 ? (
-            <div className="text-center p-3 text-muted-foreground text-[11px]">
+            <div className="text-center p-3 text-muted-foreground text-document-11">
               No data table to display.
             </div>
           ) : (
-            <table className="w-full border-collapse text-[11px]">
+            <table className="w-full border-collapse text-document-11">
               <thead>
                 <tr className="bg-muted border-b border-border">
-                  <th className="border-r border-border p-1.5 text-center font-bold text-foreground text-[11px] sticky left-0 bg-muted z-10">
+                  <th className="border-r border-border p-1.5 text-center font-bold text-foreground text-document-11 sticky left-0 bg-muted z-10">
                     Reading
                   </th>
                   {headers.map((h, c) => (
@@ -428,13 +428,13 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                       className="border-r border-border p-1 bg-muted min-w-[120px]"
                     >
                       <div className="flex items-center justify-between mb-0.5">
-                        <div className="text-[9px] text-muted-foreground font-semibold">
+                        <div className="text-document-9 text-muted-foreground font-semibold">
                           {String.fromCharCode(65 + c)}
                         </div>
                       </div>
                       <div className="relative">{h}</div>
                       {parsed?.columnExpressions?.[c]?.error && (
-                        <div className="text-[9px] text-destructive mt-0.5 truncate">
+                        <div className="text-document-9 text-destructive mt-0.5 truncate">
                           {parsed?.columnExpressions?.[c].error}
                         </div>
                       )}
@@ -454,7 +454,7 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                         className="border-r border-b border-border p-1 text-center"
                       >
                         <span
-                          className={`inline-block w-full text-[11px] text-center tabular-nums ${
+                          className={`inline-block w-full text-document-11 text-center tabular-nums ${
                             parsed?.columnExpressions?.[c]?.enabled
                               ? "text-muted-foreground italic"
                               : "text-foreground"
@@ -472,13 +472,13 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                 ))}
                 {showAverageRow && (
                   <tr className="bg-muted border-t-2 border-border">
-                    <td className="border-r border-b border-border p-1.5 font-bold text-[11px] text-foreground sticky left-0 bg-muted z-10">
+                    <td className="border-r border-b border-border p-1.5 font-bold text-document-11 text-foreground sticky left-0 bg-muted z-10">
                       Average
                     </td>
                     {stats.map((s, i) => (
                       <td
                         key={`avg-${headers[i]}`}
-                        className="border-r border-b border-border p-1 text-center text-[11px] font-semibold text-foreground"
+                        className="border-r border-b border-border p-1 text-center text-document-11 font-semibold text-foreground"
                       >
                         {formatNumber(s.avg, false)}
                       </td>
@@ -487,13 +487,13 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                 )}
                 {showSdRow && (
                   <tr className="bg-muted">
-                    <td className="border-r border-b border-border p-1.5 font-bold text-[11px] text-foreground sticky left-0 bg-muted z-10">
+                    <td className="border-r border-b border-border p-1.5 font-bold text-document-11 text-foreground sticky left-0 bg-muted z-10">
                       SD
                     </td>
                     {stats.map((s, i) => (
                       <td
                         key={`sd-${headers[i]}`}
-                        className="border-r border-b border-border p-1 text-center text-[11px] font-semibold text-foreground"
+                        className="border-r border-b border-border p-1 text-center text-document-11 font-semibold text-foreground"
                       >
                         {formatNumber(s.sd, false)}
                       </td>
@@ -502,13 +502,13 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                 )}
                 {showRsdRow && (
                   <tr className="bg-muted">
-                    <td className="border-r border-b border-border p-1.5 font-bold text-[11px] text-foreground sticky left-0 bg-muted z-10">
+                    <td className="border-r border-b border-border p-1.5 font-bold text-document-11 text-foreground sticky left-0 bg-muted z-10">
                       RSD (%)
                     </td>
                     {stats.map((s, i) => (
                       <td
                         key={`rsd-${headers[i]}`}
-                        className="border-r border-b border-border p-1 text-center text-[11px] font-semibold text-foreground"
+                        className="border-r border-b border-border p-1 text-center text-document-11 font-semibold text-foreground"
                       >
                         {formatNumber(s.rsd, false)}
                       </td>
@@ -522,18 +522,18 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
       </div> */}
       <div className="bg-card border border-border rounded p-2 w-full print:p-0 print:border-0">
         <div className="flex items-center justify-between mb-2 print:mb-1">
-          <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">
+          <h3 className="text-document-11 font-bold text-foreground uppercase tracking-wider">
             Data Table
           </h3>
         </div>
 
         <div className="border border-border rounded w-full">
           {headers.length === 0 ? (
-            <div className="text-center p-3 text-muted-foreground text-[11px]">
+            <div className="text-center p-3 text-muted-foreground text-document-11">
               No data table to display.
             </div>
           ) : (
-            <table className="w-full table-fixed border-collapse text-[10px] print:text-[9px]">
+            <table className="w-full table-fixed border-collapse text-document-10 print:text-document-9">
               <thead>
                 <tr className="bg-muted border-b border-border">
                   <th className="border-r border-border p-1 text-center font-bold w-[70px]">
@@ -545,14 +545,14 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                       key={c}
                       className="border-r border-border p-1 bg-muted break-words"
                     >
-                      <div className="text-[8px] text-muted-foreground font-semibold">
+                      <div className="text-document-8 text-muted-foreground font-semibold">
                         {String.fromCharCode(65 + c)}
                       </div>
 
                       <div className="break-words leading-tight">{h}</div>
 
                       {parsed?.columnExpressions?.[c]?.error && (
-                        <div className="text-[8px] text-destructive mt-0.5 break-words">
+                        <div className="text-document-8 text-destructive mt-0.5 break-words">
                           {parsed?.columnExpressions?.[c].error}
                         </div>
                       )}

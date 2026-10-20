@@ -1,0 +1,55 @@
+diff --git a/crates/ui-egui/src/theme.rs b/crates/ui-egui/src/theme.rs
+index 1691f83..b9a1e46 100644
+--- a/crates/ui-egui/src/theme.rs
++++ b/crates/ui-egui/src/theme.rs
+@@ -86,8 +86,8 @@ impl Tokens {
+                 hover: Color32::from_rgb(0xF0, 0xF0, 0xF3),
+                 pressed: Color32::from_rgb(0xE4, 0xE4, 0xE9),
+                 selected: Color32::from_rgb(0xE6, 0xEE, 0xFD),
+-                accent: Color32::from_rgb(0x1B, 0x63, 0xE0),
+-                accent_text: Color32::from_rgb(0x17, 0x55, 0xC4),
++                accent: Color32::from_rgb(0x00, 0x00, 0xFF),
++                accent_text: Color32::from_rgb(0x00, 0x00, 0xFF),
+                 accent_soft: Color32::from_rgb(0xE3, 0xEC, 0xFD),
+                 field: Color32::from_rgb(0xFF, 0xFF, 0xFF),
+                 badge_new: Color32::from_rgb(0x1B, 0x63, 0xE0),
+@@ -110,8 +110,8 @@ impl Tokens {
+                 hover: Color32::from_rgb(0x34, 0x34, 0x3A),
+                 pressed: Color32::from_rgb(0x3E, 0x3E, 0x45),
+                 selected: Color32::from_rgb(0x23, 0x3A, 0x63),
+-                accent: Color32::from_rgb(0x4B, 0x8B, 0xF5),
+-                accent_text: Color32::from_rgb(0x8C, 0xB6, 0xFA),
++                accent: Color32::from_rgb(0x99, 0x99, 0xFF),
++                accent_text: Color32::from_rgb(0x99, 0x99, 0xFF),
+                 accent_soft: Color32::from_rgb(0x24, 0x36, 0x57),
+                 field: Color32::from_rgb(0x1E, 0x1E, 0x22),
+                 badge_new: Color32::from_rgb(0x3D, 0x7D, 0xEE),
+diff --git a/crates/ui-egui/src/widgets.rs b/crates/ui-egui/src/widgets.rs
+index 21448bd..51c2da3 100644
+--- a/crates/ui-egui/src/widgets.rs
++++ b/crates/ui-egui/src/widgets.rs
+@@ -225,22 +225,12 @@ pub fn progress_notice(app: &PdfCraftApp, ctx: &egui::Context) -> bool {
+ 
+ /// The ArtCraft wordmark (Storyteller's brand, docs/brand/; not open source), sized to `height`.
+ pub fn artcraft_logo(ui: &mut egui::Ui, height: f32) -> Response {
+-    let dark = ui.visuals().dark_mode;
+-    let (uri, bytes): (&str, &'static [u8]) = if dark {
+-        ("bytes://artcraft-logo-white.svg", include_bytes!("../../../docs/brand/artcraft-logo-white.svg"))
+-    } else {
+-        ("bytes://artcraft-logo.svg", include_bytes!("../../../docs/brand/artcraft-logo.svg"))
+-    };
+-    ui.add(egui::Image::from_bytes(uri, bytes).max_height(height).alt_text("ArtCraft"))
++    ui.label(egui::RichText::new("Dodo Workspace").size(height))
+ }
+ 
+ /// The ArtCraft mark (brand blue, works on light and dark), `size` points square.
+ pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
+-    ui.add(
+-        egui::Image::from_bytes("bytes://artcraft-mark.svg", include_bytes!("../../../docs/brand/artcraft-mark.svg"))
+-            .fit_to_exact_size(vec2(size, size))
+-            .alt_text("ArtCraft"),
+-    )
++    ui.label(egui::RichText::new("PDF").size(size))
+ }
+ 
+ /// Buttons for every community link (`pdfcraft_engine::links`), Discord first and prominent.
