@@ -92,7 +92,10 @@ it("sends nothing when stock was issued after the page was opened", async () => 
   await user.click(screen.getByRole("button", { name: "Issue stock" }));
   page.state.record = requisition({}, 2);
   await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Issue stock" }));
-  expect(await within(screen.getByRole("dialog")).findByText(/issued against this requisition since you opened it/)).toBeTruthy();
+  // The refusal stays on the page even after the fresh read replaces the form and its dialog.
+  await waitFor(() => expect(screen.getAllByText(/issued against this requisition since you opened it/).some((n) => !n.closest("[role=dialog]"))).toBe(true));
+  // The page now shows the fresh issued quantity.
+  expect(within(screen.getByRole("region", { name: "Requisition items" })).getByText("2 bx")).toBeTruthy();
   expect(page.writes()).toHaveLength(0);
 });
 

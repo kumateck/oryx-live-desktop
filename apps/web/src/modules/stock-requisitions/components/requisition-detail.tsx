@@ -25,7 +25,10 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 }
 const amount = (n: number, line: RequisitionLine) => `${String(n)} ${line.unit ?? ""}`.trim();
 
-function IssueForm({ requisition, onIssued }: { requisition: StockRequisition; onIssued: () => void }) {
+const staleIssue = "Stock has been issued against this requisition since you opened it. Check the quantities again.";
+
+/** `onStale` keeps the refusal on the page: the fresh read refreshes the requisition and replaces this form. */
+function IssueForm({ requisition, onIssued, onStale }: { requisition: StockRequisition; onIssued: () => void; onStale: (message: string) => void }) {
   const [reread] = inventoryApi.useLazyGetApiV1ItemsStockRequisitionsByIdQuery();
   const [issue] = inventoryApi.usePostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainstRequisitionMutation();
   const open = requisition.lines.filter((line) => line.remaining > 0);
@@ -67,7 +70,7 @@ function IssueForm({ requisition, onIssued }: { requisition: StockRequisition; o
         const fresh = await reread({ ...issueStockAudit, id: requisition.id }, false);
         if (fresh.error) return apiErrorMessage(fresh.error);
         const current = stockRequisitionSchema.safeParse(fresh.data);
-        if (!current.success || !sameIssueEvidence(requisition, current.data)) return "Stock has been issued against this requisition since you opened it. Close this and check the quantities again.";
+        if (!current.success || !sameIssueEvidence(requisition, current.data)) { onStale(staleIssue); return staleIssue; }
         const result = await issue({ ...issueStockAudit, stockRequisitionId: requisition.id,
           domainEntitiesItemStockRequisitionsIssueStockAgainstRequisitionRequest: { quantitiesToIssue: chosen.map(({ line, quantity }) => ({ itemId: line.itemId, quantity })) } });
         if ("error" in result) return apiErrorMessage(result.error);
@@ -87,6 +90,7 @@ export function StockRequisitionDetailPage({ mode }: { mode: "raise" | "issue" }
   const query = inventoryApi.useGetApiV1ItemsStockRequisitionsByIdQuery({ ...audit, id }, { skip: !id, refetchOnMountOrArgChange: true });
   const [remove] = inventoryApi.useDeleteApiV1ItemsStockRequisitionsByIdMutation();
   const parsed = useMemo(() => query.data ? stockRequisitionSchema.safeParse(query.data) : null, [query.data]);
+  const [staleNotice, setStaleNotice] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [removing, setRemoving] = useState(false);
   const root = mode === "issue" ? issueStockRoot : stockRequisitionRoot;
@@ -126,8 +130,10 @@ export function StockRequisitionDetailPage({ mode }: { mode: "raise" | "issue" }
           <td className="p-2 font-mono text-xs">{line.code}</td><td className="p-2">{amount(line.requested, line)}</td><td className="p-2">{amount(line.issued, line)}</td>
           <td className="p-2">{amount(line.remaining, line)}</td><td className="p-2">{amount(line.available, line)}</td></tr>)}</tbody></table></div>
     </section>
+    {mode === "issue" && staleNotice ? <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">{staleNotice}</p> : null}
     {mode === "issue" ? blocker ? <p className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">{blocker}</p>
-      : canIssue ? <IssueForm key={`${requisition.status}|${requisition.lines.map((l) => l.issued).join(",")}`} requisition={requisition} onIssued={() => void query.refetch()} />
+      : canIssue ? <IssueForm key={`${requisition.status}|${requisition.lines.map((l) => l.issued).join(",")}`} requisition={requisition}
+        onIssued={() => { setStaleNotice(null); void query.refetch(); }} onStale={setStaleNotice} />
       : <p className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">You can view this requisition but not issue stock from this store.</p> : null}
     {editing && store !== null ? <RequisitionEditor store={store} requisition={requisition} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); void query.refetch(); }} /> : null}
     {removing && store !== null ? <ConfirmActionDialog require={workflowRule(store, "stockRequisitions", "create")} title={`Delete ${requisition.number}?`}
