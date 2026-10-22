@@ -74,3 +74,20 @@ it("expires the workspace when the session cannot be renewed", async () => {
   expect(expired).toBe(1);
   expect(requestsTo(fetcher, "/api/v1/role")).toHaveLength(1);
 });
+
+it.each([429, 503])("does not expire the workspace or replay a write when renewal is temporarily unavailable (%s)", async (refreshStatus) => {
+  const { fetcher } = stubBackend({ refreshStatus });
+  rememberSession();
+  const original = fetcher.getMockImplementation();
+  fetcher.mockImplementation(async (input, init) => input instanceof Request ? new Response(null, { status: 401 })
+    : original ? original(input, init) : new Response(null, { status: 500 }));
+  let expired = 0;
+  const unsubscribe = onSessionExpired(() => { expired += 1; });
+  const store = configureStore({ reducer: { [api.reducerPath]: api.reducer }, middleware: (defaults) => defaults().concat(api.middleware) });
+  try {
+    await store.dispatch(probeApi.endpoints.forbiddenWriteProbe.initiate());
+    expect(expired).toBe(0);
+    expect(tokenStore.refreshToken()).toBe("refresh-stored");
+    expect(requestsTo(fetcher, "/api/v1/role")).toHaveLength(1);
+  } finally { unsubscribe(); store.dispatch(api.util.resetApiState()); }
+});

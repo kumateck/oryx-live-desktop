@@ -13,7 +13,7 @@ export type ReadableDocument = (typeof readable)[number];
 export const isReadable = (type: string): type is ReadableDocument => (readable as readonly string[]).includes(type);
 
 /** Documents that are signed on a page of their own, with their own checks, rather than from this queue. */
-const elsewhere: Record<string, string> = { Payment: "Finance, under payment approvals", FormulaRevision: "the formula's own review page", ProcedureRevision: "the procedure's own review page" };
+const elsewhere: Record<string, string> = { PerformanceReview: "Human resources, under performance reviews, where the complete assessment is checked", PayrollRun: "Human resources, under payroll runs, where the complete employee and payslip totals are reconciled", Payment: "Finance, under payment approvals", FormulaRevision: "the formula's own review page", ProcedureRevision: "the procedure's own review page" };
 /** Where a document is decided when it is not decided here, or null when it is decided here. */
 export function decidedElsewhere(type: string): string | null {
   if (type in elsewhere) return elsewhere[type] ?? null;

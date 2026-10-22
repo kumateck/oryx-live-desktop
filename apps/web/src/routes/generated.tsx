@@ -12,6 +12,11 @@ export const routes: RouteObject[] = [
       { path: "login", Component: Outlet, children: [
         { index: true, lazy: async () => ({ Component: (await import("../pages/(public)/login/page")).default }) }
       ] },
+      { path: "onboarding", Component: Outlet, children: [
+        { path: ":type", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(public)/onboarding/[type]/page")).default }) }
+        ] }
+      ] },
       { path: "reset-password", Component: Outlet, children: [
         { index: true, lazy: async () => ({ Component: (await import("../pages/(public)/reset-password/page")).default }) }
       ] }
@@ -82,6 +87,11 @@ export const routes: RouteObject[] = [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/crm/invoices/[id]/page")).default }) }
           ] }
         ] },
+        { path: "jobs", Component: Outlet, children: [
+          { path: "job-request", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/crm/jobs/job-request/page")).default }) }
+          ] }
+        ] },
         { path: "production-order", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/crm/production-order/page")).default }) },
           { path: ":id", Component: Outlet, children: [
@@ -100,18 +110,293 @@ export const routes: RouteObject[] = [
           ] }
         ] }
       ] },
+      { path: "extrals", Component: Outlet, children: [
+        { path: "available-stocks", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/available-stocks/page")).default }) },
+          { path: ":code", Component: Outlet, children: [
+            { path: "item-transactions", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/available-stocks/[code]/item-transactions/page")).default }) }
+            ] }
+          ] }
+        ] },
+        { path: "damage-missing-items", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/damage-missing-items/page")).default }) }
+        ] },
+        { path: "general-inventory-config", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/general-inventory-config/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/general-inventory-config/[id]/page")).default }) },
+            { path: "edit", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/general-inventory-config/[id]/edit/page")).default }) }
+            ] }
+          ] },
+          { path: "create", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/general-inventory-config/create/page")).default }) }
+          ] }
+        ] },
+        { path: "issue-stock", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/issue-stock/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/issue-stock/[id]/page")).default }) }
+          ] }
+        ] },
+        { path: "job-orders", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/job-orders/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { path: "details", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/job-orders/[id]/details/page")).default }) }
+            ] }
+          ] }
+        ] },
+        { path: "job-requests", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/job-requests/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { path: "details", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/job-requests/[id]/details/page")).default }) }
+            ] }
+          ] }
+        ] },
+        { path: "procurement", Component: Outlet, children: [
+          { path: "memo", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/procurement/memo/page")).default }) },
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/procurement/memo/[id]/page")).default }) }
+            ] }
+          ] },
+          { path: "open-market-collection", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/procurement/open-market-collection/page")).default }) },
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/procurement/open-market-collection/[id]/page")).default }) }
+            ] }
+          ] },
+          { path: "price-comparison", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/procurement/price-comparison/page")).default }) }
+          ] },
+          { path: "purchase-requisition-sourcing", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/procurement/purchase-requisition-sourcing/page")).default }) },
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/procurement/purchase-requisition-sourcing/[id]/page")).default }) }
+            ] }
+          ] },
+          { path: "purchased-items", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/procurement/purchased-items/page")).default }) }
+          ] },
+          { path: "quotation-responses", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/procurement/quotation-responses/page")).default }) }
+          ] },
+          { path: "vendor-quotations", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/procurement/vendor-quotations/page")).default }) }
+          ] }
+        ] },
+        { path: "purchase-requisitions", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/purchase-requisitions/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { path: "details", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/purchase-requisitions/[id]/details/page")).default }) }
+            ] }
+          ] }
+        ] },
+        { path: "receiving-area", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/receiving-area/page")).default }) }
+        ] },
+        { path: "return-items", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/return-items/page")).default }) }
+        ] },
+        { path: "service-memo", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/service-memo/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/service-memo/[id]/page")).default }) }
+          ] }
+        ] },
+        { path: "service-price-comparison", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/service-price-comparison/page")).default }) }
+        ] },
+        { path: "service-proforma-request", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/service-proforma-request/page")).default }) }
+        ] },
+        { path: "service-quotation-response", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/service-quotation-response/page")).default }) }
+        ] },
+        { path: "services", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/services/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/services/[id]/page")).default }) }
+          ] }
+        ] },
+        { path: "services-providers", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/services-providers/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/services-providers/[id]/page")).default }) }
+          ] }
+        ] },
+        { path: "stock-requisitions", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/stock-requisitions/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { path: "details", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/stock-requisitions/[id]/details/page")).default }) }
+            ] }
+          ] }
+        ] },
+        { path: "vendors", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/extrals/vendors/page")).default }) }
+        ] }
+      ] },
       { path: "fgtn-dashbord", Component: Outlet, children: [
         { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/fgtn-dashbord/page")).default }) }
+      ] },
+      { path: "finance", Component: Outlet, children: [
+        { path: "cashflow", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/cashflow/page")).default }) }
+        ] },
+        { path: "payment-approvals", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/payment-approvals/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/payment-approvals/[id]/page")).default }) }
+          ] }
+        ] },
+        { path: "payments", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/payments/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/payments/[id]/page")).default }) }
+          ] }
+        ] }
+      ] },
+      { path: "formula", Component: Outlet, children: [
+        { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/formula/page")).default }) }
       ] },
       { path: "home", Component: Outlet, children: [
         { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/home/page")).default }) }
       ] },
       { path: "hr", Component: Outlet, children: [
+        { path: "attendance-report-summary", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/attendance-report-summary/page")).default }) },
+          { path: ":departmentName", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/attendance-report-summary/[departmentName]/page")).default }) }
+          ] }
+        ] },
+        { path: "attendance-report-upload", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/attendance-report-upload/page")).default }) }
+        ] },
+        { path: "department-employee-export", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/department-employee-export/page")).default }) }
+        ] },
         { path: "designation-management", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/designation-management/page")).default }) }
         ] },
+        { path: "employee-compensation", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/employee-compensation/page")).default }) }
+        ] },
+        { path: "employee-management", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/employee-management/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { path: "details", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/employee-management/[id]/details/page")).default }) }
+            ] },
+            { path: "edit", Component: Outlet, children: [
+              { path: ":type", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/employee-management/[id]/edit/[type]/page")).default }) }
+              ] }
+            ] }
+          ] },
+          { path: "create", Component: Outlet, children: [
+            { path: ":type", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/employee-management/create/[type]/page")).default }) }
+            ] }
+          ] }
+        ] },
+        { path: "goals", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/goals/page")).default }) },
+          { path: "reviews", Component: Outlet, children: [
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/goals/reviews/[id]/page")).default }) }
+            ] }
+          ] }
+        ] },
+        { path: "human-resources-report", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/human-resources-report/page")).default }) },
+          { path: "new-hires-and-exit-count", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/human-resources-report/new-hires-and-exit-count/page")).default }) }
+          ] },
+          { path: "parmanent-staff-grade-count-report", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/human-resources-report/parmanent-staff-grade-count-report/page")).default }) }
+          ] },
+          { path: "staff-gender-ratio-report", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/human-resources-report/staff-gender-ratio-report/page")).default }) }
+          ] },
+          { path: "total-staff-report", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/human-resources-report/total-staff-report/page")).default }) }
+          ] }
+        ] },
         { path: "leave-configuration", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/leave-configuration/page")).default }) }
+        ] },
+        { path: "leave-management", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/leave-management/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { path: "details", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/leave-management/[id]/details/page")).default }) }
+            ] },
+            { path: "edit", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/leave-management/[id]/edit/page")).default }) }
+            ] }
+          ] },
+          { path: "create", Component: Outlet, children: [
+            { path: ":category", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/leave-management/create/[category]/page")).default }) }
+            ] }
+          ] }
+        ] },
+        { path: "overtime-management", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/overtime-management/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { path: "details", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/overtime-management/[id]/details/page")).default }) }
+            ] },
+            { path: "edit", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/overtime-management/[id]/edit/page")).default }) }
+            ] }
+          ] },
+          { path: "create", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/overtime-management/create/page")).default }) }
+          ] }
+        ] },
+        { path: "payroll-configuration", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/payroll-configuration/page")).default }) }
+        ] },
+        { path: "payroll-runs", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/payroll-runs/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/payroll-runs/[id]/page")).default }) }
+          ] },
+          { path: "payslips", Component: Outlet, children: [
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/payroll-runs/payslips/[id]/page")).default }) }
+            ] }
+          ] }
+        ] },
+        { path: "performance-cycles", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/performance-cycles/page")).default }) }
+        ] },
+        { path: "performance-reviews", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/performance-reviews/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/performance-reviews/[id]/page")).default }) }
+          ] }
+        ] },
+        { path: "shift-schedule-upload", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/shift-schedule-upload/page")).default }) }
+        ] },
+        { path: "staff-requisition", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/staff-requisition/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/staff-requisition/[id]/page")).default }) },
+            { path: "edit", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/staff-requisition/[id]/edit/page")).default }) }
+            ] }
+          ] },
+          { path: "create", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/hr/staff-requisition/create/page")).default }) }
+          ] }
         ] }
       ] },
       { path: "hr-dashboard", Component: Outlet, children: [
@@ -188,6 +473,14 @@ export const routes: RouteObject[] = [
       ] },
       { path: "logistics-dashboard", Component: Outlet, children: [
         { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/logistics-dashboard/page")).default }) }
+      ] },
+      { path: "plan-shift", Component: Outlet, children: [
+        { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/plan-shift/page")).default }) },
+        { path: ":id", Component: Outlet, children: [
+          { path: "calendar", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/plan-shift/[id]/calendar/page")).default }) }
+          ] }
+        ] }
       ] },
       { path: "procurement", Component: Outlet, children: [
         { path: "awarded-quotations", Component: Outlet, children: [
@@ -340,6 +633,14 @@ export const routes: RouteObject[] = [
           { path: "monthly-report", Component: Outlet, children: [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/schedules/monthly-report/page")).default }) }
           ] }
+        ] },
+        { path: "stock-transfer-requests", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/stock-transfer-requests/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { path: "details", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/stock-transfer-requests/[id]/details/page")).default }) }
+            ] }
+          ] }
         ] }
       ] },
       { path: "production-health-dashboard", Component: Outlet, children: [
@@ -348,6 +649,18 @@ export const routes: RouteObject[] = [
       { path: "qa", Component: Outlet, children: [
         { path: "approval-rights-transfer", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/approval-rights-transfer/page")).default }) }
+        ] },
+        { path: "formula-approvals", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/formula-approvals/page")).default }) },
+          { path: ":questionId", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/formula-approvals/[questionId]/page")).default }) }
+          ] }
+        ] },
+        { path: "formula-reviews", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/formula-reviews/page")).default }) },
+          { path: ":questionId", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/formula-reviews/[questionId]/page")).default }) }
+          ] }
         ] },
         { path: "issue-bmr", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/issue-bmr/page")).default }) },
@@ -484,6 +797,72 @@ export const routes: RouteObject[] = [
           { path: "water-quality", Component: Outlet, children: [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/routines/water-quality/page")).default }) }
           ] }
+        ] }
+      ] },
+      { path: "reports", Component: Outlet, children: [
+        { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/page")).default }) },
+        { path: "finish-goods-transfernote-report", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/finish-goods-transfernote-report/page")).default }) }
+        ] },
+        { path: "human-resources-report", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/human-resources-report/page")).default }) },
+          { path: "daily-attendance-overview", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/human-resources-report/daily-attendance-overview/page")).default }) }
+          ] },
+          { path: "departmental-attendance-report-summary", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/human-resources-report/departmental-attendance-report-summary/page")).default }) }
+          ] },
+          { path: "employee-master-list", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/human-resources-report/employee-master-list/page")).default }) }
+          ] },
+          { path: "leave-overview-report", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/human-resources-report/leave-overview-report/page")).default }) }
+          ] },
+          { path: "new-hires-and-exit-count", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/human-resources-report/new-hires-and-exit-count/page")).default }) }
+          ] },
+          { path: "parmanent-staff-grade-count-report", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/human-resources-report/parmanent-staff-grade-count-report/page")).default }) }
+          ] },
+          { path: "staff-gender-ratio-report", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/human-resources-report/staff-gender-ratio-report/page")).default }) }
+          ] },
+          { path: "staff-turn-over-over-report", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/human-resources-report/staff-turn-over-over-report/page")).default }) }
+          ] },
+          { path: "total-staff-report", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/human-resources-report/total-staff-report/page")).default }) }
+          ] }
+        ] },
+        { path: "procument-reports", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/procument-reports/page")).default }) }
+        ] },
+        { path: "procurement-report", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/procurement-report/page")).default }) }
+        ] },
+        { path: "qc-qa-reports", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/qc-qa-reports/page")).default }) },
+          { path: "daily-production-schedule", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/qc-qa-reports/daily-production-schedule/page")).default }) }
+          ] },
+          { path: "material-list-report", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/qc-qa-reports/material-list-report/page")).default }) }
+          ] },
+          { path: "product-readiness", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/qc-qa-reports/product-readiness/page")).default }) }
+          ] },
+          { path: "production-schedule", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/qc-qa-reports/production-schedule/page")).default }) }
+          ] },
+          { path: "products", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/qc-qa-reports/products/page")).default }) }
+          ] }
+        ] },
+        { path: "store-inventory-report", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/store-inventory-report/page")).default }) }
+        ] },
+        { path: "warehouse-report", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/warehouse-report/page")).default }) }
         ] }
       ] },
       { path: "services-dashboard", Component: Outlet, children: [

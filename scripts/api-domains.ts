@@ -16,7 +16,7 @@ export const apiDomains: readonly ApiDomain[] = [
     "ActivityLog", "Alert", "Collection", "CompanyWorkingDays", "Configuration", "Country", "File", "Holiday", "WorkingHoursPolicy",
   ] },
   { id: "hr", exportName: "hrApi", tags: [
-    "AttendanceRecord", "Designation", "Employee", "LeaveEntitlement", "LeaveRequest", "LeaveType", "OvertimeRequest",
+    "AttendanceRecord", "Designation", "Employee", "Onboarding", "LeaveEntitlement", "LeaveRequest", "LeaveType", "OvertimeRequest",
     "Payroll", "Performance", "ShiftCategory", "ShiftSchedule", "ShiftType", "StaffRequisition",
   ] },
   { id: "materials", exportName: "materialsApi", tags: ["Material", "BillOfMaterial"] },

@@ -41,7 +41,7 @@ export function AccountSummary() {
       <dt className="text-muted-foreground">Access</dt>
       <dd>{permissions.length === 1 ? "1 permission" : `${permissions.length} permissions`} from your assigned roles</dd>
       <dt className="text-muted-foreground">Session</dt>
-      <dd>Kept by your customer server for one work shift, or until you sign out. Signing out here signs out every open Oryx window.</dd>
+      <dd>Kept securely on this desktop across restarts, until you sign out or your customer server ends the session. Signing out also signs out other open Oryx windows.</dd>
     </dl>
     <AvatarForm userId={user.id} onSaved={refresh} />
     {switching ? <DepartmentSwitchDialog user={user} onClose={() => setSwitching(false)} /> : null}

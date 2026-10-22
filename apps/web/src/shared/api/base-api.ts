@@ -20,9 +20,9 @@ export const api = createApi({
     let result = await request(args, context, extraOptions);
     if (result.error?.status === 401) {
       // The access token is short-lived: renew it once and repeat the request before giving up.
-      const renewed = await refreshTokens().catch(() => false);
+      const renewed = await refreshTokens().catch(() => null);
       if (renewed) result = await request(args, context, extraOptions);
-      if (!renewed || result.error?.status === 401) notifySessionExpired();
+      if (renewed === false || (renewed === true && result.error?.status === 401)) notifySessionExpired();
     }
     // Never repeat a forbidden mutation. Refresh the session so routes and actions reflect the server's decision.
     if (result.error?.status === 403) notifyPermissionDenied();

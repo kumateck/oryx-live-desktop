@@ -29,7 +29,7 @@ export default function DistributeDialog({ grn, kind, onClose }: { grn: Grn; kin
         {plan ? <DistributionPlanView plan={plan} busy={action.busy} onDistribute={(warehouse) => {
           void form.handleSubmit((values) => values.material ? action.submit(values.material.value, warehouse) : undefined)();
         }} /> : <p className="text-sm text-muted-foreground">Choose an approved material to see its warehouse distribution plan.</p>}
-        {action.message ? <p role="alert" className="text-sm text-destructive">{action.message}</p> : null}
+        {action.message && action.message !== plan?.problem ? <p role="alert" className="text-sm text-destructive">{action.message}</p> : null}
       </DialogBody>
       <DialogFooter><Button type="button" variant="outline" disabled={action.busy !== null} onClick={onClose}>Close</Button></DialogFooter>
     </DialogContent>

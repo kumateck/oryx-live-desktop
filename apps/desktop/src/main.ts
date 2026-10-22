@@ -119,6 +119,12 @@ async function createWindow(): Promise<void> {
       nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true,
     },
   });
+  let closing = false;
+  window.on("close", (event) => {
+    if (closing) return;
+    event.preventDefault();
+    void vault.flush().finally(() => { closing = true; window.close(); });
+  });
   // The app never opens windows of its own. A web link meant for a new window (an attachment's "Open in browser")
   // goes to the system browser instead; any other kind of address is refused.
   window.webContents.setWindowOpenHandler(({ url }) => {
@@ -169,3 +175,10 @@ app.whenReady().then(async () => {
 }).catch((error: Error) => { console.error(error); app.quit(); });
 
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
+
+let quitting = false;
+app.on("before-quit", (event) => {
+  if (quitting || !vault) return;
+  event.preventDefault();
+  void vault.flush().finally(() => { quitting = true; app.quit(); });
+});

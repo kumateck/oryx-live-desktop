@@ -1,0 +1,9 @@
+--- a/APP/Services/Token/JwtService.cs
++++ b/APP/Services/Token/JwtService.cs
+@@ -42,6 +42,7 @@
+         context.RefreshTokens.Add(new RefreshToken
+         {
++            UserId = userId,
+             CreatedById = userId,
+             Token = refreshToken,
+             Expiry = DateTime.UtcNow.AddMonths(6)

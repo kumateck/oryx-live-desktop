@@ -43,3 +43,36 @@ test("refuses what is not a token, and drops a file it cannot read", async () =>
   assert.equal(await broken.load(site), null);
   await assert.rejects(stat(file));
 });
+
+test("a fresh process restores the latest token, and concurrent reads cannot see a half-written file", async () => {
+  const file = await vaultFile();
+  const vault = createSessionVault(file, () => cipher);
+  const first = vault.save(site, "refresh-first");
+  const read = vault.load(site);
+  const second = vault.save(site, "refresh-second");
+  await first;
+  assert.equal(await read, "refresh-first");
+  await second;
+  await vault.flush();
+  assert.equal(await createSessionVault(file, () => cipher).load(site), "refresh-second");
+});
+
+test("queued sign-out cannot be overtaken by an earlier token save", async () => {
+  const file = await vaultFile();
+  const vault = createSessionVault(file, () => cipher);
+  const writing = vault.save(site, "refresh-first");
+  const signingOut = vault.forget();
+  await Promise.all([writing, signingOut, vault.flush()]);
+  assert.equal(await createSessionVault(file, () => cipher).load(site), null);
+});
+
+test("a failed encrypted replacement preserves the previous complete token", async () => {
+  const file = await vaultFile();
+  let broken = false;
+  const vault = createSessionVault(file, () => broken ? { ...cipher, encrypt: () => { throw new Error("keyring unavailable"); } } : cipher);
+  await vault.save(site, "refresh-good");
+  broken = true;
+  await assert.rejects(vault.save(site, "refresh-replacement"));
+  broken = false;
+  assert.equal(await vault.load(site), "refresh-good");
+});

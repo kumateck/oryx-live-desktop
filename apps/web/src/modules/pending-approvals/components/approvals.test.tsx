@@ -17,7 +17,7 @@ it("names documents, says where each is decided, and asks for a reason only when
     .toEqual(["Purchase order", "Production extra material", "QC COA", "QC OOS case", "Template form revision", "Document"]);
   expect([isReadable("LeaveRequest"), isReadable("PayrollRun"), isReadable("ServiceMemo"), isReadable("QcCoa")]).toEqual([true, true, false, false]);
   expect(decidedElsewhere("PurchaseOrder")).toBeNull();
-  expect(decidedElsewhere("PayrollRun")).toBeNull();
+  expect(decidedElsewhere("PayrollRun")).toContain("reconciled");
   expect(decidedElsewhere("QcSpecification")).toContain("Quality Control");
   expect(decidedElsewhere("Payment")).toContain("Finance");
   expect(decidedElsewhere("TemplateSectionRevision")).toContain("template");
@@ -69,7 +69,8 @@ it("shows what is waiting by document, linking only those decided here", async (
   expect(cards.queryByText("Billing sheet")).toBeNull();
   expect(cards.queryByRole("link", { name: /QC COA/ })).toBeNull();
   expect(cards.getByText(/Decided in Quality Control/)).toBeTruthy();
-  expect(cards.getByRole("link", { name: "Payroll run, 1 waiting" })).toBeTruthy();
+  expect(cards.queryByRole("link", { name: "Payroll run, 1 waiting" })).toBeNull();
+  expect(cards.getByText(/Decided in Human resources/)).toBeTruthy();
   await userEvent.setup().click(cards.getByRole("link", { name: "Leave request, 2 waiting" }));
   await waitFor(() => expect(router.state.location.search).toBe("?type=LeaveRequest"));
   expect(await screen.findByText("LR-1")).toBeTruthy();
@@ -195,7 +196,7 @@ it("lays out every readable document without failing, from full or sparse data",
     await waitFor(() => expect(within(section).queryByText(/^Loading the/)).toBeNull());
     const text = expected[type];
     if (text) expect(section.textContent).toContain(text);
-    expect((screen.getByRole("button", { name: "Approve" }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: "Approve" }) as HTMLButtonElement).disabled).toBe(type === "PayrollRun" || type === "PerformanceReview");
     cleanup(); forgetSession();
   }
 }, 60_000);

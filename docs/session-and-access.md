@@ -4,7 +4,7 @@
 
 The desktop uses the same backend as Oryx Next, unchanged. It signs in with `POST /api/v1/auth/login`, sends the access token as a bearer header, renews it with `POST /api/v1/auth/login-with-refresh-token`, and builds the session from `GET /api/v1/user/authenticated` and `GET /api/v1/permission/user/{id}`. A permission counts as held when its module is active and its types include `Access`, the same rule as Oryx Next.
 
-The access token is kept in memory only. The refresh token is also kept in `sessionStorage` so a reload restores the session; nothing is written to `localStorage`, and the session ends when the window closes. `SessionProvider` (`apps/web/src/shared/auth`) holds the validated public view: user ID, name, email, department, avatar path, and granted permission keys.
+The access token is kept in memory only. The refresh token is also kept in `sessionStorage` so a reload restores the session; nothing is written to `localStorage`. In the installed desktop, the OS-encrypted refresh token survives closing the window and quitting the app. A browser without the desktop bridge retains only the current browser session. `SessionProvider` (`apps/web/src/shared/auth`) holds the validated public view: user ID, name, email, department, avatar path, and granted permission keys.
 
 | Situation | Behavior |
 | --- | --- |
@@ -12,7 +12,7 @@ The access token is kept in memory only. The refresh token is also kept in `sess
 | Wrong credentials | "The email or password is incorrect." The password field is cleared and focused. |
 | Disabled account | Explained on the login screen. The backend reports wrong credentials as 400 and a disabled account as 412, so the error code in the response decides which message is shown. |
 | Too many attempts (429), server fault, no connection, unreadable reply | Each has its own message. Requests time out after 15 seconds. |
-| API request returns 401 | The token is renewed once and the request repeated. Concurrent requests share one renewal, because the backend replaces the refresh token each time. If renewal fails, the workspace closes, its cache is discarded, and the login screen says the session ended and returns the user to the same page after sign-in. |
+| API request returns 401 | The token is renewed once and the request repeated. Concurrent requests share one renewal, so requests do not race to replace local credentials. If the server definitively refuses renewal, the workspace closes, its cache is discarded, and the login screen says the session ended and returns the user to the same page after sign-in. |
 | Window regains focus or the network returns | The session is re-read after at least a minute, so permission changes are picked up. A failed background check never closes the workspace. |
 | Sign-out | The backend has no sign-out endpoint, so signing out discards this window's tokens and tells other open Oryx windows to do the same. The refresh token stays valid on the server until it expires. |
 
@@ -115,7 +115,7 @@ Sonner (the shadcn `Toaster`, mounted once in `main.tsx` and following the Oryx 
 The shell keeps the refresh token encrypted by the operating system (`apps/desktop/src/session-vault.ts`, Electron `safeStorage`), in `session.bin` in the app's user data folder, so a restart does not ask for a sign-in until the server ends the session.
 
 - Only the top page of the connected server can read or keep it (`session:load` / `session:save`, checked in `main.ts`); the setup page and frames are refused. It is tied to the server's origin and forgotten when the server address changes or the server is forgotten.
-- Each new refresh token is kept as the server issues it (the server replaces it on every renewal); signing out, or the server ending the session, removes it.
+- Each new refresh token is kept as the server issues it (whether or not the server rotates its value); signing out, or the server ending the session, removes it.
 - Without OS encryption (on Linux without a keyring Electron uses a fixed key, which protects nothing), nothing is kept and the session lasts as long as the window.
 - The web app uses it through `window.oryxSession` in `shared/auth/token-store.ts`; in a browser it is absent and nothing changes.
 
@@ -124,3 +124,14 @@ The shell keeps the refresh token encrypted by the operating system (`apps/deskt
 - **Forgot password** `/forgot-password` and **reset password** `/reset-password?key=` (`modules/auth`). The server emails a link to `/reset-password` on the origin the request came from, which is this app's site. The same answer is given whether or not an account uses the address (the server says when none does; that is not passed on). The reset page also takes the emailed link pasted in, for when the email opens on another computer. New passwords are checked against the server's rules (8 characters, a digit, a capital letter, a symbol; `shared/auth/password-rules.ts`, also used by change password), and a 200 answer without `success: true` is a refusal.
 - **Photo** on the Account page (`shared/auth/avatar-form.tsx`). The upload endpoint swallows failures and answers 204, so the stored photo is read back and compared before it is reported as saved (`shared/images/stored-image.ts`, shared with the signature page). The photo is stored under the same name each time, so the app adds a version to its address after a change.
 - **Switch department** in the account menu and on the Account page (`shared/auth/department-switch-dialog.tsx`), shown only to the roles the server allows (`Warehouse Manager`, `admin`, `super`, from the profile's roles); Oryx Next showed it to four departments named in its code, whose users the server could then refuse. Production departments are offered, as in Oryx Next. The server saves the change on the account, so it applies in every window until switched back; the dialog says so. Everything read for the old department is discarded and the session is read again.
+
+## Desktop restart and renewal reliability (2026-10-21)
+
+- Encrypted vault operations are serialized. Replacement writes use a private temporary file, flush it, then atomically rename it. Reads cannot race a partial write; sign-out deletion cannot be overtaken by an earlier save. Failed writes retain the previous complete file.
+- A confirmed login/renewal awaits the shell save. Closing the desktop or quitting waits for queued vault operations. No plaintext long-lived token fallback was added; OS encryption and connected-origin IPC restrictions remain required.
+- Restoration is coalesced and versioned. A late load or refresh cannot restore a token after sign-out or replace a newer login. On restart, the encrypted token takes precedence over an older window copy.
+- Renewal belongs to the session, not the initiating page. Cancelling a StrictMode effect or leaving a page cancels only that caller's wait. Temporary network, server, rate-limit and unrecognized endpoint failures retain the refresh token and do not expire an established workspace. A failed mutation is not automatically replayed after such a failure.
+- Explicit sign-out clears memory and session storage immediately, awaits encrypted deletion, and clears other open windows through the existing session channel. The server still controls token acceptance and account status; closing Oryx does not extend a token's lifetime.
+- Regression tests cover vault reopening, write/read/delete ordering, failed replacement, cancelled callers, sign-out during renewal, confirmed persistence, stale window tokens and transient failures. Desktop and web TypeScript checks are required alongside these tests. A real installed-process quit/relaunch remains an acceptance check.
+
+Backend renewal blocker found in source: refresh-token creation omits `UserId`, which renewal requires; `CreatedById` is overwritten by the audit hook and is not a safe substitute. The exact repair (now applied locally to the backend with user approval, regression passing, not deployed) and live-verification limit are documented in `implementation-2026-10-20/hr-requests-and-session.md`. Desktop persistence alone cannot fix ownerless server tokens.

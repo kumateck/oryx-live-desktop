@@ -11,7 +11,7 @@ import { FormPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useFormulaQuestion } from "../hooks/use-formula-question";
 import { questionPermissions, questionsPath } from "../lib/questions";
 import { formulaTypeOptions, type QuestionFormulaValues } from "../schemas/formula-question-schema";
-import { DraftFormulaChecks } from "./formula-checks";
+import { DraftFormulaChecks } from "@/shared/formula/review/formula-checks";
 import { FormulaRevisionPanel } from "./formula-revision-panel";
 import { VariableScopeFields } from "./variable-scope-fields";
 

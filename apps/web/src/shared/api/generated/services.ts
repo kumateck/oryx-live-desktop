@@ -799,6 +799,7 @@ const injectedRtkApi = api.injectEndpoints({
           status: queryArg.status,
           jobOrderId: queryArg.jobOrderId,
           serviceProviderId: queryArg.serviceProviderId,
+          memoPending: queryArg.memoPending,
         },
       }),
     }),
@@ -1592,6 +1593,8 @@ export type GetApiV1ServiceProformaInvoicesApiArg = {
   jobOrderId?: string;
   /** Filter by service provider ID */
   serviceProviderId?: string;
+  /** Only approved proformas whose job order has no service memo yet */
+  memoPending?: boolean;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */

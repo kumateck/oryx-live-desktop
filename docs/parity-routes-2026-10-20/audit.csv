@@ -1,0 +1,4 @@
+area,next_route,status,live_destination,next_source,live_source,finding
+audit,/audit/quality-audits/[id],unported,,src/app/(private)/audit/quality-audits/[id]/page.tsx,,"No equivalent complete screen identified in Live. Related dashboard, generated API or generic approval evidence does not replace the domain workflow."
+audit,/audit/quality-audits/create,unported,,src/app/(private)/audit/quality-audits/create/page.tsx,,"No equivalent complete screen identified in Live. Related dashboard, generated API or generic approval evidence does not replace the domain workflow."
+audit,/audit/quality-audits,unported,,src/app/(private)/audit/quality-audits/page.tsx,,"No equivalent complete screen identified in Live. Related dashboard, generated API or generic approval evidence does not replace the domain workflow."

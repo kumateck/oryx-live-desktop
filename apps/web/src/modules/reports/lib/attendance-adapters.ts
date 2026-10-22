@@ -1,0 +1,58 @@
+import type { DomainEntitiesAttendanceRecordsAttendanceRecordDepartmentDto, DomainEntitiesAttendanceRecordsGeneralAttendanceReportDtoRead, DomainEntitiesAttendanceRecordsSystemGeneralStaffCountDto, DomainEntitiesAttendanceRecordsSystemGeneralStats } from "@/shared/api/generated/hr";
+import { reportSheet } from "@/shared/reports/report-data";
+export const dailyAttendanceSheet = (name: string, rows: readonly DomainEntitiesAttendanceRecordsAttendanceRecordDepartmentDto[]) => reportSheet(name, rows, [
+  { label: "Staff Name", read: (row) => row.staffName },
+  { label: "Employee Id", read: (row) => row.employeeId },
+  { label: "Shift Name", read: (row) => row.shiftName },
+  { label: "Clock In Time", read: (row) => row.clockInTime },
+  { label: "Clock Out Time", read: (row) => row.clockOutTime },
+  { label: "Work Hours", read: (row) => row.workHours },
+]);
+export const departmentAttendanceSheet = (name: string, rows: readonly DomainEntitiesAttendanceRecordsGeneralAttendanceReportDtoRead[]) => reportSheet(name, rows, [
+  { label: "Department Name", read: (row) => row.departmentName },
+  { label: "Permanent Staff", read: (row) => row.permanentStaff },
+  { label: "Casual Staff", read: (row) => row.casualStaff },
+  { label: "Total Staff", read: (row) => row.totalStaff },
+  { label: "Permanent Early Morning", read: (row) => row.permanentEarlyMorning },
+  { label: "Permanent Morning", read: (row) => row.permanentMorning },
+  { label: "Permanent Afternoon", read: (row) => row.permanentAfternoon },
+  { label: "Permanent Night", read: (row) => row.permanentNight },
+  { label: "Casual Early Morning", read: (row) => row.casualEarlyMorning },
+  { label: "Casual Morning", read: (row) => row.casualMorning },
+  { label: "Casual Afternoon", read: (row) => row.casualAfternoon },
+  { label: "Casual Night", read: (row) => row.casualNight },
+  { label: "Approved Leaves", read: (row) => row.approvedLeaves },
+  { label: "Absences", read: (row) => row.absences },
+  { label: "Suspensions", read: (row) => row.suspensions },
+  { label: "Sick Leaves", read: (row) => row.sickLeaves },
+  { label: "Maternity Leaves", read: (row) => row.maternityLeaves },
+]);
+export const attendanceExceptionsSheet = (name: string, rows: readonly DomainEntitiesAttendanceRecordsSystemGeneralStaffCountDto[]) => reportSheet(name, rows, [
+  { label: "Number Of Permanent Leaves", read: (row) => row.numberOfPermanentLeaves },
+  { label: "Number Of Casual Leaves", read: (row) => row.numberOfCasualLeaves },
+  { label: "Number Of Permanent Sick Leaves", read: (row) => row.numberOfPermanentSickLeaves },
+  { label: "Number Of Casual Sick Leaves", read: (row) => row.numberOfCasualSickLeaves },
+  { label: "Number Of Permanent Maternity Leave", read: (row) => row.numberOfPermanentMaternityLeave },
+  { label: "Number Of Casual Maternity Leave", read: (row) => row.numberOfCasualMaternityLeave },
+  { label: "Number Of Permanent Absent Employees", read: (row) => row.numberOfPermanentAbsentEmployees },
+  { label: "Number Of Casual Absent Employees", read: (row) => row.numberOfCasualAbsentEmployees },
+  { label: "Number Of Permanent Official Duty", read: (row) => row.numberOfPermanentOfficialDuty },
+  { label: "Number Of Casual Official Duty", read: (row) => row.numberOfCasualOfficialDuty },
+  { label: "Number Of Permanent Suspensions", read: (row) => row.numberOfPermanentSuspensions },
+  { label: "Number Of Casual Suspensions", read: (row) => row.numberOfCasualSuspensions },
+  { label: "Department", read: (row) => row.department },
+]);
+export const attendanceTotalsSheet = (name: string, rows: readonly DomainEntitiesAttendanceRecordsSystemGeneralStats[]) => reportSheet(name, rows, [
+  { label: "Number Of Permanent Leaves", read: (row) => row.numberOfPermanentLeaves },
+  { label: "Number Of Casual Leaves", read: (row) => row.numberOfCasualLeaves },
+  { label: "Number Of Permanent Sick Leaves", read: (row) => row.numberOfPermanentSickLeaves },
+  { label: "Number Of Casual Sick Leaves", read: (row) => row.numberOfCasualSickLeaves },
+  { label: "Number Of Permanent Maternity Leave", read: (row) => row.numberOfPermanentMaternityLeave },
+  { label: "Number Of Casual Maternity Leave", read: (row) => row.numberOfCasualMaternityLeave },
+  { label: "Number Of Permanent Absent Employees", read: (row) => row.numberOfPermanentAbsentEmployees },
+  { label: "Number Of Casual Absent Employees", read: (row) => row.numberOfCasualAbsentEmployees },
+  { label: "Number Of Permanent Official Duty", read: (row) => row.numberOfPermanentOfficialDuty },
+  { label: "Number Of Casual Official Duty", read: (row) => row.numberOfCasualOfficialDuty },
+  { label: "Number Of Permanent Suspensions", read: (row) => row.numberOfPermanentSuspensions },
+  { label: "Number Of Casual Suspensions", read: (row) => row.numberOfCasualSuspensions },
+]);

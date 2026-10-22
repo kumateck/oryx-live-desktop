@@ -1,3 +1,4 @@
+import { tokenStore } from "./token-store";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { currentSession, loginSession, logoutSession, SessionRequestError, type SessionView } from "./session-api";
 import { openSessionChannel, type SessionSignal } from "./session-channel";
@@ -126,6 +127,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const channel = openSessionChannel((signal) => {
       if (signal === "signed-in") { void refresh(); return; }
+      logoutSession();
       ++revision.current;
       committedAccess.current = { state: "anonymous" };
       setState((current) => current.status === "authenticated" ? { status: "anonymous", reason: "signed-out" } : current);
@@ -151,6 +153,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     committedAccess.current = { state: "anonymous" };
     announce.current("signed-out");
     setState({ status: "anonymous", reason: "signed-out" });
+    await tokenStore.flush();
   }, []);
 
   const retry = useCallback(async () => { committedAccess.current = { state: "anonymous" }; setState({ status: "loading" }); await load(); }, [load]);

@@ -5,7 +5,7 @@ import { buildFormulaOptionValue, currentRevision, savedValidationFor, toFormula
 
 const revision = (overrides: Partial<FormulaRevision> = {}): FormulaRevision => ({
   id: "r1", formulaDefinitionId: "d1", questionId: "q1", revision: 1, definitionHash: "a".repeat(64), formulaLanguageVersion: "oryx-formula-v1", numericPolicyVersion: "v1",
-  presentationPreset: "Universal", authoringPayload: null, status: 0, statusName: "Draft", testCases: [], createdById: null, reviewedById: null, reviewedAt: null,
+  presentationPreset: "Universal", authoringPayload: null, status: 0, statusName: "Draft", definition: null, testCases: [], createdById: null, reviewedById: null, reviewedAt: null,
   approvedById: null, approvedAt: null, effectiveAt: null, ...overrides,
 });
 

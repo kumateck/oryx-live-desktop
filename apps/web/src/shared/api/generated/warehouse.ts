@@ -31,6 +31,8 @@ const injectedRtkApi = api.injectEndpoints({
           page: queryArg.page,
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
+          store: queryArg.store,
+          damageStatus: queryArg.damageStatus,
         },
       }),
     }),
@@ -1234,6 +1236,8 @@ export type GetApiV1DamagedGoodsApiArg = {
   page?: number;
   pageSize?: number;
   searchQuery?: string;
+  store?: DomainEntitiesItemsStore;
+  damageStatus?: DomainEntitiesDamagedStocksDamageStatus;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1248,8 +1252,7 @@ export type GetApiV1DamagedGoodsByIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
-export type PutApiV1DamagedGoodsByIdApiResponse =
-  /** status 204 No Content */ DomainEntitiesDamagedStocksDamagedStockDto;
+export type PutApiV1DamagedGoodsByIdApiResponse = void;
 export type PutApiV1DamagedGoodsByIdApiArg = {
   id: string;
   /** The module this request falls under */

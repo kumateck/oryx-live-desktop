@@ -51,7 +51,7 @@ it("wires month and calendar fields to Zod and submits month-only values", async
 
   render(<BatchForm />);
   expect(await screen.findByRole("button", { name: "Received date" })).toBeTruthy();
-  expect(screen.getByRole("button", { name: "Inspection range" })).toBeTruthy();
+  expect(await screen.findByRole("button", { name: "Inspection range" })).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Save batch" }));
   expect(await screen.findByText("Expiry must follow manufacturing")).toBeTruthy();
   expect(submit).not.toHaveBeenCalled();

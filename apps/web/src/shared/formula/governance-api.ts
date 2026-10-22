@@ -26,7 +26,7 @@ const testOutcome = z.object({ id: z.string(), name: z.string(), category, resol
 export const formulaRevisionSchema = z.object({
   id: z.string(), formulaDefinitionId: z.string().catch(""), questionId: z.string().catch(""), revision: z.number(), definitionHash: z.string(),
   formulaLanguageVersion: z.string().catch(""), numericPolicyVersion: z.string().catch(""), presentationPreset: z.string().catch(""),
-  authoringPayload: text, status, statusName: z.string().catch(""), testCases: z.array(testCase).catch([]),
+  authoringPayload: text, status, statusName: z.string().catch(""), definition: z.unknown(), testCases: z.array(testCase).catch([]),
   createdById: text, reviewedById: text, reviewedAt: text, approvedById: text, approvedAt: text, effectiveAt: text,
 });
 export type FormulaRevision = z.infer<typeof formulaRevisionSchema>;
@@ -46,6 +46,8 @@ export const validationPassed = (validation: FormulaValidation | null | undefine
   validation?.status === formulaServiceCompleted && validation.testOutcomes.length > 0 && validation.testOutcomes.every((outcome) => outcome.passed);
 
 interface Audit { module: string; subModule: string }
+/** Module and sub-module audit headers sent with every governance request. */
+export type FormulaAudit = Audit;
 const headers = (audit: Audit) => ({ Module: audit.module, SubModule: audit.subModule });
 const revisionsTag = (questionId: string) => ({ type: "FormulaRevisions" as const, id: questionId });
 type Transition = Audit & { revisionId: string; questionId: string; body: { expectedDefinitionHash: string; reason: string } };
@@ -83,12 +85,20 @@ export const governanceApi = api.enhanceEndpoints({ addTagTypes: ["FormulaRevisi
       query: ({ revisionId, body, questionId: _questionId, ...audit }) => ({ url: `/api/v1/formula-definitions/revisions/${revisionId}/approve`, method: "POST", body, headers: headers(audit) }),
       transformResponse: parsed(formulaRevisionSchema), invalidatesTags: (_result, error, arg) => error ? [] : [revisionsTag(arg.questionId), "FormulaQueues"],
     }),
-    getApprovedFormulaRevisions: build.query<FormulaRevision[], Audit & { questionId: string }>({
+    // Reviewers and approvers read revisions and queues through their own permissions, not the question editor's.
+    getFormulaReviewRevisions: build.query<FormulaRevision[], Audit & { questionId: string }>({
+      query: ({ questionId, ...audit }) => ({ url: `/api/v1/formula-definitions/questions/${questionId}/review-revisions`, headers: headers(audit) }),
+      transformResponse: parsed(z.array(formulaRevisionSchema)), providesTags: (_result, _error, arg) => [revisionsTag(arg.questionId)],
+    }),
+    getFormulaApprovalRevisions: build.query<FormulaRevision[], Audit & { questionId: string }>({
       query: ({ questionId, ...audit }) => ({ url: `/api/v1/formula-definitions/questions/${questionId}/approval-revisions`, headers: headers(audit) }),
       transformResponse: parsed(z.array(formulaRevisionSchema)), providesTags: (_result, _error, arg) => [revisionsTag(arg.questionId)],
     }),
     getFormulaReviewQueue: build.query<FormulaQueueItem[], Audit>({
       query: (audit) => ({ url: "/api/v1/formula-definitions/review-queue", headers: headers(audit) }), transformResponse: parsed(queueSchema), providesTags: ["FormulaQueues"],
+    }),
+    getFormulaApprovalQueue: build.query<FormulaQueueItem[], Audit>({
+      query: (audit) => ({ url: "/api/v1/formula-definitions/approval-queue", headers: headers(audit) }), transformResponse: parsed(queueSchema), providesTags: ["FormulaQueues"],
     }),
   }),
 });

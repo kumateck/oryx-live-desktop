@@ -7388,6 +7388,7 @@ export type DomainEntitiesEmployeesEmployee = {
   religion?: DomainEntitiesEmployeesReligion;
   staffNumber?: string | null;
   email?: string | null;
+  userId?: string | null;
   phoneNumber?: string | null;
   bankAccountNumber?: string | null;
   ssnitNumber?: string | null;
@@ -7443,6 +7444,7 @@ export type DomainEntitiesEmployeesEmployeeRead = {
   religion?: DomainEntitiesEmployeesReligion;
   staffNumber?: string | null;
   email?: string | null;
+  userId?: string | null;
   phoneNumber?: string | null;
   bankAccountNumber?: string | null;
   ssnitNumber?: string | null;

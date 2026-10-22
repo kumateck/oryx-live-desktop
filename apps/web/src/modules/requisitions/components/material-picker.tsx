@@ -41,7 +41,7 @@ export function MaterialPicker({ kind }: { kind: MaterialKind }) {
     <MaterialPickerTable rows={picker.rows} search={picker.search} filtered={picker.category !== null} paging={picker.paging} loading={picker.loading} refreshing={picker.refreshing}
       error={picker.error} onRetry={picker.retry} transferPermission={createRequisitionPermissions[kind]} onShowStock={setViewing} onTransfer={setTransferring} selection={mayCreate ? { selected: picker.selected, onChange: picker.select } : undefined} />
     {viewing ? <StockAvailabilityDialog key={viewing.id} material={viewing} audit={createAudit} onClose={() => setViewing(null)} /> : null}
-    {transferring ? <StockTransferDialog key={transferring.id} material={transferring} onClose={() => setTransferring(null)} /> : null}
+    {transferring ? <StockTransferDialog key={transferring.id} material={transferring} require={createRequisitionPermissions[kind]} onClose={() => setTransferring(null)} /> : null}
     {raising && count > 0 ? <PurchaseRequisitionDialog initialLines={picker.chosen.map(newOrderLine)} onClose={() => setRaising(false)} onCreated={() => {
       picker.clear(); setRaising(false);
       if (viewRequisitionPermissions.some((permission) => has(permission))) void navigate(requisitionsPath);

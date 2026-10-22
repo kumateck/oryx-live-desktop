@@ -120,6 +120,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1EmployeeRegister: build.mutation<
+      PostApiV1EmployeeRegisterApiResponse,
+      PostApiV1EmployeeRegisterApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "employee/register", id: "LIST" }, { type: "employee", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/employee/register`,
+        method: "POST",
+        body: queryArg.domainEntitiesEmployeesOnboardEmployeeDto,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     postApiV1Employee: build.mutation<
       PostApiV1EmployeeApiResponse,
       PostApiV1EmployeeApiArg
@@ -321,6 +336,19 @@ const injectedRtkApi = api.injectEndpoints({
         },
         params: {
           email: queryArg.email,
+        },
+      }),
+    }),
+    getApiV1EmployeeMe: build.query<
+      GetApiV1EmployeeMeApiResponse,
+      GetApiV1EmployeeMeApiArg
+    >({
+      providesTags: [{ type: "employee/me", id: "LIST" }, { type: "employee", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/employee/me`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
         },
       }),
     }),
@@ -597,6 +625,51 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1OnboardingInvitation: build.mutation<
+      PostApiV1OnboardingInvitationApiResponse,
+      PostApiV1OnboardingInvitationApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "onboarding/invitation", id: "LIST" }, { type: "onboarding", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/onboarding/invitation`,
+        method: "POST",
+        body: queryArg.domainEntitiesEmployeesOnboardingTokenRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1OnboardingSubmit: build.mutation<
+      PostApiV1OnboardingSubmitApiResponse,
+      PostApiV1OnboardingSubmitApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "onboarding/submit", id: "LIST" }, { type: "onboarding", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/onboarding/submit`,
+        method: "POST",
+        body: queryArg.domainEntitiesEmployeesCompleteOnboardingRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1OnboardingPhoto: build.mutation<
+      PostApiV1OnboardingPhotoApiResponse,
+      PostApiV1OnboardingPhotoApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "onboarding/photo", id: "LIST" }, { type: "onboarding", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/onboarding/photo`,
+        method: "POST",
+        body: queryArg.domainEntitiesEmployeesOnboardingAvatarRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     postApiV1OvertimeRequests: build.mutation<
       PostApiV1OvertimeRequestsApiResponse,
       PostApiV1OvertimeRequestsApiArg
@@ -667,6 +740,50 @@ const injectedRtkApi = api.injectEndpoints({
       invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "overtime-request", id: "LIST" }, { type: "overtime-request", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/overtime-requests/${queryArg.id}`,
+        method: "DELETE",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1PerformanceGoals: build.mutation<
+      PostApiV1PerformanceGoalsApiResponse,
+      PostApiV1PerformanceGoalsApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "performance/goal", id: "LIST" }, { type: "performance", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/performance/goals`,
+        method: "POST",
+        body: queryArg.domainEntitiesPerformanceCreateGoalRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1PerformanceGoalsById: build.mutation<
+      PutApiV1PerformanceGoalsByIdApiResponse,
+      PutApiV1PerformanceGoalsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "performance/goal", id: "LIST" }, { type: "performance", id: "LIST" }, { type: "performance/goal", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/performance/goals/${queryArg.id}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesPerformanceUpdateGoalRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    deleteApiV1PerformanceGoalsById: build.mutation<
+      DeleteApiV1PerformanceGoalsByIdApiResponse,
+      DeleteApiV1PerformanceGoalsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "performance/goal", id: "LIST" }, { type: "performance", id: "LIST" }, { type: "performance/goal", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/performance/goals/${queryArg.id}`,
         method: "DELETE",
         headers: {
           Module: queryArg["module"],
@@ -1138,6 +1255,15 @@ export type GetApiV1DesignationDepartmentByIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type PostApiV1EmployeeRegisterApiResponse =
+  /** status 200 OK */ DomainEntitiesEmployeesEmployeeInvitationResult[];
+export type PostApiV1EmployeeRegisterApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesEmployeesOnboardEmployeeDto: DomainEntitiesEmployeesOnboardEmployeeDto;
+};
 export type PostApiV1EmployeeApiResponse = /** status 200 OK */ string;
 export type PostApiV1EmployeeApiArg = {
   /** The module this request falls under */
@@ -1261,6 +1387,14 @@ export type PutApiV1EmployeeEmailByIdApiResponse = void;
 export type PutApiV1EmployeeEmailByIdApiArg = {
   id: string;
   email?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1EmployeeMeApiResponse =
+  /** status 200 OK */ DomainEntitiesEmployeesEmployeeDto;
+export type GetApiV1EmployeeMeApiArg = {
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1435,6 +1569,31 @@ export type DeleteApiV1LeaveTypeByIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type PostApiV1OnboardingInvitationApiResponse =
+  /** status 200 OK */ DomainEntitiesEmployeesOnboardingInvitationDto;
+export type PostApiV1OnboardingInvitationApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesEmployeesOnboardingTokenRequest: DomainEntitiesEmployeesOnboardingTokenRequest;
+};
+export type PostApiV1OnboardingSubmitApiResponse = /** status 200 OK */ string;
+export type PostApiV1OnboardingSubmitApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesEmployeesCompleteOnboardingRequest: DomainEntitiesEmployeesCompleteOnboardingRequest;
+};
+export type PostApiV1OnboardingPhotoApiResponse = void;
+export type PostApiV1OnboardingPhotoApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesEmployeesOnboardingAvatarRequest: DomainEntitiesEmployeesOnboardingAvatarRequest;
+};
 export type PostApiV1OvertimeRequestsApiResponse = /** status 200 OK */ string;
 export type PostApiV1OvertimeRequestsApiArg = {
   /** The module this request falls under */
@@ -1477,6 +1636,31 @@ export type PutApiV1OvertimeRequestsByIdApiArg = {
 };
 export type DeleteApiV1OvertimeRequestsByIdApiResponse = void;
 export type DeleteApiV1OvertimeRequestsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1PerformanceGoalsApiResponse = /** status 200 OK */ string;
+export type PostApiV1PerformanceGoalsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesPerformanceCreateGoalRequest: DomainEntitiesPerformanceCreateGoalRequest;
+};
+export type PutApiV1PerformanceGoalsByIdApiResponse = void;
+export type PutApiV1PerformanceGoalsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesPerformanceUpdateGoalRequest: DomainEntitiesPerformanceUpdateGoalRequest;
+};
+export type DeleteApiV1PerformanceGoalsByIdApiResponse = void;
+export type DeleteApiV1PerformanceGoalsByIdApiArg = {
   id: string;
   /** The module this request falls under */
   module?: string;
@@ -2000,6 +2184,19 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
+export type DomainEntitiesEmployeesEmployeeInvitationResult = {
+  email?: string | null;
+  sent?: boolean;
+  problem?: string | null;
+};
+export type DomainEntitiesEmployeesEmployeeInviteDto = {
+  name?: string | null;
+  email: string;
+  employeeType: DomainEntitiesEmployeesEmployeeType;
+};
+export type DomainEntitiesEmployeesOnboardEmployeeDto = {
+  emailList: DomainEntitiesEmployeesEmployeeInviteDto[];
+};
 export type DomainEntitiesEmployeesCreateEmployeeRequest = {
   avatar?: string | null;
   firstName?: string | null;
@@ -2243,6 +2440,23 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
+export type DomainEntitiesEmployeesOnboardingInvitationDto = {
+  email?: string | null;
+  name?: string | null;
+  employeeType?: DomainEntitiesEmployeesEmployeeType;
+  expiresAt?: string;
+};
+export type DomainEntitiesEmployeesOnboardingTokenRequest = {
+  token: string;
+};
+export type DomainEntitiesEmployeesCompleteOnboardingRequest = {
+  token: string;
+  employee: DomainEntitiesEmployeesCreateEmployeeRequest;
+};
+export type DomainEntitiesEmployeesOnboardingAvatarRequest = {
+  token: string;
+  file: string;
+};
 export type DomainEntitiesOvertimeRequestsCreateOvertimeRequest = {
   code: string;
   employeeIds: string[];
@@ -2278,6 +2492,24 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
+export type DomainEntitiesPerformanceCreateGoalRequest = {
+  employeeId?: string;
+  cycleId?: string;
+  title?: string | null;
+  description?: string | null;
+  weight?: number;
+  targetDate?: string;
+};
+export type DomainEntitiesPerformanceGoalStatus = 0 | 1 | 2 | 3;
+export type DomainEntitiesPerformanceUpdateGoalRequest = {
+  title?: string | null;
+  description?: string | null;
+  weight?: number;
+  targetDate?: string;
+  status?: DomainEntitiesPerformanceGoalStatus;
+  progressPercentage?: number;
+  managerComments?: string | null;
+};
 export type DomainEntitiesShiftAssignmentsCreateShiftCategoryRequest = {
   name: string;
 };
@@ -2444,6 +2676,7 @@ export const {
   useDeleteApiV1DesignationByIdMutation,
   useGetApiV1DesignationDepartmentByIdQuery,
   useLazyGetApiV1DesignationDepartmentByIdQuery,
+  usePostApiV1EmployeeRegisterMutation,
   usePostApiV1EmployeeMutation,
   useGetApiV1EmployeeQuery,
   useLazyGetApiV1EmployeeQuery,
@@ -2461,6 +2694,8 @@ export const {
   usePutApiV1EmployeeByIdChangeTypeMutation,
   usePutApiV1EmployeeByIdStatusMutation,
   usePutApiV1EmployeeEmailByIdMutation,
+  useGetApiV1EmployeeMeQuery,
+  useLazyGetApiV1EmployeeMeQuery,
   usePostApiV1LeaveEntitlementMutation,
   useGetApiV1LeaveEntitlementQuery,
   useLazyGetApiV1LeaveEntitlementQuery,
@@ -2485,6 +2720,9 @@ export const {
   useLazyGetApiV1LeaveTypeByIdQuery,
   usePutApiV1LeaveTypeByIdMutation,
   useDeleteApiV1LeaveTypeByIdMutation,
+  usePostApiV1OnboardingInvitationMutation,
+  usePostApiV1OnboardingSubmitMutation,
+  usePostApiV1OnboardingPhotoMutation,
   usePostApiV1OvertimeRequestsMutation,
   useGetApiV1OvertimeRequestsQuery,
   useLazyGetApiV1OvertimeRequestsQuery,
@@ -2492,6 +2730,9 @@ export const {
   useLazyGetApiV1OvertimeRequestsByIdQuery,
   usePutApiV1OvertimeRequestsByIdMutation,
   useDeleteApiV1OvertimeRequestsByIdMutation,
+  usePostApiV1PerformanceGoalsMutation,
+  usePutApiV1PerformanceGoalsByIdMutation,
+  useDeleteApiV1PerformanceGoalsByIdMutation,
   usePostApiV1ShiftCategoryMutation,
   useGetApiV1ShiftCategoryQuery,
   useLazyGetApiV1ShiftCategoryQuery,

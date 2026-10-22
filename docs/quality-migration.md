@@ -71,6 +71,12 @@ The list filters by type and searches; the configuration column shows each formu
 
 The formula page builds the formula, lets each variable come from the formula itself or from another form field, runs the generated checks in the app as a provisional preview, and saves a governed draft revision. On an existing question the revision panel runs the server's validation, then submit for review, record review and approve, each with a reason and its own permission. A revision in review is read-only.
 
+### Formula reviews and approvals (QA)
+
+Added 2026-10-22, closing parity gap P-01. `/qa/formula-reviews` and `/qa/formula-approvals` (modules `formula-reviews` and `formula-approvals`) list the server's review and approval queues; each row opens `…/:questionId?revisionId=…`, which shows exactly that revision. Access follows the backend: `CanViewReviewFormulaRevision` / `CanViewApproveFormulaRevision` open the pages, and `CanReviewFormulaRevision` / `CanApproveFormulaRevision` record the decision. Neither needs `CanViewQuestions` or `CanEditQuestions`, because the pages read only `review-revisions`, `approval-revisions` and the two queues, never the editor's `revisions` endpoint. Oryx Next's QA detail reused the editor panel, which reads that endpoint, so a reviewer without question access was refused there too.
+
+The detail page shows the definition (results, intermediate expressions, inputs and the exact stored JSON), recomputes the definition hash in the app and warns when it does not match, re-runs the saved calculation checks as a provisional result (server validation stays with the author), and shows who wrote, reviewed and approved it relative to the signed-in user (the server returns no names). The decision needs a reason and a confirmation. Just before it is sent the revision is read again, and nothing is sent if its hash, status, reviewer or approver changed. The same separation of duties as the server is shown up front: the author cannot review, and neither the author nor the reviewer can approve. A link to a revision that is no longer returned says so rather than showing another revision. The question editor's panel uses the same decision component (`shared/formula/review`).
+
 Changed: changing the formula type starts the builder afresh (a definition for one type means nothing to another builder); Submit for review is offered only after the server's checks all pass.
 
 ## Templates

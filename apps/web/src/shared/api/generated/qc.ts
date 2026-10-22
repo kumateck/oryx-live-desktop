@@ -3989,6 +3989,8 @@ export type DomainEntitiesQcWorksheetsProposedWorksheetSection = {
   order?: number;
   name?: string | null;
   instrumentId?: string | null;
+  testDefinition?: string | null;
+  testDefinitionVariants?: string[] | null;
   fields?: DomainEntitiesQcWorksheetsProposedWorksheetField[] | null;
 };
 export type DomainEntitiesQcWorksheetsProposedWorksheetTemplate = {

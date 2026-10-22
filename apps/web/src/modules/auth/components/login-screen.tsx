@@ -66,7 +66,7 @@ export function LoginScreen() {
       </Button>
     </form>
     <p className="text-center text-xs leading-relaxed text-muted-foreground">
-      Your session is secured by your customer server and lasts for one work shift.
+      The desktop keeps your sign-in securely when you close Oryx, until you sign out or the server ends your session.
     </p>
   </AuthShell>;
 }

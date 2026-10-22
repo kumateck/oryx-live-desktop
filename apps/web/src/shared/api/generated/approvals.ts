@@ -62,6 +62,33 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1ApprovalDelegationsMine: build.query<
+      GetApiV1ApprovalDelegationsMineApiResponse,
+      GetApiV1ApprovalDelegationsMineApiArg
+    >({
+      providesTags: [{ type: "approval/delegation", id: "LIST" }, { type: "approval", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/approval/delegations/mine`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    deleteApiV1ApprovalDelegationsByDelegationId: build.mutation<
+      DeleteApiV1ApprovalDelegationsByDelegationIdApiResponse,
+      DeleteApiV1ApprovalDelegationsByDelegationIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "approval/delegation", id: "LIST" }, { type: "approval", id: "LIST" }, { type: "approval/delegation", id: queryArg.delegationId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/approval/delegations/${queryArg.delegationId}`,
+        method: "DELETE",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     postApiV1ApprovalTransferRights: build.mutation<
       PostApiV1ApprovalTransferRightsApiResponse,
       PostApiV1ApprovalTransferRightsApiArg
@@ -265,14 +292,29 @@ export type GetApiV1ApprovalApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
-export type PostApiV1ApprovalDelegateApiResponse =
-  /** status 204 No Content */ DomainEntitiesApprovalsDelegateApprovalDto;
+export type PostApiV1ApprovalDelegateApiResponse = /** status 200 OK */ string;
 export type PostApiV1ApprovalDelegateApiArg = {
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesApprovalsDelegateApproval: DomainEntitiesApprovalsDelegateApproval;
+};
+export type GetApiV1ApprovalDelegationsMineApiResponse =
+  /** status 200 OK */ DomainEntitiesApprovalsMyApprovalDelegationsDto;
+export type GetApiV1ApprovalDelegationsMineApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type DeleteApiV1ApprovalDelegationsByDelegationIdApiResponse = void;
+export type DeleteApiV1ApprovalDelegationsByDelegationIdApiArg = {
+  delegationId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
 };
 export type PostApiV1ApprovalTransferRightsApiResponse = void;
 export type PostApiV1ApprovalTransferRightsApiArg = {
@@ -462,16 +504,31 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
-export type DomainEntitiesAttachmentsAttachmentDto = {
-  link?: string | null;
-  name?: string | null;
-  id?: string;
-  reference?: string | null;
+export type DomainEntitiesApprovalsDelegateApproval = {
+  startDate: string;
+  endDate: string;
+  delegateUserId: string;
+  reason?: string | null;
 };
-export type DomainEntitiesEmployeesGender = 0 | 1;
-export type DomainEntitiesEmployeesMaritalStatus = 0 | 1;
-export type DomainEntitiesEmployeesReligion = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-export type DomainEntitiesEmployeesEmployeeType = 0 | 1;
+export type DomainEntitiesApprovalsApprovalDelegationStatus = 0 | 1 | 2 | 3;
+export type DomainEntitiesApprovalsApprovalDelegationDto = {
+  id?: string;
+  delegator?: SharedCollectionItemDto;
+  delegate?: SharedCollectionItemDto;
+  startsAt?: string;
+  endsAt?: string;
+  reason?: string | null;
+  revokedAt?: string | null;
+  status?: DomainEntitiesApprovalsApprovalDelegationStatus;
+};
+export type DomainEntitiesApprovalsMyApprovalDelegationsDto = {
+  given?: DomainEntitiesApprovalsApprovalDelegationDto[] | null;
+  received?: DomainEntitiesApprovalsApprovalDelegationDto[] | null;
+};
+export type DomainEntitiesApprovalsTransferApprovalRequest = {
+  fromUserId: string;
+  toUserId: string;
+};
 export type DomainEntitiesWarehousesWarehouseType = 0 | 1 | 2 | 3;
 export type DomainEntitiesWarehousesWarehouseDto = {
   id?: string;
@@ -494,117 +551,6 @@ export type DomainEntitiesDepartmentsDepartmentDto = {
   parentDepartment?: SharedCollectionItemDto;
   isSeeded?: boolean;
 };
-export type DomainEntitiesDesignationsDesignationDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  name?: string | null;
-  description?: string | null;
-  maximumLeaveDays?: number;
-  departments?: DomainEntitiesDepartmentsDepartmentDto[] | null;
-  employees?: DomainEntitiesEmployeesEmployeeDto[] | null;
-};
-export type DomainEntitiesPersonsLifeStatus = 0 | 1;
-export type DomainEntitiesPersonsPersonDto = {
-  fullName?: string | null;
-  phoneNumber?: string | null;
-  occupation?: string | null;
-  lifeStatus?: DomainEntitiesPersonsLifeStatus;
-};
-export type DomainEntitiesEmergencyContactsEmergencyContactDto = {
-  fullName?: string | null;
-  contactNumber?: string | null;
-  relationship?: string | null;
-  residentialAddress?: string | null;
-};
-export type DomainEntitiesChildrenChildDto = {
-  fullName?: string | null;
-  dateOfBirth?: string;
-  gender?: DomainEntitiesEmployeesGender;
-};
-export type DomainEntitiesSiblingsSiblingDto = {
-  fullName?: string | null;
-  contact?: string | null;
-  gender?: DomainEntitiesEmployeesGender;
-};
-export type DomainEntitiesEducationHistoriesEducationDto = {
-  schoolName?: string | null;
-  startDate?: string;
-  endDate?: string;
-  major?: string | null;
-  qualificationEarned?: string | null;
-};
-export type DomainEntitiesEmployeeHistoriesEmploymentHistoryDto = {
-  companyName?: string | null;
-  startDate?: string;
-  endDate?: string;
-  position?: string | null;
-};
-export type DomainEntitiesEmployeesEmployeeLevel = 0 | 1 | 2;
-export type DomainEntitiesEmployeesEmployeeStatus = 0 | 1 | 2;
-export type DomainEntitiesEmployeesEmployeeActiveStatus = 0 | 1 | 2 | 3;
-export type DomainEntitiesEmployeesEmployeeInactiveStatus =
-  0 | 1 | 2 | 3 | 4 | 5;
-export type DomainEntitiesEmployeesEmployeeDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  attachments?: DomainEntitiesAttachmentsAttachmentDto[] | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  avatar?: string | null;
-  dateOfBirth?: string;
-  gender?: DomainEntitiesEmployeesGender;
-  residentialAddress?: string | null;
-  annualLeaveDays?: number;
-  nationality?: string | null;
-  bankAccountNumber?: string | null;
-  ssnitNumber?: string | null;
-  ghanaCardNumber?: string | null;
-  region?: string | null;
-  maritalStatus?: DomainEntitiesEmployeesMaritalStatus;
-  religion?: DomainEntitiesEmployeesReligion;
-  staffNumber?: string | null;
-  email?: string | null;
-  phoneNumber?: string | null;
-  type?: DomainEntitiesEmployeesEmployeeType;
-  dateEmployed?: string;
-  designation?: DomainEntitiesDesignationsDesignationDto;
-  department?: DomainEntitiesDepartmentsDepartmentDto;
-  reportingManagerId?: string | null;
-  reportingManager?: DomainEntitiesUsersUserDto;
-  mother?: DomainEntitiesPersonsPersonDto;
-  father?: DomainEntitiesPersonsPersonDto;
-  spouse?: DomainEntitiesPersonsPersonDto;
-  emergencyContact?: DomainEntitiesEmergencyContactsEmergencyContactDto;
-  nextOfKin?: DomainEntitiesEmergencyContactsEmergencyContactDto;
-  children?: DomainEntitiesChildrenChildDto[] | null;
-  siblings?: DomainEntitiesSiblingsSiblingDto[] | null;
-  educationBackground?: DomainEntitiesEducationHistoriesEducationDto[] | null;
-  employmentHistory?:
-    DomainEntitiesEmployeeHistoriesEmploymentHistoryDto[] | null;
-  level?: DomainEntitiesEmployeesEmployeeLevel;
-  status?: DomainEntitiesEmployeesEmployeeStatus;
-  activeStatus?: DomainEntitiesEmployeesEmployeeActiveStatus;
-  inactiveStatus?: DomainEntitiesEmployeesEmployeeInactiveStatus;
-  suspensionStartDate?: string | null;
-  suspensionEndDate?: string | null;
-};
-export type DomainEntitiesApprovalsDelegateApprovalDto = {
-  startDate?: string;
-  endDate?: string;
-  employeeId?: string;
-  employee?: DomainEntitiesEmployeesEmployeeDto;
-};
-export type DomainEntitiesApprovalsDelegateApproval = {
-  startDate: string;
-  endDate: string;
-  employeeId: string;
-};
-export type DomainEntitiesApprovalsTransferApprovalRequest = {
-  fromUserId: string;
-  toUserId: string;
-};
 export type DomainEntitiesApprovalsApprovalStatus = 0 | 1 | 2;
 export type DomainEntitiesApprovalsApprovalLog = {
   user?: SharedCollectionItemDto;
@@ -624,6 +570,7 @@ export type DomainEntitiesApprovalsApprovalEntity = {
   batchManufacturingRecordId?: string | null;
   productionActivityStepId?: string | null;
   requestedBy?: DomainEntitiesUsersUserDto;
+  onBehalfOf?: SharedCollectionItemDto;
 };
 export type DomainEntitiesApprovalsApprovalRequestBody = {
   comments?: string | null;
@@ -645,6 +592,9 @@ export const {
   useGetApiV1ApprovalQuery,
   useLazyGetApiV1ApprovalQuery,
   usePostApiV1ApprovalDelegateMutation,
+  useGetApiV1ApprovalDelegationsMineQuery,
+  useLazyGetApiV1ApprovalDelegationsMineQuery,
+  useDeleteApiV1ApprovalDelegationsByDelegationIdMutation,
   usePostApiV1ApprovalTransferRightsMutation,
   useGetApiV1ApprovalByApprovalIdQuery,
   useLazyGetApiV1ApprovalByApprovalIdQuery,

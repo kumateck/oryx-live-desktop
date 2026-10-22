@@ -1,3 +1,4 @@
+import { useAccess } from "@/shared/auth/use-access";
 import { useMemo } from "react";
 import { ChevronRight } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -23,12 +24,14 @@ function useCounts() {
 }
 
 function DocumentCards({ documents }: { documents: readonly { type: string; count: number }[] }) {
+  const { has } = useAccess();
   return <ul aria-label="Documents waiting for you" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{documents.map(({ type, count }) => { const place = decidedElsewhere(type);
     const body = <><span className="min-w-0"><span className="block break-words font-medium">{documentLabel(type)}</span>
       <span className="block text-xs text-muted-foreground">{place ? `Decided in ${place}` : isReadable(type) ? "Read and decide here" : "Listed here; decided in the web app for now"}</span></span>
       <span className="flex shrink-0 items-center gap-1"><Badge variant={place ? "outline" : "default"}>{count}</Badge>{place ? null : <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />}</span></>;
-    return <li key={type}>{place ? <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/40 p-4">{body}</div>
-      : <Link to={approvalListPath(type)} aria-label={`${documentLabel(type)}, ${count} waiting`} className="flex items-center justify-between gap-3 rounded-lg border bg-card p-4 hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-ring">{body}</Link>}</li>; })}</ul>;
+    const target = type === "PerformanceReview" && has("CanViewPerformanceReviews") ? "/hr/performance-reviews" : type === "PayrollRun" && has("CanViewPayrollRuns") ? "/hr/payroll-runs" : type === "Payment" && has("CanApprovePayment") ? "/finance/payment-approvals" : !place ? approvalListPath(type) : null;
+    return <li key={type}>{!target ? <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/40 p-4">{body}</div>
+      : <Link to={target} aria-label={`${documentLabel(type)}, ${count} waiting`} className="flex items-center justify-between gap-3 rounded-lg border bg-card p-4 hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-ring">{body}</Link>}</li>; })}</ul>;
 }
 
 const column = dataTableColumns<PendingApproval>();

@@ -13,6 +13,8 @@ function createApiStore() {
   });
 }
 
+export type ApiDispatch = ReturnType<typeof createApiStore>["dispatch"];
+
 function ApiStore({ children }: { children: ReactNode }) {
   const [store] = useState(createApiStore);
   // Reads queries again when the window comes back into focus or the network returns (see base-api.ts).

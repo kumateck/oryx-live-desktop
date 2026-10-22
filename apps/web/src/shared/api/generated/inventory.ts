@@ -32,6 +32,8 @@ const injectedRtkApi = api.injectEndpoints({
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
           status: queryArg.status,
+          anyStatus: queryArg.anyStatus,
+          store: queryArg.store,
         },
       }),
     }),
@@ -121,6 +123,7 @@ const injectedRtkApi = api.injectEndpoints({
         params: {
           page: queryArg.page,
           pageSize: queryArg.pageSize,
+          closed: queryArg.closed,
         },
       }),
     }),
@@ -258,6 +261,7 @@ const injectedRtkApi = api.injectEndpoints({
           page: queryArg.page,
           pageSize: queryArg.pageSize,
           complete: queryArg.complete,
+          marketRequisitionId: queryArg.marketRequisitionId,
         },
       }),
     }),
@@ -336,6 +340,19 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1ProcurementInventoryMemoCodeGenerate: build.query<
+      GetApiV1ProcurementInventoryMemoCodeGenerateApiResponse,
+      GetApiV1ProcurementInventoryMemoCodeGenerateApiArg
+    >({
+      providesTags: [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/procurement/inventory/memo/code/generate`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     getApiV1ProcurementInventoryPurchasedItems: build.query<
       GetApiV1ProcurementInventoryPurchasedItemsApiResponse,
       GetApiV1ProcurementInventoryPurchasedItemsApiArg
@@ -383,105 +400,22 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getApiV1ProcurementInventoryMemoCodeGenerate: build.query<
-      GetApiV1ProcurementInventoryMemoCodeGenerateApiResponse,
-      GetApiV1ProcurementInventoryMemoCodeGenerateApiArg
+    getApiV1ItemsChoices: build.query<
+      GetApiV1ItemsChoicesApiResponse,
+      GetApiV1ItemsChoicesApiArg
     >({
-      providesTags: [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }],
+      providesTags: [{ type: "item/choice", id: "LIST" }, { type: "item", id: "LIST" }],
       query: (queryArg) => ({
-        url: `/api/v1/procurement/inventory/memo/code/generate`,
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-      }),
-    }),
-    postApiV1Items: build.mutation<
-      PostApiV1ItemsApiResponse,
-      PostApiV1ItemsApiArg
-    >({
-      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item", id: "LIST" }]),
-      query: (queryArg) => ({
-        url: `/api/v1/items`,
-        method: "POST",
-        body: queryArg.domainEntitiesItemsCreateItemsRequest,
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-      }),
-    }),
-    getApiV1Items: build.query<GetApiV1ItemsApiResponse, GetApiV1ItemsApiArg>({
-      providesTags: [{ type: "item", id: "LIST" }],
-      query: (queryArg) => ({
-        url: `/api/v1/items`,
+        url: `/api/v1/items/choices`,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
         params: {
           store: queryArg.store,
+          searchQuery: queryArg.searchQuery,
           page: queryArg.page,
           pageSize: queryArg.pageSize,
-          searchQuery: queryArg.searchQuery,
-        },
-      }),
-    }),
-    getApiV1ItemsById: build.query<
-      GetApiV1ItemsByIdApiResponse,
-      GetApiV1ItemsByIdApiArg
-    >({
-      providesTags: (_result, _error, queryArg) => [{ type: "item", id: queryArg.id }],
-      query: (queryArg) => ({
-        url: `/api/v1/items/${queryArg.id}`,
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-      }),
-    }),
-    putApiV1ItemsById: build.mutation<
-      PutApiV1ItemsByIdApiResponse,
-      PutApiV1ItemsByIdApiArg
-    >({
-      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item", id: "LIST" }, { type: "item", id: queryArg.id }]),
-      query: (queryArg) => ({
-        url: `/api/v1/items/${queryArg.id}`,
-        method: "PUT",
-        body: queryArg.domainEntitiesItemsCreateItemsRequest,
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-      }),
-    }),
-    deleteApiV1ItemsById: build.mutation<
-      DeleteApiV1ItemsByIdApiResponse,
-      DeleteApiV1ItemsByIdApiArg
-    >({
-      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item", id: "LIST" }, { type: "item", id: queryArg.id }]),
-      query: (queryArg) => ({
-        url: `/api/v1/items/${queryArg.id}`,
-        method: "DELETE",
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-      }),
-    }),
-    getApiV1ItemsByItemCodeTransactions: build.query<
-      GetApiV1ItemsByItemCodeTransactionsApiResponse,
-      GetApiV1ItemsByItemCodeTransactionsApiArg
-    >({
-      providesTags: (_result, _error, queryArg) => [{ type: "item", id: queryArg.itemCode }],
-      query: (queryArg) => ({
-        url: `/api/v1/items/${queryArg.itemCode}/transactions`,
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-        params: {
-          transactionType: queryArg.transactionType,
         },
       }),
     }),
@@ -875,6 +809,95 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1Items: build.mutation<
+      PostApiV1ItemsApiResponse,
+      PostApiV1ItemsApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/items`,
+        method: "POST",
+        body: queryArg.domainEntitiesItemsCreateItemsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1Items: build.query<GetApiV1ItemsApiResponse, GetApiV1ItemsApiArg>({
+      providesTags: [{ type: "item", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/items`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          store: queryArg.store,
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          searchQuery: queryArg.searchQuery,
+        },
+      }),
+    }),
+    getApiV1ItemsById: build.query<
+      GetApiV1ItemsByIdApiResponse,
+      GetApiV1ItemsByIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/items/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1ItemsById: build.mutation<
+      PutApiV1ItemsByIdApiResponse,
+      PutApiV1ItemsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item", id: "LIST" }, { type: "item", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/items/${queryArg.id}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesItemsCreateItemsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    deleteApiV1ItemsById: build.mutation<
+      DeleteApiV1ItemsByIdApiResponse,
+      DeleteApiV1ItemsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item", id: "LIST" }, { type: "item", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/items/${queryArg.id}`,
+        method: "DELETE",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1ItemsByItemCodeTransactions: build.query<
+      GetApiV1ItemsByItemCodeTransactionsApiResponse,
+      GetApiV1ItemsByItemCodeTransactionsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item", id: queryArg.itemCode }],
+      query: (queryArg) => ({
+        url: `/api/v1/items/${queryArg.itemCode}/transactions`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          transactionType: queryArg.transactionType,
+        },
+      }),
+    }),
     postApiV1ItemGrns: build.mutation<
       PostApiV1ItemGrnsApiResponse,
       PostApiV1ItemGrnsApiArg
@@ -993,20 +1016,8 @@ const injectedRtkApi = api.injectEndpoints({
           page: queryArg.page,
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
-        },
-      }),
-    }),
-    deleteApiV1ItemsStockRequisitions: build.mutation<
-      DeleteApiV1ItemsStockRequisitionsApiResponse,
-      DeleteApiV1ItemsStockRequisitionsApiArg
-    >({
-      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item/stock-requisition", id: "LIST" }, { type: "item", id: "LIST" }]),
-      query: (queryArg) => ({
-        url: `/api/v1/items/stock-requisitions`,
-        method: "DELETE",
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
+          store: queryArg.store,
+          status: queryArg.status,
         },
       }),
     }),
@@ -1032,6 +1043,20 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/v1/items/stock-requisitions/${queryArg.id}`,
         method: "PUT",
         body: queryArg.domainEntitiesItemStockRequisitionsCreateItemStockRequisitionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    deleteApiV1ItemsStockRequisitionsById: build.mutation<
+      DeleteApiV1ItemsStockRequisitionsByIdApiResponse,
+      DeleteApiV1ItemsStockRequisitionsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/stock-requisition", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/stock-requisition", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/items/stock-requisitions/${queryArg.id}`,
+        method: "DELETE",
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -1090,6 +1115,34 @@ const injectedRtkApi = api.injectEndpoints({
       providesTags: [{ type: "v1/recoverable-items-report", id: "LIST" }, { type: "v1", id: "LIST" }],
       query: (queryArg) => ({
         url: `/v1/recoverable-items-reports`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1RecoverableItemsReports: build.mutation<
+      PostApiV1RecoverableItemsReportsApiResponse,
+      PostApiV1RecoverableItemsReportsApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "recoverable-items-report", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/recoverable-items-reports`,
+        method: "POST",
+        body: queryArg.domainEntitiesRecoverableItemsReportsCreateRecoverableItemReportRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1RecoverableItemsReports: build.query<
+      GetApiV1RecoverableItemsReportsApiResponse,
+      GetApiV1RecoverableItemsReportsApiArg
+    >({
+      providesTags: [{ type: "recoverable-items-report", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/recoverable-items-reports`,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -1208,6 +1261,8 @@ export type GetApiV1ProcurementInventoryApiArg = {
   /** Search query for filtering requisitions by code. */
   searchQuery?: string;
   status?: DomainEntitiesItemsRequisitionsInventoryPurchaseRequisitionStatus;
+  anyStatus?: boolean;
+  store?: DomainEntitiesItemsStore;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1268,6 +1323,7 @@ export type GetApiV1ProcurementInventoryMarketApiArg = {
   page?: number;
   /** The number of items per page. */
   pageSize?: number;
+  closed?: boolean;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1365,6 +1421,7 @@ export type GetApiV1ProcurementInventoryMarketVendorsApiArg = {
   pageSize?: number;
   /** A boolean to filter by completed or pending open market requisitions. */
   complete?: boolean;
+  marketRequisitionId?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1424,6 +1481,14 @@ export type PostApiV1ProcurementInventoryMemoItemByIdMarkPaidApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetApiV1ProcurementInventoryMemoCodeGenerateApiResponse =
+  /** status 200 OK */ string;
+export type GetApiV1ProcurementInventoryMemoCodeGenerateApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type GetApiV1ProcurementInventoryPurchasedItemsApiResponse =
   /** status 200 OK */ DomainEntitiesStockEntriesStockEntryDtoRead[];
 export type GetApiV1ProcurementInventoryPurchasedItemsApiArg = {
@@ -1452,68 +1517,13 @@ export type PostApiV1ProcurementInventoryItemsByIdRejectApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
-export type GetApiV1ProcurementInventoryMemoCodeGenerateApiResponse =
-  /** status 200 OK */ string;
-export type GetApiV1ProcurementInventoryMemoCodeGenerateApiArg = {
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-};
-export type PostApiV1ItemsApiResponse = /** status 200 OK */ string;
-export type PostApiV1ItemsApiArg = {
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-  domainEntitiesItemsCreateItemsRequest: DomainEntitiesItemsCreateItemsRequest;
-};
-export type GetApiV1ItemsApiResponse =
-  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesItemsItemDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
-export type GetApiV1ItemsApiArg = {
+export type GetApiV1ItemsChoicesApiResponse =
+  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601ApiControllersStoreItemChoiceDto20Api20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
+export type GetApiV1ItemsChoicesApiArg = {
   store?: DomainEntitiesItemsStore;
+  searchQuery?: string;
   page?: number;
   pageSize?: number;
-  searchQuery?: string;
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-};
-export type GetApiV1ItemsByIdApiResponse =
-  /** status 200 OK */ DomainEntitiesItemsItemDto;
-export type GetApiV1ItemsByIdApiArg = {
-  id: string;
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-};
-export type PutApiV1ItemsByIdApiResponse =
-  /** status 204 No Content */ DomainEntitiesItemsItemDto;
-export type PutApiV1ItemsByIdApiArg = {
-  id: string;
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-  domainEntitiesItemsCreateItemsRequest: DomainEntitiesItemsCreateItemsRequest;
-};
-export type DeleteApiV1ItemsByIdApiResponse = void;
-export type DeleteApiV1ItemsByIdApiArg = {
-  id: string;
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-};
-export type GetApiV1ItemsByItemCodeTransactionsApiResponse =
-  /** status 200 OK */ DomainEntitiesItemTransactionLogsItemTransactionLogDto[];
-export type GetApiV1ItemsByItemCodeTransactionsApiArg = {
-  /** The item code */
-  itemCode: string;
-  /** The transaction type */
-  transactionType?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1755,6 +1765,65 @@ export type PutApiV1ItemsBillingSheetChargesPaidApiArg = {
   subModule?: string;
   domainEntitiesPurchaseOrdersRequestMarkBillingSheetCharge: DomainEntitiesPurchaseOrdersRequestMarkBillingSheetCharge;
 };
+export type PostApiV1ItemsApiResponse = /** status 200 OK */ string;
+export type PostApiV1ItemsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesItemsCreateItemsRequest: DomainEntitiesItemsCreateItemsRequest;
+};
+export type GetApiV1ItemsApiResponse =
+  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesItemsItemDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
+export type GetApiV1ItemsApiArg = {
+  store?: DomainEntitiesItemsStore;
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1ItemsByIdApiResponse =
+  /** status 200 OK */ DomainEntitiesItemsItemDto;
+export type GetApiV1ItemsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PutApiV1ItemsByIdApiResponse =
+  /** status 204 No Content */ DomainEntitiesItemsItemDto;
+export type PutApiV1ItemsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesItemsCreateItemsRequest: DomainEntitiesItemsCreateItemsRequest;
+};
+export type DeleteApiV1ItemsByIdApiResponse = void;
+export type DeleteApiV1ItemsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1ItemsByItemCodeTransactionsApiResponse =
+  /** status 200 OK */ DomainEntitiesItemTransactionLogsItemTransactionLogDto[];
+export type GetApiV1ItemsByItemCodeTransactionsApiArg = {
+  /** The item code */
+  itemCode: string;
+  /** The transaction type */
+  transactionType?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type PostApiV1ItemGrnsApiResponse = /** status 200 OK */ string;
 export type PostApiV1ItemGrnsApiArg = {
   /** The module this request falls under */
@@ -1825,14 +1894,8 @@ export type GetApiV1ItemsStockRequisitionsApiArg = {
   page?: number;
   pageSize?: number;
   searchQuery?: string;
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-};
-export type DeleteApiV1ItemsStockRequisitionsApiResponse = void;
-export type DeleteApiV1ItemsStockRequisitionsApiArg = {
-  id: string;
+  store?: DomainEntitiesItemsStore;
+  status?: DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionStatus;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1847,8 +1910,7 @@ export type GetApiV1ItemsStockRequisitionsByIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
-export type PutApiV1ItemsStockRequisitionsByIdApiResponse =
-  /** status 204 No Content */ DomainEntitiesItemStockRequisitionsItemStockRequisitionDtoRead;
+export type PutApiV1ItemsStockRequisitionsByIdApiResponse = void;
 export type PutApiV1ItemsStockRequisitionsByIdApiArg = {
   id: string;
   /** The module this request falls under */
@@ -1857,8 +1919,15 @@ export type PutApiV1ItemsStockRequisitionsByIdApiArg = {
   subModule?: string;
   domainEntitiesItemStockRequisitionsCreateItemStockRequisitionRequest: DomainEntitiesItemStockRequisitionsCreateItemStockRequisitionRequest;
 };
-export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainstRequisitionApiResponse =
-  /** status 204 No Content */ DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionDtoRead;
+export type DeleteApiV1ItemsStockRequisitionsByIdApiResponse = void;
+export type DeleteApiV1ItemsStockRequisitionsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainstRequisitionApiResponse = void;
 export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainstRequisitionApiArg =
   {
     stockRequisitionId: string;
@@ -1868,8 +1937,7 @@ export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainst
     subModule?: string;
     domainEntitiesItemStockRequisitionsIssueStockAgainstRequisitionRequest: DomainEntitiesItemStockRequisitionsIssueStockAgainstRequisitionRequest;
   };
-export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdPartialIssueStockAgainstRequisitionApiResponse =
-  /** status 204 No Content */ DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionDtoRead;
+export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdPartialIssueStockAgainstRequisitionApiResponse = void;
 export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdPartialIssueStockAgainstRequisitionApiArg =
   {
     stockRequisitionId: string;
@@ -1891,6 +1959,23 @@ export type PostV1RecoverableItemsReportsApiArg = {
 export type GetV1RecoverableItemsReportsApiResponse =
   /** status 200 OK */ DomainEntitiesRecoverableItemsReportsRecoverableItemReportDto[];
 export type GetV1RecoverableItemsReportsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1RecoverableItemsReportsApiResponse =
+  /** status 200 OK */ string;
+export type PostApiV1RecoverableItemsReportsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesRecoverableItemsReportsCreateRecoverableItemReportRequest: DomainEntitiesRecoverableItemsReportsCreateRecoverableItemReportRequest;
+};
+export type GetApiV1RecoverableItemsReportsApiResponse =
+  /** status 200 OK */ DomainEntitiesRecoverableItemsReportsRecoverableItemReportDto[];
+export type GetApiV1RecoverableItemsReportsApiArg = {
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -2118,6 +2203,10 @@ export type DomainEntitiesItemsRequisitionsMarketRequisitionDto = {
   item?: DomainEntitiesItemsItemDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   quantity?: number;
+  requisitionCode?: string | null;
+  inventoryPurchaseRequisitionId?: string | null;
+  vendorCount?: number;
+  closed?: boolean;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesItemsRequisitionsMarketRequisitionDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -2251,6 +2340,7 @@ export type DomainEntitiesItemsRequisitionsMarketRequisitionVendorDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
   createdAt?: string;
+  marketRequisitionId?: string;
   vendorName?: string | null;
   vendorAddress?: string | null;
   vendorPhoneNumber?: string | null;
@@ -2294,6 +2384,9 @@ export type DomainEntitiesMemosMemoItemDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
   createdAt?: string;
+  purchasedAt?: string | null;
+  vendorQuotationItemId?: string | null;
+  marketRequisitionVendorId?: string | null;
   memo?: SharedCollectionItemDto;
   vendor?: SharedCollectionItemDto;
   item?: SharedCollectionItemDto;
@@ -2309,6 +2402,9 @@ export type DomainEntitiesMemosMemoItemDtoRead = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
   createdAt?: string;
+  purchasedAt?: string | null;
+  vendorQuotationItemId?: string | null;
+  marketRequisitionVendorId?: string | null;
   memo?: SharedCollectionItemDto;
   vendor?: SharedCollectionItemDto;
   item?: SharedCollectionItemDto;
@@ -2383,22 +2479,20 @@ export type DomainEntitiesStockEntriesStockEntryDtoRead = {
   quantity?: number;
   status?: DomainEntitiesApprovalsApprovalStatus;
 };
-export type DomainEntitiesItemsCreateItemsRequest = {
-  name: string;
-  code: string;
-  classification: DomainEntitiesItemsInventoryClassification;
-  unitOfMeasureId: string;
-  minimumLevel?: number;
-  maximumLevel?: number;
-  reorderLevel?: number;
-  store: DomainEntitiesItemsStore;
-  isActive: boolean;
-  itemCategoryId?: string | null;
-  description?: string | null;
+export type ApiControllersStoreItemChoiceDto = {
+  id?: string;
+  name?: string | null;
+  code?: string | null;
+  store?: DomainEntitiesItemsStore;
+  classification?: DomainEntitiesItemsInventoryClassification;
+  availableQuantity?: number;
+  unitOfMeasureId?: string;
+  unitOfMeasureName?: string | null;
+  unitOfMeasureSymbol?: string | null;
 };
-export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesItemsItemDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601ApiControllersStoreItemChoiceDto20Api20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
-    data?: DomainEntitiesItemsItemDto[] | null;
+    data?: ApiControllersStoreItemChoiceDto[] | null;
     pageIndex?: number;
     pageCount?: number;
     totalRecordCount?: number;
@@ -2406,18 +2500,6 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
-export type DomainEntitiesItemTransactionLogsItemTransactionLogDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  date?: string;
-  transactionType?: string | null;
-  itemCode?: string | null;
-  credit?: number;
-  debit?: number;
-  totalBalance?: number;
-  shadowHold?: number;
-};
 export type DomainEntitiesItemShipmentsCreateItemShipmentInvoiceItem = {
   itemId?: string;
   uoMId?: string;
@@ -2687,6 +2769,41 @@ export type DomainEntitiesItemShipmentsUpdateItemBillingSheetRequest = {
 };
 export type DomainEntitiesPurchaseOrdersRequestMarkBillingSheetCharge = {
   billingSheetChargeIds?: string[] | null;
+};
+export type DomainEntitiesItemsCreateItemsRequest = {
+  name: string;
+  code: string;
+  classification: DomainEntitiesItemsInventoryClassification;
+  unitOfMeasureId: string;
+  minimumLevel?: number;
+  maximumLevel?: number;
+  reorderLevel?: number;
+  store: DomainEntitiesItemsStore;
+  isActive: boolean;
+  itemCategoryId?: string | null;
+  description?: string | null;
+};
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesItemsItemDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+  {
+    data?: DomainEntitiesItemsItemDto[] | null;
+    pageIndex?: number;
+    pageCount?: number;
+    totalRecordCount?: number;
+    numberOfPagesToShow?: number;
+    startPageIndex?: number;
+    stopPageIndex?: number;
+  };
+export type DomainEntitiesItemTransactionLogsItemTransactionLogDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  date?: string;
+  transactionType?: string | null;
+  itemCode?: string | null;
+  credit?: number;
+  debit?: number;
+  totalBalance?: number;
+  shadowHold?: number;
 };
 export type DomainEntitiesItemGrnsCreateItemGrnRequest = {
   itemId: string;
@@ -8998,6 +9115,7 @@ export type DomainEntitiesEmployeesEmployee = {
   religion?: DomainEntitiesEmployeesReligion;
   staffNumber?: string | null;
   email?: string | null;
+  userId?: string | null;
   phoneNumber?: string | null;
   bankAccountNumber?: string | null;
   ssnitNumber?: string | null;
@@ -9053,6 +9171,7 @@ export type DomainEntitiesEmployeesEmployeeRead = {
   religion?: DomainEntitiesEmployeesReligion;
   staffNumber?: string | null;
   email?: string | null;
+  userId?: string | null;
   phoneNumber?: string | null;
   bankAccountNumber?: string | null;
   ssnitNumber?: string | null;
@@ -9378,6 +9497,7 @@ export type DomainEntitiesItemsItemStockRequisitionItemDto = {
   itemId?: string;
   item?: DomainEntitiesItemsItem;
   quantityRequested?: number;
+  quantityIssued?: number;
 };
 export type DomainEntitiesItemsItemStockRequisitionItemDtoRead = {
   id?: string;
@@ -9388,6 +9508,8 @@ export type DomainEntitiesItemsItemStockRequisitionItemDtoRead = {
   itemId?: string;
   item?: DomainEntitiesItemsItemRead;
   quantityRequested?: number;
+  quantityIssued?: number;
+  quantityRemaining?: number;
 };
 export type DomainEntitiesItemStockRequisitionsItemStockRequisitionDto = {
   id?: string;
@@ -9399,6 +9521,8 @@ export type DomainEntitiesItemStockRequisitionsItemStockRequisitionDto = {
   department?: DomainEntitiesDepartmentsDepartmentDto;
   justification?: string | null;
   status?: DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionStatus;
+  store?: DomainEntitiesItemsStore;
+  issueHistoryAttributed?: boolean;
   requisitionItems?: DomainEntitiesItemsItemStockRequisitionItemDto[] | null;
 };
 export type DomainEntitiesItemStockRequisitionsItemStockRequisitionDtoRead = {
@@ -9411,6 +9535,8 @@ export type DomainEntitiesItemStockRequisitionsItemStockRequisitionDtoRead = {
   department?: DomainEntitiesDepartmentsDepartmentDto;
   justification?: string | null;
   status?: DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionStatus;
+  store?: DomainEntitiesItemsStore;
+  issueHistoryAttributed?: boolean;
   requisitionItems?:
     DomainEntitiesItemsItemStockRequisitionItemDtoRead[] | null;
 };
@@ -9435,23 +9561,6 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
-export type DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  itemStockRequisitionId?: string;
-  itemStockRequisition?: DomainEntitiesItemStockRequisitionsItemStockRequisitionDto;
-  quantityIssued?: number;
-};
-export type DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionDtoRead =
-  {
-    id?: string;
-    createdBy?: DomainEntitiesUsersUserDto;
-    createdAt?: string;
-    itemStockRequisitionId?: string;
-    itemStockRequisition?: DomainEntitiesItemStockRequisitionsItemStockRequisitionDtoRead;
-    quantityIssued?: number;
-  };
 export type DomainEntitiesItemStockRequisitionsIssueQuantityDto = {
   itemId?: string;
   quantity?: number;
@@ -9466,6 +9575,7 @@ export type DomainEntitiesRecoverableItemsReportsCreateRecoverableItemReportRequ
     itemId: string;
     quantity: number;
     reason?: string | null;
+    itemStockRequisitionItemId?: string | null;
   };
 export type DomainEntitiesRecoverableItemsReportsRecoverableItemReportDto = {
   id?: string;
@@ -9474,6 +9584,10 @@ export type DomainEntitiesRecoverableItemsReportsRecoverableItemReportDto = {
   item?: DomainEntitiesItemsItemDto;
   quantity?: number;
   reason?: string | null;
+  store?: DomainEntitiesItemsStore;
+  itemStockRequisitionId?: string | null;
+  itemStockRequisitionItemId?: string | null;
+  requisitionNumber?: string | null;
 };
 export type DomainEntitiesVendorsCreateVendorRequest = {
   name: string;
@@ -9528,21 +9642,14 @@ export const {
   useGetApiV1ProcurementInventoryMemoByIdQuery,
   useLazyGetApiV1ProcurementInventoryMemoByIdQuery,
   usePostApiV1ProcurementInventoryMemoItemByIdMarkPaidMutation,
+  useGetApiV1ProcurementInventoryMemoCodeGenerateQuery,
+  useLazyGetApiV1ProcurementInventoryMemoCodeGenerateQuery,
   useGetApiV1ProcurementInventoryPurchasedItemsQuery,
   useLazyGetApiV1ProcurementInventoryPurchasedItemsQuery,
   usePostApiV1ProcurementInventoryItemsByIdApproveMutation,
   usePostApiV1ProcurementInventoryItemsByIdRejectMutation,
-  useGetApiV1ProcurementInventoryMemoCodeGenerateQuery,
-  useLazyGetApiV1ProcurementInventoryMemoCodeGenerateQuery,
-  usePostApiV1ItemsMutation,
-  useGetApiV1ItemsQuery,
-  useLazyGetApiV1ItemsQuery,
-  useGetApiV1ItemsByIdQuery,
-  useLazyGetApiV1ItemsByIdQuery,
-  usePutApiV1ItemsByIdMutation,
-  useDeleteApiV1ItemsByIdMutation,
-  useGetApiV1ItemsByItemCodeTransactionsQuery,
-  useLazyGetApiV1ItemsByItemCodeTransactionsQuery,
+  useGetApiV1ItemsChoicesQuery,
+  useLazyGetApiV1ItemsChoicesQuery,
   usePostApiV1ItemsShipmentInvoiceMutation,
   useGetApiV1ItemsShipmentInvoiceQuery,
   useLazyGetApiV1ItemsShipmentInvoiceQuery,
@@ -9579,6 +9686,15 @@ export const {
   useLazyGetApiV1ItemsBillingSheetInvoiceByInvoiceIdQuery,
   usePutApiV1ItemsBillingSheetByBillingSheetIdChargesMutation,
   usePutApiV1ItemsBillingSheetChargesPaidMutation,
+  usePostApiV1ItemsMutation,
+  useGetApiV1ItemsQuery,
+  useLazyGetApiV1ItemsQuery,
+  useGetApiV1ItemsByIdQuery,
+  useLazyGetApiV1ItemsByIdQuery,
+  usePutApiV1ItemsByIdMutation,
+  useDeleteApiV1ItemsByIdMutation,
+  useGetApiV1ItemsByItemCodeTransactionsQuery,
+  useLazyGetApiV1ItemsByItemCodeTransactionsQuery,
   usePostApiV1ItemGrnsMutation,
   useGetApiV1ItemGrnsQuery,
   useLazyGetApiV1ItemGrnsQuery,
@@ -9591,15 +9707,18 @@ export const {
   usePostApiV1ItemsStockRequisitionsMutation,
   useGetApiV1ItemsStockRequisitionsQuery,
   useLazyGetApiV1ItemsStockRequisitionsQuery,
-  useDeleteApiV1ItemsStockRequisitionsMutation,
   useGetApiV1ItemsStockRequisitionsByIdQuery,
   useLazyGetApiV1ItemsStockRequisitionsByIdQuery,
   usePutApiV1ItemsStockRequisitionsByIdMutation,
+  useDeleteApiV1ItemsStockRequisitionsByIdMutation,
   usePostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainstRequisitionMutation,
   usePostApiV1ItemsStockRequisitionsByStockRequisitionIdPartialIssueStockAgainstRequisitionMutation,
   usePostV1RecoverableItemsReportsMutation,
   useGetV1RecoverableItemsReportsQuery,
   useLazyGetV1RecoverableItemsReportsQuery,
+  usePostApiV1RecoverableItemsReportsMutation,
+  useGetApiV1RecoverableItemsReportsQuery,
+  useLazyGetApiV1RecoverableItemsReportsQuery,
   usePostApiV1VendorsMutation,
   useGetApiV1VendorsQuery,
   useLazyGetApiV1VendorsQuery,

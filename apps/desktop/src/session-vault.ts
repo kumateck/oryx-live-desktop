@@ -1,44 +1,78 @@
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { open, readFile, rename, rm } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 
-/** Operating-system encryption, as Electron's safeStorage gives it. Null when none is available. */
 export interface Cipher {
   encrypt(plain: string): Buffer;
   decrypt(sealed: Buffer): string;
 }
-
-interface Stored { origin: string; token: string }
-
-const maxTokenLength = 4096;
-
-/** A refresh token is an opaque string from the server; anything else is not kept. */
+interface Stored {
+  origin: string;
+  token: string;
+}
 export function isRefreshToken(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= maxTokenLength && !/\s/.test(value);
+  return typeof value === "string" && value.length > 0 && value.length <= 4096 && !/\s/.test(value);
 }
 
-/**
- * Keeps one refresh token, encrypted by the operating system for the signed-in OS user, and tied to the
- * server it came from: a token is only given back to that same server's pages. Without OS encryption,
- * nothing is written and the sign-in lasts as long as the window, as it does in a browser.
- */
+/** Serialize reads, writes and deletion. A failed replacement leaves the last complete encrypted file intact. */
 export function createSessionVault(file: string, cipher: () => Cipher | null) {
-  const forget = () => rm(file, { force: true });
+  let pending = Promise.resolve();
+  function queue<T>(operation: () => Promise<T>): Promise<T> {
+    const result = pending.then(operation);
+    pending = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+  const remove = () => rm(file, { force: true });
   return {
-    async load(origin: string): Promise<string | null> {
-      const sealer = cipher();
-      if (!sealer) return null;
-      let stored: Stored;
-      try { stored = JSON.parse(sealer.decrypt(await readFile(file))) as Stored; }
-      catch { await forget(); return null; }
-      if (stored.origin !== origin || !isRefreshToken(stored.token)) return null;
-      return stored.token;
+    load(origin: string): Promise<string | null> {
+      return queue(async () => {
+        const sealer = cipher();
+        if (!sealer) return null;
+        let sealed: Buffer;
+        try {
+          sealed = await readFile(file);
+        } catch (error) {
+          if (error instanceof Error && "code" in error && error.code === "ENOENT") return null;
+          throw error;
+        }
+        let stored: Stored;
+        try {
+          stored = JSON.parse(sealer.decrypt(sealed)) as Stored;
+        } catch {
+          await remove();
+          return null;
+        }
+        return stored.origin === origin && isRefreshToken(stored.token) ? stored.token : null;
+      });
     },
-    async save(origin: string, token: string | null): Promise<void> {
-      const sealer = cipher();
-      if (!sealer || token === null) { await forget(); return; }
-      if (!isRefreshToken(token)) throw new Error("Not a refresh token.");
-      await writeFile(file, sealer.encrypt(JSON.stringify({ origin, token } satisfies Stored)), { mode: 0o600 });
+    save(origin: string, token: string | null): Promise<void> {
+      return queue(async () => {
+        const sealer = cipher();
+        if (!sealer || token === null) {
+          await remove();
+          return;
+        }
+        if (!isRefreshToken(token)) throw new Error("Not a refresh token.");
+        const sealed = sealer.encrypt(JSON.stringify({ origin, token } satisfies Stored));
+        const temporary = `${file}.${randomUUID()}.tmp`;
+        try {
+          const handle = await open(temporary, "wx", 0o600);
+          try {
+            await handle.writeFile(sealed);
+            await handle.sync();
+          } finally {
+            await handle.close();
+          }
+          await rename(temporary, file);
+        } finally {
+          await rm(temporary, { force: true });
+        }
+      });
     },
-    forget,
+    forget: (): Promise<void> => queue(remove),
+    flush: (): Promise<void> => pending,
   };
 }
 export type SessionVault = ReturnType<typeof createSessionVault>;

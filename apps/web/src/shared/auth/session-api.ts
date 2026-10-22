@@ -1,37 +1,39 @@
+import { SessionRequestError } from "./session-errors";
+import { send, json } from "./session-transport";
+import { renewSession, waitForRenewal } from "./session-renewal";
+export { SessionRequestError } from "./session-errors";
+export type { SessionFailure } from "./session-errors";
 import { z } from "zod";
 import { passwordFailure } from "./password-rules";
 import { tokenStore } from "./token-store";
 
 // Same endpoints Oryx Next uses; the desktop adds nothing to the backend.
 const loginPath = "/api/v1/auth/login";
-const refreshPath = "/api/v1/auth/login-with-refresh-token";
 const audit = { Module: "Authentication", SubModule: "Login" };
 const avatarPath = /^\/api\/v1\/file\/avatar\/[^/?#\\]+$/;
 
-export interface SessionUser { id: string; name: string; email: string | null; department: string | null; departmentId: string | null; departmentType: 0 | 1 | 2 | null; avatar: string | null; roles: string[] }
-export interface SessionView { user: SessionUser; permissions: string[] }
-export type SessionFailure = "credentials" | "disabled" | "throttled" | "server" | "network" | "invalid-response";
-
-const failureMessages: Record<SessionFailure, string> = {
-  credentials: "The email or password is incorrect.",
-  disabled: "This account is disabled. Contact your administrator.",
-  throttled: "Too many sign-in attempts. Wait a minute and try again.",
-  server: "The customer server could not complete the request. Try again shortly.",
-  network: "Cannot reach the customer server. Check the connection and try again.",
-  "invalid-response": "The customer server returned an invalid session.",
-};
-
-export class SessionRequestError extends Error {
-  constructor(readonly reason: SessionFailure, readonly status: number) {
-    super(failureMessages[reason]);
-    this.name = "SessionRequestError";
-  }
+export interface SessionUser {
+  id: string;
+  name: string;
+  email: string | null;
+  department: string | null;
+  departmentId: string | null;
+  departmentType: 0 | 1 | 2 | null;
+  avatar: string | null;
+  roles: string[];
 }
-
+export interface SessionView {
+  user: SessionUser;
+  permissions: string[];
+}
 const tokensSchema = z.object({
   userId: z.uuid(),
   accessToken: z.string().min(1),
-  refreshToken: z.string().min(1).nullish().transform((value) => value ?? null),
+  refreshToken: z
+    .string()
+    .min(1)
+    .nullish()
+    .transform((value) => value ?? null),
 });
 const problemSchema = z.object({ errors: z.array(z.object({ code: z.string() })).min(1) });
 const userSchema = z.object({
@@ -41,23 +43,33 @@ const userSchema = z.object({
   email: z.string().nullish(),
   isDisabled: z.boolean().default(false),
   avatar: z.string().nullish(),
-  department: z.object({
-    id: z.uuid().nullish(),
-    name: z.string().nullish(),
-    type: z.union([z.literal(0), z.literal(1), z.literal(2)]).nullish(),
-  }).nullish(),
+  department: z
+    .object({
+      id: z.uuid().nullish(),
+      name: z.string().nullish(),
+      type: z.union([z.literal(0), z.literal(1), z.literal(2)]).nullish(),
+    })
+    .nullish(),
   roles: z.array(z.object({ name: z.string().nullish() })).nullish(),
 });
-const permissionsSchema = z.array(z.object({
-  isActive: z.boolean().default(true),
-  children: z.array(z.object({ key: z.string().nullish(), types: z.array(z.string()).nullish() })).nullish(),
-}));
+const permissionsSchema = z.array(
+  z.object({
+    isActive: z.boolean().default(true),
+    children: z.array(z.object({ key: z.string().nullish(), types: z.array(z.string()).nullish() })).nullish(),
+  }),
+);
 
 /** The backend returns an absolute http:// avatar address; only its file path on this origin is used. */
 export function sameOriginAvatar(value: string | null | undefined): string | null {
   if (!value) return null;
   let path = value;
-  if (/^https?:\/\//i.test(value)) { try { path = new URL(value).pathname; } catch { return null; } }
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      path = new URL(value).pathname;
+    } catch {
+      return null;
+    }
+  }
   return avatarPath.test(path) && !path.includes("..") ? path : null;
 }
 
@@ -69,32 +81,6 @@ export function grantedPermissions(modules: z.infer<typeof permissionsSchema>): 
     for (const child of module.children ?? []) if (child.key && child.types?.includes("Access")) keys.add(child.key);
   }
   return [...keys];
-}
-
-const requestTimeoutMs = 15_000;
-
-/** A stalled or failed connection becomes a "network" failure; a caller's own abort is passed through. */
-async function send(path: string, init: RequestInit, signal?: AbortSignal): Promise<Response> {
-  const controller = new AbortController();
-  const cancel = () => controller.abort();
-  signal?.addEventListener("abort", cancel, { once: true });
-  if (signal?.aborted) controller.abort();
-  const timer = setTimeout(cancel, requestTimeoutMs);
-  try {
-    return await fetch(path, { ...init, credentials: "omit", cache: "no-store", signal: controller.signal });
-  } catch (error) {
-    if (signal?.aborted) throw error;
-    throw new SessionRequestError("network", 0);
-  } finally {
-    clearTimeout(timer);
-    signal?.removeEventListener("abort", cancel);
-  }
-}
-
-type JsonBody = string | number | boolean | object | null;
-
-async function json(response: Response): Promise<JsonBody> {
-  try { const body: JsonBody = await response.json(); return body; } catch { return null; }
 }
 
 async function loginFailure(response: Response): Promise<SessionRequestError> {
@@ -110,42 +96,32 @@ async function loginFailure(response: Response): Promise<SessionRequestError> {
 }
 
 let currentUserId: string | null = null;
+export const sessionUserId = (): string | null => currentUserId;
 
-async function acceptTokens(response: Response): Promise<string> {
+async function acceptTokens(response: Response, version = tokenStore.version()): Promise<string> {
   const parsed = tokensSchema.safeParse(await json(response));
   if (!parsed.success) throw new SessionRequestError("invalid-response", 502);
+  if (version !== tokenStore.version()) throw new DOMException("Session changed", "AbortError");
   tokenStore.set({ accessToken: parsed.data.accessToken, refreshToken: parsed.data.refreshToken });
   currentUserId = parsed.data.userId;
+  await tokenStore.flush();
   return parsed.data.userId;
 }
 
 let refreshing: Promise<boolean> | null = null;
 
-/**
- * Exchanges the refresh token for new tokens. Concurrent callers share one request, because the
- * backend replaces the refresh token each time. Resolves false when the session has ended.
- */
+/** One renewal is shared across callers; cancelling a page never cancels another page's renewal. */
 export function refreshTokens(signal?: AbortSignal): Promise<boolean> {
-  refreshing ??= (async () => {
-    // After a restart of the installed app, the sign-in the shell kept is the only one there is.
-    await tokenStore.restore();
-    const refreshToken = tokenStore.refreshToken();
-    if (!refreshToken) return false;
-    const response = await send(refreshPath, {
-      method: "POST", headers: { "Content-Type": "application/json", ...audit }, body: JSON.stringify({ refreshToken }),
-    }, signal);
-    if (response.status >= 500) throw new SessionRequestError("server", response.status);
-    if (!response.ok) { tokenStore.clear(); return false; }
-    await acceptTokens(response);
-    return true;
-  })().finally(() => { refreshing = null; });
-  return refreshing;
+  refreshing ??= renewSession(acceptTokens).finally(() => {
+    refreshing = null;
+  });
+  return waitForRenewal(refreshing, signal);
 }
 
 async function authorized(path: string, signal?: AbortSignal): Promise<Response> {
   const request = () => send(path, { headers: { Authorization: `Bearer ${tokenStore.accessToken() ?? ""}`, ...audit } }, signal);
   const response = await request();
-  return response.status === 401 && await refreshTokens(signal) ? request() : response;
+  return response.status === 401 && (await refreshTokens(signal)) ? request() : response;
 }
 
 /** Reads the signed-in user and permissions. Null means the backend no longer accepts the session. */
@@ -155,13 +131,19 @@ async function loadSession(userId: string, signal?: AbortSignal): Promise<Sessio
     authorized(`/api/v1/permission/user/${userId}`, signal),
   ]);
   for (const response of [userResponse, permissionResponse]) {
-    if (response.status === 401) { tokenStore.clear(); return null; }
+    if (response.status === 401) {
+      tokenStore.clear();
+      return null;
+    }
     if (!response.ok) throw new SessionRequestError(response.status === 403 ? "disabled" : "server", response.status);
   }
   const user = userSchema.safeParse(await json(userResponse));
   const permissions = permissionsSchema.safeParse(await json(permissionResponse));
   if (!user.success || !permissions.success) throw new SessionRequestError("invalid-response", 502);
-  if (user.data.isDisabled) { tokenStore.clear(); throw new SessionRequestError("disabled", 403); }
+  if (user.data.isDisabled) {
+    tokenStore.clear();
+    throw new SessionRequestError("disabled", 403);
+  }
   return {
     user: {
       id: user.data.id,
@@ -171,7 +153,7 @@ async function loadSession(userId: string, signal?: AbortSignal): Promise<Sessio
       departmentId: user.data.department?.id ?? null,
       departmentType: user.data.department?.type ?? null,
       avatar: sameOriginAvatar(user.data.avatar),
-      roles: (user.data.roles ?? []).flatMap((role) => role.name ? [role.name] : []),
+      roles: (user.data.roles ?? []).flatMap((role) => (role.name ? [role.name] : [])),
     },
     permissions: grantedPermissions(permissions.data),
   };
@@ -180,17 +162,20 @@ async function loadSession(userId: string, signal?: AbortSignal): Promise<Sessio
 /** Restores the session after a reload, or re-reads it while signed in. Null means signed out. */
 export async function currentSession(signal?: AbortSignal): Promise<SessionView | null> {
   if (!tokenStore.accessToken() || !currentUserId) {
-    if (!await refreshTokens(signal)) return null;
+    if (!(await refreshTokens(signal))) return null;
   }
   return currentUserId ? loadSession(currentUserId, signal) : null;
 }
 
 export async function loginSession(email: string, password: string): Promise<SessionView> {
+  const version = tokenStore.version();
   const response = await send(loginPath, {
-    method: "POST", headers: { "Content-Type": "application/json", ...audit }, body: JSON.stringify({ email, password }),
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...audit },
+    body: JSON.stringify({ email, password }),
   });
   if (!response.ok) throw await loginFailure(response);
-  const userId = await acceptTokens(response);
+  const userId = await acceptTokens(response, version);
   const session = await loadSession(userId);
   if (!session) throw new SessionRequestError("invalid-response", 502);
   return session;
@@ -209,7 +194,11 @@ const resetAudit = { Module: "Authentication", SubModule: "Forgot Password" };
  * that is not passed on, so this page cannot be used to find out who has an account.
  */
 export async function requestPasswordReset(email: string): Promise<void> {
-  const response = await send("/api/v1/auth/forgot-password", { method: "POST", headers: { "Content-Type": "application/json", ...resetAudit }, body: JSON.stringify({ email }) });
+  const response = await send("/api/v1/auth/forgot-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...resetAudit },
+    body: JSON.stringify({ email }),
+  });
   if (response.ok || response.status === 404) return;
   throw new SessionRequestError(response.status === 429 ? "throttled" : "server", response.status);
 }
@@ -219,15 +208,18 @@ export async function requestPasswordReset(email: string): Promise<void> {
  * server confirms it: the server answers 200 with `success: false` when the password itself is refused.
  */
 export async function setPasswordWithKey(key: string, password: string, confirmPassword: string): Promise<string | null> {
-  const response = await send("/api/v1/auth/set-password", { method: "POST", headers: { "Content-Type": "application/json", ...resetAudit },
-    body: JSON.stringify({ token: key, password, confirmPassword }) });
-  if (response.ok) return passwordFailure(await json(response) as Parameters<typeof passwordFailure>[0]);
+  const response = await send("/api/v1/auth/set-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...resetAudit },
+    body: JSON.stringify({ token: key, password, confirmPassword }),
+  });
+  if (response.ok) return passwordFailure((await json(response)) as Parameters<typeof passwordFailure>[0]);
   const problem = problemSchema.safeParse(await json(response));
   const code = problem.success ? problem.data.errors[0]?.code : null;
   if (code === "Token.Expired") return "This reset link has expired; links last two days. Ask for a new one.";
   if (code === "Token.NotFound" || response.status === 404) return "This reset link is not valid. Ask for a new one.";
-  if (response.status === 429) return failureMessages.throttled;
-  return failureMessages.server;
+  if (response.status === 429) return new SessionRequestError("throttled", 429).message;
+  return new SessionRequestError("server", response.status).message;
 }
 
 // The server lets only these roles move themselves to another department; the names are its own.
