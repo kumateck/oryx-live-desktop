@@ -160,11 +160,22 @@ jobs:
               "${{ env.WEB_IMAGE }}:$TAG"
 
             docker image prune -f >/dev/null
-            sleep 8
+            # The web container copies and checks every release file into /srv/assets before nginx listens, which takes
+            # longer as the release grows. Until then the published port accepts and drops connections (curl exit 52),
+            # so wait for nginx to answer instead of a fixed pause. curl failures must not end the script under set -e.
+            STATUS=000
+            for attempt in $(seq 1 45); do
+              STATUS=$(curl -s -o /dev/null -m 15 -w "%{http_code}" "http://127.0.0.1:${{ env.HOST_PORT }}/api/v1/user/authenticated" || true)
+              case "$STATUS" in 000|"") sleep 2;; *) break;; esac
+            done
             docker ps --filter "name=oryx-live" --format '{{.Names}} {{.Status}}'
-            STATUS=$(curl -s -o /dev/null -m 15 -w "%{http_code}" "http://127.0.0.1:${{ env.HOST_PORT }}/api/v1/user/authenticated")
+            if [ "$STATUS" = 000 ] || [ -z "$STATUS" ]; then
+              echo "The site did not start answering within 90 seconds."
+              docker logs --tail 40 "oryx-live-web" 2>&1 || true
+              exit 1
+            fi
             echo "site to backend: HTTP $STATUS"
-            echo "gateway: $(curl -s -m 10 "http://127.0.0.1:${{ env.HOST_PORT }}/realtime/health")"
+            echo "gateway: $(curl -s -m 10 "http://127.0.0.1:${{ env.HOST_PORT }}/realtime/health" || true)"
             # Any answer from the backend (401 without a sign-in) means the site reaches it.
             case "$STATUS" in 000|502|504) echo "The site cannot reach the backend."; exit 1;; esac
             # Every file the page loads must be served with exactly the content this release built.
