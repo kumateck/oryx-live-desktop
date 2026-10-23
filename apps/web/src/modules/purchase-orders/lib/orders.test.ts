@@ -45,6 +45,17 @@ it("reads an order's recorded totals and its revision history", () => {
   expect(purchaseOrderSchema.parse({ code: "no id", supplier: null })).toBeNull();
 });
 
+it("never shows the server's raw cost for a line it cannot cost", () => {
+  // EPRC-69: 650 kg stored in mg at 1.2 with no price unit. The server's cost is 1.2 x 650,000,000.
+  const order = purchaseOrderSchema.parse({ id: "po1", code: "EPRC-69", supplier: { id: "s1", name: "Shubham", type: 0, currency: { symbol: "$" } },
+    items: [{ id: "l1", quantity: 650_000_000, price: 1.2, priceUoM: "", cost: 780_000_000, uom: { symbol: "mg" }, material: { name: "Amoxicillin" } }] });
+  expect(order?.items[0]?.cost).toBeNull();
+  expect(order?.total).toBeNull();
+  const priced = purchaseOrderSchema.parse({ id: "po1", code: "EPRC-69", supplier: { id: "s1", name: "Shubham", type: 0, currency: { symbol: "$" } },
+    items: [{ id: "l1", quantity: 650_000_000, price: 1.2, priceUoM: "kg", cost: 780_000_000, uom: { symbol: "mg" }, material: { name: "Amoxicillin" } }] });
+  expect(priced?.total).toBe(780);
+});
+
 const sent = purchaseOrderSchema.parse({ id: "po1", code: "PO-9", status: 7, supplier: { id: "s1", name: "Acme", type: 0, currency: { symbol: "$" } }, items: [
   { id: "l1", quantity: 25_000_000, price: 12, priceUoM: "kg", uom: { id: "u-mg", symbol: "mg" }, currency: { id: "c-usd" }, material: { name: "Maize starch" } },
   { id: "l2", quantity: 40, price: 2.5, priceUoM: "pcs", uom: { id: "u-pcs", symbol: "pcs" }, material: { name: "Blister film" } }] });

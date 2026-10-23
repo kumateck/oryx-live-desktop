@@ -76,6 +76,11 @@ export function fromSmallestUnit(value: number, symbol: string | null | undefine
   return step ? clean(value / step.factor) : value;
 }
 
+/** Whether a unit is counted (pcs, pack) rather than measured in a family stored in its smallest unit (mg, ml). */
+export function isCountedUnit(symbol: string | null | undefined): boolean {
+  return Boolean(symbol?.trim()) && familyOf(symbol) === null;
+}
+
 /** Whether a unit measures volume (ml, L) as opposed to mass or a count. */
 export function isVolumeUnit(symbol: string | null | undefined): boolean {
   return familyOf(symbol) === volume;
