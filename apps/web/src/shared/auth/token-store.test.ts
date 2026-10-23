@@ -16,7 +16,7 @@ it("after a restart of the installed app, signs in again with the sign-in the sh
   const { currentSession, logoutSession } = await import("./session-api");
   const session = await currentSession();
   expect(session?.user.name).toBe("Ada");
-  expect(bodies).toEqual([{ refreshToken: "refresh-kept" }]);
+  expect(bodies).toEqual([{ clientId: "web", refreshToken: "refresh-kept" }]);
   // The server replaces the refresh token each time; the shell keeps the newest.
   expect(saved).toEqual(["refresh-next"]);
   logoutSession();

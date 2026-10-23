@@ -75,6 +75,15 @@ it.each([429, 503, 404, 408])("keeps the stored session after a temporary or unr
   expect(tokenStore.refreshToken()).toBe("kept");
 });
 
+it.each(["Token.NotFound", "User.NotFound"])("clears the stored session when the backend no longer knows it (%s)", async (code) => {
+  const { tokenStore } = await import("./token-store");
+  tokenStore.set({ accessToken: "", refreshToken: "gone" });
+  vi.stubGlobal("fetch", vi.fn<typeof fetch>(async () => Response.json({ errors: [{ code, description: "x" }] }, { status: 404 })));
+  const { refreshTokens } = await import("./session-api");
+  expect(await refreshTokens()).toBe(false);
+  expect(tokenStore.refreshToken()).toBeNull();
+});
+
 it("uses the most recent encrypted token ahead of an older window copy on restart", async () => {
   sessionStorage.setItem("oryx-session-refresh", "older");
   window.oryxSession = { load: vi.fn(async () => "latest"), save: vi.fn(async () => {}) };
