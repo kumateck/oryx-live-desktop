@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { api } from "@/shared/api/base-api";
+import { useApiDispatch } from "@/shared/api/use-api-dispatch";
+import { procurementApi } from "@/shared/api/generated/procurement";
 import { toast } from "sonner";
 import { useCreatePricingMutation, useGetPricingQuery, useUpdatePricingMutation } from "@/modules/suppliers/relationship/relationship-api";
 import type { PricingAgreement } from "@/modules/suppliers/relationship/types";
@@ -24,6 +27,8 @@ export function useRecordPrices(quotation: SupplierQuotation, type: SupplierType
   const { has, allowsNow } = useAccess();
   const permission = usePermissionAction(recordResponsePermissions[type]);
   const supplierId = quotation.supplier.id ?? "";
+  const dispatch = useApiDispatch();
+  const associations = procurementApi.useGetApiV1ProcurementSupplierBySupplierIdMaterialQuery({ supplierId, ...audit }, { skip: !supplierId || !permission.allowed });
   // Agreements only pre-fill prices and offer a follow-up; the quotation can be recorded without them.
   const pricing = useGetPricingQuery(supplierId, { skip: !supplierId || !permission.allowed });
   const agreements = pricing.data ?? noAgreements;
@@ -39,8 +44,8 @@ export function useRecordPrices(quotation: SupplierQuotation, type: SupplierType
 
   // Start once the agreements have answered (or failed), so typing is never overwritten by a late pre-fill.
   useEffect(() => {
-    if (lines === null && !pricing.isLoading) setLines(startPriceLines(quotation, agreements));
-  }, [lines, pricing.isLoading, quotation, agreements]);
+    if (lines === null && !pricing.isLoading && !associations.isLoading) setLines(startPriceLines(quotation, agreements, new Date(), associations.data ?? []));
+  }, [lines, pricing.isLoading, associations.isLoading, associations.data, quotation, agreements]);
 
   const change = useCallback((id: string, update: Partial<Pick<PriceLine, "price" | "priceUnit">>) => {
     setLines((current) => current?.map((line) => line.id === id ? { ...line, ...update } : line) ?? null);
@@ -60,15 +65,19 @@ export function useRecordPrices(quotation: SupplierQuotation, type: SupplierType
     try {
       const saved = await receive({ ...audit, supplierQuotationId: quotation.id, body: toQuotationResponse(inScope(lines)) });
       if ("error" in saved) { setMessage(apiErrorMessage(saved.error)); return; }
+      dispatch(api.util.invalidateTags([{ type: "Supplier", id: supplierId }, { type: "Supplier", id: `${supplierId}:pricing` }, { type: "procurement/supplier", id: supplierId }]));
+      // Unit changes are proposed atomically by the quotation endpoint; do not create a duplicate proposal here.
       // One at a time, after the prices are safely recorded: a failed proposal must not hide that they were.
       let failed = 0;
       for (const proposal of proposals) {
+        const prior = agreements.find((agreement) => agreement.materialId === proposal.body.materialId && agreement.uoMId === proposal.body.uoMId);
+        if (prior && prior.priceUoM.trim().toLowerCase() !== proposal.body.priceUoM.trim().toLowerCase()) continue;
         if (!allowsNow(manageAgreementsPermission)) { failed += 1; continue; }
         const result = proposal.mode === "create" ? await createAgreement({ supplierId, body: proposal.body }) : await updateAgreement({ supplierId, id: proposal.id, body: proposal.body });
         if ("error" in result) failed += 1;
       }
       if (failed > 0) toast.error("Prices recorded, but not every agreement change", { description: `${failed} of ${proposals.length} could not be submitted. Review the supplier's pricing agreements.` });
-      else toast.success(proposals.length > 0 ? "Prices recorded and agreement changes submitted" : only ? "Prices corrected" : "Prices recorded");
+      else toast.success(proposals.length > 0 ? "Prices recorded and agreement changes submitted" : only ? "Prices corrected" : "Prices recorded", { description: "Purchase-unit changes affecting standing pricing follow its approval workflow." });
       onDone();
     } finally { setSaving(false); }
   };

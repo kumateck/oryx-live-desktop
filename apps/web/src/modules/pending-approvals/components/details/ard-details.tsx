@@ -11,7 +11,8 @@ import { DetailGroup, DetailItem } from "@/shared/detail/detail-list";
 import { formatDate, formatMonthYear } from "@/shared/format/dates";
 import { useAccess } from "@/shared/auth/use-access";
 import { PrintButton } from "@/shared/print/print-button";
-import { ArdResultsTable } from "./ard-results-table";
+import { ArdDocument, type CertificateFacts } from "./ard-document";
+import { ArdWorksheet } from "./ard-worksheet";
 import { ardAnswersSchema as answers, ardFormSchema as formSchema } from "../../schemas/ard-result-schema";
 import { answerFails, answersByField } from "../../lib/ard-results";
 import { audit } from "../../lib/approval-documents";
@@ -88,19 +89,23 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
   const certificateSections = sections.map((section) => ({ id: section.id, name: section.name, description: section.description, groupName: section.groupName,
     fields: [...(section.fields ?? [])].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0)) }));
 
-  return <DetailState {...state} loading={loading} value={response} label="analytical raw data">{(data) => { const unit = material?.materialBatch?.uoM?.symbol;
+  return <DetailState {...state} loading={loading} value={response} label="certificate of analysis">{(data) => { const unit = material?.materialBatch?.uoM?.symbol;
     const isMaterial = Boolean(materialBatchId);
     const name = isMaterial ? material?.materialBatch?.material?.name ?? data.materialBatch?.name ?? null : batch?.productionScheduleProduct?.product?.name ?? data.batchManufacturingRecord?.name ?? null;
     const batchNumber = isMaterial ? material?.materialBatch?.batchNumber ?? null : batch?.batchNumber ?? data.batchManufacturingRecord?.code ?? null;
+    const facts: CertificateFacts = {
+          kind: isMaterial ? "material" : "product", name, code: isMaterial ? material?.materialBatch?.material?.code ?? data.materialBatch?.code ?? null : batch?.productionScheduleProduct?.product?.code ?? null,
+          batch: batchNumber, manufactured: isMaterial ? material?.materialBatch?.manufacturingDate : batch?.manufacturingDate, expires: isMaterial ? material?.materialBatch?.expiryDate : batch?.expiryDate,
+          arNumber: isMaterial ? material?.arNumber ?? null : product?.arNumber ?? null, specNumber: isMaterial ? material?.specNumber ?? null : product?.specNumber ?? ard?.specNumber ?? null,
+          sampled: isMaterial ? material?.sampledDate : product?.sampledDate, analysed: (isMaterial ? material?.materialBatch?.analysedDate : product?.analysedDate) ?? data.checkedAt };
     return <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
         {rejection && has(oosPermission) ? <Button type="button" size="sm" variant="outline" className="text-destructive" onClick={() => setStartingOos(true)}><TriangleAlert />Start OOS investigation</Button> : null}
         {coaTarget ? <GenerateCoaButton approved={approved} target={coaTarget} /> : null}
-        {sections.length > 0 ? <PrintButton label="Certificate of analysis" preview={(close) => <ArdCertificate sections={certificateSections} recorded={recorded} onClose={close} facts={{
-          kind: isMaterial ? "material" : "product", name, code: isMaterial ? material?.materialBatch?.material?.code ?? data.materialBatch?.code ?? null : batch?.productionScheduleProduct?.product?.code ?? null,
-          batch: batchNumber, manufactured: isMaterial ? material?.materialBatch?.manufacturingDate : batch?.manufacturingDate, expires: isMaterial ? material?.materialBatch?.expiryDate : batch?.expiryDate,
-          arNumber: isMaterial ? material?.arNumber ?? null : product?.arNumber ?? null, specNumber: isMaterial ? material?.specNumber ?? null : product?.specNumber ?? ard?.specNumber ?? null,
-          sampled: isMaterial ? material?.sampledDate : product?.sampledDate, analysed: (isMaterial ? material?.materialBatch?.analysedDate : product?.analysedDate) ?? data.checkedAt }} />} /> : null}
+        {sections.length > 0 ? <>
+          <PrintButton label="Print COA" preview={(close) => <ArdCertificate sections={certificateSections} recorded={recorded} onClose={close} facts={facts} />} />
+          <PrintButton label="Print Worksheet" preview={(close) => <ArdWorksheet sections={certificateSections} recorded={recorded} onClose={close} facts={facts} />} />
+        </> : null}
       </div>
       {startingOos && rejection ? <StartOosDialog onClose={() => setStartingOos(false)} subject={{ kind: isMaterial ? "material" : "product", materialBatchId, analyticalTestRequestId: atr?.id ?? null,
         coaNumber: rejection.code, name, batchNumber, reason: rejection.reason }} /> : null}
@@ -120,6 +125,8 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
       {data.checkedAt || data.checkedBy ? <p className="text-sm text-muted-foreground">Checked {[formatDate(data.checkedAt), fullName(data.checkedBy)].filter(Boolean).join(" by ")}.</p> : null}
       {sections.length === 0 ? <p role="alert" className="rounded-md border border-destructive/50 p-3 text-sm">The tests on this data sheet could not be read, so the results cannot be laid out.</p> : <>
         <p role="status" className={`rounded-md border p-3 text-sm ${failures > 0 ? "border-destructive/50 bg-destructive/5" : "bg-muted/50"}`}>{failures > 0 ? `${failures} ${failures === 1 ? "result does" : "results do"} not comply with the specification.` : "No result is recorded as not complying."}</p>
-        <ArdResultsTable sections={certificateSections} recorded={recorded} /></>}
+        <article aria-label="Certificate of analysis" className="print-sheet min-w-0">
+          <ArdDocument sections={certificateSections} recorded={recorded} facts={facts} />
+        </article></>}
     </div>; }}</DetailState>;
 }

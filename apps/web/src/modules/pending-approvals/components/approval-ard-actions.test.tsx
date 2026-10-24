@@ -35,7 +35,7 @@ it("previews the certificate of analysis and starts an OOS investigation on reje
   const router = createMemoryRouter([{ path: "/qa/pending-approvals/:type/:id", element: <PendingApprovalPage /> }], { initialEntries: ["/qa/pending-approvals/Response/doc-1"] });
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
 
-  await user.click(await screen.findByRole("button", { name: "Certificate of analysis" }));
+  await user.click(await screen.findByRole("button", { name: "Print COA" }));
   const certificate = await screen.findByRole("dialog");
   expect(certificate.textContent).toContain("QC AR AR-55");
   // A test with no result is not reported as complying.
@@ -68,7 +68,7 @@ it("offers no OOS investigation on results that were not rejected", async () => 
   });
   const router = createMemoryRouter([{ path: "/qa/pending-approvals/:type/:id", element: <PendingApprovalPage /> }], { initialEntries: ["/qa/pending-approvals/Response/doc-1"] });
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
-  expect(await screen.findByRole("button", { name: "Certificate of analysis" })).toBeTruthy();
+  expect(await screen.findByRole("button", { name: "Print COA" })).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Start OOS investigation" })).toBeNull();
 });
 
@@ -95,7 +95,7 @@ it("generates the approved COA for a material batch or a product's test request 
     const router = createMemoryRouter([{ path: "/qa/pending-approvals/:type/:id", element: <PendingApprovalPage /> }, { path: "/qc/commercial-certificates/:id", element: <p>Certificate page</p> }],
       { initialEntries: ["/qa/pending-approvals/Response/doc-1"] });
     render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
-    expect(await screen.findByRole("button", { name: "Certificate of analysis" })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Print COA" })).toBeTruthy();
     if (!approved) {
       expect(screen.queryByRole("button", { name: "Generate approved COA" })).toBeNull();
     } else {

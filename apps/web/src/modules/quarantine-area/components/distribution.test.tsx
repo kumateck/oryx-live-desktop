@@ -9,6 +9,7 @@ import { ApiProvider } from "@/shared/api/api-provider";
 import { SessionProvider } from "@/shared/auth/session-provider";
 import { notifyPermissionDenied } from "@/shared/auth/session-events";
 import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
+import { chooseAction } from "@/test/menu";
 import { grnFixture, ids } from "../lib/distribution-fixtures";
 
 HTMLElement.prototype.hasPointerCapture = () => false;
@@ -21,7 +22,7 @@ const view = "CanViewQuarantineRawMaterials";
 const distribute = "CanDistributeRawMaterials";
 const payload = z.array(z.object({ warehouseId: z.uuid(), materialBatchId: z.uuid(), uoMId: z.uuid(), distributedRequisitionItemId: z.uuid(), quantity: z.number().positive() }));
 interface Write { body: z.infer<typeof payload>; module: string | null; subModule: string | null }
-function open(options: { permissions?: string[]; kind?: number; status?: number; stale?: boolean; refused?: boolean; offline?: boolean; holdPreflight?: boolean } = {}) {
+function open(options: { permissions?: string[]; kind?: number; status?: number; stale?: boolean; refused?: boolean; offline?: boolean; holdPreflight?: boolean; multipleMaterials?: boolean } = {}) {
   const backend = stubBackend({ permissions: options.permissions ?? [view, distribute] });
   rememberSession();
   const session = backend.fetcher.getMockImplementation();
@@ -38,6 +39,17 @@ function open(options: { permissions?: string[]; kind?: number; status?: number;
       if (reads > 1 && options.holdPreflight) await gate;
       if (reads > 1 && options.offline) return new Response(null, { status: 503 });
       const fixture = grnFixture(reads > 1 && options.stale ? 4 : options.status ?? 8, options.kind ?? 0);
+      const firstBatch = fixture.materialBatches[0];
+      if (options.multipleMaterials && firstBatch) {
+        const material = { id: "22222222-2222-4222-8222-222222222223", name: "Maize Starch" };
+        fixture.materialBatches.push({ ...firstBatch, material,
+          id: "44444444-4444-4444-8444-444444444446", batchNumber: "OTHER", totalQuantity: 1_000_000,
+          quantityDistributed: 0, status: 8,
+        });
+        fixture.checkLists.push({ material: { ...material, kind: options.kind ?? 0 },
+          distributedRequisitionMaterial: { distributedRequisitionItems: [] },
+        });
+      }
       if (saved) fixture.materialBatches = fixture.materialBatches.map((batch) => ({ ...batch, quantityDistributed: batch.totalQuantity }));
       return Response.json(fixture);
     }
@@ -53,20 +65,29 @@ function open(options: { permissions?: string[]; kind?: number; status?: number;
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   return { writes, backend, release: () => release(), reads: () => reads };
 }
-async function review() {
+async function review(fromRow = false) {
   const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: "Distribute" }));
+  if (fromRow) await chooseAction("Actions for Diclofenac Sodium, batch BNTXOCT16A", "Distribute material");
+  else await user.click(await screen.findByRole("button", { name: "Distribute" }));
   const dialog = await screen.findByRole("dialog");
   await within(dialog).findByRole("button", { name: "Distribute to Production store" });
   return { user, dialog };
 }
 
-it("renders Approved with allocation quantities and a usable distribution action on the real GRN route", async () => {
+it("renders distribution actions from the actual GRN contract whose batch material has no kind field", async () => {
   open();
   await screen.findByText("GRN GRXTNC");
   expect(screen.getAllByText("Approved")).toHaveLength(2);
-  expect(screen.getByRole("columnheader", { name: /Allocated/ })).toBeTruthy();
-  expect(screen.getByRole("columnheader", { name: /Distributed/ })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "Quantities" })).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "Dates" })).toBeTruthy();
+  const row = screen.getByText("BNTXOCT16A").closest("tr");
+  if (!row) throw new Error("Expected the first batch row");
+  expect(within(row).getAllByRole("term").map((term) => term.textContent)).toEqual([
+    "Received", "Allocated", "Distributed", "Manufacturing", "Expiry", "Retest",
+  ]);
+  expect(within(row).getAllByRole("definition").map((value) => value.textContent)).toEqual([
+    "10 kg", "0 mg", "2 kg", "Oct 2026", "Oct 2027", "–",
+  ]);
   const { dialog } = await review();
   expect(within(dialog).getByText("13 kg")).toBeTruthy();
   expect(within(dialog).getByText("10 kg")).toBeTruthy();
@@ -104,7 +125,7 @@ it("submits the reviewed requisition-specific allocation once, with audit header
 
 it("requires another review when approval changes during preflight, and sends nothing if stock cannot be checked", async () => {
   const state = open({ stale: true });
-  const { user, dialog } = await review();
+  const { user, dialog } = await review(true);
   await user.click(within(dialog).getByRole("button", { name: "Distribute to Production store" }));
   await within(dialog).findByText("This material no longer has approved batches on this note.");
   expect(state.writes).toHaveLength(0);
@@ -125,9 +146,9 @@ it("keeps a server refusal visible with no automatic mutation retry", async () =
   await waitFor(() => expect(state.reads()).toBeGreaterThanOrEqual(3));
 });
 
-it("removes an open distribution dialog when access is revoked", async () => {
+it("removes an open row distribution dialog when access is revoked", async () => {
   const state = open();
-  await review();
+  await review(true);
   state.backend.set({ permissions: [view] });
   fireEvent(window, new Event("focus"));
   notifyPermissionDenied();
@@ -152,4 +173,32 @@ it("shows an unrecognized status explicitly and never enables distribution for i
   await screen.findByText("GRN GRXTNC");
   expect(screen.getAllByText("Unknown (99)")).toHaveLength(2);
   expect(screen.getByRole("button", { name: "Distribute" }).hasAttribute("disabled")).toBe(true);
+});
+
+it("preselects the approved row material when the GRN contains multiple materials and preserves the audited write", async () => {
+  const state = open({ multipleMaterials: true });
+  await chooseAction("Actions for Diclofenac Sodium, batch BNTXOCT16A", "Distribute material");
+  const dialog = await screen.findByRole("dialog");
+  await within(dialog).findByRole("button", { name: "Distribute to Production store" });
+  expect(within(dialog).getByText("13 kg")).toBeTruthy();
+  await userEvent.setup().click(within(dialog).getByRole("button", { name: "Distribute to Production store" }));
+  await waitFor(() => expect(state.writes).toHaveLength(1));
+  expect(state.writes[0]?.module).toBe("Warehouse");
+  expect(state.writes[0]?.subModule).toBe("Quality Assurance Goods Receipt Note");
+});
+
+it("hides row distribution without the matching permission or approved batch status", async () => {
+  open({ permissions: [view] });
+  await screen.findByText("GRN GRXTNC");
+  expect(screen.queryByRole("button", { name: /Actions for/ })).toBeNull();
+  cleanup();
+  open({ status: 3 });
+  await screen.findByText("GRN GRXTNC");
+  expect(screen.queryByRole("button", { name: /Actions for/ })).toBeNull();
+});
+
+it.each([0, 3, 4, 9, 99])("hides the row distribution action for non-approved status %s", async (status) => {
+  open({ status });
+  await screen.findByText("GRN GRXTNC");
+  expect(screen.queryByRole("button", { name: /Actions for/ })).toBeNull();
 });

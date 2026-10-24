@@ -17,11 +17,11 @@ export function RequisitionsTable({ label, rows, search, paging, loading, refres
   const columns = useMemo(() => column.columns([
     column.accessor("code", { header: "Requisition", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.code}</div>
       <div className="text-xs text-muted-foreground">{row.original.items.length} {row.original.items.length === 1 ? "material" : "materials"}{row.original.product ? ` · for ${row.original.product}` : ""}</div></div> }),
-    ...(showType ? [column.accessor((row) => requisitionTypeLabels[row.type], { id: "type", header: "Type", size: 120 })] : []),
-    column.accessor((row) => row.createdAt ?? "", { id: "requested", header: "Requested", size: 220, cell: ({ row }) => <div className="min-w-0"><div>{formatDate(row.original.createdAt) ?? "–"}</div>
+    ...(showType ? [column.accessor((row) => requisitionTypeLabels[row.type], { id: "type", header: "Type" })] : []),
+    column.accessor((row) => row.createdAt ?? "", { id: "requested", header: "Requested", cell: ({ row }) => <div className="min-w-0"><div>{formatDate(row.original.createdAt) ?? "–"}</div>
       <div className="break-words text-xs text-muted-foreground">{[row.original.requestedBy, row.original.department].filter(Boolean).join(" · ") || "Requester not recorded"}</div></div> }),
-    column.accessor((row) => row.expectedDelivery ?? "", { id: "expected", header: "Needed by", size: 150, cell: ({ row }) => formatDate(row.original.expectedDelivery) ?? dash }),
-    column.accessor("status", { header: "Status", size: 170, cell: ({ row }) => <RequisitionStatusBadge status={row.original.status} type={row.original.type} /> }),
+    column.accessor((row) => row.expectedDelivery ?? "", { id: "expected", header: "Needed by", cell: ({ row }) => formatDate(row.original.expectedDelivery) ?? dash }),
+    column.accessor("status", { header: "Status", cell: ({ row }) => <RequisitionStatusBadge status={row.original.status} type={row.original.type} /> }),
   ]), [showType]);
   return <ServerDataTable label={label} columns={columns} rows={rows} getRowId={(row) => row.id} {...paging} loading={loading} refreshing={refreshing} error={error} onRetry={onRetry} onRowOpen={onOpen}
     emptyTitle={search.trim() ? "No requisitions match this search" : emptyTitle} emptyDescription={search.trim() ? "Search by requisition number or remarks." : emptyDescription} />;

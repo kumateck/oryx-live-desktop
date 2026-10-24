@@ -33,3 +33,11 @@ it("refreshes exactly the shipment an approval decided, and nothing after a fail
   expect(reads.get("sd-2")).toBe(1);
   decided.unsubscribe(); other.unsubscribe();
 });
+
+it("invalidates supplier reads after either pricing approval or rejection", () => {
+  for (const endpoint of ["postApiV1ApprovalApproveByModelTypeAndModelId", "postApiV1ApprovalRejectByModelTypeAndModelId"]) {
+    expect(cacheEffects[endpoint]?.({ modelType: "SupplierPricingAgreement", modelId: "proposal" })).toEqual([
+      { type: "procurement/supplier", id: "proposal" }, { type: "procurement/supplier", id: "LIST" },
+    ]);
+  }
+});

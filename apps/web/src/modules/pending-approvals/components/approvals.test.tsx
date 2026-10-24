@@ -13,8 +13,8 @@ import { decidedElsewhere, decisionProblem, documentLabel, isReadable, waitingDo
 afterEach(() => { cleanup(); forgetSession(); });
 
 it("names documents, says where each is decided, and asks for a reason only when rejecting", () => {
-  expect([documentLabel("PurchaseOrder"), documentLabel("ProductionExtraPacking"), documentLabel("QcCoa"), documentLabel("QcOosCase"), documentLabel("TemplateFormRevision"), documentLabel(null)])
-    .toEqual(["Purchase order", "Production extra material", "QC COA", "QC OOS case", "Template form revision", "Document"]);
+  expect([documentLabel("PurchaseOrder"), documentLabel("ProductionExtraPacking"), documentLabel("QcCoa"), documentLabel("QcOosCase"), documentLabel("TemplateFormRevision"), documentLabel(null), documentLabel("Response")])
+    .toEqual(["Purchase order", "Production extra material", "QC COA", "QC OOS case", "Template form revision", "Document", "Certificate of analysis"]);
   expect([isReadable("LeaveRequest"), isReadable("PayrollRun"), isReadable("ServiceMemo"), isReadable("QcCoa")]).toEqual([true, true, false, false]);
   expect(decidedElsewhere("PurchaseOrder")).toBeNull();
   expect(decidedElsewhere("PayrollRun")).toContain("reconciled");
@@ -177,7 +177,7 @@ it("lays out every readable document without failing, from full or sparse data",
     "/api/v1/form/responses/material-batch/mb-1": [{ responseId: "doc-1", formField: { id: "fld-1" }, value: "94.1% Does not comply" }, { responseId: "other", formField: { id: "fld-1" }, value: "99.9%" }],
     "/api/v1/material-ard/material/batch-details/mb-1": { arNumber: "AR-55", materialBatch: { batchNumber: "B-1", material: { name: "Maize starch" } } } };
   const expected: Record<string, string> = { CustomerQuotation: "GH₵ 1,140.00", SupplierPricingAgreement: "10% above the current one", PayrollRun: "190,000.00", PerformanceReview: "Exceeds expectations", RndProject: "On hold",
-    RndFormulation: "V3", RndTechnologyTransfer: "Execution in progress", Response: "No.Test & Observations1Assay94.1% does not comply", StockAdjustment: "-1 kg", ProductionOrder: "Kinapharma", AllocateProductionOrder: "FG-7", OvertimeRequest: "6 for 2 people" };
+    RndFormulation: "V3", RndTechnologyTransfer: "Execution in progress", Response: "94.1%", StockAdjustment: "-1 kg", ProductionOrder: "Kinapharma", AllocateProductionOrder: "FG-7", OvertimeRequest: "6 for 2 people" };
   for (const type of ["StockAdjustment", "ProductionOrder", "AllocateProductionOrder", "OvertimeRequest", "ProformaInvoice", "FinishedGoodsTransferNote", "ProductionExtraPacking", "StaffRequisition", "JobRequest", "PurchaseOrder", "BillingSheet", "ShipmentDocument", "PurchaseRequisition",
     "CustomerQuotation", "SupplierPricingAgreement", "PayrollRun", "PerformanceReview", "RndProject", "RndFormulation", "RndTechnologyTransfer", "Response"]) {
     const backend = stubBackend({ permissions: ["CanViewPendingApprovals", "CanApprovePendingApproval"] });

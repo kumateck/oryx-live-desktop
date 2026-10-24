@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useGetApiV1WarehouseGrnByIdQuery, useGetApiV1WarehouseGrnsQuery } from "../api/quarantine-api";
 import type { ReceivedBatch } from "@/shared/material-batches/received-batch";
-import { ClientDataTable, ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
+import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDateTime, formatMonthYear } from "@/shared/format/dates";
@@ -16,12 +16,12 @@ import { KindSwitch } from "@/shared/reference-data/kind-switch";
 import { useKindTabs } from "@/shared/reference-data/kind-tabs";
 import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
-import { BatchStatus, batchStatusLabel } from "@/shared/material-batches/batch-status";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { NoAccess } from "@/shared/auth/no-access";
 import { useAccess } from "@/shared/auth/use-access";
 import { stockQuantity } from "../lib/distribution-plan";
 import { DistributionAction } from "./distribution-action";
+import { GrnBatchTable } from "./grn-batch-table";
 import { audit, grnPath, grnStatusLabels, quarantinePath, quarantinePermissions } from "../lib/quarantine";
 import { grnRowsSchema, grnSchema, type Grn } from "../schemas/grn-schema";
 
@@ -60,20 +60,6 @@ export function QuarantineListPage() {
   </section>;
 }
 
-const batchColumn = dataTableColumns<ReceivedBatch>();
-const batchColumns = batchColumn.columns([
-  batchColumn.accessor((row) => row.number ?? "", { id: "number", header: "Batch", cell: ({ row }) => <span className="break-words font-medium">{row.original.number ?? "No number"}</span> }),
-  batchColumn.accessor((row) => row.materialName ?? "", { id: "material", header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words">{row.original.materialName ?? "–"}</div>
-    <div className="break-words text-xs text-muted-foreground">{row.original.manufacturer ? `Made by ${row.original.manufacturer}` : "Manufacturer not recorded"}</div></div> }),
-  batchColumn.accessor((row) => row.invoice ?? "", { id: "invoice", header: "Invoice", size: 140, cell: ({ row }) => row.original.invoice ?? "–" }),
-  batchColumn.accessor("total", { header: "Received", size: 140, cell: ({ row }) => show(row.original.total, row.original.unit) }),
-  batchColumn.accessor((row) => row.assigned ?? -1, { id: "allocated", header: "Allocated", size: 140, cell: ({ row }) => row.original.assigned === null ? "–" : show(row.original.assigned, row.original.unit) }),
-  batchColumn.accessor((row) => row.distributed ?? -1, { id: "distributed", header: "Distributed", size: 140, cell: ({ row }) => row.original.distributed === null ? "–" : show(row.original.distributed, row.original.unit) }),
-  batchColumn.accessor((row) => row.retest ?? "", { id: "retest", header: "Retest", size: 140, cell: ({ row }) => formatMonthYear(row.original.retest) ?? "–" }),
-  batchColumn.accessor((row) => row.made ?? "", { id: "made", header: "Manufactured", size: 140, cell: ({ row }) => formatMonthYear(row.original.made) ?? "–" }),
-  batchColumn.accessor((row) => row.expires ?? "", { id: "expires", header: "Expires", size: 140, cell: ({ row }) => formatMonthYear(row.original.expires) ?? "–" }),
-  batchColumn.accessor((row) => row.status ?? -1, { id: "status", header: "Status", size: 140, cell: ({ row }) => <Badge variant={row.original.status === BatchStatus.Approved || row.original.status === BatchStatus.Available ? "default" : row.original.status === BatchStatus.Rejected ? "destructive" : "outline"}>{batchStatusLabel(row.original.status)}</Badge> }),
-]);
 const printColumns: PrintColumn<ReceivedBatch>[] = [
   { id: "n", header: "#", cell: (_row, index) => index + 1, width: "6%" },
   { id: "material", header: "Material", cell: (row) => <>{row.materialName ?? "–"}<small>{row.manufacturer ?? ""}</small></> },
@@ -109,7 +95,7 @@ function GrnDetail({ id }: { id: string }) {
       <KeyFact label="Batches" value={grn.batches.length} />
     </KeyFacts>
     {grn.remarks ? <p className="text-sm"><span className="text-muted-foreground">Remarks: </span>{grn.remarks}</p> : null}
-    <ClientDataTable label="Batches on this note" columns={batchColumns} rows={grn.batches} getRowId={(row) => row.id} fill={false} emptyTitle="No batches on this note" />
+    <GrnBatchTable grn={grn} refreshing={query.isFetching} />
   </article>;
 }
 

@@ -5,6 +5,7 @@ import { responseSchemas } from "./response-schemas";
 const route = (id: string) => `/api/v1/suppliers/${id}`;
 const audit = (subModule: string) => ({ Module: "Supplier relationship management", SubModule: subModule });
 const tag = (supplierId: string, section: string) => [{ type: "Supplier" as const, id: `${supplierId}:${section}` }];
+const pricingTags = (supplierId: string) => [...tag(supplierId, "pricing"), { type: "Supplier" as const, id: supplierId }, { type: "procurement/supplier" as const, id: supplierId }];
 
 /** The backend DTOs provide these types; OpenAPI currently omits response schemas for SRM. */
 export const relationshipApi = api.injectEndpoints({ endpoints: (build) => ({
@@ -24,10 +25,10 @@ export const relationshipApi = api.injectEndpoints({ endpoints: (build) => ({
   updateBankDetail: build.mutation<void, ScopedRecord<BankRequest>>({ query: ({ supplierId, id, body }) => ({ url: `${route(supplierId)}/bank-details/${id}`, method: "PUT", body, headers: audit("Bank details") }), invalidatesTags: (_result, error, arg) => error ? [] : tag(arg.supplierId, "bank") }),
   deleteBankDetail: build.mutation<void, RecordId>({ query: ({ supplierId, id }) => ({ url: `${route(supplierId)}/bank-details/${id}`, method: "DELETE", headers: audit("Bank details") }), invalidatesTags: (_result, error, arg) => error ? [] : tag(arg.supplierId, "bank") }),
 
-  getPricing: build.query<PricingAgreement[], string>({ query: (id) => ({ url: `${route(id)}/pricing-agreements`, headers: audit("Pricing agreements") }), transformResponse: (response) => responseSchemas.pricing.parse(response), providesTags: (_result, _error, id) => tag(id, "pricing") }),
-  createPricing: build.mutation<string, Scoped<PricingRequest>>({ query: ({ supplierId, body }) => ({ url: `${route(supplierId)}/pricing-agreements`, method: "POST", body, headers: audit("Pricing agreements") }), transformResponse: (response) => responseSchemas.createdId.parse(response), invalidatesTags: (_result, error, arg) => error ? [] : tag(arg.supplierId, "pricing") }),
-  updatePricing: build.mutation<void, ScopedRecord<PricingRequest>>({ query: ({ supplierId, id, body }) => ({ url: `${route(supplierId)}/pricing-agreements/${id}`, method: "PUT", body, headers: audit("Pricing agreements") }), invalidatesTags: (_result, error, arg) => error ? [] : tag(arg.supplierId, "pricing") }),
-  archivePricing: build.mutation<void, RecordId>({ query: ({ supplierId, id }) => ({ url: `${route(supplierId)}/pricing-agreements/${id}`, method: "DELETE", headers: audit("Pricing agreements") }), invalidatesTags: (_result, error, arg) => error ? [] : tag(arg.supplierId, "pricing") }),
+  getPricing: build.query<PricingAgreement[], string>({ query: (id) => ({ url: `${route(id)}/pricing-agreements`, headers: audit("Pricing agreements") }), transformResponse: (response) => responseSchemas.pricing.parse(response), providesTags: (_result, _error, id) => [...pricingTags(id), { type: "procurement/supplier", id: "LIST" }] }),
+  createPricing: build.mutation<string, Scoped<PricingRequest>>({ query: ({ supplierId, body }) => ({ url: `${route(supplierId)}/pricing-agreements`, method: "POST", body, headers: audit("Pricing agreements") }), transformResponse: (response) => responseSchemas.createdId.parse(response), invalidatesTags: (_result, error, arg) => error ? [] : pricingTags(arg.supplierId) }),
+  updatePricing: build.mutation<void, ScopedRecord<PricingRequest>>({ query: ({ supplierId, id, body }) => ({ url: `${route(supplierId)}/pricing-agreements/${id}`, method: "PUT", body, headers: audit("Pricing agreements") }), invalidatesTags: (_result, error, arg) => error ? [] : pricingTags(arg.supplierId) }),
+  archivePricing: build.mutation<void, RecordId>({ query: ({ supplierId, id }) => ({ url: `${route(supplierId)}/pricing-agreements/${id}`, method: "DELETE", headers: audit("Pricing agreements") }), invalidatesTags: (_result, error, arg) => error ? [] : pricingTags(arg.supplierId) }),
 
   getPerformance: build.query<Performance[], string>({ query: (id) => `${route(id)}/performance`, transformResponse: (response) => responseSchemas.performance.parse(response), providesTags: (_result, _error, id) => tag(id, "performance") }),
   computePerformance: build.mutation<Performance, Scoped<PerformanceRequest>>({ query: ({ supplierId, body }) => ({ url: `${route(supplierId)}/performance/compute`, method: "POST", body, headers: audit("Performance") }), transformResponse: (response) => responseSchemas.performanceRecord.parse(response) }),

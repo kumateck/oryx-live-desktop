@@ -70,8 +70,10 @@ function open(address: string, permissions: string[], record: object = sheet()) 
     if (path === "/api/v1/procurement/shipment-document") return Response.json({ data: [shipment("sd-1", "inv-a"), shipment("sd-2", "inv-b", { hasBillingSheet: true }), shipment("sd-3", "inv-c", { status: 2 })], pageIndex: 1, pageCount: 1, totalRecordCount: 3 });
     if (path === "/api/v1/collection") return Response.json({ Charge: [{ id: "ch-1", name: "Port handling" }, { id: "ch-2", name: "Customs duty" }], Currency: [{ id: "usd", name: "US Dollar", symbol: "$" }, { id: "ghs", name: "Ghana Cedi", symbol: "GH₵" }], PackageStyle: [{ id: "ps-1", name: "Pallet" }] });
     if (path === "/api/v1/configuration/by-model-type/BillingSheet") return Response.json({ prefix: "BS-", namingType: 0, minimumNameLength: 4, maximumNameLength: 6 });
+    if (path === "/api/v1/configuration/BillingSheet/count") return Response.json({ detail: "Invalid model type sent" }, { status: 400 });
     if (path.startsWith("/api/v1/configuration/")) return Response.json(4);
-    if (path === "/api/v1/procurement/billing-sheet") return Response.json("bs-9", { status: 201 });
+    if (path === "/api/v1/procurement/billing-sheet") return input.method === "GET"
+      ? Response.json({ data: [], pageIndex: 1, pageCount: 1, totalRecordCount: 4 }) : Response.json("bs-9", { status: 201 });
     if (path === "/api/v1/procurement/billing-sheet/charge") return Response.json({ paidChargeIds: [], pendingChargeIds: ["c-1"] });
     if (path.startsWith("/api/v1/procurement/billing-sheet/")) return input.method === "GET" ? Response.json(record) : new Response(null, { status: 204 });
     return new Response(null, { status: 404 });
@@ -83,6 +85,7 @@ function open(address: string, permissions: string[], record: object = sheet()) 
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   return { calls, router };
 }
+const secondField = (fields: HTMLElement[]) => { const field = fields[1]; if (!field) throw new Error("Missing second charge row"); return field; };
 const writes = (calls: readonly Call[]) => calls.filter((call) => call.method !== "GET" && call.path !== "/api/v1/collection");
 
 it("creates a sheet for the invoice in the address, with dates worked out and the supplier's currency on its charges", async () => {
@@ -105,6 +108,14 @@ it("creates a sheet for the invoice in the address, with dates worked out and th
   await user.type(screen.getByRole("spinbutton", { name: /Amount/ }), "500.5");
   // The currency was filled from the supplier.
   await waitFor(() => expect(screen.getByRole("combobox", { name: /Currency/ }).textContent).toContain("US Dollar"));
+  await user.click(screen.getByRole("button", { name: "Add charge" }));
+  expect(screen.getAllByRole("combobox", { name: /Currency/ })).toHaveLength(1);
+  await user.click(secondField(screen.getAllByRole("combobox", { name: /^Charge/ })));
+  expect(screen.queryByRole("option", { name: "Port handling" })).toBeNull();
+  await user.click(await screen.findByRole("option", { name: "Customs duty" }));
+  await user.type(secondField(screen.getAllByRole("spinbutton", { name: /Amount/ })), "75");
+  await user.click(screen.getByRole("combobox", { name: /Currency/ }));
+  await user.click(await screen.findByRole("option", { name: /Ghana Cedi/ }));
   await user.click(screen.getByRole("button", { name: /Expected arrival/ }));
   await user.click((await screen.findAllByRole("gridcell")).find((cell) => cell.textContent === "15")!.querySelector("button") ?? (await screen.findAllByRole("gridcell")).find((cell) => cell.textContent === "15")!);
   expect(await screen.findByText(/Free time ends on/)).toBeTruthy();
@@ -112,8 +123,9 @@ it("creates a sheet for the invoice in the address, with dates worked out and th
   await waitFor(() => expect(router.state.location.pathname).toBe("/logistics/billing-sheets/bs-9"));
   expect(writes(calls)).toHaveLength(1);
   const body = writes(calls)[0]?.body as { expectedArrivalDate: string; freeTimeExpiryDate: string; demurrageStartDate: string };
-  expect(body).toMatchObject({ billOfLading: "BL-77", invoiceId: "inv-a", supplierId: "s0", freeTimeDuration: "14 days", containerNumber: "MSKU-1", numberOfPackages: "40", containerPackageStyleId: null,
-    charges: [{ chargeId: "ch-1", currencyId: "usd", amount: 500.5 }] });
+  expect(calls.some((call) => call.path === "/api/v1/configuration/BillingSheet/count")).toBe(false);
+  expect(body).toMatchObject({ code: "BS-0005", billOfLading: "BL-77", invoiceId: "inv-a", supplierId: "s0", freeTimeDuration: "14 days", containerNumber: "MSKU-1", numberOfPackages: "40", containerPackageStyleId: null,
+    charges: [{ chargeId: "ch-1", currencyId: "ghs", amount: 500.5 }, { chargeId: "ch-2", currencyId: "ghs", amount: 75 }] });
   const days = (to: string) => Math.round((new Date(to).getTime() - new Date(body.expectedArrivalDate).getTime()) / 86_400_000);
   expect([days(body.freeTimeExpiryDate), days(body.demurrageStartDate)]).toEqual([14, 15]);
 }, 40_000);
@@ -172,3 +184,24 @@ it("saves an edit with the invoice and supplier the sheet already has", async ()
   expect(writes(calls)[0]).toMatchObject({ method: "PUT", path: "/api/v1/procurement/billing-sheet/bs-1", body: { code: "BS-1", billOfLading: "BL-77", invoiceId: "inv-a", supplierId: "s0", containerNumber: "MSKU-2",
     expectedArrivalDate: "2026-10-28T00:00:00.000Z", freeTimeExpiryDate: "2026-11-11T00:00:00.000Z", demurrageStartDate: "2026-11-12T00:00:00.000Z", freeTimeDuration: "14 days", numberOfPackages: "40", containerPackageStyleId: "ps-1", packageDescription: "Drums on pallets" } });
 }, 30_000);
+
+it("adds a batch of charges with one currency and no repeated selection", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/logistics/billing-sheets/bs-1", ["CanViewBillingSheet", "CanEditBillingSheet"], sheet({ charges: [] }));
+  await user.click(await screen.findByRole("button", { name: "Add charges" }));
+  const dialog = await screen.findByRole("dialog");
+  await waitFor(() => expect(within(dialog).getByRole("combobox", { name: /Currency/ }).textContent).toContain("US Dollar"));
+  await user.click(within(dialog).getByRole("combobox", { name: /^Charge/ }));
+  await user.click(await screen.findByRole("option", { name: "Port handling" }));
+  await user.type(within(dialog).getByRole("spinbutton", { name: /Amount/ }), "12");
+  await user.click(within(dialog).getByRole("button", { name: "Add charge" }));
+  await user.click(secondField(within(dialog).getAllByRole("combobox", { name: /^Charge/ })));
+  expect(screen.queryByRole("option", { name: "Port handling" })).toBeNull();
+  await user.click(await screen.findByRole("option", { name: "Customs duty" }));
+  await user.type(secondField(within(dialog).getAllByRole("spinbutton", { name: /Amount/ })), "30");
+  expect(within(dialog).getAllByRole("combobox", { name: /Currency/ })).toHaveLength(1);
+  await user.click(within(dialog).getByRole("button", { name: "Add charges" }));
+  await waitFor(() => expect(writes(calls)).toHaveLength(1));
+  expect(writes(calls)[0]).toMatchObject({ method: "POST", path: "/api/v1/procurement/billing-sheet/charge/bs-1",
+    body: [{ chargeId: "ch-1", currencyId: "usd", amount: 12 }, { chargeId: "ch-2", currencyId: "usd", amount: 30 }] });
+});

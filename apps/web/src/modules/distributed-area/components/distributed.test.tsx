@@ -43,7 +43,8 @@ function open(permissions: string[]) {
     const url = new URL(input.url);
     calls.push({ method: input.method, path: url.pathname, search: url.search, body: input.method === "GET" ? null : await input.clone().json() });
     if (url.pathname === "/api/v1/procurement/distribute-material") return Response.json({ data: [delivery], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
-    if (url.pathname === "/api/v1/warehouse/rack/by-department/summary") return Response.json([{ id: "r1", name: "Rack 1", warehouseLocation: { name: "Raw store" }, shelves: [{ id: "s1", code: "A1" }, { id: "s2", code: "A2" }] }]);
+    if (url.pathname === "/api/v1/warehouse/rack/by-department/summary") return Response.json([{ id: "r1", name: "Rack 1", warehouseLocation: { name: "Raw store" }, shelves: [{ id: "s1", code: "A1" }, { id: "s2", code: "A2" }] },
+      { id: "r2", name: "Rack 2", warehouseLocation: { name: "Raw store" }, shelves: [{ id: "s3", code: "B1" }] }]);
     if (url.pathname === "/api/v1/material/distribute-material/move-batch") return new Response(null, { status: 204 });
     return new Response(null, { status: 404 });
   });
@@ -68,6 +69,9 @@ it("lists the department's deliveries still to be shelved, and shelves one in fu
   await user.clear(quantity);
   await user.type(quantity, "2");
   await user.click(within(dialog).getByRole("combobox", { name: /Rack/ }));
+  await screen.findByRole("option", { name: "Raw store · Rack 2" });
+  await user.type(screen.getByRole("textbox", { name: "Search Rack" }), "RACK 1");
+  await waitFor(() => expect(screen.queryByRole("option", { name: "Raw store · Rack 2" })).toBeNull());
   await user.click(await screen.findByRole("option", { name: "Raw store · Rack 1" }));
   await user.click(within(dialog).getByRole("combobox", { name: /Shelf/ }));
   await user.click(await screen.findByRole("option", { name: "A1" }));

@@ -19,6 +19,7 @@ export const approvalDocuments: Readonly<Record<string, readonly Resource[]>> = 
   ProductionExtraPacking: ["production-schedule/extra-packing"], FinishedGoodsTransferNote: ["production-schedule/finished-goods-transfer-note"],
   ProductionOrder: ["production-order"], ProformaInvoice: ["production-order/proforma-invoice"], AllocateProductionOrder: ["production-order/allocate"],
   StockAdjustment: ["stock-adjustment"], LeaveRequest: ["leave-request"], OvertimeRequest: ["overtime-request"], StaffRequisition: ["staff-requisition"], JobRequest: ["job-request"],
+  SupplierPricingAgreement: ["procurement/supplier"],
   CustomerQuotation: ["customer"], RndProject: ["rnd/project"], Response: ["form/response", "material/batch", "qa/analytical-test"],
 };
 

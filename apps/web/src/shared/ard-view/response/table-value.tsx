@@ -1,113 +1,7 @@
-import { sanitizeString } from "@/shared/ard-view/legacy";
 import { FormResponseDto } from "@/shared/ard-view/dto";
-
-const parseTablePayload = (value: unknown): unknown => {
-  if (value == null) return null;
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-    try {
-      return JSON.parse(trimmed);
-    } catch {
-      return trimmed;
-    }
-  }
-  if (typeof value === "object") {
-    const candidate = value as Record<string, unknown>;
-    if ("value" in candidate) {
-      const nested = candidate.value;
-      if (typeof nested === "string") {
-        const trimmed = nested.trim();
-        if (!trimmed) return null;
-        try {
-          return JSON.parse(trimmed);
-        } catch {
-          return nested;
-        }
-      }
-      if (nested && typeof nested === "object") return nested;
-    }
-  }
-  return value;
-};
-
-const getHeadersFromQuestion = (response?: FormResponseDto): string[] => {
-  const normalize = (value: unknown) => sanitizeString(value);
-  const options = response?.formField?.question?.options ?? [];
-  const headers = options.flatMap((opt) => {
-    const label = normalize((opt as { label?: unknown })?.label);
-    const value = normalize((opt as { value?: unknown })?.value);
-    const name = normalize((opt as { name?: unknown })?.name);
-
-    if (label && value && label !== value) return [label, value];
-    if (label) return [label];
-    if (value) return [value];
-    if (name) return [name];
-    return [];
-  });
-
-  return Array.from(new Set(headers));
-};
-
-type TableConfig = {
-  rows?: number | undefined;
-  cols?: number | undefined;
-  cellConfigs?: Record<
-    string,
-    {
-      type?: "empty" | "label" | "input" | "select" | undefined;
-      label?: string | undefined;
-    }
-  >;
-};
-
-const parseTableConfigFromQuestion = (
-  response?: FormResponseDto,
-): TableConfig | null => {
-  const raw = sanitizeString(response?.formField?.question?.options?.[0]?.name);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as TableConfig;
-    if (parsed && typeof parsed === "object") return parsed;
-  } catch {
-    // ignore invalid config payload
-  }
-  return null;
-};
-
-const buildGridFromCellMap = (
-  raw: Record<string, unknown>,
-  headerCount: number,
-): string[][] => {
-  const keyedCells = Object.entries(raw)
-    .map(([key, value]) => {
-      const match = key.match(/^(\d+)-(\d+)$/);
-      if (!match) return null;
-      const row = Number(match[1]);
-      const col = Number(match[2]);
-      if (!Number.isFinite(row) || !Number.isFinite(col)) return null;
-      return { row, col, value: String(value ?? "") };
-    })
-    .filter((item): item is { row: number; col: number; value: string } =>
-      Boolean(item),
-    );
-
-  if (!keyedCells.length) return [];
-
-  const maxRow = Math.max(...keyedCells.map((c) => c.row));
-  const maxCol = Math.max(...keyedCells.map((c) => c.col));
-  const colCount = Math.max(headerCount, maxCol + 1);
-  const rows = Array.from({ length: maxRow + 1 }, () =>
-    Array.from({ length: colCount }, () => ""),
-  );
-
-  keyedCells.forEach(({ row, col, value }) => {
-    const target = rows[row];
-    if (target) target[col] = value;
-  });
-
-  return rows;
-};
+import { TableReadOnly } from "@/shared/questions/table-read-only";
+import { getTableConfig, parseTablePayload } from "./table-config";
+import { getHeadersFromQuestion, buildGridFromCellMap } from "./table-data";
 
 export const TableValue = ({
   value,
@@ -118,7 +12,22 @@ export const TableValue = ({
 }) => {
   const parsed = parseTablePayload(value);
   const questionHeaders = getHeadersFromQuestion(response);
-  const tableConfig = parseTableConfigFromQuestion(response);
+  const tableConfig = getTableConfig(response?.formField?.question?.options);
+
+  const isLegacyTable =
+    parsed &&
+    typeof parsed === "object" &&
+    "headers" in parsed &&
+    Array.isArray(parsed.headers) &&
+    "data" in parsed &&
+    Array.isArray(parsed.data);
+  if (tableConfig && !isLegacyTable) {
+    const values =
+      parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : {};
+    return <TableReadOnly config={tableConfig} values={values} />;
+  }
 
   if (parsed == null || parsed === "") {
     return <span className="text-sm text-muted-foreground/80">-</span>;
@@ -175,42 +84,12 @@ export const TableValue = ({
     );
     if (cellMapRows.length > 0) {
       const rawMap = parsed as Record<string, unknown>;
-      const configuredCols = sanitizeString(tableConfig?.cols)
-        ? Number(tableConfig?.cols)
-        : (cellMapRows[0]?.length ?? 0);
-      const colCount = Number.isFinite(configuredCols)
-        ? Math.max(configuredCols, cellMapRows[0]?.length ?? 0)
-        : (cellMapRows[0]?.length ?? 0);
-
-      const inputOrSelectCols = new Set<number>();
-      const headerByCol = new Map<number, string>();
-      if (tableConfig?.cellConfigs) {
-        Object.entries(tableConfig.cellConfigs).forEach(([key, cfg]) => {
-          const match = key.match(/^(\d+)-(\d+)$/);
-          if (!match) return;
-          const row = Number(match[1]);
-          const col = Number(match[2]);
-          if (cfg?.type === "input" || cfg?.type === "select") {
-            inputOrSelectCols.add(col);
-          }
-          if (
-            cfg?.type === "label" &&
-            row === 0 &&
-            sanitizeString(cfg?.label)
-          ) {
-            headerByCol.set(col, sanitizeString(cfg?.label));
-          }
-        });
-      }
-
-      const activeCols =
-        inputOrSelectCols.size > 0
-          ? Array.from(inputOrSelectCols).sort((a, b) => a - b)
-          : Array.from({ length: colCount }, (_, idx) => idx);
-
+      const activeCols = Array.from(
+        { length: (cellMapRows[0]?.length ?? 0) },
+        (_, index) => index,
+      );
       const headersFromConfig = activeCols.map(
-        (col, idx) =>
-          headerByCol.get(col) || questionHeaders[idx] || `Col ${col + 1}`,
+        (col) => questionHeaders[col] || `Col ${col + 1}`,
       );
 
       const rowIndexes = Array.from(

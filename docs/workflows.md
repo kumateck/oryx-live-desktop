@@ -1,5 +1,52 @@
 # Desktop workflow corrections
 
+## GRN distribution visibility contract correction (2026-10-24)
+
+The grouped table could show Approved while hiding both header and ellipsis
+row actions. The GRN batch material is a `CollectionItemDto`, which lacks the
+`kind` property the UI expected. The adapter now resolves material kinds from
+matching GRN checklists by material ID. Duplicate consistent evidence is allowed;
+missing, unsupported or contradictory evidence cannot grant an action.
+
+Rows continue using the shared **TableMenu** ellipsis dropdown with
+**Distribute material** for approved batches. Permission, stock preflight,
+approval recheck and audit behavior remain unchanged. Tests now use the actual
+backend DTO shape, with kind only on checklist material; coverage includes raw,
+packaging, multi-material preselection, conflicting evidence, revoked access
+and stale approval. Thirty focused tests pass. The production build, including
+strict TypeScript, passes. In the running local Electron app, GRN
+`WHD/RM/26/020` shows four ellipsis menus; the Maize Starch row opens its plan
+for TABLET Raw Warehouse with 1,000 kg. Only the read/review UI was exercised;
+no distribution mutation was submitted.
+
+Documentation updated: this workflow correction and the existing GRN read
+contract in `services.md`. No backend endpoint or generated API changed.
+
+## GRN table distribution and grouped columns (2026-10-24)
+
+- Approved batch rows expose **Actions → Distribute material** for the matching
+  raw/packaging quarantine-view and distribution permissions. Other statuses
+  have no distribution row action. Actions pause while the GRN refreshes.
+- The action opens the existing distribution dialog with that row's material
+  selected, even when the GRN contains several materials. The plan still covers
+  all approved batches of the selected material and displays each warehouse's
+  allocations before submission; this is not a single-batch stock transfer.
+- **Quantities** stacks Received, Allocated, Distributed in that order. **Dates**
+  stacks Manufacturing, Expiry, Retest. Missing evidence remains a dash. Batch,
+  material/manufacturer, invoice, status, and the row menu remain visible.
+- The existing header action, preflight approval/stock checks, permission
+  rechecks, mutation/audit contract, cache refresh and refusal behavior remain
+  unchanged. No endpoint or generated contract changed.
+- Verification: 24 focused tests passed, including multi-material preselection,
+  approved-only visibility, stale approval and access revocation. The production
+  web build and strict TypeScript check passed. The UI detector found no issues;
+  React Doctor found none in the changed quarantine module (the wider repository
+  has existing findings). Local synthetic-fixture browser checks covered the
+  grouped table, row menu and dialog; no live inventory mutation or deployment.
+
+Documentation updated: this workflow note. The source change is in
+`modules/quarantine-area/components`, including the extracted `grn-batch-table`.
+
 ## Approved GRN distribution (2026-10-20)
 
 The desktop quarantine detail now follows Oryx Next's approved-material distribution flow:
@@ -92,3 +139,72 @@ The current web suite passes 1,280 tests across 244 files with two workers and n
 ### Inventory definitions, receiving and stock reports
 
 Seven new routes retain store-specific gates and zero enums. Definition writes freeze current evidence, verify references/duplicates, recheck access/account and reconcile persisted fields; staged attachments retain saved identity and never recreate an uncertain item. Receiving decisions require a pending positive receipt, known distinct creator, current stock and explicit confirmation. Damage/missing creation checks a fresh reconciled balance and verifies report/stock/ledger afterward. Commands are never automatically replayed. Matching source repairs preserve receipt quantities, prevent terminal-state replacement, post atomic stock/ledger changes and reject concurrency conflicts. These repairs are not deployed; visual/PostgreSQL/end-to-end acceptance remains. See `implementation-2026-10-20/inventory-and-stock.md`.
+
+## Billing-sheet charge selection (2026-10-23)
+
+Creation and add-charges entry show one currency field above the charge rows.
+It defaults to the supplier currency on creation or the sheet's existing currency
+when adding a batch, once collections load, without replacing an explicit choice.
+The current selection applies to every charge in that submission, including rows
+added later. Existing saved charges retain their currencies and payment history.
+
+A selected charge stays available on its own row and disappears from every other
+row's picker. Changing or removing it makes it available again. Add charge is
+disabled while choices load or all available row slots are occupied. Add-charges
+continues to exclude charges already saved on the sheet. Zod still rejects
+duplicate charges, missing currency and nonpositive amounts. Save errors retain
+the form for correction/retry; approval, access and audit behavior are unchanged.
+
+Focused interaction tests verify filtering, changing/removing rows, delayed
+currency defaults, explicit choices, and the shared currency in both API payloads.
+
+## Configured billing-sheet numbers (2026-10-24)
+
+The create form automatically generates its number from the existing BillingSheet
+code settings using the desktop's shared generator. The billing-sheet list count
+is the sequence source, as in Oryx Next. An explicit number is preserved while
+initial generation completes; Generate again intentionally replaces it after a
+fresh count read. Configuration/count failures expose Retry and retain entered
+values. Missing, negative or noninteger counts do not become a fictitious first
+number. Editing an existing sheet does not generate a new number.
+
+The number is submitted through the existing audited billing-sheet create request.
+Generation is a read-only suggestion, not a reservation; the backend remains the
+uniqueness authority for simultaneous users. Approval and attachment retry behavior
+are unchanged. Tests cover configured generation, both retry paths, preserved
+manual values, payload numbering, invalid counts and unchanged shared generators.
+
+### GRN numbering on receipt
+
+Creating a goods received note now presents an automatic, read-only number in
+the same series as Oryx Next and refreshes it immediately before creation. Count
+failures require retry before a note is written. Permission checks run before
+preflight and again before creation; batch selection and quarantine behavior
+stay with the existing backend workflow. See [GRN numbering](grn-number-generation.md).
+
+### File answers in analytical tests
+
+A successful file draft immediately shows saved status. Reopening the test shows
+saved attachment links; newly edited inputs remain unsaved, including edits made
+during upload. Submission reuses acknowledged drafts instead of uploading the
+same file again. This saved check does not advance checking, approval or release.
+Older files with missing field associations need explicit, auditable recovery.
+See [test-result file drafts](test-result-file-drafts.md).
+
+### Certificate of analysis approval review
+
+The existing `Response` approval is displayed as **Certificate of analysis** in
+the queue and detail page, preserving its key, registry position, routes and
+approval rules. The COA is on the page; **Print COA** and **Print Worksheet**
+open separate print-preview dialogs. Printing creates no certificate or approval
+mutation. See [COA approval review](coa-approval-review-2026-10-24.md).
+
+## Supplier purchase-unit synchronization (2026-10-24)
+
+Supplier material selection loads all department linkages, expands mass/volume
+families and deduplicates symbols. Saved values remain selected. Supplier edits,
+pricing agreements and quotation responses share the purchase/price symbol.
+Standing price-unit changes preserve price meaning through agreement proposals,
+permissions and the configured approval workflow. Pending/rejected changes retain
+the effective unit; future agreements respect their dates. Historical transaction
+prices and quantity units remain intact. See [behavior and release order](supplier-purchase-units.md).

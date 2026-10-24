@@ -19,7 +19,7 @@ export function SupplierMaterialsTab({ supplies, loading, error, onRetry }: { su
     id: `${item.material?.id ?? "material"}-${item.manufacturer?.id ?? "manufacturer"}-${index}`,
     material: item.material?.name?.trim() || "Unnamed material", code: item.material?.code?.trim() ?? "",
     manufacturer: item.manufacturer?.name?.trim() ?? "", manufacturerId: item.manufacturer?.id ?? null,
-    unit: item.uoM?.name?.trim() || item.uoM?.symbol?.trim() || "", preferred: Boolean(item.default),
+    unit: item.purchaseUnit?.trim() || item.uoM?.symbol?.trim() || item.uoM?.name?.trim() || "", preferred: Boolean(item.default),
   })), [supplies]);
   const shown = useMemo(() => {
     const term = search.trim().toLowerCase();

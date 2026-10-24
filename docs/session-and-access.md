@@ -88,7 +88,7 @@ Tests cover route precedence and ownership, department restrictions, undeclared 
 
 ## User and avatar
 
-`useCurrentUser()` returns the signed-in user. `UserAvatar` shows the photo and falls back to initials while it loads, when the user has none, or when it fails to load. The backend returns the avatar as an absolute `http://` address; the app keeps only its file path on the current origin and accepts only `/api/v1/file/avatar/<file>`, so it also loads when the site is served over HTTPS. The header menu shows name, email, and department, with links to Account and Appearance. `/settings/account` shows the same details, lets the user refresh their access after an administrator changes it, and signs out.
+`useCurrentUser()` returns the signed-in user. `UserAvatar` shows the photo and falls back to initials while it loads, when the user has none, or when it fails to load. The backend returns the avatar as an absolute `http://` address; the app keeps only its file path on the current origin and accepts only `/api/v1/file/avatar/<file>`, so it also loads when the site is served over HTTPS. The header menu shows name, assigned roles, and department, with links to Account and Appearance. `/settings/account` shows the name and email, lets the user refresh their access after an administrator changes it, and signs out.
 
 ## Navigation
 
@@ -135,3 +135,14 @@ The shell keeps the refresh token encrypted by the operating system (`apps/deskt
 - Regression tests cover vault reopening, write/read/delete ordering, failed replacement, cancelled callers, sign-out during renewal, confirmed persistence, stale window tokens and transient failures. Desktop and web TypeScript checks are required alongside these tests. A real installed-process quit/relaunch remains an acceptance check.
 
 Backend renewal blocker found in source: refresh-token creation omits `UserId`, which renewal requires; `CreatedById` is overwritten by the audit hook and is not a safe substitute. The exact repair (now applied locally to the backend with user approval, regression passing, not deployed) and live-verification limit are documented in `implementation-2026-10-20/hr-requests-and-session.md`. Desktop persistence alone cannot fix ownerless server tokens.
+
+## Avatar dropdown identity — 2026-10-24
+
+The avatar dropdown shows the signed-in user's assigned role names beneath
+their name, replacing the email line. Multiple roles are separated by commas
+and long names wrap; users with no assigned roles see “No role assigned.”
+The department and account actions remain in the dropdown. Email is still
+available on the Account page. Role display reads the existing validated
+session and does not change permissions, role assignments, or API requests.
+
+Documentation updated: this session/account guide.

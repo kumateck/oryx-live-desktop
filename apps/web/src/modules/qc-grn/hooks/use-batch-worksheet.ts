@@ -3,14 +3,14 @@ import { useMemo } from "react";
 import { z } from "zod";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formSchema } from "@/shared/form-response/form-model";
+import { storedAnswerRowsSchema } from "@/shared/form-response/stored-answer-schema";
 import { latestAnswers } from "@/shared/form-response/use-answer-form";
 import { formAssigneeSchema } from "@/shared/qc/assignments";
 import { qcGrnAnalyticalApi, qcGrnFormsApi } from "../api/qc-grn-api";
 import { qcGrnAudit } from "../lib/qc-grn";
 
 const ardSchema = z.object({ form: z.object({ id: z.string().nullish(), name: z.string().nullish() }).nullish() });
-const answerRows = z.array(z.object({ responseId: z.string().nullish(), value: z.string().nullish(), createdAt: z.string().nullish(), formField: z.object({ id: z.string().nullish() }).nullish() }))
-  .transform((rows) => rows.map((row) => ({ formFieldId: row.formField?.id ?? null, value: row.value ?? null, responseId: row.responseId ?? null, createdAt: row.createdAt ?? null })));
+const answerRows = storedAnswerRowsSchema;
 const notFound = (error: object | undefined) => Boolean(error && "status" in error && error.status === 404);
 
 /** One batch's analytical raw data: the test form linked to its material, the batch details, the answers so far and who was given which fields. */

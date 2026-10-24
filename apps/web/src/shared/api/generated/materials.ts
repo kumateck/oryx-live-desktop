@@ -829,6 +829,19 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1MaterialByMaterialIdPurchaseUnits: build.query<
+      GetApiV1MaterialByMaterialIdPurchaseUnitsApiResponse,
+      GetApiV1MaterialByMaterialIdPurchaseUnitsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/material/${queryArg.materialId}/purchase-units`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -1440,6 +1453,16 @@ export type GetApiV1MaterialDiagnosticsInconsistenciesApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetApiV1MaterialByMaterialIdPurchaseUnitsApiResponse =
+  /** status 200 OK */ DomainEntitiesBaseUnitOfMeasureDto[];
+export type GetApiV1MaterialByMaterialIdPurchaseUnitsApiArg = {
+  /** The material Id for which you need the uom */
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -1794,6 +1817,10 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
   material?: DomainEntitiesMaterialsMaterialDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   default?: boolean;
+  /** Purchase-unit symbol; the unit ID remains a legacy quantity-unit reference. */
+  purchaseUnit?: string | null;
+  /** Unit symbol awaiting pricing approval. */
+  pendingPurchaseUnit?: string | null;
 };
 export type DomainEntitiesProcurementSuppliersSupplierDto = {
   id?: string;
@@ -2626,4 +2653,6 @@ export const {
   useLazyGetApiV1MaterialBatchesDepartmentsQuery,
   useGetApiV1MaterialDiagnosticsInconsistenciesQuery,
   useLazyGetApiV1MaterialDiagnosticsInconsistenciesQuery,
+  useGetApiV1MaterialByMaterialIdPurchaseUnitsQuery,
+  useLazyGetApiV1MaterialByMaterialIdPurchaseUnitsQuery,
 } = injectedRtkApi;

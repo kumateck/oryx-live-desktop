@@ -1,5 +1,8 @@
 import { lazy, Suspense, useState } from "react";
 import { Truck } from "lucide-react";
+import { TableMenu } from "@/shared/actions";
+import { BatchStatus } from "@/shared/material-batches/batch-status";
+import type { ReceivedBatch } from "@/shared/material-batches/received-batch";
 import { Button } from "@/components/ui/button";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
@@ -20,4 +23,23 @@ export function DistributionAction({ grn, refreshing }: { grn: Grn; refreshing: 
       <DistributeDialog grn={grn} kind={kind} onClose={() => setOpen(null)} />
     </Suspense> : null}
   </PermissionGuard>)}</>;
+}
+
+/** Opens the existing material-level plan from an approved batch row. */
+export function BatchDistributionAction({ grn, batch, refreshing }: {
+  grn: Grn; batch: ReceivedBatch; refreshing: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const kind = batch.materialKind;
+  if (batch.status !== BatchStatus.Approved || !batch.materialId || (kind !== 0 && kind !== 1)) return null;
+  const require = { kind: "all", permissions: [quarantinePermissions[kind], distributePermissions[kind]] } as const;
+  return <>
+    <TableMenu label={`Actions for ${batch.materialName ?? "material"}, batch ${batch.number ?? "without a number"}`} disabled={refreshing}
+      items={[{ id: "distribute", label: "Distribute material", icon: Truck, require, onSelect: () => setOpen(true) }]} />
+    {open ? <PermissionGuard require={require}>
+      <Suspense fallback={<span role="status" className="text-sm text-muted-foreground">Loading distribution…</span>}>
+        <DistributeDialog grn={grn} kind={kind} initialMaterialId={batch.materialId} onClose={() => setOpen(false)} />
+      </Suspense>
+    </PermissionGuard> : null}
+  </>;
 }

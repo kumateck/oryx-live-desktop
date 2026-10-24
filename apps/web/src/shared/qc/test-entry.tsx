@@ -53,7 +53,7 @@ export function TestEntry({ form, mine, stored, context, audit, require, summary
     {summary}
     <form noValidate className="space-y-4" onSubmit={(event) => void submit(event)}>
       <AnswerSheet form={answers} sections={sections} loadEquipment={loadEquipment}
-        drafts={{ stored: (id) => stored.get(id)?.value ?? null, saving: writer.saving, failed: writer.failed, save: (field, value) => void writer.saveOne(field, value) }} />
+        drafts={{ acknowledged: (id) => writer.acknowledged.get(id) ?? null, attachments: (id) => stored.get(id)?.attachments ?? [], stored: (id) => stored.get(id)?.value ?? null, saving: writer.saving, failed: writer.failed, save: (field, value) => void writer.saveOne(field, value) }} />
       {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
       <div className="flex flex-wrap items-center justify-end gap-2">
         {!complete ? <span className="text-sm text-muted-foreground">Every field of the form needs an answer, including other analysts' fields, before the test can be submitted.</span> : null}

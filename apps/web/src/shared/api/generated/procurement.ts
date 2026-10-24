@@ -2070,6 +2070,8 @@ export type DomainEntitiesProcurementSuppliersCreateSupplierManufacturerRequest 
     materialId?: string | null;
     uoMId?: string | null;
     default?: boolean;
+    /** Purchase-unit symbol; the unit ID remains a legacy quantity-unit reference. */
+    purchaseUnit?: string | null;
   };
 export type DomainEntitiesProcurementSuppliersCreateSupplierRequest = {
   name?: string | null;
@@ -2102,6 +2104,10 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
   material?: DomainEntitiesMaterialsMaterialDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   default?: boolean;
+  /** Purchase-unit symbol; the unit ID remains a legacy quantity-unit reference. */
+  purchaseUnit?: string | null;
+  /** Unit symbol awaiting pricing approval. */
+  pendingPurchaseUnit?: string | null;
 };
 export type DomainEntitiesProcurementSuppliersSupplierDto = {
   id?: string;

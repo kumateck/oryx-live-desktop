@@ -1,0 +1,11 @@
+/* Document previews stay black on white inside either application theme. */
+.ard-document {
+  --foreground: #111;
+  --background: #fff;
+  --card: #fff;
+  --card-foreground: #111;
+  --muted: #eee;
+  --muted-foreground: #555;
+  --border: #999;
+  color: var(--foreground);
+}

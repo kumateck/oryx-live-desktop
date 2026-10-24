@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useWatch, type Control } from "react-hook-form";
 import { formatDate } from "@/shared/format/dates";
@@ -24,12 +25,13 @@ function detailFields(styles: readonly SelectOption[], loading: boolean): Wizard
 }
 
 /** The fields a billing sheet is created and edited with, and the dates that follow from them. */
-export function SheetDetailsFields<TValues extends WithDetails>({ form, styles, loading }: { form: UseFormReturn<TValues>; styles: readonly SelectOption[]; loading: boolean }) {
+export function SheetDetailsFields<TValues extends WithDetails>({ form, styles, loading, numberField }: { form: UseFormReturn<TValues>; styles: readonly SelectOption[]; loading: boolean; numberField?: ReactNode }) {
   const own = form as unknown as UseFormReturn<EditSheetValues>;
   const [arrival, days] = useWatch({ control: own.control as Control<EditSheetValues>, name: ["arrival", "freeDays"] });
   const time = freeTime(arrival, days);
   return <section className="space-y-3 rounded-lg border bg-card p-4">
-    <FormWizard form={own} fields={detailFields(styles, loading)} className="md:grid-cols-2" />
+    {numberField}
+    <FormWizard form={own} fields={detailFields(styles, loading).filter((field) => !numberField || !("name" in field) || field.name !== "code")} className="md:grid-cols-2" />
     <p role="status" className="rounded-md border bg-muted/50 p-3 text-sm">{time
       ? <>Free time ends on <span className="font-medium">{formatDate(time.expiry.toISOString())}</span>; demurrage is charged from <span className="font-medium">{formatDate(time.demurrageStart.toISOString())}</span>.</>
       : "Enter the arrival date and the free days to see when free time ends and demurrage starts."}</p>

@@ -1,5 +1,5 @@
 import type { FieldValues } from "react-hook-form";
-import type { SelectLoader, WizardField } from "@/shared/forms/form-wizard-types";
+import type { PersistedAttachment, SelectLoader, WizardField } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
 import { QuestionType, specificationReferences } from "@/shared/questions/question-types";
 import { acceptedAnswerFiles } from "./answers";
@@ -9,7 +9,7 @@ const loadTable = () => import("./fields/table-answer-field");
 const loadFormula = () => import("./fields/formula-answer-field");
 
 /** The control an analyst answers a question with. Choices are offered as the option text, which is what is stored. */
-export function answerWizardField(field: FormField, loadEquipment: SelectLoader, options: { label?: string; disabled?: boolean } = {}): WizardField<FieldValues> {
+export function answerWizardField(field: FormField, loadEquipment: SelectLoader, options: { label?: string; disabled?: boolean; persisted?: readonly PersistedAttachment[] } = {}): WizardField<FieldValues> {
   const { question } = field;
   const base = { name: field.id, label: options.label ?? question.label, required: field.required, disabled: options.disabled ?? false, ...(field.description ?? question.description ? { description: field.description ?? question.description ?? "" } : {}) };
   const choices = question.options.map((name) => ({ value: name, label: name }));
@@ -19,7 +19,7 @@ export function answerWizardField(field: FormField, loadEquipment: SelectLoader,
     case QuestionType.SingleChoice: return { ...base, type: InputTypes.RADIO, options: choices };
     case QuestionType.Dropdown: return { ...base, type: InputTypes.SELECT, mode: "single", source: "sync", options: choices };
     case QuestionType.Checkbox: return { ...base, type: InputTypes.SELECT, mode: "multiple", source: "sync", options: choices };
-    case QuestionType.FileUpload: return { ...base, type: InputTypes.UPLOAD, mode: "multiple", accept: acceptedAnswerFiles, maxSizeBytes: 20 * 1024 * 1024 };
+    case QuestionType.FileUpload: return { ...base, type: InputTypes.UPLOAD, mode: "multiple", accept: acceptedAnswerFiles, persisted: options.persisted ?? [], maxSizeBytes: 20 * 1024 * 1024 };
     case QuestionType.Signature: return { ...base, type: InputTypes.SIGNATURE };
     case QuestionType.Specification: return { ...base, type: InputTypes.SELECT, mode: "single", source: "sync", options: specificationReferences };
     case QuestionType.Equipment: return { ...base, type: InputTypes.SELECT, mode: "single", source: "async", loadOptions: loadEquipment, placeholder: "Select equipment" };

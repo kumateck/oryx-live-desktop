@@ -20,7 +20,7 @@ const columns = column.columns([
 ]);
 ```
 
-Define columns outside the component (or memoize them). `size` sets a column width in pixels; other columns share the remaining width and wrap their text, so the table never forces the page to scroll sideways.
+Define columns outside the component (or memoize them). `size` sets a column width in pixels; other columns share the remaining width and wrap their text. When no visible columns declare a size, the browser sizes them automatically from their content. Any horizontal overflow stays within the table container.
 
 ## Required on every table
 
@@ -86,3 +86,19 @@ Pass `sorting` and `onSortingChange` only when the endpoint sorts; otherwise hea
 ## Checking the tables by hand
 
 `apps/web/datatable-preview.html` is a development-only page with all four tables on local sample rows. Run `bun run dev:web` and open `/datatable-preview.html`. It is not part of the production build. The tables were checked there at 1366×768: no sideways scrolling, sorting, paging, selection, row opening, the failure notice and retry, the editable cells, and reordering by keyboard and by pointer. They have not yet been used on a migrated screen with backend data other than Roles.
+
+## Content-sized requisition columns (2026-10-24)
+
+Material requisition lists declare no column sizes. The shared datatable uses automatic
+content-based layout when none of its visible columns declares a size, without a
+computed minimum width. This keeps the requisition number and material count compact
+and allows requester/department text to use the available space. Cell text still wraps,
+and overflow stays inside the table container on narrow screens. Tables with declared
+sizes retain their existing fixed layout and minimum-width behavior.
+
+This presentation change preserves filters, pagination, row activation, permissions,
+API contracts, approval statuses, and audit behavior.
+
+Verification: the requisition preview fits at container widths of 1232, 1024, 853,
+and 640 pixels without horizontal overflow. At 360 pixels, scrolling stays inside
+the table. No requisition header receives an explicit width.

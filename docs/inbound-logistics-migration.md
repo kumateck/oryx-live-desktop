@@ -37,8 +37,9 @@ Stages are taken one at a time, in order, each after a confirmation: New → At 
 
 ### Billing sheets
 - **Create** for the invoice of a shipment that is not yet cleared and has no sheet. Opened from a shipment, the invoice is already chosen.
+- **Number** is generated automatically using the existing desktop code generator and the configured `BillingSheet` prefix, naming style and length. Its sequence counter comes from the billing-sheet list's `totalRecordCount`, matching Next. The field remains editable; Generate again reads a fresh count, and failed reads show Retry without inventing a zero count.
 - **Free time** is entered as days. The date it ends and the date demurrage starts follow from the arrival date and are never typed.
-- **Charges** each have their own currency, starting at the supplier's. The same charge cannot be added twice. Totals are shown per currency and never added across currencies.
+- **Charges** use one currency selection for all rows being entered, starting at the supplier's on creation or the sheet's existing currency when adding a batch. Changing it applies to every row in that submission. Selected charges stay visible on their own row and are filtered out of the other pickers; changing or removing a row makes its charge available again. Add charge is disabled while collections load or all available row slots are in use. Duplicate-charge and required-currency validation remain in place. The API still receives `currencyId` on every charge. Existing saved charges retain their currencies; totals remain grouped per currency.
 - **Approval**: a new sheet waits for approval. Until then it cannot be edited, added to or paid, which is the server's rule; the page says so rather than letting the request fail.
 - **Record payment**: tick the unpaid charges, give the date, the method and a reference for each. Each charge is paid in full. A payment may itself wait for approval; the charge then shows "Payment awaiting approval" and is not offered again.
 - **Edit** changes the sheet's details only. The invoice and supplier are sent back as they are, because the server replaces every field.
@@ -69,7 +70,7 @@ Goods received notes with their batches and each batch's standing with quality c
 | A checklist could be opened and saved again for a delivery already checked. | The page refuses, and links to the saved one. | The server does not check, and would create the batches twice. |
 | The billing sheet's package description was sent the number of packages. | The description is its own field. | It was the wrong value. |
 | Free-time expiry and demurrage dates were typed separately. | Worked out from arrival and free days. | Three fields that could contradict each other. |
-| One currency for every charge on a sheet. | A currency per charge. | The server stores it per charge, and pays each in its own. |
+| One currency for every charge on a sheet. | One currency selection per creation/add-charges submission, copied to every charge in its API payload. Existing saved charges keep their currencies. | Avoid repeated selection while preserving the server's per-charge accounting contract. |
 
 ## Known limits (server behaviour)
 
@@ -81,7 +82,7 @@ Goods received notes with their batches and each batch's standing with quality c
 
 ## Tests
 
-`modules/shipment-invoices/components/invoices.test.tsx`, `modules/shipment-documents/components/shipments.test.tsx`, `modules/billing-sheets/components/billing-sheets.test.tsx`, `modules/material-distribution/components/distribution.test.tsx`, `modules/receiving-area/components/receiving.test.tsx`: the rules of each step, permissions, nothing written before a confirmation, request bodies and their order.
+`modules/shipment-invoices/components/invoices.test.tsx`, `modules/shipment-documents/components/shipments.test.tsx`, `modules/billing-sheets/components/billing-sheets.test.tsx`, `modules/billing-sheets/components/charges-editor.test.tsx`, `modules/material-distribution/components/distribution.test.tsx`, `modules/receiving-area/components/receiving.test.tsx`: the rules of each step, permissions, nothing written before a confirmation, request bodies and their order.
 
 ## Manufacturing and expiry dates are month and year
 

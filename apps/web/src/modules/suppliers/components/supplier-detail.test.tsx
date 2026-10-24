@@ -61,7 +61,7 @@ it("opens the records behind an alert, and keeps the open tab in the address", a
   fireEvent.click(screen.getByRole("tab", { name: "Materials (1)" }));
   expect(await screen.findByText("Sequent")).toBeTruthy();
   expect(screen.getByText("Preferred")).toBeTruthy();
-  expect(screen.getByText("Kilogram")).toBeTruthy();
+  expect(screen.getByText("kg")).toBeTruthy();
   fireEvent.change(screen.getByRole("searchbox", { name: "Search materials or manufacturers" }), { target: { value: "cipla" } });
   expect(screen.queryByText("Sequent")).toBeNull();
 });

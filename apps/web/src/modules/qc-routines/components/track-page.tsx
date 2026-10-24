@@ -1,3 +1,4 @@
+import { storedAnswerRowsSchema } from "@/shared/form-response/stored-answer-schema";
 import { useMemo, useState } from "react";
 import { Send } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -26,7 +27,7 @@ import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { routinesApi } from "../api/routines-api";
 import { analysisLabel, audit, routinePath, routinePermissions, routinesPath } from "../lib/routines";
 
-const answerRows = z.array(z.object({ responseId: z.string().nullish(), value: z.string().nullish(), createdAt: z.string().nullish(), formField: z.object({ id: z.string().nullish() }).nullish() }));
+const answerRows = storedAnswerRowsSchema;
 const performers = [routinePermissions.perform] as const;
 
 /** Gives the whole worksheet to one analyst, as routines are tested by one person per analysis. */
@@ -72,7 +73,7 @@ export function RoutineTrackPage() {
   const form = useMemo(() => { const parsed = formSchema.safeParse(formQuery.data ?? null); return parsed.success ? parsed.data : null; }, [formQuery.data]);
   const stored = useMemo(() => {
     const rows = answerRows.safeParse(response.data?.formResponses ?? []);
-    return latestAnswers((rows.success ? rows.data : []).map((row) => ({ formFieldId: row.formField?.id ?? null, value: row.value ?? null, responseId: row.responseId ?? known, createdAt: row.createdAt ?? null })));
+    return latestAnswers((rows.success ? rows.data : []).map((row) => ({ ...row, value: row.value ?? null, responseId: row.responseId ?? known, createdAt: row.createdAt ?? null })));
   }, [response.data, known]);
   const fieldIds = useMemo(() => form ? formFields(form).map((field) => field.id) : [], [form]);
   // Every field is the assigned analyst's: the server keeps one assignee per routine worksheet and reads back no per-field list.

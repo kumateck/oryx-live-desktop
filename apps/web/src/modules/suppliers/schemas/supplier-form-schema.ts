@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { DomainEntitiesProcurementSuppliersCreateSupplierRequest, DomainEntitiesProcurementSuppliersSupplierDto, DomainEntitiesProcurementSuppliersSupplierManufacturerDto } from "@/shared/api/generated/procurement";
+import { purchaseUnitSymbol } from "@/shared/procurement/purchase-units";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 
 const option = z.object({ value: z.string().min(1), label: z.string().min(1) });
@@ -7,7 +8,7 @@ const selected = option.nullable().superRefine((value, context) => {
   if (value === null) context.addIssue({ code: "custom", message: "Choose an option" });
 });
 const association = z.object({
-  kind: selected, material: selected, uom: selected, defaultManufacturer: selected,
+  kind: selected, material: selected, uom: selected, pendingUnit: z.string().nullish(), defaultManufacturer: selected,
   otherManufacturers: z.array(option),
 }).superRefine((row, context) => {
   const ids = row.otherManufacturers.map((item) => item.value);
@@ -48,10 +49,11 @@ export function supplierDefaults(data: DomainEntitiesProcurementSuppliersSupplie
     const current: SupplierFormValues["associations"][number] = grouped.get(material.id) ?? {
       kind: material.kind === undefined ? null : { value: String(material.kind), label: material.kind === 0 ? "Raw material" : "Packaging material" },
       material: selectedOption(material.id, `${material.code ? `${material.code} · ` : ""}${material.name ?? "Material"}`),
-      uom: selectedOption(item.uoM?.id, item.uoM?.symbol ?? item.uoM?.name),
+      uom: selectedOption(purchaseUnitSymbol(item.purchaseUnit ?? item.uoM?.symbol), purchaseUnitSymbol(item.purchaseUnit ?? item.uoM?.symbol)),
+      pendingUnit: item.pendingPurchaseUnit ?? null,
       defaultManufacturer: null, otherManufacturers: [],
     };
-    if (!current.uom && item.uoM?.id) current.uom = selectedOption(item.uoM.id, item.uoM.symbol ?? item.uoM.name);
+    if (!current.uom) { const symbol = purchaseUnitSymbol(item.purchaseUnit ?? item.uoM?.symbol); current.uom = selectedOption(symbol, symbol); }
     if (item.default) current.defaultManufacturer = manufacturer;
     else if (!current.otherManufacturers.some((other) => other.value === manufacturer.value)) current.otherManufacturers.push(manufacturer);
     grouped.set(material.id, current);
@@ -71,11 +73,11 @@ export function supplierPayload(values: SupplierFormValues): DomainEntitiesProcu
     type: values.country?.label.trim().toLowerCase() === "ghana" ? 1 : 0,
     associatedManufacturers: values.associations.flatMap((row) => {
       const materialId = row.material?.value;
-      const uoMId = row.uom?.value;
+      const purchaseUnit = purchaseUnitSymbol(row.uom?.value);
       const manufacturerId = row.defaultManufacturer?.value;
-      return materialId && uoMId && manufacturerId ? [
-        { materialId, uoMId, manufacturerId, default: true },
-        ...row.otherManufacturers.map((manufacturer) => ({ materialId, uoMId, manufacturerId: manufacturer.value, default: false })),
+      return materialId && purchaseUnit && manufacturerId ? [
+        { materialId, purchaseUnit, manufacturerId, default: true },
+        ...row.otherManufacturers.map((manufacturer) => ({ materialId, purchaseUnit, manufacturerId: manufacturer.value, default: false })),
       ] : [];
     }),
   };

@@ -17,6 +17,15 @@ reloadOnStaleBuild();
 const router = createBrowserRouter(routes);
 createRoot(root).render(
   <StrictMode>
-    <GlobalErrorBoundary><ThemeProvider><TooltipProvider delayDuration={200}><SessionProvider><RouterProvider router={router} /></SessionProvider><Toaster position="bottom-right" closeButton /></TooltipProvider></ThemeProvider></GlobalErrorBoundary>
-  </StrictMode>,
+    <GlobalErrorBoundary>
+      <ThemeProvider>
+        <TooltipProvider delayDuration={200}>
+          <SessionProvider>
+            <RouterProvider router={router} />
+          </SessionProvider>
+          <Toaster position="top-right" closeButton richColors />
+        </TooltipProvider>
+      </ThemeProvider>
+    </GlobalErrorBoundary>
+  </StrictMode>
 );

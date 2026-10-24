@@ -23,7 +23,7 @@ export function AccountMenu({ user, onLogout }: { user: SessionUser | null; onLo
     <DropdownMenuLabel className="flex min-w-0 items-center gap-3">
       <UserAvatar user={user} />
       <span className="min-w-0"><span className="block truncate text-sm font-medium text-foreground">{user?.name || "Account"}</span>
-        {user?.email ? <span className="account-subtitle truncate">{user.email}</span> : null}
+        {user ? <span className="account-subtitle wrap-anywhere">{user.roles.join(", ") || "No role assigned"}</span> : null}
         <span className="account-subtitle">{user?.department ?? "No department"}</span></span>
     </DropdownMenuLabel>
     <DropdownMenuSeparator />

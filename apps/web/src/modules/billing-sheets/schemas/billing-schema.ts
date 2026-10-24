@@ -59,7 +59,7 @@ const details = {
   packageStyle: option.nullable(),
   packageDescription: z.string().trim().max(1000, "Keep the description under 1000 characters"),
 };
-const chargeLine = z.object({ charge: chosen("Choose the charge"), currency: chosen("Choose the currency"), amount: z.number({ message: "Enter the amount" }).refine((value) => value > 0, "The amount must be above zero") });
+const chargeLine = z.object({ charge: chosen("Choose the charge"), amount: z.number({ message: "Enter the amount" }).refine((value) => value > 0, "The amount must be above zero") });
 const charges = (minimum: string) => z.array(chargeLine).min(1, minimum).superRefine((lines, context) => {
   const seen = new Set<string>();
   lines.forEach((line, index) => {
@@ -75,9 +75,9 @@ const files = z.array(z.instanceof(File))
 
 export const editSheetSchema = z.object(details);
 export type EditSheetValues = z.infer<typeof editSheetSchema>;
-export const createSheetSchema = z.object({ ...details, invoice: chosen("Choose the invoice the sheet is for"), charges: charges("Add at least one charge"), attachments: files });
+export const createSheetSchema = z.object({ ...details, invoice: chosen("Choose the invoice the sheet is for"), currency: chosen("Choose the currency"), charges: charges("Add at least one charge"), attachments: files });
 export type CreateSheetValues = z.infer<typeof createSheetSchema>;
-export const addChargesSchema = z.object({ charges: charges("Add at least one charge") });
+export const addChargesSchema = z.object({ currency: chosen("Choose the currency"), charges: charges("Add at least one charge") });
 export type AddChargesValues = z.infer<typeof addChargesSchema>;
 export type ChargeLineValues = z.infer<typeof chargeLine>;
 

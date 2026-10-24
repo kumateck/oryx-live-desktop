@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import { invoiceSchema } from "@/modules/shipment-invoices/schemas/invoice-schem
 import { useGetApiV1ProcurementShipmentDocumentQuery } from "@/modules/shipment-documents/api/shipment-api";
 import { shipmentStatus } from "@/modules/shipment-documents/lib/shipment-kinds";
 import { shipmentRowsSchema } from "@/modules/shipment-documents/schemas/shipment-schema";
-import { useGeneratedCode } from "@/shared/codes/use-generated-code";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
@@ -27,6 +26,7 @@ import { detailsRequest } from "../lib/billing-rules";
 import { createSheetSchema, type CreateSheetValues } from "../schemas/billing-schema";
 import { ChargesEditor, emptyCharge } from "./charges-editor";
 import { SheetDetailsFields } from "./sheet-details-fields";
+import { BillingSheetNumber } from "./billing-sheet-number";
 
 /** Creates the billing sheet for a shipment that has not been cleared: its container, free time, charges and papers. */
 export function CreateBillingSheetForm() {
@@ -38,7 +38,6 @@ export function CreateBillingSheetForm() {
   const waiting = useMemo(() => { const parsed = shipmentRowsSchema.safeParse(shipments.data?.data ?? []);
     return parsed.success ? parsed.data.filter((item) => item.invoice && !item.hasBillingSheet && item.status <= shipmentStatus.atPort) : []; }, [shipments.data]);
   const collections = useBillingCollections();
-  const code = useGeneratedCode("BillingSheet");
   const [create, creating] = usePostApiV1ProcurementBillingSheetMutation();
   const [upload, uploading] = useUploadBillingSheetFilesMutation();
   const [message, setMessage] = useState("");
@@ -46,7 +45,7 @@ export function CreateBillingSheetForm() {
   // Once the sheet exists it must not be created again; a retry only attaches the papers.
   const created = useRef<string | null>(null);
   const form = useForm<CreateSheetValues>({ resolver: zodResolver(createSheetSchema), defaultValues: { code: "", billOfLading: "", arrival: null, freeDays: Number.NaN, containerNumber: "", packages: Number.NaN, packageStyle: null,
-    packageDescription: "", invoice: null, charges: [emptyCharge(null)], attachments: [] } });
+    packageDescription: "", invoice: null, currency: null, charges: [emptyCharge()], attachments: [] } });
   // Read here so the form re-renders, and its fields show their messages, when validation fails.
   void form.formState.errors;
   const chosen = useWatch({ control: form.control, name: "invoice" });
@@ -67,18 +66,6 @@ export function CreateBillingSheetForm() {
     if (match) form.setValue("invoice", match, { shouldValidate: true });
     else setMessage("The invoice this page was opened for has no shipment waiting for a billing sheet. Choose one below.");
   }, [preset, shipments.isLoading, options, form]);
-  // Charges with no currency yet take the supplier's once an invoice is chosen.
-  useEffect(() => {
-    if (!supplierCurrency) return;
-    form.getValues("charges").forEach((line, index) => { if (!line.currency) form.setValue(`charges.${index}.currency`, supplierCurrency); });
-  }, [supplierCurrency, form]);
-  const suggested = useRef(false);
-  useEffect(() => {
-    if (!code.ready || suggested.current) return;
-    suggested.current = true;
-    void code.suggest().then((next) => { if (next && !form.getValues("code")) form.setValue("code", next, { shouldValidate: true }); });
-  }, [code, form]);
-
   const fields = useMemo((): WizardField<CreateSheetValues>[] => [
     { type: InputTypes.SELECT, name: "invoice", label: "Shipment invoice", mode: "single", source: "sync", required: true, options,
       placeholder: shipments.isLoading ? "Loading…" : options.length ? "Select an invoice" : "No shipment is waiting for a billing sheet" },
@@ -93,7 +80,7 @@ export function CreateBillingSheetForm() {
     if (!created.current) {
       const result = await create({ ...audit, domainEntitiesPurchaseOrdersRequestCreateBillingSheetRequest: {
         ...detailsRequest({ ...values, arrival: values.arrival, packageStyleId: values.packageStyle?.value ?? null }, values.invoice.value, invoice.supplier.id),
-        charges: values.charges.flatMap((line) => line.charge && line.currency ? [{ chargeId: line.charge.value, currencyId: line.currency.value, amount: line.amount }] : []) } });
+        charges: values.charges.flatMap((line) => line.charge && values.currency ? [{ chargeId: line.charge.value, currencyId: values.currency.value, amount: line.amount }] : []) } });
       if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
       if (typeof result.data !== "string" || !result.data) { setMessage("The server did not say which billing sheet it created."); return; }
       created.current = result.data;
@@ -108,7 +95,7 @@ export function CreateBillingSheetForm() {
   });
   const saving = creating.isLoading || uploading.isLoading;
 
-  return <form noValidate onSubmit={(event) => void submit(event)} className="min-w-0 space-y-4">
+  return <FormProvider {...form}><form noValidate onSubmit={(event) => void submit(event)} className="min-w-0 space-y-4">
     <UnsavedChangesGuard when={form.formState.isDirty && !saving && !saved} />
     <PageHeader title="New billing sheet" crumbs={[{ label: "Billing sheets", to: billingSheetsPath }, { label: "New" }]}
       actions={<><Button type="button" variant="outline" disabled={saving} onClick={() => void navigate(billingSheetsPath)}>Cancel</Button>
@@ -122,8 +109,8 @@ export function CreateBillingSheetForm() {
     {invoice ? <section className="space-y-2"><h2 className="text-sm font-semibold">Shipment invoice items</h2>
       {detail.isFetching && !full ? <p className="text-sm text-muted-foreground">Loading the invoice's materials…</p> : detail.error ? <p role="alert" className="text-sm text-destructive">The invoice's materials could not be loaded. {apiErrorMessage(detail.error)}</p> : null}
       <InvoiceLinesTable label="Materials on the invoice" lines={invoice.items} currency={invoice.currency} /></section> : null}
-    <SheetDetailsFields form={form} styles={collections.packageStyles} loading={collections.loading} />
-    <ChargesEditor form={form} charges={collections.charges} currencies={collections.currencies} loading={collections.loading} defaultCurrency={supplierCurrency} />
+    <SheetDetailsFields form={form} styles={collections.packageStyles} loading={collections.loading} numberField={<BillingSheetNumber />} />
+    <ChargesEditor charges={collections.charges} currencies={collections.currencies} loading={collections.loading} defaultCurrency={supplierCurrency} />
     <section className="rounded-lg border bg-card p-4"><FormWizard form={form} fields={papers} /></section>
-  </form>;
+  </form></FormProvider>;
 }

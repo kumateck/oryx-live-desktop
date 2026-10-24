@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { ApiProvider } from "@/shared/api/api-provider";
 import { SessionProvider } from "@/shared/auth/session-provider";
@@ -13,9 +13,9 @@ import { ArdResultsTable } from "./details/ard-results-table";
 import { formulaAnswers, formulaForm } from "./__fixtures__/ard-formulas";
 
 const sections = (form: object = formulaForm) => (ardFormSchema.parse(form).sections ?? []).map((section) => ({ ...section, fields: section.fields ?? [] }));
-afterEach(() => { cleanup(); forgetSession(); });
+afterEach(() => { cleanup(); forgetSession(); vi.restoreAllMocks(); });
 
-it("renders formula readings and equations on approval and certificate without changing results", async () => {
+it("reviews the COA on the page and prints detailed worksheet or COA previews without changing results", async () => {
   const backend = stubBackend({ permissions: ["CanViewPendingApprovals", "CanApprovePendingApproval"] });
   rememberSession();
   const session = backend.fetcher.getMockImplementation();
@@ -34,20 +34,38 @@ it("renders formula readings and equations on approval and certificate without c
   });
   const router = createMemoryRouter([{ path: "/qa/pending-approvals/:type/:id", element: <PendingApprovalPage /> }], { initialEntries: ["/qa/pending-approvals/Response/doc-1"] });
   const { container } = render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
-  expect(await screen.findByText("0.5%")).toBeTruthy();
+  expect(await screen.findByText("0.50%")).toBeTruthy();
   expect(await screen.findAllByText("10.04%")).toBeTruthy();
   expect(screen.getAllByText("7.17%")).toBeTruthy();
   expect(container.textContent).not.toContain('"tableData"');
   expect(container.textContent).not.toContain("Unrelated result");
-  expect(screen.getByText("Test & Observations")).toBeTruthy();
+  expect(screen.queryByText("Test & Observations")).toBeNull();
+  expect(screen.getByRole("article", { name: "Certificate of analysis" }).textContent).toContain("10.04%");
   expect(container.querySelector("input, textarea")).toBeNull();
-  await userEvent.click(screen.getByRole("button", { name: "Certificate of analysis" }));
+  const print = vi.spyOn(window, "print").mockImplementation(() => {});
+  await userEvent.click(screen.getByRole("button", { name: "Print Worksheet" }));
+  const worksheet = await screen.findByRole("dialog");
+  expect(within(worksheet).getByText("Test & Observations")).toBeTruthy();
+  expect(worksheet.textContent).toContain("10.04%");
+  expect(worksheet.textContent).not.toContain("Unrelated result");
+  expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Test & Observations");
+  expect(print).not.toHaveBeenCalled();
+  await userEvent.click(within(worksheet).getByRole("button", { name: "Print" }));
+  expect(print).toHaveBeenCalledTimes(1);
+  await userEvent.click(within(worksheet).getAllByRole("button", { name: "Close" })[0] as HTMLElement);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(document.body.querySelector(".print-portal")).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: "Print COA" }));
   const preview = await screen.findByRole("dialog");
   expect(await within(preview).findByText("10.04%")).toBeTruthy();
   expect(preview.textContent).toContain("Does not comply");
   expect(preview.textContent).not.toContain('"manualVars"');
+  expect(within(preview).queryByText("Test & Observations")).toBeNull();
+  expect(document.body.querySelector(":scope > .print-portal")?.textContent).not.toContain("Test & Observations");
+  await userEvent.click(within(preview).getByRole("button", { name: "Print" }));
+  expect(print).toHaveBeenCalledTimes(2);
   expect(writes).toEqual([]);
-});
+}, 20_000);
 
 it("preserves authoritative results and never recalculates a governed answer", async () => {
   const recorded = answersByField(ardAnswersSchema.parse([{ ...formulaAnswers[1], formulaGoverned: true, formulaResultFinalized: true,

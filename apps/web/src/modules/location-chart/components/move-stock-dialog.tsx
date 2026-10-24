@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm, useWatch, type UseFormReturn } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
@@ -8,6 +8,7 @@ import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, Dia
 import { Spinner } from "@/components/ui/spinner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
+import type { SelectLoader } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
 import { formatQuantityNumber } from "@/shared/units/quantity";
 import { useMoveShelfStockMutation } from "../api/location-api";
@@ -21,7 +22,11 @@ export const emptyMove = { quantity: Number.NaN, rack: null, shelf: null, note: 
 /** One destination: how much goes on which shelf of which rack. Shared by every dialog that puts stock on shelves. */
 export function MoveLine({ form, index, racks, unit, onRemove }: { form: Form; index: number; racks: readonly RackSummary[]; unit: string; onRemove: (() => void) | null }) {
   const rack = useWatch({ control: form.control, name: `moves.${index}.rack` });
-  const rackOptions = useMemo(() => racks.map((item) => ({ value: item.id, label: item.label })), [racks]);
+  const loadRacks = useCallback<SelectLoader>(async (search) => {
+    const term = search.trim().toLocaleLowerCase();
+    return { options: racks.filter((item) => item.label.toLocaleLowerCase().includes(term))
+      .map((item) => ({ value: item.id, label: item.label })), hasNext: false, hasPrevious: false };
+  }, [racks]);
   const shelfOptions = useMemo(() => (racks.find((item) => item.id === rack?.value)?.shelves ?? []).map((shelf) => ({ value: shelf.id, label: shelf.label })), [racks, rack]);
   const shelf = useWatch({ control: form.control, name: `moves.${index}.shelf` });
   // A shelf chosen under another rack is not a shelf of this one.
@@ -30,11 +35,11 @@ export function MoveLine({ form, index, racks, unit, onRemove }: { form: Form; i
   }, [form, index, rack, racks.length, shelf, shelfOptions]);
   const fields = useMemo((): WizardField<MoveStockFormValues>[] => [
     { type: InputTypes.NUMBER, name: `moves.${index}.quantity`, label: `Quantity (${unit})`, required: true, min: 0 },
-    { type: InputTypes.SELECT, name: `moves.${index}.rack`, label: "Rack", mode: "single", source: "sync", options: rackOptions, required: true, placeholder: "Select a rack" },
+    { type: InputTypes.SELECT, name: `moves.${index}.rack`, label: "Rack", mode: "single", source: "async", loadOptions: loadRacks, debounceMs: 0, required: true, placeholder: "Select a rack", searchPlaceholder: "Search racks" },
     { type: InputTypes.SELECT, name: `moves.${index}.shelf`, label: "Shelf", mode: "single", source: "sync", options: shelfOptions, required: true,
       placeholder: !rack ? "Choose a rack first" : shelfOptions.length ? "Select a shelf" : "This rack has no shelves" },
     { type: InputTypes.TEXT, name: `moves.${index}.note`, label: "Note", placeholder: "Optional", className: "md:col-span-3" },
-  ], [index, unit, rackOptions, shelfOptions, rack]);
+  ], [index, unit, loadRacks, shelfOptions, rack]);
   return <li className="space-y-2 rounded-md border p-3">
     <div className="flex items-center justify-between gap-2"><span className="text-sm font-medium">Destination {index + 1}</span>
       {onRemove ? <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove destination ${index + 1}`} onClick={onRemove}><Trash2 /></Button> : null}</div>

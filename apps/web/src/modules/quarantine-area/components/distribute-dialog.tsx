@@ -11,9 +11,10 @@ import { distributionFormSchema, type DistributionFormValues, type Grn } from ".
 import { DistributionPlanView } from "./distribution-plan-view";
 
 
-export default function DistributeDialog({ grn, kind, onClose }: { grn: Grn; kind: MaterialKind; onClose: () => void }) {
+export default function DistributeDialog({ grn, kind, initialMaterialId, onClose }: { grn: Grn; kind: MaterialKind; initialMaterialId?: string; onClose: () => void }) {
   const options = approvedMaterials(grn, kind);
-  const form = useForm<DistributionFormValues>({ resolver: zodResolver(distributionFormSchema), defaultValues: { material: options.length === 1 ? options[0] ?? null : null } });
+  const initialMaterial = options.find((option) => option.value === initialMaterialId) ?? (options.length === 1 ? options[0] : null) ?? null;
+  const form = useForm<DistributionFormValues>({ resolver: zodResolver(distributionFormSchema), defaultValues: { material: initialMaterial } });
   const material = useWatch({ control: form.control, name: "material" });
   const action = useDistribution(grn, kind, onClose);
   const fields: WizardField<DistributionFormValues>[] = [{ type: InputTypes.SELECT, name: "material", label: "Approved material", required: true,

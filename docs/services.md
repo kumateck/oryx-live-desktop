@@ -14,7 +14,14 @@ Read audit headers: `Module: Warehouse`, `SubModule: Quarantine Area`. Distribut
 
 Successful distribution invalidates shared `Grns` and `DistributedStock` tags, alongside the generated endpoint tags. Rejected mutations do not invalidate unrelated modules or retry automatically. See [workflows.md](workflows.md) for eligibility, validation, failure handling, and the existing backend enforcement limitation.
 
-The shared `shared/material-batches/received-batch.ts` schema retains material id/kind, unit id, assigned quantity and distributed quantity for receiving and quarantine. Missing assigned/distributed values remain null; the app does not turn missing distribution evidence into zero.
+The shared `shared/material-batches/received-batch.ts` schema retains material id,
+optional kind, unit id, assigned quantity and distributed quantity. The GRN
+contract returns `materialBatches[].material` as `CollectionItemDto` (no kind).
+The quarantine GRN adapter resolves each batch's kind by material ID from
+`checkLists[].material.kind`, which is part of the full `MaterialDto`. An explicit
+batch kind remains compatible with richer responses; conflicting or unavailable
+evidence cannot authorize distribution. No kind is inferred from the URL.
+Missing assigned/distributed values remain null rather than becoming zero.
 
 QC GRNs and warehouse GRNs now share `shared/material-batches/batch-status.ts`, preventing their status definitions from drifting.
 
@@ -67,3 +74,49 @@ Four Live routes use generated service/provider CRUD and the existing file contr
 ### General inventory, stock and receiving
 
 Generated item CRUD combines with a Zod-validated adapter for the stock endpoint's actual pagination envelope (the published schema incorrectly declares an array). Exact store/query/record identities and bounded complete search are checked. Item file stages use confirmed model IDs and stored references through the central original read-only viewers. Receipt decisions and damage creation reconcile resulting stock; the matching undeployed backend source now enforces current store grants, maker-checker, ledger integrity, definition history and concurrency. Endpoint request/response shapes are unchanged; see `implementation-2026-10-20/inventory-and-stock.md` and backend `docs/inventory-stock-integrity.md`.
+
+## Billing-sheet charge entry (2026-10-23)
+
+The create billing-sheet and add-charges forms each hold one required currency
+selection. `POST /api/v1/procurement/billing-sheet` still sends
+`charges[].{chargeId, currencyId, amount}`;
+`POST /api/v1/procurement/billing-sheet/charge/{billingSheetId}` sends the same
+per-charge fields as its existing array body. The selected currency is copied
+to every submitted charge. No generated types, server endpoints, audit headers,
+payment records or existing saved charge currencies change.
+
+## Billing-sheet number generation (2026-10-24)
+
+Creation reuses `shared/codes/use-generated-code` and `generate-code`. It reads the
+existing `GET /api/v1/configuration/by-model-type/BillingSheet` configuration with
+Settings / Code Settings audit headers. A domain count loader reads
+`GET /api/v1/procurement/billing-sheet?page=1&pageSize=1` with Logistics / Billing
+Sheets headers and supplies its validated `totalRecordCount` to the shared generator.
+The unsupported generic `GET /api/v1/configuration/BillingSheet/count` is not used.
+No configuration writes, endpoint changes or generated-client edits are required.
+Other models keep their existing generic count loader.
+
+### Automatic GRN number generation
+
+The receiving GRN form uses the existing `GET /api/v1/configuration/GrnNumber/count`
+with the warehouse/material-kind/year prefix for both its automatic preview and
+fresh issue-time number. It sends that number through the unchanged GRN create
+API with Warehouse / Receiving Area audit headers. Invalid or failed counts block
+the write and expose retry. See [GRN numbering](grn-number-generation.md).
+
+### Test-result file draft state and metadata
+
+The shared response writer acknowledges successful file drafts immediately and
+keeps the returned response ID for later writes. Material-batch, product-test and
+routine answer readers retain existing `attachments` metadata and pass it to the
+shared upload/attachment viewer. Draft and finalize URLs/contracts are unchanged.
+The backend assigns a stable field ID before storage and returns upload failures.
+See [test-result file drafts](test-result-file-drafts.md).
+
+## Supplier material purchase-unit lookup (2026-10-24)
+
+The generated `GET /api/v1/material/{materialId}/purchase-units` reads distinct
+symbols linked across all departments. Supplier requests persist `purchaseUnit`
+symbols; responses also expose `pendingPurchaseUnit`. Pricing and quotation writes
+share backend synchronization and existing approval handling. The backend migration
+must precede the frontend release. See [purchase-unit contract and rollout](supplier-purchase-units.md).

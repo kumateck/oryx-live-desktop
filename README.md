@@ -2,7 +2,11 @@
 
 Electron Forge shell plus a separately deployed React application for Oryx customer servers. The shell connects to a site-specific HTTP or HTTPS frontend origin. The React app is built and served by that customer server; ordinary UI releases therefore do not require reinstalling clients.
 
-This repository is in the first module stage. It has a typed file-route generator, compact workspace, configurable appearance, desktop connection screen, sign-in against the existing Oryx backend (the same one Oryx Next uses, unchanged), the backend's published OpenAPI contract, and strictly typed generated hooks for 20 API domains (1,078 of 1,324 backend operations; the rest are listed in `docs/api-untyped-operations.md`). Roles and Users are the migrated modules. Most ERP routes, live notification data, and native updates are **not yet integrated**. See [PLAN.md](PLAN.md) for the sequence and open decisions.
+This repository is in the first module stage. It has a typed file-route generator, compact workspace, configurable appearance, desktop connection screen, sign-in against the existing Oryx backend (the same one Oryx Next uses, unchanged), the backend's published OpenAPI contract, and strictly typed generated hooks for 20 API domains (1,079 of 1,325 backend operations; the rest are listed in `docs/api-untyped-operations.md`). Roles and Users are the migrated modules. Most ERP routes, live notification data, and native updates are **not yet integrated**. See [PLAN.md](PLAN.md) for the sequence and open decisions.
+
+Purchase-unit synchronization requires the companion backend migration/API before
+frontend rollout. See [supplier purchase units](docs/supplier-purchase-units.md)
+for symbol storage, approval behavior and verification.
 
 ## Requirements
 

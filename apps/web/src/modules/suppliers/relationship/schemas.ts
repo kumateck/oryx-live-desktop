@@ -34,7 +34,7 @@ export type PerformanceValues = z.infer<typeof performanceSchema>;
 
 export const pricingSchema = z.object({
   material: selected, currency: selected, agreedPrice: z.number().positive("Price must be above zero"),
-  priceUoM: z.string().trim().min(1, "Price unit is required").max(100),
+  priceUoM: selected,
   effectiveFrom: z.date(), effectiveTo: z.date().nullable(), notes: z.string().max(2000),
 }).refine((value) => !value.effectiveTo || value.effectiveTo >= value.effectiveFrom,
   { path: ["effectiveTo"], message: "End date must follow start date" });

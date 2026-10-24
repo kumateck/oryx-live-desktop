@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { z } from "zod";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formSchema } from "@/shared/form-response/form-model";
+import { storedAnswerRowsSchema } from "@/shared/form-response/stored-answer-schema";
 import { latestAnswers } from "@/shared/form-response/use-answer-form";
 import { formAssigneeSchema } from "@/shared/qc/assignments";
 import { atrApi, atrFormsApi } from "../api/atr-api";
@@ -10,7 +11,7 @@ import { atrAudit } from "../lib/atr";
 import { ardForStage, atrSchema, productArdsSchema } from "../schemas/atr-schema";
 
 const responseSchema = z.object({ checkedAt: z.string().nullish(), approved: z.boolean().nullish(), rejected: z.boolean().nullish(), hasPendingApproval: z.boolean().nullish(),
-  formResponses: z.array(z.object({ responseId: z.string().nullish(), value: z.string().nullish(), createdAt: z.string().nullish(), formField: z.object({ id: z.string().nullish() }).nullish() })).nullish() });
+  formResponses: storedAnswerRowsSchema.nullish() });
 
 /** Where the certificate of a product test stands, from its response. Only an unchecked response can have its certificate generated. */
 export function certificateState(response: z.infer<typeof responseSchema> | null): { canGenerate: boolean; label: string } {
@@ -39,7 +40,7 @@ export function useAtrWorksheet(id: string) {
   const parsedResponse = useMemo(() => { const parsed = responseSchema.safeParse(response.data ?? null); return parsed.success ? parsed.data : null; }, [response.data]);
   const assignees = atrFormsApi.useGetApiV1FormAssigneesBmrByBmrIdQuery(atr?.bmrId ? { ...atrAudit, bmrId: atr.bmrId, ...(atr.stage === 0 || atr.stage === 1 || atr.stage === 2 ? { stage: atr.stage } : {}), ...(atr.stepId ? { productionActivityStepId: atr.stepId } : {}) } : skipToken);
   const assigned = useMemo(() => { const parsed = formAssigneeSchema.safeParse(assignees.data ?? null); return parsed.success ? parsed.data : null; }, [assignees.data]);
-  const stored = useMemo(() => latestAnswers((parsedResponse?.formResponses ?? []).map((row) => ({ formFieldId: row.formField?.id ?? null, value: row.value ?? null, responseId: row.responseId ?? currentResponseId, createdAt: row.createdAt ?? null }))),
+  const stored = useMemo(() => latestAnswers((parsedResponse?.formResponses ?? []).map((row) => ({ ...row, value: row.value ?? null, responseId: row.responseId ?? currentResponseId, createdAt: row.createdAt ?? null }))),
     [currentResponseId, parsedResponse]);
   const loading = atrQuery.isLoading || ards.isLoading || (Boolean(formId) && formQuery.isLoading) || responseId.isLoading || response.isLoading;
   const error = atrQuery.error ? apiErrorMessage(atrQuery.error) : !atrQuery.isLoading && !atr ? "The server returned a test request the app could not read." : ards.error ? apiErrorMessage(ards.error)

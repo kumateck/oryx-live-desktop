@@ -24,7 +24,7 @@ export function decidedElsewhere(type: string): string | null {
 }
 
 const names: Record<string, string> = { ProductionExtraPacking: "Production extra material", RawStockRequisition: "Raw material stock requisition", PackageStockRequisition: "Packaging material stock requisition",
-  AllocateProductionOrder: "Production order allocation", Response: "Analytical raw data", RndProject: "R&D project", RndFormulation: "R&D formulation", RndTechnologyTransfer: "R&D technology transfer" };
+  AllocateProductionOrder: "Production order allocation", Response: "Certificate of analysis", RndProject: "R&D project", RndFormulation: "R&D formulation", RndTechnologyTransfer: "R&D technology transfer" };
 /** A document type as people say it: "PurchaseOrder" is "Purchase order", "QcCoa" is "QC COA". */
 export function documentLabel(type: string | null | undefined): string {
   if (!type) return "Document";
