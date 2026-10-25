@@ -22,26 +22,41 @@ export function CertificatePreview({ kind, facts, extra = [], sections, response
   onCompliance: (sectionId: string, complies: boolean) => void;
 }) {
   const responseMap = useMemo(() => getBestResponseMap([...responses]), [responses]);
-  const fact = (label: string, value: string | null) => <p><span className="font-semibold">{label}:</span> {value ?? "–"}</p>;
-  return <div className="mx-auto max-w-4xl border bg-card p-6 text-sm">
-    <div className="mb-4 space-y-1 text-center"><h2 className="text-base font-bold">QUALITY CONTROL DEPARTMENT</h2><h3 className="font-semibold">CERTIFICATE OF ANALYSIS FOR {kind.toUpperCase()}</h3></div>
-    <div className="mb-4 grid grid-cols-2 gap-2 border p-4">
-      <div>{fact("Batch No.", facts.batchNumber)}{fact("Date of Mfg.", formatMonthYear(facts.made))}{fact("Date of Exp.", formatMonthYear(facts.expires))}</div>
-      <div>{fact("Sampled date", formatDate(facts.sampled))}{fact("Analysed date", formatDate(facts.analysed))}</div>
-      <div className="col-span-2">{fact("QC AR No.", facts.arNumber)}</div>
+  const fact = (label: string, value: string | null) => <div className="min-w-0"><dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</dt><dd className="mt-0.5 break-words font-medium">{value ?? "–"}</dd></div>;
+  const compliantCount = compliance.filter((item) => item.complies).length;
+  return <article aria-label="Certificate document preview" className="mx-auto max-w-5xl overflow-hidden rounded-lg border bg-card text-sm shadow-sm">
+    <header className="border-b bg-muted/20 px-5 py-5 text-center sm:px-8">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quality control department</p>
+      <h2 className="mt-2 text-lg font-semibold tracking-tight">Certificate of Analysis</h2>
+      <p className="mt-1 text-xs text-muted-foreground">{kind} · Batch quality record</p>
+    </header>
+    <div className="space-y-5 p-4 sm:p-6">
+      <dl className="grid grid-cols-2 gap-x-5 gap-y-4 rounded-md border bg-background p-4 sm:grid-cols-3 lg:grid-cols-4">
+        {fact("Batch number", facts.batchNumber)}{fact("Manufactured", formatMonthYear(facts.made))}{fact("Expiry", formatMonthYear(facts.expires))}
+        {fact("QC AR number", facts.arNumber)}{fact("Sampled", formatDate(facts.sampled))}{fact("Analysed", formatDate(facts.analysed))}
+      </dl>
+      <section aria-label="Material or product" className="rounded-md border-l-2 border-primary bg-muted/20 px-4 py-3">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{kind}</p>
+        <p className="mt-1 break-words font-semibold">{facts.subject}</p>
+      </section>
+      {extra.length ? <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-md border bg-border sm:grid-cols-2">{extra.map((row) => <div key={row.label} className="min-w-0 bg-background px-3 py-2"><dt className="text-xs text-muted-foreground">{row.label}</dt><dd className="mt-0.5 break-words font-medium">{row.value ?? "–"}</dd></div>)}</dl> : null}
+      <section aria-label="Test results" className="min-w-0">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><div><h3 className="font-semibold">Test results</h3><p className="text-xs text-muted-foreground">Review each result and confirm its specification compliance.</p></div>
+          <span className="rounded-full border bg-background px-2.5 py-1 text-xs text-muted-foreground">{compliantCount} of {sections.length} comply</span></div>
+        <div className="max-w-full overflow-x-auto rounded-md border"><table className="w-full min-w-[760px] border-collapse text-sm">
+          <colgroup><col className="w-10" /><col className="w-[18%]" /><col className="w-[22%]" /><col className="w-[20%]" /><col /></colgroup>
+          <thead><tr className="bg-muted/60 text-left">{["No.", "Test", "Result / observation", "Compliance review", "Specification"].map((head) => <th key={head} scope="col" className="border-b px-3 py-2.5 text-xs font-semibold text-muted-foreground">{head}</th>)}</tr></thead>
+          <tbody>{sections.map((section, index) => { const item = compliance.find((entry) => entry.formSectionId === section.id);
+            return <tr key={section.id ?? index} className="align-top [&:not(:last-child)>td]:border-b"><td className="px-3 py-3 text-center text-xs text-muted-foreground">{index + 1}</td>
+              <td className="px-3 py-3 font-medium"><RichTextView html={section.name} /></td>
+              <td className="px-3 py-3"><div className="break-words">{getResponsesForSection(section.fields ?? [], responseMap)}</div></td>
+              <td className="px-3 py-3">{section.id ? <div className="min-w-0 space-y-2"><CoaComplianceControl formSectionId={section.id} complies={item?.complies === true} onComplianceChange={onCompliance} />
+                {item?.requiresReview ? <p className="text-xs text-warning">Review required: result cannot be assessed automatically.</p> : null}</div> : "–"}</td>
+              <td className="px-3 py-3"><div className="break-words"><RichTextView html={section.description} /></div></td></tr>; })}</tbody>
+        </table></div>
+      </section>
+      <section className="rounded-md border bg-muted/20 px-4 py-3"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Overall assessment</p>
+        <p className="mt-1 font-medium">{certificateComment(compliance, kind)}</p></section>
     </div>
-    <p className="mb-4 border p-4 font-semibold">{facts.subject}</p>
-    {extra.length ? <dl className="mb-4 grid grid-cols-[8rem_1fr] border">{extra.map((row) => [<dt key={`${row.label}-label`} className="border p-2 font-semibold">{row.label}</dt>, <dd key={`${row.label}-value`} className="border p-2">{row.value ?? "–"}</dd>])}</dl> : null}
-    <div className="max-w-full overflow-x-auto"><table className="mb-4 w-full table-fixed border-collapse border text-sm">
-      <colgroup><col className="w-10" /><col className="w-1/4" /><col className="w-1/4" /><col className="w-44" /><col /></colgroup>
-      <thead><tr className="bg-muted text-left">{["No.", "Test", "Result / observation", "Compliance", "Specification"].map((head) => <th key={head} scope="col" className="border p-2">{head}</th>)}</tr></thead>
-      <tbody>{sections.map((section, index) => { const item = compliance.find((entry) => entry.formSectionId === section.id);
-        return <tr key={section.id ?? index}><td className="border p-2 text-center align-top">{index + 1}</td><td className="border p-2 align-top font-medium"><RichTextView html={section.name} /></td>
-          <td className="border p-2 align-top">{getResponsesForSection(section.fields ?? [], responseMap)}</td>
-          <td className="border p-2 align-top">{section.id ? <div className="space-y-1"><CoaComplianceControl formSectionId={section.id} complies={item?.complies === true} onComplianceChange={onCompliance} />
-            {item?.requiresReview ? <p className="text-xs text-warning">Check this: it could not be worked out from the result.</p> : null}</div> : "–"}</td>
-          <td className="border p-2 align-top"><RichTextView html={section.description} /></td></tr>; })}</tbody>
-    </table></div>
-    <p className="font-semibold">Comment: <span className="font-normal">{certificateComment(compliance, kind)}</span></p>
-  </div>;
+  </article>;
 }

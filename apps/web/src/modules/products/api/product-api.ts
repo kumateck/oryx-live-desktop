@@ -49,6 +49,7 @@ export const {
   useGetApiV1ProductByProductIdPackingQuery, usePostApiV1ProductByProductIdPackingMutation,
   useGetApiV1ProductByProductIdPackagesQuery, usePostApiV1ProductByProductIdPackagesMutation,
   usePutApiV1ProductPackageDescriptionByProductIdMutation, usePostApiV1ProductByProductIdRoutesMutation, useLazyGetApiV1ProductQuery,
+  useLazyGetApiV1ProductByProductIdRoutesQuery,
   useGetApiV1ProductByProductIdBomQuery, usePutApiV1ProductByProductIdBomArchiveMutation,
 } = productApi;
 export const { usePostApiV1VerificationMutation } = verificationApi;

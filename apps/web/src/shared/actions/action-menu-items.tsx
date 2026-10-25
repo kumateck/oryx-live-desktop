@@ -11,6 +11,7 @@ function ItemBody({ item }: { item: ActionItem }) {
     {Icon ? <Icon className={item.destructive ? "size-4 text-destructive" : "size-4"} /> : null}
     <span className="min-w-0">
       <span className={item.destructive ? "block whitespace-nowrap text-destructive" : "block whitespace-nowrap"}>{item.label}</span>
+      {item.description ? <span className="block max-w-64 whitespace-normal text-xs text-muted-foreground">{item.description}</span> : null}
       {item.disabled && item.disabledReason ? <span className="block max-w-56 whitespace-normal text-xs text-muted-foreground">{item.disabledReason}</span> : null}
     </span>
   </>;
