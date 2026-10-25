@@ -45,12 +45,15 @@ it("lists the steps with who is responsible and saves the remaining steps renumb
   expect(within(row).getByText("Critical")).toBeTruthy();
   expect(within(row).getByText("2 hours")).toBeTruthy();
   expect(within(row).getByRole("button", { name: "Responsible for Testing: 1 user, 1 role" })).toBeTruthy();
-  expect(screen.getByRole("button", { name: "Copy to products" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Copy procedure" })).toBeTruthy();
+  await openMenu("Copy procedure");
+  expect(screen.getByRole("menuitem", { name: /^Copy to products/ })).toBeTruthy();
+  fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
   await chooseAction("Actions for Testing", "Remove");
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
   await waitFor(() => expect(screen.queryByText("Testing")).toBeNull());
   // Only a saved procedure can be copied.
-  expect(screen.queryByRole("button", { name: "Copy to products" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Copy procedure" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Save procedure" }));
   await waitFor(() => expect(calls.length).toBe(1));
   expect(JSON.parse(calls[0]?.body ?? "[]")).toEqual([{ operationId: "op-pack", order: 1, isCritical: false, estimatedTime: null, workCenters: [{ workCenterId: "w2" }],

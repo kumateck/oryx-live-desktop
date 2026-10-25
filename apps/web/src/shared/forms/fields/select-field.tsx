@@ -1,6 +1,6 @@
-import { useId, useMemo, useState } from "react";
+import { useId } from "react";
 import { useController, useFormContext, type FieldValues } from "react-hook-form";
-import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FieldFrame } from "../field-frame";
 import { fieldDescription } from "../field-description";
 import type { SingleSelectField } from "../form-wizard-types";
@@ -12,35 +12,22 @@ export default function SelectInputField({ field }: {
   const form = useFormContext<FieldValues>();
   const id = useId();
   const { field: control, fieldState } = useController({ name: field.name, control: form.control });
-  const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
   const error = fieldState.error?.message;
   const selected = isSelectOption(control.value) ? control.value : null;
-  const itemValues = useMemo(() => field.options.map((option) => option.value), [field.options]);
   return <FieldFrame id={id} label={field.label} required={field.required} description={field.description} error={error} className={field.className}>
-    <Combobox items={itemValues} value={selected?.value ?? null} onValueChange={(value) => {
-      const option = field.options.find((item) => item.value === value);
-      if (option) control.onChange(option);
-    }}
-      itemToStringLabel={(value) => field.options.find((option) => option.value === value)?.label ?? value}
-      filter={(value, query) => (field.options.find((option) => option.value === value)?.label ?? "").toLocaleLowerCase().includes(query.toLocaleLowerCase())}
-      onOpenChange={(open) => {
-        if (open) {
-          const active = document.activeElement;
-          setPortalContainer(active instanceof HTMLElement ? active.closest("div[data-slot='dialog-content']") : null);
-        } else {
-          control.onBlur();
-          setPortalContainer(null);
-        }
-      }}
-      autoHighlight disabled={field.disabled ?? false}>
-      <ComboboxInput id={id} ref={control.ref} placeholder={field.placeholder ?? "Search or select an option"} showTrigger
-        showClear={!field.required && selected !== null} aria-required={field.required} aria-invalid={Boolean(error)}
-        aria-describedby={fieldDescription(id, field.description, error)} onBlur={control.onBlur} />
-      <ComboboxContent container={portalContainer ?? undefined}><ComboboxList>{(value) => {
+    <Select name={control.name} value={selected?.value ?? ""}
+      onValueChange={(value) => {
+        // Radix's native form bridge can emit an empty value while async options mount.
+        // Only a real option selection changes this field; form.reset/setValue still clear it.
         const option = field.options.find((item) => item.value === value);
-        return option ? <ComboboxItem key={option.value} value={value} disabled={option.disabled ?? false}>{option.label}</ComboboxItem> : null;
-      }}</ComboboxList>
-        <ComboboxEmpty>No options found</ComboboxEmpty></ComboboxContent>
-    </Combobox>
+        if (option) control.onChange(option);
+      }}
+      onOpenChange={(open) => { if (!open) control.onBlur(); }} disabled={field.disabled ?? false}>
+      <SelectTrigger id={id} ref={control.ref} className="w-full" aria-required={field.required} aria-invalid={Boolean(error)}
+        aria-describedby={fieldDescription(id, field.description, error)}>
+        <SelectValue placeholder={field.placeholder ?? "Select an option"} />
+      </SelectTrigger>
+      <SelectContent>{field.options.map((option) => <SelectItem key={option.value} value={option.value} disabled={option.disabled ?? false}>{option.label}</SelectItem>)}</SelectContent>
+    </Select>
   </FieldFrame>;
 }

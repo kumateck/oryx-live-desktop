@@ -68,7 +68,7 @@ it("lists the department's deliveries still to be shelved, and shelves one in fu
   expect((quantity as HTMLInputElement).value).toBe("5");
   await user.clear(quantity);
   await user.type(quantity, "2");
-  await user.click(within(dialog).getByRole("combobox", { name: /Rack/ }));
+  await user.click(await within(dialog).findByRole("combobox", { name: /Rack/ }));
   await screen.findByRole("option", { name: "Raw store · Rack 2" });
   await user.type(screen.getByRole("textbox", { name: "Search Rack" }), "RACK 1");
   await waitFor(() => expect(screen.queryByRole("option", { name: "Raw store · Rack 2" })).toBeNull());

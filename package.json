@@ -25,12 +25,14 @@
     "dev:desktop": "bun run --filter @oryx/desktop start",
     "check": "bun run routes:check && bun run api:check && bun run test && bun run typecheck",
     "nav:import": "bun scripts/import-navigation.ts",
-    "dev:gateway": "bun run --filter @oryx/gateway start"
+    "dev:gateway": "bun run --filter @oryx/gateway start",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@rtk-query/codegen-openapi": "^2.2.0",
     "@types/node": "^25.6.0",
     "fflate": "0.8.3",
+    "husky": "^9.1.7",
     "typescript": "^6.0.3"
   }
 }
