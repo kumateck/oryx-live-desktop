@@ -63,3 +63,11 @@ Appearance behavior and the Oryx accent list are in [docs/appearance.md](docs/ap
 A testing site and Windows installer are deployed from the `testing` branch; see [docs/deployment.md](docs/deployment.md). Customer-server deployment and signed shell updates remain phase gates in `PLAN.md`.
 
 Engine maintainers can rebuild reviewed viewer-only WASM adapters with `bun scripts/build-readonly-viewers.ts /absolute/isolated-workspace <engine>`; see the attachment viewer guide for pinned toolchain, source and provenance requirements. Ordinary builds continue to use verified local bundles.
+
+## Desktop companion
+
+View → Show / Hide ORYX Companion controls the optional local Operations Watch character. Click the character for notifications, or click an alert in its growing feed to open the linked shipment details; drag to move; right-click for quiet mode. See [companion behavior and limits](docs/companion.md).
+
+System alerts also appear while Oryx is in front. Closing to the tray keeps delivery running; use Quit Oryx to exit. Missed alerts remain in backend unread history. [Notification delivery and backend requirements](docs/notifications.md).
+
+Companion device controls are under Settings → Appearance. Run `bun run --filter @oryx/desktop test` for renderer/persistence tests; these also run in the root `bun run test` command. Native alert clicks locate the matching unread/history entry without marking it read.

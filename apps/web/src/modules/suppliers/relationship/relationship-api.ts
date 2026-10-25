@@ -5,7 +5,7 @@ import { responseSchemas } from "./response-schemas";
 const route = (id: string) => `/api/v1/suppliers/${id}`;
 const audit = (subModule: string) => ({ Module: "Supplier relationship management", SubModule: subModule });
 const tag = (supplierId: string, section: string) => [{ type: "Supplier" as const, id: `${supplierId}:${section}` }];
-const pricingTags = (supplierId: string) => [...tag(supplierId, "pricing"), { type: "Supplier" as const, id: supplierId }, { type: "procurement/supplier" as const, id: supplierId }];
+const pricingTags = (supplierId: string) => [{ type: "PendingApprovals" as const, id: "all" }, ...tag(supplierId, "pricing"), { type: "Supplier" as const, id: supplierId }, { type: "procurement/supplier" as const, id: supplierId }];
 
 /** The backend DTOs provide these types; OpenAPI currently omits response schemas for SRM. */
 export const relationshipApi = api.injectEndpoints({ endpoints: (build) => ({

@@ -1,3 +1,4 @@
+import { CompanionSettings } from "../notifications/companion-settings";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { InterfaceSettings } from "./interface-settings";
 import { useState } from "react";
@@ -49,6 +50,7 @@ export function AppearanceSettings() {
     <h1 id="appearance-title">Appearance</h1>
     <p className="appearance-description">Choose how your workspace looks. Changes save automatically on this device.</p>
     <InterfaceSettings />
+    <CompanionSettings />
     <h2 className="appearance-section-title">Visual style</h2>
     <div className="appearance-card mode-card"><SettingRow label="Mode"><div className="mode-options" role="group" aria-label="Theme mode">
       {(["system", "light", "dark"] as const).map((mode: ThemeMode) => <Button key={mode} size="sm" variant={settings.mode === mode ? "secondary" : "ghost"} aria-pressed={settings.mode === mode} onClick={() => theme.update({ mode })}>{mode.charAt(0).toUpperCase() + mode.slice(1)}</Button>)}

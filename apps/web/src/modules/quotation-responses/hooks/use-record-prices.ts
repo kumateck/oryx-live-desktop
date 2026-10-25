@@ -10,6 +10,7 @@ import { permissionDeniedMessage, usePermissionAction } from "@/shared/auth/use-
 import type { SupplierType } from "@/shared/procurement/supplier-type";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { usePostApiV1RequisitionSourceSupplierBySupplierQuotationIdQuotationReceiveMutation } from "../api/quotation-response-api";
+import { AgreementOutcome, agreementOutcome, agreementFeedback } from "../lib/agreement-outcome";
 import { agreementChanges, agreementProposal, type AgreementChange, type AgreementProposal } from "../lib/agreements";
 import { negligibleLines, priceLineProblems, startPriceLines, toQuotationResponse, type NegligibleLine, type PriceLine, type PriceLineProblem } from "../lib/price-lines";
 import { hasCorrections } from "../lib/open-lines";
@@ -68,16 +69,25 @@ export function useRecordPrices(quotation: SupplierQuotation, type: SupplierType
       dispatch(api.util.invalidateTags([{ type: "Supplier", id: supplierId }, { type: "Supplier", id: `${supplierId}:pricing` }, { type: "procurement/supplier", id: supplierId }]));
       // Unit changes are proposed atomically by the quotation endpoint; do not create a duplicate proposal here.
       // One at a time, after the prices are safely recorded: a failed proposal must not hide that they were.
-      let failed = 0;
+      const failures: string[] = [];
+      const submitted: AgreementProposal[] = [];
       for (const proposal of proposals) {
         const prior = agreements.find((agreement) => agreement.materialId === proposal.body.materialId && agreement.uoMId === proposal.body.uoMId);
-        if (prior && prior.priceUoM.trim().toLowerCase() !== proposal.body.priceUoM.trim().toLowerCase()) continue;
-        if (!allowsNow(manageAgreementsPermission)) { failed += 1; continue; }
+        if (prior && prior.priceUoM.trim().toLowerCase() !== proposal.body.priceUoM.trim().toLowerCase()) { submitted.push(proposal); continue; }
+        if (!allowsNow(manageAgreementsPermission)) { failures.push(permissionDeniedMessage); continue; }
         const result = proposal.mode === "create" ? await createAgreement({ supplierId, body: proposal.body }) : await updateAgreement({ supplierId, id: proposal.id, body: proposal.body });
-        if ("error" in result) failed += 1;
+        if ("error" in result) failures.push(apiErrorMessage(result.error));
+        else submitted.push(proposal);
       }
-      if (failed > 0) toast.error("Prices recorded, but not every agreement change", { description: `${failed} of ${proposals.length} could not be submitted. Review the supplier's pricing agreements.` });
-      else toast.success(proposals.length > 0 ? "Prices recorded and agreement changes submitted" : only ? "Prices corrected" : "Prices recorded", { description: "Purchase-unit changes affecting standing pricing follow its approval workflow." });
+      // A refreshed approved list distinguishes immediate activation from an accepted proposal.
+      const refreshed = submitted.length ? await pricing.refetch() : null;
+      const approved = refreshed && !refreshed.error && refreshed.data
+        ? submitted.filter((proposal) => agreementOutcome(proposal, refreshed.data ?? []) === AgreementOutcome.Approved).length : 0;
+      const feedback = agreementFeedback(approved, submitted.length - approved);
+      if (failures.length > 0) toast.error("Prices saved; some agreement changes failed", {
+        description: `${feedback} ${failures.length} of ${proposals.length} failed: ${[...new Set(failures)].join("; ")}`.trim(), duration: 15000,
+      });
+      else toast.success(only ? "Prices corrected" : "Prices recorded", { description: feedback || "No additional standing-price change was requested." });
       onDone();
     } finally { setSaving(false); }
   };

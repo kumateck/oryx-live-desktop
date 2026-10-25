@@ -10,7 +10,7 @@ export interface BrokerState { connected: boolean }
  * are its own, the gateway never takes a message away from another consumer of the same exchange.
  * Reconnects with a growing wait when the broker is unreachable.
  */
-export function startBroker(url: string, subscriptions: readonly Subscription[], log: (line: string) => void): { state: BrokerState; stop: () => Promise<void> } {
+export function startBroker(url: string, subscriptions: readonly Subscription[], log: (line: string) => void, onAvailability: (connected: boolean) => void = () => {}): { state: BrokerState; stop: () => Promise<void> } {
   const state: BrokerState = { connected: false };
   let stopped = false;
   let wait = 1_000;
@@ -19,6 +19,7 @@ export function startBroker(url: string, subscriptions: readonly Subscription[],
 
   const retry = () => {
     state.connected = false;
+    onAvailability(false);
     if (stopped || timer) return;
     timer = setTimeout(() => { timer = null; void run(); }, wait);
     wait = Math.min(wait * 2, 30_000);
@@ -31,22 +32,26 @@ export function startBroker(url: string, subscriptions: readonly Subscription[],
       connection.on("error", (error: Error) => log(`[broker] connection error: ${error.message}`));
       connection.on("close", () => { if (!stopped) { log("[broker] connection closed; reconnecting"); retry(); } });
       const channel = await connection.createChannel();
+      channel.on("error", () => { log("[broker] channel failed; reconnecting"); void connection.close().catch(() => undefined); });
+      channel.on("close", () => { if (!stopped) { void connection.close().catch(() => undefined); retry(); } });
       for (const subscription of subscriptions) {
         await channel.assertExchange(subscription.exchange, "fanout", { durable: true });
         const queue = await channel.assertQueue("", { exclusive: true, autoDelete: true });
         await channel.bindQueue(queue.queue, subscription.exchange, "");
         await channel.consume(queue.queue, (message: ConsumeMessage | null) => {
-          if (!message) return;
+          if (!message) { void connection.close().catch(() => undefined); retry(); return; }
           // A message this process cannot handle is not put back: nothing else reads this queue.
           try { subscription.onMessage(message.content); } catch (error) { log(`[broker] message dropped: ${error instanceof Error ? error.message : "unknown error"}`); }
         }, { noAck: true });
       }
       state.connected = true;
+      onAvailability(true);
       wait = 1_000;
       log(`[broker] listening to ${subscriptions.length} exchanges`);
     } catch (error) {
       // The address carries the credentials, so only the reason is logged.
       log(`[broker] could not connect: ${error instanceof Error ? error.message.replace(/\/\/[^@\s]*@/g, "//***@") : "unknown error"}`);
+      await close?.();
       retry();
     }
   }

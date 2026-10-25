@@ -1,7 +1,7 @@
 import { createServer, type Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import type { Verified } from "./auth.ts";
-import { everyoneRoom, userRoom, type BoardUpdate, type RoutedNotification } from "./messages.ts";
+import { everyoneRoom, userRoom, type BoardUpdate, type ReadUpdate, type RoutedNotification } from "./messages.ts";
 
 export interface Gateway {
   http: HttpServer;
@@ -9,6 +9,8 @@ export interface Gateway {
   deliver: (notification: RoutedNotification) => void;
   /** Tells every signed-in client that a production run changed. */
   announce: (update: BoardUpdate) => void;
+  read: (update: ReadUpdate) => void;
+  availability: (connected: boolean) => void;
   close: () => Promise<void>;
 }
 
@@ -48,6 +50,7 @@ export function createGateway({ verify, allowedOrigins, socketPath, healthy, rec
 
   io.on("connection", (socket) => {
     void socket.join([userRoom(socket.data.userId as string), everyoneRoom]);
+    socket.emit("delivery-state", { connected: healthy() });
     const token = (socket.handshake.auth as { token?: unknown }).token;
     const recheck = setInterval(() => {
       void verify(token).then((result) => { if (!result.ok && result.reason === "rejected") socket.disconnect(true); });
@@ -59,6 +62,8 @@ export function createGateway({ verify, allowedOrigins, socketPath, healthy, rec
     http,
     deliver: (notification) => { io.to(notification.recipients.map(userRoom)).emit("notification", notification.payload); },
     announce: (update) => { io.to(everyoneRoom).emit("activity-updated", update); },
+    read: (update) => { io.to(userRoom(update.userId)).emit("notification-read", { notificationId: update.notificationId }); },
+    availability: (connected) => { io.to(everyoneRoom).emit("delivery-state", { connected }); },
     close: () => new Promise((resolve) => { void io.close(() => resolve()); }),
   };
 }

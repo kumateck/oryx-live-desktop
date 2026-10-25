@@ -1,4 +1,4 @@
-export interface Unread { id: string; message: string; type: number | null }
+export interface Unread { id: string; message: string; type: number | null; sentAt?: string; priority?: string; shipmentDocumentId?: string }
 
 /**
  * Which unread notifications are new since the last look. The first look only sets the baseline:
@@ -16,11 +16,12 @@ export function createAnnouncedLog(windowMs = 120_000, now: () => number = Date.
   const seen = new Map<string, number>();
   return {
     /** True the first time a text is offered within the window; false when it was announced a moment ago. */
-    claim(message: string): boolean {
+    claim(message: string, id?: string): boolean {
       const at = now();
       for (const [text, time] of seen) if (at - time > windowMs) seen.delete(text);
-      if (seen.has(message)) return false;
-      seen.set(message, at);
+      const key = id ? `id:${id}` : `text:${message}`;
+      if (seen.has(key) || (id && seen.has(`text:${message}`))) return false;
+      seen.set(key, at);
       return true;
     },
   };

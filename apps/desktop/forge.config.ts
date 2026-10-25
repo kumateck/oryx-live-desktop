@@ -12,9 +12,10 @@ const config: ForgeConfig = {
     new VitePlugin({
       build: [
         { entry: "src/main.ts", config: "vite.main.config.ts", target: "main" },
+        { entry: "src/companion/preload.ts", config: "vite.companion-preload.config.ts", target: "preload" },
         { entry: "src/preload.ts", config: "vite.preload.config.ts", target: "preload" },
       ],
-      renderer: [{ name: "main_window", config: "vite.renderer.config.ts" }],
+      renderer: [{ name: "main_window", config: "vite.renderer.config.ts" }, { name: "companion_window", config: "vite.companion.config.ts" }],
     }),
   ],
 };

@@ -76,3 +76,24 @@ test("a client whose token stops being accepted is disconnected", async () => {
     assert.equal(await gone, "io server disconnect");
   } finally { await stop(); }
 });
+
+test("broker availability is synchronized to connected authenticated sessions", async () => {
+  const { gateway, connect, stop } = await start();
+  try {
+    const socket = await connect("token-for-ama-000000000");
+    const states = received(socket, "delivery-state");
+    gateway.availability(false); gateway.availability(true);
+    await settle();
+    assert.deepEqual(states, [{ connected: true }, { connected: false }, { connected: true }]);
+  } finally { await stop(); }
+});
+
+test("read state refreshes only the recipient's sessions", async () => {
+  const { gateway, connect, stop } = await start();
+  try {
+    const first = await connect("token-for-ama-000000000"), other = await connect("token-for-kofi-00000000");
+    const own = received(first, "notification-read"), theirs = received(other, "notification-read");
+    gateway.read({ userId: ama, notificationId: kofi }); await settle();
+    assert.deepEqual(own, [{ notificationId: kofi }]); assert.deepEqual(theirs, []);
+  } finally { await stop(); }
+});

@@ -18,9 +18,6 @@ export const unreadArg = { ...notificationAudit, unreadOnly: true } as const;
 export const unreadTag = unread;
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
-/**
- * The user's notifications, newest first. The server does not send when each was sent (it fills the field
- * with the time of the request), so no time is read from it.
- */
-export const notificationListSchema = z.array(z.object({ id: z.string().nullish(), message: text, type: z.number().nullish() })).nullish()
-  .transform((value) => (value ?? []).flatMap((entry) => entry.id && entry.message ? [{ id: entry.id, message: entry.message, type: entry.type ?? null }] : []));
+/** The user's persisted notifications, with server occurrence time when present and valid. */
+export const notificationListSchema = z.array(z.object({ id: z.string().nullish(), message: text, type: z.number().nullish(), priority: z.string().nullish().catch(null), shipmentDocumentId: z.string().uuid().nullish().catch(null), sentAt: z.string().datetime({ offset: true }).nullish().catch(null) })).nullish()
+  .transform((value) => (value ?? []).flatMap((entry) => entry.id && entry.message ? [{ id: entry.id, message: entry.message, type: entry.type ?? null, ...(entry.sentAt ? { sentAt: entry.sentAt } : {}), ...(entry.priority ? { priority: entry.priority } : {}), ...(entry.shipmentDocumentId ? { shipmentDocumentId: entry.shipmentDocumentId } : {}) }] : []));

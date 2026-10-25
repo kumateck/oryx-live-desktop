@@ -13,3 +13,11 @@ Accent names and primary color values mirror `oryx-next/src/features/appearance/
 The animated header search currently searches available local pages. The notification sheet and account menu are working controls with typed data inputs; they receive live notifications and user identity only after the authenticated API/session integration. They do not display fabricated counts or identities. The global renderer and route error boundaries show a safe retry message; application error reporting currently goes to the local console and has an injectable reporter for a later approved telemetry destination.
 
 After adding a route, run `bun run routes:generate`. After updating shadcn components, review generated code for compatibility with the repository's strict TypeScript settings, including `exactOptionalPropertyTypes`, then run `bun run check` and `bun run build:web`.
+
+## Companion controls
+
+ORYX Companion appears in Appearance as native device controls. Visibility, quiet movement and limited roaming persist across shell restarts; Reset position restores the main display corner. Browser/older-shell users see an availability explanation. Quiet movement does not disable system notifications. See [companion frontend behavior](companion.md).
+
+The companion’s **Show alert details** control keeps event label, priority and unread count below the character. It defaults on and survives restart. Quiet movement keeps these details visible; it only suppresses motion. Alert event rules, recipients and delivery channels continue to come from Alert Configuration, not Appearance.
+
+Use **Send test notification** in the ORYX Companion section to check this device’s native notification path. The result reports submission/unavailability without claiming OS visibility. It never changes ERP data or unread counts.

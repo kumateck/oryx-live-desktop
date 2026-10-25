@@ -94,3 +94,11 @@ Certifications, Contacts, Bank accounts, Pricing agreements, and Scorecards are 
 The backend has no request for "which suppliers offer this manufacturer's materials", so the page does not list them; a supplier's own page lists its manufacturers.
 
 Shared by both pages: `shared/detail/record-alerts.tsx`, `shared/detail/key-facts.tsx`, and `shared/format/due-dates.ts` (60 days counts as "due soon").
+
+Quotation-response agreement feedback now checks the refreshed approved list to identify immediately approved changes. Submission alone is not labelled approved. Partial failure shows the backend error reason rather than only a failed count. The existing no-workflow auto-approval and assigned-workflow behavior remains backend-owned; no frontend approval-setting inference is used.
+
+Verification: 14 focused backend supplier-pricing/purchase-unit tests passed, including no-workflow automatic approval, empty-stage automatic approval, and configured assigned-review behavior. Twelve quotation/outcome frontend tests and web typecheck passed. React Doctor found no new issues. No backend code, customer configuration, or live pricing record was changed in this task. The screenshot’s underlying API failure is not identified by its old generic toast; new feedback preserves the actual reason. Documentation updated: this migration note and workflows.
+
+The running app exposed the earlier agreement failure as the backend AgreedPrice 0.01 minimum. The paired backend fix aligns model validation with positive repository/frontend values, so fractional per-unit prices can create configured approval stages. Pending-approval invalidation and fresh-on-entry queries prevent cached empty queues. This does not approve, recreate or retry any live record automatically.
+
+Verification for the missing-approval fix: 13 focused queue/outcome tests passed; paired backend supplier-pricing tests passed (15). React Doctor reported no new issues. The actual running UI error was inspected; no business submission or approval was performed during diagnosis.

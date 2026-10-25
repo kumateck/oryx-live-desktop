@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { act } from "react";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
@@ -17,7 +18,7 @@ const toasts = vi.hoisted(() => ({ info: [] as { title: string; description?: st
 vi.mock("sonner", () => ({ toast: { info: (title: string, options?: { description?: string }) => { toasts.info.push({ title, ...(options?.description ? { description: options.description } : {}) }); }, error: (title: string) => { toasts.error.push(title); }, success: () => undefined } }));
 
 beforeEach(() => { live.handlers = null; live.closed = 0; toasts.info.length = 0; toasts.error.length = 0; });
-afterEach(() => { cleanup(); forgetSession(); });
+afterEach(() => { cleanup(); forgetSession(); delete window.oryxCompanion; });
 
 it("tells new arrivals from what was already waiting, and never announces one twice", () => {
   const item = (id: string) => ({ id, message: `Message ${id}`, type: null });
@@ -31,11 +32,11 @@ it("tells new arrivals from what was already waiting, and never announces one tw
   clock = 2000;
   expect(log.claim("Shipment arrived")).toBe(true);
   expect([arrivalSummary(3), arrivalSummary(4)]).toEqual([null, "4 new notifications"]);
-  expect([notificationLabel(2), notificationLabel(99), notificationLabel(null), notificationLink(15), notificationLink(1)]).toEqual(["Shipment arrived", "Notification", "Notification", "/warehouse/expired-materials", undefined]);
+  expect([notificationLabel(2), notificationLabel(99), notificationLabel(null), notificationLink(15), notificationLink(1)]).toEqual(["Shipment arrived", "Notification", "Notification", "/warehouse/expired-materials", "/settings/shift-schedule"]);
 });
 
 interface Call { method: string; path: string }
-function open(initial: { id: string; message: string; type: number }[]) {
+function open(initial: { id: string; message: string; type: number; priority?: string }[]) {
   const backend = stubBackend({ permissions: [] });
   rememberSession();
   const state = { unread: [...initial], calls: [] as Call[], refuse: null as string | null };
@@ -117,3 +118,32 @@ it("marks everything as read one request after another", async () => {
   expect(await screen.findByText("You are up to date.")).toBeTruthy();
   expect(state.calls.filter((call) => call.method === "PUT").map((call) => call.path)).toEqual(["/api/v1/alert/n1/mark-as-read", "/api/v1/alert/n2/mark-as-read"]);
 }, 20_000);
+
+it("a system-alert click focuses the matching unread notification without marking it read", async () => {
+  let requested: ((id?: string) => void) | undefined;
+  window.oryxCompanion = { summary: async () => {}, onOpen: (listener) => { requested = listener; return () => {}; } };
+  const state = open(waiting);
+  await screen.findByRole("button", { name: "Notifications, 2 unread" });
+  act(() => requested?.("n2"));
+  const selected = await screen.findByRole("listitem", { name: "Selected notification" });
+  expect(selected.textContent).toContain("Lactose"); expect(document.activeElement).toBe(selected);
+  expect(state.calls.some((call) => call.method === "PUT")).toBe(false);
+});
+it("a previously read system alert can be found in notification history", async () => {
+  let requested: ((id?: string) => void) | undefined;
+  window.oryxCompanion = { summary: async () => {}, onOpen: (listener) => { requested = listener; return () => {}; } };
+  open(waiting);
+  await screen.findByRole("button", { name: "Notifications, 2 unread" });
+  act(() => requested?.("old-1"));
+  const selected = await screen.findByRole("listitem", { name: "Selected notification" });
+  expect(selected.textContent).toContain("Leave request approved");
+});
+
+it("publishes the configured event category from the personal unread feed without querying administrative alert rules", async () => {
+  const summary = vi.fn(async () => {});
+  window.oryxCompanion = { summary, onOpen: () => () => {} };
+  const state = open([{ id: "configured-alert", type: 15, message: "Expiry review", priority: "High" }]);
+  await screen.findByRole("button", { name: "Notifications, 1 unread" });
+  await waitFor(() => expect(summary).toHaveBeenCalledWith(expect.objectContaining({ unread: 1, alerts: [{ id: "configured-alert", label: "Expired material", message: "Expiry review", type: 15, priority: 3 }] })));
+  expect(state.calls.some((call) => /\/api\/v1\/alert(?:\?|$)/.test(call.path))).toBe(false);
+});

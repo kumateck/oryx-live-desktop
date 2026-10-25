@@ -208,3 +208,39 @@ Standing price-unit changes preserve price meaning through agreement proposals,
 permissions and the configured approval workflow. Pending/rejected changes retain
 the effective unit; future agreements respect their dates. Historical transaction
 prices and quantity units remain intact. See [behavior and release order](supplier-purchase-units.md).
+
+## Companion attention workflow
+
+Existing unread notification state drives the desktop companion badge and a new-arrival gesture. Clicking restores Oryx and opens the existing notification sheet; existing record links, read actions, permissions, and approvals handle the work. Quiet mode suppresses motion. Live disconnection changes the pose while existing polling continues. Logout/navigation clear summary state. See [companion uses and boundaries](companion.md).
+
+## System alert visibility and recovery
+
+New arrivals use system notifications even while Oryx is in front. Startup shows one missed-unread summary; native click opens existing notifications without marking read. Backend read events reconcile the same user’s sessions. OS dismissal/DND does not remove backend unread history. Direct ERP-record alerts await backend source metadata. See [notification workflow](notifications.md).
+
+## Targeting an alert from the desktop
+
+An OS-alert click restores Oryx, opens notifications and focuses that notification ID. Previously read alerts are located through existing history; no click implicitly marks read. Available ERP links continue through normal navigation/permission guards. Settings → Appearance manages persistent local companion movement/visibility. See [companion](companion.md).
+
+## Quiet companion indicators
+
+Quiet movement leaves the caption label, priority and unread count visible. Appearance → ORYX Companion → Show alert details controls the caption independently; hiding it does not suppress backend alerts or system notifications. Caption clicks target the represented notification. Selection uses actual supplied priority and backend ordering; missing priority is visibly unspecified. Rules and audiences remain governed by existing Alert Configuration.
+
+## Device notification test
+
+Appearance can submit a labelled native test without creating a business event, unread item or approval. The user-visible result distinguishes OS submission from OS display. The actual frontend/gateway connection was checked separately through realtime health and the signed-in notification sheet.
+
+## Supplier price approval outcome
+
+Quotation price entry keeps the existing backend rule: no SupplierPricingAgreement workflow/stages auto-approves with audit; configured stages route to assigned reviewers. The frontend refreshes approved agreements after successful submissions and reports confirmed approvals separately. Failed agreement writes include their API reason while acknowledging the quotation prices were saved; no validation/permission/conflict is bypassed because a workflow is absent.
+
+## Missing supplier-price approval investigation
+
+The observed empty queue followed an API model-validation failure: AgreedPrice below 0.01 was rejected before a proposal/stage existed. The backend fix accepts strictly positive decimals, retaining assigned approval rules; deploy it and explicitly resubmit the failed agreement. Quotation prices already saved must not be blindly replayed. Frontend pricing mutations invalidate pending-approval caches, and the queue refreshes on entry/focus/reconnect and offers Refresh approvals.
+
+Waybill creation now reports a failed code suggestion instead of leaving the field silently blank. Retry re-requests code configuration/count support without saving a waybill or overwriting a manual number. The frontend now reads the Waybill rule and counts its prefix through the existing ShipmentDocument count route, so the new backend Waybill alias is not a deployment prerequisite.
+
+Reference checked: `oryx-next/src/components/pages/supply-chain/logistics/waybill/create/index.tsx` reads the Waybill naming rule and uses the waybill list totalRecordCount + 1. Live Desktop retains the prefix-count endpoint using the existing ShipmentDocument model, preserving shared logistics prefix counting. The backend hardening additionally includes archived records; deployed older servers retain their existing archive filtering. No Oryx Next files were changed by this comparison.
+
+Waybill verification: nine focused UI/code-generator tests passed, including failed count recovery and manual-number preservation; the backend shared/archived prefix-count test passed. Web typecheck and React Doctor completed without new issues. No live shipment/waybill was created. Documentation updated: services and workflows here and in the backend.
+
+Live desktop compatibility verification: the actual signed-in Waybill create screen generated WB009 with the existing customer server, matching Oryx Next. Nine focused tests passed with an unsupported Waybill count route fixture, retry recovery, configured WB/three-digit formatting and manual-number preservation. No live document was saved. Updated documentation: services.md and workflows.md.

@@ -1,6 +1,6 @@
 import { useAccess } from "@/shared/auth/use-access";
 import { useMemo } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, RefreshCw } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,14 @@ import { approvalRowsSchema, countsSchema, type PendingApproval } from "../schem
 import { DelegationPanel } from "./delegation-panel";
 
 /** How many documents of each type wait for the user. The full count is asked first; the older one covers a server without it. */
+const freshQueue = { refetchOnMountOrArgChange: true, refetchOnFocus: true, refetchOnReconnect: true } as const;
+
 function useCounts() {
-  const full = useGetApiV1ApprovalMyPendingDocumentCountsQuery({ ...audit });
-  const basic = useGetApiV1ApprovalMyPendingStatsQuery({ ...audit }, { skip: !full.isError });
+  const full = useGetApiV1ApprovalMyPendingDocumentCountsQuery({ ...audit }, freshQueue);
+  const basic = useGetApiV1ApprovalMyPendingStatsQuery({ ...audit }, { ...freshQueue, skip: !full.isError });
   const source = full.isError ? basic : full;
   const counts = useMemo(() => { const parsed = countsSchema.safeParse(source.data ?? null); return parsed.success ? parsed.data : {}; }, [source.data]);
-  return { counts, loading: full.isLoading || basic.isLoading, error: source.error ? apiErrorMessage(source.error) : null, retry: () => { void full.refetch(); } };
+  return { counts, loading: full.isLoading || basic.isLoading, error: source.error ? apiErrorMessage(source.error) : null, refreshing: source.isFetching, retry: () => { if (full.isError) void basic.refetch(); else void full.refetch(); } };
 }
 
 function DocumentCards({ documents }: { documents: readonly { type: string; count: number }[] }) {
@@ -48,7 +50,7 @@ const columns = column.columns([
 
 function DocumentList({ type }: { type: string }) {
   const navigate = useNavigate();
-  const query = useGetApiV1ApprovalMyPendingQuery({ ...audit, modelType: type });
+  const query = useGetApiV1ApprovalMyPendingQuery({ ...audit, modelType: type }, freshQueue);
   const parsed = useMemo(() => query.data ? approvalRowsSchema.safeParse(query.data) : null, [query.data]);
   // The server is asked for one type; anything else it sends back is left out.
   const rows = useMemo(() => parsed?.success ? parsed.data.filter((row) => row.type === type) : [], [parsed, type]);
@@ -72,8 +74,8 @@ export function ApprovalsQueuePage() {
   </section>;
 
   return <section className="min-w-0 space-y-4">
-    <div><p className="eyebrow">QUALITY ASSURANCE</p><h1 className="text-xl font-semibold">My pending approvals</h1>
-      <p className="text-sm text-muted-foreground">{state.loading ? "Counting what is waiting…" : total === 0 ? "Nothing is waiting for your decision." : `${total} ${total === 1 ? "request is" : "requests are"} waiting for your decision.`}</p></div>
+    <div className="flex items-start justify-between gap-3"><div><h1 className="text-xl font-semibold">My pending approvals</h1>
+      <p className="text-sm text-muted-foreground">{state.loading ? "Counting what is waiting…" : total === 0 ? "Nothing is waiting for your decision." : `${total} ${total === 1 ? "request is" : "requests are"} waiting for your decision.`}</p></div><Button type="button" size="sm" variant="outline" disabled={state.refreshing} onClick={state.retry}><RefreshCw />Refresh approvals</Button></div>
     {state.loading ? <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />Loading…</p> : null}
     {state.error ? <p role="alert" className="text-sm text-destructive">{state.error} <Button type="button" size="sm" variant="link" onClick={state.retry}>Retry</Button></p> : null}
     {documents.length > 0 ? <DocumentCards documents={documents} /> : null}

@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, safeStorage, session, shell, type 
 import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { CompanionRuntime } from "./companion/runtime";
 import { buildMenu } from "./menu";
 import { parseSiteUrl } from "./site-config";
 import { createSessionVault, type Cipher } from "./session-vault";
@@ -11,6 +12,7 @@ declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const MAIN_WINDOW_VITE_NAME: string;
 
 let window: BrowserWindow;
+let companion: CompanionRuntime | null = null;
 let connectionPageUrl = "";
 let siteUrl = "";
 let connectionError = "";
@@ -103,7 +105,7 @@ async function forgetServer(): Promise<void> {
 const onSite = () => Boolean(siteUrl) && window.webContents.getURL().startsWith(siteUrl);
 
 function refreshMenu(): void {
-  buildMenu({ siteUrl, reconnect: () => { void openSite(); }, changeServer, forgetServer: () => { void forgetServer(); },
+  buildMenu({ siteUrl, companion: () => companion?.toggle(), reconnect: () => { void openSite(); }, changeServer, forgetServer: () => { void forgetServer(); },
     home: () => { void openSite(); },
     back: () => { const history = window.webContents.navigationHistory; if (onSite() && history.canGoBack()) history.goBack(); },
     forward: () => { const history = window.webContents.navigationHistory; if (onSite() && history.canGoForward()) history.goForward(); },
@@ -121,7 +123,8 @@ async function createWindow(): Promise<void> {
   });
   let closing = false;
   window.on("close", (event) => {
-    if (closing) return;
+    if (closing || quitting) return;
+    if (!quitting && companion?.canRunInBackground()) { event.preventDefault(); window.hide(); return; }
     event.preventDefault();
     void vault.flush().finally(() => { closing = true; window.close(); });
   });
@@ -140,6 +143,8 @@ async function createWindow(): Promise<void> {
   try {
     siteUrl = parseSiteUrl((await readFile(configPath(), "utf8")).trim());
   } catch { siteUrl = ""; }
+  companion = new CompanionRuntime(window, __dirname, () => siteUrl);
+  await companion.start();
   refreshMenu();
   await openSite();
 }
@@ -171,7 +176,7 @@ app.whenReady().then(async () => {
     return status();
   });
   await createWindow();
-  app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) void createWindow(); });
+  app.on("activate", () => { if (!window || window.isDestroyed()) void createWindow(); else { window.show(); window.focus(); } });
 }).catch((error: Error) => { console.error(error); app.quit(); });
 
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });

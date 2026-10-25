@@ -1,91 +1,80 @@
-# Notifications
+# Notifications and system alerts
 
-How a notification gets from the backend to the right person's screen, and what the app does when it arrives.
+The backend is authoritative for alert rules, recipients, unread state, identity and time. The local companion and operating-system notifications are views of that state.
 
-## The path
+## Delivery path
 
 ```text
-.NET backend ──publishes──▶ RabbitMQ fan-out exchange ──▶ notification gateway (apps/gateway)
-                                                              │  authenticated Socket.IO, /realtime
-                                                              ▼
-                                                     desktop app (bell, toast, system notification)
-.NET backend ◀──────────── unread list, mark as read (REST) ──┘
+Business change → durable alert intent → configured recipients
+    → persisted notification + channel outbox → RabbitMQ
+    → authenticated gateway → recipient sockets → bell / system alert / companion
+                             ↑ REST unread reconciliation and mark-as-read
 ```
 
-- The backend publishes each in-app notification to the fan-out exchange `DOMAIN.Entities.Notifications:NotificationDto`, and saves it so it appears in the user's unread list.
-- The **gateway** binds a queue of its own to that exchange and passes each notification on, over Socket.IO, to the people it is addressed to.
-- The **app** shows it at once, and reads the unread list from the backend so the bell always agrees with the server.
+The companion integration is paired with backend hardening in `ERP/oryx-backend`; see its `docs/alert-reliability.md`. The backend migration must be reviewed/applied before deploying that backend version. This repository alone does not enable missing domain rules.
 
-The backend is unchanged. `oryx-next` keeps working beside this: its server has its own queue on the same exchange, and a fan-out exchange gives every queue every message, so neither takes messages from the other.
+## Gateway
 
-## The gateway (`apps/gateway`)
+`apps/gateway` consumes the backend's fanout exchanges using private ephemeral queues; it never competes with another application's consumer. Authentication uses the backend's authenticated-user endpoint. Notification text is routed only to the listed recipients' rooms; absent/invalid recipients are never broadcast. Read events are routed only to the affected user's room. Production-board identifiers retain their existing authenticated broadcast behavior.
 
-A small Node service. It holds no data and makes no decisions about who a user is.
-
-| Concern | How |
-| --- | --- |
-| Who is connecting | The client sends its access token in the Socket.IO handshake (`auth`, never the address). The gateway asks the backend (`GET /api/v1/user/authenticated`) whose it is. No valid token, no connection. A disabled account is refused. |
-| Who receives what | Each socket joins a room for its user id. A notification is emitted only to the rooms of its recipients. One with no readable recipient is dropped, never broadcast. |
-| What is sent | The text, the type and the time. The recipient list and the recipients' details stay on the server. |
-| Staying valid | Every five minutes the gateway checks each connected token again and disconnects one the backend no longer accepts. |
-| Browser origins | Only the origins listed in `ORYX_GATEWAY_ALLOWED_ORIGINS`; `*` is refused at start-up. |
-| Broker outages | Reconnects with a growing wait. `/realtime/health` answers 503 while the broker is unreachable. |
-| Secrets | Broker credentials and tokens are never logged. Tokens are remembered for a minute as a hash only. |
-
-Its queues are exclusive and temporary. Nothing builds up while the gateway is down, and nothing is lost for good either: the unread list is in the backend, and every client reads it when it connects and on a timer.
-
-Production-run updates (`ProductionActivityStepStatusChangedEvent`) go the same way, as `activity-updated`, to every signed-in client. They carry identifiers only; the app re-reads the run from the backend.
-
-### Running it
-
-```bash
-cp apps/gateway/.env.example apps/gateway/.env   # then fill it in
-bun run dev:gateway
-```
-
-| Variable | Meaning |
-| --- | --- |
-| `ORYX_API_ORIGIN` | The backend. HTTPS, unless it is local or `ORYX_GATEWAY_ALLOW_INSECURE=1` is set knowingly. |
-| `ORYX_GATEWAY_ALLOWED_ORIGINS` | Comma-separated origins the app is served from. |
-| `RABBITMQ_HOST`, `RABBITMQ_DEFAULT_USER`, `RABBITMQ_DEFAULT_PASS` | The broker, with the same names `oryx-next` uses. Or `RABBITMQ_URL`. |
-| `ORYX_GATEWAY_HOST`, `ORYX_GATEWAY_PORT` | Where it listens. Default `127.0.0.1:4100`. |
-
-In production the customer server's HTTPS entry point passes `/realtime` through to the gateway, with WebSocket upgrade, so the app reaches it on its own origin. In development set `ORYX_DEV_GATEWAY_ORIGIN` in `apps/web/.env` and Vite proxies `/realtime`.
-
-## In the app
-
-`shared/notifications`, shown by the bell in the header (`components/shell/notification-sheet.tsx`).
-
-- **The unread list is the truth.** The bell's count and list come from `GET /api/v1/alert/notifications?unreadOnly=true`, which the backend filters to the signed-in user.
-- **A push is announced at once.** A message inside the app says what it is, with a View button. If the window is in the background and the user has allowed it, the operating system shows it too. Permission is only asked for from a button in the notification list.
-- **Then the list is read again**, a moment later and once more. The backend publishes a notification just before it saves it, so the push can arrive before the list has it.
-- **Nothing is announced twice.** A notification that was pushed and then turns up in the list is recognised by its text.
-- **Signing in does not replay the backlog.** What was already waiting shows in the count; only what arrives afterwards is announced. More than three at once are announced as one line.
-- **Without the gateway it still works.** The list is read every minute (every five with the live connection up, in case a push was missed), when the window regains focus, and when the network comes back. Whatever is new is announced the same way. The notification list says which mode it is in.
-- **Mark as read** removes the item at once and puts it back if the server refuses. **Mark all** sends the requests one after another and stops at the first refusal, saying how many were done.
-- **Earlier notifications** are loaded only when asked for.
-- Where a notification is about something the app has a page for, it links to it.
-
-## Changed from oryx-next, and why
-
-| oryx-next | Now | Why |
+| Exchange | Client event | Data |
 | --- | --- | --- |
-| Every notification was sent to every connected browser, and each showed it as a toast. | Sent only to its recipients. | People saw notifications that were not theirs, with their text. |
-| Anyone could open the socket; no sign-in was checked. | The backend vouches for each connection, and keeps vouching while it is open. | The socket carried business information. |
-| A toast was shown, but the bell did not change until the page was reloaded. | The unread list is read again on every push. | The count was wrong until a reload. |
-| If the socket was down, nothing arrived. | The list is checked on a timer and on return to the window. | Notifications should not depend on one connection. |
-| "Mark all as read" sent every request at once and ignored failures. | One after another, stopping and reporting at the first failure. | Half-done work should be visible. |
-| The app's own server consumed a shared queue. | The gateway uses a queue of its own. | Two consumers on one queue each get only some of the messages. |
+| `DOMAIN.Entities.Notifications:NotificationDto` | `notification` | Stable notification ID when present, text, type, original sent time; no recipient list. |
+| `DOMAIN.Entities.Notifications:NotificationReadEvent` | `notification-read` | Notification ID; only the user's sessions. |
+| ProductionActivityStepStatusChangedEvent | `activity-updated` | Existing production identifiers. |
 
-## Known limits (server behaviour)
+The gateway publishes `delivery-state` to authenticated sessions on broker loss/recovery and initial connection. A live socket is not evidence that the broker is healthy. `/realtime/health` remains 503 when the broker is unavailable. Channel failure/cancellation closes and reconnects the broker connection. Tokens are periodically rechecked; rejected sessions disconnect. Allowed browser origins must be explicit.
 
-- The notification list does not say when each was sent: the backend fills that field with the time of the request. The app shows a time only for notifications it received during the session.
-- There is no "mark all as read" on the server, so it is one request per notification.
-- The id in a pushed notification is not the id it is saved under, so a push cannot be marked as read until the list has been read.
-- Email notifications are sent by the backend and do not pass through here.
+Queues are not a replay store. The backend unread API is the durable recovery path. On socket reconnect, broker recovery, or read events, the web hook refetches unread notifications immediately. Polling remains every minute without live delivery and every five minutes with it, plus focus/network recovery. Events can repeat; stable IDs deduplicate them. Legacy events without IDs retain text-based fallback deduplication. Two new notifications with different IDs and the same text are separate alerts.
 
-## Tests
+## Visible in every working mode
 
-- `apps/gateway/src/gateway.test.ts`: reading published messages, routing to recipients only, the token check and its caching, configuration that refuses unsafe settings.
-- `apps/gateway/src/server.test.ts`: over real sockets — a notification reaches every session of its recipient and nobody else, an unauthenticated client is not connected, a client whose token stops being accepted is disconnected.
-- `apps/web/src/shared/notifications/notifications.test.tsx`: the backlog is not announced, a push is announced once and the bell follows the server, a later check announces what it finds, mark as read with a refusal, mark all in order.
+- A new arrival shows an in-app toast and a system notification, including while Oryx is in the foreground.
+- Installed Electron clients use a narrow native notification bridge. `timeoutType: never` requests extended visibility; browsers with granted permission request `requireInteraction`.
+- The operating system controls notification-center retention, permission, focus/DND suppression, and dismissal. Oryx cannot force a toast to stay indefinitely. The backend unread list and companion badge remain until the user marks the alert read.
+- On sign-in/restart, one native summary points to waiting unread alerts. Individual old alerts are not replayed as a toast flood.
+- Clicking a system notification restores Oryx and opens the notification sheet. Clicking or dismissing an OS alert never marks it read.
+- Mark-as-read retains backend recipient authorization. Its persisted targeted event refreshes other connected sessions. Browser polling supports older backend versions that do not emit that event.
+- Companion stays always on top and can continue while the main window is hidden. Closing the main window with a working tray keeps the app running; Open Oryx and Quit are available from the tray. Explicit Quit exits cleanly.
+- The companion shows every unread alert in a 200 DIP scrolling panel and jumps to the newest alert when a new ID arrives. Clicking an alert does not mark it read.
+- Limited roaming stays within the companion canvas, stops during focus/interaction/unread alerts, and respects quiet/reduced-motion preferences.
+
+System alerts validate sender/frame/origin and bounded title/body fields. The local companion renderer receives the signed-in user’s unread alert labels, messages, IDs and priorities. It has no session, API access or ERP mutation capabilities. Alert rows are individually clickable; shipment rows with a persisted shipment ID open that shipment’s details through the trusted main window. Navigation/sign-out clears local native notification state to prevent another session opening stale private alerts.
+
+## ERP links and coverage
+
+Existing notification type links point to module/queue pages. The current backend DTO does not identify a specific ERP record. Direct record opening requires backend-owned record type/ID, event code, priority, and permission-aware routing; do not infer an ID from text. Requested OOS, upcoming expiry, reorder, blocked production, requisition approval, delayed PO/receipt, discrepancy, COA/ARD/worksheet review and calibration alerts require real backend rules. See the backend coverage audit and [companion usage](companion.md). No new business priority or due threshold is invented by the companion.
+
+## Running and deploying
+
+Use `bun run dev:gateway`. Configure `ORYX_API_ORIGIN`, `ORYX_GATEWAY_ALLOWED_ORIGINS`, and `RABBITMQ_HOST`/`RABBITMQ_DEFAULT_USER`/`RABBITMQ_DEFAULT_PASS` or `RABBITMQ_URL`. Host/port default to `127.0.0.1:4100`. The customer reverse proxy serves `/realtime` with WebSocket upgrades. Development uses `ORYX_DEV_GATEWAY_ORIGIN`. Existing HTTPS and explicit intranet HTTP controls remain in force.
+
+Backend API paths remain `GET /api/v1/alert/notifications?unreadOnly=true` and `PUT /api/v1/alert/{id}/mark-as-read`. Email is a separate backend channel. Earlier history is loaded only on request. Read failures restore optimistic UI and report failure; mark-all stops at the first refusal.
+
+## Verification and limits
+
+Gateway tests exercise real sockets for recipient isolation, authentication, token rejection, broker state and targeted read refresh. Web tests cover unread recovery, replay deduplication, read rollback, browser/older-shell support, and native/fallback system-alert paths. Desktop checks cover bounds, summary validation, packaged renderer inclusion, and native canvas isolation/background lifecycle.
+
+Live PostgreSQL/RabbitMQ failure injection, customer Windows/scaling/multiple-display behavior, native OS notification settings, and signed installer acceptance are deployment gates, not claims made by local tests.
+
+Backend verification also includes 22 alert tests, one using a disposable PostgreSQL instance to apply the migration and verify failed-delivery recovery/concurrent claim fencing. No customer database migration or production deployment was performed.
+
+## Local connection diagnosis and device test (2026-10-24)
+
+The desktop saved server is `http://127.0.0.1:5173`; local `/api` is proxied to `http://164.90.142.68:8086`. The missing realtime proxy, absent local gateway listener, and malformed `RABBITMQ_HOST=http://...` prevented live updates. Local ignored configuration now points `ORYX_DEV_GATEWAY_ORIGIN` at `http://127.0.0.1:4100`, sets the gateway HTTP port explicitly to 4100, allows the exact frontend origin, and uses a plain broker hostname. Existing credentials were retained and never printed. Explicit existing-development HTTP opt-in is needed for the configured backend; certificates/security checks were not bypassed. Gateway configuration now rejects HTTP-style broker host strings with an actionable error.
+
+Verified `/realtime/health` through the frontend reports `status: ok` and one client; the running authenticated UI displays “New notifications appear here as they are sent.” The gateway was started with `bun run dev:gateway` and must stay running for local realtime delivery. This does not install a persistent OS service.
+
+Appearance → ORYX Companion → **Send test notification** submits a clearly labelled device-only notification through the existing native bridge. It does not create a backend alert, change counts, or prove domain rule/broker delivery. The running app accepted one test during this session. OS banners/history remain subject to permissions and DND; acceptance by the native API is not proof that the user saw a banner. Real business-event coverage needs a separate authorized backend test.
+
+Device-test verification: five Appearance tests and 12 gateway tests passed, including the malformed-host guard; React Doctor reports 100/100 on changed UI code. The live authenticated app confirmed realtime connection and accepted the native device test. No synthetic broker business event or ERP write was performed. Documentation updated: notifications, appearance, services and workflows.
+
+
+## Companion alert feed (2026-10-25)
+
+Every unread notification is included in the companion feed and updated through the same realtime and REST reconciliation path as the notification sheet. Its card grows up to 200 DIP, then scrolls internally; a newly received ID scrolls the feed to the newest entry. Each alert is individually actionable. Shipment arrivals include an explicit persisted shipment document ID, and the trusted main window resolves the notification before navigating to that shipment’s detail page. Opening details does not mark the alert read.
+
+
+## Companion alert routing (2026-10-25)
+
+The companion receives the user's complete unread notification list and live notifications, not a shipment-only subset. Alert type is carried through the companion bridge so clicks can open the matching workspace route; shipment arrivals include their document reference for direct details navigation.

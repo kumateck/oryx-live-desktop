@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useGetApiV1ProcurementShipmentInvoiceUnattachedQuery } from "@/modules/shipment-invoices/api/invoice-api";
 import { InvoiceLinesTable } from "@/modules/shipment-invoices/components/invoice-lines-table";
 import { invoiceRowsSchema } from "@/modules/shipment-invoices/schemas/invoice-schema";
-import { useGeneratedCode } from "@/shared/codes/use-generated-code";
+import { useShipmentCode } from "../hooks/use-shipment-code";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
@@ -28,7 +28,7 @@ export function CreateShipmentForm({ kind }: { kind: ShipmentKind }) {
   const waiting = useGetApiV1ProcurementShipmentInvoiceUnattachedQuery({ ...config.audit });
   // Foreign invoices go on shipment documents and local ones on waybills.
   const invoices = useMemo(() => { const parsed = invoiceRowsSchema.safeParse(waiting.data ?? null); return parsed.success ? parsed.data.filter((invoice) => invoice.supplier.type === config.supplierType) : []; }, [waiting.data, config.supplierType]);
-  const code = useGeneratedCode(config.codeModel);
+  const code = useShipmentCode(kind);
   const { create, creating } = useCreateShipment(kind);
   const [upload, uploading] = useUploadShipmentFilesMutation();
   const [message, setMessage] = useState("");
@@ -49,6 +49,10 @@ export function CreateShipmentForm({ kind }: { kind: ShipmentKind }) {
       description: "PDF, image, Word or Excel, up to 10 MB each." },
   ], [invoices, waiting.isLoading, config.supplierType]);
 
+  const suggestCode = async () => {
+    const next = await code.suggest();
+    if (next && !form.getValues("code")) form.setValue("code", next, { shouldValidate: true });
+  };
   const suggested = useRef(false);
   useEffect(() => {
     if (!code.ready || suggested.current) return;
@@ -80,7 +84,13 @@ export function CreateShipmentForm({ kind }: { kind: ShipmentKind }) {
     <PageHeader title={`New ${config.singular}`} crumbs={[{ label: config.title, to: config.root }, { label: "New" }]}
       actions={<><Button type="button" variant="outline" disabled={saving} onClick={() => void navigate(config.root)}>Cancel</Button>
         <Button type="submit" disabled={saving}>{saving ? <><Spinner />Saving…</> : created.current ? "Attach documents" : `Create ${config.singular}`}</Button></>} />
-    <section className="space-y-3 rounded-lg border bg-card p-4"><FormWizard form={form} fields={fields} className="md:grid-cols-2" /></section>
+    <section className="space-y-3 rounded-lg border bg-card p-4"><FormWizard form={form} fields={fields} className="md:grid-cols-2" />
+      {code.unavailable ? <p role="alert" className="text-sm text-destructive">The document number could not be generated. Check the {config.codeModel} rule in Code Settings and the server’s code-count support. You can retry or enter a number manually.</p> : null}
+      <Button type="button" size="sm" variant="outline" disabled={saving || code.busy} onClick={() => {
+        if (!code.ready) { suggested.current = false; void code.refetchRule(); }
+        else void suggestCode();
+      }}>{code.busy ? "Generating number…" : "Retry document number"}</Button>
+    </section>
     {waiting.error ? <p role="alert" className="text-sm text-destructive">{apiErrorMessage(waiting.error)}</p> : null}
     {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
     {invoice ? <section className="space-y-2"><div className="flex flex-wrap items-baseline justify-between gap-2"><h2 className="text-sm font-semibold">On invoice {invoice.code}</h2>

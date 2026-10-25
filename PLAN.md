@@ -169,3 +169,7 @@ Alerts, approval workflows, Sites, signature settings, and password change now h
 ## Documentation and verification
 
 Keep this plan current as decisions are closed. Every implementation phase adds setup/build/deploy instructions, route conventions, API/session contract notes, and visual acceptance evidence. Verify the packaged application and an installed update path, not only browser development mode.
+
+## Operations Watch companion (2026-10-24)
+
+Adapt Dodo’s isolated transparent-window pattern for an optional ORYX Canvas 2D character, using the supplied character board. The first integration reuses unread notification and live-connection state, opens the existing notification sheet, and exposes no ERP mutation capabilities. See `docs/companion.md` for useful workflow mappings, local-only security boundaries, artwork limitations, and native acceptance gates.

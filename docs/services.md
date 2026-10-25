@@ -120,3 +120,27 @@ symbols linked across all departments. Supplier requests persist `purchaseUnit`
 symbols; responses also expose `pendingPurchaseUnit`. Pricing and quotation writes
 share backend synchronization and existing approval handling. The backend migration
 must precede the frontend release. See [purchase-unit contract and rollout](supplier-purchase-units.md).
+
+## Desktop companion summary
+
+No service endpoint added. The optional native `companion:summary` bridge accepts validated unread count, notification-connection status, and sign-in state from the configured server main frame only. The local pet receives no credentials or record content. See [companion](companion.md).
+
+## Real-time delivery reconciliation
+
+The gateway now forwards stable notification IDs, emits broker availability, and routes NotificationReadEvent only to its recipient. Clients reconcile on connect/recovery/read, with polling fallback. Native system notifications work in foreground and background, and the companion can run through the tray. See [notifications](notifications.md).
+
+## Companion preference bridge
+
+The configured app main frame can read `companion:settings` and issue validated numeric `companion:command` actions. Shared types live in `shared/companion.ts`; serialized device preference writes precede UI acknowledgement. OS-notification clicks forward their notification ID to the existing sheet; no new backend API is introduced. See [companion](companion.md).
+
+## Companion indicator metadata
+
+The optional native summary now carries a bounded alert event label, notification ID and numeric presentation priority. It is selected from the backend-authorized personal unread feed. The gateway preserves optional named priority metadata, but derives no severity or recipients. The existing Alert Configuration editor and notification display share one event catalog. Current backend contracts omit priority/custom configuration title, so the caption shows Priority not set and the shared event label until those values are supplied. No backend endpoint was changed.
+
+## Local realtime configuration diagnostics
+
+Local frontend realtime requests now proxy to gateway port 4100; gateway health and the authenticated UI connection were verified. RABBITMQ_HOST rejects HTTP-prefixed host values; full broker URLs belong in RABBITMQ_URL. Appearance's device notification test uses existing native IPC and adds no backend endpoint. See [notifications](notifications.md).
+
+## Waybill number generation
+
+Waybill code suggestions load the configured Waybill naming rule, then request `/api/v1/configuration/ShipmentDocument/count?prefix=WB` (using the actual configured prefix). Both logistics kinds are stored in ShipmentDocuments, and this existing count route works on deployed servers without the new Waybill alias. The optional backend alias remains compatible but is not required by the desktop flow. The creation UI reports unavailable suggestions and provides Retry document number, preserving manually entered numbers. No ERP record is created by retrying.

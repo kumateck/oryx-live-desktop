@@ -200,3 +200,12 @@ it("lays out every readable document without failing, from full or sparse data",
     cleanup(); forgetSession();
   }
 }, 60_000);
+
+it("refreshes pending approval counts on demand instead of keeping an old empty queue", async () => {
+  const { calls } = open("/qa/pending-approvals");
+  await screen.findByText("7 requests are waiting for your decision.");
+  const before = calls.filter((call) => call.path === "/api/v1/approval/my-pending/document-counts").length;
+  await userEvent.setup().click(screen.getByRole("button", { name: "Refresh approvals" }));
+  await waitFor(() => expect(calls.filter((call) => call.path === "/api/v1/approval/my-pending/document-counts").length).toBeGreaterThan(before));
+  expect(writes(calls)).toHaveLength(0);
+});
