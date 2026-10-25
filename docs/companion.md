@@ -1,5 +1,17 @@
 # ORYX Companion — Operations Watch
 
+## Collapsible alert card (2026-10-25)
+
+The alert card below the avatar starts collapsed as a 32 DIP header showing
+priority and unread count. Click the header to expand the bounded, scrollable
+notification feed; click it again to collapse. The native companion window
+resizes with the card, leaving the desktop area below it available when closed.
+The expansion choice is local to the current shell run and defaults to
+collapsed on launch. **Show alert details** in Appearance still controls whether
+the entire card is visible. Alert selection, unread state, backend priority,
+and navigation behavior are unchanged. Documentation updated: this guide,
+`docs/services.md`, and `docs/workflows.md`.
+
 The desktop shell includes an optional local, transparent, always-on-top 176 × 176 DIP companion window. Its Canvas 2D renderer displays the illustrated oryx at approximately 112 DIP tall inside a 128 DIP logical frame. View → Show / Hide ORYX Companion toggles it; the choice survives restart. Drag the painted character to move it. Position is kept locally and clamped to connected display work areas. Right-click offers Open Oryx, Quiet mode, Reset position, and Hide.
 
 ## Useful places in this application

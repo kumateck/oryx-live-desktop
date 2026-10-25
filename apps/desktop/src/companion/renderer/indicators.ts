@@ -1,6 +1,6 @@
 import { AlertPriority, type CompanionView } from "../contract";
 import { priorityLabel } from "../../../../../shared/alert-priority";
-import { companionPanelHeight, companionSize } from "../placement";
+import { visiblePanelHeight, companionSize } from "../placement";
 export function indicatorText(view: CompanionView) {
   const hasAlerts = view.signedIn && view.unread > 0;
   const alerts = hasAlerts ? view.alerts ?? [] : [];
@@ -19,11 +19,17 @@ export function renderIndicators(view: CompanionView): void {
   const panel = document.getElementById("indicators");
   if (panel) {
     panel.hidden = view.showIndicators === false;
-    const height = view.showIndicators === false ? 0 : companionPanelHeight(view.alerts?.length ?? 0);
+    panel.dataset.expanded = String(view.panelExpanded === true);
+    const height = view.showIndicators === false ? 0 : visiblePanelHeight(view.alerts?.length ?? 0, view.panelExpanded === true);
     panel.style.height = `${height}px`; document.body.style.height = `${companionSize + height}px`;
     const companion = document.getElementById("companion"); if (companion) companion.style.height = `${companionSize + height}px`;
   }
   document.body.dataset.details = view.showIndicators === false ? "off" : "on";
+  const toggle = document.getElementById("alert-toggle");
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(view.panelExpanded === true));
+    toggle.setAttribute("aria-label", `${view.panelExpanded ? "Collapse" : "Expand"} unread alerts`);
+  }
   for (const [id, value] of [["alert-priority", text.priority], ["alert-count", text.count], ["alert-status", text.status]]) {
     const element = document.getElementById(id ?? "");
     if (element && value) { element.textContent = value; element.title = value; }

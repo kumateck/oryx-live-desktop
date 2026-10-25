@@ -7,6 +7,7 @@ const bridge: PetBridge = {
     return () => { ipcRenderer.removeListener("pet:view", receive); };
   },
   interactive: (value) => { ipcRenderer.send("pet:interactive", value); },
+  panel: (expanded) => { ipcRenderer.send("pet:panel", expanded); },
   drag: (action) => { ipcRenderer.send("pet:drag", action); },
   open: (notificationId, direct) => { ipcRenderer.send("pet:open", { id: notificationId, direct }); },
   menu: () => { ipcRenderer.send("pet:menu"); },

@@ -3,6 +3,10 @@ export const approvalListPath = (type: string) => `${approvalsPath}?type=${encod
 export const approvalPath = (type: string, id: string) => `${approvalsPath}/${encodeURIComponent(type)}/${encodeURIComponent(id)}`;
 /** Seeing the queue, approving and rejecting are three permissions. */
 export const approvalPermissions = { view: "CanViewPendingApprovals", approve: "CanApprovePendingApproval", reject: "CanRejectPendingApproval" } as const;
+export const decisionPermission = (type: string, decision: Decision): string =>
+  type === "Response"
+    ? decision === "approve" ? "CanApproveResponse" : "CanRejectResponse"
+    : approvalPermissions[decision];
 export const audit = { module: "Quality Assurance", subModule: "Pending Approvals" } as const;
 
 /** Documents whose content this app can show, so they can be read before they are decided. The names are the server's. */

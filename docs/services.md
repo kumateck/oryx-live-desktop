@@ -144,3 +144,16 @@ Local frontend realtime requests now proxy to gateway port 4100; gateway health 
 ## Waybill number generation
 
 Waybill code suggestions load the configured Waybill naming rule, then request `/api/v1/configuration/ShipmentDocument/count?prefix=WB` (using the actual configured prefix). Both logistics kinds are stored in ShipmentDocuments, and this existing count route works on deployed servers without the new Waybill alias. The optional backend alias remains compatible but is not required by the desktop flow. The creation UI reports unavailable suggestions and provides Retry document number, preserving manually entered numbers. No ERP record is created by retrying.
+
+## Companion card expansion (2026-10-25)
+
+The local `pet:panel` IPC accepts a boolean only from the isolated companion
+frame. It resizes the native window between a compact header and the bounded
+feed. No backend endpoint, notification payload, or preference format changes.
+
+## Response decision permissions (2026-10-25)
+
+The existing `Response` approval endpoints require the dedicated
+`CanApproveResponse` or `CanRejectResponse` grant for the corresponding decision.
+The desktop now checks the same grant before offering the decision button.
+The displayed Certificate of analysis label does not change the API model type.

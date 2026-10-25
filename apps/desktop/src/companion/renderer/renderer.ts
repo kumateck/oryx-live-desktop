@@ -40,7 +40,7 @@ bridge.onView((next) => {
   control.title = companionDescription(view);
 });
 function hit(x: number, y: number): boolean {
-  if (x < 0 || y < 0 || x >= 176 || y >= 376) return false;
+  if (x < 0 || y < 0 || x >= 176 || y >= control.clientHeight) return false;
   if (y >= 176) return view.showIndicators !== false;
   return (ctx.getImageData(Math.floor(x * 2), Math.floor(y * 2), 1, 1).data[3] ?? 0) > 40;
 }
@@ -79,6 +79,7 @@ control.addEventListener("click", (event) => {
   const target = event.target instanceof Element ? event.target : null;
   const alert = target?.closest<HTMLElement>("[data-notification-id]");
   if (alert?.dataset.notificationId) { play(Clip.Greeting); bridge.open(alert.dataset.notificationId, true); }
+  else if (target?.closest("#alert-toggle")) { bridge.panel(!view.panelExpanded); }
   else if (target?.closest("#pet-action")) { play(Clip.Greeting); bridge.open(); }
 });
 control.addEventListener("contextmenu", (event) => { event.preventDefault(); finish(); bridge.menu(); });

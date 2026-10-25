@@ -198,6 +198,10 @@ the queue and detail page, preserving its key, registry position, routes and
 approval rules. The COA is on the page; **Print COA** and **Print Worksheet**
 open separate print-preview dialogs. Printing creates no certificate or approval
 mutation. See [COA approval review](coa-approval-review-2026-10-24.md).
+The decision buttons require `CanApproveResponse` or `CanRejectResponse`,
+respectively, as well as a request waiting at the user's assigned stage.
+Generic pending-approval permissions do not authorize a Response decision.
+Documentation updated: this workflow and `docs/services.md`.
 
 ## Supplier purchase-unit synchronization (2026-10-24)
 
@@ -244,3 +248,9 @@ Reference checked: `oryx-next/src/components/pages/supply-chain/logistics/waybil
 Waybill verification: nine focused UI/code-generator tests passed, including failed count recovery and manual-number preservation; the backend shared/archived prefix-count test passed. Web typecheck and React Doctor completed without new issues. No live shipment/waybill was created. Documentation updated: services and workflows here and in the backend.
 
 Live desktop compatibility verification: the actual signed-in Waybill create screen generated WB009 with the existing customer server, matching Oryx Next. Nine focused tests passed with an unsupported Waybill count route fixture, retry recovery, configured WB/three-digit formatting and manual-number preservation. No live document was saved. Updated documentation: services.md and workflows.md.
+
+## Collapsible companion alerts (2026-10-25)
+
+The card under the companion avatar starts collapsed. Its header expands or
+collapses the unread list without marking an alert read. Clicking a list item
+continues through the existing trusted navigation and authorization path.

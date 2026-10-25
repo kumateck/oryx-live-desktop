@@ -2,7 +2,9 @@ export interface Point { x: number; y: number }
 export interface Area extends Point { width: number; height: number }
 export const companionSize = 176;
 export const companionPanelHeight = (alertCount: number) => Math.min(200, Math.max(80, 42 + Math.max(1, alertCount) * 48));
-export const companionHeight = 376;
+export const companionHeaderHeight = 32;
+export const visiblePanelHeight = (alertCount: number, expanded: boolean) => expanded ? companionPanelHeight(alertCount) : companionHeaderHeight;
+export const companionHeight = companionSize + companionHeaderHeight;
 export function clampPlacement(point: Point, area: Area, height = companionHeight): Point {
   return {
     x: Math.round(Math.max(area.x, Math.min(point.x, area.x + Math.max(0, area.width - companionSize)))),

@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, screen, Tray, nativeImage, type IpcM
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { clampPlacement, companionSize, companionHeight, companionPanelHeight, validSummary, type Point } from "./placement";
+import { clampPlacement, companionSize, visiblePanelHeight, validSummary, type Point } from "./placement";
 import { SystemAlerts, validSystemAlert } from "./system-alerts";
 import { CompanionPreferenceStore } from "./preferences";
 import { CompanionCommand, type CompanionPreferences, type CompanionView } from "./contract";
@@ -20,6 +20,7 @@ export class CompanionRuntime {
   private roaming = true;
   private quiet = false;
   private state: CompanionView = { unread: 0, connected: false, signedIn: false, focused: false, quiet: false, roaming: true };
+  private panelExpanded = false;
   private drag: { pointer: Point; origin: Point } | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private localUrl = "";
@@ -70,15 +71,13 @@ export class CompanionRuntime {
       if (bounds) await writeFile(path.join(app.getPath("userData"), "companion-position.txt"), `${bounds.x},${bounds.y}`, { mode: 0o600 });
     }
     if (this.enabled) await this.show(); else this.hide();
-    this.pet?.setSize(companionSize, next.showIndicators ? companionSize + companionPanelHeight(this.state.alerts?.length ?? 0) : companionSize);
-    if (this.pet) { const bounds = this.pet.getBounds(); const area = screen.getDisplayNearestPoint(bounds).workArea; this.pet.setPosition(...this.coordinates(clampPlacement(bounds, area, bounds.height))); }
     this.update({});
     return next;
   }
   private update(change: Partial<CompanionView>): void {
-    this.state = { ...this.state, ...change, quiet: this.quiet, roaming: this.roaming, showIndicators: this.preferences.current().showIndicators };
+    this.state = { ...this.state, ...change, quiet: this.quiet, roaming: this.roaming, showIndicators: this.preferences.current().showIndicators, panelExpanded: this.panelExpanded };
     if (this.pet) {
-      const height = this.state.showIndicators ? companionSize + companionPanelHeight(this.state.alerts?.length ?? 0) : companionSize;
+      const height = this.state.showIndicators ? companionSize + visiblePanelHeight(this.state.alerts?.length ?? 0, this.panelExpanded) : companionSize;
       this.pet.setSize(companionSize, height);
       const bounds = this.pet.getBounds(); const area = screen.getDisplayNearestPoint(bounds).workArea;
       this.pet.setPosition(...this.coordinates(clampPlacement(bounds, area, height)));
@@ -115,6 +114,11 @@ export class CompanionRuntime {
     ipcMain.on("pet:ready", (event) => { if (this.trusted(event)) this.update({}); });
     ipcMain.on("pet:interactive", (event, value: boolean) => {
       if (this.trusted(event) && typeof value === "boolean" && !this.drag) this.pet?.setIgnoreMouseEvents(!value, { forward: true });
+    });
+    ipcMain.on("pet:panel", (event, expanded: boolean) => {
+      if (!this.trusted(event) || typeof expanded !== "boolean") return;
+      this.panelExpanded = expanded;
+      this.update({});
     });
     ipcMain.on("pet:drag", (event, action: string) => {
       if (!this.trusted(event)) return;
@@ -167,13 +171,13 @@ export class CompanionRuntime {
   }
   private place = (): void => {
     const area = this.position ? screen.getDisplayNearestPoint(this.position).workArea : screen.getPrimaryDisplay().workArea;
-    const height = this.preferences.current().showIndicators ? companionSize + companionPanelHeight(this.state.alerts?.length ?? 0) : companionSize;
+    const height = this.preferences.current().showIndicators ? companionSize + visiblePanelHeight(this.state.alerts?.length ?? 0, this.panelExpanded) : companionSize;
     const point = this.position ?? { x: area.x + area.width - companionSize - 20, y: area.y + area.height - height };
     this.pet?.setPosition(...this.coordinates(clampPlacement(point, area, height)));
   };
   private async show(): Promise<void> {
     if (this.pet) { this.pet.showInactive(); return; }
-    const pet = new BrowserWindow({ width: companionSize, height: this.preferences.current().showIndicators ? companionSize + companionPanelHeight(this.state.alerts?.length ?? 0) : companionSize, show: false, frame: false, transparent: true,
+    const pet = new BrowserWindow({ width: companionSize, height: this.preferences.current().showIndicators ? companionSize + visiblePanelHeight(this.state.alerts?.length ?? 0, this.panelExpanded) : companionSize, show: false, frame: false, transparent: true,
       backgroundColor: "#00000000", hasShadow: false, resizable: false, minimizable: false, maximizable: false,
       fullscreenable: false, focusable: false, skipTaskbar: true, title: "ORYX Companion",
       webPreferences: { preload: path.join(this.directory, "companion-preload.cjs"), partition: "oryx-companion", nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true, webviewTag: false },
@@ -201,6 +205,6 @@ export class CompanionRuntime {
     ipcMain.removeHandler("companion:command");
     ipcMain.removeHandler("companion:summary");
     ipcMain.removeHandler("companion:notify");
-    for (const channel of ["pet:ready", "pet:interactive", "pet:drag", "pet:open", "pet:menu"]) ipcMain.removeAllListeners(channel);
+    for (const channel of ["pet:ready", "pet:interactive", "pet:panel", "pet:drag", "pet:open", "pet:menu"]) ipcMain.removeAllListeners(channel);
   }
 }

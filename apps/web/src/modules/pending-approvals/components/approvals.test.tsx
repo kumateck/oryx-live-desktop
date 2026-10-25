@@ -8,7 +8,7 @@ import PendingApprovalsPage from "../../../pages/(workspace)/qa/pending-approval
 import { ApiProvider } from "../../../shared/api/api-provider";
 import { SessionProvider } from "../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../test/backend";
-import { decidedElsewhere, decisionProblem, documentLabel, isReadable, waitingDocuments } from "../lib/approval-documents";
+import { decidedElsewhere, decisionPermission, decisionProblem, documentLabel, isReadable, waitingDocuments } from "../lib/approval-documents";
 
 afterEach(() => { cleanup(); forgetSession(); });
 
@@ -26,6 +26,9 @@ it("names documents, says where each is decided, and asks for a reason only when
   expect(decisionProblem("reject", "  ")).toBe("Say why the request is rejected");
   expect(decisionProblem("reject", "Wrong supplier")).toBeNull();
   expect(decisionProblem("approve", "x".repeat(2001))).toContain("2000");
+  expect(decisionPermission("Response", "approve")).toBe("CanApproveResponse");
+  expect(decisionPermission("Response", "reject")).toBe("CanRejectResponse");
+  expect(decisionPermission("LeaveRequest", "approve")).toBe("CanApprovePendingApproval");
 });
 
 import { entity, leave } from "./__fixtures__/approval-records";
@@ -49,6 +52,7 @@ function open(address: string, options: { countsFail?: boolean; permissions?: st
       received: [{ id: "dg-2", delegator: { name: "Ama Owusu" }, delegate: { name: "Ada Mensah" }, startsAt: "2026-10-01T08:00:00Z", endsAt: "2026-10-03T00:00:00Z", status: 2 }] });
     if (path === "/api/v1/approval/delegations/dg-1" && input.method === "DELETE") return new Response(null, { status: 204 });
     if (path === "/api/v1/approval/my-pending/LeaveRequest/lr-1") return Response.json(entity("LeaveRequest", "lr-1", { approvalLogs: [{ user: { name: "K. Mensah" }, status: 2, approvedAt: "2026-09-30T12:00:00Z", comments: "Dates clash with the audit" }] }));
+    if (path === "/api/v1/approval/my-pending/Response/doc-1") return Response.json(entity("Response", "doc-1"));
     if (path === "/api/v1/approval/my-pending/ServiceMemo/sm-1") return Response.json(entity("ServiceMemo", "sm-1"));
     if (path === "/api/v1/approval/my-pending/LeaveRequest/gone") return new Response(null, { status: 403 });
     if (path === "/api/v1/leave-request/lr-1") return Response.json(leave);
@@ -156,6 +160,18 @@ it("offers approving and rejecting each to those who hold that permission", asyn
   expect(screen.getByRole("button", { name: "Reject" })).toBeTruthy();
 });
 
+it("requires the dedicated Response permission for each certificate decision", async () => {
+  open("/qa/pending-approvals/Response/doc-1", { permissions: ["CanViewPendingApprovals", "CanApprovePendingApproval", "CanRejectPendingApproval"] });
+  await screen.findByRole("region", { name: "Certificate of analysis details" });
+  expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Reject" })).toBeNull();
+  cleanup();
+
+  open("/qa/pending-approvals/Response/doc-1", { permissions: ["CanViewPendingApprovals", "CanApproveResponse"] });
+  await screen.findByRole("button", { name: "Approve" });
+  expect(screen.queryByRole("button", { name: "Reject" })).toBeNull();
+}, 15_000);
+
 it("lays out every readable document without failing, from full or sparse data", async () => {
   const documents: Record<string, object> = {
     StockAdjustment: { adjustmentNumber: "ADJ-1", targetType: 1, lines: [{ id: "l1", materialName: "Maize starch", batchNumber: "B-1", systemQuantitySnapshot: 5000, physicalCount: 4000, variance: -1000, uom: { symbol: "g" }, reasonCode: "PhysicalCount" }] },
@@ -180,7 +196,7 @@ it("lays out every readable document without failing, from full or sparse data",
     RndFormulation: "V3", RndTechnologyTransfer: "Execution in progress", Response: "94.1%", StockAdjustment: "-1 kg", ProductionOrder: "Kinapharma", AllocateProductionOrder: "FG-7", OvertimeRequest: "6 for 2 people" };
   for (const type of ["StockAdjustment", "ProductionOrder", "AllocateProductionOrder", "OvertimeRequest", "ProformaInvoice", "FinishedGoodsTransferNote", "ProductionExtraPacking", "StaffRequisition", "JobRequest", "PurchaseOrder", "BillingSheet", "ShipmentDocument", "PurchaseRequisition",
     "CustomerQuotation", "SupplierPricingAgreement", "PayrollRun", "PerformanceReview", "RndProject", "RndFormulation", "RndTechnologyTransfer", "Response"]) {
-    const backend = stubBackend({ permissions: ["CanViewPendingApprovals", "CanApprovePendingApproval"] });
+    const backend = stubBackend({ permissions: ["CanViewPendingApprovals", "CanApprovePendingApproval", "CanApproveResponse"] });
     rememberSession();
     const session = backend.fetcher.getMockImplementation();
     backend.fetcher.mockImplementation(async (input, init) => {

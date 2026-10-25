@@ -1,11 +1,15 @@
-html, body { margin: 0; width: 176px; height: 376px; overflow: hidden; background: transparent; }
-#companion { width: 176px; height: 376px; color: #ffffff; font-family: system-ui, sans-serif; touch-action: none; user-select: none; }
+html, body { margin: 0; width: 176px; height: 208px; overflow: hidden; background: transparent; }
+#companion { width: 176px; height: 208px; color: #ffffff; font-family: system-ui, sans-serif; touch-action: none; user-select: none; }
 #pet-action { display: block; width: 176px; height: 176px; padding: 0; border: 0; background: transparent; cursor: grab; }
 #pet-action:active { cursor: grabbing; }
-#pet-action:focus-visible, .alert-item:focus-visible { outline: 2px solid #2ea7b3; outline-offset: -5px; border-radius: 10px; }
+#pet-action:focus-visible, .alert-item:focus-visible, .alert-toggle:focus-visible { outline: 2px solid #2ea7b3; outline-offset: -5px; border-radius: 10px; }
 canvas { width: 176px; height: 176px; display: block; }
 
 .indicators { display: flex; flex-direction: column; gap: 5px; height: 80px; max-height: 200px; box-sizing: border-box; padding: 8px; border-radius: 10px; background: #1f3b4d; }
+.alert-toggle { width: 100%; min-height: 16px; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; text-align: left; }
+.alert-chevron { font-size: 13px; line-height: 13px; transition: transform 150ms ease; }
+.indicators[data-expanded="true"] .alert-chevron { transform: rotate(180deg); }
+.indicators[data-expanded="false"] .alert-empty, .indicators[data-expanded="false"] .alert-feed, .indicators[data-expanded="false"] .alert-status { display: none; }
 .alert-empty { font-size: 11px; line-height: 14px; color: #d9edf1; }
 .alert-feed { display: flex; flex-direction: column; gap: 4px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: #7a9bab #1f3b4d; scrollbar-width: thin; }
 .alert-item { display: flex; flex-direction: column; width: 100%; flex: 0 0 auto; padding: 4px 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
