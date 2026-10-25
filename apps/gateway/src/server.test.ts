@@ -15,9 +15,10 @@ async function start(verify: (token: unknown) => Promise<Verified> = async (toke
   await new Promise<void>((resolve) => gateway.http.listen(0, "127.0.0.1", resolve));
   const url = `http://127.0.0.1:${(gateway.http.address() as AddressInfo).port}`;
   const sockets: Socket[] = [];
-  const connect = (token?: string) => new Promise<Socket>((resolve, reject) => {
+  const connect = (token?: string, listen?: (socket: Socket) => void) => new Promise<Socket>((resolve, reject) => {
     const socket = io(url, { path, transports: ["websocket"], reconnection: false, auth: token ? { token } : {} });
     sockets.push(socket);
+    listen?.(socket);
     socket.once("connect", () => resolve(socket));
     socket.once("connect_error", reject);
   });
@@ -80,8 +81,8 @@ test("a client whose token stops being accepted is disconnected", async () => {
 test("broker availability is synchronized to connected authenticated sessions", async () => {
   const { gateway, connect, stop } = await start();
   try {
-    const socket = await connect("token-for-ama-000000000");
-    const states = received(socket, "delivery-state");
+    const states: unknown[] = [];
+    const socket = await connect("token-for-ama-000000000", (opened) => opened.on("delivery-state", (payload) => states.push(payload)));
     gateway.availability(false); gateway.availability(true);
     await settle();
     assert.deepEqual(states, [{ connected: true }, { connected: false }, { connected: true }]);
