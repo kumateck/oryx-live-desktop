@@ -24,9 +24,8 @@ export interface StepContext {
 }
 
 /**
- * What can be done on a step right now, and why not when it cannot. Every change is something a
- * person chooses to do: nothing is started or finished because a page was opened. A critical step
- * is carried out by the people responsible for it, and the server refuses anyone else.
+ * What can be done on a step right now, and why not when it cannot. Only the active non-critical
+ * step starts automatically; critical steps are started by their responsible people.
  */
 export function stepPolicy({ step, currentStepId, cancelled, userId, extraMaterialPending, atrExists }: StepContext) {
   const has = (action: number) => step.team.some((member) => member.action === action);
@@ -37,14 +36,16 @@ export function stepPolicy({ step, currentStepId, cancelled, userId, extraMateri
   const allowed = !step.critical || responsible;
   const isNew = step.status === stepStatus.new;
   const running = step.status === stepStatus.inProgress;
+  const startAllowed = open && allowed && isNew && !extraMaterialPending && (!startedByItsRecord.some(has) || (has(stepAction.atr) && atrExists));
 
   const blocked = cancelled ? "The batch was cancelled." : completed ? "This step is completed." : !active ? "This is not the batch's current step."
     : !allowed ? "This is a critical step. Only the people responsible for it can carry it out." : null;
 
   return {
     active, completed, open, responsible, allowed, blocked,
-    // A test request begins its step. If the request was saved but the start was refused, the step can still be started by hand.
-    canStart: open && allowed && isNew && !extraMaterialPending && (!startedByItsRecord.some(has) || (has(stepAction.atr) && atrExists)),
+    // A test request begins its step. If the request was saved but the start was refused, the step can still be started.
+    canStart: startAllowed && step.critical,
+    shouldAutoStart: startAllowed && !step.critical,
     canComplete: open && allowed && running && !completedByItsRecord.some(has) && !atrExists,
     /** The record that will finish this step, when it is not finished by hand. */
     waitsFor: completedByItsRecord.find(has) ?? null,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, FlaskConical, PackageCheck, PackagePlus, Play, RotateCcw, Send, Truck } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -34,10 +34,17 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
     extraMaterialPending: records.extraMaterialPending, atrExists: Boolean(records.atr) });
   const commands = useStepCommands(step.id, batchId);
   const [open, setOpen] = useState<Open>(null);
+  const autoStartAttempted = useRef<string | null>(null);
   const busy = commands.busy !== null;
   const running = step.status === stepStatus.inProgress;
   const batchLabel = `${activity.batch.productName}${activity.batch.batchNumber ? `, batch ${activity.batch.batchNumber}` : ""}`;
   const hasRequisition = Boolean(records.rawRequisition || records.packagingRequisition);
+
+  useEffect(() => {
+    if (!policy.shouldAutoStart || !records.ready || busy || autoStartAttempted.current === step.id) return;
+    autoStartAttempted.current = step.id;
+    void commands.start();
+  }, [policy.shouldAutoStart, records.ready, busy, step.id, commands.start]);
 
   if (!policy.open) return policy.blocked && !policy.completed ? <p className="text-sm text-muted-foreground">{policy.blocked}</p> : null;
 
@@ -46,6 +53,10 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
     {running && policy.waitsFor !== null ? <p className="text-sm text-muted-foreground">This step finishes by itself when its {stepActionLabel(policy.waitsFor).toLowerCase()} is done.</p> : null}
 
     <StepRecordsView policy={policy} records={records} />
+    {policy.shouldAutoStart && records.error ? <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">
+      <span>Automatic start could not check this step's records.</span>
+      <Button type="button" size="sm" variant="outline" onClick={records.retry}>Retry start check</Button>
+    </div> : null}
 
     <div className="flex flex-wrap gap-2">
       {policy.canStart ? <Button type="button" size="sm" disabled={busy} onClick={() => void commands.start()}>{commands.busy === "start" ? <><Spinner />Starting…</> : <><Play />Start step</>}</Button> : null}

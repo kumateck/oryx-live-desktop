@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, expect, it } from "vitest";
 import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
 import { SessionGate } from "./session-gate";
@@ -9,9 +9,15 @@ import { notifySessionExpired } from "./session-events";
 
 afterEach(() => { cleanup(); forgetSession(); });
 
-function Workspace() {
-  return <SessionProvider><MemoryRouter initialEntries={["/home?tab=tasks"]}><Routes>
+function Address() {
+  const location = useLocation();
+  return <output aria-label="Current address">{location.pathname}{location.search}{location.hash}</output>;
+}
+
+function Workspace({ address = "/home?tab=tasks" }: { address?: string }) {
+  return <SessionProvider><MemoryRouter initialEntries={[address]}><Address /><Routes>
     <Route path="/home" element={<SessionGate><div>Private workspace</div></SessionGate>} />
+    <Route path="/production/activities/:id/final-packing" element={<SessionGate><div>Private workspace</div></SessionGate>} />
     <Route path="/login" element={<div>Sign in screen</div>} />
   </Routes></MemoryRouter></SessionProvider>;
 }
@@ -28,6 +34,24 @@ it("opens a restored session", async () => {
   rememberSession();
   render(<Workspace />);
   expect(await screen.findByText("Private workspace")).toBeTruthy();
+});
+
+it("retains a deep page, its filters, and its fragment when restoring a session after reload", async () => {
+  const address = "/production/activities/a1/final-packing?tab=yield#results";
+  stubBackend(); rememberSession();
+  render(<Workspace address={address} />);
+  await screen.findByText("Private workspace");
+  expect(screen.getByLabelText("Current address").textContent).toBe(address);
+});
+
+it("carries the full deep address to sign-in when the session expires", async () => {
+  const address = "/production/activities/a1/final-packing?tab=yield#results";
+  stubBackend(); rememberSession();
+  render(<Workspace address={address} />);
+  await screen.findByText("Private workspace");
+  act(notifySessionExpired);
+  await screen.findByText("Sign in screen");
+  expect(screen.getByLabelText("Current address").textContent).toBe(`/login?next=${encodeURIComponent(address)}`);
 });
 
 it("removes protected content when an API request finds an expired session", async () => {

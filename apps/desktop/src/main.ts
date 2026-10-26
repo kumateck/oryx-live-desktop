@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { CompanionRuntime } from "./companion/runtime";
 import { buildMenu } from "./menu";
 import { parseSiteUrl } from "./site-config";
+import { isSitePage, reconnectSite } from "./site-navigation";
 import { createSessionVault, type Cipher } from "./session-vault";
 import type { SiteStatus } from "./bridge";
 
@@ -102,10 +103,11 @@ async function forgetServer(): Promise<void> {
 }
 
 /** The pages of the connected server only: the setup page is never something to go back to. */
-const onSite = () => Boolean(siteUrl) && window.webContents.getURL().startsWith(siteUrl);
+const onSite = () => isSitePage(siteUrl, window.webContents.getURL());
 
 function refreshMenu(): void {
-  buildMenu({ siteUrl, companion: () => companion?.toggle(), reconnect: () => { void openSite(); }, changeServer, forgetServer: () => { void forgetServer(); },
+  buildMenu({ siteUrl, companion: () => companion?.toggle(), reload: () => window.webContents.reload(),
+    reconnect: () => reconnectSite(siteUrl, window.webContents, () => { void openSite(); }), changeServer, forgetServer: () => { void forgetServer(); },
     home: () => { void openSite(); },
     back: () => { const history = window.webContents.navigationHistory; if (onSite() && history.canGoBack()) history.goBack(); },
     forward: () => { const history = window.webContents.navigationHistory; if (onSite() && history.canGoForward()) history.goForward(); },

@@ -47,19 +47,20 @@ it("lets the responsible person start and finish a critical step, and no one els
   const stranger = stepPolicy({ ...context, userId: "u9", step: step("s3") });
   expect(stranger).toMatchObject({ allowed: false, canStart: false });
   expect(stranger.blocked).toContain("Only the people responsible");
-  // A step that is not critical has no responsible-person rule, but still waits for someone to act.
-  expect(stepPolicy({ ...context, currentStepId: "s4", userId: "u9", step: step("s4") })).toMatchObject({ allowed: true, canStart: true });
+  // A non-critical current step starts itself and is completed by a person.
+  expect(stepPolicy({ ...context, currentStepId: "s4", userId: "u9", step: step("s4") })).toMatchObject({ allowed: true, canStart: false, shouldAutoStart: true });
   expect(stepPolicy({ ...context, currentStepId: "s4", userId: "u9", step: step("s4", { status: 1 }) })).toMatchObject({ allowed: true, canComplete: true });
 });
 
 it("closes a step that is not current, is finished, or belongs to a cancelled batch", () => {
-  expect(stepPolicy({ ...context, step: step("s4") })).toMatchObject({ open: false, blocked: "This is not the batch's current step." });
+  expect(stepPolicy({ ...context, step: step("s4") })).toMatchObject({ open: false, shouldAutoStart: false, blocked: "This is not the batch's current step." });
   expect(stepPolicy({ ...context, currentStepId: "s1", step: step("s1") })).toMatchObject({ open: false, blocked: "This step is completed." });
   expect(stepPolicy({ ...context, cancelled: true, step: step("s3") })).toMatchObject({ open: false, canStart: false, blocked: "The batch was cancelled." });
 });
 
 it("holds a start while extra material is pending, and a completion while a test request is open", () => {
   expect(stepPolicy({ ...context, extraMaterialPending: true, step: step("s3") }).canStart).toBe(false);
+  expect(stepPolicy({ ...context, currentStepId: "s4", extraMaterialPending: true, step: step("s4") })).toMatchObject({ canStart: false, shouldAutoStart: false });
   expect(stepPolicy({ ...context, atrExists: true, step: step("s3", { status: 1 }) }).canComplete).toBe(false);
   // A step carried out through its own record moves with that record, wherever it sits in the procedure.
   expect(stepPolicy({ ...context, currentStepId: "s2", userId: "u2", step: step("s2", { status: 0 }) })).toMatchObject({ canStart: false, canRequestStock: true, waitsFor: 1 });

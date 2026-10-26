@@ -11,6 +11,7 @@ import { stepActionLabel } from "../../lib/step-status";
 import type { Activity, ActivityStep } from "../../schemas/activity-schema";
 import { ActivityLog } from "../batch/activity-log";
 import { StepStatusBadge } from "../step-status-badge";
+import { StepTypeBadge } from "../step-type-badge";
 import { StepWorkspace } from "./step-workspace";
 
 const positions = { done: "Completed step", current: "Current step", upcoming: "Upcoming step" } as const;
@@ -32,7 +33,7 @@ export function StepDetail({ activity, step }: { activity: Activity; step: Activ
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="flex size-9 items-center justify-center rounded-md bg-muted text-base font-semibold">{step.order}</span>
           <h2 className="min-w-0 break-words text-lg font-semibold">{step.name}</h2>
-          <StepStatusBadge status={step.status} />{step.critical ? <Badge variant="outline">Critical</Badge> : null}<Badge variant="outline">{positions[position]}</Badge>
+          <StepStatusBadge status={step.status} /><StepTypeBadge critical={step.critical} /><Badge variant="outline">{positions[position]}</Badge>
         </div>
         {step.description ? <p className="break-words text-sm text-muted-foreground">{step.description}</p> : null}
         <StepWorkspace activity={activity} step={step} />

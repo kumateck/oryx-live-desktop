@@ -5,6 +5,7 @@ export interface MenuActions {
   /** The server the window is connected to, or "" when none is set. */
   siteUrl: string;
   companion: () => void;
+  reload: () => void;
   reconnect: () => void;
   changeServer: () => void;
   forgetServer: () => void;
@@ -35,7 +36,8 @@ export function buildMenu(actions: MenuActions): void {
     { label: "File", submenu: [{ label: "Print…", accelerator: "CmdOrCtrl+P", enabled: connected, click: actions.print }, { type: "separator" }, mac ? { role: "close" } : { role: "quit" }] },
     serverMenu(actions),
     { role: "editMenu" },
-    { label: "View", submenu: [{ label: "Show / Hide ORYX Companion", click: actions.companion }, { type: "separator" }, { role: "resetZoom" }, { role: "zoomIn" }, { role: "zoomOut" }, { type: "separator" }, { role: "togglefullscreen" },
+    { label: "View", submenu: [{ label: "Reload", accelerator: "CmdOrCtrl+R", click: actions.reload }, { type: "separator" },
+      { label: "Show / Hide ORYX Companion", click: actions.companion }, { type: "separator" }, { role: "resetZoom" }, { role: "zoomIn" }, { role: "zoomOut" }, { type: "separator" }, { role: "togglefullscreen" },
       ...(app.isPackaged ? [] : [{ type: "separator" }, { role: "toggleDevTools" }] satisfies MenuItemConstructorOptions[])] },
     { label: "Go", submenu: [
       { label: "Back", accelerator: mac ? "Cmd+[" : "Alt+Left", enabled: connected, click: actions.back },

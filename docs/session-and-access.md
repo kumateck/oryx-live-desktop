@@ -9,6 +9,7 @@ The access token is kept in memory only. The refresh token is also kept in `sess
 | Situation | Behavior |
 | --- | --- |
 | Startup | The stored refresh token, if any, is exchanged before any protected route renders. A server fault shows a retry; it is never treated as signed out. |
+| Reload / Reconnect | Desktop Reload (`Cmd/Ctrl+R`) and Reconnect (`Cmd/Ctrl+Shift+R`) retain the current page, query parameters, and fragment. Reconnect opens the configured site from setup or a failed load; Home explicitly opens the landing page. If sign-in is required, its return address includes the complete route and fragment. |
 | Wrong credentials | "The email or password is incorrect." The password field is cleared and focused. |
 | Disabled account | Explained on the login screen. The backend reports wrong credentials as 400 and a disabled account as 412, so the error code in the response decides which message is shown. |
 | Too many attempts (429), server fault, no connection, unreadable reply | Each has its own message. Requests time out after 15 seconds. |

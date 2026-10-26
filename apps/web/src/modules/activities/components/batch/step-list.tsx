@@ -1,6 +1,5 @@
 import { Check, ChevronRight } from "lucide-react";
 import { Link } from "react-router";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "cn";
 import { formatDateTime } from "@/shared/format/dates";
 import { stepPath } from "../../lib/activity-access";
@@ -8,6 +7,7 @@ import { stepDuration, stepPosition } from "../../lib/activity-progress";
 import type { Activity, ActivityStep } from "../../schemas/activity-schema";
 import { People } from "../people";
 import { StepStatusBadge } from "../step-status-badge";
+import { StepTypeBadge } from "../step-type-badge";
 import { StepWorkspace } from "../step/step-workspace";
 
 function StepMarker({ step, position }: { step: ActivityStep; position: "done" | "current" | "upcoming" }) {
@@ -29,7 +29,7 @@ export function StepList({ activity }: { activity: Activity }) {
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Link to={stepPath(activity.id, step.id)} className="min-w-0 break-words font-medium underline-offset-2 hover:underline">{step.name}</Link>
             <StepStatusBadge status={step.status} />
-            {step.critical ? <Badge variant="outline">Critical</Badge> : null}
+            <StepTypeBadge critical={step.critical} />
           </div>
           <p className="flex min-w-0 flex-wrap gap-x-3 text-xs text-muted-foreground">
             {step.workCenters.length ? <span className="break-words">{step.workCenters.join(", ")}</span> : null}

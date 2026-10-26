@@ -44,7 +44,11 @@ function open(address: string, options: Options = {}) {
       { id: "a1", batchNumber: "WM-001", quantity: 1_500_000, productionScheduleProduct: batch, currentStep: { status: 1, isCritical: true, startedAt: ago(45), productionActivity: { id: "a1" }, responsibleUsers: [{ user: me }] } }] },
       { operation: { id: "o2", name: "Filling" }, activities: [] }]);
     if (path === "/api/v1/production-schedule/activity/a1") return Response.json(run(options));
-    if (path.startsWith("/api/v1/production-schedule/activity-step/") && input.method === "PUT") return new Response(null, { status: 204 });
+    if (path.startsWith("/api/v1/production-schedule/activity-step/") && input.method === "PUT") {
+      const status = Number(url.searchParams.get("status"));
+      if (options.current) options.current.status = status;
+      return new Response(null, { status: 204 });
+    }
     if (path === "/api/v1/production-schedule/extra-packing/by-product/b1") return Response.json([]);
     if (path.startsWith("/api/v1/production-schedule/stock-requisition/")) return options.requisition ? Response.json({ id: "r1", code: "SR-0004", status: 1 }) : new Response(null, { status: 404 });
     if (path === "/api/v1/production-schedule/material-stock/b1") return Response.json([{ material: { id: "m1", name: "Sugar", code: "RM-1" }, materialDepartment: { uoM: { id: "u-g", symbol: "g" } }, quantityNeeded: 500, quantityOnHand: 900 }]);
@@ -112,14 +116,12 @@ it("does not offer a critical step to someone who is not responsible for it", as
   expect(calls).toEqual([]);
 });
 
-it("never changes a batch just because its page was opened", async () => {
+it("automatically starts a non-critical current step and leaves completion to the user", async () => {
   const { calls } = open("/production/activities/a1/board", { current: { order: 4, status: 0, critical: false, mine: false } });
-  // A step that is not critical can be started by anyone on the board, but only by pressing the button.
-  const start = await screen.findByRole("button", { name: "Start step" });
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  expect(calls).toEqual([]);
-  fireEvent.click(start);
+  expect(screen.queryByRole("button", { name: "Start step" })).toBeNull();
   await waitFor(() => expect(calls.map((call) => `${call.method} ${call.path}${call.search}`)).toEqual(["PUT /api/v1/production-schedule/activity-step/current/status?status=1"]));
+  expect(await screen.findByRole("button", { name: "Complete step" })).toBeTruthy();
+  expect(screen.getAllByText("Automated").length).toBeGreaterThan(0);
 });
 
 it("raises one stock requisition for the batch, or shows the ones already raised", async () => {

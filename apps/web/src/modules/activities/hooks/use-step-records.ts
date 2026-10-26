@@ -30,17 +30,28 @@ export function useStepRecords({ batchId, stepId, enabled, needs }: {
   return useMemo(() => {
     // "Not found" means the record has not been made yet, which is an answer, not a failure.
     const read = <T,>(query: { data?: object | null | undefined; error?: object | undefined }, parse: (value: object | null) => T): T => parse(missing(query.error) ? null : query.data ?? null);
+    const settled = (query: { isLoading: boolean; error?: object | undefined }) => !query.isLoading && (!query.error || missing(query.error));
+    const failed = (query: { error?: object | undefined }) => Boolean(query.error && !missing(query.error));
     const extras = extraMaterialsSchema.safeParse(missing(extra.error) ? null : extra.data ?? null);
     const statuses = extras.success ? extras.data : [];
     return {
       extraMaterialPending: statuses.includes(extraMaterialStatus.pending),
       extraMaterialOpen: statuses.some((status) => status !== extraMaterialStatus.approved),
+      ready: settled(extra) && (!(needs.bmr || needs.atr) || settled(bmr)) && (!needs.stockRequisition || (settled(raw) && settled(packaging))) && (!needs.atr || settled(atr)),
+      error: failed(extra) || ((needs.bmr || needs.atr) && failed(bmr)) || (needs.stockRequisition && (failed(raw) || failed(packaging))) || (needs.atr && failed(atr)),
+      retry: () => {
+        if (failed(extra)) void extra.refetch();
+        if ((needs.bmr || needs.atr) && failed(bmr)) void bmr.refetch();
+        if (needs.stockRequisition && failed(raw)) void raw.refetch();
+        if (needs.stockRequisition && failed(packaging)) void packaging.refetch();
+        if (needs.atr && failed(atr)) void atr.refetch();
+      },
       bmr: read(bmr, (value) => { const result = bmrStateSchema.safeParse(value); return result.success ? result.data : null; }),
       rawRequisition: read(raw, (value) => { const result = requisitionStateSchema.safeParse(value); return result.success ? result.data : null; }),
       packagingRequisition: read(packaging, (value) => { const result = requisitionStateSchema.safeParse(value); return result.success ? result.data : null; }),
       atr: read(atr, (value) => { const result = atrStateSchema.safeParse(value); return result.success ? result.data : null; }),
       loading: extra.isLoading || bmr.isLoading || raw.isLoading || packaging.isLoading || atr.isLoading,
     };
-  }, [extra.data, extra.error, extra.isLoading, bmr, raw, packaging, atr]);
+  }, [extra.data, extra.error, extra.isLoading, bmr, raw, packaging, atr, needs.bmr, needs.atr, needs.stockRequisition]);
 }
 export type StepRecords = ReturnType<typeof useStepRecords>;
