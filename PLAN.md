@@ -4,7 +4,7 @@ Status: foundation and first module implementation in progress, 2026-10-01. This
 
 ## Product direction
 
-Oryx Live Desktop is a small Electron Forge shell that opens a React single-page application served from each customer's own server. Staff connect to that server by its configured address. The site deploy script continues to pull `main` and build the application. A new web build reaches installed clients without a manual reinstall; Electron and native-bridge changes use a separate signed shell update served by that same site.
+Oryx Live Desktop is a small Electron Forge shell that opens a React single-page application served from each customer's own server. Staff connect to that server by its configured address. The customer-server deployment package pulls the selected release branch (`entrance-server` for the Entrance installation) and builds the application; customer installation and acceptance remain pending. A new web build reaches installed clients without a manual reinstall; Electron and native-bridge changes use a separate signed shell update served by that same site.
 
 The desktop UI should feel like a focused workspace: compact top bar, collapsible left navigation, a wide central work area, an optional context panel, and a slim bottom bar. The shell header and footer remain visible. Only the central content scrolls vertically. No page or window should require horizontal scrolling at supported laptop sizes.
 
@@ -36,13 +36,15 @@ Keep the integration in the hosted web application. Load one engine only on dema
 
 ## Decisions already made
 
+Customer pull deployment (2026-10-26): the Entrance frontend release agent is implemented under `deploy/customer-server`, tracking `entrance-server`. A customer-owned `/etc/oryx-deploy/customer.env` stores the existing backend origin and gateway connection once; it is outside Git and immutable releases. The agent runs as an unprivileged service, validates exact commit builds and approved API/shell compatibility, publishes by atomic symlink, retains old assets, and restores the previous release after failed activation. Backend/database deployment and native shell updates are separate operations. Local automated checks cover release/recovery behavior; Linux systemd/Nginx and real customer installation require environment acceptance. No live server installation is authorized by development of this package.
+
 | Area | Direction |
 | --- | --- |
 | Desktop runtime | Electron Forge, with a small main process and a sandboxed, context-isolated renderer. |
 | UI delivery | Hosted React SPA loaded from the customer's HTTP or HTTPS origin; intranet HTTP is supported in installed clients; no Next.js runtime. |
 | Routing | React Router 8.4.0, pinned initially, with an Oryx file-route generator in this repository. Upgrade React, React DOM, Node, and build tools to compatible versions. |
 | Data access | Retain RTK Query and the OpenAPI-generated DTOs and hooks. Improve generation, cache rules, and code splitting before considering a query-library change. |
-| Deployment | Build on the customer server from the selected `main` commit; publish a versioned SPA build and switch the active version only after validation. |
+| Deployment | Build on the customer server from an exact commit on its configured release branch; use `entrance-server` for the Entrance installation. Publish a versioned SPA build and switch the active version only after validation. |
 | Shell updates | Store platform-specific installers and update feeds in the site's MinIO; expose a stable HTTPS update URL through the customer server. Clients download shell updates and apply them on restart. |
 | Notifications | Keep RabbitMQ consumption in a central server service; desktop clients subscribe to its authenticated real-time endpoint. |
 

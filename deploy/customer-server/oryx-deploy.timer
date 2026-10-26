@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Entrance frontend releases every two minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=2min
+Persistent=true
+Unit=oryx-deploy.service
+
+[Install]
+WantedBy=timers.target

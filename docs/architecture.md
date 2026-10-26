@@ -2,7 +2,7 @@
 
 ## Delivery boundary
 
-The customer server serves the React SPA and API at one configured HTTP or HTTPS origin. Installed clients support intranet HTTP, as requested on 2026-10-02; HTTPS remains preferred and requires a trusted certificate. The installed Electron shell stores only that origin in its user-data directory and loads it in a sandboxed renderer. UI and shell releases follow separate paths. The initial scaffold does not implement either release pipeline yet.
+The customer server serves the React SPA and API at one configured HTTP or HTTPS origin. Installed clients support intranet HTTP, as requested on 2026-10-02; HTTPS remains preferred and requires a trusted certificate. The installed Electron shell stores only that origin in its user-data directory and loads it in a sandboxed renderer. UI and shell releases follow separate paths. The customer pull agent under `deploy/customer-server` publishes frontend releases from `entrance-server`; its permanent customer `.env` points Nginx at the existing backend. Signed shell update delivery remains a separate implementation gate.
 
 ## Route convention
 

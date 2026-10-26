@@ -60,7 +60,7 @@ Appearance behavior and the Oryx accent list are in [docs/appearance.md](docs/ap
 
 `bun run routes:check` ensures generated routes are current and enforces the 200-line page limit. `bun run api:check` checks generated API drift, rejects untyped output, and fails on a backend tag with no domain. `bun run test` covers route collisions/nesting, appearance tokens, session behavior, role permissions and table paging, and server URL validation. `bun run typecheck` checks application and generated TypeScript. `bun run build:web` builds the hosted SPA. The `AGENTS.md` guide defines ownership, business safeguards, and verification requirements for later migration work.
 
-A testing site and Windows installer are deployed from the `testing` branch; see [docs/deployment.md](docs/deployment.md). Customer-server deployment and signed shell updates remain phase gates in `PLAN.md`.
+A testing site and Windows installer are deployed from the `testing` branch; see [docs/deployment.md](docs/deployment.md). The [customer-server deployment package](deploy/customer-server/README.md) polls `entrance-server`, uses a permanent customer `.env` for the existing backend, and provides validated releases and rollback. Customer installation/acceptance and signed shell updates remain phase gates in `PLAN.md`.
 
 Engine maintainers can rebuild reviewed viewer-only WASM adapters with `bun scripts/build-readonly-viewers.ts /absolute/isolated-workspace <engine>`; see the attachment viewer guide for pinned toolchain, source and provenance requirements. Ordinary builds continue to use verified local bundles.
 
