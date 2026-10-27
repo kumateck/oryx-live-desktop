@@ -1,0 +1,38 @@
+name: Validate customer Docker release
+on:
+  push:
+    branches: [entrance-server]
+  pull_request:
+    branches: [entrance-server]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: customer-docker-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Reuse the existing web Docker build, including frozen install and repository checks
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          target: web
+          platforms: linux/amd64
+          load: true
+          tags: oryx-live-customer-web:${{ github.sha }}
+          build-args: |
+            RELEASE_SHA=${{ github.sha }}
+            RELEASE_BRANCH=entrance-server
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+      - name: Verify Nginx, API proxy, WebSocket upgrades and retained assets with isolated fixtures
+        run: node deploy/customer-docker/smoke.ts oryx-live-customer-web:${{ github.sha }}

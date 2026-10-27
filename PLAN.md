@@ -177,3 +177,12 @@ Keep this plan current as decisions are closed. Every implementation phase adds 
 ## Operations Watch companion (2026-10-24)
 
 Adapt Dodo’s isolated transparent-window pattern for an optional ORYX Canvas 2D character, using the supplied character board. The first integration reuses unread notification and live-connection state, opens the existing notification sheet, and exposes no ERP mutation capabilities. See `docs/companion.md` for useful workflow mappings, local-only security boundaries, artwork limitations, and native acceptance gates.
+
+## Customer Docker deployment (2026-10-27)
+
+The user authorized an independent manual Docker package under `deploy/customer-docker`, reusing `deploy/Dockerfile`, its Nginx template and retained assets. Production fetch/build/deploy is restricted to `origin/entrance-server` only; `main` and `testing` never qualify. Prepare the branch locally from an approved testing commit if absent; do not push. Use port 3001, external `sail`, existing `oryx_api:5001`, pinned verified Bun 1.4.4, exact-SHA builds, GitHub CI approval, Cron polling, filesystem locking, pause/resume, Discord reporting and archived rollback images that survive unrelated image pruning. Keep `deploy/customer-server` unchanged. No customer access, deployment, backend/database changes, or global image pruning is authorized.
+
+
+## Simplified customer Docker compatibility (2026-10-27)
+
+The user's current instruction replaces the Docker package's exact OpenAPI hash gate with mandatory basic API connectivity plus focused candidate compatibility checks. Preflight does not request Swagger. Candidates inspect the selected release's baseline for consumed session, permissions, production and approval contracts; confirmed removals/incompatible inputs, outputs or authentication block activation. Harmless metadata changes pass; unavailable or ambiguous Swagger warns instead of implying a breaking API. Keep minimum-shell/protocol requirements independently under `deploy/customer-docker/requirements.json`; preserve the host-Nginx agent/policy, CI approval, production-branch isolation, Nginx health, rollback archives, lock, history and Discord. The user now explicitly authorizes pushing reviewed changes to `entrance-server`. Customer access/deployment and backend changes remain prohibited.

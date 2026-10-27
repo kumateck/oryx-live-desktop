@@ -25,14 +25,22 @@ copy_tree() {
   source=$1
   destination=$2
   mkdir -p "$destination"
-  # BusyBox cp copies each entry; do not use the historically broken `cp -a src/. dst/`.
-  for entry in "$source"/*; do cp -r "$entry" "$destination/"; done
-  (cd "$source" && find . -type f) | while read -r file; do
-    cmp -s "$source/$file" "$destination/$file" || { echo "keep-assets: $file was not copied" >&2; exit 1; }
+  # Add only immutable bytes; old sessions and rollback releases retain their chunks.
+  find "$source" -type f | while IFS= read -r file; do
+    relative=${file#"$source/"}
+    target="$destination/$relative"
+    [ -s "$file" ] || { echo "keep-assets: empty asset" >&2; exit 1; }
+    mkdir -p "$(dirname "$target")"
+    if [ -e "$target" ]; then
+      cmp -s "$file" "$target" || { echo "keep-assets: immutable asset collision" >&2; exit 1; }
+    else
+      temporary="$target.$$.tmp"
+      cp "$file" "$temporary"
+      chmod 644 "$temporary"
+      mv "$temporary" "$target"
+    fi
   done
 }
 copy_tree "$release/assets" "$kept"
 copy_tree "$viewers" "$kept/viewers"
-# Copying without preserving timestamps marks current-release files fresh for retention.
-find "$kept" -type f -size 0 -delete
-find "$kept" -type f -mtime +30 -delete
+# Retention is additive. Reclaim assets only during reviewed maintenance.

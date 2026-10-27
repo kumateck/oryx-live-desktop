@@ -10,6 +10,13 @@ server {
   server_name _;
   root /usr/share/nginx/html;
   client_max_body_size 100m;
+  server_tokens off;
+  add_header X-Content-Type-Options nosniff always;
+  add_header Referrer-Policy same-origin always;
+
+  location = /healthz { add_header Cache-Control "no-store" always; try_files /deployment.json =503; }
+  location = /deployment.json { add_header Cache-Control "no-store" always; try_files $uri =404; }
+  location ~ /\. { deny all; }
   # Docker's DNS, so the gateway is looked up per request and nginx starts even while it is down.
   resolver 127.0.0.11 valid=30s ipv6=off;
 
@@ -23,12 +30,17 @@ server {
     proxy_set_header Host $http_host;
     proxy_set_header X-Forwarded-Host $http_host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Proto ${ORYX_PUBLIC_PROTO};
+    proxy_set_header Authorization $http_authorization;
+    proxy_ssl_server_name on;
+    proxy_ssl_verify on;
+    proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
     proxy_read_timeout 300s;
   }
 
   location /realtime/ {
     set $gateway http://${ORYX_GATEWAY_UPSTREAM};
+    if ($gateway = "http://disabled.invalid:4100") { return 503; }
     proxy_pass $gateway;
     proxy_http_version 1.1;
     proxy_set_header Host $http_host;
@@ -64,6 +76,7 @@ server {
   # Client-side routes all load index.html, which is always revalidated so a new release is picked up.
   location / {
     try_files $uri /index.html;
-    add_header Cache-Control "no-cache";
+    add_header Cache-Control "no-store" always;
+    add_header X-Content-Type-Options nosniff always;
   }
 }
