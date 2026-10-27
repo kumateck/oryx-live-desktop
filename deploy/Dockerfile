@@ -36,7 +36,7 @@ RUN node deploy/customer-docker/build-metadata.ts
 # Keep the cheap installer checks independent so they fail before the full web build.
 FROM ${NODE_IMAGE} AS customer-validation
 WORKDIR /app
-RUN apt-get update -qq && apt-get install -y --no-install-recommends nginx systemd util-linux git ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get -o Acquire::http::Timeout=30 -o Acquire::Retries=2 update && DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::http::Timeout=30 -o Acquire::Retries=2 install -y --no-install-recommends nginx systemd util-linux git ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY package.json ./
 COPY deploy/customer-server deploy/customer-server
 COPY contracts/openapi/backend.v1.json contracts/openapi/backend.v1.json
