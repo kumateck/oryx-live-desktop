@@ -235,6 +235,8 @@ bun run validate:customer-release -- --sha FULL_COMMIT_SHA
 
 The installation fixture verifies real Nginx syntax, real systemd unit syntax, installed permissions, non-root status and configuration preservation. Build containers have no systemd PID 1, so service-control calls are recorded rather than executed. CI uses this same fixture. No customer system is contacted. GitHub's independent validation still remains the deployment approval gate; pre-push is not a replacement for branch protection.
 
+The runtime smoke test allows up to three minutes for cold startup when testing AMD64 images under emulation. It still requires the image's actual health probe to pass before making requests and reports Docker health results on failure. This test allowance does not change production health checks or deployment timeouts.
+
 Configure branch protection to require **Validate customer release** from **Customer release pipeline**, replacing the retired `validate` / old `web` checks once the new check has run. Old workflow names can remain visible in GitHub because other branches or historical runs still contain them; production source now has one entry point. No repository protection settings are changed automatically.
 
 For an installer, manually run this same workflow on entrance-server with **build_windows=true**. The Windows job starts only after release validation succeeds. Normal frontend pushes skip installer packaging. Native Windows installation/launch checks require windows-latest and remain in that optional job; workflow structure and shell source tests are checked before every branch push.
