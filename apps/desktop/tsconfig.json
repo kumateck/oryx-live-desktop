@@ -11,7 +11,8 @@
     "noFallthroughCasesInSwitch": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["node", "vite/client"]
+    "types": ["node", "vite/client"],
+    "allowImportingTsExtensions": true
   },
   "include": ["src", "forge.config.ts", "vite.*.config.ts"]
 }

@@ -17,6 +17,18 @@ notify() {
 }
 block_release() { valid_sha "$1" || return 1; mkdir -p "$STATE/quarantine"; touch "$STATE/quarantine/$1"; write_value blocked "$1"; }
 image() { printf 'oryx-live-customer-web:%s' "$1"; }
+probe_metadata_permissions() {
+  # These two files contain public contract metadata, never customer configuration.
+  local file
+  for file in compatibility.json backend-baseline.json; do
+    [[ -f "$1/$file" && ! -L "$1/$file" ]] || { echo "Invalid probe metadata: $file" >&2; return 1; }
+  done
+  chmod 0644 "$1/compatibility.json" "$1/backend-baseline.json"
+}
+runtime_environment() {
+  printf 'ORYX_RELEASE_SHA=%s\nORYX_PUBLIC_PORT=3001\nORYX_API_UPSTREAM=%s\nORYX_GATEWAY_UPSTREAM=%s\nORYX_PUBLIC_PROTO=%s\nORYX_BIND_ADDRESS=%s\nORYX_DOWNLOADS_DIR=%s\n' \
+    "$1" "$ORYX_API_UPSTREAM" "$ORYX_GATEWAY_UPSTREAM" "$ORYX_PUBLIC_PROTO" "$ORYX_BIND_ADDRESS" "$STATE/downloads"
+}
 cleanup() {
   [[ -z ${CANDIDATE:-} ]] || docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
   [[ -z ${WORKTREE:-} ]] || git -C "$REPO" worktree remove --force "$WORKTREE" >/dev/null 2>&1 || true
@@ -24,7 +36,7 @@ cleanup() {
 compose() {
   local sha=$1; shift
   # Runtime settings are frozen per release; current shell exports must not alter rollback.
-  env -u ORYX_RELEASE_SHA -u ORYX_PUBLIC_PORT -u ORYX_API_UPSTREAM -u ORYX_GATEWAY_UPSTREAM -u ORYX_PUBLIC_PROTO -u ORYX_BIND_ADDRESS \
+  env -u ORYX_RELEASE_SHA -u ORYX_PUBLIC_PORT -u ORYX_API_UPSTREAM -u ORYX_GATEWAY_UPSTREAM -u ORYX_PUBLIC_PROTO -u ORYX_BIND_ADDRESS -u ORYX_DOWNLOADS_DIR \
     docker compose --project-name oryx-live --env-file "$STATE/releases/$sha/runtime.env" --file "$STATE/releases/$sha/compose.yml" "$@"
 }
 restore_image() {
@@ -88,14 +100,14 @@ failure() {
 backend_checks() {
   local policy=$1 context=$2 baseline=${3:-}
   STAGE="$context-api-connectivity"
-  docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --network sail \
+  docker run --rm --read-only --user node --cap-drop ALL --security-opt no-new-privileges:true --network sail \
     --mount "type=bind,src=$REPO,dst=/repo,readonly" \
     --mount "type=bind,src=$policy,dst=/release-policy.json,readonly" "$NODE_IMAGE" \
     node /repo/deploy/customer-docker/probe.ts api "$ORYX_API_UPSTREAM" "$ORYX_SHELL_FLOOR" /release-policy.json "${ORYX_MIN_FREE_GB:-10}" || return
   [[ "$context" != preflight ]] || { STAGE="$context"; return 0; }
   [[ -n "$baseline" ]] || { echo "Missing selected release contract baseline." >&2; return 1; }
   STAGE="$context-critical-compatibility"
-  docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --network host \
+  docker run --rm --read-only --user node --cap-drop ALL --security-opt no-new-privileges:true --network host \
     --mount "type=bind,src=$REPO,dst=/repo,readonly" \
     --mount "type=bind,src=$policy,dst=/release-policy.json,readonly" \
     --mount "type=bind,src=$baseline,dst=/backend-baseline.json,readonly" "$NODE_IMAGE" \
@@ -105,7 +117,7 @@ backend_checks() {
 preflight() {
   STAGE=preflight
   local command remote free_gb owners listeners
-  for command in docker git curl python3 flock gzip sha256sum df ss sync; do command -v "$command" >/dev/null || { echo "Missing prerequisite: $command" >&2; return 1; }; done
+  for command in docker git curl python3 flock gzip sha256sum df ss sync cmp chmod; do command -v "$command" >/dev/null || { echo "Missing prerequisite: $command" >&2; return 1; }; done
   docker info >/dev/null
   docker compose version >/dev/null
   remote=$(git -C "$REPO" remote get-url origin)
@@ -134,9 +146,34 @@ runs=json.load(open(sys.argv[1])).get("workflow_runs",[])
 assert any(r.get("head_sha")==sys.argv[2] and r.get("head_branch")=="entrance-server" and r.get("event")=="push" and r.get("conclusion")=="success" and r.get("status")=="completed" for r in runs)
 PY
 }
+reusable_build() {
+  local sha=$1 entry source destination
+  local release="$STATE/releases/$sha"
+  valid_sha "$sha" || return 1
+  for entry in compose.yml runtime.env compatibility.json backend-baseline.json; do
+    [[ -f "$release/$entry" && -s "$release/$entry" && ! -L "$release/$entry" ]] || return 1
+  done
+  [[ -f "$STATE/images/$sha.tar.gz" && -f "$STATE/images/$sha.sha256" ]] || return 1
+  (cd "$STATE/images" && sha256sum --check "$sha.sha256" && gzip -t "$sha.tar.gz") >/dev/null 2>&1 || return 1
+  # Also recognizes complete archives made before retry reuse was introduced.
+  for entry in deploy/customer-docker/compose.yml:compose.yml deploy/customer-docker/requirements.json:compatibility.json contracts/openapi/backend.v1.json:backend-baseline.json; do
+    source=${entry%:*}; destination=${entry##*:}
+    git -C "$REPO" show "$sha:$source" | cmp -s - "$release/$destination" || return 1
+  done
+  restore_image "$sha" >/dev/null 2>&1 || return 1
+}
 build_release() {
   local sha=$1 temporary
   local release="$STATE/releases/$sha"
+  STAGE=checking-retained-build
+  if reusable_build "$sha"; then
+    probe_metadata_permissions "$release"
+    runtime_environment "$sha" > "$release/runtime.env"
+    chmod 0600 "$release/runtime.env"
+    history build-reused "$sha"
+    echo "Reusing verified image/archive for $sha; candidate and activation checks will run again."
+    return 0
+  fi
   STAGE=building
   WORKTREE="$STATE/tmp/worktree-$sha"
   git -C "$REPO" worktree add --detach "$WORKTREE" "$sha" >/dev/null
@@ -144,8 +181,9 @@ build_release() {
   cp "$WORKTREE/deploy/customer-docker/compose.yml" "$release/compose.yml"
   cp "$WORKTREE/deploy/customer-docker/requirements.json" "$release/compatibility.json"
   cp "$WORKTREE/contracts/openapi/backend.v1.json" "$release/backend-baseline.json"
-  printf 'ORYX_RELEASE_SHA=%s\nORYX_PUBLIC_PORT=3001\nORYX_API_UPSTREAM=%s\nORYX_GATEWAY_UPSTREAM=%s\nORYX_PUBLIC_PROTO=%s\nORYX_BIND_ADDRESS=%s\n' \
-    "$sha" "$ORYX_API_UPSTREAM" "$ORYX_GATEWAY_UPSTREAM" "$ORYX_PUBLIC_PROTO" "$ORYX_BIND_ADDRESS" > "$release/runtime.env"
+  probe_metadata_permissions "$release"
+  runtime_environment "$sha" > "$release/runtime.env"
+  chmod 0600 "$release/runtime.env"
   # Exact detached commit context; never pass the webhook/token to the builder.
   docker build --file "$WORKTREE/deploy/Dockerfile" --target web --build-arg "RELEASE_SHA=$sha" --build-arg RELEASE_BRANCH=entrance-server --tag "$(image "$sha")" "$WORKTREE" > "$STATE/logs/$sha-build.log" 2>&1
   STAGE=archiving
@@ -161,6 +199,8 @@ build_release() {
 stage_candidate() {
   local sha=$1
   STAGE=candidate-validation
+  # Repair metadata from older failed attempts without relaxing directory/secret modes.
+  probe_metadata_permissions "$STATE/releases/$sha"
   restore_image "$sha"
   backend_checks "$STATE/releases/$sha/compatibility.json" candidate-validation "$STATE/releases/$sha/backend-baseline.json"
   docker volume create --label com.docker.compose.project=oryx-live oryx-live_assets >/dev/null

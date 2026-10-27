@@ -10,6 +10,12 @@ services:
       ORYX_PUBLIC_PROTO: ${ORYX_PUBLIC_PROTO:-auto}
     volumes:
       - assets:/srv/assets
+      - type: bind
+        source: ${ORYX_DOWNLOADS_DIR:?Select the public desktop downloads directory}
+        target: /srv/downloads
+        read_only: true
+        bind:
+          create_host_path: false
     networks:
       - sail
     restart: unless-stopped

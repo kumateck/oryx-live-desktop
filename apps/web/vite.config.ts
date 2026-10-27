@@ -25,6 +25,7 @@ if (apiOrigin) {
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  define: { ORYX_WEB_COMMIT: JSON.stringify(process.env.RELEASE_SHA ?? "") },
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   server: {
     port: 5173,

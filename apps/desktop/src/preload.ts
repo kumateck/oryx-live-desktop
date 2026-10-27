@@ -32,3 +32,15 @@ const companionBridge: import("./companion/contract").CompanionBridge = {
   },
 };
 contextBridge.exposeInMainWorld("oryxCompanion", companionBridge);
+
+
+const updateBridge: import("../../../shared/desktop-updates").DesktopUpdatesBridge = {
+  status: () => ipcRenderer.invoke("updates:status"),
+  open: () => ipcRenderer.invoke("updates:open"),
+  onStatus: (listener) => {
+    const receive = (_event: Electron.IpcRendererEvent, state: import("../../../shared/desktop-updates").DesktopUpdateState) => listener(state);
+    ipcRenderer.on("updates:status", receive);
+    return () => { ipcRenderer.removeListener("updates:status", receive); };
+  },
+};
+contextBridge.exposeInMainWorld("oryxUpdates", updateBridge);

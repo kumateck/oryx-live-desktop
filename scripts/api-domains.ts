@@ -53,5 +53,5 @@ export const apiDomains: readonly ApiDomain[] = [
     "IT Support Tickets", "Job Orders", "Job Requests", "JobExecution", "Service Memos", "Service Proforma Invoices",
     "Service Providers", "Service Quotations", "Services",
   ] },
-  { id: "reports", exportName: "reportsApi", tags: ["Report"] },
+  { id: "reports", exportName: "reportsApi", tags: ["Report", "ReportHistory"] },
 ];

@@ -112,7 +112,7 @@ curl --fail http://127.0.0.1:3001/healthz
 curl --fail http://127.0.0.1:3001/deployment.json
 ```
 
-Open `http://<customer-server>:3001` in a browser or point the installed Electron shell at that frontend origin. Do not enter the backend address.
+Open `http://<customer-server>:3001` in a browser or point the installed Electron shell at that frontend origin. See the [manual Windows installer download and connection guide](../../docs/customer-windows-installer.md). Do not enter the backend address.
 
 Deployment fetches only `refs/heads/entrance-server`, checks the exact SHA against the successful production GitHub workflow, and builds that detached commit with the frozen lockfile, repository checks and Vite. It tags the image `oryx-live-customer-web:<full-sha>`, archives it with a checksum, and validates an unpublished candidate alongside the running frontend. The candidate runs mandatory API connectivity and focused compatibility checks against its saved baseline before activation. Unavailable Swagger produces a warning; confirmed critical incompatibility blocks replacement.
 
@@ -157,6 +157,15 @@ bash deploy/customer-docker/deploy.sh deploy --retry
 ```
 
 Automatic polling never blindly retries a failed SHA. A newer production commit can qualify after CI approval. Unexpected production branch rewinds are refused.
+
+### Candidate JSON permissions and retry reuse
+
+The deployment retains `umask 077`. Only the two non-secret snapshot files, `compatibility.json` and `backend-baseline.json`, are explicitly set to **0644** after copying and before candidate validation. This also repairs older retained snapshots. State/release directories remain private; `customer.env`, `runtime.env`, tokens, notification logs and recovery archives are not made public. Probes explicitly run as the unprivileged Docker `node` user, drop all capabilities and mount code/JSON read-only. Do not apply recursive permission changes to the state directory.
+
+A deliberate `deploy --retry` reuses a completed build for the **same exact SHA** when its archive checksum/gzip integrity, revision label and source-controlled Compose/JSON snapshots verify. Missing pruned images are restored from the archive. Eligible archives from previous script versions are recognized without a new build marker. Current validated runtime settings are written again with mode 0600; CI approval, backend compatibility, candidate health and activation checks all run again. Reuse is recorded as `build-reused` in deployment history. Incomplete, damaged or mismatched artifacts trigger a fresh build. A newer production SHA always needs its own build; an old image is never relabeled as a different commit.
+
+After installing the corrected deployment-tool checkout and confirming CI/preflight, use the ordinary `resume` and `deploy --retry` commands above. Quarantine is cleared only after successful activation; polling never clears it merely because an image is cached.
+
 
 State includes `current`, `previous`, `pending`, `blocked`, per-SHA `quarantine/`, `paused`, `last-result`, append-only `history.tsv`, per-release `runtime.env`/Compose/requirements/critical-contract-baseline snapshots, protected logs and `images/<sha>.tar.gz` plus SHA-256 sidecars. Runtime settings are frozen per release so rollback does not silently adopt new upstream settings. Interrupted activation is recovered on the next deploy/poll or before rollback; failed recovery retains pending state and artifacts for investigation. For an interrupted first installation with no known-working release, only this project's failed `web` service is stopped/removed.
 
@@ -205,3 +214,7 @@ node deploy/customer-docker/smoke.ts oryx-live-customer-web:verification
 Regression coverage includes harmless contract drift, critical removals/inputs/authentication, unavailable metadata, split probe networking, production-branch isolation, CI gating, failed builds, automatic recovery, quarantine and checksum-protected rollback after image pruning. CI builds Linux AMD64; local Docker verification does not replace native HP/Ubuntu customer acceptance.
 
 Local verification for the simplification (2026-10-27): 108 Linux root/deployment tests, 1,576 web tests, 12 gateway tests and 8 desktop tests passed. The existing Docker production build with frozen dependencies, workspace typechecks, Vite build, Compose/shell validation and Nginx/API/compatibility/WebSocket/asset-retention smoke checks passed. Docker verification used the local Linux ARM64 engine; the production GitHub workflow builds AMD64. No customer server was contacted.
+
+## In-app desktop and web updates
+
+The frontend now mounts the dedicated public `$ORYX_DEPLOY_STATE/downloads` directory read-only for signed desktop update artifacts. Installer releases remain independent of Docker frontend releases. Follow [desktop updater setup, release publishing and compatibility](../../docs/desktop-updates.md). The main installer supports both Windows x86 and x64. Only the public downloads directory is 0755; customer configuration, credentials and private deployment state retain their restrictions.

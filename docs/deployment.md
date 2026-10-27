@@ -21,7 +21,7 @@ Containers on that server cannot reach it through its own public address, so the
 
 ## The Windows installer
 
-`bun run --filter @oryx/desktop make:windows` (on Windows) packages the shell with Electron Forge, then wraps it in an NSIS installer with electron-builder (`apps/desktop/electron-builder.config.cjs`), as `vipex_app` does: an installer wizard that lets the user choose the folder, installs per user without administrator rights, creates Start-menu and desktop shortcuts, and offers to open the app at the end. The output is `apps/desktop/out/make/nsis/OryxLiveDesktop-Setup.exe`, published under the same name so the download link never changes.
+`bun run --filter @oryx/desktop make:windows` (on Windows) compiles the shell with Electron Forge, then packages both Windows x86 and x64 applications in one NSIS installer with electron-builder (`apps/desktop/electron-builder.config.cjs`). The wizard selects the operating-system architecture, lets the user choose the folder, installs per user without administrator rights, creates Start-menu and desktop shortcuts, and offers to open the app at the end. The output is `apps/desktop/out/make/nsis/OryxLiveDesktop-Setup.exe`. See [desktop update setup and runtime support](desktop-updates.md) for the Windows runtime pin and signed update publishing.
 
 Icons come from the Oryx mark (`assets/oryx-mark.png`, taken from Oryx Next's logo): `apps/desktop/build/icon.ico` (Windows executable and installer), `icon.icns` (macOS), and the web favicons and `site.webmanifest` in `apps/web/public`.
 
@@ -41,7 +41,7 @@ The workflow uses the server secrets of `oryx-next`'s deploy workflows, under th
 ### Known limits
 
 - Plain HTTP: passwords and tokens cross the network unencrypted, as they already do for the Oryx Next demo. Put the site behind HTTPS (a domain and a certificate) before real data or customers use it.
-- The installer is unsigned and has no automatic shell updates yet; reinstalling from the link upgrades it in place (`PLAN.md`, site deployment and shell updates).
+- Windows Authenticode signing remains outstanding. On `entrance-server`, desktop 0.2.0 introduces signed in-app updates; an older installation needs one manual bootstrap upgrade. Configure its verification/signing keys and publish the update bundle before offering native updates. See [desktop updates](desktop-updates.md).
 - Build the desktop shell with Node 22 or 24. On Node 26, Electron Packager stops silently while extracting Electron and produces nothing.
 
 ## Building the images yourself
@@ -72,3 +72,7 @@ For the Ubuntu `entrance` account, use [`deploy/customer-docker`](../deploy/cust
 The shared Docker builder now pins Bun 1.4.4 and Node 24 LTS, runs repository checks before the web build, emits release metadata when a SHA is supplied, and uses stable Nginx Alpine. Legacy web builds without a supplied SHA identify as `unversioned`; the customer package always supplies and verifies a full production SHA. Asset retention is now additive rather than automatically deleting files after 30 days, so existing sessions and rollback assets remain available; monitor disk usage.
 
 Customer Docker preflight requires basic backend API connectivity, not an identical OpenAPI fingerprint. Candidate activation checks focused critical API contracts when local Swagger is available; confirmed incompatibilities block deployment and unavailable/ambiguous metadata produces warnings. See the [customer Docker compatibility policy](../deploy/customer-docker/README.md#focused-compatibility-before-activation). The independent host-Nginx policy is unchanged.
+
+## Manual customer Windows installer
+
+On `entrance-server`, the registered `deploy-testing.yml` workflow is manual and installer-only, with a combined Windows x86/x64 build, native installation/launch and installed-upgrade checks, and the `oryx-live-windows-installer` artifact. The `testing` branch keeps its existing workflow definition. Follow the [customer Windows installer guide](customer-windows-installer.md) to trigger it, download `OryxLiveDesktop-Setup.exe`, and connect the shell to `http://CUSTOMER_SERVER_IP:3001`. Customer Docker approval/deployment remains separate.

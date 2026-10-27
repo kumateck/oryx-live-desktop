@@ -1,3 +1,4 @@
+import { stores } from "@/shared/inventory/stores";
 import type { DomainEntitiesProductsProductListDto } from "@/shared/api/generated/products";
 import type { DomainEntitiesItemsItemDto } from "@/shared/api/generated/inventory";
 import { richTextToPlain } from "@/shared/rich-text/rich-text-view";
@@ -22,13 +23,13 @@ export const productMasterSheet = (rows: readonly DomainEntitiesProductsProductL
 ]);
 export const itemMasterSheet = (rows: readonly DomainEntitiesItemsItemDto[]) => reportSheet("Inventory items", rows, [
   { label: "Item", read: (row) => row.name }, { label: "Code", read: (row) => row.code }, { label: "Classification", read: (row) => reportEnum(row.classification, ["Recoverable", "Non-recoverable"]) },
-  { label: "Category", read: (row) => row.itemCategory?.name }, { label: "Store", read: (row) => reportEnum(row.store, ["Equipment store", "General store", "IT store", "Reagent store"]) },
+  { label: "Category", read: (row) => row.itemCategory?.name }, { label: "Store", read: (row) => reportEnum(row.store, stores) },
   { label: "Available quantity", read: (row) => row.availableQuantity }, { label: "Unit", read: (row) => row.unitOfMeasure?.symbol ?? row.unitOfMeasure?.name },
   { label: "Minimum level", read: (row) => row.minimumLevel }, { label: "Maximum level", read: (row) => row.maximumLevel }, { label: "Reorder level", read: (row) => row.reorderLevel },
-  { label: "Has batch", read: (row) => row.hasBatch }, { label: "Active", read: (row) => row.isActive }, { label: "Description", read: (row) => row.description ? richTextToPlain(row.description) : null },
+  { label: "Active", read: (row) => row.isActive }, { label: "Description", read: (row) => row.description ? richTextToPlain(row.description) : null },
 ]);
 export const vendorSummarySheet = (rows: readonly VendorSummaryRow[]) => reportSheet("Vendor count by item", rows, [
-  { label: "Store", read: (row) => reportEnum(row.store, ["Equipment store", "General store", "IT store", "Reagent store"]) },
+  { label: "Store", read: (row) => reportEnum(row.store, stores) },
   { label: "Item", read: (row) => row.itemName }, { label: "Code", read: (row) => row.itemCode }, { label: "Category", read: (row) => row.category },
   { label: "Classification", read: (row) => reportEnum(row.classification, ["Recoverable", "Non-recoverable"]) }, { label: "Vendor count", read: (row) => row.vendorCount },
 ]);

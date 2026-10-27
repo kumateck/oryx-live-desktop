@@ -35,6 +35,7 @@ const injectedRtkApi = api.injectEndpoints({
           division: queryArg.division,
           category: queryArg.category,
           isVerified: queryArg.isVerified,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -451,6 +452,8 @@ export type GetApiV1ProductApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ProductByProductIdApiResponse =
   /** status 200 OK */ DomainEntitiesProductsProductDtoRead;

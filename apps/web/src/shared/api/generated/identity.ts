@@ -32,6 +32,7 @@ const injectedRtkApi = api.injectEndpoints({
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
           type: queryArg["type"],
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -435,6 +436,8 @@ export type GetApiV1DepartmentApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1DepartmentByDepartmentIdApiResponse =
   /** status 200 OK */ DomainEntitiesDepartmentsDepartmentDto;

@@ -10,7 +10,7 @@ import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { forgetSession, rememberSession, stubBackend, testUserId } from "@/test/backend";
 
 afterEach(() => { cleanup(); forgetSession(); });
-interface Options { readStatus?: number; returnStatus?: number; saveStatus?: number; changeStep?: boolean; changeStock?: boolean; malformedStock?: boolean; missingUnit?: boolean; revokeOnSave?: boolean; extraStatus?: number }
+interface Options { legacyAbsent?: boolean; readStatus?: number; returnStatus?: number; saveStatus?: number; changeStep?: boolean; changeStock?: boolean; malformedStock?: boolean; missingUnit?: boolean; revokeOnSave?: boolean; extraStatus?: number }
 
 function AccessProbe() {
   const access = usePermissionAction({ kind: "all", permissions: ["CanViewPlannedProducts"], departmentType: 0 });
@@ -55,6 +55,7 @@ function open(options: Options = {}, address = "/production/activities/a1/final-
     }]);
     if (path.endsWith("/final-packing/product/b1")) {
       if (options.readStatus) return new Response(null, { status: options.readStatus });
+      if (options.legacyAbsent && !saved) return Response.json({errors:[{code:"Error.NullValue",description:"The specified result value is null."}]},{status:400});
       return Response.json(saved ? { id: "fp1", totalQuantityPacked: 1000, nUmberOfFullShipperPacked: 100, leftOver: 0,
         numberOfBottlesPerShipper: 10, yieldTotalQuantityPacked: 1000, totalGainOrLoss: 0, expectedYield: 1000 } : null);
     }
@@ -186,4 +187,13 @@ it("rechecks extra-material issue before final packing completes the step", asyn
   fireEvent.click(screen.getByRole("button", { name: "Record final packing" }));
   await screen.findByText("All extra material must be approved and issued before recording final packing.");
   expect(calls).toEqual([]);
+});
+
+it("opens and saves first final packing when an older backend reports the absent record as Error.NullValue", async () => {
+  const { calls } = open({ legacyAbsent: true });
+  await fill();
+  expect(screen.queryByText("The specified result value is null.")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Record final packing" }));
+  await screen.findByText("Batch board");
+  expect(calls.filter((call) => call.path.endsWith("/final-packing"))).toHaveLength(1);
 });
