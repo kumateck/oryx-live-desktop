@@ -15,6 +15,7 @@ import { activitySchema, extraMaterialsSchema, type Activity } from "../schemas/
 import { extraMaterialStatus } from "../lib/step-status";
 import { stepPolicy } from "../lib/step-policy";
 import { extraIssuedSchema, issuedPackagingSchema, packingSourceSchema, recordedPackingSchema } from "../schemas/final-packing-schema";
+import { absentFinalPacking } from "../lib/packing-record-absence";
 
 const audit = { module: "Production", subModule: "Final Packing" } as const;
 const missing = (error: object | undefined) => Boolean(error && "status" in error && error.status === 404);
@@ -43,10 +44,10 @@ export function useFinalPacking(batchId: string, activity: Activity) {
   const source = useMemo(() => { const parsed = packingSourceSchema.safeParse(recordQuery.data ?? null); return parsed.success ? parsed.data : null; }, [recordQuery.data]);
   const issued = useMemo(() => { const parsed = issuedPackagingSchema.safeParse(missing(issuedQuery.error) ? null : issuedQuery.data ?? null); return parsed.success ? parsed.data : []; }, [issuedQuery.data, issuedQuery.error]);
   const extras = useMemo(() => { const parsed = extraIssuedSchema.safeParse(missing(extraQuery.error) ? null : extraQuery.data ?? null); return parsed.success ? parsed.data : []; }, [extraQuery.data, extraQuery.error]);
-  const recorded = useMemo(() => { const parsed = recordedPackingSchema.safeParse(missing(doneQuery.error) ? null : doneQuery.data ?? null); return parsed.success ? parsed.data : null; }, [doneQuery.data, doneQuery.error]);
+  const recorded = useMemo(() => { const parsed = recordedPackingSchema.safeParse(absentFinalPacking(doneQuery.error) ? null : doneQuery.data ?? null); return parsed.success ? parsed.data : null; }, [doneQuery.data, doneQuery.error]);
   const materials = useMemo(() => packingMaterials(issued, extras), [issued, extras]);
   const unitIds = useMemo(() => Object.fromEntries(issued.flatMap((item) => item.unitId ? [[item.materialId, item.unitId] as const] : [])), [issued]);
-  const failure = recordQuery.error ?? (missing(issuedQuery.error) ? undefined : issuedQuery.error) ?? (missing(extraQuery.error) ? undefined : extraQuery.error) ?? (missing(doneQuery.error) ? undefined : doneQuery.error);
+  const failure = recordQuery.error ?? (missing(issuedQuery.error) ? undefined : issuedQuery.error) ?? (missing(extraQuery.error) ? undefined : extraQuery.error) ?? (absentFinalPacking(doneQuery.error) ? undefined : doneQuery.error);
   const malformed = (!recordQuery.isLoading && !source)
     || (!issuedQuery.error && issuedQuery.data != null && !issuedPackagingSchema.safeParse(issuedQuery.data).success)
     || (!extraQuery.error && extraQuery.data != null && !extraIssuedSchema.safeParse(extraQuery.data).success)
@@ -100,7 +101,7 @@ export function useFinalPacking(batchId: string, activity: Activity) {
         activityQuery.refetch(), recordQuery.refetch(), issuedQuery.refetch(), extraQuery.refetch(), doneQuery.refetch(),
       ]);
       const readFailure = latestActivity.error ?? latestPacking.error ?? (missing(latestIssued.error) ? undefined : latestIssued.error)
-        ?? (missing(latestExtra.error) ? undefined : latestExtra.error) ?? (missing(latestDone.error) ? undefined : latestDone.error);
+        ?? (missing(latestExtra.error) ? undefined : latestExtra.error) ?? (absentFinalPacking(latestDone.error) ? undefined : latestDone.error);
       if (readFailure) { setMessage(apiErrorMessage(readFailure)); return false; }
       const latestExtraStates = extraMaterialsSchema.safeParse(missing(latestExtra.error) ? null : latestExtra.data);
       if (!latestExtraStates.success || latestExtraStates.data.some((status) => status !== extraMaterialStatus.issued)) {
@@ -112,7 +113,7 @@ export function useFinalPacking(batchId: string, activity: Activity) {
         cancelled: fresh.data.batch.cancelled, userId: user?.id ?? null, extraMaterialPending: false, extraMaterialOpen: false, atrExists: false }).canFinalPack) {
         setMessage("The active step or your assignment has changed. Return to the batch and review its current state."); return false;
       }
-      if (latestDone.data != null) { setMessage("Final packing has already been recorded. Reload to view it."); return false; }
+      if (!absentFinalPacking(latestDone.error) && latestDone.data != null) { setMessage("Final packing has already been recorded. Reload to view it."); return false; }
       if (JSON.stringify(latestPacking.data) !== JSON.stringify(recordQuery.data) || JSON.stringify(latestIssued.data) !== JSON.stringify(issuedQuery.data)
         || JSON.stringify(latestExtra.data) !== JSON.stringify(extraQuery.data) || fresh.data.batch.quantity !== activity.batch.quantity || fresh.data.batch.unit !== activity.batch.unit) {
         setMessage("The packing style or issued quantities changed. Review the updated figures before saving again."); return false;
