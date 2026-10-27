@@ -22,8 +22,6 @@ export const qcGrnAnalyticalApi = analyticalApi.enhanceEndpoints({ addTagTypes: 
 } });
 export const qcGrnMaterialsApi = materialsApi.enhanceEndpoints({ addTagTypes: ["QcGrns", "QcBatch"], endpoints: {
   getApiV1MaterialBatchByBatchId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [batch(arg.batchId)]); },
-  postApiV1MaterialBatchByBatchIdRequestRetest: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => fresh(arg.batchId)(_result, error)); },
-  postApiV1MaterialBatchByBatchIdCompleteRetest: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => fresh(arg.batchId)(_result, error)); },
 } });
 export const qcGrnFormsApi = formsApi.enhanceEndpoints({ addTagTypes: ["QcGrns", "QcBatch"], endpoints: {
   getApiV1FormAssigneesMaterialBatchByMaterialBatchId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [batch(arg.materialBatchId)]); },

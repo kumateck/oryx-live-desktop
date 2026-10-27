@@ -22,7 +22,7 @@ export const apiDomains: readonly ApiDomain[] = [
   { id: "materials", exportName: "materialsApi", tags: ["Material", "BillOfMaterial"] },
   { id: "products", exportName: "productsApi", tags: ["Product"] },
   { id: "production", exportName: "productionApi", tags: ["ProductionSchedule", "ProductionOrder", "WorkOrder"] },
-  { id: "warehouse", exportName: "warehouseApi", tags: ["Warehouse", "Requisition", "StockAdjustment", "DamagedStocks"] },
+  { id: "warehouse", exportName: "warehouseApi", tags: ["Warehouse", "Requisition", "StockAdjustment", "StockDiscrepancy", "DamagedStocks"] },
   { id: "procurement", exportName: "procurementApi", tags: ["Procurement", "Supplier"] },
   { id: "inventory", exportName: "inventoryApi", tags: [
     "Item", "ItemGrn", "ItemInventoryTransaction", "ItemStockRequisition", "InventoryProcurement", "Vendor", "RecoverableItemsReport",
@@ -32,7 +32,7 @@ export const apiDomains: readonly ApiDomain[] = [
     "CommercialCertificate", "Instrument", "MicrobialRequirement", "QcAiExtractionSettings", "QcCoa", "QcEquipment",
     "QcMonitoringProgram", "QcOosCase", "QcSamplingPointGroup", "QcSpecification", "QcSpecificationProposal",
     "QcStandardTestProcedure", "QcTestRequest", "QcWaterQuality", "QcWorksheetApproval", "QcWorksheetInstance",
-    "QcWorksheetTemplate", "RoutineQc", "WaterQuality",
+    "QcWorksheetTemplate", "RoutineQc", "WaterQuality", "MaterialRetest", "QcResponseRework", "QcWorksheetFiles",
   ] },
   { id: "analytical", exportName: "analyticalApi", tags: [
     "AnalyticalTestRequest", "MaterialAnalyticalRawData", "MaterialSampling", "MaterialSpecification",

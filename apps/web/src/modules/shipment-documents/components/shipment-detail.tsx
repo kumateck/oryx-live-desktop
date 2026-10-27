@@ -36,6 +36,7 @@ export function ShipmentDetail({ kind, shipment }: { kind: ShipmentKind; shipmen
   const mayBill = kind === "shipment" && shipment.status === shipmentStatus.atPort && !shipment.hasBillingSheet && invoice && has(billingPermissions.create);
   return <article className="min-w-0 space-y-4">
     <PageHeader title={shipment.code} crumbs={[{ label: config.title, to: config.root }, { label: shipment.code }]} actions={<>
+      {kind === "shipment" && has("CanRecordShipmentDiscrepancy") && has("CanViewShipmentDocument") ? <Button asChild size="sm" variant="outline"><Link to={`/logistics/shipment-discrepancies/create?shipmentDocumentId=${encodeURIComponent(shipment.id)}`}>Report discrepancy</Link></Button> : null}
       <PrintButton preview={(close) => kind === "shipment" ? <ShipmentBillingPrint shipment={shipment} sheet={billing.sheet} onClose={close} /> : <WaybillPrint shipment={shipment} onClose={close} />} />
       {kind === "shipment" && billing.sheet ? <ShipmentChargeActions shipment={shipment} sheet={billing.sheet} /> : null}
       {mayBill ? <Button asChild type="button" size="sm" variant="outline"><Link to={createBillingSheetPath(invoice.id)}><Banknote />Create billing sheet</Link></Button> : null}

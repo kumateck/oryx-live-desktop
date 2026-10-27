@@ -36,6 +36,8 @@ Keep the integration in the hosted web application. Load one engine only on dema
 
 ## Decisions already made
 
+Quality workflow completion (2026-10-27): the user authorized the reviewed QA rejection, material retest, QC rework, stock/shipment discrepancy, OOS authorization/state, generic approval verification, and unavailable-navigation fixes, including companion backend changes. Implement the governed test-request/worksheet/certificate journey needed by material retests without reopening unrelated worksheet template authoring or full-procedure holds. Retain backend signing, pinned evidence, separate permissions, audit history and stock reconciliation; unavailable destinations must not be advertised as working screens. Local verification and release acceptance are recorded separately.
+
 Customer pull deployment (2026-10-26): the Entrance frontend release agent is implemented under `deploy/customer-server`, tracking `entrance-server`. A customer-owned `/etc/oryx-deploy/customer.env` stores the existing backend origin and gateway connection once; it is outside Git and immutable releases. The agent runs as an unprivileged service, validates exact commit builds and approved API/shell compatibility, publishes by atomic symlink, retains old assets, and restores the previous release after failed activation. Backend/database deployment and native shell updates are separate operations. Local automated checks cover release/recovery behavior; Linux systemd/Nginx and real customer installation require environment acceptance. No live server installation is authorized by development of this package.
 
 | Area | Direction |

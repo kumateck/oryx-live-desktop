@@ -118,6 +118,7 @@ it("shows the document and its history, and rejects only with a reason", async (
   expect(within(screen.getByRole("list", { name: "Approval history" })).getByText("Dates clash with the audit")).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Reject" }));
   const dialog = await screen.findByRole("dialog");
+  await within(dialog).findByRole("textbox", { name: /Reason for rejecting/ });
   await user.click(within(dialog).getByRole("button", { name: "Reject request" }));
   expect(await within(dialog).findByText("Say why the request is rejected")).toBeTruthy();
   expect(writes(calls)).toEqual([]);

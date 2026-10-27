@@ -809,6 +809,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1ProcurementShipmentInvoiceShortageMakeUp: build.mutation<
+      PostApiV1ProcurementShipmentInvoiceShortageMakeUpApiResponse,
+      PostApiV1ProcurementShipmentInvoiceShortageMakeUpApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/shipment-invoice", id: "LIST" }, { type: "procurement", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/procurement/shipment-invoice/shortage-make-up`,
+        method: "POST",
+        body: queryArg.domainEntitiesShipmentsRequestCreateShortageMakeUpInvoice,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     getApiV1ProcurementShipmentInvoiceById: build.query<
       GetApiV1ProcurementShipmentInvoiceByIdApiResponse,
       GetApiV1ProcurementShipmentInvoiceByIdApiArg
@@ -927,6 +942,32 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1ProcurementShipmentDiscrepancy: build.query<
+      GetApiV1ProcurementShipmentDiscrepancyApiResponse,
+      GetApiV1ProcurementShipmentDiscrepancyApiArg
+    >({
+      providesTags: [{ type: "procurement/shipment-discrepancy", id: "LIST" }, { type: "procurement", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/procurement/shipment-discrepancy`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1ProcurementShipmentDiscrepancyLineByDiscrepancyItemIdBalance:
+      build.query<
+        GetApiV1ProcurementShipmentDiscrepancyLineByDiscrepancyItemIdBalanceApiResponse,
+        GetApiV1ProcurementShipmentDiscrepancyLineByDiscrepancyItemIdBalanceApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/procurement/shipment-discrepancy/line/${queryArg.discrepancyItemId}/balance`,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
     getApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyId: build.query<
       GetApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyIdApiResponse,
       GetApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyIdApiArg
@@ -1690,6 +1731,15 @@ export type GetApiV1ProcurementShipmentInvoiceApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type PostApiV1ProcurementShipmentInvoiceShortageMakeUpApiResponse =
+  /** status 200 OK */ string;
+export type PostApiV1ProcurementShipmentInvoiceShortageMakeUpApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesShipmentsRequestCreateShortageMakeUpInvoice: DomainEntitiesShipmentsRequestCreateShortageMakeUpInvoice;
+};
 export type GetApiV1ProcurementShipmentInvoiceByIdApiResponse =
   /** status 200 OK */ DomainEntitiesShipmentsShipmentInvoiceDto;
 export type GetApiV1ProcurementShipmentInvoiceByIdApiArg = {
@@ -1761,6 +1811,24 @@ export type PostApiV1ProcurementShipmentDiscrepancyApiArg = {
   subModule?: string;
   domainEntitiesShipmentsRequestCreateShipmentDiscrepancy: DomainEntitiesShipmentsRequestCreateShipmentDiscrepancy;
 };
+export type GetApiV1ProcurementShipmentDiscrepancyApiResponse =
+  /** status 200 OK */ DomainEntitiesShipmentsShipmentDiscrepancyDto[];
+export type GetApiV1ProcurementShipmentDiscrepancyApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1ProcurementShipmentDiscrepancyLineByDiscrepancyItemIdBalanceApiResponse =
+  /** status 200 OK */ DomainEntitiesShipmentsRequestShipmentShortageBalanceDto;
+export type GetApiV1ProcurementShipmentDiscrepancyLineByDiscrepancyItemIdBalanceApiArg =
+  {
+    discrepancyItemId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+  };
 export type GetApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyIdApiResponse =
   /** status 200 OK */ DomainEntitiesShipmentsShipmentDiscrepancyDto;
 export type GetApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyIdApiArg =
@@ -1820,7 +1888,7 @@ export type PostApiV1ProcurementMaterialsByPurchaseOrdersApiArg = {
   body: string[];
 };
 export type GetApiV1ProcurementShipmentDocumentByShipmentDocumentIdMaterialDistributionApiResponse =
-  /** status 200 OK */ DomainEntitiesProcurementDistributionMaterialDistributionDtoRead;
+  /** status 200 OK */ DomainEntitiesProcurementDistributionMaterialDistributionPageDto;
 export type GetApiV1ProcurementShipmentDocumentByShipmentDocumentIdMaterialDistributionApiArg =
   {
     /** The ID of the shipment document. */
@@ -2069,9 +2137,8 @@ export type DomainEntitiesProcurementSuppliersCreateSupplierManufacturerRequest 
     manufacturerId?: string;
     materialId?: string | null;
     uoMId?: string | null;
-    default?: boolean;
-    /** Purchase-unit symbol; the unit ID remains a legacy quantity-unit reference. */
     purchaseUnit?: string | null;
+    default?: boolean;
   };
 export type DomainEntitiesProcurementSuppliersCreateSupplierRequest = {
   name?: string | null;
@@ -2103,11 +2170,9 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
   manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
   material?: DomainEntitiesMaterialsMaterialDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  default?: boolean;
-  /** Purchase-unit symbol; the unit ID remains a legacy quantity-unit reference. */
   purchaseUnit?: string | null;
-  /** Unit symbol awaiting pricing approval. */
   pendingPurchaseUnit?: string | null;
+  default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierDto = {
   id?: string;
@@ -2426,7 +2491,9 @@ export type DomainEntitiesShipmentsShipmentInvoiceItemDto = {
   totalCost?: number;
   currency?: DomainEntitiesCurrenciesCurrencyDto;
   reason?: string | null;
+  fulfillsDiscrepancyItemId?: string | null;
 };
+export type DomainEntitiesShipmentsShipmentInvoiceKind = 0 | 1;
 export type DomainEntitiesShipmentsShipmentInvoiceDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -2441,6 +2508,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceDto = {
   amountPaid?: number;
   outstandingBalance?: number;
   isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
 };
 export type DomainEntitiesPurchaseOrdersBillingSheetStatus = 0 | 1 | 2;
 export type DomainEntitiesChargesChargeDto = {
@@ -2533,16 +2601,23 @@ export type DomainEntitiesShipmentsRequestCreateShipmentDocumentRequest = {
   shipmentInvoiceId?: string | null;
 };
 export type DomainEntitiesShipmentsShipmentDiscrepancyItemDto = {
+  id?: string;
   material?: SharedCollectionItemDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   receivedQuantity?: number;
+  declaredQuantitySnapshot?: number;
+  shipmentInvoiceItemId?: string | null;
   type?: SharedCollectionItemDto;
   reason?: string | null;
   resolved?: boolean;
 };
 export type DomainEntitiesShipmentsShipmentDiscrepancyDto = {
+  id?: string;
   shipmentDocument?: DomainEntitiesShipmentsShipmentDocumentDto;
   items?: DomainEntitiesShipmentsShipmentDiscrepancyItemDto[] | null;
+  approved?: boolean;
+  rejected?: boolean;
+  createdAt?: string;
 };
 export type DomainEntitiesShipmentsDocType = 0 | 1;
 export type DomainEntitiesShipmentsShipmentStatus = 0 | 1 | 2 | 3 | 4;
@@ -2607,7 +2682,14 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
+export type DomainEntitiesShipmentsRequestCreateShortageMakeUpInvoice = {
+  code?: string | null;
+  shipmentDiscrepancyItemId?: string;
+  quantity?: number;
+  requestKey?: string;
+};
 export type DomainEntitiesShipmentsRequestCreateShipmentDiscrepancyItem = {
+  shipmentInvoiceItemId?: string | null;
   materialId?: string;
   uoMId?: string;
   receivedQuantity?: number;
@@ -2618,6 +2700,85 @@ export type DomainEntitiesShipmentsRequestCreateShipmentDiscrepancy = {
   shipmentDocumentId?: string;
   items?: DomainEntitiesShipmentsRequestCreateShipmentDiscrepancyItem[] | null;
 };
+export type DomainEntitiesShipmentsRequestShipmentShortageBalanceDto = {
+  shipmentDiscrepancyId?: string;
+  shipmentDiscrepancyItemId?: string;
+  declaredQuantity?: number;
+  initialPhysicalQuantity?: number;
+  confirmedMakeUpQuantity?: number;
+  inFlightMakeUpQuantity?: number;
+  outstandingQuantity?: number;
+  availableToShipQuantity?: number;
+};
+export type DomainEntitiesProcurementDistributionDistributionMaterial = {
+  id?: string;
+  name?: string | null;
+  code?: string | null;
+  description?: string | null;
+  kind?: DomainEntitiesMaterialsMaterialKind;
+};
+export type DomainEntitiesProcurementDistributionDistributionLabel = {
+  id?: string | null;
+  name?: string | null;
+  code?: string | null;
+  description?: string | null;
+  symbol?: string | null;
+};
+export type DomainEntitiesRequisitionsRequestStatus = 0 | 1 | 2 | 3 | 4;
+export type DomainEntitiesProcurementDistributionDistributionRequest = {
+  id?: string;
+  quantity?: number;
+  quantityReceived?: number;
+  status?: DomainEntitiesRequisitionsRequestStatus;
+  uoM?: DomainEntitiesProcurementDistributionDistributionLabel;
+};
+export type DomainEntitiesProcurementDistributionDistributionOrder = {
+  id?: string | null;
+  code?: string | null;
+  currency?: DomainEntitiesProcurementDistributionDistributionLabel;
+};
+export type DomainEntitiesProcurementDistributionDistributionInvoiceLine = {
+  id?: string;
+  material?: DomainEntitiesProcurementDistributionDistributionMaterial;
+  uoM?: DomainEntitiesProcurementDistributionDistributionLabel;
+  manufacturer?: DomainEntitiesProcurementDistributionDistributionLabel;
+  purchaseOrder?: DomainEntitiesProcurementDistributionDistributionOrder;
+  expectedQuantity?: number;
+  receivedQuantity?: number;
+  price?: number;
+  priceUoM?: string | null;
+  currency?: DomainEntitiesProcurementDistributionDistributionLabel;
+};
+export type DomainEntitiesProcurementDistributionDistributionSource = {
+  quantity?: number;
+  shipmentInvoiceItem?: DomainEntitiesProcurementDistributionDistributionInvoiceLine;
+};
+export type DomainEntitiesProcurementDistributionDistributionShare = {
+  department?: DomainEntitiesProcurementDistributionDistributionLabel;
+  requisitionItem?: DomainEntitiesProcurementDistributionDistributionRequest;
+  quantityRequested?: number;
+  quantityAllocated?: number;
+  quantityRemaining?: number;
+  distributions?:
+    DomainEntitiesProcurementDistributionDistributionSource[] | null;
+};
+export type DomainEntitiesProcurementDistributionDistributionPageSection = {
+  material?: DomainEntitiesProcurementDistributionDistributionMaterial;
+  totalQuantity?: number;
+  uoM?: DomainEntitiesProcurementDistributionDistributionLabel;
+  items?: DomainEntitiesProcurementDistributionDistributionShare[] | null;
+};
+export type DomainEntitiesProcurementDistributionMaterialDistributionPageDto = {
+  sections?:
+    DomainEntitiesProcurementDistributionDistributionPageSection[] | null;
+};
+export type DomainEntitiesWarehousesDistributeMaterialRequest = {
+  warehouseId?: string;
+  materialBatchId?: string;
+  uoMId?: string;
+  distributedRequisitionItemId?: string;
+  quantity?: number;
+};
 export type DomainEntitiesWarehousesWarehouseType = 0 | 1 | 2 | 3;
 export type DomainEntitiesWarehousesWarehouseDto = {
   id?: string;
@@ -2627,190 +2788,8 @@ export type DomainEntitiesWarehousesWarehouseDto = {
   division?: DomainEntitiesProductsDivision;
   locations?: SharedCollectionItemDto[] | null;
 };
-export type DomainEntitiesDepartmentsDepartmentDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  code?: string | null;
-  name?: string | null;
-  type?: SharedDepartmentType;
-  description?: string | null;
-  warehouses?: DomainEntitiesWarehousesWarehouseDto[] | null;
-  division?: DomainEntitiesProductsDivision;
-  parentDepartment?: SharedCollectionItemDto;
-  isSeeded?: boolean;
-};
-export type DomainEntitiesRequisitionsRequestStatus = 0 | 1 | 2 | 3 | 4;
 export type DomainEntitiesMaterialsBatchBatchStatus =
   0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
-export type DomainEntitiesChecklistsIntactness = 0 | 1;
-export type DomainEntitiesChecklistsConsignmentCarrier = 0 | 1 | 2 | 3 | 4 | 5;
-export type DomainEntitiesChecklistsMaterialBatchChecklistDto = {
-  checkedAt?: string | null;
-  shipmentInvoice?: DomainEntitiesShipmentsShipmentInvoiceDto;
-  supplier?: DomainEntitiesProcurementSuppliersSupplierDto;
-  manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
-  certificateOfAnalysisDelivered?: boolean;
-  visibleLabelling?: boolean;
-  intactnessStatus?: DomainEntitiesChecklistsIntactness;
-  consignmentCarrierStatus?: DomainEntitiesChecklistsConsignmentCarrier;
-};
-export type DomainEntitiesMaterialsBatchMaterialBatchListDto = {
-  id?: string;
-  material?: SharedCollectionItemDto;
-  batchNumber?: string | null;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  numberOfContainers?: number;
-  containerPackageStyle?: DomainEntitiesBasePackageStyleDto;
-  quantityPerContainer?: number;
-  status?: DomainEntitiesMaterialsBatchBatchStatus;
-  dateReceived?: string;
-  dateApproved?: string | null;
-  quantityAssigned?: number;
-  quantityUnassigned?: number;
-  totalQuantity?: number;
-  consumedQuantity?: number;
-  remainingQuantity?: number;
-  sampledQuantity?: number;
-  quantityDistributed?: number;
-  expiryDate?: string | null;
-  manufacturingDate?: string | null;
-  retestDate?: string | null;
-  checklist?: DomainEntitiesChecklistsMaterialBatchChecklistDto;
-  returnDate?: string | null;
-  issueNumber?: string | null;
-  supplierName?: string | null;
-  manufacturerName?: string | null;
-  arNumber?: string | null;
-  sampledBy?: string | null;
-  sampledOn?: string | null;
-  sampleQuantity?: number;
-  analysedBy?: string | null;
-  analysedDate?: string | null;
-  issuedBy?: SharedCollectionItemDto;
-  issuedAt?: string | null;
-};
-export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
-  id?: string;
-  material?: SharedCollectionItemDto;
-  batchNumber?: string | null;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  numberOfContainers?: number;
-  containerPackageStyle?: DomainEntitiesBasePackageStyleDto;
-  quantityPerContainer?: number;
-  status?: DomainEntitiesMaterialsBatchBatchStatus;
-  dateReceived?: string;
-  dateApproved?: string | null;
-  quantityAssigned?: number;
-  quantityUnassigned?: number;
-  totalQuantity?: number;
-  consumedQuantity?: number;
-  remainingQuantity?: number;
-  sampledQuantity?: number;
-  quantityDistributed?: number;
-  expiryDate?: string | null;
-  manufacturingDate?: string | null;
-  retestDate?: string | null;
-  checklist?: DomainEntitiesChecklistsMaterialBatchChecklistDto;
-  aboutToExpire?: boolean;
-  expired?: boolean;
-  returnDate?: string | null;
-  isReturn?: boolean;
-  issueNumber?: string | null;
-  supplierName?: string | null;
-  manufacturerName?: string | null;
-  arNumber?: string | null;
-  sampledBy?: string | null;
-  sampledOn?: string | null;
-  sampleQuantity?: number;
-  analysedBy?: string | null;
-  analysedDate?: string | null;
-  issuedBy?: SharedCollectionItemDto;
-  issuedAt?: string | null;
-};
-export type DomainEntitiesMaterialsBatchBatchToSupply = {
-  batch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
-  quantityToTake?: number;
-  warehouseLocationShelfId?: string | null;
-};
-export type DomainEntitiesMaterialsBatchBatchToSupplyRead = {
-  batch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
-  quantityToTake?: number;
-  warehouseLocationShelfId?: string | null;
-};
-export type DomainEntitiesRequisitionsRequisitionItemDto = {
-  id?: string;
-  material?: DomainEntitiesMaterialsMaterialDto;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  quantity?: number;
-  quantityReceived?: number;
-  status?: DomainEntitiesRequisitionsRequestStatus;
-  batches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
-};
-export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
-  id?: string;
-  material?: DomainEntitiesMaterialsMaterialDto;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  quantity?: number;
-  quantityReceived?: number;
-  status?: DomainEntitiesRequisitionsRequestStatus;
-  batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
-};
-export type DomainEntitiesProcurementDistributionMaterialItemDistributionDto = {
-  shipmentInvoiceItem?: DomainEntitiesShipmentsShipmentInvoiceItemDto;
-  quantity?: number;
-};
-export type DomainEntitiesProcurementDistributionDistributionRequisitionItem = {
-  department?: DomainEntitiesDepartmentsDepartmentDto;
-  requisitionItem?: DomainEntitiesRequisitionsRequisitionItemDto;
-  quantityRequested?: number;
-  quantityAllocated?: number;
-  quantityRemaining?: number;
-  distributions?:
-    DomainEntitiesProcurementDistributionMaterialItemDistributionDto[] | null;
-};
-export type DomainEntitiesProcurementDistributionDistributionRequisitionItemRead =
-  {
-    department?: DomainEntitiesDepartmentsDepartmentDto;
-    requisitionItem?: DomainEntitiesRequisitionsRequisitionItemDtoRead;
-    quantityRequested?: number;
-    quantityAllocated?: number;
-    quantityRemaining?: number;
-    distributions?:
-      DomainEntitiesProcurementDistributionMaterialItemDistributionDto[] | null;
-  };
-export type DomainEntitiesProcurementDistributionMaterialDistributionSection = {
-  material?: DomainEntitiesMaterialsMaterialDto;
-  totalQuantity?: number;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  items?:
-    DomainEntitiesProcurementDistributionDistributionRequisitionItem[] | null;
-};
-export type DomainEntitiesProcurementDistributionMaterialDistributionSectionRead =
-  {
-    material?: DomainEntitiesMaterialsMaterialDto;
-    totalQuantity?: number;
-    uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-    items?:
-      | DomainEntitiesProcurementDistributionDistributionRequisitionItemRead[]
-      | null;
-  };
-export type DomainEntitiesProcurementDistributionMaterialDistributionDto = {
-  sections?:
-    DomainEntitiesProcurementDistributionMaterialDistributionSection[] | null;
-};
-export type DomainEntitiesProcurementDistributionMaterialDistributionDtoRead = {
-  sections?:
-    | DomainEntitiesProcurementDistributionMaterialDistributionSectionRead[]
-    | null;
-};
-export type DomainEntitiesWarehousesDistributeMaterialRequest = {
-  warehouseId?: string;
-  materialBatchId?: string;
-  uoMId?: string;
-  distributedRequisitionItemId?: string;
-  quantity?: number;
-};
 export type DomainEntitiesMaterialsBatchMaterialBatchReducedDto = {
   id?: string;
   material?: DomainEntitiesMaterialsMaterialDto;
@@ -2996,6 +2975,7 @@ export const {
   usePostApiV1ProcurementShipmentInvoiceMutation,
   useGetApiV1ProcurementShipmentInvoiceQuery,
   useLazyGetApiV1ProcurementShipmentInvoiceQuery,
+  usePostApiV1ProcurementShipmentInvoiceShortageMakeUpMutation,
   useGetApiV1ProcurementShipmentInvoiceByIdQuery,
   useLazyGetApiV1ProcurementShipmentInvoiceByIdQuery,
   useGetApiV1ProcurementShipmentInvoiceUnattachedQuery,
@@ -3007,6 +2987,10 @@ export const {
   usePutApiV1ProcurementShipmentInvoicePaidByShipmentInvoiceIdMutation,
   usePutApiV1ProcurementShipmentInvoicePaidMultipleMutation,
   usePostApiV1ProcurementShipmentDiscrepancyMutation,
+  useGetApiV1ProcurementShipmentDiscrepancyQuery,
+  useLazyGetApiV1ProcurementShipmentDiscrepancyQuery,
+  useGetApiV1ProcurementShipmentDiscrepancyLineByDiscrepancyItemIdBalanceQuery,
+  useLazyGetApiV1ProcurementShipmentDiscrepancyLineByDiscrepancyItemIdBalanceQuery,
   useGetApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyIdQuery,
   useLazyGetApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyIdQuery,
   usePutApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyIdMutation,

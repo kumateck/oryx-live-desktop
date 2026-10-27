@@ -49,8 +49,8 @@ it("records a review only with the reviewer's password and the meaning of the si
   const user = userEvent.setup();
   const calls = open("/qc/material-stp/t1/document?type=0", ["CanViewRawMaterialStps", "CanEditRawMaterialStp"], 1);
   await user.click(await screen.findByRole("button", { name: "Record review" }));
-  await screen.findByLabelText(/Your password/);
-  await screen.findByLabelText(/Meaning of the signature/);
+  await screen.findByLabelText(/Your password/, { selector: "input" });
+  await screen.findByLabelText(/Meaning of the signature/, { selector: "input" });
   await user.click(screen.getByRole("button", { name: "Sign review" }));
   expect(await screen.findByText("Enter your password.")).toBeTruthy();
   expect(writes(calls)).toEqual([]);

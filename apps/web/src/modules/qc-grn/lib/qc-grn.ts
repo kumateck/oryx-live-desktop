@@ -17,13 +17,11 @@ export const qcPermissions = {
   test: byKind("CanStartRawMaterialTest", "CanStartPackagingMaterialTest"),
   reassign: byKind("CanReassignRawMaterialTest", "CanReassignPackagingMaterialTest"),
   check: byKind("CanCheckRawMaterialTestResult", "CanCheckPackagingMaterialTestResult"),
-  requestRetest: byKind("CanRequestRetestRawMaterial", "CanRequestRetestPackagingMaterial"),
-  completeRetest: byKind("CanCompleteRetestRawMaterial", "CanCompleteRetestPackagingMaterial"),
 } as const;
 
 export const grnStatusLabels: Record<number, string> = { 0: "Pending", 1: "Partly done", 2: "Completed" };
 
-export type BatchAction = "sample" | "assign" | "start" | "continue" | "reassign" | "assignments" | "check" | "requestRetest" | "completeRetest" | "print";
+export type BatchAction = "sample" | "assign" | "start" | "continue" | "reassign" | "assignments" | "check" | "requestRetest" | "viewRetest" | "print";
 /** What can be done with a batch in its status, in the order QC does it. */
 export function batchActions(status: number | null): ReadonlySet<BatchAction> {
   const S = BatchStatus;
@@ -35,7 +33,7 @@ export function batchActions(status: number | null): ReadonlySet<BatchAction> {
   if (status === S.TestAssigned || status === S.Testing || status === S.TestTaken) actions.add("assignments");
   if (status === S.TestTaken) actions.add("check");
   if (status === S.Available || status === S.Approved || status === S.Rejected) actions.add("requestRetest");
-  if (status === S.Retest) actions.add("completeRetest");
+  if (status === S.Retest) actions.add("viewRetest");
   if (status === S.TestAssigned || status === S.Testing || status === S.TestTaken || status === S.Checked || status === S.Approved) actions.add("print");
   return actions;
 }

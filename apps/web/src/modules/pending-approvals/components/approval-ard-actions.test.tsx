@@ -51,7 +51,7 @@ it("previews the certificate of analysis and starts an OOS investigation on reje
   expect(calls).toEqual([]);
   await user.click(within(dialog).getByRole("button", { name: "Start investigation" }));
   await waitFor(() => expect(calls).toEqual([{ method: "POST", path: "/api/v1/qa/oos-investigations/initiate", body: {
-    materialBatchId: "mb-1", analyticalTestRequestId: null, coaNumber: "COA-12", productOrMaterialName: "Maize starch", batchNumber: "B-1", rejectionReason: "Assay below limit" } }]));
+    responseId: "doc-1", materialBatchId: "mb-1", analyticalTestRequestId: null, coaNumber: "COA-12", productOrMaterialName: "Maize starch", batchNumber: "B-1", rejectionReason: "Assay below limit" } }]));
 }, 20_000);
 
 it("offers no OOS investigation on results that were not rejected", async () => {

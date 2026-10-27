@@ -424,6 +424,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          expectedResponseId: queryArg.expectedResponseId,
+        },
       }),
     }),
     postApiV1FormGenerateCertificateProductByBatchManufacturingRecordIdAndProductionActivityStepId:
@@ -438,6 +441,9 @@ const injectedRtkApi = api.injectEndpoints({
           headers: {
             Module: queryArg["module"],
             SubModule: queryArg.subModule,
+          },
+          params: {
+            expectedResponseId: queryArg.expectedResponseId,
           },
         }),
       }),
@@ -954,6 +960,7 @@ export type PostApiV1FormGenerateCertificateByMaterialBatchIdApiResponse = void;
 export type PostApiV1FormGenerateCertificateByMaterialBatchIdApiArg = {
   /** The ID of the material batch. */
   materialBatchId: string;
+  expectedResponseId?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -968,6 +975,7 @@ export type PostApiV1FormGenerateCertificateProductByBatchManufacturingRecordIdA
     batchManufacturingRecordId: string;
     /** The id of production activity step */
     productionActivityStepId: string;
+    expectedResponseId?: string;
     /** The module this request falls under */
     module?: string;
     /** The sub module this request falls under */
@@ -1408,6 +1416,7 @@ export type DomainEntitiesFormsResponseDetailDto = {
   createdAt?: string;
   form?: SharedCollectionItemDto;
   formResponses?: DomainEntitiesFormsFormResponseDto[] | null;
+  materialSamplingId?: string | null;
   batchManufacturingRecord?: SharedCollectionItemDto;
   materialBatch?: SharedCollectionItemDto;
   productionActivityStepId?: string | null;

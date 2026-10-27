@@ -11,7 +11,7 @@ import { arNumber, arNumberPrefix, useNextSerial } from "@/shared/qc/qc-numbers"
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 import { relatedUnits, toLargestUnit, toSmallestUnit } from "@/shared/units/quantity";
 import { SettingsFormDialog } from "@/modules/settings-support/ui";
-import { qcGrnAnalyticalApi, qcGrnMaterialsApi } from "../api/qc-grn-api";
+import { qcGrnAnalyticalApi } from "../api/qc-grn-api";
 import { qcGrnAudit, qcPermissions } from "../lib/qc-grn";
 import type { QcBatch } from "../schemas/grn-schema";
 
@@ -50,55 +50,6 @@ export function SampleDialog({ grnId, batch, kind, onClose }: { grnId: string; b
       const result = await create({ ...qcGrnAudit, domainEntitiesMaterialSamplingCreateMaterialSamplingRequest: { grnId, materialBatchId: batch.id, arNumber: values.arNumber.trim(), sampleQuantity } });
       if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
       toast.success("Sample recorded");
-      onClose();
-    }} />;
-}
-
-const requestSchema = z.object({ reason: z.string().trim().min(1, "Give the reason for the retest.").max(2000) });
-type RequestValues = z.infer<typeof requestSchema>;
-const requestFields: WizardField<RequestValues>[] = [{ type: InputTypes.TEXTAREA, name: "reason", label: "Reason", required: true, rows: 4, className: "md:col-span-2" }];
-
-export function RequestRetestDialog({ batch, kind, onClose }: { batch: QcBatch; kind: MaterialKind; onClose: () => void }) {
-  const [request, requesting] = qcGrnMaterialsApi.usePostApiV1MaterialBatchByBatchIdRequestRetestMutation();
-  const permission = usePermissionAction(qcPermissions.requestRetest[kind]);
-  const form = useForm<RequestValues>({ resolver: zodResolver(requestSchema), defaultValues: { reason: "" } });
-  const [message, setMessage] = useState("");
-  return <SettingsFormDialog title={`Request a retest of ${batch.number ?? batch.material}`} description="The batch goes back to QC for retesting." form={form} fields={requestFields}
-    saving={requesting.isLoading} message={message} submitLabel="Request retest" onClose={onClose}
-    onSubmit={async (values) => {
-      setMessage("");
-      const denied = permission.check();
-      if (denied) { setMessage(denied); return; }
-      const result = await request({ ...qcGrnAudit, batchId: batch.id, domainEntitiesMaterialsBatchRequestRetestDto: { reason: values.reason.trim() } });
-      if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-      toast.success("Retest requested");
-      onClose();
-    }} />;
-}
-
-const completeSchema = z.object({ expiry: z.date({ message: "Choose the new expiry date." }).nullable().refine((value): boolean => value !== null, "Choose the new expiry date."), notes: z.string().max(2000) });
-type CompleteValues = z.infer<typeof completeSchema>;
-
-/** Records that a retest is complete and the batch's new expiry date, which must be later than today. */
-export function CompleteRetestDialog({ batch, kind, onClose }: { batch: QcBatch; kind: MaterialKind; onClose: () => void }) {
-  const [complete, completing] = qcGrnMaterialsApi.usePostApiV1MaterialBatchByBatchIdCompleteRetestMutation();
-  const permission = usePermissionAction(qcPermissions.completeRetest[kind]);
-  const form = useForm<CompleteValues>({ resolver: zodResolver(completeSchema), defaultValues: { expiry: null, notes: "" } });
-  const [message, setMessage] = useState("");
-  const fields: WizardField<CompleteValues>[] = [
-    { type: InputTypes.DATE, name: "expiry", label: "Extended expiry date", required: true, minDate: new Date() },
-    { type: InputTypes.TEXTAREA, name: "notes", label: "Notes", rows: 3 },
-  ];
-  return <SettingsFormDialog title={`Complete the retest of ${batch.number ?? batch.material}`} description="The batch's expiry is extended to the new date." form={form} fields={fields}
-    saving={completing.isLoading} message={message} submitLabel="Complete retest" onClose={onClose}
-    onSubmit={async (values) => {
-      setMessage("");
-      const denied = permission.check();
-      if (denied) { setMessage(denied); return; }
-      if (!values.expiry) return;
-      const result = await complete({ ...qcGrnAudit, batchId: batch.id, domainEntitiesMaterialsBatchCompleteRetestDto: { extendedExpiryDate: values.expiry.toISOString(), notes: values.notes.trim() || null } });
-      if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-      toast.success("Retest completed");
       onClose();
     }} />;
 }

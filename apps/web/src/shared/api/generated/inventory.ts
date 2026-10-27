@@ -2607,11 +2607,9 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
   manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
   material?: DomainEntitiesMaterialsMaterialDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  default?: boolean;
-  /** Purchase-unit symbol; the unit ID remains a legacy quantity-unit reference. */
   purchaseUnit?: string | null;
-  /** Unit symbol awaiting pricing approval. */
   pendingPurchaseUnit?: string | null;
+  default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierDto = {
   id?: string;
@@ -5823,6 +5821,7 @@ export type DomainEntitiesFormsResponseApprovalRead = {
   formulaSubmissionSetId?: string | null;
   formulaSubmissionSet?: DomainEntitiesFormulasResponseFormulaSubmissionSetRead;
 };
+export type DomainEntitiesFormsResponseRejectionOutcome = 0 | 1;
 export type DomainEntitiesFormsResponse = {
   id?: string;
   createdAt?: string;
@@ -5855,6 +5854,8 @@ export type DomainEntitiesFormsResponse = {
   checkedAt?: string | null;
   approved?: boolean;
   rejected?: boolean;
+  rejectionOutcome?: DomainEntitiesFormsResponseRejectionOutcome;
+  reworkSequence?: number;
 };
 export type DomainEntitiesFormsResponseRead = {
   id?: string;
@@ -5888,6 +5889,8 @@ export type DomainEntitiesFormsResponseRead = {
   checkedAt?: string | null;
   approved?: boolean;
   rejected?: boolean;
+  rejectionOutcome?: DomainEntitiesFormsResponseRejectionOutcome;
+  reworkSequence?: number;
 };
 export type DomainEntitiesMaterialSpecificationsMaterialSpecification = {
   id?: string;
@@ -7160,6 +7163,7 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturer = {
   material?: DomainEntitiesMaterialsMaterial;
   uoMId?: string | null;
   uoM?: DomainEntitiesBaseUnitOfMeasure;
+  purchaseUnit?: string | null;
   default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierManufacturerRead = {
@@ -7181,6 +7185,7 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerRead = {
   material?: DomainEntitiesMaterialsMaterialRead;
   uoMId?: string | null;
   uoM?: DomainEntitiesBaseUnitOfMeasureRead;
+  purchaseUnit?: string | null;
   default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierCertificationType =
@@ -7527,6 +7532,7 @@ export type DomainEntitiesProcurementSuppliersSupplierRead = {
   performanceRecords?:
     DomainEntitiesProcurementSuppliersSupplierPerformanceRecordRead[] | null;
 };
+export type DomainEntitiesShipmentsShipmentInvoiceKind = 0 | 1;
 export type DomainEntitiesShipmentsShipmentInvoice = {
   id?: string;
   createdAt?: string;
@@ -7547,6 +7553,8 @@ export type DomainEntitiesShipmentsShipmentInvoice = {
   currency?: DomainEntitiesCurrenciesCurrency;
   paidAt?: string | null;
   dueDate?: string | null;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
+  fulfillmentRequestKey?: string | null;
 };
 export type DomainEntitiesShipmentsShipmentInvoiceRead = {
   id?: string;
@@ -7568,6 +7576,8 @@ export type DomainEntitiesShipmentsShipmentInvoiceRead = {
   currency?: DomainEntitiesCurrenciesCurrencyRead;
   paidAt?: string | null;
   dueDate?: string | null;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
+  fulfillmentRequestKey?: string | null;
 };
 export type DomainEntitiesRequisitionsProcurementSource = 0 | 1;
 export type DomainEntitiesRequisitionsSourceRequisitionItem = {
@@ -7903,6 +7913,256 @@ export type DomainEntitiesPurchaseOrdersPurchaseOrderRead = {
   department?: DomainEntitiesDepartmentsDepartment;
   approved?: boolean;
 };
+export type DomainEntitiesShipmentsShipmentDocumentApproval = {
+  userId?: string | null;
+  user?: DomainEntitiesUsersUser;
+  roleId?: string | null;
+  role?: DomainEntitiesRolesRole;
+  required?: boolean;
+  order?: number;
+  stageStartTime?: string | null;
+  status?: DomainEntitiesApprovalsApprovalStatus;
+  approvalTime?: string | null;
+  approvedById?: string | null;
+  approvedBy?: DomainEntitiesUsersUser;
+  createdAt?: string;
+  activatedAt?: string | null;
+  comments?: string | null;
+  id?: string;
+  shipmentDocumentId?: string;
+  shipmentDocument?: DomainEntitiesShipmentsShipmentDocument;
+  approvalId?: string;
+  approval?: DomainEntitiesApprovalsApproval;
+};
+export type DomainEntitiesShipmentsShipmentDocumentApprovalRead = {
+  userId?: string | null;
+  user?: DomainEntitiesUsersUser;
+  roleId?: string | null;
+  role?: DomainEntitiesRolesRole;
+  required?: boolean;
+  order?: number;
+  stageStartTime?: string | null;
+  status?: DomainEntitiesApprovalsApprovalStatus;
+  approvalTime?: string | null;
+  approvedById?: string | null;
+  approvedBy?: DomainEntitiesUsersUser;
+  createdAt?: string;
+  activatedAt?: string | null;
+  comments?: string | null;
+  id?: string;
+  shipmentDocumentId?: string;
+  shipmentDocument?: DomainEntitiesShipmentsShipmentDocument;
+  approvalId?: string;
+  approval?: DomainEntitiesApprovalsApprovalRead;
+};
+export type DomainEntitiesShipmentsShipmentDocument = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  code?: string | null;
+  discrepancies?: DomainEntitiesShipmentsShipmentDiscrepancy[] | null;
+  shipmentInvoiceId?: string | null;
+  shipmentInvoice?: DomainEntitiesShipmentsShipmentInvoice;
+  arrivedAt?: string | null;
+  clearedAt?: string | null;
+  transitStartedAt?: string | null;
+  atPortAt?: string | null;
+  type?: DomainEntitiesShipmentsDocType;
+  completedDistributionAt?: string | null;
+  status?: DomainEntitiesShipmentsShipmentStatus;
+  approved?: boolean;
+  approvals?: DomainEntitiesShipmentsShipmentDocumentApproval[] | null;
+};
+export type DomainEntitiesShipmentsShipmentDocumentRead = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  code?: string | null;
+  discrepancies?: DomainEntitiesShipmentsShipmentDiscrepancy[] | null;
+  shipmentInvoiceId?: string | null;
+  shipmentInvoice?: DomainEntitiesShipmentsShipmentInvoiceRead;
+  arrivedAt?: string | null;
+  clearedAt?: string | null;
+  transitStartedAt?: string | null;
+  atPortAt?: string | null;
+  type?: DomainEntitiesShipmentsDocType;
+  completedDistributionAt?: string | null;
+  status?: DomainEntitiesShipmentsShipmentStatus;
+  approved?: boolean;
+  approvals?: DomainEntitiesShipmentsShipmentDocumentApprovalRead[] | null;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyApproval = {
+  userId?: string | null;
+  user?: DomainEntitiesUsersUser;
+  roleId?: string | null;
+  role?: DomainEntitiesRolesRole;
+  required?: boolean;
+  order?: number;
+  stageStartTime?: string | null;
+  status?: DomainEntitiesApprovalsApprovalStatus;
+  approvalTime?: string | null;
+  approvedById?: string | null;
+  approvedBy?: DomainEntitiesUsersUser;
+  createdAt?: string;
+  activatedAt?: string | null;
+  comments?: string | null;
+  id?: string;
+  shipmentDiscrepancyId?: string;
+  shipmentDiscrepancy?: DomainEntitiesShipmentsShipmentDiscrepancy;
+  approvalId?: string;
+  approval?: DomainEntitiesApprovalsApproval;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyApprovalRead = {
+  userId?: string | null;
+  user?: DomainEntitiesUsersUser;
+  roleId?: string | null;
+  role?: DomainEntitiesRolesRole;
+  required?: boolean;
+  order?: number;
+  stageStartTime?: string | null;
+  status?: DomainEntitiesApprovalsApprovalStatus;
+  approvalTime?: string | null;
+  approvedById?: string | null;
+  approvedBy?: DomainEntitiesUsersUser;
+  createdAt?: string;
+  activatedAt?: string | null;
+  comments?: string | null;
+  id?: string;
+  shipmentDiscrepancyId?: string;
+  shipmentDiscrepancy?: DomainEntitiesShipmentsShipmentDiscrepancy;
+  approvalId?: string;
+  approval?: DomainEntitiesApprovalsApprovalRead;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancy = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  shipmentDocumentId?: string;
+  shipmentDocument?: DomainEntitiesShipmentsShipmentDocument;
+  items?: DomainEntitiesShipmentsShipmentDiscrepancyItem[] | null;
+  approved?: boolean;
+  approvals?: DomainEntitiesShipmentsShipmentDiscrepancyApproval[] | null;
+  rejected?: boolean;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyRead = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  shipmentDocumentId?: string;
+  shipmentDocument?: DomainEntitiesShipmentsShipmentDocumentRead;
+  items?: DomainEntitiesShipmentsShipmentDiscrepancyItem[] | null;
+  approved?: boolean;
+  approvals?: DomainEntitiesShipmentsShipmentDiscrepancyApprovalRead[] | null;
+  rejected?: boolean;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyType = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  name?: string | null;
+  description?: string | null;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyTypeRead = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  name?: string | null;
+  description?: string | null;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyItem = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  shipmentDiscrepancyId?: string;
+  shipmentDiscrepancy?: DomainEntitiesShipmentsShipmentDiscrepancy;
+  materialId?: string;
+  material?: DomainEntitiesMaterialsMaterial;
+  uoMId?: string;
+  uoM?: DomainEntitiesBaseUnitOfMeasure;
+  receivedQuantity?: number;
+  declaredQuantitySnapshot?: number;
+  shipmentInvoiceItemId?: string | null;
+  shipmentInvoiceItem?: DomainEntitiesShipmentsShipmentInvoiceItem;
+  typeId?: string | null;
+  type?: DomainEntitiesShipmentsShipmentDiscrepancyType;
+  reason?: string | null;
+  resolved?: boolean;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyItemRead = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  shipmentDiscrepancyId?: string;
+  shipmentDiscrepancy?: DomainEntitiesShipmentsShipmentDiscrepancyRead;
+  materialId?: string;
+  material?: DomainEntitiesMaterialsMaterialRead;
+  uoMId?: string;
+  uoM?: DomainEntitiesBaseUnitOfMeasureRead;
+  receivedQuantity?: number;
+  declaredQuantitySnapshot?: number;
+  shipmentInvoiceItemId?: string | null;
+  shipmentInvoiceItem?: DomainEntitiesShipmentsShipmentInvoiceItem;
+  typeId?: string | null;
+  type?: DomainEntitiesShipmentsShipmentDiscrepancyTypeRead;
+  reason?: string | null;
+  resolved?: boolean;
+};
 export type DomainEntitiesShipmentsShipmentInvoiceItem = {
   id?: string;
   createdAt?: string;
@@ -7933,6 +8193,8 @@ export type DomainEntitiesShipmentsShipmentInvoiceItem = {
   totalCost?: number;
   currencyId?: string | null;
   currency?: DomainEntitiesCurrenciesCurrency;
+  fulfillsDiscrepancyItemId?: string | null;
+  fulfillsDiscrepancyItem?: DomainEntitiesShipmentsShipmentDiscrepancyItem;
 };
 export type DomainEntitiesShipmentsShipmentInvoiceItemRead = {
   id?: string;
@@ -7964,6 +8226,8 @@ export type DomainEntitiesShipmentsShipmentInvoiceItemRead = {
   totalCost?: number;
   currencyId?: string | null;
   currency?: DomainEntitiesCurrenciesCurrencyRead;
+  fulfillsDiscrepancyItemId?: string | null;
+  fulfillsDiscrepancyItem?: DomainEntitiesShipmentsShipmentDiscrepancyItemRead;
 };
 export type DomainEntitiesWarehousesMaterialItemDistribution = {
   id?: string;

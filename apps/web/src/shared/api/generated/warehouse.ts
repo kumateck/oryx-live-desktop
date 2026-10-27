@@ -488,6 +488,61 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1StockDiscrepancy: build.mutation<
+      PostApiV1StockDiscrepancyApiResponse,
+      PostApiV1StockDiscrepancyApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "stock-discrepancy", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-discrepancy`,
+        method: "POST",
+        body: queryArg.domainEntitiesStockAdjustmentsCreateStockDiscrepancy,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1StockDiscrepancy: build.query<
+      GetApiV1StockDiscrepancyApiResponse,
+      GetApiV1StockDiscrepancyApiArg
+    >({
+      providesTags: [{ type: "stock-discrepancy", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/stock-discrepancy`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1StockDiscrepancyById: build.query<
+      GetApiV1StockDiscrepancyByIdApiResponse,
+      GetApiV1StockDiscrepancyByIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stock-discrepancy", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/stock-discrepancy/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1StockDiscrepancyByIdReconcile: build.mutation<
+      PostApiV1StockDiscrepancyByIdReconcileApiResponse,
+      PostApiV1StockDiscrepancyByIdReconcileApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stock-discrepancy", id: "LIST" }, { type: "stock-discrepancy", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-discrepancy/${queryArg.id}/reconcile`,
+        method: "POST",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     postApiV1Warehouse: build.mutation<
       PostApiV1WarehouseApiResponse,
       PostApiV1WarehouseApiArg
@@ -1579,6 +1634,39 @@ export type GetApiV1StockAdjustmentByIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type PostApiV1StockDiscrepancyApiResponse = /** status 200 OK */ string;
+export type PostApiV1StockDiscrepancyApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesStockAdjustmentsCreateStockDiscrepancy: DomainEntitiesStockAdjustmentsCreateStockDiscrepancy;
+};
+export type GetApiV1StockDiscrepancyApiResponse =
+  /** status 200 OK */ DomainEntitiesStockAdjustmentsStockDiscrepancyDto[];
+export type GetApiV1StockDiscrepancyApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1StockDiscrepancyByIdApiResponse =
+  /** status 200 OK */ DomainEntitiesStockAdjustmentsStockDiscrepancyDto;
+export type GetApiV1StockDiscrepancyByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1StockDiscrepancyByIdReconcileApiResponse = void;
+export type PostApiV1StockDiscrepancyByIdReconcileApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type PostApiV1WarehouseApiResponse = /** status 200 OK */ string;
 export type PostApiV1WarehouseApiArg = {
   /** The module this request falls under */
@@ -1959,7 +2047,7 @@ export type GetApiV1WarehouseGrnByIdApiArg = {
   subModule?: string;
 };
 export type GetApiV1WarehouseGrnsApiResponse =
-  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesGrnsGrnListDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798ERead;
+  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesGrnsGrnSummaryDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
 export type GetApiV1WarehouseGrnsApiArg = {
   status?: DomainEntitiesGrnsStatus;
   page?: number;
@@ -2300,11 +2388,9 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
   manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
   material?: DomainEntitiesMaterialsMaterialDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  default?: boolean;
-  /** Purchase-unit symbol; the unit ID remains a legacy quantity-unit reference. */
   purchaseUnit?: string | null;
-  /** Unit symbol awaiting pricing approval. */
   pendingPurchaseUnit?: string | null;
+  default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierDto = {
   id?: string;
@@ -2339,7 +2425,9 @@ export type DomainEntitiesShipmentsShipmentInvoiceItemDto = {
   totalCost?: number;
   currency?: DomainEntitiesCurrenciesCurrencyDto;
   reason?: string | null;
+  fulfillsDiscrepancyItemId?: string | null;
 };
+export type DomainEntitiesShipmentsShipmentInvoiceKind = 0 | 1;
 export type DomainEntitiesShipmentsShipmentInvoiceDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -2354,6 +2442,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceDto = {
   amountPaid?: number;
   outstandingBalance?: number;
   isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
 };
 export type DomainEntitiesChecklistsIntactness = 0 | 1;
 export type DomainEntitiesChecklistsConsignmentCarrier = 0 | 1 | 2 | 3 | 4 | 5;
@@ -2869,6 +2958,28 @@ export type DomainEntitiesStockAdjustmentsStockAdjustmentDetailDto = {
   createdAt?: string;
   lines?: DomainEntitiesStockAdjustmentsStockAdjustmentLineDetailDto[] | null;
 };
+export type DomainEntitiesStockAdjustmentsCreateStockDiscrepancy = {
+  shelfMaterialBatchId?: string;
+  physicalQuantity?: number;
+  reasonCode?: DomainEntitiesStockAdjustmentsStockAdjustmentReasonCode;
+  notes?: string | null;
+};
+export type DomainEntitiesStockAdjustmentsStockDiscrepancyDto = {
+  id?: string;
+  shelfMaterialBatchId?: string;
+  batchNumber?: string | null;
+  materialName?: string | null;
+  unit?: string | null;
+  systemQuantitySnapshot?: number;
+  physicalQuantity?: number;
+  variance?: number;
+  reasonCode?: DomainEntitiesStockAdjustmentsStockAdjustmentReasonCode;
+  notes?: string | null;
+  approved?: boolean;
+  rejected?: boolean;
+  reconciledAt?: string | null;
+  createdAt?: string;
+};
 export type DomainEntitiesWarehousesWarehouseType = 0 | 1 | 2 | 3;
 export type DomainEntitiesWarehousesRequestCreateWarehouseLocationShelfRequest =
   {
@@ -3172,6 +3283,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceListDto = {
   amountPaid?: number;
   outstandingBalance?: number;
   isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
 };
 export type DomainEntitiesProcurementDistributionMaterialItemDistributionDto = {
   shipmentInvoiceItem?: DomainEntitiesShipmentsShipmentInvoiceItemDto;
@@ -3843,6 +3955,31 @@ export type DomainEntitiesGrnsGrnDtoRead = {
   declarationNumber?: string | null;
 };
 export type DomainEntitiesGrnsStatus = 0 | 1 | 2;
+export type DomainEntitiesGrnsGrnBatchSummaryDto = {
+  id?: string;
+  supplierName?: string | null;
+};
+export type DomainEntitiesGrnsGrnSummaryDto = {
+  id?: string;
+  createdAt?: string;
+  grnNumber?: string | null;
+  carrierName?: string | null;
+  vehicleNumber?: string | null;
+  remarks?: string | null;
+  declarationNumber?: string | null;
+  status?: DomainEntitiesGrnsStatus;
+  materialBatches?: DomainEntitiesGrnsGrnBatchSummaryDto[] | null;
+};
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesGrnsGrnSummaryDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+  {
+    data?: DomainEntitiesGrnsGrnSummaryDto[] | null;
+    pageIndex?: number;
+    pageCount?: number;
+    totalRecordCount?: number;
+    numberOfPagesToShow?: number;
+    startPageIndex?: number;
+    stopPageIndex?: number;
+  };
 export type DomainEntitiesGrnsGrnListDto = {
   id?: string;
   createdAt?: string;
@@ -4101,6 +4238,12 @@ export const {
   useLazyGetApiV1StockAdjustmentQuery,
   useGetApiV1StockAdjustmentByIdQuery,
   useLazyGetApiV1StockAdjustmentByIdQuery,
+  usePostApiV1StockDiscrepancyMutation,
+  useGetApiV1StockDiscrepancyQuery,
+  useLazyGetApiV1StockDiscrepancyQuery,
+  useGetApiV1StockDiscrepancyByIdQuery,
+  useLazyGetApiV1StockDiscrepancyByIdQuery,
+  usePostApiV1StockDiscrepancyByIdReconcileMutation,
   usePostApiV1WarehouseMutation,
   useGetApiV1WarehouseQuery,
   useLazyGetApiV1WarehouseQuery,

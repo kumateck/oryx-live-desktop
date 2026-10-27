@@ -5,7 +5,7 @@ their OpenAPI contract would produce `any` or `unknown`. Declare the response or
 controller (for example `[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), run
 `bun run api:export` and `bun run api:generate`, and the hook appears.
 
-Typed operations: 1092. Skipped: 243.
+Typed operations: 1114. Skipped: 244.
 
 ## identity
 
@@ -191,6 +191,7 @@ Typed operations: 1092. Skipped: 243.
 | CommercialCertificate | `GET /api/v1/qc/commercial-certificates/{id}` | 200 response has no declared body type |
 | MicrobialRequirement | `GET /api/v1/qc/microbial-requirements` | 200 response has no declared body type |
 | MicrobialRequirement | `POST /api/v1/qc/microbial-requirements` | 200 response has no declared body type |
+| QcWorksheetFiles | `GET /api/v1/qc/worksheets/instances/{id}/files/{reference}` | 200 response has no declared body type |
 | RoutineQc | `POST /api/v1/qc/routines/ards` | 200 response has no declared body type |
 | RoutineQc | `GET /api/v1/qc/routines/ards` | 200 response has no declared body type |
 | RoutineQc | `GET /api/v1/qc/routines/definitions` | 200 response has no declared body type |

@@ -3597,6 +3597,7 @@ export type DomainEntitiesReportsMaterialReadyForChecklistDto = {
   departmentId?: string | null;
   departmentName?: string | null;
 };
+export type DomainEntitiesShipmentsShipmentInvoiceKind = 0 | 1;
 export type DomainEntitiesShipmentsShipmentInvoiceListDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -3610,6 +3611,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceListDto = {
   amountPaid?: number;
   outstandingBalance?: number;
   isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
 };
 export type DomainEntitiesShipmentsShipmentInvoiceItemDto = {
   id?: string;
@@ -3626,6 +3628,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceItemDto = {
   totalCost?: number;
   currency?: DomainEntitiesCurrenciesCurrencyDto;
   reason?: string | null;
+  fulfillsDiscrepancyItemId?: string | null;
 };
 export type DomainEntitiesProcurementDistributionMaterialItemDistributionDto = {
   shipmentInvoiceItem?: DomainEntitiesShipmentsShipmentInvoiceItemDto;
@@ -3771,11 +3774,9 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
   manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
   material?: DomainEntitiesMaterialsMaterialDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  default?: boolean;
-  /** Purchase-unit symbol; the unit ID remains a legacy quantity-unit reference. */
   purchaseUnit?: string | null;
-  /** Unit symbol awaiting pricing approval. */
   pendingPurchaseUnit?: string | null;
+  default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierDto = {
   id?: string;
@@ -3809,6 +3810,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceDto = {
   amountPaid?: number;
   outstandingBalance?: number;
   isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
 };
 export type DomainEntitiesChecklistsIntactness = 0 | 1;
 export type DomainEntitiesChecklistsConsignmentCarrier = 0 | 1 | 2 | 3 | 4 | 5;

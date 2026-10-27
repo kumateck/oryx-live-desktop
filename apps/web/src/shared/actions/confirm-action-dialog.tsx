@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import type { PermissionRequirement } from "../auth/access";
 import { permissionDeniedMessage, usePermissionAction } from "../auth/use-permission-action";
@@ -33,8 +33,9 @@ export function ConfirmActionDialog({ title, description, confirmLabel, busyLabe
     finally { setBusy(false); }
   };
   return <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}><DialogContent>
-    <DialogHeader><DialogTitle>{title}</DialogTitle><DialogDescription>{description}</DialogDescription></DialogHeader>
-    {error || !permission.allowed ? <p role="alert" className="text-sm text-destructive">{error || permissionDeniedMessage}</p> : null}
+    <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
+    <DialogBody className="space-y-3"><DialogDescription className="break-words">{description}</DialogDescription>
+      {error || !permission.allowed ? <p role="alert" className="break-words text-sm text-destructive">{error || permissionDeniedMessage}</p> : null}</DialogBody>
     <DialogFooter>
       <Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button>
       <Button type="button" variant={destructive ? "destructive" : "default"} disabled={busy || !permission.allowed} onClick={() => void run()}>{busy ? <><Spinner />{busyLabel}</> : confirmLabel}</Button>

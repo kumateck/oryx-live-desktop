@@ -107,7 +107,7 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
           <PrintButton label="Print Worksheet" preview={(close) => <ArdWorksheet sections={certificateSections} recorded={recorded} onClose={close} facts={facts} />} />
         </> : null}
       </div>
-      {startingOos && rejection ? <StartOosDialog onClose={() => setStartingOos(false)} subject={{ kind: isMaterial ? "material" : "product", materialBatchId, analyticalTestRequestId: atr?.id ?? null,
+      {startingOos && rejection && query.data ? <StartOosDialog evidence={query.data} responseId={id} onClose={() => setStartingOos(false)} subject={{ kind: isMaterial ? "material" : "product", materialBatchId, analyticalTestRequestId: atr?.id ?? null,
         coaNumber: rejection.code, name, batchNumber, reason: rejection.reason }} /> : null}
       {materialBatchId ? <div className="grid gap-3 lg:grid-cols-2">
         <DetailGroup title="Material"><DetailItem label="Material" value={[material?.materialBatch?.material?.name ?? data.materialBatch?.name, material?.materialBatch?.material?.code ?? data.materialBatch?.code].filter(Boolean).join(" · ")} />

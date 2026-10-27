@@ -1,3 +1,5 @@
+import { StockDiscrepancyApprovalEvidence } from "@/modules/stock-discrepancies/public";
+import { ShipmentDiscrepancyApprovalEvidence } from "@/modules/shipment-discrepancies/public";
 import type { ReactNode } from "react";
 import { isReadable, type ReadableDocument } from "../lib/approval-documents";
 import { ArdDetails, type ArdRejection } from "./details/ard-details";
@@ -8,6 +10,7 @@ import { AllocationDetails, ExtraMaterialDetails, ProductionOrderDetails, Profor
 
 interface Context { supplierId: string | null; rejection: ArdRejection | null }
 const views: Record<ReadableDocument, (id: string, context: Context) => ReactNode> = {
+  StockDiscrepancy: (id) => <StockDiscrepancyApprovalEvidence id={id} />, ShipmentDiscrepancy: (id) => <ShipmentDiscrepancyApprovalEvidence id={id} />,
   PurchaseOrder: (id) => <PurchaseOrderDetails id={id} />, BillingSheet: (id) => <BillingSheetDetails id={id} />, ShipmentDocument: (id) => <ShipmentDetails id={id} />,
   PurchaseRequisition: (id) => <RequisitionDetails id={id} />, TrialRequisition: (id) => <RequisitionDetails id={id} />, StockRequisition: (id) => <RequisitionDetails id={id} />,
   RawStockRequisition: (id) => <RequisitionDetails id={id} />, PackageStockRequisition: (id) => <RequisitionDetails id={id} />,

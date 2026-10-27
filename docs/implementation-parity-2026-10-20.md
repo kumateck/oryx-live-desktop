@@ -1,5 +1,7 @@
 # Oryx Live / Oryx Next implementation parity — 2026-10-20
 
+Historical snapshot. Use the [2026-10-27 source review and refreshed route ledger](parity-review-2026-10-27/README.md) for current gaps, later implementations and backend compatibility regressions.
+
 Oryx Live is a substantial but incomplete migration. Core procurement, logistics, warehouse, production and legacy QC flows have implementations. Major domain workflows and independent reviewer journeys remain missing. Matching a menu, endpoint or URL does not establish functional parity.
 
 ## Scope and evidence

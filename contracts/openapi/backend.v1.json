@@ -13511,6 +13511,14 @@
             }
           },
           {
+            "name": "expectedResponseId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -13607,6 +13615,14 @@
             "in": "path",
             "description": "The id of production activity step",
             "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "expectedResponseId",
+            "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -33650,6 +33666,74 @@
         }
       }
     },
+    "/api/v1/material/{materialId}/purchase-units": {
+      "get": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "Return distinct material unit symbols linked in any active department, including zero-stock links.",
+        "parameters": [
+          {
+            "name": "materialId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/material-ard": {
       "post": {
         "tags": [
@@ -34968,6 +35052,635 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/qc/material-retests": {
+      "get": {
+        "tags": [
+          "MaterialRetest"
+        ],
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.Materials.MaterialRetestDetailDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.Materials.MaterialRetestDetailDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.Materials.MaterialRetestDetailDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/qc/material-retests/{id}": {
+      "get": {
+        "tags": [
+          "MaterialRetest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.Materials.MaterialRetestDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.Materials.MaterialRetestDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.Materials.MaterialRetestDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/qc/material-retests/batches/{batchId}": {
+      "post": {
+        "tags": [
+          "MaterialRetest"
+        ],
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.CreateMaterialRetestRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.CreateMaterialRetestRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.CreateMaterialRetestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/qc/material-retests/{id}/approve": {
+      "post": {
+        "tags": [
+          "MaterialRetest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialRetestDecision"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialRetestDecision"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialRetestDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/qc/material-retests/{id}/reject": {
+      "post": {
+        "tags": [
+          "MaterialRetest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialRetestDecision"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialRetestDecision"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialRetestDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/qc/material-retests/{id}/sample": {
+      "post": {
+        "tags": [
+          "MaterialRetest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.RecordMaterialRetestSample"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.RecordMaterialRetestSample"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.RecordMaterialRetestSample"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/qc/material-retests/{id}/acknowledge": {
+      "post": {
+        "tags": [
+          "MaterialRetest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/qc/material-retests/{id}/test-request": {
+      "post": {
+        "tags": [
+          "MaterialRetest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.LinkMaterialRetestTestRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.LinkMaterialRetestTestRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.LinkMaterialRetestTestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/qc/material-retests/{id}/test-request/create": {
+      "post": {
+        "tags": [
+          "MaterialRetest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.QcWorksheets.CreateTestRequestRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.QcWorksheets.CreateTestRequestRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.QcWorksheets.CreateTestRequestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.QcWorksheets.TestRequestDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.QcWorksheets.TestRequestDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.QcWorksheets.TestRequestDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/qc/material-retests/{id}/certificates": {
+      "get": {
+        "tags": [
+          "MaterialRetest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.QcWorksheets.CoaDetailDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.QcWorksheets.CoaDetailDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.QcWorksheets.CoaDetailDto"
+                  }
                 }
               }
             }
@@ -41159,7 +41872,7 @@
         "tags": [
           "Performance"
         ],
-        "summary": "Goals, newest target first. Without team access only the signed-in employee's own goals are returned, whatever\r\nemployee is asked for.",
+        "summary": "Goals, newest target first. Without team access only the signed-in employee's own goals are returned, or, for a\r\nreview's assigned reviewer, the reviewed employee's goals in that review's cycle.",
         "parameters": [
           {
             "name": "employeeId",
@@ -47335,6 +48048,77 @@
         }
       }
     },
+    "/api/v1/procurement/shipment-invoice/shortage-make-up": {
+      "post": {
+        "tags": [
+          "Procurement"
+        ],
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.Request.CreateShortageMakeUpInvoice"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.Request.CreateShortageMakeUpInvoice"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.Request.CreateShortageMakeUpInvoice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/procurement/shipment-invoice/{id}": {
       "get": {
         "tags": [
@@ -48025,6 +48809,120 @@
             }
           }
         }
+      },
+      "get": {
+        "tags": [
+          "Procurement"
+        ],
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancyDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancyDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancyDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/procurement/shipment-discrepancy/line/{discrepancyItemId}/balance": {
+      "get": {
+        "tags": [
+          "Procurement"
+        ],
+        "parameters": [
+          {
+            "name": "discrepancyItemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.Request.ShipmentShortageBalanceDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.Request.ShipmentShortageBalanceDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.Request.ShipmentShortageBalanceDto"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/procurement/shipment-discrepancy/{shipmentDiscrepancyId}": {
@@ -48586,17 +49484,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.MaterialDistributionDto"
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.MaterialDistributionPageDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.MaterialDistributionDto"
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.MaterialDistributionPageDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.MaterialDistributionDto"
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.MaterialDistributionPageDto"
                 }
               }
             }
@@ -66176,6 +67074,241 @@
         }
       }
     },
+    "/api/v1/qc/rework-tasks": {
+      "get": {
+        "tags": [
+          "QcResponseRework"
+        ],
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.QcWorksheets.ResponseReworkTaskDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.QcWorksheets.ResponseReworkTaskDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.QcWorksheets.ResponseReworkTaskDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/qc/rework-tasks/{id}": {
+      "get": {
+        "tags": [
+          "QcResponseRework"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.QcWorksheets.ResponseReworkDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.QcWorksheets.ResponseReworkDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.QcWorksheets.ResponseReworkDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/qc/rework-tasks/{id}/start": {
+      "post": {
+        "tags": [
+          "QcResponseRework"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/qc/rework-tasks/{id}/form": {
+      "get": {
+        "tags": [
+          "QcResponseRework"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Forms.FormDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Forms.FormDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Forms.FormDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/qc/worksheets/sampling-point-groups": {
       "get": {
         "tags": [
@@ -70479,6 +71612,122 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/qc/worksheets/instances/{id}/files/{reference}": {
+      "post": {
+        "tags": [
+          "QcWorksheetFiles"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reference",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "QcWorksheetFiles"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reference",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -95890,6 +97139,232 @@
         }
       }
     },
+    "/api/v1/stock-discrepancy": {
+      "post": {
+        "tags": [
+          "StockDiscrepancy"
+        ],
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.CreateStockDiscrepancy"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.CreateStockDiscrepancy"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.CreateStockDiscrepancy"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "StockDiscrepancy"
+        ],
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.StockDiscrepancyDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.StockDiscrepancyDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.StockDiscrepancyDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stock-discrepancy/{id}": {
+      "get": {
+        "tags": [
+          "StockDiscrepancy"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.StockDiscrepancyDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.StockDiscrepancyDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.StockDiscrepancyDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stock-discrepancy/{id}/reconcile": {
+      "post": {
+        "tags": [
+          "StockDiscrepancy"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/v1/stp-documents/{ownerType}/{ownerId}": {
       "get": {
         "tags": [
@@ -107162,17 +108637,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Grns.GrnListDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Grns.GrnSummaryDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Grns.GrnListDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Grns.GrnSummaryDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Grns.GrnListDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Grns.GrnSummaryDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
                 }
               }
             }
@@ -108789,75 +110264,6 @@
           }
         }
       }
-    },
-    "/api/v1/material/{materialId}/purchase-units": {
-      "get": {
-        "tags": [
-          "Material"
-        ],
-        "summary": "Return distinct material unit symbols linked in any active department, including zero-stock links.",
-        "parameters": [
-          {
-            "name": "materialId",
-            "in": "path",
-            "description": "The material Id for which you need the uom",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "Module",
-            "in": "header",
-            "description": "The module this request falls under",
-            "example": "Warehouse",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "SubModule",
-            "in": "header",
-            "description": "The sub module this request falls under",
-            "example": "PurchaseOrder",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -109466,6 +110872,194 @@
           },
           "formula": {
             "$ref": "#/components/schemas/APP.Services.Formulas.FormulaRevisionDraftRequest"
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.Materials.MaterialRetestDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialKind": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialKind"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialRetestOrigin"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialRetestStatus"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "scheduledFor": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "originalExpiryDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "proposedExpiryDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "sampleTakenAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "sampleQuantity": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "sampledContainers": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "acknowledgedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "testRequestId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "coaId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APP.Services.Materials.MaterialRetestEventDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.Materials.MaterialRetestEventDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "actorId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.QcWorksheets.ResponseReworkDetailDto": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "$ref": "#/components/schemas/APP.Services.QcWorksheets.ResponseReworkTaskDto"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APP.Services.QcWorksheets.ResponseReworkTaskDto"
+            },
+            "nullable": true
+          },
+          "productionActivityStepId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "productStage": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.QcWorksheets.ResponseReworkTaskDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceResponseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rootResponseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "newResponseId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "materialBatchId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "batchManufacturingRecordId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Forms.ResponseReworkStatus"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -110236,6 +111830,43 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DOMAIN.Entities.Grns.GrnListDto"
+            },
+            "nullable": true
+          },
+          "pageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRecordCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numberOfPagesToShow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stopPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Grns.GrnSummaryDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Grns.GrnSummaryDto"
             },
             "nullable": true
           },
@@ -114884,6 +116515,9 @@
           "comments": {
             "type": "string",
             "nullable": true
+          },
+          "responseRejectionOutcome": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Forms.ResponseRejectionOutcome"
           }
         },
         "additionalProperties": false
@@ -121701,6 +123335,13 @@
           },
           "rejected": {
             "type": "boolean"
+          },
+          "rejectionOutcome": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Forms.ResponseRejectionOutcome"
+          },
+          "reworkSequence": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -121824,6 +123465,11 @@
             },
             "nullable": true
           },
+          "materialSamplingId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "batchManufacturingRecord": {
             "$ref": "#/components/schemas/SHARED.CollectionItemDto"
           },
@@ -121881,6 +123527,25 @@
           }
         },
         "additionalProperties": false
+      },
+      "DOMAIN.Entities.Forms.ResponseRejectionOutcome": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "DOMAIN.Entities.Forms.ResponseReworkStatus": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
       },
       "DOMAIN.Entities.Formulas.FormFieldFormulaConfiguration": {
         "type": "object",
@@ -125022,6 +126687,20 @@
         },
         "additionalProperties": false
       },
+      "DOMAIN.Entities.Grns.GrnBatchSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "DOMAIN.Entities.Grns.GrnDto": {
         "type": "object",
         "properties": {
@@ -125129,6 +126808,50 @@
             "maxLength": 10000,
             "minLength": 0,
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Grns.GrnSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "grnNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "carrierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "vehicleNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "remarks": {
+            "type": "string",
+            "nullable": true
+          },
+          "declarationNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Grns.Status"
+          },
+          "materialBatches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Grns.GrnBatchSummaryDto"
+            },
             "nullable": true
           }
         },
@@ -130946,6 +132669,20 @@
         },
         "additionalProperties": false
       },
+      "DOMAIN.Entities.Materials.Batch.CreateMaterialRetestRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "DOMAIN.Entities.Materials.Batch.CreateShelfMaterialBatch": {
         "type": "object",
         "properties": {
@@ -131457,6 +133194,19 @@
             "format": "date-time"
           },
           "movedById": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.Batch.LinkMaterialRetestTestRequest": {
+        "required": [
+          "testRequestId"
+        ],
+        "type": "object",
+        "properties": {
+          "testRequestId": {
             "type": "string",
             "format": "uuid"
           }
@@ -132493,6 +134243,46 @@
         },
         "additionalProperties": false
       },
+      "DOMAIN.Entities.Materials.Batch.MaterialRetestDecision": {
+        "required": [
+          "comments",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "password": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "comments": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.Batch.MaterialRetestOrigin": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "DOMAIN.Entities.Materials.Batch.MaterialRetestStatus": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
       "DOMAIN.Entities.Materials.Batch.MaterialStockByDepartmentDto": {
         "type": "object",
         "properties": {
@@ -132589,6 +134379,29 @@
         ],
         "type": "integer",
         "format": "int32"
+      },
+      "DOMAIN.Entities.Materials.Batch.RecordMaterialRetestSample": {
+        "required": [
+          "proposedExpiryDate"
+        ],
+        "type": "object",
+        "properties": {
+          "sampleQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "sampledContainers": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "proposedExpiryDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
       },
       "DOMAIN.Entities.Materials.Batch.RequestRetestDto": {
         "type": "object",
@@ -133914,6 +135727,36 @@
           "type": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Notifications.NotificationType"
           },
+          "shipmentDocumentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "relatedEntityType": {
+            "type": "string",
+            "nullable": true
+          },
+          "relatedEntityId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "relatedEntityCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "relatedEntityName": {
+            "type": "string",
+            "nullable": true
+          },
+          "relatedEntityStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "relatedEntityPriority": {
+            "type": "string",
+            "nullable": true
+          },
           "recipients": {
             "type": "array",
             "items": {
@@ -133962,6 +135805,11 @@
         ],
         "type": "object",
         "properties": {
+          "responseId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "analyticalTestRequestId": {
             "type": "string",
             "format": "uuid",
@@ -133973,34 +135821,48 @@
             "nullable": true
           },
           "coaNumber": {
-            "minLength": 1,
+            "maxLength": 100,
+            "minLength": 0,
             "type": "string"
           },
           "productOrMaterialName": {
+            "maxLength": 500,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "batchNumber": {
+            "maxLength": 200,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "rejectionReason": {
-            "minLength": 1,
+            "maxLength": 2000,
+            "minLength": 0,
             "type": "string"
           },
           "rootCauseAnalysis": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "correctiveActions": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "preventiveActions": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "investigationDetails": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           }
@@ -134119,26 +135981,38 @@
         "type": "object",
         "properties": {
           "productOrMaterialName": {
+            "maxLength": 500,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "batchNumber": {
+            "maxLength": 200,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "rootCauseAnalysis": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "correctiveActions": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "preventiveActions": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           },
           "investigationDetails": {
+            "maxLength": 4000,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           }
@@ -135453,14 +137327,172 @@
         },
         "additionalProperties": false
       },
-      "DOMAIN.Entities.Procurement.Distribution.DistributionRequisitionItem": {
+      "DOMAIN.Entities.Procurement.Distribution.DistributionInvoiceLine": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "material": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionMaterial"
+          },
+          "uoM": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionLabel"
+          },
+          "manufacturer": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionLabel"
+          },
+          "purchaseOrder": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionOrder"
+          },
+          "expectedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "receivedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceUoM": {
+            "type": "string",
+            "nullable": true
+          },
+          "currency": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionLabel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Procurement.Distribution.DistributionLabel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "symbol": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Procurement.Distribution.DistributionMaterial": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialKind"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Procurement.Distribution.DistributionOrder": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "currency": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionLabel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Procurement.Distribution.DistributionPageSection": {
+        "type": "object",
+        "properties": {
+          "material": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionMaterial"
+          },
+          "totalQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "uoM": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionLabel"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionShare"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Procurement.Distribution.DistributionRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "quantityReceived": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.RequestStatus"
+          },
+          "uoM": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionLabel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Procurement.Distribution.DistributionShare": {
         "type": "object",
         "properties": {
           "department": {
-            "$ref": "#/components/schemas/DOMAIN.Entities.Departments.DepartmentDto"
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionLabel"
           },
           "requisitionItem": {
-            "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.RequisitionItemDto"
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionRequest"
           },
           "quantityRequested": {
             "type": "number",
@@ -135477,43 +137509,33 @@
           "distributions": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.MaterialItemDistributionDto"
+              "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionSource"
             },
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "DOMAIN.Entities.Procurement.Distribution.MaterialDistributionDto": {
+      "DOMAIN.Entities.Procurement.Distribution.DistributionSource": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "shipmentInvoiceItem": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionInvoiceLine"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Procurement.Distribution.MaterialDistributionPageDto": {
         "type": "object",
         "properties": {
           "sections": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.MaterialDistributionSection"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "DOMAIN.Entities.Procurement.Distribution.MaterialDistributionSection": {
-        "type": "object",
-        "properties": {
-          "material": {
-            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialDto"
-          },
-          "totalQuantity": {
-            "type": "number",
-            "format": "double"
-          },
-          "uoM": {
-            "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionRequisitionItem"
+              "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Distribution.DistributionPageSection"
             },
             "nullable": true
           }
@@ -135961,13 +137983,12 @@
             "format": "uuid",
             "nullable": true
           },
-          "default": {
-            "type": "boolean"
-          },
           "purchaseUnit": {
             "type": "string",
-            "nullable": true,
-            "description": "Purchase-unit symbol; the unit ID remains a legacy quantity-unit reference."
+            "nullable": true
+          },
+          "default": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -136769,6 +138790,12 @@
           "uoM": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasure"
           },
+          "purchaseUnit": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
           "default": {
             "type": "boolean"
           }
@@ -136787,18 +138814,16 @@
           "uoM": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
           },
-          "default": {
-            "type": "boolean"
-          },
           "purchaseUnit": {
             "type": "string",
-            "nullable": true,
-            "description": "Purchase-unit symbol; the unit ID remains a legacy quantity-unit reference."
+            "nullable": true
           },
           "pendingPurchaseUnit": {
             "type": "string",
-            "nullable": true,
-            "description": "Unit symbol awaiting pricing approval."
+            "nullable": true
+          },
+          "default": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -137107,7 +139132,7 @@
           },
           "agreedPrice": {
             "maximum": 7.922816251426434e+28,
-            "minimum": 0.01,
+            "minimum": 0,
             "type": "number",
             "format": "double"
           },
@@ -161812,6 +163837,11 @@
       "DOMAIN.Entities.Shipments.Request.CreateShipmentDiscrepancyItem": {
         "type": "object",
         "properties": {
+          "shipmentInvoiceItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "materialId": {
             "type": "string",
             "format": "uuid"
@@ -161934,6 +163964,66 @@
         },
         "additionalProperties": false
       },
+      "DOMAIN.Entities.Shipments.Request.CreateShortageMakeUpInvoice": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipmentDiscrepancyItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "requestKey": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Shipments.Request.ShipmentShortageBalanceDto": {
+        "type": "object",
+        "properties": {
+          "shipmentDiscrepancyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shipmentDiscrepancyItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "declaredQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "initialPhysicalQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "confirmedMakeUpQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "inFlightMakeUpQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "outstandingQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "availableToShipQuantity": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "DOMAIN.Entities.Shipments.Request.UpdateShipmentStatusRequest": {
         "type": "object",
         "properties": {
@@ -161943,9 +164033,171 @@
         },
         "additionalProperties": false
       },
+      "DOMAIN.Entities.Shipments.ShipmentDiscrepancy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "lastUpdatedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "lastUpdatedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastDeletedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "lastDeletedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "shipmentDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shipmentDocument": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDocument"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancyItem"
+            },
+            "nullable": true
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "approvals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancyApproval"
+            },
+            "nullable": true
+          },
+          "rejected": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Shipments.ShipmentDiscrepancyApproval": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "user": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "roleId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Roles.Role"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stageStartTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Approvals.ApprovalStatus"
+          },
+          "approvalTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "approvedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "approvedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "activatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "comments": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shipmentDiscrepancyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shipmentDiscrepancy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancy"
+          },
+          "approvalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approval": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Approvals.Approval"
+          }
+        },
+        "additionalProperties": false
+      },
       "DOMAIN.Entities.Shipments.ShipmentDiscrepancyDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
           "shipmentDocument": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDocumentDto"
           },
@@ -161955,6 +164207,118 @@
               "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancyItemDto"
             },
             "nullable": true
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "rejected": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Shipments.ShipmentDiscrepancyItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "lastUpdatedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "lastUpdatedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastDeletedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "lastDeletedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "shipmentDiscrepancyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shipmentDiscrepancy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancy"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "material": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Material"
+          },
+          "uoMId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uoM": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasure"
+          },
+          "receivedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "declaredQuantitySnapshot": {
+            "type": "number",
+            "format": "double"
+          },
+          "shipmentInvoiceItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "shipmentInvoiceItem": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentInvoiceItem"
+          },
+          "typeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancyType"
+          },
+          "reason": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "resolved": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -161962,6 +164326,10 @@
       "DOMAIN.Entities.Shipments.ShipmentDiscrepancyItemDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
           "material": {
             "$ref": "#/components/schemas/SHARED.CollectionItemDto"
           },
@@ -161972,6 +164340,15 @@
             "type": "number",
             "format": "double"
           },
+          "declaredQuantitySnapshot": {
+            "type": "number",
+            "format": "double"
+          },
+          "shipmentInvoiceItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "type": {
             "$ref": "#/components/schemas/SHARED.CollectionItemDto"
           },
@@ -161981,6 +164358,259 @@
           },
           "resolved": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Shipments.ShipmentDiscrepancyType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "lastUpdatedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "lastUpdatedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastDeletedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "lastDeletedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "name": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Shipments.ShipmentDocument": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "lastUpdatedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "lastUpdatedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastDeletedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "lastDeletedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "code": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "discrepancies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancy"
+            },
+            "nullable": true
+          },
+          "shipmentInvoiceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "shipmentInvoice": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentInvoice"
+          },
+          "arrivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "clearedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "transitStartedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "atPortAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.DocType"
+          },
+          "completedDistributionAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentStatus"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "approvals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDocumentApproval"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Shipments.ShipmentDocumentApproval": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "user": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "roleId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Roles.Role"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stageStartTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Approvals.ApprovalStatus"
+          },
+          "approvalTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "approvedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "approvedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Users.User"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "activatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "comments": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shipmentDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shipmentDocument": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDocument"
+          },
+          "approvalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approval": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Approvals.Approval"
           }
         },
         "additionalProperties": false
@@ -162150,6 +164780,14 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentInvoiceKind"
+          },
+          "fulfillmentRequestKey": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -162209,6 +164847,9 @@
           },
           "isUsed": {
             "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentInvoiceKind"
           }
         },
         "additionalProperties": false
@@ -162331,6 +164972,14 @@
           },
           "currency": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Currencies.Currency"
+          },
+          "fulfillsDiscrepancyItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "fulfillsDiscrepancyItem": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentDiscrepancyItem"
           }
         },
         "additionalProperties": false
@@ -162387,9 +165036,22 @@
           "reason": {
             "type": "string",
             "nullable": true
+          },
+          "fulfillsDiscrepancyItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
+      },
+      "DOMAIN.Entities.Shipments.ShipmentInvoiceKind": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32"
       },
       "DOMAIN.Entities.Shipments.ShipmentInvoiceListDto": {
         "type": "object",
@@ -162439,6 +165101,9 @@
           },
           "isUsed": {
             "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Shipments.ShipmentInvoiceKind"
           }
         },
         "additionalProperties": false
@@ -162732,6 +165397,27 @@
         },
         "additionalProperties": false
       },
+      "DOMAIN.Entities.StockAdjustments.CreateStockDiscrepancy": {
+        "type": "object",
+        "properties": {
+          "shelfMaterialBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "physicalQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "reasonCode": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.StockAdjustmentReasonCode"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "DOMAIN.Entities.StockAdjustments.StockAdjustmentDetailDto": {
         "type": "object",
         "properties": {
@@ -162936,6 +165622,66 @@
         ],
         "type": "integer",
         "format": "int32"
+      },
+      "DOMAIN.Entities.StockAdjustments.StockDiscrepancyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shelfMaterialBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialName": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "systemQuantitySnapshot": {
+            "type": "number",
+            "format": "double"
+          },
+          "physicalQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "variance": {
+            "type": "number",
+            "format": "double"
+          },
+          "reasonCode": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.StockAdjustments.StockAdjustmentReasonCode"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "rejected": {
+            "type": "boolean"
+          },
+          "reconciledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
       },
       "DOMAIN.Entities.StockEntries.StockEntryDto": {
         "type": "object",

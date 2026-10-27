@@ -10,7 +10,7 @@ import type { StoredAnswers } from "./use-answer-form";
 import { sharedResponseId } from "./use-answer-form";
 
 /** What a response belongs to: one of a material batch, a batch record and production step, a specification, or a routine track. */
-export type ResponseContext = Omit<DomainEntitiesFormsRequestSaveResponseDraftRequest, "responseId" | "formId" | "formFieldId" | "value">;
+export type ResponseContext = Omit<DomainEntitiesFormsRequestSaveResponseDraftRequest, "responseId" | "formId" | "formFieldId" | "value"> & { responseId?: string };
 export const finalizePermission = "CanExecuteFormulaResponse";
 
 /**
@@ -33,7 +33,7 @@ export function useResponseWriter({ formId, context, stored, audit, require, onC
   const acknowledged = useMemo(() => confirmed.scope === scope ? confirmed.fields : new Map<string, string>(), [confirmed, scope]);
   const activeScope = useRef(scope);
   useEffect(() => { activeScope.current = scope; }, [scope]);
-  const currentResponseId = useCallback(() => response.current?.scope === scope ? response.current.id : sharedResponseId(stored), [scope, stored]);
+  const currentResponseId = useCallback(() => response.current?.scope === scope ? response.current.id : context.responseId ?? sharedResponseId(stored), [scope, stored, context.responseId]);
 
   const write = useCallback(async (field: FormField, value: AnswerValue | undefined, responseId: string | null): Promise<{ responseId: string } | { error: string }> => {
     const denied = drafts.check();

@@ -63,6 +63,152 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1QcMaterialRetests: build.query<
+      GetApiV1QcMaterialRetestsApiResponse,
+      GetApiV1QcMaterialRetestsApiArg
+    >({
+      providesTags: [{ type: "qc/material-retest", id: "LIST" }, { type: "qc", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/qc/material-retests`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          batchId: queryArg.batchId,
+        },
+      }),
+    }),
+    getApiV1QcMaterialRetestsById: build.query<
+      GetApiV1QcMaterialRetestsByIdApiResponse,
+      GetApiV1QcMaterialRetestsByIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/material-retest", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/qc/material-retests/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1QcMaterialRetestsBatchesByBatchId: build.mutation<
+      PostApiV1QcMaterialRetestsBatchesByBatchIdApiResponse,
+      PostApiV1QcMaterialRetestsBatchesByBatchIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/material-retest", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/material-retest", id: queryArg.batchId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/qc/material-retests/batches/${queryArg.batchId}`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsBatchCreateMaterialRetestRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1QcMaterialRetestsByIdApprove: build.mutation<
+      PostApiV1QcMaterialRetestsByIdApproveApiResponse,
+      PostApiV1QcMaterialRetestsByIdApproveApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/material-retest", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/material-retest", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/qc/material-retests/${queryArg.id}/approve`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsBatchMaterialRetestDecision,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1QcMaterialRetestsByIdReject: build.mutation<
+      PostApiV1QcMaterialRetestsByIdRejectApiResponse,
+      PostApiV1QcMaterialRetestsByIdRejectApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/material-retest", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/material-retest", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/qc/material-retests/${queryArg.id}/reject`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsBatchMaterialRetestDecision,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1QcMaterialRetestsByIdSample: build.mutation<
+      PostApiV1QcMaterialRetestsByIdSampleApiResponse,
+      PostApiV1QcMaterialRetestsByIdSampleApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/material-retest", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/material-retest", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/qc/material-retests/${queryArg.id}/sample`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsBatchRecordMaterialRetestSample,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1QcMaterialRetestsByIdAcknowledge: build.mutation<
+      PostApiV1QcMaterialRetestsByIdAcknowledgeApiResponse,
+      PostApiV1QcMaterialRetestsByIdAcknowledgeApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/material-retest", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/material-retest", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/qc/material-retests/${queryArg.id}/acknowledge`,
+        method: "POST",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1QcMaterialRetestsByIdTestRequest: build.mutation<
+      PostApiV1QcMaterialRetestsByIdTestRequestApiResponse,
+      PostApiV1QcMaterialRetestsByIdTestRequestApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/material-retest", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/material-retest", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/qc/material-retests/${queryArg.id}/test-request`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsBatchLinkMaterialRetestTestRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1QcMaterialRetestsByIdTestRequestCreate: build.mutation<
+      PostApiV1QcMaterialRetestsByIdTestRequestCreateApiResponse,
+      PostApiV1QcMaterialRetestsByIdTestRequestCreateApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/material-retest", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/material-retest", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/qc/material-retests/${queryArg.id}/test-request/create`,
+        method: "POST",
+        body: queryArg.domainEntitiesQcWorksheetsCreateTestRequestRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1QcMaterialRetestsByIdCertificates: build.query<
+      GetApiV1QcMaterialRetestsByIdCertificatesApiResponse,
+      GetApiV1QcMaterialRetestsByIdCertificatesApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/material-retest", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/qc/material-retests/${queryArg.id}/certificates`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     getApiV1QcAiExtractionSettings: build.query<
       GetApiV1QcAiExtractionSettingsApiResponse,
       GetApiV1QcAiExtractionSettingsApiArg
@@ -552,6 +698,59 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/v1/qc/worksheets/oos-cases/${queryArg.id}/disposition`,
         method: "POST",
         body: queryArg.domainEntitiesQcWorksheetsOosDispositionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1QcReworkTasks: build.query<
+      GetApiV1QcReworkTasksApiResponse,
+      GetApiV1QcReworkTasksApiArg
+    >({
+      providesTags: [{ type: "qc/rework-task", id: "LIST" }, { type: "qc", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/qc/rework-tasks`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1QcReworkTasksById: build.query<
+      GetApiV1QcReworkTasksByIdApiResponse,
+      GetApiV1QcReworkTasksByIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/rework-task", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/qc/rework-tasks/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1QcReworkTasksByIdStart: build.mutation<
+      PostApiV1QcReworkTasksByIdStartApiResponse,
+      PostApiV1QcReworkTasksByIdStartApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/rework-task", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/rework-task", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/qc/rework-tasks/${queryArg.id}/start`,
+        method: "POST",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1QcReworkTasksByIdForm: build.query<
+      GetApiV1QcReworkTasksByIdFormApiResponse,
+      GetApiV1QcReworkTasksByIdFormApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qc/rework-task", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/qc/rework-tasks/${queryArg.id}/form`,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -1228,6 +1427,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1QcWorksheetsInstancesByIdFilesAndReference: build.mutation<
+      PostApiV1QcWorksheetsInstancesByIdFilesAndReferenceApiResponse,
+      PostApiV1QcWorksheetsInstancesByIdFilesAndReferenceApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qc/worksheet", id: "LIST" }, { type: "qc", id: "LIST" }, { type: "qc/worksheet", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/qc/worksheets/instances/${queryArg.id}/files/${queryArg.reference}`,
+        method: "POST",
+        body: queryArg.body,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     getApiV1QcWorksheetsInstancesById: build.query<
       GetApiV1QcWorksheetsInstancesByIdApiResponse,
       GetApiV1QcWorksheetsInstancesByIdApiArg
@@ -1599,6 +1813,97 @@ export type GetApiV1QcInstrumentsCalibrationDueApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetApiV1QcMaterialRetestsApiResponse =
+  /** status 200 OK */ AppServicesMaterialsMaterialRetestDetailDto[];
+export type GetApiV1QcMaterialRetestsApiArg = {
+  batchId?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1QcMaterialRetestsByIdApiResponse =
+  /** status 200 OK */ AppServicesMaterialsMaterialRetestDetailDto;
+export type GetApiV1QcMaterialRetestsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1QcMaterialRetestsBatchesByBatchIdApiResponse =
+  /** status 200 OK */ string;
+export type PostApiV1QcMaterialRetestsBatchesByBatchIdApiArg = {
+  batchId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsBatchCreateMaterialRetestRequest: DomainEntitiesMaterialsBatchCreateMaterialRetestRequest;
+};
+export type PostApiV1QcMaterialRetestsByIdApproveApiResponse = void;
+export type PostApiV1QcMaterialRetestsByIdApproveApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsBatchMaterialRetestDecision: DomainEntitiesMaterialsBatchMaterialRetestDecision;
+};
+export type PostApiV1QcMaterialRetestsByIdRejectApiResponse = void;
+export type PostApiV1QcMaterialRetestsByIdRejectApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsBatchMaterialRetestDecision: DomainEntitiesMaterialsBatchMaterialRetestDecision;
+};
+export type PostApiV1QcMaterialRetestsByIdSampleApiResponse = void;
+export type PostApiV1QcMaterialRetestsByIdSampleApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsBatchRecordMaterialRetestSample: DomainEntitiesMaterialsBatchRecordMaterialRetestSample;
+};
+export type PostApiV1QcMaterialRetestsByIdAcknowledgeApiResponse = void;
+export type PostApiV1QcMaterialRetestsByIdAcknowledgeApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1QcMaterialRetestsByIdTestRequestApiResponse = void;
+export type PostApiV1QcMaterialRetestsByIdTestRequestApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsBatchLinkMaterialRetestTestRequest: DomainEntitiesMaterialsBatchLinkMaterialRetestTestRequest;
+};
+export type PostApiV1QcMaterialRetestsByIdTestRequestCreateApiResponse =
+  /** status 200 OK */ DomainEntitiesQcWorksheetsTestRequestDetailDto;
+export type PostApiV1QcMaterialRetestsByIdTestRequestCreateApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesQcWorksheetsCreateTestRequestRequest: DomainEntitiesQcWorksheetsCreateTestRequestRequest;
+};
+export type GetApiV1QcMaterialRetestsByIdCertificatesApiResponse =
+  /** status 200 OK */ DomainEntitiesQcWorksheetsCoaDetailDto[];
+export type GetApiV1QcMaterialRetestsByIdCertificatesApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type GetApiV1QcAiExtractionSettingsApiResponse =
   /** status 200 OK */ AppServicesQcWorksheetsWorksheetDocxImportAiExtractionAiExtractionSettingsDto;
 export type GetApiV1QcAiExtractionSettingsApiArg = {
@@ -1913,6 +2218,41 @@ export type PostApiV1QcWorksheetsOosCasesByIdDispositionApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesQcWorksheetsOosDispositionRequest: DomainEntitiesQcWorksheetsOosDispositionRequest;
+};
+export type GetApiV1QcReworkTasksApiResponse =
+  /** status 200 OK */ AppServicesQcWorksheetsResponseReworkTaskDto[];
+export type GetApiV1QcReworkTasksApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1QcReworkTasksByIdApiResponse =
+  /** status 200 OK */ AppServicesQcWorksheetsResponseReworkDetailDto;
+export type GetApiV1QcReworkTasksByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1QcReworkTasksByIdStartApiResponse =
+  /** status 200 OK */ string;
+export type PostApiV1QcReworkTasksByIdStartApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1QcReworkTasksByIdFormApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsFormDto;
+export type GetApiV1QcReworkTasksByIdFormApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
 };
 export type GetApiV1QcWorksheetsSamplingPointGroupsApiResponse =
   /** status 200 OK */ DomainEntitiesQcWorksheetsSamplingPointGroupDto[];
@@ -2346,6 +2686,18 @@ export type GetApiV1QcWorksheetsApprovalsByEntityTypeAndEntityIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type PostApiV1QcWorksheetsInstancesByIdFilesAndReferenceApiResponse = void;
+export type PostApiV1QcWorksheetsInstancesByIdFilesAndReferenceApiArg = {
+  id: string;
+  reference: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  body: {
+    file?: Blob;
+  };
+};
 export type GetApiV1QcWorksheetsInstancesByIdApiResponse =
   /** status 200 OK */ DomainEntitiesQcWorksheetsWorksheetInstanceDetailDto;
 export type GetApiV1QcWorksheetsInstancesByIdApiArg = {
@@ -2627,63 +2979,155 @@ export type DomainEntitiesInstrumentsUpdateInstrumentCalibrationRequest = {
   calibrationCertificateAttachmentId?: string | null;
   qualificationStatus?: DomainEntitiesInstrumentsInstrumentQualificationStatus;
 };
-export type DomainEntitiesQcWorksheetsAiExtractionProvider = 0 | 1;
-export type AppServicesQcWorksheetsWorksheetDocxImportAiExtractionAiExtractionProviderStatusDto =
-  {
-    provider?: DomainEntitiesQcWorksheetsAiExtractionProvider;
-    model?: string | null;
-    hasKey?: boolean;
-    keyPreview?: string | null;
-    updatedById?: string | null;
-    updatedByName?: string | null;
-    updatedAt?: string | null;
-  };
-export type AppServicesQcWorksheetsWorksheetDocxImportAiExtractionAiExtractionSettingsDto =
-  {
-    activeProvider?: DomainEntitiesQcWorksheetsAiExtractionProvider;
-    providers?:
-      | AppServicesQcWorksheetsWorksheetDocxImportAiExtractionAiExtractionProviderStatusDto[]
-      | null;
-  };
-export type ApiControllersSaveAiExtractionProviderKeyRequest = {
-  model?: string | null;
-  apiKey?: string | null;
+export type DomainEntitiesMaterialsMaterialKind = 0 | 1;
+export type DomainEntitiesMaterialsBatchMaterialRetestOrigin = 0 | 1;
+export type DomainEntitiesMaterialsBatchMaterialRetestStatus =
+  0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type AppServicesMaterialsMaterialRetestEventDto = {
+  action?: string | null;
+  detail?: string | null;
+  actorId?: string | null;
+  occurredAt?: string;
 };
-export type ApiControllersSetActiveAiExtractionProviderRequest = {
-  provider?: DomainEntitiesQcWorksheetsAiExtractionProvider;
+export type AppServicesMaterialsMaterialRetestDetailDto = {
+  id?: string;
+  materialBatchId?: string;
+  batchNumber?: string | null;
+  materialKind?: DomainEntitiesMaterialsMaterialKind;
+  origin?: DomainEntitiesMaterialsBatchMaterialRetestOrigin;
+  status?: DomainEntitiesMaterialsBatchMaterialRetestStatus;
+  approved?: boolean;
+  scheduledFor?: string | null;
+  originalExpiryDate?: string | null;
+  proposedExpiryDate?: string | null;
+  reason?: string | null;
+  sampleTakenAt?: string | null;
+  sampleQuantity?: number | null;
+  sampledContainers?: number | null;
+  acknowledgedAt?: string | null;
+  testRequestId?: string | null;
+  coaId?: string | null;
+  completedAt?: string | null;
+  events?: AppServicesMaterialsMaterialRetestEventDto[] | null;
 };
-export type DomainEntitiesQcWorksheetsCoaCertificateShape = 0 | 1;
-export type DomainEntitiesQcWorksheetsCoaStatus = 0 | 1 | 2;
-export type DomainEntitiesQcWorksheetsCoaSummaryDto = {
+export type DomainEntitiesMaterialsBatchCreateMaterialRetestRequest = {
+  reason: string;
+};
+export type DomainEntitiesMaterialsBatchMaterialRetestDecision = {
+  password: string;
+  comments: string;
+};
+export type DomainEntitiesMaterialsBatchRecordMaterialRetestSample = {
+  sampleQuantity?: number;
+  sampledContainers?: number;
+  proposedExpiryDate: string;
+};
+export type DomainEntitiesMaterialsBatchLinkMaterialRetestTestRequest = {
+  testRequestId: string;
+};
+export type DomainEntitiesQcWorksheetsTestRequestType = 0 | 1 | 2 | 3 | 4;
+export type DomainEntitiesQcWorksheetsTestRequestScheduleOrigin = 0 | 1;
+export type DomainEntitiesQcWorksheetsTestRequestStatus =
+  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type DomainEntitiesQcWorksheetsSamplingPointGroupDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  name?: string | null;
+  description?: string | null;
+};
+export type DomainEntitiesQcWorksheetsSpecificationAnalysisType = 0 | 1;
+export type DomainEntitiesQcWorksheetsWorksheetInstanceStatus =
+  0 | 1 | 2 | 3 | 4;
+export type DomainEntitiesQcWorksheetsWorksheetInstanceSummaryDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  testRequestSubjectId?: string;
+  worksheetTemplateId?: string;
+  worksheetTemplateVersion?: number;
+  worksheetTemplateCode?: string | null;
+  worksheetTemplateName?: string | null;
+  analysisType?: DomainEntitiesQcWorksheetsSpecificationAnalysisType;
+  assignedToId?: string | null;
+  assignedTo?: DomainEntitiesUsersUserDto;
+  assignedById?: string | null;
+  assignedAt?: string | null;
+  status?: DomainEntitiesQcWorksheetsWorksheetInstanceStatus;
+  approved?: boolean;
+  submittedAt?: string | null;
+  retestOfInstanceId?: string | null;
+};
+export type DomainEntitiesQcWorksheetsTestRequestSubjectDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
   createdAt?: string;
   testRequestId?: string;
-  certificateCode?: string | null;
-  certificateShape?: DomainEntitiesQcWorksheetsCoaCertificateShape;
-  status?: DomainEntitiesQcWorksheetsCoaStatus;
-  revisionNumber?: number;
+  subjectRef?: string | null;
+  subjectLabel?: string | null;
+  arNumber?: string | null;
+  samplingPointGroupId?: string | null;
+  samplingPointGroup?: DomainEntitiesQcWorksheetsSamplingPointGroupDto;
+  samplingPointId?: string | null;
+  materialBatchId?: string | null;
+  batchManufacturingRecordId?: string | null;
+  collectedAt?: string | null;
+  worksheetInstances?:
+    DomainEntitiesQcWorksheetsWorksheetInstanceSummaryDto[] | null;
+};
+export type DomainEntitiesQcWorksheetsOosCaseStatus = 0 | 1 | 2 | 3 | 4;
+export type DomainEntitiesQcWorksheetsTestRequestBlockingOosCaseDto = {
+  id?: string;
+  worksheetInstanceId?: string;
+  fieldKey?: string | null;
+  status?: DomainEntitiesQcWorksheetsOosCaseStatus;
+  openedAt?: string;
+};
+export type DomainEntitiesQcWorksheetsTestRequestDetailDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  type?: DomainEntitiesQcWorksheetsTestRequestType;
+  specificationId?: string;
+  specificationVersion?: number;
+  specificationCode?: string | null;
+  specificationName?: string | null;
+  scheduleOrigin?: DomainEntitiesQcWorksheetsTestRequestScheduleOrigin;
+  unscheduledReason?: string | null;
+  arNumber?: string | null;
+  issueNumber?: string | null;
   issuedAt?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
-  subject?: string | null;
-  arNumber?: string | null;
-  specificationCode?: string | null;
-  specificationVersion?: number;
-  overallComplies?: boolean;
-  supersedesId?: string | null;
-  supersededById?: string | null;
-  supersededByCertificateCode?: string | null;
+  status?: DomainEntitiesQcWorksheetsTestRequestStatus;
+  subjectCount?: number;
+  worksheetInstanceCount?: number;
+  subjects?: DomainEntitiesQcWorksheetsTestRequestSubjectDto[] | null;
+  blocksRelease?: boolean;
+  blockingOosCases?:
+    DomainEntitiesQcWorksheetsTestRequestBlockingOosCaseDto[] | null;
 };
-export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesQcWorksheetsCoaSummaryDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
-  {
-    data?: DomainEntitiesQcWorksheetsCoaSummaryDto[] | null;
-    pageIndex?: number;
-    pageCount?: number;
-    totalRecordCount?: number;
-    numberOfPagesToShow?: number;
-    startPageIndex?: number;
-    stopPageIndex?: number;
-  };
+export type DomainEntitiesQcWorksheetsCreateTestRequestSubjectRequest = {
+  subjectRef?: string | null;
+  subjectLabel?: string | null;
+  arNumber?: string | null;
+  samplingPointGroupId?: string | null;
+  samplingPointId?: string | null;
+  materialBatchId?: string | null;
+  batchManufacturingRecordId?: string | null;
+  collectedAt?: string | null;
+};
+export type DomainEntitiesQcWorksheetsCreateTestRequestRequest = {
+  type: DomainEntitiesQcWorksheetsTestRequestType;
+  specificationId: string;
+  scheduleOrigin: DomainEntitiesQcWorksheetsTestRequestScheduleOrigin;
+  unscheduledReason?: string | null;
+  arNumber: string;
+  issueNumber?: string | null;
+  issuedAt?: string | null;
+  subjects?: DomainEntitiesQcWorksheetsCreateTestRequestSubjectRequest[] | null;
+};
+export type DomainEntitiesQcWorksheetsCoaCertificateShape = 0 | 1;
+export type DomainEntitiesQcWorksheetsCoaStatus = 0 | 1 | 2;
 export type DomainEntitiesQcWorksheetsCoaHeaderDto = {
   certificateCode?: string | null;
   specificationCode?: string | null;
@@ -2744,6 +3188,61 @@ export type DomainEntitiesQcWorksheetsCoaDetailDto = {
   revisionReason?: string | null;
   subjects?: DomainEntitiesQcWorksheetsCoaSubjectGroupDto[] | null;
 };
+export type DomainEntitiesQcWorksheetsAiExtractionProvider = 0 | 1;
+export type AppServicesQcWorksheetsWorksheetDocxImportAiExtractionAiExtractionProviderStatusDto =
+  {
+    provider?: DomainEntitiesQcWorksheetsAiExtractionProvider;
+    model?: string | null;
+    hasKey?: boolean;
+    keyPreview?: string | null;
+    updatedById?: string | null;
+    updatedByName?: string | null;
+    updatedAt?: string | null;
+  };
+export type AppServicesQcWorksheetsWorksheetDocxImportAiExtractionAiExtractionSettingsDto =
+  {
+    activeProvider?: DomainEntitiesQcWorksheetsAiExtractionProvider;
+    providers?:
+      | AppServicesQcWorksheetsWorksheetDocxImportAiExtractionAiExtractionProviderStatusDto[]
+      | null;
+  };
+export type ApiControllersSaveAiExtractionProviderKeyRequest = {
+  model?: string | null;
+  apiKey?: string | null;
+};
+export type ApiControllersSetActiveAiExtractionProviderRequest = {
+  provider?: DomainEntitiesQcWorksheetsAiExtractionProvider;
+};
+export type DomainEntitiesQcWorksheetsCoaSummaryDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  testRequestId?: string;
+  certificateCode?: string | null;
+  certificateShape?: DomainEntitiesQcWorksheetsCoaCertificateShape;
+  status?: DomainEntitiesQcWorksheetsCoaStatus;
+  revisionNumber?: number;
+  issuedAt?: string | null;
+  issuedBy?: DomainEntitiesUsersUserDto;
+  subject?: string | null;
+  arNumber?: string | null;
+  specificationCode?: string | null;
+  specificationVersion?: number;
+  overallComplies?: boolean;
+  supersedesId?: string | null;
+  supersededById?: string | null;
+  supersededByCertificateCode?: string | null;
+};
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesQcWorksheetsCoaSummaryDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+  {
+    data?: DomainEntitiesQcWorksheetsCoaSummaryDto[] | null;
+    pageIndex?: number;
+    pageCount?: number;
+    totalRecordCount?: number;
+    numberOfPagesToShow?: number;
+    startPageIndex?: number;
+    stopPageIndex?: number;
+  };
 export type DomainEntitiesQcWorksheetsReviseCoaRequest = {
   reason: string;
   password: string;
@@ -2794,13 +3293,6 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     stopPageIndex?: number;
   };
 export type DomainEntitiesQcWorksheetsSamplingPointType = 0 | 1;
-export type DomainEntitiesQcWorksheetsSamplingPointGroupDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  name?: string | null;
-  description?: string | null;
-};
 export type DomainEntitiesQcWorksheetsSamplingPointDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -2876,7 +3368,6 @@ export type DomainEntitiesQcWorksheetsMonitoringScanResultDto = {
   waterPeriodsExpired?: number;
   createdTestRequestIds?: string[] | null;
 };
-export type DomainEntitiesQcWorksheetsOosCaseStatus = 0 | 1 | 2 | 3 | 4;
 export type DomainEntitiesQcWorksheetsOosCaseSummaryDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -2909,28 +3400,6 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     stopPageIndex?: number;
   };
 export type DomainEntitiesQcWorksheetsQcRetestPolicy = 1 | 2;
-export type DomainEntitiesQcWorksheetsSpecificationAnalysisType = 0 | 1;
-export type DomainEntitiesQcWorksheetsWorksheetInstanceStatus =
-  0 | 1 | 2 | 3 | 4;
-export type DomainEntitiesQcWorksheetsWorksheetInstanceSummaryDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  testRequestSubjectId?: string;
-  worksheetTemplateId?: string;
-  worksheetTemplateVersion?: number;
-  worksheetTemplateCode?: string | null;
-  worksheetTemplateName?: string | null;
-  analysisType?: DomainEntitiesQcWorksheetsSpecificationAnalysisType;
-  assignedToId?: string | null;
-  assignedTo?: DomainEntitiesUsersUserDto;
-  assignedById?: string | null;
-  assignedAt?: string | null;
-  status?: DomainEntitiesQcWorksheetsWorksheetInstanceStatus;
-  approved?: boolean;
-  submittedAt?: string | null;
-  retestOfInstanceId?: string | null;
-};
 export type DomainEntitiesQcWorksheetsOosCaseDetailDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -2994,6 +3463,107 @@ export type DomainEntitiesQcWorksheetsOosDispositionRequest = {
   outcome?: DomainEntitiesQcWorksheetsOosDispositionOutcome;
   password?: string | null;
   dispositionComments?: string | null;
+};
+export type DomainEntitiesFormsResponseReworkStatus = 0 | 1 | 2 | 3 | 4;
+export type AppServicesQcWorksheetsResponseReworkTaskDto = {
+  id?: string;
+  sourceResponseId?: string;
+  rootResponseId?: string;
+  newResponseId?: string | null;
+  materialBatchId?: string | null;
+  batchManufacturingRecordId?: string | null;
+  batchNumber?: string | null;
+  reason?: string | null;
+  status?: DomainEntitiesFormsResponseReworkStatus;
+  requestedAt?: string;
+};
+export type AppServicesQcWorksheetsResponseReworkDetailDto = {
+  task?: AppServicesQcWorksheetsResponseReworkTaskDto;
+  history?: AppServicesQcWorksheetsResponseReworkTaskDto[] | null;
+  productionActivityStepId?: string | null;
+  productStage?: number | null;
+};
+export type DomainEntitiesFormsFormType = 0 | 1;
+export type DomainEntitiesFormsQuestionType =
+  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
+export type DomainEntitiesFormsQuestionValidationType = 0 | 1 | 2 | 3;
+export type DomainEntitiesFormsQuestionOptionDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  question?: SharedCollectionItemDto;
+  name?: string | null;
+};
+export type DomainEntitiesFormsQuestionDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  label?: string | null;
+  type?: DomainEntitiesFormsQuestionType;
+  validation?: DomainEntitiesFormsQuestionValidationType;
+  isMultiSelect?: boolean;
+  reference?: string | null;
+  description?: string | null;
+  options?: DomainEntitiesFormsQuestionOptionDto[] | null;
+};
+export type DomainEntitiesFormsFormFieldDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  formSection?: SharedCollectionItemDto;
+  question?: DomainEntitiesFormsQuestionDto;
+  required?: boolean;
+  description?: string | null;
+  rank?: number;
+};
+export type DomainEntitiesQualityRoutinesAnalysisType = 0 | 1;
+export type DomainEntitiesFormsFormSectionDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  form?: SharedCollectionItemDto;
+  name?: string | null;
+  description?: string | null;
+  instrument?: DomainEntitiesProductsEquipmentsQcEquipmentDto;
+  order?: number;
+  fields?: DomainEntitiesFormsFormFieldDto[] | null;
+  value?: string | null;
+  groupName?: string | null;
+  complies?: boolean;
+  analysisType?: DomainEntitiesQualityRoutinesAnalysisType;
+};
+export type DomainEntitiesAttachmentsAttachmentDto = {
+  link?: string | null;
+  name?: string | null;
+  id?: string;
+  reference?: string | null;
+};
+export type DomainEntitiesFormsFormResponseDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  attachments?: DomainEntitiesAttachmentsAttachmentDto[] | null;
+  responseId?: string;
+  productionActivityStepId?: string | null;
+  formField?: DomainEntitiesFormsFormFieldDto;
+  sectionName?: string | null;
+  complies?: boolean;
+  value?: string | null;
+  checkedBy?: DomainEntitiesUsersUserDto;
+  checkedAt?: string | null;
+  formulaGoverned?: boolean;
+  formulaResultFinalized?: boolean;
+  formulaExecutionId?: string | null;
+  formulaDisplayResultsJson?: string | null;
+};
+export type DomainEntitiesFormsFormDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  name?: string | null;
+  type?: DomainEntitiesFormsFormType;
+  sections?: DomainEntitiesFormsFormSectionDto[] | null;
+  responses?: DomainEntitiesFormsFormResponseDto[] | null;
 };
 export type DomainEntitiesQcWorksheetsCreateSamplingPointGroupRequest = {
   name: string;
@@ -3415,10 +3985,6 @@ export type DomainEntitiesQcWorksheetsStpImportResultDto = {
   failureReason?: string | null;
   flaggedForReview?: string[] | null;
 };
-export type DomainEntitiesQcWorksheetsTestRequestType = 0 | 1 | 2 | 3 | 4;
-export type DomainEntitiesQcWorksheetsTestRequestScheduleOrigin = 0 | 1;
-export type DomainEntitiesQcWorksheetsTestRequestStatus =
-  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type DomainEntitiesQcWorksheetsTestRequestSummaryDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -3448,73 +4014,6 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
-export type DomainEntitiesQcWorksheetsTestRequestSubjectDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  testRequestId?: string;
-  subjectRef?: string | null;
-  subjectLabel?: string | null;
-  arNumber?: string | null;
-  samplingPointGroupId?: string | null;
-  samplingPointGroup?: DomainEntitiesQcWorksheetsSamplingPointGroupDto;
-  samplingPointId?: string | null;
-  materialBatchId?: string | null;
-  batchManufacturingRecordId?: string | null;
-  collectedAt?: string | null;
-  worksheetInstances?:
-    DomainEntitiesQcWorksheetsWorksheetInstanceSummaryDto[] | null;
-};
-export type DomainEntitiesQcWorksheetsTestRequestBlockingOosCaseDto = {
-  id?: string;
-  worksheetInstanceId?: string;
-  fieldKey?: string | null;
-  status?: DomainEntitiesQcWorksheetsOosCaseStatus;
-  openedAt?: string;
-};
-export type DomainEntitiesQcWorksheetsTestRequestDetailDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  type?: DomainEntitiesQcWorksheetsTestRequestType;
-  specificationId?: string;
-  specificationVersion?: number;
-  specificationCode?: string | null;
-  specificationName?: string | null;
-  scheduleOrigin?: DomainEntitiesQcWorksheetsTestRequestScheduleOrigin;
-  unscheduledReason?: string | null;
-  arNumber?: string | null;
-  issueNumber?: string | null;
-  issuedAt?: string | null;
-  issuedBy?: DomainEntitiesUsersUserDto;
-  status?: DomainEntitiesQcWorksheetsTestRequestStatus;
-  subjectCount?: number;
-  worksheetInstanceCount?: number;
-  subjects?: DomainEntitiesQcWorksheetsTestRequestSubjectDto[] | null;
-  blocksRelease?: boolean;
-  blockingOosCases?:
-    DomainEntitiesQcWorksheetsTestRequestBlockingOosCaseDto[] | null;
-};
-export type DomainEntitiesQcWorksheetsCreateTestRequestSubjectRequest = {
-  subjectRef?: string | null;
-  subjectLabel?: string | null;
-  arNumber?: string | null;
-  samplingPointGroupId?: string | null;
-  samplingPointId?: string | null;
-  materialBatchId?: string | null;
-  batchManufacturingRecordId?: string | null;
-  collectedAt?: string | null;
-};
-export type DomainEntitiesQcWorksheetsCreateTestRequestRequest = {
-  type: DomainEntitiesQcWorksheetsTestRequestType;
-  specificationId: string;
-  scheduleOrigin: DomainEntitiesQcWorksheetsTestRequestScheduleOrigin;
-  unscheduledReason?: string | null;
-  arNumber: string;
-  issueNumber?: string | null;
-  issuedAt?: string | null;
-  subjects?: DomainEntitiesQcWorksheetsCreateTestRequestSubjectRequest[] | null;
-};
 export type DomainEntitiesQcWorksheetsAddTestRequestSubjectsRequest = {
   subjects: DomainEntitiesQcWorksheetsCreateTestRequestSubjectRequest[];
 };
@@ -4088,6 +4587,19 @@ export const {
   usePutApiV1QcInstrumentsByIdCalibrationMutation,
   useGetApiV1QcInstrumentsCalibrationDueQuery,
   useLazyGetApiV1QcInstrumentsCalibrationDueQuery,
+  useGetApiV1QcMaterialRetestsQuery,
+  useLazyGetApiV1QcMaterialRetestsQuery,
+  useGetApiV1QcMaterialRetestsByIdQuery,
+  useLazyGetApiV1QcMaterialRetestsByIdQuery,
+  usePostApiV1QcMaterialRetestsBatchesByBatchIdMutation,
+  usePostApiV1QcMaterialRetestsByIdApproveMutation,
+  usePostApiV1QcMaterialRetestsByIdRejectMutation,
+  usePostApiV1QcMaterialRetestsByIdSampleMutation,
+  usePostApiV1QcMaterialRetestsByIdAcknowledgeMutation,
+  usePostApiV1QcMaterialRetestsByIdTestRequestMutation,
+  usePostApiV1QcMaterialRetestsByIdTestRequestCreateMutation,
+  useGetApiV1QcMaterialRetestsByIdCertificatesQuery,
+  useLazyGetApiV1QcMaterialRetestsByIdCertificatesQuery,
   useGetApiV1QcAiExtractionSettingsQuery,
   useLazyGetApiV1QcAiExtractionSettingsQuery,
   usePutApiV1QcAiExtractionSettingsByProviderKeyMutation,
@@ -4134,6 +4646,13 @@ export const {
   usePostApiV1QcWorksheetsOosCasesByIdAuthorizeRetestMutation,
   usePostApiV1QcWorksheetsOosCasesByIdEscalateMutation,
   usePostApiV1QcWorksheetsOosCasesByIdDispositionMutation,
+  useGetApiV1QcReworkTasksQuery,
+  useLazyGetApiV1QcReworkTasksQuery,
+  useGetApiV1QcReworkTasksByIdQuery,
+  useLazyGetApiV1QcReworkTasksByIdQuery,
+  usePostApiV1QcReworkTasksByIdStartMutation,
+  useGetApiV1QcReworkTasksByIdFormQuery,
+  useLazyGetApiV1QcReworkTasksByIdFormQuery,
   useGetApiV1QcWorksheetsSamplingPointGroupsQuery,
   useLazyGetApiV1QcWorksheetsSamplingPointGroupsQuery,
   usePostApiV1QcWorksheetsSamplingPointGroupsMutation,
@@ -4194,6 +4713,7 @@ export const {
   useLazyGetApiV1QcWorksheetsApprovalsMyPendingQuery,
   useGetApiV1QcWorksheetsApprovalsByEntityTypeAndEntityIdQuery,
   useLazyGetApiV1QcWorksheetsApprovalsByEntityTypeAndEntityIdQuery,
+  usePostApiV1QcWorksheetsInstancesByIdFilesAndReferenceMutation,
   useGetApiV1QcWorksheetsInstancesByIdQuery,
   useLazyGetApiV1QcWorksheetsInstancesByIdQuery,
   useGetApiV1QcWorksheetsInstancesMyWorkQuery,

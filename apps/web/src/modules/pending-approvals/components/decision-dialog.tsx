@@ -1,51 +1,51 @@
-import { useId, useState } from "react";
+import { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
+import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
+import { InputTypes } from "@/shared/forms/input-types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
-import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { usePostApiV1ApprovalApproveByModelTypeAndModelIdMutation, usePostApiV1ApprovalRejectByModelTypeAndModelIdMutation } from "../api/approval-api";
-import { audit, decisionProblem, documentLabel, type Decision } from "../lib/approval-documents";
+import type { DecisionEvidence } from "../api/decision-evidence";
+import { useApprovalDecision } from "../hooks/use-approval-decision";
+import { documentLabel, type Decision } from "../lib/approval-documents";
 import type { PendingApproval } from "../schemas/approval-schema";
 
-/** Records the signed-in user's decision on a request. A rejection has to say why. */
-export function DecisionDialog({ approval, decision, onClose, onDone }: { approval: PendingApproval; decision: Decision; onClose: () => void; onDone: () => void }) {
-  const [approve, approving] = usePostApiV1ApprovalApproveByModelTypeAndModelIdMutation();
-  const [reject, rejecting] = usePostApiV1ApprovalRejectByModelTypeAndModelIdMutation();
-  const [comments, setComments] = useState("");
-  const [problem, setProblem] = useState("");
+interface Values { comments: string; outcome: "" | "0" | "1" }
+export function DecisionDialog({ approval, decision, evidence, onClose, onDone }: {
+  approval: PendingApproval; decision: Decision; evidence: DecisionEvidence; onClose: () => void; onDone: () => void;
+}) {
+  const rejecting = decision === "reject";
+  const disposition = rejecting && approval.type === "Response";
+  const schema = useMemo(() => z.object({
+    comments: z.string().trim().max(2000).refine((value) => !rejecting || value.length >= 3, "Say why the request is rejected"),
+    outcome: z.enum(["", "0", "1"]).refine((value) => !disposition || value !== "", "Choose rework testing or disposal"),
+  }), [rejecting, disposition]);
+  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { comments: "", outcome: "" } });
+  const command = useApprovalDecision(approval, decision, evidence);
   const [message, setMessage] = useState("");
-  const field = useId();
-  const busy = approving.isLoading || rejecting.isLoading;
-  const name = `${documentLabel(approval.type).toLowerCase()}${approval.code ? ` ${approval.code}` : ""}`;
-  const rejectingIt = decision === "reject";
-
-  const submit = async () => {
-    const invalid = decisionProblem(decision, comments);
-    setProblem(invalid ?? ""); setMessage("");
-    if (invalid) return;
-    const arg = { ...audit, modelType: approval.type, modelId: approval.id, domainEntitiesApprovalsApprovalRequestBody: { comments: comments.trim() || null } };
-    const result = rejectingIt ? await reject(arg) : await approve(arg);
-    if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    toast.success(rejectingIt ? "Request rejected" : "Request approved", { description: `${name.charAt(0).toUpperCase()}${name.slice(1)}` });
+  const name = `${documentLabel(approval.type)}${approval.code ? ` ${approval.code}` : ""}`;
+  const fields: WizardField<Values>[] = [
+    { type: InputTypes.TEXTAREA, name: "comments", label: rejecting ? "Reason for rejecting" : "Comment (optional)", required: rejecting, rows: 4 },
+    ...(disposition ? [{ type: InputTypes.RADIO, name: "outcome", label: "Rejected test disposition", required: true,
+      options: [{ value: "1", label: "Rework testing" }, { value: "0", label: "Dispose" }] } as const] : []),
+  ];
+  const submit = form.handleSubmit(async (values) => {
+    const failure = await command.submit(values.comments, values.outcome === "1" ? 1 : values.outcome === "0" ? 0 : null);
+    if (failure) { setMessage(failure); return; }
+    toast.success(rejecting ? "Request rejected" : "Request approved");
     onDone();
-  };
-
-  return <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
-    <DialogContent className="sm:max-w-xl">
-      <DialogHeader><DialogTitle>{rejectingIt ? "Reject" : "Approve"} {name}?</DialogTitle>
-        <DialogDescription>{rejectingIt ? "The request goes back to the person who made it, with your reason. This cannot be undone." : "Your approval is recorded under your name and the request moves to its next stage. This cannot be undone."}</DialogDescription></DialogHeader>
-      <form noValidate onSubmit={(event) => { event.preventDefault(); event.stopPropagation(); void submit(); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
-        <DialogBody className="space-y-2">
-          <label htmlFor={field} className="text-sm font-medium">{rejectingIt ? "Reason for rejecting" : "Comment (optional)"}{rejectingIt ? <span aria-hidden="true" className="text-destructive"> *</span> : null}</label>
-          <Textarea id={field} rows={4} value={comments} disabled={busy} required={rejectingIt} aria-invalid={problem ? true : undefined} aria-describedby={problem ? `${field}-problem` : undefined} onChange={(event) => { setComments(event.target.value); if (problem) setProblem(""); }} />
-          {problem ? <p id={`${field}-problem`} role="alert" className="text-sm text-destructive">{problem}</p> : null}
-          {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
-        </DialogBody>
-        <DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant={rejectingIt ? "destructive" : "default"} disabled={busy}>{busy ? <><Spinner />Saving…</> : rejectingIt ? "Reject request" : "Approve request"}</Button></DialogFooter>
-      </form>
-    </DialogContent>
-  </Dialog>;
+  });
+  return <Dialog open onOpenChange={(open) => { if (!open && !command.busy) onClose(); }}><DialogContent className="sm:max-w-xl">
+    <DialogHeader><DialogTitle className="break-words">{rejecting ? "Reject" : "Approve"} {name}?</DialogTitle>
+      <DialogDescription>{disposition ? "Rework creates a separate test cycle and preserves these results. Disposal records a final rejection. Choose the intended disposition explicitly."
+        : "Your decision is recorded under your name. Current evidence and assignment are checked before saving."}</DialogDescription></DialogHeader>
+    <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 flex-1 flex-col gap-4">
+      <DialogBody><fieldset disabled={command.busy || command.attempted}><FormWizard form={form} fields={fields} /></fieldset>
+        {message ? <p role="alert" className="mt-3 text-sm text-destructive">{message}</p> : null}</DialogBody>
+      <DialogFooter><Button type="button" variant="outline" disabled={command.busy} onClick={onClose}>Cancel</Button>
+        <Button type="submit" variant={rejecting ? "destructive" : "default"} disabled={command.busy || command.attempted || !command.allowed}>{command.busy ? "Verifying…" : rejecting ? "Reject request" : "Approve request"}</Button></DialogFooter>
+    </form>
+  </DialogContent></Dialog>;
 }

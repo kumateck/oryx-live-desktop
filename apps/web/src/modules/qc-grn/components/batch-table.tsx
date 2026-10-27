@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CircleCheck, ClipboardCheck, Eye, FlaskConical, Pipette, Play, Printer, Target, UserCog } from "lucide-react";
+import { ClipboardCheck, Eye, FlaskConical, Pipette, Play, Printer, Target, UserCog } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmActionDialog, TableMenu, TableMenuHeader } from "@/shared/actions";
@@ -14,10 +14,11 @@ import { toLargestUnit } from "@/shared/units/quantity";
 import { qcGrnAnalyticalApi, qcGrnFormsApi } from "../api/qc-grn-api";
 import { batchActions, batchPath, batchStatusLabels, printsFilled, qcGrnAudit, qcPermissions } from "../lib/qc-grn";
 import type { QcBatch } from "../schemas/grn-schema";
-import { CompleteRetestDialog, RequestRetestDialog, SampleDialog } from "./batch-dialogs";
+import { RequestMaterialRetestDialog, retestPermissions } from "@/modules/material-retests/public";
+import { SampleDialog } from "./batch-dialogs";
 import { BatchWorksheetPrint } from "./batch-worksheet";
 
-type Open = { kind: "sample" | "requestRetest" | "completeRetest" | "assignments" | "print" | "start"; batch: QcBatch } | null;
+type Open = { kind: "sample" | "requestRetest" | "assignments" | "print" | "start"; batch: QcBatch } | null;
 const shown = (value: number | null, unit: string | null) => value === null ? "–" : toLargestUnit(value, unit, "calculated")?.text ?? "–";
 const column = dataTableColumns<QcBatch>();
 
@@ -55,8 +56,8 @@ export function BatchTable({ grnId, kind, batches }: { grnId: string; kind: Mate
         actions.has("reassign") && { id: "reassign", label: "Reassign analysts", icon: UserCog, require: qcPermissions.reassign[kind], to: batchPath(grnId, batch.id, kind, "reassign") },
         actions.has("assignments") && { id: "assignments", label: "View assignments", icon: Eye, onSelect: () => setOpen({ kind: "assignments", batch }) },
         actions.has("check") && { id: "check", label: "Check results", icon: ClipboardCheck, require: qcPermissions.check[kind], to: batchPath(grnId, batch.id, kind) },
-        actions.has("requestRetest") && { id: "requestRetest", label: "Request retest", icon: FlaskConical, require: qcPermissions.requestRetest[kind], separated: true, onSelect: () => setOpen({ kind: "requestRetest", batch }) },
-        actions.has("completeRetest") && { id: "completeRetest", label: "Complete retest", icon: CircleCheck, require: qcPermissions.completeRetest[kind], onSelect: () => setOpen({ kind: "completeRetest", batch }) },
+        actions.has("requestRetest") && { id: "requestRetest", label: "Request retest", icon: FlaskConical, require: retestPermissions.request, separated: true, onSelect: () => setOpen({ kind: "requestRetest", batch }) },
+        batch.status === 5 && { id: "retests", label: "Open governed retests", icon: FlaskConical, require: retestPermissions.view, to: `/qc/material-retests?batchId=${encodeURIComponent(batch.id)}` },
         actions.has("print") && { id: "print", label: printsFilled(batch.status) ? "Print worksheet with results" : "Print blank worksheet", icon: Printer, require: qcPermissions.test[kind], separated: true, onSelect: () => setOpen({ kind: "print", batch }) },
       ]} />; } }),
   ]), [grnId, kind]);
@@ -74,8 +75,7 @@ export function BatchTable({ grnId, kind, batches }: { grnId: string; kind: Mate
   return <>
     <ListDataTable label="Batches on this note" columns={columns} rows={batches} getRowId={(row) => row.id} emptyTitle="No batches on this note" />
     {open?.kind === "sample" ? <SampleDialog grnId={grnId} batch={open.batch} kind={kind} onClose={() => setOpen(null)} /> : null}
-    {open?.kind === "requestRetest" ? <RequestRetestDialog batch={open.batch} kind={kind} onClose={() => setOpen(null)} /> : null}
-    {open?.kind === "completeRetest" ? <CompleteRetestDialog batch={open.batch} kind={kind} onClose={() => setOpen(null)} /> : null}
+    {open?.kind === "requestRetest" ? <RequestMaterialRetestDialog batchId={open.batch.id} onClose={() => setOpen(null)} /> : null}
     {open?.kind === "assignments" ? <Assignments batch={open.batch} onClose={() => setOpen(null)} /> : null}
     {open?.kind === "print" ? <BatchWorksheetPrint batchId={open.batch.id} filled={printsFilled(open.batch.status)} onClose={() => setOpen(null)} /> : null}
     {open?.kind === "start" ? <ConfirmActionDialog require={qcPermissions.test[kind]} destructive={false} title={`Start the test of batch ${open.batch.number ?? open.batch.material}?`}

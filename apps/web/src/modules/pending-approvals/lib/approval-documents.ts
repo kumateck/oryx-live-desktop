@@ -4,7 +4,9 @@ export const approvalPath = (type: string, id: string) => `${approvalsPath}/${en
 /** Seeing the queue, approving and rejecting are three permissions. */
 export const approvalPermissions = { view: "CanViewPendingApprovals", approve: "CanApprovePendingApproval", reject: "CanRejectPendingApproval" } as const;
 export const decisionPermission = (type: string, decision: Decision): string =>
-  type === "Response"
+  type === "StockDiscrepancy" ? decision === "approve" ? "CanApproveStockDiscrepancy" : "CanRejectStockDiscrepancy"
+    : type === "ShipmentDiscrepancy" ? decision === "approve" ? "CanApproveShipmentDiscrepancy" : "CanRejectShipmentDiscrepancy"
+    : type === "Response"
     ? decision === "approve" ? "CanApproveResponse" : "CanRejectResponse"
     : approvalPermissions[decision];
 export const audit = { module: "Quality Assurance", subModule: "Pending Approvals" } as const;
@@ -12,7 +14,7 @@ export const audit = { module: "Quality Assurance", subModule: "Pending Approval
 /** Documents whose content this app can show, so they can be read before they are decided. The names are the server's. */
 const readable = ["PurchaseOrder", "BillingSheet", "ShipmentDocument", "PurchaseRequisition", "TrialRequisition", "StockRequisition", "RawStockRequisition", "PackageStockRequisition", "ProductionExtraPacking",
   "FinishedGoodsTransferNote", "LeaveRequest", "OvertimeRequest", "StaffRequisition", "JobRequest", "ProductionOrder", "ProformaInvoice", "AllocateProductionOrder", "StockAdjustment", "CustomerQuotation", "SupplierPricingAgreement", "PayrollRun", "PerformanceReview",
-  "RndProject", "RndFormulation", "RndTechnologyTransfer", "Response"] as const;
+  "RndProject", "RndFormulation", "RndTechnologyTransfer", "Response", "StockDiscrepancy", "ShipmentDiscrepancy"] as const;
 export type ReadableDocument = (typeof readable)[number];
 export const isReadable = (type: string): type is ReadableDocument => (readable as readonly string[]).includes(type);
 
@@ -56,3 +58,5 @@ export function decisionProblem(decision: Decision, comments: string): string | 
   if (decision === "reject" && text.length < 3) return "Say why the request is rejected";
   return null;
 }
+
+export const decisionViewPermission = (type: string) => type === "StockDiscrepancy" ? "CanViewStockDiscrepancy" : type === "ShipmentDiscrepancy" ? "CanViewShipmentDiscrepancy" : approvalPermissions.view;

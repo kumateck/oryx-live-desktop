@@ -572,8 +572,10 @@ export type DomainEntitiesApprovalsApprovalEntity = {
   requestedBy?: DomainEntitiesUsersUserDto;
   onBehalfOf?: SharedCollectionItemDto;
 };
+export type DomainEntitiesFormsResponseRejectionOutcome = 0 | 1;
 export type DomainEntitiesApprovalsApprovalRequestBody = {
   comments?: string | null;
+  responseRejectionOutcome?: DomainEntitiesFormsResponseRejectionOutcome;
 };
 export type AppServicesApprovalsPendingRevisionApprovalDto = {
   revisionId?: string;

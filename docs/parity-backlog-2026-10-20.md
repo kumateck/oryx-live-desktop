@@ -1,5 +1,7 @@
 # Parity backlog and source evidence — 2026-10-20
 
+Historical backlog. The [2026-10-27 review](parity-review-2026-10-27/README.md) distinguishes completed migrations, current regressions, remaining suites and unchanged scope holds.
+
 Companion to [the audit](implementation-parity-2026-10-20.md). Priorities below are recommended sequencing, not implementation authorization or a change to recorded holds. Every unmatched URL is in the [classified ledger](parity-routes-2026-10-20/README.md).
 
 ## P1: approval, quality and inventory journeys

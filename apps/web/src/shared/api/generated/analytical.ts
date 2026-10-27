@@ -3282,6 +3282,7 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     stopPageIndex?: number;
   };
 export type DomainEntitiesOosInvestigationsInitiateOosInvestigationRequest = {
+  responseId?: string | null;
   analyticalTestRequestId?: string | null;
   materialBatchId?: string | null;
   coaNumber: string;

@@ -1330,6 +1330,13 @@ export type DomainEntitiesNotificationsNotificationDto = {
   id?: string;
   message?: string | null;
   type?: DomainEntitiesNotificationsNotificationType;
+  shipmentDocumentId?: string | null;
+  relatedEntityType?: string | null;
+  relatedEntityId?: string | null;
+  relatedEntityCode?: string | null;
+  relatedEntityName?: string | null;
+  relatedEntityStatus?: string | null;
+  relatedEntityPriority?: string | null;
   recipients?: DomainEntitiesUsersUserDto[] | null;
   sentAt?: string;
 };
