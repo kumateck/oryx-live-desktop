@@ -3,8 +3,9 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { contractDigest, object, parse, type ObjectValue } from "../deploy/customer-server/data.ts";
-import { compatibility } from "../deploy/customer-server/release.ts";
-import { verifySwaggerContract } from "../deploy/customer-docker/probe-checks.ts";
+import { compatibility, checkCompatibility } from "../deploy/customer-server/release.ts";
+import { readConfig } from "../deploy/customer-server/config.ts";
+const hostConfig = readConfig({ ORYX_SITE_URL: "http://customer.test", ORYX_API_ORIGIN: "http://backend.test" });
 
 const approvedFingerprint = "4727f9d426d4fa53cdf6ee93f2b5df1edb959d6fa83d705ebdfc7fb2ca9648ae";
 const customerFingerprint = "c89615ea1e0050bbb0ed5f61f9308ee87e5398e79b3972b00e4dee33587abdc1";
@@ -55,13 +56,13 @@ test("all 1,358 operations and schemas match after only 2,716 audit-header schem
   assert.deepEqual(customer.security, pinned.security);
 });
 
-test("the deployment verifier accepts both reviewed raw and typed documents without normalizing runtime evidence", async () => {
+test("the separate legacy host-Nginx verifier retains both reviewed exact documents", async () => {
   for (const document of [customer, pinned]) {
-    await verifySwaggerContract("http://127.0.0.1:8080", policy, { fetcher: async () => Response.json(document) });
+    checkCompatibility(hostConfig, policy, contractDigest(document));
   }
 });
 
-test("unreviewed endpoint, body, response and authorization changes remain blocked", async () => {
+test("the separate legacy host-Nginx verifier still blocks unreviewed document changes", async () => {
   const changes: ((document: ObjectValue) => void)[] = [
     (document) => { delete object(document.paths ?? null)["/api/v1/auth/login"]; },
     (document) => { object(object(object(document.paths ?? null)["/api/v1/auth/login"] ?? null).post ?? null).requestBody = { required: true, content: {} }; },
@@ -72,6 +73,6 @@ test("unreviewed endpoint, body, response and authorization changes remain block
   ];
   for (const change of changes) {
     const changed = object(parse(raw)); change(changed);
-    await assert.rejects(verifySwaggerContract("http://127.0.0.1:8080", policy, { fetcher: async () => Response.json(changed) }), /\[Swagger:fingerprint\]/);
+    assert.throws(() => checkCompatibility(hostConfig, policy, contractDigest(changed)), /has not been approved/);
   }
 });

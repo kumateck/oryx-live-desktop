@@ -34,6 +34,8 @@ try {
   const base = await start(web);
   await docker(["exec", web, "nginx", "-t"]);
   const version = await fetch(`${base}/deployment.json`); assert.equal(version.status, 200); assert.equal(version.headers.get("cache-control"), "no-store");
+  const metadata: { backendContracts?: string[] } = await version.clone().json();
+  assert.equal(Object.hasOwn(metadata, "backendContracts"), false);
   const marker: { commit: string; criticalAssets: string[] } = await version.json();
   assert.match(marker.commit, /^[a-f0-9]{40}$/);
   assert.equal((await fetch(`${base}/healthz`)).status, 200);
@@ -50,6 +52,17 @@ try {
   const echoed: { url: string; authorization: string; proto: string } = await proxy.json();
   assert.equal(echoed.url, "/api/echo?keep=path"); assert.equal(echoed.authorization, "Bearer fixture-only"); assert.equal(echoed.proto, "http");
   assert.equal((await fetch(`${base}/api/v1/user/authenticated`)).status, 401);
+  // Exercise actual TypeScript probe entrypoints without the customer's sail network or host services.
+  const probe = async (mode: string, origin: string, probeNetwork: string) => docker([
+    "run", "--rm", "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true", "--network", probeNetwork,
+    "--mount", `type=bind,src=${resolve(".")},dst=/repo,readonly`, "node:24.22.1-bookworm-slim",
+    "node", "/repo/deploy/customer-docker/probe.ts", mode, origin, "0.1.0", "/repo/deploy/customer-docker/requirements.json", "1",
+    "/repo/contracts/openapi/backend.v1.json",
+  ]);
+  assert.match(await probe("api", "http://fixture-api:5001", network), /API connectivity/);
+  assert.match(await probe("compatibility", "http://127.0.0.1:5001", `container:${api}`), /Critical API contracts verified/);
+  assert.match(await probe("compatibility", "http://127.0.0.1:1", `container:${api}`), /no confirmed breaking changes/);
+
   assert.equal((await fetch(`${base}/realtime/health`)).status, 503);
   await docker(["exec", web, "sh", "-c", "test ! -d /app && ! command -v node && ! command -v bun && test ! -e /usr/share/nginx/html/.env"]);
   const live = await start(connected, "http://fixture-api:5001");
@@ -61,7 +74,7 @@ try {
     socket.addEventListener("error", () => { clearTimeout(timer); reject(new Error("WebSocket upgrade failed")); });
   });
   assert.equal(await (await fetch(`${live}/assets/previous-deadbeef.js`)).text(), "/* retained previous release */");
-  console.log("PASS: Nginx syntax, health/version, SPA routes, real HTTP API proxy, optional gateway/WebSocket, immutable asset retention, runtime contents");
+  console.log("PASS: Nginx syntax, health/version, SPA routes, real HTTP API proxy, API/compatibility probes, optional gateway/WebSocket, immutable asset retention, runtime contents");
 } finally {
   for (const name of [web, connected, api]) await run({ executable: "docker", args: ["rm", "--force", name] });
   await run({ executable: "docker", args: ["volume", "rm", volume] });

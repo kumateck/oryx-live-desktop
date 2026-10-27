@@ -84,19 +84,22 @@ failure() {
   notify "ORYX Live deployment FAILED | entrance-server | ${TARGET:-preflight} | stage: $STAGE"
   exit "$code"
 }
-# The API and local contract have different access boundaries and must use different networks.
+# Basic connectivity is mandatory. Only candidates inspect optional local contract metadata.
 backend_checks() {
-  local policy=$1 context=$2
+  local policy=$1 context=$2 baseline=${3:-}
   STAGE="$context-api-connectivity"
   docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --network sail \
     --mount "type=bind,src=$REPO,dst=/repo,readonly" \
     --mount "type=bind,src=$policy,dst=/release-policy.json,readonly" "$NODE_IMAGE" \
     node /repo/deploy/customer-docker/probe.ts api "$ORYX_API_UPSTREAM" "$ORYX_SHELL_FLOOR" /release-policy.json "${ORYX_MIN_FREE_GB:-10}" || return
-  STAGE="$context-swagger-contract"
+  [[ "$context" != preflight ]] || { STAGE="$context"; return 0; }
+  [[ -n "$baseline" ]] || { echo "Missing selected release contract baseline." >&2; return 1; }
+  STAGE="$context-critical-compatibility"
   docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --network host \
     --mount "type=bind,src=$REPO,dst=/repo,readonly" \
-    --mount "type=bind,src=$policy,dst=/release-policy.json,readonly" "$NODE_IMAGE" \
-    node /repo/deploy/customer-docker/probe.ts swagger "${ORYX_SWAGGER_ORIGIN:-http://127.0.0.1:8080}" "$ORYX_SHELL_FLOOR" /release-policy.json "${ORYX_MIN_FREE_GB:-10}" || return
+    --mount "type=bind,src=$policy,dst=/release-policy.json,readonly" \
+    --mount "type=bind,src=$baseline,dst=/backend-baseline.json,readonly" "$NODE_IMAGE" \
+    node /repo/deploy/customer-docker/probe.ts compatibility "${ORYX_SWAGGER_ORIGIN:-http://127.0.0.1:8080}" "$ORYX_SHELL_FLOOR" /release-policy.json "${ORYX_MIN_FREE_GB:-10}" /backend-baseline.json || return
   STAGE="$context"
 }
 preflight() {
@@ -116,7 +119,7 @@ preflight() {
   [[ -z "$owners" || ( "$owners" = oryx-live\|* && "$owners" != *$'\n'* ) ]] || { echo 'Port 3001 belongs to another Docker project.' >&2; return 1; }
   listeners=$(ss -H -ltn 'sport = :3001')
   [[ -z "$listeners" || "$owners" = oryx-live\|* ]] || { echo 'Port 3001 belongs to another listener.' >&2; return 1; }
-  backend_checks "$REPO/deploy/customer-server/release.json" preflight
+  backend_checks "$REPO/deploy/customer-docker/requirements.json" preflight
 }
 approved() {
   local sha=$1 file="$STATE/tmp/approval.json"
@@ -139,7 +142,8 @@ build_release() {
   git -C "$REPO" worktree add --detach "$WORKTREE" "$sha" >/dev/null
   mkdir -p "$release"
   cp "$WORKTREE/deploy/customer-docker/compose.yml" "$release/compose.yml"
-  cp "$WORKTREE/deploy/customer-server/release.json" "$release/compatibility.json"
+  cp "$WORKTREE/deploy/customer-docker/requirements.json" "$release/compatibility.json"
+  cp "$WORKTREE/contracts/openapi/backend.v1.json" "$release/backend-baseline.json"
   printf 'ORYX_RELEASE_SHA=%s\nORYX_PUBLIC_PORT=3001\nORYX_API_UPSTREAM=%s\nORYX_GATEWAY_UPSTREAM=%s\nORYX_PUBLIC_PROTO=%s\nORYX_BIND_ADDRESS=%s\n' \
     "$sha" "$ORYX_API_UPSTREAM" "$ORYX_GATEWAY_UPSTREAM" "$ORYX_PUBLIC_PROTO" "$ORYX_BIND_ADDRESS" > "$release/runtime.env"
   # Exact detached commit context; never pass the webhook/token to the builder.
@@ -158,7 +162,7 @@ stage_candidate() {
   local sha=$1
   STAGE=candidate-validation
   restore_image "$sha"
-  backend_checks "$STATE/releases/$sha/compatibility.json" candidate-validation
+  backend_checks "$STATE/releases/$sha/compatibility.json" candidate-validation "$STATE/releases/$sha/backend-baseline.json"
   docker volume create --label com.docker.compose.project=oryx-live oryx-live_assets >/dev/null
   CANDIDATE="oryx-live-candidate-${sha:0:12}-$$"
   docker run --detach --name "$CANDIDATE" --network sail --mount type=volume,src=oryx-live_assets,dst=/srv/assets \

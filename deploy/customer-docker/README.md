@@ -2,7 +2,7 @@
 
 This package runs the hosted React application through the existing `deploy/Dockerfile` **web** target. It requires no Codex, Node or Bun installation on the customer host. Docker runs the pinned Node/Bun build and compatibility probes. The installed Electron shell, notification gateway, backend, ORYX Next, databases and other customer services remain separate.
 
-Production accepts **`origin/entrance-server` only**. `main` and `testing` are never production deployment sources. Before distributing these instructions, the maintainer must review/commit this package, push `entrance-server`, and confirm **Validate customer Docker release** succeeds on that branch. The branch was prepared locally from approved testing commit `7952cd85e69853c787a4d71de464f11d79e27e26`; this task does not push it or access the customer server.
+Production accepts **`origin/entrance-server` only**. `main` and `testing` are never production deployment sources. A commit qualifies only after **Validate customer Docker release** succeeds for that exact SHA on `entrance-server`. Updating the hosted frontend does not install or update Electron clients.
 
 ## 1. Prerequisites and clone
 
@@ -47,7 +47,7 @@ nano /home/entrance/.config/oryx-live/customer.env
 | `ORYX_DEPLOY_BRANCH` | `entrance-server`. Other branches are refused. |
 | `ORYX_PUBLIC_PORT` | `3001`. Port 3000 stays with ORYX Next. |
 | `ORYX_API_UPSTREAM` | `http://oryx_api:5001`. Application connectivity and the frontend proxy continue using the internal backend on `sail`. |
-| `ORYX_SWAGGER_ORIGIN` | Default `http://127.0.0.1:8080`. Verification-only local backend origin, requested by a temporary Linux host-network probe. Accepts loopback HTTP(S) origins only; never sent to the frontend container. |
+| `ORYX_SWAGGER_ORIGIN` | Default `http://127.0.0.1:8080`. Optional compatibility evidence for candidate releases; not required by preflight. An isolated host-network probe reads local Swagger here. Only genuine loopback origins are requested. Never sent to the frontend container. |
 | `DISCORD_WEBHOOK_URL` | Customer-owned HTTPS Discord webhook; replace the placeholder. Never put it in Git. |
 | `ORYX_DEPLOY_STATE` | `/home/entrance/.local/state/oryx-live`; keep outside the checkout. Stores history, protected logs, release settings and independent recovery archives. |
 | `ORYX_MIN_FREE_GB` | Default 10 GiB; minimum free disk checked in both deployment state storage and the Docker image store before building. Builds also require RAM for a 6 GiB Node heap and test workers. |
@@ -66,31 +66,40 @@ cd /home/entrance/oryx-live-desktop
 bash deploy/customer-docker/deploy.sh preflight
 ```
 
-Preflight checks prerequisites, Docker access/Compose, free disk, approved repository/branch access, the external `sail` network, `oryx_api` network membership, port 3001 ownership, configuration, existing API connectivity, backend contract and installed-shell compatibility. It makes only unauthenticated read requests. It does not restart or change customer services. The Node probe image may be downloaded on first use.
+Preflight checks Docker/Compose, GitHub repository and production branch access, disk space, port 3001 ownership, configuration, the existing `sail` network and `oryx_api` membership, basic API connectivity and installed-shell compatibility. It does **not** request Swagger or require an OpenAPI fingerprint. No service is restarted. The pinned Node probe image may be downloaded on first use.
 
-API and Swagger checks use separate access boundaries:
+The API probe joins `sail` and reads `http://oryx_api:5001/api/v1/user/authenticated`. HTTP 200, 401 and 403 establish connectivity; 401/403 are expected without credentials. Connection, timeout and other HTTP failures block deployment. The deadline is 15 seconds. This check cannot establish a user's permissions without signing in.
 
-- The API probe joins `sail` and checks `http://oryx_api:5001/api/v1/user/authenticated`; 200, 401 and 403 establish connectivity. Its timeout remains 15 seconds.
-- A second isolated, temporary probe uses `--network host` on the Ubuntu server and requests `${ORYX_SWAGGER_ORIGIN}/swagger/v1/swagger.json`. The default origin is the actual loopback endpoint `http://127.0.0.1:8080`. Its natural HTTP Host comes from that URL; no localhost Host header is forged for requests to the container alias. Swagger must return valid OpenAPI JSON with an approved fingerprint. The 60-second deadline covers both connection/header wait and the complete response body. Redirects are refused rather than followed.
+### Focused compatibility before activation
 
-Both probes use read-only filesystems and mounts, drop capabilities, have no published ports, and are removed when finished. Linux host networking is required for the local Swagger probe; `127.0.0.1` then refers to the customer server. This setting is not a frontend API origin and does not change Nginx routing, authentication, backend middleware or TLS verification.
+Each candidate repeats API connectivity and compares available Swagger evidence with the **selected commit's** `contracts/openapi/backend.v1.json`, using the operations declared in `critical-contract.ts`:
 
-The backend's published OpenAPI must match the reviewed `deploy/customer-server/release.json` policy. A mismatch is a release blocker; do not simply approve an unfamiliar fingerprint. Review the actual backend version and business compatibility first. No backend/API/database changes are made by this package.
+- Login and token refresh: payload inputs and session token fields.
+- Authenticated user and permissions: identity, disabled flag, department and grant structure.
+- Production activity and step status: consumed identifiers/states and accepted start/complete status values.
+- Approval/rejection: endpoints, comments, rejection outcome and required inputs.
 
-### Existing customer configuration and probe diagnostics
+Confirmed critical endpoint/method removals, incompatible consumed field types, unsupported required inputs/authentication, or removal of expected success responses block activation. Added optional fields, descriptions, unrelated endpoint changes, equivalent path placeholders and audit-header typing do not block deployment. There is **no exact hash allowlist** in the Docker package or deployment metadata. `requirements.json` retains only the deployment protocol and minimum Electron shell version. The separate host-Nginx package keeps its own existing policy.
 
-Add this verification setting to `/home/entrance/.config/oryx-live/customer.env` (the same default also applies when an older file omits it):
+Swagger is supporting metadata, not a prerequisite for a reachable application API. A 401, redirect, connection failure, 60-second timeout, invalid JSON or ambiguous schema produces a visible `[Compatibility:warning]`, identifying what could not be verified; it does not prove a breaking change and does not block activation. `[Compatibility:breaking]` lists confirmed incompatibilities. Checks are deliberately focused, not a complete API or business-workflow certification. Sign-in and permission/workflow acceptance still need customer validation; the probes never submit production mutations or use user credentials.
+
+The metadata probe is temporary and isolated, uses Linux `--network host`, and requests `${ORYX_SWAGGER_ORIGIN}/swagger/v1/swagger.json` with its natural Host header. It never spoofs localhost access, follows redirects or disables TLS verification. Probes drop capabilities, use read-only mounts/filesystems, publish no ports and are removed after completion. API errors retain `[API:connection]`, `[API:http]` and `[API:timeout]`; metadata warnings retain `[Swagger:connection]`, `[Swagger:http]`, `[Swagger:timeout]`, `[Swagger:configuration]` and `[Swagger:json]` diagnostics.
+
+### Upgrade an existing deployment-tool checkout
+
+Pause polling and update the **tool checkout** to the reviewed production branch; polling itself never changes installed scripts:
 
 ```bash
-ORYX_API_UPSTREAM=http://oryx_api:5001
-ORYX_SWAGGER_ORIGIN=http://127.0.0.1:8080
+cd /home/entrance/oryx-live-desktop
+bash deploy/customer-docker/deploy.sh pause
+git fetch origin refs/heads/entrance-server:refs/remotes/origin/entrance-server
+git switch entrance-server
+git merge --ff-only origin/entrance-server
+bash deploy/customer-docker/deploy.sh preflight
+bash deploy/customer-docker/deploy.sh resume
 ```
 
-Then rerun `bash deploy/customer-docker/deploy.sh preflight` after reviewing/updating the deployment checkout. Do not change the frontend API upstream to localhost or add a Host-header override.
-
-Probe errors distinguish `[API:connection]` / `[API:http]` / `[API:timeout]` from `[Swagger:connection]`, `[Swagger:http]`, `[Swagger:timeout]`, `[Swagger:json]` and `[Swagger:fingerprint]`. Connection failures include a network error code when available; HTTP failures include the status; timeout failures identify the configured endpoint and deadline. JSON failures identify invalid/missing OpenAPI evidence. Fingerprint failures report the received digest and require compatibility review, not automatic approval. Preflight and candidate logs also identify which probe failed.
-
-Verification for this preflight repair: **95 Linux root/deployment tests passed**, including split-network command checks, failure propagation, a real HTTP Host observation, Swagger timeout/body-read diagnostics and fingerprint rejection. Root TypeScript and Bash syntax checks passed. A temporary Docker host-network probe also verified an isolated loopback-only Swagger fixture; no customer server was contacted.
+Keep `ORYX_API_UPSTREAM=http://oryx_api:5001`. Existing `ORYX_SWAGGER_ORIGIN` settings remain valid. A SHA quarantined by an earlier fingerprint failure stays blocked; after preflight and CI succeed, use `deploy --retry` only if deliberately retrying that same SHA. New commits qualify normally.
 
 ## 5. Initial deployment
 
@@ -105,7 +114,7 @@ curl --fail http://127.0.0.1:3001/deployment.json
 
 Open `http://<customer-server>:3001` in a browser or point the installed Electron shell at that frontend origin. Do not enter the backend address.
 
-Deployment fetches only `refs/heads/entrance-server`, checks the exact SHA against the successful production GitHub workflow, and builds that detached commit with the frozen lockfile, repository checks and Vite. It tags the image `oryx-live-customer-web:<full-sha>`, archives it with a checksum, and validates an unpublished candidate alongside the running frontend. The candidate runs the same split API/local-Swagger checks using the selected release's saved compatibility policy before activation. A Swagger 401, invalid JSON, timeout or fingerprint mismatch still blocks replacement of the working frontend.
+Deployment fetches only `refs/heads/entrance-server`, checks the exact SHA against the successful production GitHub workflow, and builds that detached commit with the frozen lockfile, repository checks and Vite. It tags the image `oryx-live-customer-web:<full-sha>`, archives it with a checksum, and validates an unpublished candidate alongside the running frontend. The candidate runs mandatory API connectivity and focused compatibility checks against its saved baseline before activation. Unavailable Swagger produces a warning; confirmed critical incompatibility blocks replacement.
 
 Only the `web` service in Compose project **oryx-live** is replaced. The running commit, container health, public deployment marker and `/api` proxy are checked after activation. Success/failure and SHA are sent to Discord. Notification failures are recorded separately and do not undo a healthy release. A failed build leaves the working frontend untouched; a failed replacement attempts to restore the known-working release.
 
@@ -149,7 +158,7 @@ bash deploy/customer-docker/deploy.sh deploy --retry
 
 Automatic polling never blindly retries a failed SHA. A newer production commit can qualify after CI approval. Unexpected production branch rewinds are refused.
 
-State includes `current`, `previous`, `pending`, `blocked`, per-SHA `quarantine/`, `paused`, `last-result`, append-only `history.tsv`, per-release `runtime.env`/Compose/compatibility snapshots, protected logs and `images/<sha>.tar.gz` plus SHA-256 sidecars. Runtime settings are frozen per release so rollback does not silently adopt new upstream settings. Interrupted activation is recovered on the next deploy/poll or before rollback; failed recovery retains pending state and artifacts for investigation. For an interrupted first installation with no known-working release, only this project's failed `web` service is stopped/removed.
+State includes `current`, `previous`, `pending`, `blocked`, per-SHA `quarantine/`, `paused`, `last-result`, append-only `history.tsv`, per-release `runtime.env`/Compose/requirements/critical-contract-baseline snapshots, protected logs and `images/<sha>.tar.gz` plus SHA-256 sidecars. Runtime settings are frozen per release so rollback does not silently adopt new upstream settings. Interrupted activation is recovered on the next deploy/poll or before rollback; failed recovery retains pending state and artifacts for investigation. For an interrupted first installation with no known-working release, only this project's failed `web` service is stopped/removed.
 
 The existing backend job may run **`docker image prune -a -f`**. Recovery therefore does **not** depend on unused Docker images surviving: missing images are reloaded from verified, independently stored archives before activation. The package never invokes global pruning, `docker compose down`, or changes the backend job. Protect and back up the deployment state directory. Deleting its archives removes that recovery guarantee.
 
@@ -178,16 +187,21 @@ The builder pins Bun **1.4.4**, Node **24.22.1**, and stable Nginx Alpine with i
 
 Automated tests cover production-branch isolation, build-failure preservation, failed-SHA suppression, interrupted activation recovery, independent archive reload after image pruning, corruption refusal and existing viewer retention. The Docker smoke test uses uniquely named local fixtures and an isolated network/volume, testing Nginx syntax, health/version, SPA fallback, API/auth forwarding, optional gateway/WebSocket, old chunks and runtime contents. It never uses customer credentials or the customer `sail` network.
 
-Before customer activation, verify the actual HP server's RAM/disk/CPU, private GitHub access, installed shell floor, backend contract, role grants, gateway delivery and trusted HTTPS configuration. Local Docker tests do not replace that acceptance. No customer server is accessed, no production Discord message is sent, and no code is pushed or merged by this task.
+Before customer activation, verify the actual HP server's RAM/disk/CPU, private GitHub access, installed shell floor, backend contract, role grants, gateway delivery and trusted HTTPS configuration. Local Docker tests do not replace that acceptance. Local tests use no customer server, production webhook or backend data. Push the reviewed change to `entrance-server` and wait for its production CI workflow before manually deploying.
 
-### Local verification for this implementation
+### Repository verification
 
-- Reused `deploy/Dockerfile --target web` image built successfully with Bun 1.4.4 and the frozen lockfile; `bun run check` and the production Vite build passed.
-- Latest Linux root suite: **85 passed**, including seven customer Docker regressions. Web: **1,576 passed**; gateway: **12 passed**; desktop: **8 passed**. Workspace TypeScript and Compose/shell syntax checks passed.
-- Actual Nginx image smoke checks passed for SPA routing, API path/auth forwarding, health/version, optional realtime/WebSocket, retained assets and runtime contents.
-- A real Docker image archive was saved, its disposable image tag removed, and the archive successfully loaded again with the expected revision label. Corrupt archives are refused by the Linux regression suite.
-- `deploy/customer-server` has no changes. No customer server, production webhook, backend data, push or merge was used. Verification ran on the local Linux ARM64 Docker engine; the workflow targets Linux AMD64, while native HP/Ubuntu and customer acceptance remain outstanding.
+Run the root deployment regressions on Linux (the Bash recovery fixtures depend on GNU utilities), then the existing Docker build and smoke test:
 
-### Reviewed raw contract fingerprint
+```bash
+bun run check
+docker build --file deploy/Dockerfile --target web \
+  --build-arg RELEASE_SHA="$(git rev-parse HEAD)" \
+  --build-arg RELEASE_BRANCH=entrance-server \
+  --tag oryx-live-customer-web:verification .
+node deploy/customer-docker/smoke.ts oryx-live-customer-web:verification
+```
 
-The customer's raw Swagger fingerprint `c89615ea1e0050bbb0ed5f61f9308ee87e5398e79b3972b00e4dee33587abdc1` is explicitly approved alongside `4727f9d426d4fa53cdf6ee93f2b5df1edb959d6fa83d705ebdfc7fb2ca9648ae`. The [contract review](../../docs/customer-backend-contract-review-2026-10-27.md) proves that the only difference is the exporter's existing string typing of the two audit headers. Runtime validation remains strict for every other fingerprint. After updating the deployment-tool checkout to the reviewed commit, rerun preflight; do not replace the approved list with an unreviewed server digest or change backend authentication.
+Regression coverage includes harmless contract drift, critical removals/inputs/authentication, unavailable metadata, split probe networking, production-branch isolation, CI gating, failed builds, automatic recovery, quarantine and checksum-protected rollback after image pruning. CI builds Linux AMD64; local Docker verification does not replace native HP/Ubuntu customer acceptance.
+
+Local verification for the simplification (2026-10-27): 108 Linux root/deployment tests, 1,576 web tests, 12 gateway tests and 8 desktop tests passed. The existing Docker production build with frozen dependencies, workspace typechecks, Vite build, Compose/shell validation and Nginx/API/compatibility/WebSocket/asset-retention smoke checks passed. Docker verification used the local Linux ARM64 engine; the production GitHub workflow builds AMD64. No customer server was contacted.

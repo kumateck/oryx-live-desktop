@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createServer } from "node:http";
-import { contractDigest } from "../deploy/customer-server/data.ts";
-import { localSwaggerOrigin, verifyApiConnectivity, verifySwaggerContract } from "../deploy/customer-docker/probe-checks.ts";
+import { readFileSync } from "node:fs";
+import { object, parse } from "../deploy/customer-server/data.ts";
+import { localSwaggerOrigin, verifyApiConnectivity, verifyCriticalCompatibility } from "../deploy/customer-docker/probe-checks.ts";
 
-const contract = { openapi: "3.0.1", paths: {} };
-const policy = { deploymentProtocol: 1, minimumShellVersion: "0.1.0", backendContracts: [contractDigest(contract)] };
+const contract = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
 
 test("application API connectivity accepts expected authorization responses without requesting Swagger", async () => {
   for (const status of [200, 401, 403]) {
@@ -22,7 +22,7 @@ test("Swagger uses a genuine configured loopback URL with no Host spoofing and a
   const original = AbortSignal.timeout;
   const deadlines: number[] = [];
   context.mock.method(AbortSignal, "timeout", (duration: number) => { deadlines.push(duration); return original(duration); });
-  await verifySwaggerContract("http://127.0.0.1:8080", policy, { fetcher: async (input, init) => {
+  await verifyCriticalCompatibility("http://127.0.0.1:8080", contract, { fetcher: async (input, init) => {
     assert.equal(String(input), "http://127.0.0.1:8080/swagger/v1/swagger.json");
     assert.equal(init?.headers, undefined); assert.equal(init?.redirect, "manual");
     return Response.json(contract);
@@ -32,8 +32,10 @@ test("Swagger uses a genuine configured loopback URL with no Host spoofing and a
 
 test("API readiness and a denied Docker Swagger URL remain independent checks", async () => {
   await verifyApiConnectivity("http://oryx_api:5001", { fetcher: async () => new Response(null, { status: 401 }) });
-  await assert.rejects(verifySwaggerContract("http://127.0.0.1:8080", policy, { fetcher: async () => new Response(null, { status: 401 }) }), /\[Swagger:http\].*HTTP 401/);
-  await assert.rejects(verifySwaggerContract("http://127.0.0.1:8080", policy, { fetcher: async () => new Response(null, { status: 302, headers: { Location: "http://elsewhere.test" } }) }), /\[Swagger:http\].*HTTP 302/);
+  const denied = await verifyCriticalCompatibility("http://127.0.0.1:8080", contract, { fetcher: async () => new Response(null, { status: 401 }) });
+  assert.equal(denied.verified, false); assert.match(denied.warnings.join(), /\[Swagger:http\].*HTTP 401/);
+  const redirected = await verifyCriticalCompatibility("http://127.0.0.1:8080", contract, { fetcher: async () => new Response(null, { status: 302, headers: { Location: "http://elsewhere.test" } }) });
+  assert.match(redirected.warnings.join(), /\[Swagger:http\].*HTTP 302/);
 });
 
 test("Swagger rejects nonlocal origins and credentials before making a request", async () => {
@@ -42,17 +44,19 @@ test("Swagger rejects nonlocal origins and credentials before making a request",
   assert.equal(localSwaggerOrigin("http://[::1]:8080"), "http://[::1]:8080");
   for (const origin of ["http://oryx_api:5001", "http://example.test", "http://user:password@127.0.0.1:8080", "http://127.0.0.1:8080/swagger"]) {
     let called = false;
-    await assert.rejects(verifySwaggerContract(origin, policy, { fetcher: async () => { called = true; return Response.json(contract); } }));
+    const result = await verifyCriticalCompatibility(origin, contract, { fetcher: async () => { called = true; return Response.json(contract); } });
+    assert.equal(result.verified, false); assert.ok(result.warnings.length);
     assert.equal(called, false);
   }
 });
 
-test("Swagger connection, JSON and fingerprint failures retain distinct actionable diagnostics", async () => {
-  await assert.rejects(verifySwaggerContract("http://127.0.0.1:8080", policy, { fetcher: async () => { throw new TypeError("fetch failed", { cause: { code: "ECONNREFUSED" } }); } }), /\[Swagger:connection\].*ECONNREFUSED/);
+test("unavailable or invalid Swagger warns without blocking a reachable backend", async () => {
+  const offline = await verifyCriticalCompatibility("http://127.0.0.1:8080", contract, { fetcher: async () => { throw new TypeError("fetch failed", { cause: { code: "ECONNREFUSED" } }); } });
+  assert.equal(offline.verified, false); assert.match(offline.warnings.join(), /\[Swagger:connection\].*ECONNREFUSED/);
   for (const body of ["<html>Sign in</html>", "{", "[]", '{"openapi":"3.0.1"}']) {
-    await assert.rejects(verifySwaggerContract("http://127.0.0.1:8080", policy, { fetcher: async () => new Response(body) }), /\[Swagger:json\]/);
+    const result = await verifyCriticalCompatibility("http://127.0.0.1:8080", contract, { fetcher: async () => new Response(body) });
+    assert.equal(result.verified, false); assert.match(result.warnings.join(), /\[Swagger:json\]/);
   }
-  await assert.rejects(verifySwaggerContract("http://127.0.0.1:8080", { ...policy, backendContracts: ["0".repeat(64)] }, { fetcher: async () => Response.json(contract) }), new RegExp(`\\[Swagger:fingerprint\\].*${contractDigest(contract)}.*not approved`));
 });
 
 function stalledFetch(body: boolean): typeof fetch {
@@ -72,7 +76,8 @@ function stalledFetch(body: boolean): typeof fetch {
 
 test("the Swagger timeout covers both connection/header wait and the full response body", async () => {
   for (const body of [false, true]) {
-    await assert.rejects(verifySwaggerContract("http://127.0.0.1:8080", policy, { fetcher: stalledFetch(body), timeoutMs: 10 }), /\[Swagger:timeout\].*exceeded 0.01s/);
+    const result = await verifyCriticalCompatibility("http://127.0.0.1:8080", contract, { fetcher: stalledFetch(body), timeoutMs: 10 });
+    assert.equal(result.verified, false); assert.match(result.warnings.join(), /\[Swagger:timeout\].*exceeded 0.01s/);
   }
 });
 
@@ -90,10 +95,18 @@ test("a local HTTP fixture observes the real loopback Host while the API can rem
   const origin = `http://127.0.0.1:${address.port}`;
   try {
     await verifyApiConnectivity(origin);
-    await verifySwaggerContract(origin, policy);
+    await verifyCriticalCompatibility(origin, contract);
     assert.deepEqual(seen, [
       { path: "/api/v1/user/authenticated", host: `127.0.0.1:${address.port}` },
       { path: "/swagger/v1/swagger.json", host: `127.0.0.1:${address.port}` },
     ]);
   } finally { await new Promise<void>((resolve) => server.close(() => resolve())); }
+});
+
+test("unreachable, redirected and failing application APIs remain deployment blockers", async () => {
+  for (const status of [302, 404, 500]) {
+    await assert.rejects(verifyApiConnectivity("http://oryx_api:5001", { fetcher: async () => new Response(null, { status }) }), new RegExp(`\\[API:http\\].*HTTP ${status}`));
+  }
+  await assert.rejects(verifyApiConnectivity("http://oryx_api:5001", { fetcher: async () => { throw new TypeError("fetch failed", { cause: { code: "ECONNREFUSED" } }); } }), /\[API:connection\].*ECONNREFUSED/);
+  await assert.rejects(verifyApiConnectivity("http://oryx_api:5001", { fetcher: stalledFetch(false), timeoutMs: 10 }), /\[API:timeout\]/);
 });

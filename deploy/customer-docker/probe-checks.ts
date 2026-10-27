@@ -1,6 +1,6 @@
-import { contractDigest, object, parse, type ObjectValue } from "../customer-server/data.ts";
+import { object, parse, type ObjectValue } from "../customer-server/data.ts";
 import { origin } from "../customer-server/config.ts";
-import type { Compatibility } from "../customer-server/release.ts";
+import { checkCriticalContract } from "./critical-contract.ts";
 
 export const apiTimeoutMs = 15_000;
 export const swaggerTimeoutMs = 60_000;
@@ -60,7 +60,7 @@ async function contractText(response: Response): Promise<string> {
   return Buffer.concat(chunks).toString("utf8");
 }
 
-export async function verifySwaggerContract(localOrigin: string, policy: Compatibility, options: RequestOptions = {}): Promise<void> {
+async function readSwagger(localOrigin: string, options: RequestOptions): Promise<ObjectValue> {
   const url = `${localSwaggerOrigin(localOrigin)}/swagger/v1/swagger.json`;
   const timeoutMs = options.timeoutMs ?? swaggerTimeoutMs;
   const { response, signal } = await request("Swagger", url, timeoutMs, options.fetcher ?? fetch);
@@ -79,8 +79,18 @@ export async function verifySwaggerContract(localOrigin: string, policy: Compati
     value = object(parse(bytes));
     if (!value.paths || typeof value.paths !== "object" || Array.isArray(value.paths) || typeof value.openapi !== "string") throw new Error("Invalid OpenAPI shape");
   } catch { throw new Error(`[Swagger:json] ${url} did not return a valid OpenAPI JSON object with openapi and paths`); }
-  const fingerprint = contractDigest(value);
-  if (!policy.backendContracts.includes(fingerprint)) {
-    throw new Error(`[Swagger:fingerprint] Backend contract ${fingerprint} is not approved by the selected release; review compatibility before approving any change`);
+  return value;
+}
+
+/** Metadata unavailability is not evidence of a breaking API; confirmed critical changes are. */
+export async function verifyCriticalCompatibility(localOrigin: string, baseline: ObjectValue, options: RequestOptions = {}): Promise<{ verified: boolean; warnings: string[] }> {
+  let actual: ObjectValue;
+  try { actual = await readSwagger(localOrigin, options); }
+  catch (error) {
+    const detail = error instanceof Error ? error.message : "OpenAPI metadata unavailable";
+    return { verified: false, warnings: [`${detail}; critical contracts could not be verified. API connectivity remains mandatory.`] };
   }
+  const result = checkCriticalContract(actual, baseline);
+  if (result.breaking.length) throw new Error(`[Compatibility:breaking] Confirmed critical API incompatibilities:\n${result.breaking.join("\n")}`);
+  return { verified: !result.warnings.length, warnings: result.warnings };
 }

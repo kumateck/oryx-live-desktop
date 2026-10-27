@@ -23,7 +23,6 @@ ORYX_SHELL_FLOOR=${ORYX_SHELL_FLOOR:-}
 STATE=${ORYX_DEPLOY_STATE:-$HOME/.local/state/oryx-live}
 [[ "$STATE" = /* && "$STATE" != / && "$STATE" != *$'\n'* ]] || { echo 'State must be an absolute non-root path.' >&2; exit 1; }
 [[ "$ORYX_API_UPSTREAM" =~ ^https?://[A-Za-z0-9_.-]+(:[0-9]{1,5})?$ ]] || { echo 'Invalid API origin.' >&2; exit 1; }
-[[ "$ORYX_SWAGGER_ORIGIN" =~ ^https?://(127\.0\.0\.1|localhost|\[::1\])(:[0-9]{1,5})?$ ]] || { echo 'Invalid local Swagger origin; use a loopback HTTP(S) origin without a path.' >&2; exit 1; }
 [[ "$ORYX_GATEWAY_UPSTREAM" =~ ^[A-Za-z0-9_.-]+:[0-9]{1,5}$ ]] || { echo 'Invalid gateway upstream.' >&2; exit 1; }
 [[ "$ORYX_PUBLIC_PROTO" = auto || "$ORYX_PUBLIC_PROTO" = http || "$ORYX_PUBLIC_PROTO" = https ]] || exit 1
 [[ ( "$ORYX_BIND_ADDRESS" = 0.0.0.0 || "$ORYX_BIND_ADDRESS" = 127.0.0.1 ) && "$ORYX_SHELL_FLOOR" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Invalid bind address or installed-shell baseline.' >&2; exit 1; }

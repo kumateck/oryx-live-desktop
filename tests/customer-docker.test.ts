@@ -28,7 +28,8 @@ elif [[ "$1" = compose ]]; then
   elif [[ "$*" = *' ps '* ]]; then echo oryx-live-web-1; fi
 fi`);
   executable("curl", `printf '%s\\n' "$*" >> "$FIXTURE/curl-commands"
-if [[ "$*" = *write-out* ]]; then printf 401
+if [[ "$*" = *approval.json* ]]; then cp "$FIXTURE/approval.json" "$FIXTURE/state/tmp/approval.json"
+elif [[ "$*" = *write-out* ]]; then printf 401
 elif [[ "$*" = *deployment.json* ]]; then printf '{"commit":"%s"}' "$(cat "$FIXTURE/active")"
 fi`);
   for (const sha of [old,next]) {
@@ -131,23 +132,23 @@ test("pause prevents cron fetch/build and resume leaves quarantined SHAs blocked
 });
 
 
-test("preflight and candidate compatibility probes separate sail API access from local host-network Swagger", () => {
+test("candidate compatibility uses sail API and a selected-baseline host-network probe", () => {
   const f=fixture();
   try {
-    const result=f.run('ORYX_SWAGGER_ORIGIN=http://localhost:8081; backend_checks "$STATE/releases/'+next+'/compatibility.json" candidate-validation');
+    const result=f.run('ORYX_SWAGGER_ORIGIN=http://localhost:8081; backend_checks "$STATE/releases/'+next+'/compatibility.json" candidate-validation "$STATE/baseline.json"');
     assert.equal(result.status,0,result.stderr);
     const calls=readFileSync(join(f.directory,"commands"),"utf8").trim().split("\n");
     assert.equal(calls.length,2);
     assert.match(calls[0]??"",/--network sail .*probe.ts api http:\/\/oryx_api:5001/);
-    assert.match(calls[1]??"",/--network host .*probe.ts swagger http:\/\/localhost:8081/);
+    assert.match(calls[1]??"",/--network host .*probe.ts compatibility http:\/\/localhost:8081/);
     for (const call of calls) {
       assert.match(call,/--rm --read-only --cap-drop ALL/);
       assert.ok(call.includes(`/releases/${next}/compatibility.json,dst=/release-policy.json,readonly`));
       assert.doesNotMatch(call,/--header|--env|Host:/);
     }
     const lib=readFileSync("deploy/customer-docker/lib.sh","utf8");
-    assert.ok(lib.includes('backend_checks "$REPO/deploy/customer-server/release.json" preflight'));
-    assert.ok(lib.includes('backend_checks "$STATE/releases/$sha/compatibility.json" candidate-validation'));
+    assert.ok(lib.includes('backend_checks "$REPO/deploy/customer-docker/requirements.json" preflight'));
+    assert.ok(lib.includes('backend_checks "$STATE/releases/$sha/compatibility.json" candidate-validation "$STATE/releases/$sha/backend-baseline.json"'));
     assert.doesNotMatch(readFileSync("deploy/customer-docker/compose.yml","utf8"),/SWAGGER/);
   } finally { f.cleanup(); }
 });
@@ -162,14 +163,48 @@ test("API probe failure stops before Swagger and preserves a failing exit status
   } finally { f.cleanup(); }
 });
 
-test("Swagger denial fails the shared check after API connectivity succeeds", () => {
+test("confirmed critical incompatibility fails the candidate before activation", () => {
   const f=fixture();
   try {
-    const result=f.run('export FIXTURE_FAIL_PROBE=swagger; backend_checks "$STATE/policy.json" candidate-validation; echo unexpected-activation');
+    const result=f.run('export FIXTURE_FAIL_PROBE=compatibility; backend_checks "$STATE/policy.json" candidate-validation "$STATE/baseline.json"; echo unexpected-activation');
     assert.equal(result.status,23,result.stderr);
     assert.doesNotMatch(result.stdout,/unexpected-activation/);
     const calls=readFileSync(join(f.directory,"commands"),"utf8").trim().split("\n");
     assert.equal(calls.length,2);
-    assert.match(calls[1]??"",/--network host .*probe.ts swagger http:\/\/127.0.0.1:8080/);
+    assert.match(calls[1]??"",/--network host .*probe.ts compatibility http:\/\/127.0.0.1:8080/);
+  } finally { f.cleanup(); }
+});
+
+
+test("preflight never requests Swagger or reads the legacy fingerprint policy", () => {
+  const f=fixture();
+  try {
+    const result=f.run('ORYX_SWAGGER_ORIGIN=http://unavailable.invalid; backend_checks "$STATE/requirements.json" preflight');
+    assert.equal(result.status,0,result.stderr);
+    const commands=readFileSync(join(f.directory,"commands"),"utf8").trim().split("\n");
+    assert.equal(commands.length,1); assert.match(commands[0]??"",/--network sail .*probe.ts api/);
+    const sources=["deploy/customer-docker/probe.ts","deploy/customer-docker/probe-checks.ts","deploy/customer-docker/build-metadata.ts","deploy/customer-docker/lib.sh"].map((path)=>readFileSync(path,"utf8")).join("\n");
+    assert.doesNotMatch(sources,/backendContracts|contractDigest|customer-server\/release.json|verifySwaggerContract/);
+    assert.doesNotMatch(readFileSync("deploy/Dockerfile","utf8"),/customer-server\/check-release/);
+  } finally { f.cleanup(); }
+});
+
+
+test("CI approval requires the exact successful production push and holds activation otherwise", () => {
+  const f=fixture();
+  try {
+    mkdirSync(join(f.state,"tmp"),{recursive:true});
+    const valid={head_sha:next,head_branch:"entrance-server",event:"push",status:"completed",conclusion:"success"};
+    for (const invalid of [{head_sha:old},{head_branch:"testing"},{head_branch:"main"},{event:"pull_request"},{status:"in_progress"},{conclusion:"failure"}]) {
+      writeFileSync(join(f.directory,"approval.json"),JSON.stringify({workflow_runs:[{...valid,...invalid}]}));
+      assert.notEqual(f.run(`approved ${next}`).status,0);
+    }
+    writeFileSync(join(f.directory,"approval.json"),JSON.stringify({workflow_runs:[valid]}));
+    assert.equal(f.run(`approved ${next}`).status,0);
+    writeFileSync(join(f.state,"current"),old);
+    const result=f.run(`git(){ if [[ "$*" = *rev-parse* ]]; then echo ${next}; fi; }; approved(){ return 1; }; OPERATION=poll; deploy ''`);
+    assert.equal(result.status,0,result.stderr); assert.match(result.stdout,/Waiting for successful/);
+    assert.equal(readFileSync(join(f.state,"current"),"utf8"),old);
+    assert.equal(f.run('test ! -f "$FIXTURE/commands"').status,0);
   } finally { f.cleanup(); }
 });

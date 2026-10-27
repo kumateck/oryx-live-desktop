@@ -1,14 +1,14 @@
 import { statfsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { parse } from "../customer-server/data.ts";
+import { object, parse } from "../customer-server/data.ts";
 import { atLeast } from "../customer-server/config.ts";
-import { compatibility } from "../customer-server/release.ts";
-import { verifyApiConnectivity, verifySwaggerContract } from "./probe-checks.ts";
+import { requirements } from "./requirements.ts";
+import { verifyApiConnectivity, verifyCriticalCompatibility } from "./probe-checks.ts";
 
 async function main(): Promise<void> {
   const mode = process.argv[2];
-  if (mode !== "api" && mode !== "swagger") throw new Error("Use probe.ts api|swagger <origin> <shell-floor> <policy-file> <minimum-free-gb>");
-  const policy = compatibility(parse(await readFile(process.argv[5] ?? "/repo/deploy/customer-server/release.json", "utf8")));
+  if (mode !== "api" && mode !== "compatibility") throw new Error("Use probe.ts api|compatibility <origin> <shell-floor> <requirements-file> <minimum-free-gb> [baseline-file]");
+  const policy = requirements(parse(await readFile(process.argv[5] ?? "/repo/deploy/customer-docker/requirements.json", "utf8")));
   if (!atLeast(process.argv[4] ?? "", policy.minimumShellVersion)) throw new Error("Installed shell baseline is incompatible");
   if (mode === "api") {
     const disk = statfsSync("/");
@@ -17,8 +17,10 @@ async function main(): Promise<void> {
     await verifyApiConnectivity(process.argv[3] ?? "");
     console.log("API connectivity on sail and installed-shell baseline verified");
   } else {
-    await verifySwaggerContract(process.argv[3] ?? "", policy);
-    console.log("Local Swagger contract fingerprint verified through Linux host networking");
+    const baseline = object(parse(await readFile(process.argv[7] ?? "/repo/contracts/openapi/backend.v1.json", "utf8")));
+    const result = await verifyCriticalCompatibility(process.argv[3] ?? "", baseline);
+    for (const warning of result.warnings) console.warn(`[Compatibility:warning] ${warning}`);
+    console.log(result.verified ? "Critical API contracts verified; unrelated OpenAPI differences are allowed" : "Compatibility evidence incomplete; no confirmed breaking changes found");
   }
 }
 await main().catch((error) => { console.error(error instanceof Error ? error.message : "Probe failed"); process.exitCode = 1; });

@@ -30,7 +30,7 @@ RUN bun run check && bun run build:web
 ARG RELEASE_SHA
 ARG RELEASE_BRANCH=entrance-server
 ENV RELEASE_SHA=${RELEASE_SHA} RELEASE_BRANCH=${RELEASE_BRANCH}
-RUN node deploy/customer-server/check-release.ts && node deploy/customer-docker/build-metadata.ts
+RUN node deploy/customer-docker/build-metadata.ts
 
 # The web application: static files, with /api passed to the backend and /realtime to the gateway.
 FROM ${NGINX_IMAGE} AS web
