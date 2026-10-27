@@ -32,6 +32,21 @@ ENV RELEASE_SHA=${RELEASE_SHA} RELEASE_BRANCH=${RELEASE_BRANCH}
 RUN bun run check && bun run build:web
 RUN node deploy/customer-docker/build-metadata.ts
 
+# CI and pre-push use the same isolated installation checks; this stage is never deployed.
+# Keep the cheap installer checks independent so they fail before the full web build.
+FROM ${NODE_IMAGE} AS customer-validation
+WORKDIR /app
+COPY scripts/customer-apt-source.ts /tmp/customer-apt-source.ts
+RUN ORYX_CUSTOMER_INSTALL_FIXTURE=container-only node /tmp/customer-apt-source.ts \
+    && apt-get -o Acquire::https::CaInfo=/tmp/oryx-apt-ca.pem -o Acquire::https::Timeout=30 -o Acquire::Retries=2 update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::https::CaInfo=/tmp/oryx-apt-ca.pem -o Acquire::https::Timeout=30 -o Acquire::Retries=2 install -y --no-install-recommends nginx systemd util-linux git ca-certificates \
+    && rm -rf /var/lib/apt/lists/* /tmp/oryx-apt-ca.pem /tmp/customer-apt-source.ts
+COPY package.json ./
+COPY deploy/customer-server deploy/customer-server
+COPY contracts/openapi/backend.v1.json contracts/openapi/backend.v1.json
+COPY scripts/customer-install-fixture.ts scripts/customer-install-fixture.ts
+RUN ORYX_CUSTOMER_INSTALL_FIXTURE=container-only node scripts/customer-install-fixture.ts
+
 # The web application: static files, with /api passed to the backend and /realtime to the gateway.
 FROM ${NGINX_IMAGE} AS web
 ARG RELEASE_SHA

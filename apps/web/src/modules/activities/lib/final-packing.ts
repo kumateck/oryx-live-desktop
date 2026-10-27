@@ -2,7 +2,7 @@ import type {
   DomainEntitiesProductionSchedulesPackingCreateFinalPacking as FinalPackingRequest,
   DomainEntitiesProductionSchedulesPackingCreateFinalPackingMaterial as MaterialRequest,
 } from "@/shared/api/generated/production";
-import { fromSmallestUnit, isVolumeUnit, relatedUnits, toSmallestUnit } from "@/shared/units/quantity";
+import { fromSmallestUnit, isVolumeUnit, relatedUnits, toLargestUnit, toSmallestUnit } from "@/shared/units/quantity";
 
 /** Above this share of loss or gain, the person recording it must say why. */
 export const varianceLimitPercent = 2;
@@ -69,7 +69,12 @@ export function packingMaterials(items: readonly { materialId: string; name: str
   }
   return [...grouped.values()].map((item) => {
     const delivered = extras.filter((extra) => extra.materialId === item.materialId).reduce((sum, extra) => sum + extra.quantity, 0);
-    return { materialId: item.materialId, name: item.name, code: item.code, displayUnit: relatedUnits(item.unit).at(-1) ?? item.unit ?? "", received: item.quantity, delivered, total: item.quantity + delivered };
+    const total = item.quantity + delivered;
+    // API amounts are in the family's smallest unit, even when its UoM symbol is kg or L.
+    // Keep the entry unit stable for this baseline; never derive it from an edited remainder.
+    const baseUnit = relatedUnits(item.unit)[0] ?? item.unit;
+    const displayUnit = toLargestUnit(total, baseUnit)?.unit ?? item.unit ?? "";
+    return { materialId: item.materialId, name: item.name, code: item.code, displayUnit, received: item.quantity, delivered, total };
   });
 }
 

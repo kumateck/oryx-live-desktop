@@ -25,7 +25,7 @@ The service never deploys a backend, restarts a gateway, applies migrations, or 
 
 ## Prepare the release branch
 
-Create `entrance-server` from the approved frontend commit and enable branch protection: required review, required **Validate customer server release / validate** CI, and no force pushes. The workflow also runs for pull requests targeting this branch. This package does not create branches or change repository access automatically. A read-only deploy key can fetch code; it cannot push it. Approved branch code and dependency lifecycle scripts execute as the deployment user, so branch review remains a trust boundary.
+Create `entrance-server` from the approved frontend commit and enable branch protection: required review, required **Customer release pipeline / Validate customer release** CI, and no force pushes. The consolidated customer-docker.yml workflow also runs for pull requests targeting this branch, with host-Nginx validation inside the same sequential release job. The retired workflow check must be replaced in branch protection. This package does not create branches or change repository access automatically. A read-only deploy key can fetch code; it cannot push it. Approved branch code and dependency lifecycle scripts execute as the deployment user, so branch review remains a trust boundary.
 
 `deploy/customer-server/release.json` declares the supported deployment protocol, minimum shell version, and reviewed backend OpenAPI fingerprints. CI checks that the checked-in API contract is approved. Changing API contracts requires reviewing this manifest too.
 

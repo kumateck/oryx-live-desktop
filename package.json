@@ -23,6 +23,7 @@
     "build:web": "bun run routes:generate && bun run --filter @oryx/web build",
     "dev:web": "bun run routes:generate && bun run --filter @oryx/web dev",
     "dev:desktop": "bun run --filter @oryx/desktop start",
+    "validate:customer-release": "node scripts/customer-release-validation.ts",
     "check": "bun run routes:check && bun run api:check && bun run test && bun run typecheck",
     "nav:import": "bun scripts/import-navigation.ts",
     "dev:gateway": "bun run --filter @oryx/gateway start",

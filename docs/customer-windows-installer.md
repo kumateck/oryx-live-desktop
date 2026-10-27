@@ -4,23 +4,23 @@ The installed Electron shell and the customer Docker frontend are independent. S
 
 ## Build and download
 
-The existing registered workflow file `.github/workflows/deploy-testing.yml` has an **installer-only** definition on `entrance-server`. Its `testing` branch version continues to own the testing deployment. Using the existing workflow path makes manual dispatch available without adding a new workflow to `main`.
+The single production workflow is `.github/workflows/customer-docker.yml` (**Customer release pipeline**). Its Windows job is opt-in and runs after release validation. The testing branch retains its own testing-deployment definition.
 
-1. Open [the installer workflow in GitHub Actions](https://github.com/kumateck/oryx-live-desktop/actions/workflows/deploy-testing.yml).
-2. Choose **Run workflow**, select branch **entrance-server**, and run it. Depending on GitHub's displayed workflow registration, it may still be listed as **Deploy testing site**; the production run is named **Windows x86 and x64 installer from entrance-server**.
-3. Wait for the `installer` job to succeed. It uses `windows-latest`, Node 24 and Bun 1.3.14, the frozen lockfile, and the existing `bun run --filter @oryx/desktop make:windows` NSIS build. It checks the application payloads' x86 and x64 PE headers and the installer's SHA-256, installs silently, verifies shortcuts, and launches both the connection screen and a local frontend fixture. Both launches must include the companion window.
+1. Open [the installer workflow in GitHub Actions](https://github.com/kumateck/oryx-live-desktop/actions/workflows/customer-docker.yml).
+2. Choose **Run workflow**, select branch **entrance-server**, enable **build_windows**, and run it.
+3. Wait for the `windows-installer` job to succeed. It uses `windows-latest`, Node 24 and Bun 1.3.14, the frozen lockfile, and the existing `bun run --filter @oryx/desktop make:windows` NSIS build. It checks the application payloads' x86 and x64 PE headers and the installer's SHA-256, installs silently, verifies shortcuts, and launches both the connection screen and a local frontend fixture. Both launches must include the companion window.
 4. Open the successful run and download **oryx-live-windows-installer** under **Artifacts**. Extract its ZIP and run **OryxLiveDesktop-Setup.exe** on the user's Windows computer (32-bit or 64-bit). The installer artifact is kept for 30 days. Smoke screenshots/logs are kept separately as **oryx-live-windows-smoke** for 14 days. The run summary records the commit and installer checksum.
 
 With GitHub CLI and repository write access:
 
 ```bash
-gh workflow run deploy-testing.yml --repo kumateck/oryx-live-desktop --ref entrance-server
-gh run list --repo kumateck/oryx-live-desktop --workflow deploy-testing.yml --branch entrance-server --event workflow_dispatch --limit 5
+gh workflow run customer-docker.yml --repo kumateck/oryx-live-desktop --ref entrance-server -F build_windows=true
+gh run list --repo kumateck/oryx-live-desktop --workflow customer-docker.yml --branch entrance-server --event workflow_dispatch --limit 5
 # Replace RUN_ID with the successful installer run's ID.
 gh run download RUN_ID --repo kumateck/oryx-live-desktop --name oryx-live-windows-installer --dir downloads
 ```
 
-The production job refuses other branches and checks out the exact dispatched SHA. Selecting `entrance-server` is essential: other branches contain their own workflow definitions. There is no publication or SSH step in the production installer workflow. The standard customer Docker workflow still validates hosted frontend releases separately.
+The production job refuses other branches and checks out the exact dispatched SHA. Selecting `entrance-server` is essential: other branches contain their own workflow definitions. There is no publication or SSH step in the production installer workflow. The same workflow validates the frontend first, then runs this job sequentially. Automatic frontend updates skip the installer job.
 
 ## Install and connect
 

@@ -18,14 +18,18 @@ async function start(name: string, gateway = "") {
   await docker(["run", "--detach", "--name", name, "--network", network, "--publish", "127.0.0.1::80", "--mount", `type=volume,src=${volume},dst=/srv/assets`,
     "--mount", `type=volume,src=${downloads},dst=/srv/downloads,readonly`,
     "--env", "ORYX_API_ORIGIN=http://fixture-api:5001", "--env", `ORYX_GATEWAY_UPSTREAM=${gateway ? "fixture-api:5001" : "disabled.invalid:4100"}`, image]);
-  for (let attempt = 0; attempt < 100; attempt += 1) {
+  // AMD64 emulation can take longer to copy the pinned viewer files into a fresh volume.
+  // Keep the real image health probe authoritative and bound this local/CI startup wait.
+  const deadline = Date.now() + 180_000;
+  while (Date.now() < deadline) {
     if (await docker(["inspect", "--format", "{{.State.Health.Status}}", name]) === "healthy") {
       const port = (await docker(["port", name, "80/tcp"])).split(":").at(-1);
       assert.match(port ?? "", /^\d+$/); return `http://127.0.0.1:${port}`;
     }
     await wait();
   }
-  throw new Error(`Smoke container did not become healthy: ${await docker(["logs", name])}`);
+  const state = await docker(["inspect", "--format", "{{json .State}}", name]);
+  throw new Error(`Smoke container did not become healthy. Docker state and health probe results: ${state}\nContainer logs: ${await docker(["logs", name])}`);
 }
 try {
   await copyFile(resolve("deploy/customer-docker/mock-api.ts"), join(directory, "mock-api.ts"));

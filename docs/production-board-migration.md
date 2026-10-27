@@ -59,6 +59,7 @@ These are in `lib/step-policy.ts` and are the same wherever a step is shown.
 - **Final packing**:
   - Summary and three tabs follow Oryx Next. The active tab is carried in `?tab=` so reload restores it. Yield uses the numbered batch-record table with plain text calculated values. Failed validation opens the relevant tab and shows each field's error.
   - Worked-out figures (expected packs, after samples, gain or loss, shippers, leftovers, what to return, loss per material) are calculated from what is entered and cannot be typed over.
+  - Material entry units come from `toLargestUnit` applied to the raw total received in its smallest family unit. They remain stable while editing; displayed quantities use the same converter, and entries/returns convert back to raw API quantities. Small weights use g or mg instead of being forced into kg and displayed as `< 0.0001 kg`.
   - Packed, rejected, and sampled cannot add up to more than was received. Oryx Next silently returned zero.
   - The packing record is saved first, then the leftovers are returned. If the return is refused, the page says the packing was saved and offers to send only the return again. Oryx Next sent both at once, so either could succeed without the other.
   - Once recorded, the page shows the record and offers no second entry.

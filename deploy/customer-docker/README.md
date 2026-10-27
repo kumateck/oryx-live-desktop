@@ -2,7 +2,7 @@
 
 This package runs the hosted React application through the existing `deploy/Dockerfile` **web** target. It requires no Codex, Node or Bun installation on the customer host. Docker runs the pinned Node/Bun build and compatibility probes. The installed Electron shell, notification gateway, backend, ORYX Next, databases and other customer services remain separate.
 
-Production accepts **`origin/entrance-server` only**. `main` and `testing` are never production deployment sources. A commit qualifies only after **Validate customer Docker release** succeeds for that exact SHA on `entrance-server`. Updating the hosted frontend does not install or update Electron clients.
+Production accepts **`origin/entrance-server` only**. `main` and `testing` are never production deployment sources. A commit qualifies only after **Customer release pipeline** succeeds for that exact SHA on `entrance-server`. Updating the hosted frontend does not install or update Electron clients.
 
 ## 1. Prerequisites and clone
 
@@ -103,7 +103,7 @@ Keep `ORYX_API_UPSTREAM=http://oryx_api:5001`. Existing `ORYX_SWAGGER_ORIGIN` se
 
 ## 5. Initial deployment
 
-Wait for **Validate customer Docker release** to succeed for the production branch head, then:
+Wait for **Customer release pipeline** to succeed for the production branch head, then:
 
 ```bash
 bash deploy/customer-docker/deploy.sh deploy
@@ -218,3 +218,25 @@ Local verification for the simplification (2026-10-27): 108 Linux root/deploymen
 ## In-app desktop and web updates
 
 The frontend now mounts the dedicated public `$ORYX_DEPLOY_STATE/downloads` directory read-only for signed desktop update artifacts. Installer releases remain independent of Docker frontend releases. Follow [desktop updater setup, release publishing and compatibility](../../docs/desktop-updates.md). The main installer supports both Windows x86 and x64. Only the public downloads directory is 0755; customer configuration, credentials and private deployment state retain their restrictions.
+
+
+## One pipeline and mandatory pre-push validation
+
+`customer-docker.yml` is the single production workflow on this branch. Pushes and PRs targeting entrance-server share a global non-cancelling concurrency group, so they queue instead of running concurrently. Its `Validate customer release` job runs the same command as the pre-push hook. The old customer-server and deploy-testing workflow files are retired on entrance-server; the testing branch keeps its own definition.
+
+Before pushing any branch, the Husky hook reads each outgoing ref and validates its exact commit SHA. This includes development and testing pushes whose changes later reach entrance-server through pull requests. Start Docker first for local pre-push checks. GitHub CI checks out and builds the commit on its own runner; it does not consume your workstation's disk-space measurements. The shared validator has no fixed free-space admission threshold. Actual build or filesystem errors still fail validation. Customer-server deployment preflight retains its separate server storage checks. The validator exports `git archive` into an isolated temporary directory; dirty or untracked working files cannot accidentally make an invalid committed release pass. It first checks the workflow with digest-pinned actionlint in an offline read-only container, then verifies the host-Nginx package in a disposable linux/amd64 build stage. It next builds the production web image, running the existing frozen install/repository checks/Vite build once, and runs the Docker smoke checks. Only its own archive/tagged images are removed; unrelated containers/images and build cache are retained. A failure blocks the push. Each distinct outgoing branch commit is validated; deleting refs or a push with no branch updates retains the regular repository checks.
+
+```bash
+# Optional explicit rehearsal of the exact commit before git push:
+bun run validate:customer-release
+# Or validate a specific full outgoing commit:
+bun run validate:customer-release -- --sha FULL_COMMIT_SHA
+```
+
+The installation fixture verifies real Nginx syntax, real systemd unit syntax, installed permissions, non-root status and configuration preservation. Build containers have no systemd PID 1, so service-control calls are recorded rather than executed. CI uses this same fixture. No customer system is contacted. GitHub's independent validation still remains the deployment approval gate; pre-push is not a replacement for branch protection.
+
+The runtime smoke test allows up to three minutes for cold startup when testing AMD64 images under emulation. It still requires the image's actual health probe to pass before making requests and reports Docker health results on failure. This test allowance does not change production health checks or deployment timeouts.
+
+Configure branch protection to require **Validate customer release** from **Customer release pipeline**, replacing the retired `validate` / old `web` checks once the new check has run. Old workflow names can remain visible in GitHub because other branches or historical runs still contain them; production source now has one entry point. No repository protection settings are changed automatically.
+
+For an installer, manually run this same workflow on entrance-server with **build_windows=true**. The Windows job starts only after release validation succeeds. Normal frontend pushes skip installer packaging. Native Windows installation/launch checks require windows-latest and remain in that optional job; workflow structure and shell source tests are checked before every branch push.
