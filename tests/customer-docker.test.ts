@@ -12,6 +12,8 @@ function fixture() {
   for (const path of [bin, state, join(state,"releases",old), join(state,"releases",next), join(state,"logs"), join(state,"images")]) mkdirSync(path, { recursive: true });
   const executable = (name: string, source: string) => { const path = join(bin,name); writeFileSync(path, `#!/usr/bin/env bash\nset -eu\n${source}\n`); chmodSync(path, 0o755); };
   executable("docker", `printf '%s\\n' "$*" >> "$FIXTURE/commands"
+if [[ "$1" = run && -n "\${FIXTURE_FAIL_PROBE:-}" && "$*" = *"probe.ts \${FIXTURE_FAIL_PROBE:-} "* ]]; then exit 23
+else :; fi
 if [[ "$1" = image && "$2" = inspect ]]; then
   if [[ "$*" = *--format* ]]; then printf '%s\\n' "\${@: -1}" | sed 's/.*://'; else [[ -f "$FIXTURE/image" ]]; fi
 elif [[ "$1" = image && "$2" = load ]]; then cat > "$FIXTURE/loaded"; touch "$FIXTURE/image"
@@ -125,5 +127,49 @@ test("pause prevents cron fetch/build and resume leaves quarantined SHAs blocked
     writeFileSync(join(f.state,"blocked"),next);
     const poll=command("poll"); assert.equal(poll.status,0,poll.stderr); assert.match(poll.stdout,/Polling paused/);
     assert.equal(command("resume").status,0); assert.equal(readFileSync(join(f.state,"blocked"),"utf8"),next);
+  } finally { f.cleanup(); }
+});
+
+
+test("preflight and candidate compatibility probes separate sail API access from local host-network Swagger", () => {
+  const f=fixture();
+  try {
+    const result=f.run('ORYX_SWAGGER_ORIGIN=http://localhost:8081; backend_checks "$STATE/releases/'+next+'/compatibility.json" candidate-validation');
+    assert.equal(result.status,0,result.stderr);
+    const calls=readFileSync(join(f.directory,"commands"),"utf8").trim().split("\n");
+    assert.equal(calls.length,2);
+    assert.match(calls[0]??"",/--network sail .*probe.ts api http:\/\/oryx_api:5001/);
+    assert.match(calls[1]??"",/--network host .*probe.ts swagger http:\/\/localhost:8081/);
+    for (const call of calls) {
+      assert.match(call,/--rm --read-only --cap-drop ALL/);
+      assert.ok(call.includes(`/releases/${next}/compatibility.json,dst=/release-policy.json,readonly`));
+      assert.doesNotMatch(call,/--header|--env|Host:/);
+    }
+    const lib=readFileSync("deploy/customer-docker/lib.sh","utf8");
+    assert.ok(lib.includes('backend_checks "$REPO/deploy/customer-server/release.json" preflight'));
+    assert.ok(lib.includes('backend_checks "$STATE/releases/$sha/compatibility.json" candidate-validation'));
+    assert.doesNotMatch(readFileSync("deploy/customer-docker/compose.yml","utf8"),/SWAGGER/);
+  } finally { f.cleanup(); }
+});
+
+test("API probe failure stops before Swagger and preserves a failing exit status", () => {
+  const f=fixture();
+  try {
+    const result=f.run('export FIXTURE_FAIL_PROBE=api; backend_checks "$STATE/policy.json" preflight');
+    assert.equal(result.status,23,result.stderr);
+    const calls=readFileSync(join(f.directory,"commands"),"utf8").trim().split("\n");
+    assert.equal(calls.length,1); assert.match(calls[0]??"",/--network sail/);
+  } finally { f.cleanup(); }
+});
+
+test("Swagger denial fails the shared check after API connectivity succeeds", () => {
+  const f=fixture();
+  try {
+    const result=f.run('export FIXTURE_FAIL_PROBE=swagger; backend_checks "$STATE/policy.json" candidate-validation; echo unexpected-activation');
+    assert.equal(result.status,23,result.stderr);
+    assert.doesNotMatch(result.stdout,/unexpected-activation/);
+    const calls=readFileSync(join(f.directory,"commands"),"utf8").trim().split("\n");
+    assert.equal(calls.length,2);
+    assert.match(calls[1]??"",/--network host .*probe.ts swagger http:\/\/127.0.0.1:8080/);
   } finally { f.cleanup(); }
 });

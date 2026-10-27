@@ -46,7 +46,8 @@ nano /home/entrance/.config/oryx-live/customer.env
 | --- | --- |
 | `ORYX_DEPLOY_BRANCH` | `entrance-server`. Other branches are refused. |
 | `ORYX_PUBLIC_PORT` | `3001`. Port 3000 stays with ORYX Next. |
-| `ORYX_API_UPSTREAM` | `http://oryx_api:5001`. Containers use the existing backend's internal port, not host port 8080. |
+| `ORYX_API_UPSTREAM` | `http://oryx_api:5001`. Application connectivity and the frontend proxy continue using the internal backend on `sail`. |
+| `ORYX_SWAGGER_ORIGIN` | Default `http://127.0.0.1:8080`. Verification-only local backend origin, requested by a temporary Linux host-network probe. Accepts loopback HTTP(S) origins only; never sent to the frontend container. |
 | `DISCORD_WEBHOOK_URL` | Customer-owned HTTPS Discord webhook; replace the placeholder. Never put it in Git. |
 | `ORYX_DEPLOY_STATE` | `/home/entrance/.local/state/oryx-live`; keep outside the checkout. Stores history, protected logs, release settings and independent recovery archives. |
 | `ORYX_MIN_FREE_GB` | Default 10 GiB; minimum free disk checked in both deployment state storage and the Docker image store before building. Builds also require RAM for a 6 GiB Node heap and test workers. |
@@ -67,7 +68,29 @@ bash deploy/customer-docker/deploy.sh preflight
 
 Preflight checks prerequisites, Docker access/Compose, free disk, approved repository/branch access, the external `sail` network, `oryx_api` network membership, port 3001 ownership, configuration, existing API connectivity, backend contract and installed-shell compatibility. It makes only unauthenticated read requests. It does not restart or change customer services. The Node probe image may be downloaded on first use.
 
+API and Swagger checks use separate access boundaries:
+
+- The API probe joins `sail` and checks `http://oryx_api:5001/api/v1/user/authenticated`; 200, 401 and 403 establish connectivity. Its timeout remains 15 seconds.
+- A second isolated, temporary probe uses `--network host` on the Ubuntu server and requests `${ORYX_SWAGGER_ORIGIN}/swagger/v1/swagger.json`. The default origin is the actual loopback endpoint `http://127.0.0.1:8080`. Its natural HTTP Host comes from that URL; no localhost Host header is forged for requests to the container alias. Swagger must return valid OpenAPI JSON with an approved fingerprint. The 60-second deadline covers both connection/header wait and the complete response body. Redirects are refused rather than followed.
+
+Both probes use read-only filesystems and mounts, drop capabilities, have no published ports, and are removed when finished. Linux host networking is required for the local Swagger probe; `127.0.0.1` then refers to the customer server. This setting is not a frontend API origin and does not change Nginx routing, authentication, backend middleware or TLS verification.
+
 The backend's published OpenAPI must match the reviewed `deploy/customer-server/release.json` policy. A mismatch is a release blocker; do not simply approve an unfamiliar fingerprint. Review the actual backend version and business compatibility first. No backend/API/database changes are made by this package.
+
+### Existing customer configuration and probe diagnostics
+
+Add this verification setting to `/home/entrance/.config/oryx-live/customer.env` (the same default also applies when an older file omits it):
+
+```bash
+ORYX_API_UPSTREAM=http://oryx_api:5001
+ORYX_SWAGGER_ORIGIN=http://127.0.0.1:8080
+```
+
+Then rerun `bash deploy/customer-docker/deploy.sh preflight` after reviewing/updating the deployment checkout. Do not change the frontend API upstream to localhost or add a Host-header override.
+
+Probe errors distinguish `[API:connection]` / `[API:http]` / `[API:timeout]` from `[Swagger:connection]`, `[Swagger:http]`, `[Swagger:timeout]`, `[Swagger:json]` and `[Swagger:fingerprint]`. Connection failures include a network error code when available; HTTP failures include the status; timeout failures identify the configured endpoint and deadline. JSON failures identify invalid/missing OpenAPI evidence. Fingerprint failures report the received digest and require compatibility review, not automatic approval. Preflight and candidate logs also identify which probe failed.
+
+Verification for this preflight repair: **95 Linux root/deployment tests passed**, including split-network command checks, failure propagation, a real HTTP Host observation, Swagger timeout/body-read diagnostics and fingerprint rejection. Root TypeScript and Bash syntax checks passed. A temporary Docker host-network probe also verified an isolated loopback-only Swagger fixture; no customer server was contacted.
 
 ## 5. Initial deployment
 
@@ -82,7 +105,7 @@ curl --fail http://127.0.0.1:3001/deployment.json
 
 Open `http://<customer-server>:3001` in a browser or point the installed Electron shell at that frontend origin. Do not enter the backend address.
 
-Deployment fetches only `refs/heads/entrance-server`, checks the exact SHA against the successful production GitHub workflow, and builds that detached commit with the frozen lockfile, repository checks and Vite. It tags the image `oryx-live-customer-web:<full-sha>`, archives it with a checksum, and validates an unpublished candidate alongside the running frontend. The candidate verifies the selected release's backend/shell policy before activation.
+Deployment fetches only `refs/heads/entrance-server`, checks the exact SHA against the successful production GitHub workflow, and builds that detached commit with the frozen lockfile, repository checks and Vite. It tags the image `oryx-live-customer-web:<full-sha>`, archives it with a checksum, and validates an unpublished candidate alongside the running frontend. The candidate runs the same split API/local-Swagger checks using the selected release's saved compatibility policy before activation. A Swagger 401, invalid JSON, timeout or fingerprint mismatch still blocks replacement of the working frontend.
 
 Only the `web` service in Compose project **oryx-live** is replaced. The running commit, container health, public deployment marker and `/api` proxy are checked after activation. Success/failure and SHA are sent to Discord. Notification failures are recorded separately and do not undo a healthy release. A failed build leaves the working frontend untouched; a failed replacement attempts to restore the known-working release.
 
