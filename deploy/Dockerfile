@@ -36,7 +36,11 @@ RUN node deploy/customer-docker/build-metadata.ts
 # Keep the cheap installer checks independent so they fail before the full web build.
 FROM ${NODE_IMAGE} AS customer-validation
 WORKDIR /app
-RUN apt-get -o Acquire::http::Timeout=30 -o Acquire::Retries=2 update && DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::http::Timeout=30 -o Acquire::Retries=2 install -y --no-install-recommends nginx systemd util-linux git ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY scripts/customer-apt-source.ts /tmp/customer-apt-source.ts
+RUN ORYX_CUSTOMER_INSTALL_FIXTURE=container-only node /tmp/customer-apt-source.ts \
+    && apt-get -o Acquire::https::CaInfo=/tmp/oryx-apt-ca.pem -o Acquire::https::Timeout=30 -o Acquire::Retries=2 update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::https::CaInfo=/tmp/oryx-apt-ca.pem -o Acquire::https::Timeout=30 -o Acquire::Retries=2 install -y --no-install-recommends nginx systemd util-linux git ca-certificates \
+    && rm -rf /var/lib/apt/lists/* /tmp/oryx-apt-ca.pem /tmp/customer-apt-source.ts
 COPY package.json ./
 COPY deploy/customer-server deploy/customer-server
 COPY contracts/openapi/backend.v1.json contracts/openapi/backend.v1.json

@@ -64,6 +64,9 @@ test("local and CI validation build the same frozen AMD64 release sequentially a
   assert.match(docker, /FROM \$\{NODE_IMAGE\} AS customer-validation/);
   assert.match(docker, /nginx systemd util-linux git ca-certificates/);
   assert.match(docker, /ORYX_CUSTOMER_INSTALL_FIXTURE=container-only node scripts\/customer-install-fixture.ts/);
+  const apt = readFileSync("scripts/customer-apt-source.ts", "utf8");
+  assert.match(apt, /rootCertificates/); assert.match(apt, /https:\/\/deb\.debian\.org/);
+  assert.doesNotMatch(apt + docker, /Verify-Peer=false|Verify-Host=false|allow-unauthenticated/);
   const fixture = readFileSync("scripts/customer-install-fixture.ts", "utf8");
   for (const check of ["systemd-analyze", "runuser", "check-nginx.ts", "check-release.ts", "uninstall.ts", "before.equals"]) assert.ok(fixture.includes(check), check);
 });
