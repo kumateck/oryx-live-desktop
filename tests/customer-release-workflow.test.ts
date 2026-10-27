@@ -61,7 +61,8 @@ test("local and CI validation build the same frozen AMD64 release sequentially a
   assert.doesNotMatch(validator, /image.*prune|compose.*down/);
   const docker = readFileSync("deploy/Dockerfile", "utf8");
   assert.equal((docker.match(/RUN bun run check && bun run build:web/g) ?? []).length, 1);
-  assert.match(docker, /FROM web-build AS customer-validation/);
+  assert.match(docker, /FROM \$\{NODE_IMAGE\} AS customer-validation/);
+  assert.match(docker, /nginx systemd util-linux git ca-certificates/);
   assert.match(docker, /ORYX_CUSTOMER_INSTALL_FIXTURE=container-only node scripts\/customer-install-fixture.ts/);
   const fixture = readFileSync("scripts/customer-install-fixture.ts", "utf8");
   for (const check of ["systemd-analyze", "runuser", "check-nginx.ts", "check-release.ts", "uninstall.ts", "before.equals"]) assert.ok(fixture.includes(check), check);
