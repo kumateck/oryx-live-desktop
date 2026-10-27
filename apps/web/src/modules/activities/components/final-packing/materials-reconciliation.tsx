@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { EditableNumberCell, ListDataTable, dataTableColumns } from "@/shared/datatable";
-import { formatQuantityNumber, fromSmallestUnit } from "@/shared/units/quantity";
+import { fromSmallestUnit, toLargestUnit } from "@/shared/units/quantity";
 import { emptyEntry, materialFigures, type MaterialEntry, type PackingMaterial } from "../../lib/final-packing";
 
 const column = dataTableColumns<PackingMaterial>();
-const show = (value: number, unit: string) => `${formatQuantityNumber(value, "calculated")} ${unit}`.trim();
+const show = (value: number, unit: string) => toLargestUnit(value, unit, "calculated")?.text ?? "–";
 
 /**
  * Accounts for every packaging material issued to the batch: how much was packed, rejected, and
