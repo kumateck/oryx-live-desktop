@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
-import { productionPushCommits } from "../scripts/pre-push-validation.ts";
+import { outgoingPushCommits } from "../scripts/pre-push-validation.ts";
 import { releaseBuildArguments } from "../scripts/customer-release-validation.ts";
 
 const path = ".github/workflows/customer-docker.yml";
@@ -32,12 +32,12 @@ test("production approval retains the existing workflow path and requires the co
   assert.match(workflow, /ref: \$\{\{ github.sha \}\}/);
 });
 
-test("pre-push validates the actual outgoing production ref, not the checked-out branch name", () => {
-  assert.deepEqual(productionPushCommits(`refs/heads/testing ${sha} refs/heads/entrance-server ${"b".repeat(40)}\n`), [sha]);
-  assert.deepEqual(productionPushCommits(`refs/heads/entrance-server ${sha} refs/heads/testing ${"b".repeat(40)}\n`), []);
-  assert.deepEqual(productionPushCommits(`(delete) ${"0".repeat(40)} refs/heads/entrance-server ${sha}\n`), []);
-  assert.deepEqual(productionPushCommits(`refs/heads/a ${sha} refs/heads/entrance-server ${sha}\nrefs/heads/b ${sha} refs/heads/entrance-server ${sha}\n`), [sha]);
-  assert.throws(() => productionPushCommits("malformed"), /Invalid pre-push/);
+test("pre-push validates every outgoing branch SHA, including development and testing before their production PRs", () => {
+  assert.deepEqual(outgoingPushCommits(`refs/heads/testing ${sha} refs/heads/entrance-server ${"b".repeat(40)}\n`), [sha]);
+  assert.deepEqual(outgoingPushCommits(`refs/heads/entrance-server ${sha} refs/heads/testing ${"b".repeat(40)}\n`), [sha]);
+  assert.deepEqual(outgoingPushCommits(`(delete) ${"0".repeat(40)} refs/heads/entrance-server ${sha}\n`), []);
+  assert.deepEqual(outgoingPushCommits(`refs/heads/a ${sha} refs/heads/entrance-server ${sha}\nrefs/heads/b ${sha} refs/heads/entrance-server ${sha}\n`), [sha]);
+  assert.throws(() => outgoingPushCommits("malformed"), /Invalid pre-push/);
   assert.equal(readFileSync(".husky/pre-push", "utf8").trim(), "node scripts/pre-push-validation.ts");
 });
 

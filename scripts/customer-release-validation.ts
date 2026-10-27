@@ -21,7 +21,7 @@ function run(command: string, args: string[], cwd: string): void {
 export function validateCustomerRelease(sha: string): void {
   if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Validation requires a full Git commit SHA.");
   const check = spawnSync("docker", ["info"], { stdio: "ignore" });
-  if (check.error || check.status !== 0) throw new Error("Start Docker before pushing entrance-server. Release validation cannot be skipped.");
+  if (check.error || check.status !== 0) throw new Error("Start Docker before pushing. Release validation cannot be skipped.");
   const source = mkdtempSync(join(tmpdir(), "oryx-release-validation-"));
   const suffix = `${sha}-${randomUUID().slice(0, 8)}`;
   const validationImage = `oryx-live-validation:${suffix}`;
