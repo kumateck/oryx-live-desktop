@@ -73,6 +73,7 @@ const injectedRtkApi = api.injectEndpoints({
           page: queryArg.page,
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -86,6 +87,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -164,6 +168,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -448,6 +455,7 @@ const injectedRtkApi = api.injectEndpoints({
           departmentId: queryArg.departmentId,
           kind: queryArg.kind,
           materialCategoryId: queryArg.materialCategoryId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -899,6 +907,8 @@ export type GetApiV1MaterialApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1MaterialByMaterialIdApiResponse =
   /** status 200 OK */ DomainEntitiesMaterialsMaterialDto;
@@ -909,6 +919,8 @@ export type GetApiV1MaterialByMaterialIdApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type PutApiV1MaterialByMaterialIdApiResponse = void;
 export type PutApiV1MaterialByMaterialIdApiArg = {
@@ -965,6 +977,8 @@ export type GetApiV1MaterialAllApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type PutApiV1MaterialByMaterialIdReorderLevelApiResponse = void;
 export type PutApiV1MaterialByMaterialIdReorderLevelApiArg = {
@@ -1176,6 +1190,8 @@ export type GetApiV1MaterialDepartmentApprovedMaterialsV2ApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1MaterialByMaterialIdBatchesV2AndDepartmentIdApiResponse =
   /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericList601DomainEntitiesWarehousesShelfMaterialBatchDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798ERead;

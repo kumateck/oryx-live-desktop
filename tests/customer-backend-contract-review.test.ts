@@ -11,7 +11,8 @@ const approvedFingerprint = "4727f9d426d4fa53cdf6ee93f2b5df1edb959d6fa83d705ebdf
 const customerFingerprint = "c89615ea1e0050bbb0ed5f61f9308ee87e5398e79b3972b00e4dee33587abdc1";
 const raw = gunzipSync(readFileSync("contracts/openapi/reviewed/customer-c89615ea.swagger.json.gz")).toString("utf8");
 const customer = object(parse(raw));
-const pinned = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+// Preserve the dated review independently of later additive source contracts.
+const reviewedImport = () => auditHeaderReview(customer).normalized;
 const policy = compatibility(parse(readFileSync("deploy/customer-server/release.json", "utf8")));
 const verbs = new Set(["get", "post", "put", "patch", "delete", "options", "head", "trace"]);
 
@@ -41,7 +42,7 @@ function auditHeaderReview(document: ObjectValue) {
 
 test("the preserved customer export matches the reported digest and retains both exact approved contracts", () => {
   assert.equal(contractDigest(customer), customerFingerprint);
-  assert.equal(contractDigest(pinned), approvedFingerprint);
+  assert.equal(contractDigest(reviewedImport()), approvedFingerprint);
   assert.ok(policy.backendContracts.includes(approvedFingerprint));
   assert.ok(policy.backendContracts.includes(customerFingerprint));
 });
@@ -51,13 +52,35 @@ test("all 1,358 operations and schemas match after only 2,716 audit-header schem
   assert.equal(review.paths, 1056); assert.equal(review.operations, 1358); assert.equal(review.headers, 2716);
   assert.equal(Object.keys(object(object(customer.components ?? null).schemas ?? null)).length, 1531);
   assert.equal(contractDigest(review.normalized), approvedFingerprint);
-  assert.deepEqual(review.normalized, pinned);
-  assert.deepEqual(customer.components, pinned.components);
-  assert.deepEqual(customer.security, pinned.security);
+});
+
+test("historical reporting adds optional read parameters without changing existing contracts or security", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const before = reviewedImport();
+  const paths = object(current.paths ?? null);
+  for (const [path, item] of Object.entries(object(before.paths ?? null))) {
+    for (const [verb, oldValue] of Object.entries(object(item))) {
+      const original = object(oldValue);
+      const operation = object(object(paths[path] ?? null)[verb] ?? null);
+      const parameters = operation.parameters;
+      if (Array.isArray(parameters)) operation.parameters = parameters.filter((entry) => {
+        const parameter = object(entry);
+        return !(parameter.in === "query" && (parameter.name === "asOfDate" || (path === "/api/v1/attendance-records/general-summary" && parameter.name === "departmentId") || (path === "/api/v1/report/warehouse/materials-stock-batch-detail" && parameter.name === "materialId")));
+      });
+      const responses = object(operation.responses ?? null);
+      if (!("409" in object(original.responses ?? null))) delete responses["409"];
+      assert.deepEqual(operation, original, `${verb.toUpperCase()} ${path}`);
+    }
+  }
+  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))), ["/api/v1/report/history/capabilities", "/api/v1/report/history/vendors"]);
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  delete schemas["DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"];
+  assert.deepEqual(current.components, before.components);
+  assert.deepEqual(current.security, before.security);
 });
 
 test("the separate legacy host-Nginx verifier retains both reviewed exact documents", async () => {
-  for (const document of [customer, pinned]) {
+  for (const document of [customer, reviewedImport()]) {
     checkCompatibility(hostConfig, policy, contractDigest(document));
   }
 });

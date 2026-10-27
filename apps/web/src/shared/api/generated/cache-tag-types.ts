@@ -215,6 +215,7 @@ export const generatedTagTypes = [
   "report/finished-goods-transfer-detailed",
   "report/finished-goods-transfer-summary",
   "report/general-inventory-dashboard",
+  "report/history",
   "report/hr",
   "report/hr-kpi",
   "report/human-resource",
