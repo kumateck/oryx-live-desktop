@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { checked, run } from "./command.ts";
+import { verifyProbePermissions } from "./probe-permissions-smoke.ts";
 
 const image = process.argv[2] ?? "";
 if (!image || !/^[a-zA-Z0-9./:_-]+$/.test(image)) throw new Error("Pass the local image tag to smoke.ts");
@@ -54,7 +55,7 @@ try {
   assert.equal((await fetch(`${base}/api/v1/user/authenticated`)).status, 401);
   // Exercise actual TypeScript probe entrypoints without the customer's sail network or host services.
   const probe = async (mode: string, origin: string, probeNetwork: string) => docker([
-    "run", "--rm", "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true", "--network", probeNetwork,
+    "run", "--rm", "--read-only", "--user", "node", "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true", "--network", probeNetwork,
     "--mount", `type=bind,src=${resolve(".")},dst=/repo,readonly`, "node:24.22.1-bookworm-slim",
     "node", "/repo/deploy/customer-docker/probe.ts", mode, origin, "0.1.0", "/repo/deploy/customer-docker/requirements.json", "1",
     "/repo/contracts/openapi/backend.v1.json",
@@ -62,6 +63,7 @@ try {
   assert.match(await probe("api", "http://fixture-api:5001", network), /API connectivity/);
   assert.match(await probe("compatibility", "http://127.0.0.1:5001", `container:${api}`), /Critical API contracts verified/);
   assert.match(await probe("compatibility", "http://127.0.0.1:1", `container:${api}`), /no confirmed breaking changes/);
+  await verifyProbePermissions(api, network);
 
   assert.equal((await fetch(`${base}/realtime/health`)).status, 503);
   await docker(["exec", web, "sh", "-c", "test ! -d /app && ! command -v node && ! command -v bun && test ! -e /usr/share/nginx/html/.env"]);

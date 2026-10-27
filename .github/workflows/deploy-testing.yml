@@ -1,219 +1,62 @@
-name: Deploy testing site
+name: Build customer Windows installer
+run-name: Windows x64 installer from entrance-server (${{ github.sha }})
 
-# Builds the web app and notification gateway images and the Windows installer from the testing branch,
-# and runs them on the shared server beside oryx-next. See docs/deployment.md.
+# This already-registered workflow has a manual, installer-only definition on entrance-server.
+# The testing branch retains its own testing-site deployment definition.
 on:
-  push:
-    branches: [testing]
   workflow_dispatch:
-
+permissions:
+  contents: read
 concurrency:
-  group: deploy-testing
+  group: customer-windows-installer
   cancel-in-progress: false
 
-env:
-  # GitHub's registry, so no separate registry account is needed; the workflow's own token pushes and pulls.
-  WEB_IMAGE: ghcr.io/kumateck/oryx-live-web
-  GATEWAY_IMAGE: ghcr.io/kumateck/oryx-live-gateway
-  WEB_CONTAINER: oryx-live-web
-  GATEWAY_CONTAINER: oryx-live-gateway
-  HOST_PORT: "3011"
-  SITE_ORIGIN: http://164.90.142.68:3011
-  API_ORIGIN: http://164.90.142.68:8086
-
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.14
-      - run: bun install --frozen-lockfile
-        env:
-          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
-      - run: bun run check
-        env:
-          # The web typecheck needs more than Node's default heap on a runner.
-          NODE_OPTIONS: --max-old-space-size=6144
-
-  images:
-    runs-on: ubuntu-latest
-    needs: check
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: deploy/Dockerfile
-          target: web
-          push: true
-          tags: ${{ env.WEB_IMAGE }}:${{ github.sha }},${{ env.WEB_IMAGE }}:testing
-          cache-from: type=gha,scope=web
-          cache-to: type=gha,scope=web,mode=max
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: deploy/Dockerfile
-          target: gateway
-          push: true
-          tags: ${{ env.GATEWAY_IMAGE }}:${{ github.sha }},${{ env.GATEWAY_IMAGE }}:testing
-          cache-from: type=gha,scope=gateway
-          cache-to: type=gha,scope=gateway,mode=max
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: images
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - name: Run the containers
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          # Valid only while this job runs; the server signs out of the registry once it has pulled.
-          REGISTRY_USER: ${{ github.actor }}
-          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST }}
-          RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
-          TAG: ${{ github.sha }}
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          envs: REGISTRY_USER,REGISTRY_TOKEN,RABBITMQ_HOST,RABBITMQ_PASS,TAG
-          script: |
-            set -e
-            printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "$REGISTRY_USER" --password-stdin
-            docker pull "${{ env.WEB_IMAGE }}:$TAG"
-            docker pull "${{ env.GATEWAY_IMAGE }}:$TAG"
-            docker logout ghcr.io
-            docker network inspect sail >/dev/null 2>&1 || docker network create sail
-            mkdir -p "$HOME/oryx-live/downloads" "$HOME/oryx-live/assets"
-
-            # Containers cannot always reach the server through its own public address, so find the route that works,
-            # testing from the sail network exactly as the site's containers will: the backend's own container first,
-            # then the server itself (the network's gateway address, i.e. "localhost" from a container), then the public address.
-            CHECK_IMAGE="${{ env.GATEWAY_IMAGE }}:$TAG"
-            reach() { docker run --rm --net sail "$CHECK_IMAGE" node -e "$1" "$2" >/dev/null 2>&1; }
-            HTTP_OK='fetch(process.argv[1] + "/api/v1/user/authenticated", { signal: AbortSignal.timeout(6000) }).then(() => process.exit(0), () => process.exit(1))'
-            TCP_OK='const [h, p] = process.argv[1].split(":"); const s = require("node:net").connect(Number(p), h); s.setTimeout(5000, () => process.exit(1)); s.on("connect", () => process.exit(0)); s.on("error", () => process.exit(1))'
-            # name:port of each container on the sail network that publishes host port $1
-            published() {
-              for name in $(docker ps --filter "publish=$1" --format '{{.Names}}'); do
-                docker inspect "$name" --format '{{range $net, $v := .NetworkSettings.Networks}}{{$net}} {{end}}' | grep -qw sail || continue
-                inner=$(docker port "$name" | grep -E ":$1\$" | head -n 1 | cut -d/ -f1)
-                [ -n "$inner" ] && echo "$name:$inner"
-              done
-            }
-            SERVER=$(docker network inspect sail --format '{{range .IPAM.Config}}{{.Gateway}} {{end}}' | awk '{print $1}')
-
-            API_UPSTREAM=""
-            for candidate in $(published 8086 | sed 's#^#http://#') "http://$SERVER:8086" "${{ env.API_ORIGIN }}"; do
-              if reach "$HTTP_OK" "$candidate"; then API_UPSTREAM="$candidate"; break; fi
-              echo "backend: no answer at $candidate"
-            done
-            if [ -z "$API_UPSTREAM" ]; then echo "The backend cannot be reached from the sail network; the running site is left as it is."; exit 1; fi
-            echo "backend: using $API_UPSTREAM"
-
-            BROKER_PORT="${RABBITMQ_HOST##*:}"; BROKER_NAME="${RABBITMQ_HOST%:*}"
-            if [ "$BROKER_PORT" = "$RABBITMQ_HOST" ]; then BROKER_PORT=5672; BROKER_NAME="$RABBITMQ_HOST"; fi
-            BROKER=""
-            for candidate in "$BROKER_NAME:$BROKER_PORT" $(published "$BROKER_PORT") "$SERVER:$BROKER_PORT"; do
-              if reach "$TCP_OK" "$candidate"; then BROKER="$candidate"; break; fi
-              echo "broker: no answer at $candidate"
-            done
-            if [ -z "$BROKER" ]; then echo "broker: unreachable; live notifications fall back to checking every minute"; BROKER="$RABBITMQ_HOST"; else echo "broker: using $BROKER"; fi
-
-            docker rm -f "${{ env.GATEWAY_CONTAINER }}" >/dev/null 2>&1 || true
-            docker run -d --init --restart always --net sail \
-              --name "${{ env.GATEWAY_CONTAINER }}" \
-              --env ORYX_API_ORIGIN="$API_UPSTREAM" \
-              --env ORYX_GATEWAY_ALLOWED_ORIGINS="${{ env.SITE_ORIGIN }}" \
-              --env ORYX_GATEWAY_ALLOW_INSECURE=1 \
-              --env RABBITMQ_HOST="$BROKER" \
-              --env RABBITMQ_DEFAULT_USER=root \
-              --env RABBITMQ_DEFAULT_PASS="$RABBITMQ_PASS" \
-              "${{ env.GATEWAY_IMAGE }}:$TAG"
-
-            docker rm -f "${{ env.WEB_CONTAINER }}" >/dev/null 2>&1 || true
-            docker run -d --restart always --net sail \
-              -p "${{ env.HOST_PORT }}:80" \
-              --name "${{ env.WEB_CONTAINER }}" \
-              --env ORYX_API_ORIGIN="$API_UPSTREAM" \
-              --env ORYX_GATEWAY_UPSTREAM="${{ env.GATEWAY_CONTAINER }}:4100" \
-              --volume "$HOME/oryx-live/downloads:/srv/downloads:ro" \
-              --volume "$HOME/oryx-live/assets:/srv/assets" \
-              "${{ env.WEB_IMAGE }}:$TAG"
-
-            docker image prune -f >/dev/null
-            # The web container copies and checks every release file into /srv/assets before nginx listens, which takes
-            # longer as the release grows. Until then the published port accepts and drops connections (curl exit 52),
-            # so wait for nginx to answer instead of a fixed pause. curl failures must not end the script under set -e.
-            STATUS=000
-            for attempt in $(seq 1 45); do
-              STATUS=$(curl -s -o /dev/null -m 15 -w "%{http_code}" "http://127.0.0.1:${{ env.HOST_PORT }}/api/v1/user/authenticated" || true)
-              case "$STATUS" in 000|"") sleep 2;; *) break;; esac
-            done
-            docker ps --filter "name=oryx-live" --format '{{.Names}} {{.Status}}'
-            if [ "$STATUS" = 000 ] || [ -z "$STATUS" ]; then
-              echo "The site did not start answering within 90 seconds."
-              docker logs --tail 40 "oryx-live-web" 2>&1 || true
-              exit 1
-            fi
-            echo "site to backend: HTTP $STATUS"
-            echo "gateway: $(curl -s -m 10 "http://127.0.0.1:${{ env.HOST_PORT }}/realtime/health" || true)"
-            # Any answer from the backend (401 without a sign-in) means the site reaches it.
-            case "$STATUS" in 000|502|504) echo "The site cannot reach the backend."; exit 1;; esac
-            # Every file the page loads must be served with exactly the content this release built.
-            SITE="http://127.0.0.1:${{ env.HOST_PORT }}"
-            FILES=$(curl -s -m 10 "$SITE/" | grep -oE '/assets/[^"]+\.(js|css)' | sort -u)
-            if [ -z "$FILES" ]; then echo "The site's page names no assets."; exit 1; fi
-            for file in $FILES; do
-              served=$(curl -fs -m 10 "$SITE$file" | sha256sum | cut -d' ' -f1)
-              built=$(docker exec "${{ env.WEB_CONTAINER }}" sha256sum "/usr/share/nginx/html$file" | cut -d' ' -f1)
-              if [ "$served" != "$built" ]; then echo "The site serves $file with the wrong content."; exit 1; fi
-            done
-            echo "assets: $(echo "$FILES" | wc -l) checked; $(ls "$HOME/oryx-live/assets" | wc -l) files kept"
-
   installer:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/entrance-server'
     runs-on: windows-latest
-    needs: check
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.22.1
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
       - run: bun install --frozen-lockfile
-      - name: Build the installer (NSIS)
-        run: bun run --filter @oryx/desktop make:windows
-      - name: Name the installer
-        shell: bash
+      - name: Check the desktop shell
         run: |
-          mkdir -p downloads
-          cp apps/desktop/out/make/nsis/OryxLiveDesktop-Setup.exe downloads/
-      # Installs as a tester would, then opens the app twice: fresh (the connection page) and pointed at the site.
-      - name: Install and launch
+          bun run --filter @oryx/desktop test
+          bun run --filter @oryx/desktop typecheck
+      - name: Build the existing Windows x64 NSIS installer
+        run: bun run --filter @oryx/desktop make:windows
+      - name: Verify and collect the installer
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          Start-Process (Resolve-Path downloads/OryxLiveDesktop-Setup.exe) -ArgumentList '/S' -Wait
+          $installer = Get-Item 'apps/desktop/out/make/nsis/OryxLiveDesktop-Setup.exe'
+          if ($installer.Length -lt 1MB) { throw 'The installer is missing or unexpectedly small.' }
+          $header = [System.IO.File]::ReadAllBytes($installer.FullName)
+          if ($header[0] -ne 0x4d -or $header[1] -ne 0x5a) { throw 'The installer is not a Windows executable.' }
+          # The NSIS bootstrapper can be 32-bit; verify the packaged application itself is AMD64.
+          $app = [System.IO.File]::ReadAllBytes((Resolve-Path 'apps/desktop/out/Oryx Live Desktop-win32-x64/OryxLiveDesktop.exe'))
+          $pe = [BitConverter]::ToInt32($app, 0x3c)
+          if ([BitConverter]::ToUInt32($app, $pe) -ne 0x4550 -or [BitConverter]::ToUInt16($app, $pe + 4) -ne 0x8664) { throw 'The packaged application is not Windows x64.' }
+          New-Item -ItemType Directory downloads -Force | Out-Null
+          Copy-Item $installer.FullName 'downloads/OryxLiveDesktop-Setup.exe'
+          $hash = (Get-FileHash 'downloads/OryxLiveDesktop-Setup.exe' -Algorithm SHA256).Hash
+          "Installer SHA256: $hash"
+          "Windows x64 installer from commit $env:GITHUB_SHA`n`nSHA256: $hash" >> $env:GITHUB_STEP_SUMMARY
+      - name: Install and launch on the disposable Windows runner
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $setup = Start-Process (Resolve-Path downloads/OryxLiveDesktop-Setup.exe) -ArgumentList '/S' -Wait -PassThru
+          if ($setup.ExitCode -ne 0) { throw "Installer failed: $($setup.ExitCode)" }
           Start-Sleep 3
           Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue | Stop-Process -Force
           $exe = Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter OryxLiveDesktop.exe | Select-Object -First 1
@@ -271,37 +114,36 @@ jobs:
             "${name}: windows $shown"
             if (-not (& $ok $titles)) { throw "${name}: unexpected windows $shown" }
           }
-          Launch 'first-launch' { param($titles) $titles -contains 'Connect to Oryx' }
+          $config = Join-Path $env:APPDATA 'Oryx Live Desktop'
+          if (Test-Path $config) { Remove-Item $config -Recurse -Force }
+          Launch 'first-launch' { param($titles) ($titles -contains 'Connect to Oryx') -and ($titles -contains 'ORYX Companion') }
           $config = Join-Path $env:APPDATA 'Oryx Live Desktop'
           New-Item -ItemType Directory $config -Force | Out-Null
-          Set-Content -NoNewline -Path (Join-Path $config 'site-url.txt') -Value '${{ env.SITE_ORIGIN }}'
-          Launch 'connected' { param($titles) $titles -contains 'Oryx Live Desktop' }
+          $fixture = Start-Process node -ArgumentList 'scripts/windows-installer-site.ts' -RedirectStandardOutput 'shots/site.log' -RedirectStandardError 'shots/site-error.log' -PassThru
+          try {
+            $ready = $false
+            for ($attempt = 0; $attempt -lt 30; $attempt++) {
+              if ($fixture.HasExited) { throw 'The local port 3001 fixture exited; inspect the smoke logs.' }
+              try { $ready = (Invoke-WebRequest 'http://127.0.0.1:3001' -TimeoutSec 2).StatusCode -eq 200 } catch { }
+              if ($ready) { break }
+              Start-Sleep 1
+            }
+            if (-not $ready) { throw 'The local port 3001 fixture did not start.' }
+            Set-Content -NoNewline -Path (Join-Path $config 'site-url.txt') -Value 'http://127.0.0.1:3001'
+            Launch 'connected' { param($titles) ($titles -contains 'Oryx installer smoke site') -and ($titles -contains 'ORYX Companion') }
+          } finally {
+            Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue | Stop-Process -Force
+            if (-not $fixture.HasExited) { Stop-Process -Id $fixture.Id -Force }
+          }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: windows-launch-screenshots
+          name: oryx-live-windows-smoke
           path: shots/
           retention-days: 14
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-installer
+          name: oryx-live-windows-installer
           path: downloads/OryxLiveDesktop-Setup.exe
-          retention-days: 14
-
-  publish-installer:
-    runs-on: ubuntu-latest
-    needs: [installer, deploy]
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: windows-installer
-          path: downloads
-      - name: Copy it to the site
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          source: downloads/OryxLiveDesktop-Setup.exe
-          target: oryx-live
+          if-no-files-found: error
+          retention-days: 30

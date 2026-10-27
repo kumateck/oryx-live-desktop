@@ -186,3 +186,12 @@ The user authorized an independent manual Docker package under `deploy/customer-
 ## Simplified customer Docker compatibility (2026-10-27)
 
 The user's current instruction replaces the Docker package's exact OpenAPI hash gate with mandatory basic API connectivity plus focused candidate compatibility checks. Preflight does not request Swagger. Candidates inspect the selected release's baseline for consumed session, permissions, production and approval contracts; confirmed removals/incompatible inputs, outputs or authentication block activation. Harmless metadata changes pass; unavailable or ambiguous Swagger warns instead of implying a breaking API. Keep minimum-shell/protocol requirements independently under `deploy/customer-docker/requirements.json`; preserve the host-Nginx agent/policy, CI approval, production-branch isolation, Nginx health, rollback archives, lock, history and Discord. The user now explicitly authorizes pushing reviewed changes to `entrance-server`. Customer access/deployment and backend changes remain prohibited.
+
+
+## Customer Docker probe permissions and retry (2026-10-27)
+
+Keep umask 077 and restricted customer settings. Explicitly publish only the two non-secret release JSON snapshots as 0644 and repair their modes before candidate probes. Run probes as node with the existing read-only mounts and capability restrictions. Reuse a same-SHA completed image/archive only after archive integrity, revision and copied source snapshots verify; preserve fresh CI/compatibility/health checks, blocked-release protection and automatic rollback. Recognize complete pre-fix archives, reload pruned images, and refresh candidate runtime settings privately without rebuilding the image. Regression smoke uses root-owned Linux files and the exact backend_checks user/mount flags on isolated local networks.
+
+## Manual customer Windows x64 installer (2026-10-27)
+
+On entrance-server, reuse the already-registered deploy-testing.yml path as a manual installer-only workflow. Its testing branch copy remains independent, and the customer Docker workflow is unchanged. A branch/event guard plus exact dispatched SHA checkout restricts the production source. Reuse make:windows/NSIS/icons/shortcuts and native first-launch/companion checks; use an isolated Windows-runner frontend on loopback port 3001 for connected launch. Upload the verified installer as oryx-live-windows-installer. No customer server access or container changes. Document download and frontend-origin connection separately from hosted frontend updates.
