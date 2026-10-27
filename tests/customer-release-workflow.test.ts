@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import test from "node:test";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -21,16 +21,25 @@ test("release validation rejects insufficient disk before archiving or building"
 
 test("the exported source remains readable by the non-root read-only probe under umask 077", { skip: process.platform === "win32" }, () => {
   const directory = mkdtempSync(join(tmpdir(), "oryx-source-permissions-"));
+  const fixture = mkdtempSync(join(tmpdir(), "oryx-source-fixture-"));
   const previous = process.umask(0o077);
   try {
-    const archive = spawnSync("git", ["archive", "--format=tar", "HEAD", path]);
+    mkdirSync(join(fixture, ".github/workflows"), { recursive: true });
+    writeFileSync(join(fixture, path), "name: public committed fixture\n");
+    for (const folder of [fixture, join(fixture, ".github"), join(fixture, ".github/workflows")]) chmodSync(folder, 0o755);
+    chmodSync(join(fixture, path), 0o644);
+    const archive = spawnSync("tar", ["-cf", "-", "-C", fixture, ".github"]);
     assert.equal(archive.status, 0);
     extractReleaseSource(archive.stdout, directory);
     for (const folder of [directory, join(directory, ".github"), join(directory, ".github/workflows")]) {
       assert.equal(statSync(folder).mode & 0o005, 0o005, folder);
     }
     assert.equal(statSync(join(directory, path)).mode & 0o004, 0o004);
-  } finally { process.umask(previous); rmSync(directory, { recursive: true, force: true }); }
+  } finally {
+    process.umask(previous);
+    rmSync(directory, { recursive: true, force: true });
+    rmSync(fixture, { recursive: true, force: true });
+  }
 });
 
 test("one production workflow queues all runs and validates before optional Windows packaging", () => {
