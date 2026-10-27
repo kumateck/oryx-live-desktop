@@ -1,16 +1,37 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import test from "node:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { outgoingPushCommits } from "../scripts/pre-push-validation.ts";
-import { releaseBuildArguments } from "../scripts/customer-release-validation.ts";
+import { extractReleaseSource, releaseBuildArguments, requireValidationDiskSpace } from "../scripts/customer-release-validation.ts";
 
 const path = ".github/workflows/customer-docker.yml";
 const workflow = readFileSync(path, "utf8");
 const sha = "a".repeat(40);
+
+test("release validation rejects insufficient disk before archiving or building", () => {
+  const gibibyte = 1024n ** 3n;
+  assert.throws(() => requireValidationDiskSpace(10n * gibibyte - 1n), /at least 10 GiB free/);
+  assert.throws(() => requireValidationDiskSpace(gibibyte), /1 GiB available/);
+  assert.doesNotThrow(() => requireValidationDiskSpace(10n * gibibyte));
+});
+
+test("the exported source remains readable by the non-root read-only probe under umask 077", { skip: process.platform === "win32" }, () => {
+  const directory = mkdtempSync(join(tmpdir(), "oryx-source-permissions-"));
+  const previous = process.umask(0o077);
+  try {
+    const archive = spawnSync("git", ["archive", "--format=tar", "HEAD", path]);
+    assert.equal(archive.status, 0);
+    extractReleaseSource(archive.stdout, directory);
+    for (const folder of [directory, join(directory, ".github"), join(directory, ".github/workflows")]) {
+      assert.equal(statSync(folder).mode & 0o005, 0o005, folder);
+    }
+    assert.equal(statSync(join(directory, path)).mode & 0o004, 0o004);
+  } finally { process.umask(previous); rmSync(directory, { recursive: true, force: true }); }
+});
 
 test("one production workflow queues all runs and validates before optional Windows packaging", () => {
   const entries = readdirSync(".github/workflows").filter((name) => /\.ya?ml$/.test(name));

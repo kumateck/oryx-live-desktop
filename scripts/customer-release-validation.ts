@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { chmodSync, mkdtempSync, rmSync, statfsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,11 +7,26 @@ import { randomUUID } from "node:crypto";
 
 export const actionlintImage = "rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667";
 
+export function requireValidationDiskSpace(availableBytes: bigint): void {
+  const gibibyte = 1024n ** 3n;
+  if (availableBytes < 10n * gibibyte) {
+    const available = Number(availableBytes * 10n / gibibyte) / 10;
+    throw new Error(`Release validation needs at least 10 GiB free; ${available} GiB available. Free disk space before retrying.`);
+  }
+}
+
 export function releaseBuildArguments(sha: string, target: "customer-validation" | "web", tag: string): string[] {
   if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Validation requires a full Git commit SHA.");
   return ["buildx", "build", "--load", "--platform", "linux/amd64", "--file", "deploy/Dockerfile", "--target", target,
     "--tag", tag, "--build-arg", `RELEASE_SHA=${sha}`, "--build-arg", "RELEASE_BRANCH=entrance-server",
     "."];
+}
+
+export function extractReleaseSource(archive: Buffer, directory: string): void {
+  // Git archives contain committed source only. Preserve their public modes even with a restrictive caller umask.
+  const extract = spawnSync("tar", ["-xp", "-C", directory], { input: archive });
+  if (extract.error || extract.status !== 0) throw new Error("Could not extract the release validation archive.");
+  chmodSync(directory, 0o755);
 }
 
 function run(command: string, args: string[], cwd: string): void {
@@ -24,6 +39,10 @@ export function validateCustomerRelease(sha: string): void {
   if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Validation requires a full Git commit SHA.");
   const check = spawnSync("docker", ["info"], { stdio: "ignore" });
   if (check.error || check.status !== 0) throw new Error("Start Docker before pushing. Release validation cannot be skipped.");
+  for (const directory of [process.cwd(), tmpdir()]) {
+    const disk = statfsSync(directory, { bigint: true });
+    requireValidationDiskSpace(disk.bavail * disk.bsize);
+  }
   const source = mkdtempSync(join(tmpdir(), "oryx-release-validation-"));
   const suffix = `${sha}-${randomUUID().slice(0, 8)}`;
   const validationImage = `oryx-live-validation:${suffix}`;
@@ -31,8 +50,7 @@ export function validateCustomerRelease(sha: string): void {
   try {
     const archive = spawnSync("git", ["archive", "--format=tar", sha], { maxBuffer: 256 * 1024 * 1024 });
     if (archive.error || archive.status !== 0) throw new Error("Could not export the exact outgoing Git commit for validation.");
-    const extract = spawnSync("tar", ["-x", "-C", source], { input: archive.stdout });
-    if (extract.error || extract.status !== 0) throw new Error("Could not extract the release validation archive.");
+    extractReleaseSource(archive.stdout, source);
     console.log(`Validating exact commit ${sha} for linux/amd64 before approval.`);
     run("docker", ["run", "--rm", "--network", "none", "--platform", "linux/amd64", "--mount", `type=bind,source=${source},target=/repo,readonly`,
       "--workdir", "/repo", actionlintImage, "-color", ".github/workflows/customer-docker.yml"], source);

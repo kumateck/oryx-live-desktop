@@ -25,7 +25,8 @@ async function start(name: string, gateway = "") {
     }
     await wait();
   }
-  throw new Error(`Smoke container did not become healthy: ${await docker(["logs", name])}`);
+  const state = await docker(["inspect", "--format", "{{json .State}}", name]);
+  throw new Error(`Smoke container did not become healthy. Docker state and health probe results: ${state}\nContainer logs: ${await docker(["logs", name])}`);
 }
 try {
   await copyFile(resolve("deploy/customer-docker/mock-api.ts"), join(directory, "mock-api.ts"));
