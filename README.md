@@ -71,3 +71,7 @@ View → Show / Hide ORYX Companion controls the optional local Operations Watch
 System alerts also appear while Oryx is in front. Closing to the tray keeps delivery running; use Quit Oryx to exit. Missed alerts remain in backend unread history. [Notification delivery and backend requirements](docs/notifications.md).
 
 Companion device controls are under Settings → Appearance. Run `bun run --filter @oryx/desktop test` for renderer/persistence tests; these also run in the root `bun run test` command. Native alert clicks locate the matching unread/history entry without marking it read.
+
+## Manual customer Docker installation
+
+Use [the customer Docker package](deploy/customer-docker/README.md) for the Ubuntu `entrance` account: production follows **`origin/entrance-server` only**, project **`oryx-live`**, port **3001**, existing external **`sail`** network and backend **`oryx_api:5001`**. It reuses the existing web Docker build with pinned **Bun 1.4.4**. The administrator installs it through SSH commands and enables Cron; no Codex installation is needed. Deployment checks, Discord reporting, locking, pause/resume and archived-image rollback are included. The host-Nginx agent remains separate.

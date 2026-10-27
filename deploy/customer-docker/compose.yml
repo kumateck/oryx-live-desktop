@@ -1,0 +1,38 @@
+name: oryx-live
+services:
+  web:
+    image: oryx-live-customer-web:${ORYX_RELEASE_SHA:?Select a verified release SHA}
+    ports:
+      - "${ORYX_BIND_ADDRESS:-0.0.0.0}:${ORYX_PUBLIC_PORT:-3001}:80"
+    environment:
+      ORYX_API_ORIGIN: ${ORYX_API_UPSTREAM:-http://oryx_api:5001}
+      ORYX_GATEWAY_UPSTREAM: ${ORYX_GATEWAY_UPSTREAM:-disabled.invalid:4100}
+      ORYX_PUBLIC_PROTO: ${ORYX_PUBLIC_PROTO:-auto}
+    volumes:
+      - assets:/srv/assets
+    networks:
+      - sail
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, 'http://127.0.0.1/healthz']
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+volumes:
+  assets:
+    name: oryx-live_assets
+    external: true
+networks:
+  sail:
+    name: sail
+    external: true

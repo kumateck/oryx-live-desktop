@@ -177,3 +177,7 @@ Keep this plan current as decisions are closed. Every implementation phase adds 
 ## Operations Watch companion (2026-10-24)
 
 Adapt Dodo’s isolated transparent-window pattern for an optional ORYX Canvas 2D character, using the supplied character board. The first integration reuses unread notification and live-connection state, opens the existing notification sheet, and exposes no ERP mutation capabilities. See `docs/companion.md` for useful workflow mappings, local-only security boundaries, artwork limitations, and native acceptance gates.
+
+## Customer Docker deployment (2026-10-27)
+
+The user authorized an independent manual Docker package under `deploy/customer-docker`, reusing `deploy/Dockerfile`, its Nginx template and retained assets. Production fetch/build/deploy is restricted to `origin/entrance-server` only; `main` and `testing` never qualify. Prepare the branch locally from an approved testing commit if absent; do not push. Use port 3001, external `sail`, existing `oryx_api:5001`, pinned verified Bun 1.4.4, exact-SHA builds, GitHub CI approval, Cron polling, filesystem locking, pause/resume, Discord reporting and archived rollback images that survive unrelated image pruning. Keep `deploy/customer-server` unchanged. No customer access, deployment, backend/database changes, or global image pruning is authorized.
