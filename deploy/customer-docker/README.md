@@ -187,3 +187,7 @@ Before customer activation, verify the actual HP server's RAM/disk/CPU, private 
 - Actual Nginx image smoke checks passed for SPA routing, API path/auth forwarding, health/version, optional realtime/WebSocket, retained assets and runtime contents.
 - A real Docker image archive was saved, its disposable image tag removed, and the archive successfully loaded again with the expected revision label. Corrupt archives are refused by the Linux regression suite.
 - `deploy/customer-server` has no changes. No customer server, production webhook, backend data, push or merge was used. Verification ran on the local Linux ARM64 Docker engine; the workflow targets Linux AMD64, while native HP/Ubuntu and customer acceptance remain outstanding.
+
+### Reviewed raw contract fingerprint
+
+The customer's raw Swagger fingerprint `c89615ea1e0050bbb0ed5f61f9308ee87e5398e79b3972b00e4dee33587abdc1` is explicitly approved alongside `4727f9d426d4fa53cdf6ee93f2b5df1edb959d6fa83d705ebdfc7fb2ca9648ae`. The [contract review](../../docs/customer-backend-contract-review-2026-10-27.md) proves that the only difference is the exporter's existing string typing of the two audit headers. Runtime validation remains strict for every other fingerprint. After updating the deployment-tool checkout to the reviewed commit, rerun preflight; do not replace the approved list with an unreviewed server digest or change backend authentication.

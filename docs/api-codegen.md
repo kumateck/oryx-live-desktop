@@ -57,3 +57,7 @@ Purchase-unit additions are staged in the versioned contract from the companion
 backend controller/DTO declarations; generated clients pass through the normal
 generator. Re-export from the upgraded backend during release verification. See
 [supplier purchase units](supplier-purchase-units.md).
+
+## Raw Swagger versus typed import fingerprint
+
+The export's documented `Module`/`SubModule` string-schema adjustment changes the canonical digest even when the backend API contract is otherwise identical. The [2026-10-27 customer review](customer-backend-contract-review-2026-10-27.md) verifies that raw digest `c89615ea1e0050bbb0ed5f61f9308ee87e5398e79b3972b00e4dee33587abdc1` differs from the pinned typed import only by these 2,716 declarations. Both exact digests are explicitly approved. Deployment continues to hash the raw document without normalization; a different digest still requires contract review.
