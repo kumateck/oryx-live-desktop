@@ -5,6 +5,8 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 
+export const actionlintImage = "rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667";
+
 export function releaseBuildArguments(sha: string, target: "customer-validation" | "web", tag: string): string[] {
   if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Validation requires a full Git commit SHA.");
   return ["buildx", "build", "--load", "--platform", "linux/amd64", "--file", "deploy/Dockerfile", "--target", target,
@@ -32,6 +34,8 @@ export function validateCustomerRelease(sha: string): void {
     const extract = spawnSync("tar", ["-x", "-C", source], { input: archive.stdout });
     if (extract.error || extract.status !== 0) throw new Error("Could not extract the release validation archive.");
     console.log(`Validating exact commit ${sha} for linux/amd64 before approval.`);
+    run("docker", ["run", "--rm", "--network", "none", "--platform", "linux/amd64", "--mount", `type=bind,source=${source},target=/repo,readonly`,
+      "--workdir", "/repo", actionlintImage, "-color", ".github/workflows/customer-docker.yml"], source);
     run("docker", releaseBuildArguments(sha, "customer-validation", validationImage), source);
     run("docker", releaseBuildArguments(sha, "web", webImage), source);
     run(process.execPath, ["deploy/customer-docker/smoke.ts", webImage], source);

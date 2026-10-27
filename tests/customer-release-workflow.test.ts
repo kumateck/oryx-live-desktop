@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 import { outgoingPushCommits } from "../scripts/pre-push-validation.ts";
 import { releaseBuildArguments } from "../scripts/customer-release-validation.ts";
 
@@ -50,6 +54,8 @@ test("local and CI validation build the same frozen AMD64 release sequentially a
   assert.throws(() => releaseBuildArguments("testing", "web", "fixture:web"), /full Git commit SHA/);
   const validator = readFileSync("scripts/customer-release-validation.ts", "utf8");
   assert.match(validator, /\["archive", "--format=tar", sha\]/);
+  assert.match(validator, /rhysd\/actionlint:1\.7\.12@sha256:[a-f0-9]{64}/);
+  assert.match(validator, /"--network", "none"/);
   assert.ok(validator.indexOf('releaseBuildArguments(sha, "customer-validation"') < validator.indexOf('releaseBuildArguments(sha, "web"'));
   assert.ok(validator.indexOf('releaseBuildArguments(sha, "web"') < validator.indexOf('"deploy/customer-docker/smoke.ts"'));
   assert.doesNotMatch(validator, /image.*prune|compose.*down/);
@@ -59,4 +65,18 @@ test("local and CI validation build the same frozen AMD64 release sequentially a
   assert.match(docker, /ORYX_CUSTOMER_INSTALL_FIXTURE=container-only node scripts\/customer-install-fixture.ts/);
   const fixture = readFileSync("scripts/customer-install-fixture.ts", "utf8");
   for (const check of ["systemd-analyze", "runuser", "check-nginx.ts", "check-release.ts", "uninstall.ts", "before.equals"]) assert.ok(fixture.includes(check), check);
+});
+
+test("a failed release check exits pre-push unsuccessfully before any upload", { skip: process.platform === "win32" }, () => {
+  const directory = mkdtempSync(join(tmpdir(), "oryx-pre-push-test-"));
+  try {
+    writeFileSync(join(directory, "docker"), `#!${process.execPath}\nprocess.exit(42);\n`, { mode: 0o755 });
+    const result = spawnSync(process.execPath, ["scripts/pre-push-validation.ts"], {
+      encoding: "utf8", input: `refs/heads/development ${sha} refs/heads/development ${"b".repeat(40)}\n`,
+      env: { ...process.env, PATH: `${directory}:${process.env.PATH ?? ""}` },
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Start Docker before pushing/);
+    assert.match(result.stderr, /Push blocked: customer release validation failed/);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
 });
