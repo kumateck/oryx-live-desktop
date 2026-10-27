@@ -1,19 +1,11 @@
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdtempSync, rmSync, statfsSync } from "node:fs";
+import { chmodSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 
 export const actionlintImage = "rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667";
-
-export function requireValidationDiskSpace(availableBytes: bigint): void {
-  const gibibyte = 1024n ** 3n;
-  if (availableBytes < 10n * gibibyte) {
-    const available = Number(availableBytes * 10n / gibibyte) / 10;
-    throw new Error(`Release validation needs at least 10 GiB free; ${available} GiB available. Free disk space before retrying.`);
-  }
-}
 
 export function releaseBuildArguments(sha: string, target: "customer-validation" | "web", tag: string): string[] {
   if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Validation requires a full Git commit SHA.");
@@ -39,10 +31,6 @@ export function validateCustomerRelease(sha: string): void {
   if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Validation requires a full Git commit SHA.");
   const check = spawnSync("docker", ["info"], { stdio: "ignore" });
   if (check.error || check.status !== 0) throw new Error("Start Docker before pushing. Release validation cannot be skipped.");
-  for (const directory of [process.cwd(), tmpdir()]) {
-    const disk = statfsSync(directory, { bigint: true });
-    requireValidationDiskSpace(disk.bavail * disk.bsize);
-  }
   const source = mkdtempSync(join(tmpdir(), "oryx-release-validation-"));
   const suffix = `${sha}-${randomUUID().slice(0, 8)}`;
   const validationImage = `oryx-live-validation:${suffix}`;

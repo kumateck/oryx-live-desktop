@@ -6,17 +6,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { outgoingPushCommits } from "../scripts/pre-push-validation.ts";
-import { extractReleaseSource, releaseBuildArguments, requireValidationDiskSpace } from "../scripts/customer-release-validation.ts";
+import { extractReleaseSource, releaseBuildArguments } from "../scripts/customer-release-validation.ts";
 
 const path = ".github/workflows/customer-docker.yml";
 const workflow = readFileSync(path, "utf8");
 const sha = "a".repeat(40);
 
-test("release validation rejects insufficient disk before archiving or building", () => {
-  const gibibyte = 1024n ** 3n;
-  assert.throws(() => requireValidationDiskSpace(10n * gibibyte - 1n), /at least 10 GiB free/);
-  assert.throws(() => requireValidationDiskSpace(gibibyte), /1 GiB available/);
-  assert.doesNotThrow(() => requireValidationDiskSpace(10n * gibibyte));
+test("CI validates its checked-out commit without a workstation disk-space admission gate", () => {
+  const validator = readFileSync("scripts/customer-release-validation.ts", "utf8");
+  assert.doesNotMatch(validator, /statfs|requireValidationDiskSpace|ORYX_MIN_FREE_GB|Free disk space/);
+  assert.match(workflow, /ref: \$\{\{ github.sha \}\}/);
+  // Customer deployment storage is checked separately, on the server that will actually host releases.
+  assert.match(readFileSync("deploy/customer-docker/lib.sh", "utf8"), /free_gb.*ORYX_MIN_FREE_GB|ORYX_MIN_FREE_GB.*free_gb/);
 });
 
 test("the exported source remains readable by the non-root read-only probe under umask 077", { skip: process.platform === "win32" }, () => {
