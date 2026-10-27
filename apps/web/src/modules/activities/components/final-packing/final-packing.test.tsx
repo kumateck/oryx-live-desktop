@@ -10,7 +10,7 @@ import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { forgetSession, rememberSession, stubBackend, testUserId } from "@/test/backend";
 
 afterEach(() => { cleanup(); forgetSession(); });
-interface Options { readStatus?: number; returnStatus?: number; saveStatus?: number; changeStep?: boolean; changeStock?: boolean; malformedStock?: boolean; missingUnit?: boolean; revokeOnSave?: boolean }
+interface Options { readStatus?: number; returnStatus?: number; saveStatus?: number; changeStep?: boolean; changeStock?: boolean; malformedStock?: boolean; missingUnit?: boolean; revokeOnSave?: boolean; extraStatus?: number }
 
 function AccessProbe() {
   const access = usePermissionAction({ kind: "all", permissions: ["CanViewPlannedProducts"], departmentType: 0 });
@@ -50,7 +50,9 @@ function open(options: Options = {}, address = "/production/activities/a1/final-
     } } });
     if (path.endsWith("/stock-requisition/package/b1")) return Response.json({ items: [{ material: { id: "m1", name: "Bottle", code: "PM1" },
       uoM: { id: options.missingUnit ? null : "piece", symbol: "piece" }, quantity: options.malformedStock ? -10 : options.changeStock ? 1200 : 1100 }] });
-    if (path.endsWith("/extra-packing/by-product/b1")) return Response.json([]);
+    if (path.endsWith("/extra-packing/by-product/b1")) return Response.json(options.extraStatus === undefined ? [] : [{
+      material: { id: "m1" }, quantity: 100, uoM: { id: "piece" }, status: options.extraStatus,
+    }]);
     if (path.endsWith("/final-packing/product/b1")) {
       if (options.readStatus) return new Response(null, { status: options.readStatus });
       return Response.json(saved ? { id: "fp1", totalQuantityPacked: 1000, nUmberOfFullShipperPacked: 100, leftOver: 0,
@@ -170,4 +172,18 @@ it("restores the selected packing tab from the URL after a full page reload", as
   await screen.findByRole("spinbutton", { name: "Total volume received" });
   expect(screen.getByRole("tab", { name: "Yield on packaging" }).getAttribute("aria-selected")).toBe("true");
   expect(restored.calls).toHaveLength(0);
+});
+
+it.each([0, 1])("blocks final packing when extra material has not been issued (%s)", async (extraStatus) => {
+  const { calls } = open({ extraStatus });
+  await screen.findByText("All extra material must be approved and issued before recording final packing.");
+  expect(screen.queryByRole("button", { name: "Record final packing" })).toBeNull();
+  expect(calls).toEqual([]);
+});
+
+it("rechecks extra-material issue before final packing completes the step", async () => {
+  const { calls, options } = open(); await fill(); options.extraStatus = 1;
+  fireEvent.click(screen.getByRole("button", { name: "Record final packing" }));
+  await screen.findByText("All extra material must be approved and issued before recording final packing.");
+  expect(calls).toEqual([]);
 });

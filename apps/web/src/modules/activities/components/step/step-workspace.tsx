@@ -31,7 +31,7 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
   const needs = { stockRequisition: step.team.some((member) => member.action === 1), bmr: step.team.some((member) => member.action === 0), atr: step.team.some((member) => member.action === 7) };
   const records = useStepRecords({ batchId, stepId: step.id, enabled: active, needs });
   const policy = stepPolicy({ step, currentStepId: activity.currentStepId, cancelled: activity.batch.cancelled, userId: user?.id ?? null,
-    extraMaterialPending: records.extraMaterialPending, atrExists: Boolean(records.atr) });
+    extraMaterialPending: records.extraMaterialPending, extraMaterialOpen: records.extraMaterialOpen, atrExists: Boolean(records.atr) });
   const commands = useStepCommands(step.id, batchId);
   const [open, setOpen] = useState<Open>(null);
   const autoStartAttempted = useRef<string | null>(null);
@@ -53,14 +53,14 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
     {running && policy.waitsFor !== null ? <p className="text-sm text-muted-foreground">This step finishes by itself when its {stepActionLabel(policy.waitsFor).toLowerCase()} is done.</p> : null}
 
     <StepRecordsView policy={policy} records={records} />
-    {policy.shouldAutoStart && records.error ? <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">
-      <span>Automatic start could not check this step's records.</span>
-      <Button type="button" size="sm" variant="outline" onClick={records.retry}>Retry start check</Button>
+    {records.error ? <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">
+      <span>This step's records could not be verified. Start and completion remain unavailable.</span>
+      <Button type="button" size="sm" variant="outline" onClick={records.retry}>Retry step check</Button>
     </div> : null}
 
     <div className="flex flex-wrap gap-2">
-      {policy.canStart ? <Button type="button" size="sm" disabled={busy} onClick={() => void commands.start()}>{commands.busy === "start" ? <><Spinner />Starting…</> : <><Play />Start step</>}</Button> : null}
-      {policy.canComplete ? <Button type="button" size="sm" disabled={busy} onClick={() => setOpen("complete")}>{commands.busy === "complete" ? <><Spinner />Completing…</> : <><Check />Complete step</>}</Button> : null}
+      {policy.canStart ? <Button type="button" size="sm" disabled={busy || !records.ready} onClick={() => void commands.start()}>{commands.busy === "start" ? <><Spinner />Starting…</> : <><Play />Start step</>}</Button> : null}
+      {policy.canManuallyComplete ? <Button type="button" size="sm" disabled={busy || !records.ready || !policy.canComplete} onClick={() => setOpen("complete")}>{commands.busy === "complete" ? <><Spinner />Completing…</> : <><Check />Complete step</>}</Button> : null}
       {policy.canRequestStock && !records.loading && !hasRequisition && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("stock")}><Send />Request stock</Button> : null}
       {policy.canRequestAtr && !records.loading && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("atr")}><FlaskConical />Request analysis</Button> : null}
       {policy.canRequestExtraMaterial ? <Button asChild size="sm" variant="outline"><Link to={extraMaterialPath(activity.id)}><PackagePlus />Request extra material</Link></Button> : null}
@@ -72,7 +72,7 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
 
     {open === "complete" ? <ConfirmActionDialog require={{ kind: "all", permissions: ["CanViewPlannedProducts"], departmentType: 0 }} title={`Complete "${step.name}"?`} description={`The batch moves on to its next step. A completed step cannot be reopened. ${batchLabel}.`}
       confirmLabel="Complete step" busyLabel="Completing…" destructive={false} onClose={() => setOpen(null)}
-      onConfirm={async () => !policy.canComplete ? "This step can no longer be completed." : (await commands.complete()) ? null : "The step was not completed. The reason is shown on the page."} /> : null}
+      onConfirm={async () => !records.ready || !policy.canComplete ? "This step cannot be completed until its records are verified and all extra material is issued." : (await commands.complete()) ? null : "The step was not completed. The reason is shown on the page."} /> : null}
     {open === "return" ? <ReasonDialog title="Return all materials?" description={`Every material issued to ${batchLabel} goes back to the warehouse and the batch's production is cancelled. This cannot be undone.`}
       confirmLabel="Return and cancel" busyLabel="Returning…" onClose={() => setOpen(null)} onConfirm={async (reason) => policy.canFullReturn ? commands.fullReturn(reason) : "Materials can no longer be returned from this step."} /> : null}
     {open === "atr" && batchId ? <AtrDialog stage={configuredTestStage(step)} record={records.bmr} batchId={batchId} stepId={step.id} productName={activity.batch.productName}

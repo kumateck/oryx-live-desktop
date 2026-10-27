@@ -11,7 +11,8 @@ import {
 } from "../api/activity-api";
 import { finalPackingRequest, materialRequests, packingMaterials, packingProblem, packCategory, returnedMaterials, yieldFigures, yieldTerms, type MaterialEntry, type YieldFigures, type YieldInputs } from "../lib/final-packing";
 import { activityAudit } from "../lib/activity-access";
-import { activitySchema, type Activity } from "../schemas/activity-schema";
+import { activitySchema, extraMaterialsSchema, type Activity } from "../schemas/activity-schema";
+import { extraMaterialStatus } from "../lib/step-status";
 import { stepPolicy } from "../lib/step-policy";
 import { extraIssuedSchema, issuedPackagingSchema, packingSourceSchema, recordedPackingSchema } from "../schemas/final-packing-schema";
 
@@ -53,7 +54,11 @@ export function useFinalPacking(batchId: string, activity: Activity) {
   const unaccounted = extras.some((extra) => extra.quantity > 0 && !issued.some((item) => item.materialId === extra.materialId));
   const inconsistentUnits = issued.some((item) => issued.some((other) => other.materialId === item.materialId && (other.unitId !== item.unitId || other.unit !== item.unit)))
     || extras.some((extra) => extra.unitId && issued.some((item) => item.materialId === extra.materialId && item.unitId !== extra.unitId));
+  const extraStates = extraMaterialsSchema.safeParse(missing(extraQuery.error) ? null : extraQuery.data);
+  const extraMaterialOpen = extraStates.success && extraStates.data.some((status) => status !== extraMaterialStatus.issued);
   const error = failure ? apiErrorMessage(failure) : malformed ? "The server returned packing data the app could not validate. Reload before recording packing."
+    : !extraStates.success ? "Extra material issue status could not be verified."
+    : extraMaterialOpen ? "All extra material must be approved and issued before recording final packing."
     : unaccounted ? "Extra packaging materials do not match the issued requisition. Reconcile the issued materials before recording packing."
       : inconsistentUnits ? "An issued material has conflicting units of measure. Correct the requisition before recording packing." : null;
 
@@ -97,10 +102,14 @@ export function useFinalPacking(batchId: string, activity: Activity) {
       const readFailure = latestActivity.error ?? latestPacking.error ?? (missing(latestIssued.error) ? undefined : latestIssued.error)
         ?? (missing(latestExtra.error) ? undefined : latestExtra.error) ?? (missing(latestDone.error) ? undefined : latestDone.error);
       if (readFailure) { setMessage(apiErrorMessage(readFailure)); return false; }
+      const latestExtraStates = extraMaterialsSchema.safeParse(missing(latestExtra.error) ? null : latestExtra.data);
+      if (!latestExtraStates.success || latestExtraStates.data.some((status) => status !== extraMaterialStatus.issued)) {
+        setMessage("All extra material must be approved and issued before recording final packing."); return false;
+      }
       const fresh = activitySchema.safeParse(latestActivity.data);
       const step = fresh.success ? fresh.data.steps.find((step) => step.id === input.stepId) : null;
       if (!fresh.success || fresh.data.batch.id !== batchId || !step || !stepPolicy({ step, currentStepId: fresh.data.currentStepId,
-        cancelled: fresh.data.batch.cancelled, userId: user?.id ?? null, extraMaterialPending: false, atrExists: false }).canFinalPack) {
+        cancelled: fresh.data.batch.cancelled, userId: user?.id ?? null, extraMaterialPending: false, extraMaterialOpen: false, atrExists: false }).canFinalPack) {
         setMessage("The active step or your assignment has changed. Return to the batch and review its current state."); return false;
       }
       if (latestDone.data != null) { setMessage("Final packing has already been recorded. Reload to view it."); return false; }

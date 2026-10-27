@@ -124,3 +124,41 @@ it("offers every linked family across departments once, even without a current-d
   await userEvent.setup().click(control);
   expect((await screen.findAllByRole("option")).map((option) => option.textContent)).toEqual(["mg", "g", "kg", "ml", "L"]);
 });
+
+it("filters material rows without removing hidden associations from the save", async () => {
+  const { writes } = openSupplier();
+  await purchaseUnit();
+  fireEvent.click(screen.getByRole("button", { name: "Packaging materials (0)" }));
+  expect(screen.queryByRole("combobox", { name: /Purchase unit/ })).toBeNull();
+  expect(screen.getByText(/Showing 0 of 1 material rows/)).toBeTruthy();
+  submit();
+  await screen.findByText("Supplier saved");
+  expect(JSON.parse(writes[0] ?? "{}").associatedManufacturers).toMatchObject([{ materialId: "m1", manufacturerId: "f1", purchaseUnit: "kg" }]);
+});
+
+it("prepends a blank material, clears the filter, and reveals hidden invalid rows on save", async () => {
+  const { writes } = openSupplier();
+  await purchaseUnit();
+  fireEvent.click(screen.getByRole("button", { name: "Raw materials (1)" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add material" }));
+  expect(screen.getByRole("button", { name: "All materials (2)" }).getAttribute("aria-pressed")).toBe("true");
+  const kinds = screen.getAllByRole("combobox", { name: /Material kind/ });
+  expect(kinds.map((kind) => kind.textContent)).toEqual(["Select an option", "Raw material"]);
+  fireEvent.click(screen.getByRole("button", { name: "Raw materials (1)" }));
+  submit();
+  await waitFor(() => expect(screen.getByRole("button", { name: "All materials (2)" }).getAttribute("aria-pressed")).toBe("true"));
+  expect(screen.getAllByRole("combobox", { name: /Material kind/ })).toHaveLength(2);
+  expect(writes).toEqual([]);
+});
+
+it("reveals a hidden row whose purchase unit fails fresh validation", async () => {
+  const { state, writes } = openSupplier();
+  await purchaseUnit();
+  fireEvent.click(screen.getByRole("button", { name: "Packaging materials (0)" }));
+  state.volume = true;
+  submit();
+  expect(await screen.findByText(/Choose a purchase unit compatible/)).toBeTruthy();
+  expect(screen.getByRole("combobox", { name: /Purchase unit/ })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "All materials (1)" }).getAttribute("aria-pressed")).toBe("true");
+  expect(writes).toEqual([]);
+});

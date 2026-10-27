@@ -16,7 +16,10 @@ const me = { id: testUserId, firstName: "Ada", lastName: "Mensah" };
 const other = { id: "someone-else", firstName: "Kofi", lastName: "Boateng" };
 const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
 
-interface Options { current?: { order: number; status: number; critical: boolean; mine: boolean; actions?: number[] }; cancelled?: boolean; requisition?: boolean }
+interface Options {
+  current?: { order: number; status: number; critical: boolean; mine: boolean; actions?: number[] };
+  cancelled?: boolean; requisition?: boolean; extraStatuses?: number[]; extraReadStatus?: number; malformedExtra?: boolean;
+}
 function run(options: Options) {
   const current = options.current ?? { order: 3, status: 0, critical: true, mine: true };
   const people = (current.actions ?? [8]).map((action) => ({ user: current.mine ? me : other, action }));
@@ -49,7 +52,10 @@ function open(address: string, options: Options = {}) {
       if (options.current) options.current.status = status;
       return new Response(null, { status: 204 });
     }
-    if (path === "/api/v1/production-schedule/extra-packing/by-product/b1") return Response.json([]);
+    if (path === "/api/v1/production-schedule/extra-packing/by-product/b1") {
+      if (options.extraReadStatus) return new Response(null, { status: options.extraReadStatus });
+      return Response.json(options.malformedExtra ? { unexpected: true } : (options.extraStatuses ?? []).map((status) => ({ status })));
+    }
     if (path.startsWith("/api/v1/production-schedule/stock-requisition/")) return options.requisition ? Response.json({ id: "r1", code: "SR-0004", status: 1 }) : new Response(null, { status: 404 });
     if (path === "/api/v1/production-schedule/material-stock/b1") return Response.json([{ material: { id: "m1", name: "Sugar", code: "RM-1" }, materialDepartment: { uoM: { id: "u-g", symbol: "g" } }, quantityNeeded: 500, quantityOnHand: 900 }]);
     if (path === "/api/v1/production-schedule/package-material-stock/b1") return Response.json([]);
@@ -145,4 +151,45 @@ it("closes every action on a cancelled batch and says why", async () => {
   open("/production/activities/a1/board", { cancelled: true });
   expect((await screen.findByRole("alert")).textContent).toContain("Production of this batch was cancelled. Reason: Line down");
   expect(screen.queryByRole("button", { name: "Start step" })).toBeNull();
+});
+
+it.each([0, 1])("disables completion until every extra material has been issued (outstanding status %s)", async (status) => {
+  const { calls } = open("/production/activities/a1/board", {
+    current: { order: 5, status: 1, critical: true, mine: true, actions: [3] }, extraStatuses: [2, status],
+  });
+  await screen.findByText(status === 0 ? /Extra material is waiting for approval/ : /Approved extra material has not been issued/);
+  const complete = screen.getByRole("button", { name: "Complete step" });
+  expect(complete.hasAttribute("disabled")).toBe(true);
+  fireEvent.click(complete);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(calls).toEqual([]);
+});
+
+it("allows completion after all extra materials are issued", async () => {
+  const { calls } = open("/production/activities/a1/board", {
+    current: { order: 5, status: 1, critical: true, mine: true }, extraStatuses: [2, 2],
+  });
+  await waitFor(() => expect(screen.getByRole("button", { name: "Complete step" }).hasAttribute("disabled")).toBe(false));
+  fireEvent.click(screen.getByRole("button", { name: "Complete step" }));
+  fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Complete step" }));
+  await waitFor(() => expect(calls.map((call) => call.search)).toEqual(["?status=2"]));
+});
+
+it.each([0, 1])("refreshes extra material at confirmation and refuses a newly outstanding request (%s)", async (status) => {
+  const options: Options = { current: { order: 5, status: 1, critical: true, mine: true }, extraStatuses: [2] };
+  const { calls } = open("/production/activities/a1/board", options);
+  await waitFor(() => expect(screen.getByRole("button", { name: "Complete step" }).hasAttribute("disabled")).toBe(false));
+  fireEvent.click(screen.getByRole("button", { name: "Complete step" }));
+  const dialog = await screen.findByRole("dialog");
+  options.extraStatuses = [status];
+  fireEvent.click(within(dialog).getByRole("button", { name: "Complete step" }));
+  await screen.findByText("All extra material must be approved and issued before completing this step.");
+  expect(calls).toEqual([]);
+});
+
+it.each([{ extraReadStatus: 503 }, { malformedExtra: true }])("keeps completion disabled when issue evidence cannot be verified: %o", async (failure) => {
+  const { calls } = open("/production/activities/a1/board", { ...failure, current: { order: 5, status: 1, critical: true, mine: true } });
+  await screen.findByRole("button", { name: "Retry step check" });
+  expect(screen.getByRole("button", { name: "Complete step" }).hasAttribute("disabled")).toBe(true);
+  expect(calls).toEqual([]);
 });

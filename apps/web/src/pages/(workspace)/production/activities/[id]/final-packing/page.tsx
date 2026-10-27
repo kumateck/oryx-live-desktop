@@ -20,7 +20,7 @@ function Packing({ activity, batchId }: { activity: Activity; batchId: string })
   useEffect(() => { if (state.completed) void navigate(batchBoardPath(activity.id)); }, [state.completed, activity.id, navigate]);
   const step = activity.steps.find((item) => item.id === activity.currentStepId);
   // The same rule as the button that leads here, so the address alone does not open the form.
-  const policy = step ? stepPolicy({ step, currentStepId: activity.currentStepId, cancelled: activity.batch.cancelled, userId: user?.id ?? null, extraMaterialPending: false, atrExists: false }) : null;
+  const policy = step ? stepPolicy({ step, currentStepId: activity.currentStepId, cancelled: activity.batch.cancelled, userId: user?.id ?? null, extraMaterialPending: false, extraMaterialOpen: false, atrExists: false }) : null;
   const processing = state.saving || state.pendingReturn || state.uncertain || state.completed;
   if (state.loading && !processing) return <FormPageSkeleton label="Loading final packing" sections={[6, 4]} />;
   if (state.error && !processing) return <div role="alert" className="flex flex-wrap items-center gap-2 text-sm">{state.error}<Button type="button" size="sm" variant="outline" onClick={state.retry}>Retry</Button></div>;

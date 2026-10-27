@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ import { usePostApiV1ProcurementManufacturerMutation, usePutApiV1ProcurementManu
 import { manufacturerAudit, manufacturerPath, manufacturersPath, manufacturerPermissions } from "../lib/manufacturer-access";
 import { emptyManufacturer, emptyMaterial, manufacturerDefaults, manufacturerFormSchema, manufacturerPayload, type ManufacturerFormValues } from "../schemas/manufacturer-form-schema";
 import { ManufacturerMaterialRow } from "./manufacturer-material-row";
+import { MaterialRowFilters } from "@/shared/procurement/material-row-filters";
+import { matchesMaterialRow, type MaterialRowFilter } from "@/shared/procurement/material-row-filter";
 
 export function ManufacturerEditor({ manufacturer }: { manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto }) {
   const navigate = useNavigate();
@@ -27,6 +29,8 @@ export function ManufacturerEditor({ manufacturer }: { manufacturer?: DomainEnti
   const [saved, setSaved] = useState(false);
   const form = useForm<ManufacturerFormValues>({ resolver: zodResolver(manufacturerFormSchema), defaultValues: manufacturer ? manufacturerDefaults(manufacturer) : emptyManufacturer() });
   const rows = useFieldArray({ control: form.control, name: "materials" });
+  const materialsInForm = useWatch({ control: form.control, name: "materials" });
+  const [materialFilter, setMaterialFilter] = useState<MaterialRowFilter>("all");
   const fields = [
     { type: InputTypes.TEXT, name: "name", label: "Manufacturer name", required: true },
     { type: InputTypes.TEXT, name: "address", label: "Address", required: true },
@@ -50,7 +54,7 @@ export function ManufacturerEditor({ manufacturer }: { manufacturer?: DomainEnti
       toast.success(manufacturer ? "Manufacturer updated" : "Manufacturer created");
       const savedId = manufacturer?.id ?? result.data;
       void navigate(savedId ? manufacturerPath(savedId) : manufacturersPath);
-    })();
+    }, (errors) => { if (errors.materials) setMaterialFilter("all"); })();
   };
 
   return <form noValidate onSubmit={(event) => void save(event)} className="min-w-0 space-y-4">
@@ -61,8 +65,11 @@ export function ManufacturerEditor({ manufacturer }: { manufacturer?: DomainEnti
     </section>
     <section className="space-y-3"><div className="flex items-center justify-between gap-2"><div><h2 className="text-sm font-semibold">Manufactured materials</h2>
       <p className="text-xs text-muted-foreground">Record quantity per pack for each material.</p></div>
-      <Button type="button" size="sm" variant="outline" onClick={() => rows.append(emptyMaterial())}>Add material</Button></div>
-      {rows.fields.map((row, index) => <ManufacturerMaterialRow key={row.id} form={form} index={index} onRemove={() => rows.remove(index)} />)}
+      <Button type="button" size="sm" variant="outline" onClick={() => { setMaterialFilter("all"); rows.prepend(emptyMaterial()); }}>Add material</Button></div>
+      <MaterialRowFilters kinds={materialsInForm.map((row) => row.kind?.value)} value={materialFilter} onChange={setMaterialFilter} />
+      {rows.fields.map((row, index) => <div key={row.id} hidden={!matchesMaterialRow(materialFilter, materialsInForm[index]?.kind?.value)}>
+        <ManufacturerMaterialRow form={form} index={index} onRemove={() => rows.remove(index)} />
+      </div>)}
       {form.formState.errors.materials?.message ? <p role="alert" className="text-sm text-destructive">{form.formState.errors.materials.message}</p> : null}
     </section>
     {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}

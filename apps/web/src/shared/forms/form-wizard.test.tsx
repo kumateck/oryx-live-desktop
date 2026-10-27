@@ -118,13 +118,14 @@ it("selects and clears full option objects in a multi-select", async () => {
   }
   render(<MultiForm />);
   await user.click(await screen.findByRole("button", { name: "Roles" }));
-  await user.click(screen.getByText("Buyer"));
-  await user.click(screen.getByText("Seller"));
+  await user.click(screen.getByRole("button", { name: "Select All" }));
+  expect(screen.getByRole("button", { name: "Unselect All" })).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Save roles" }));
   await waitFor(() => expect(submit.mock.calls[0]?.[0].roles).toEqual([
     { value: "buyer", label: "Buyer" }, { value: "seller", label: "Seller" },
   ]));
-  await user.click(screen.getByRole("button", { name: "Clear Roles" }));
+  await user.click(screen.getByRole("button", { name: "Roles" }));
+  await user.click(screen.getByRole("button", { name: "Unselect All" }));
   await user.click(screen.getByRole("button", { name: "Save roles" }));
   await waitFor(() => expect(submit.mock.calls[1]?.[0].roles).toEqual([]));
 });

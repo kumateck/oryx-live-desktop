@@ -102,3 +102,9 @@ Verification: 14 focused backend supplier-pricing/purchase-unit tests passed, in
 The running app exposed the earlier agreement failure as the backend AgreedPrice 0.01 minimum. The paired backend fix aligns model validation with positive repository/frontend values, so fractional per-unit prices can create configured approval stages. Pending-approval invalidation and fresh-on-entry queries prevent cached empty queues. This does not approve, recreate or retry any live record automatically.
 
 Verification for the missing-approval fix: 13 focused queue/outcome tests passed; paired backend supplier-pricing tests passed (15). React Doctor reported no new issues. The actual running UI error was inspected; no business submission or approval was performed during diagnosis.
+
+## Material editor controls (2026-10-27)
+
+**Add material** prepends a new row in both supplier and manufacturer editors and resets the material filter so the blank row is visible. Clickable filters show live counts for All materials, Raw materials, Packaging materials and Unassigned. Filtering hides rows without removing their form values; every row is validated and included when saving. A hidden invalid row, including a supplier purchase unit rejected by the fresh lookup, restores the All materials view. The shared multi-select now labels its option toggle **Select All / Unselect All**.
+
+Regression tests cover preserving hidden associations and precise manufacturer quantities, adding at the top under an active filter, and revealing hidden validation errors. Mocked browser checks at 1280×720, 1366×768 and 853×480 found no horizontal overflow or browser exceptions.

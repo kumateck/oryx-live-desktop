@@ -21,7 +21,7 @@ const raw = { id: "a1", status: 1, startedAt: "2026-10-01T08:00:00Z", currentSte
   ] };
 const activity = activitySchema.parse(raw);
 const step = (id: string, change: Partial<ActivityStep> = {}): ActivityStep => ({ ...activity.steps.find((item) => item.id === id)!, ...change });
-const context = { currentStepId: "s3", cancelled: false, userId: "u1", extraMaterialPending: false, atrExists: false };
+const context = { currentStepId: "s3", cancelled: false, userId: "u1", extraMaterialPending: false, extraMaterialOpen: false, atrExists: false };
 
 it("orders the steps, puts the newest log first, and measures progress", () => {
   expect(activity.steps.map((item) => item.order)).toEqual([1, 2, 3, 4]);
@@ -68,6 +68,14 @@ it("holds a start while extra material is pending, and a completion while a test
   const packing = step("s3", { status: 0, team: [{ ...step("s3").team[0]!, action: 4 }] });
   expect(stepPolicy({ ...context, step: packing })).toMatchObject({ canStart: true, waitsFor: 4 });
   expect(stepPolicy({ ...context, step: { ...packing, status: 1 } })).toMatchObject({ canComplete: false, canFinalPack: true });
+});
+
+it("holds manual completion for pending approval and approved but unissued extra material", () => {
+  const running = step("s3", { status: 1 });
+  expect(stepPolicy({ ...context, step: running, extraMaterialPending: true, extraMaterialOpen: true }))
+    .toMatchObject({ canManuallyComplete: true, canComplete: false });
+  expect(stepPolicy({ ...context, step: running, extraMaterialPending: false, extraMaterialOpen: true }).canComplete).toBe(false);
+  expect(stepPolicy({ ...context, step: running, extraMaterialOpen: false }).canComplete).toBe(true);
 });
 
 it("raises a test request once, for the stage set on the step's instruction", () => {
