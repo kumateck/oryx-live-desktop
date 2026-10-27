@@ -1,11 +1,12 @@
 import { lazy, Suspense, useId, useMemo, useState } from "react";
-import { FormProvider, type FieldValues, type UseFormReturn } from "react-hook-form";
+import { FormProvider, useFormState, type FieldValues, type UseFormReturn } from "react-hook-form";
 import { cn } from "cn";
 import { CustomFieldBoundary } from "./custom-field-boundary";
 import { FieldFrame } from "./field-frame";
 import { fieldDescription } from "./field-description";
 import { useFieldError } from "./field-state";
 import type { CustomField, ExtendedWizardField, WizardField } from "./form-wizard-types";
+import { useFormUpdateSafety } from "../updates/form-update-safety";
 import { InputTypes } from "./input-types";
 
 const TextInputField = lazy(() => import("./fields/text-field"));
@@ -113,6 +114,8 @@ function WizardFieldSlot<TValues extends FieldValues>({ field, form }: {
 }
 
 export function FormWizard<TValues extends FieldValues>({ form, fields, className }: FormWizardProps<TValues>) {
+  const { isDirty, isSubmitting } = useFormState({ control: form.control });
+  useFormUpdateSafety(isDirty || isSubmitting);
   return <FormProvider {...form}><div className={cn("grid min-w-0 grid-cols-1 gap-4", className)}>
     {fields.map((field) => <Suspense key={"name" in field ? field.name : field.id} fallback={<div className="h-14 min-w-0 animate-pulse rounded-lg bg-muted" aria-label={`Loading ${"label" in field ? field.label : "form layout"}`} />}>
       <WizardFieldSlot field={field} form={form} />

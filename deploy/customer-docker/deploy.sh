@@ -29,6 +29,9 @@ STATE=${ORYX_DEPLOY_STATE:-$HOME/.local/state/oryx-live}
 [[ ${DISCORD_WEBHOOK_URL:-} =~ ^https://(discord.com|discordapp.com)/api/webhooks/[A-Za-z0-9_/-]+$ ]] || { echo 'Set a Discord webhook URL in the protected customer configuration.' >&2; exit 1; }
 [[ ${GITHUB_TOKEN:-} != *$'\n'* && ${GITHUB_TOKEN:-} != *'"'* && ${GITHUB_TOKEN:-} != *'\'* ]] || exit 1
 mkdir -p "$STATE"/{releases,images,logs,tmp,quarantine}
+[[ ! -L "$STATE/downloads" ]] || { echo 'The public downloads directory must not be a symlink.' >&2; exit 1; }
+mkdir -p "$STATE/downloads"
+chmod 0755 "$STATE/downloads"
 source "$PACKAGE/lib.sh"
 OPERATION=${1:-status}
 case "$OPERATION" in preflight|deploy|poll|status|rollback|pause|resume) ;; *) echo 'Use preflight, deploy [--retry], poll, status, rollback, pause or resume.' >&2; exit 1;; esac

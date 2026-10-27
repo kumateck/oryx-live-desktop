@@ -26,8 +26,8 @@ probe_metadata_permissions() {
   chmod 0644 "$1/compatibility.json" "$1/backend-baseline.json"
 }
 runtime_environment() {
-  printf 'ORYX_RELEASE_SHA=%s\nORYX_PUBLIC_PORT=3001\nORYX_API_UPSTREAM=%s\nORYX_GATEWAY_UPSTREAM=%s\nORYX_PUBLIC_PROTO=%s\nORYX_BIND_ADDRESS=%s\n' \
-    "$1" "$ORYX_API_UPSTREAM" "$ORYX_GATEWAY_UPSTREAM" "$ORYX_PUBLIC_PROTO" "$ORYX_BIND_ADDRESS"
+  printf 'ORYX_RELEASE_SHA=%s\nORYX_PUBLIC_PORT=3001\nORYX_API_UPSTREAM=%s\nORYX_GATEWAY_UPSTREAM=%s\nORYX_PUBLIC_PROTO=%s\nORYX_BIND_ADDRESS=%s\nORYX_DOWNLOADS_DIR=%s\n' \
+    "$1" "$ORYX_API_UPSTREAM" "$ORYX_GATEWAY_UPSTREAM" "$ORYX_PUBLIC_PROTO" "$ORYX_BIND_ADDRESS" "$STATE/downloads"
 }
 cleanup() {
   [[ -z ${CANDIDATE:-} ]] || docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
@@ -36,7 +36,7 @@ cleanup() {
 compose() {
   local sha=$1; shift
   # Runtime settings are frozen per release; current shell exports must not alter rollback.
-  env -u ORYX_RELEASE_SHA -u ORYX_PUBLIC_PORT -u ORYX_API_UPSTREAM -u ORYX_GATEWAY_UPSTREAM -u ORYX_PUBLIC_PROTO -u ORYX_BIND_ADDRESS \
+  env -u ORYX_RELEASE_SHA -u ORYX_PUBLIC_PORT -u ORYX_API_UPSTREAM -u ORYX_GATEWAY_UPSTREAM -u ORYX_PUBLIC_PROTO -u ORYX_BIND_ADDRESS -u ORYX_DOWNLOADS_DIR \
     docker compose --project-name oryx-live --env-file "$STATE/releases/$sha/runtime.env" --file "$STATE/releases/$sha/compose.yml" "$@"
 }
 restore_image() {

@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, safeStorage, session, shell, type 
 import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { DesktopUpdateRuntime } from "./updates/runtime";
 import { CompanionRuntime } from "./companion/runtime";
 import { buildMenu } from "./menu";
 import { parseSiteUrl } from "./site-config";
@@ -14,6 +15,7 @@ declare const MAIN_WINDOW_VITE_NAME: string;
 
 let window: BrowserWindow;
 let companion: CompanionRuntime | null = null;
+let updates: DesktopUpdateRuntime | null = null;
 let connectionPageUrl = "";
 let siteUrl = "";
 let connectionError = "";
@@ -69,6 +71,12 @@ async function isOryxSite(): Promise<boolean> {
 
 async function openSite(): Promise<void> {
   if (!siteUrl) { await showConnectionPage(); return; }
+  updates?.connect(siteUrl);
+  const minimum = await updates?.minimumForSite();
+  if (minimum) {
+    connectionError = `This web release needs desktop ${minimum} or newer. Update Oryx before opening it.`;
+    await showConnectionPage(); await updates?.open(); return;
+  }
   try {
     await window.loadURL(siteUrl);
     if (await isOryxSite()) { connectionError = ""; return; }
@@ -97,6 +105,7 @@ async function forgetServer(): Promise<void> {
   await vault.forget();
   await session.defaultSession.clearStorageData();
   siteUrl = "";
+  updates?.connect("");
   connectionError = "";
   refreshMenu();
   await showConnectionPage();
@@ -108,6 +117,7 @@ const onSite = () => isSitePage(siteUrl, window.webContents.getURL());
 function refreshMenu(): void {
   buildMenu({ siteUrl, companion: () => companion?.toggle(), reload: () => window.webContents.reload(),
     reconnect: () => reconnectSite(siteUrl, window.webContents, () => { void openSite(); }), changeServer, forgetServer: () => { void forgetServer(); },
+    updates: () => { void updates?.open().catch((error: Error) => console.error(error.message)); },
     home: () => { void openSite(); },
     back: () => { const history = window.webContents.navigationHistory; if (onSite() && history.canGoBack()) history.goBack(); },
     forward: () => { const history = window.webContents.navigationHistory; if (onSite() && history.canGoForward()) history.goForward(); },
@@ -145,12 +155,29 @@ async function createWindow(): Promise<void> {
   try {
     siteUrl = parseSiteUrl((await readFile(configPath(), "utf8")).trim());
   } catch { siteUrl = ""; }
+  updates = new DesktopUpdateRuntime(window, __dirname, {
+    site: () => siteUrl, connection: () => connectionPageUrl,
+    beforeInstall: async () => {
+      const guard = 'window.dispatchEvent(new Event("beforeunload", { cancelable: true }))';
+      const initiallyAllowed: boolean = await window.webContents.executeJavaScript(guard);
+      if (!initiallyAllowed) return false;
+      await vault.flush();
+      const allowed: boolean = await window.webContents.executeJavaScript(guard);
+      return allowed;
+    },
+    quit: () => { quitting = true; app.quit(); },
+  });
   companion = new CompanionRuntime(window, __dirname, () => siteUrl);
   await companion.start();
   refreshMenu();
   await openSite();
 }
 
+if (!app.requestSingleInstanceLock()) app.quit();
+else {
+app.on("second-instance", () => {
+  if (window && !window.isDestroyed()) { window.show(); window.focus(); updates?.updater.newLaunch(); }
+});
 app.whenReady().then(async () => {
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   vault = createSessionVault(path.join(app.getPath("userData"), "session.bin"), osCipher);
@@ -180,6 +207,7 @@ app.whenReady().then(async () => {
   await createWindow();
   app.on("activate", () => { if (!window || window.isDestroyed()) void createWindow(); else { window.show(); window.focus(); } });
 }).catch((error: Error) => { console.error(error); app.quit(); });
+}
 
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
 

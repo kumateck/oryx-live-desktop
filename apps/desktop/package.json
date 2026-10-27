@@ -1,7 +1,7 @@
 {
   "name": "@oryx/desktop",
   "productName": "Oryx Live Desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Desktop shell for the Oryx ERP",
   "author": "Kumateck",
   "private": true,
@@ -14,9 +14,10 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "make:windows": "electron-forge package --platform win32 --arch x64 && electron-builder --config electron-builder.config.cjs --win nsis --x64 --prepackaged \"out/Oryx Live Desktop-win32-x64\" --publish never",
+    "make:windows": "bun ../../scripts/make-windows.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "bun test tests"
+    "test": "bun test tests",
+    "make:windows:x86": "bun ../../scripts/make-windows.ts --arch ia32"
   },
   "devDependencies": {
     "@electron-forge/cli": "7.11.2",
