@@ -3169,6 +3169,14 @@
         "summary": "Get a daily attendance record summary based on and the date.",
         "parameters": [
           {
+            "name": "departmentId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -3184,6 +3192,16 @@
             "example": "PurchaseOrder",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
             }
           }
         ],
@@ -3207,6 +3225,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -4186,6 +4207,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -4237,6 +4268,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       },
@@ -8366,6 +8400,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -8388,6 +8432,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -28813,6 +28860,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -28835,6 +28892,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -28872,6 +28932,16 @@
             "example": "PurchaseOrder",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
             }
           }
         ],
@@ -28915,6 +28985,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       },
@@ -29266,6 +29339,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -29297,6 +29380,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -31379,6 +31465,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -31441,6 +31537,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -50264,6 +50363,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -50286,6 +50395,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -75987,6 +76099,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -76009,6 +76131,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -77107,6 +77232,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -77158,6 +77293,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -77233,6 +77371,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -77284,6 +77432,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -77589,6 +77740,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -77620,6 +77781,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -77648,6 +77812,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -77679,6 +77853,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -77745,6 +77922,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -77776,6 +77963,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -77834,6 +78024,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -77865,6 +78065,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -81216,6 +81419,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -81267,6 +81480,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -81316,6 +81532,14 @@
             }
           },
           {
+            "name": "materialId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -81331,6 +81555,16 @@
             "example": "PurchaseOrder",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
             }
           }
         ],
@@ -81383,6 +81617,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -83142,6 +83379,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -83193,6 +83440,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -84531,6 +84781,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -84582,6 +84842,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -85826,6 +86089,166 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/report/history/capabilities": {
+      "get": {
+        "tags": [
+          "ReportHistory"
+        ],
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/report/history/vendors": {
+      "get": {
+        "tags": [
+          "ReportHistory"
+        ],
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -105130,6 +105553,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "asOfDate",
+            "in": "query",
+            "description": "Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409.",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
           }
         ],
         "responses": {
@@ -105152,6 +105585,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Historical evidence unavailable for the selected date or report dependency."
           }
         }
       }
@@ -157461,6 +157897,32 @@
           "numberOfPackingMaterials": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto": {
+        "type": "object",
+        "properties": {
+          "protocolVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "availableFrom": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "basis": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

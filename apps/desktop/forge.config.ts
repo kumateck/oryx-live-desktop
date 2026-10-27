@@ -4,7 +4,7 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 
 const config: ForgeConfig = {
   // The extension is chosen per platform: build/icon.ico on Windows, build/icon.icns on macOS.
-  packagerConfig: { asar: true, executableName: "OryxLiveDesktop", icon: "build/icon", appBundleId: "com.kumateck.oryx-live-desktop" },
+  packagerConfig: { ...(process.env.ORYX_WINDOWS_ARCH ? { electronVersion: "43.8.3" } : {}), asar: true, executableName: "OryxLiveDesktop", icon: "build/icon", appBundleId: "com.kumateck.oryx-live-desktop" },
   makers: [
     new MakerZIP({}, ["darwin"]),
   ],
@@ -13,9 +13,10 @@ const config: ForgeConfig = {
       build: [
         { entry: "src/main.ts", config: "vite.main.config.ts", target: "main" },
         { entry: "src/companion/preload.ts", config: "vite.companion-preload.config.ts", target: "preload" },
+        { entry: "src/updates/preload.ts", config: "vite.update-preload.config.ts", target: "preload" },
         { entry: "src/preload.ts", config: "vite.preload.config.ts", target: "preload" },
       ],
-      renderer: [{ name: "main_window", config: "vite.renderer.config.ts" }, { name: "companion_window", config: "vite.companion.config.ts" }],
+      renderer: [{ name: "update_window", config: "vite.update.config.ts" }, { name: "main_window", config: "vite.renderer.config.ts" }, { name: "companion_window", config: "vite.companion.config.ts" }],
     }),
   ],
 };

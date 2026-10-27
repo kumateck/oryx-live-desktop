@@ -29,6 +29,10 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          departmentId: queryArg.departmentId,
+          asOfDate: queryArg.asOfDate,
+        },
       }),
     }),
     postApiV1Designation: build.mutation<
@@ -1194,10 +1198,13 @@ export type GetApiV1AttendanceRecordsDailySummaryApiArg = {
 export type GetApiV1AttendanceRecordsGeneralSummaryApiResponse =
   /** status 200 OK */ DomainEntitiesAttendanceRecordsGeneralAttendanceReportResponseRead;
 export type GetApiV1AttendanceRecordsGeneralSummaryApiArg = {
+  departmentId?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type PostApiV1DesignationApiResponse = /** status 200 OK */ string;
 export type PostApiV1DesignationApiArg = {

@@ -13,6 +13,7 @@ export interface MenuActions {
   back: () => void;
   forward: () => void;
   print: () => void;
+  updates: () => void;
 }
 
 function serverMenu(actions: MenuActions): MenuItemConstructorOptions {
@@ -21,6 +22,7 @@ function serverMenu(actions: MenuActions): MenuItemConstructorOptions {
     { label: connected ? `Connected to ${actions.siteUrl}` : "Not connected", enabled: false },
     { type: "separator" },
     { label: "Reconnect", accelerator: "CmdOrCtrl+Shift+R", enabled: connected, click: actions.reconnect },
+    { label: "Check for updates…", enabled: connected, click: actions.updates },
     { label: "Change Server…", accelerator: "CmdOrCtrl+Shift+S", click: actions.changeServer },
     { type: "separator" },
     { label: "Forget Server…", enabled: connected, click: actions.forgetServer },

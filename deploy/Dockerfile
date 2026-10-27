@@ -26,10 +26,10 @@ FROM deps AS web-build
 # The web typecheck (part of the build) needs more than Node's default heap.
 ENV NODE_OPTIONS=--max-old-space-size=6144
 COPY . .
-RUN bun run check && bun run build:web
 ARG RELEASE_SHA
 ARG RELEASE_BRANCH=entrance-server
 ENV RELEASE_SHA=${RELEASE_SHA} RELEASE_BRANCH=${RELEASE_BRANCH}
+RUN bun run check && bun run build:web
 RUN node deploy/customer-docker/build-metadata.ts
 
 # The web application: static files, with /api passed to the backend and /realtime to the gateway.

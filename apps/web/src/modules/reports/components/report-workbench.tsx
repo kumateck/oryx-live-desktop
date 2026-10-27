@@ -1,9 +1,11 @@
-import { useMemo } from "react";
+import { useDependentReportFilters } from "../hooks/use-dependent-report-filters";
+import { useReportHistory } from "../hooks/use-report-history";
+import { ReportFilterDialog } from "./report-filter-dialog";
+import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { FormWizard } from "@/shared/forms/form-wizard";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { Skeleton } from "@/shared/skeleton/skeleton";
 import { ReportResults } from "@/shared/reports/report-results";
@@ -18,16 +20,22 @@ function SelectedReport({ definition, requirement, initialFilters }: { definitio
     for (const name of definition.required ?? []) if (!values[name]) ctx.addIssue({ code: "custom", path: [name], message: "This filter is required." });
   }), [definition]);
   const form = useForm<ReportFilters>({ resolver: zodResolver(schema), defaultValues: { ...emptyReportFilters(), ...initialFilters } });
-  const [department, materialKind, store, division] = useWatch({ control: form.control, name: ["department", "materialKind", "store", "division"] });
-  const load = useReportLookups(definition.group, { department, materialKind, store, division });
-  const fields = useMemo(() => reportFilterFields(definition, (entity) => (search, page, signal) => load(entity, search, page, signal)), [definition, load]);
+  const resetFilters = useDependentReportFilters(form);
+  const load = useReportLookups(definition, form.getValues());
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [initialApplied] = useState(() => form.getValues());
+  const applied = useRef(initialApplied);
+  const history = useReportHistory(filtersOpen && definition.fields.includes("asOfDate"));
+  const fields = useMemo(() => reportFilterFields(definition, (entity) => (search, page, signal) => load(entity, search, page, signal)).map((field) => "name" in field && field.name === "asOfDate" ? { ...field, disabled: history.disabled, description: history.message } : field), [definition, load, history.disabled, history.message]);
+  const closeFilters = (open: boolean) => { if (!open) resetFilters(structuredClone(applied.current)); setFiltersOpen(open); };
   const runner = useReportRunner(definition, requirement);
   return <div className="space-y-5"><p className="text-sm text-muted-foreground">{definition.description}</p>
-    <form className="space-y-4" onSubmit={form.handleSubmit(runner.run)}>
-      <fieldset disabled={runner.busy} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"><FormWizard form={form} fields={fields} /></fieldset>
-      <div className="flex flex-wrap gap-2"><Button type="submit" disabled={runner.busy}>{runner.busy ? "Generating…" : "Generate report"}</Button>
-        {runner.busy ? <Button type="button" variant="outline" onClick={runner.cancel}>Cancel generation</Button> : <Button type="button" variant="outline" onClick={() => { form.reset({ ...emptyReportFilters(), ...initialFilters }); runner.reset(); }}>Reset filters</Button>}</div>
-    </form>
+    <div className="flex flex-wrap items-center gap-2"><Button disabled={runner.busy} onClick={() => setFiltersOpen(true)}>{runner.book ? "Edit filters" : "Choose filters"}</Button>
+      {runner.busy ? <Button variant="outline" onClick={runner.cancel}>Cancel generation</Button> : null}
+      <span className="text-sm text-muted-foreground">{runner.book ? "The report shows the last submitted filters." : "Set filters, then generate the complete report."}</span>
+    </div>
+    <ReportFilterDialog title={definition.title} open={filtersOpen} onOpenChange={closeFilters} form={form} fields={fields}
+      submit={(values) => { setFiltersOpen(false); void runner.run(values).then((success) => { if (success) applied.current = structuredClone(values); }); }} reset={() => resetFilters({ ...emptyReportFilters(), ...initialFilters })} />
     {runner.error ? <p role="alert" className="text-destructive">{runner.error}</p> : null}
     {runner.busy ? <div aria-label="Generating report" className="space-y-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-64 w-full" /></div> : runner.book ? <ReportResults book={runner.book} /> : <p className="text-sm text-muted-foreground">Choose filters and generate a report to view, print or export the complete snapshot.</p>}
   </div>;

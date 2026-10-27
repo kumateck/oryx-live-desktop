@@ -121,6 +121,7 @@ const injectedRtkApi = api.injectEndpoints({
         },
         params: {
           departmentId: queryArg.departmentId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -350,6 +351,7 @@ const injectedRtkApi = api.injectEndpoints({
           productId: queryArg.productId,
           warehouseId: queryArg.warehouseId,
           departmentId: queryArg.departmentId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -371,6 +373,7 @@ const injectedRtkApi = api.injectEndpoints({
           batchNumber: queryArg.batchNumber,
           expiryDateFrom: queryArg.expiryDateFrom,
           expiryDateTo: queryArg.expiryDateTo,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -434,6 +437,7 @@ const injectedRtkApi = api.injectEndpoints({
           inventoryClassification: queryArg.inventoryClassification,
           itemId: queryArg.itemId,
           categoryId: queryArg.categoryId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -447,6 +451,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -467,6 +474,7 @@ const injectedRtkApi = api.injectEndpoints({
           itemId: queryArg.itemId,
           categoryId: queryArg.categoryId,
           classification: queryArg.classification,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -486,6 +494,7 @@ const injectedRtkApi = api.injectEndpoints({
           categoryId: queryArg.categoryId,
           classification: queryArg.classification,
           store: queryArg.store,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -1099,6 +1108,7 @@ const injectedRtkApi = api.injectEndpoints({
           departmentId: queryArg.departmentId,
           materialKind: queryArg.materialKind,
           materialId: queryArg.materialId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -1119,6 +1129,8 @@ const injectedRtkApi = api.injectEndpoints({
           batchNumber: queryArg.batchNumber,
           expiryDateFrom: queryArg.expiryDateFrom,
           expiryDateTo: queryArg.expiryDateTo,
+          materialId: queryArg.materialId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -1431,6 +1443,7 @@ const injectedRtkApi = api.injectEndpoints({
           expiryDateFrom: queryArg.expiryDateFrom,
           expiryDateTo: queryArg.expiryDateTo,
           departmentId: queryArg.departmentId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -1679,6 +1692,7 @@ const injectedRtkApi = api.injectEndpoints({
           employeeType: queryArg.employeeType,
           gradeLevel: queryArg.gradeLevel,
           status: queryArg.status,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -1902,6 +1916,35 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1ReportHistoryCapabilities: build.query<
+      GetApiV1ReportHistoryCapabilitiesApiResponse,
+      GetApiV1ReportHistoryCapabilitiesApiArg
+    >({
+      providesTags: [{ type: "report/history", id: "LIST" }, { type: "report", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/report/history/capabilities`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1ReportHistoryVendors: build.query<
+      GetApiV1ReportHistoryVendorsApiResponse,
+      GetApiV1ReportHistoryVendorsApiArg
+    >({
+      providesTags: [{ type: "report/history", id: "LIST" }, { type: "report", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/report/history/vendors`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          asOfDate: queryArg.asOfDate,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -1981,6 +2024,8 @@ export type GetApiV1ReportStaffReportApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportEmployeeMovementApiResponse =
   /** status 200 OK */ DomainEntitiesReportsHumanResourceEmployeeMovementReportDtoRead[];
@@ -2126,6 +2171,8 @@ export type GetApiV1ReportProductStockSummaryApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportProductStockDetailedApiResponse =
   /** status 200 OK */ DomainEntitiesReportsFinishedGoodsTransferNotesProductStockDetailedReportDto[];
@@ -2140,6 +2187,8 @@ export type GetApiV1ReportProductStockDetailedApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportFgtnDashboardKpiApiResponse =
   /** status 200 OK */ DomainEntitiesReportsFinishedGoodsTransferNotesDashboardKpiReportDto;
@@ -2182,6 +2231,8 @@ export type GetApiV1ReportItemsPerStoreTypeApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportStockSummaryPerStoreTypeApiResponse =
   /** status 200 OK */ DomainEntitiesItemsStoreItemStockSummaryDto[];
@@ -2190,6 +2241,8 @@ export type GetApiV1ReportStockSummaryPerStoreTypeApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportVendorItemApiResponse =
   /** status 200 OK */ DomainEntitiesItemsVendorStoreItemStockSummaryDto[];
@@ -2203,6 +2256,8 @@ export type GetApiV1ReportVendorItemApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportVendorItemSummaryApiResponse =
   /** status 200 OK */ DomainEntitiesItemsVendorStoreItemStockSummaryDto[];
@@ -2215,6 +2270,8 @@ export type GetApiV1ReportVendorItemSummaryApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportShipmentApiResponse =
   /** status 200 OK */ DomainEntitiesReportsShipmentsShipmentReportDto[];
@@ -2593,6 +2650,8 @@ export type GetApiV1ReportWarehouseMaterialsStockSummaryApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportWarehouseMaterialsStockBatchDetailApiResponse =
   /** status 200 OK */ DomainEntitiesReportsWarehouseMaterialsStockBatchDetailDto[];
@@ -2602,10 +2661,13 @@ export type GetApiV1ReportWarehouseMaterialsStockBatchDetailApiArg = {
   batchNumber?: string;
   expiryDateFrom?: string;
   expiryDateTo?: string;
+  materialId?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportWarehouseShelfUtilisationDetailApiResponse =
   /** status 200 OK */ DomainEntitiesReportsWarehouseShelfUtilisationDetailDto[];
@@ -2806,6 +2868,8 @@ export type GetApiV1ReportWarehouseInventoryValuationDetailApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportWarehouseEmployeeActivityApiResponse =
   /** status 200 OK */ DomainEntitiesReportsWarehouseWarehouseEmployeeActivityDto[];
@@ -2956,6 +3020,8 @@ export type GetApiV1ReportHrEmployeeMasterListApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportHrEmployeeDirectoryByDepartmentApiResponse =
   /** status 200 OK */ DomainEntitiesReportsHumanResourceEmployeeDirectoryByDepartmentDto[];
@@ -3092,6 +3158,24 @@ export type GetApiV1ReportHrShiftScheduleRegisterApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+};
+export type GetApiV1ReportHistoryCapabilitiesApiResponse =
+  /** status 200 OK */ DomainEntitiesReportsReportHistoryCapabilitiesDto;
+export type GetApiV1ReportHistoryCapabilitiesApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1ReportHistoryVendorsApiResponse =
+  /** status 200 OK */ SharedCollectionItemDto[];
+export type GetApiV1ReportHistoryVendorsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type DomainEntitiesReportsProductionReportDto = {
   numberOfPurchaseRequisitions?: number;
@@ -5449,6 +5533,13 @@ export type DomainEntitiesReportsHumanResourceShiftScheduleRegisterReportDto = {
   rotationType?: string | null;
 };
 export type DomainEntitiesShiftSchedulesScheduleStatus = 0 | 1 | 2 | 3 | 4;
+export type DomainEntitiesReportsReportHistoryCapabilitiesDto = {
+  protocolVersion?: number;
+  serverTime?: string;
+  available?: boolean;
+  availableFrom?: string | null;
+  basis?: string | null;
+};
 export const {
   useGetApiV1ReportProductionQuery,
   useLazyGetApiV1ReportProductionQuery,
@@ -5658,4 +5749,8 @@ export const {
   useLazyGetApiV1ReportHrEmployeeAnniversaryBirthdayQuery,
   useGetApiV1ReportHrShiftScheduleRegisterQuery,
   useLazyGetApiV1ReportHrShiftScheduleRegisterQuery,
+  useGetApiV1ReportHistoryCapabilitiesQuery,
+  useLazyGetApiV1ReportHistoryCapabilitiesQuery,
+  useGetApiV1ReportHistoryVendorsQuery,
+  useLazyGetApiV1ReportHistoryVendorsQuery,
 } = injectedRtkApi;

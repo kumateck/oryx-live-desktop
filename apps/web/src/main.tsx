@@ -1,3 +1,4 @@
+import { UpdateProvider } from "./shared/updates/update-provider";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";
@@ -20,9 +21,9 @@ createRoot(root).render(
     <GlobalErrorBoundary>
       <ThemeProvider>
         <TooltipProvider delayDuration={200}>
-          <SessionProvider>
+          <UpdateProvider><SessionProvider>
             <RouterProvider router={router} />
-          </SessionProvider>
+          </SessionProvider></UpdateProvider>
           <Toaster position="top-right" closeButton richColors />
         </TooltipProvider>
       </ThemeProvider>

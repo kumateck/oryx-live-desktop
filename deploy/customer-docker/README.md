@@ -214,3 +214,7 @@ node deploy/customer-docker/smoke.ts oryx-live-customer-web:verification
 Regression coverage includes harmless contract drift, critical removals/inputs/authentication, unavailable metadata, split probe networking, production-branch isolation, CI gating, failed builds, automatic recovery, quarantine and checksum-protected rollback after image pruning. CI builds Linux AMD64; local Docker verification does not replace native HP/Ubuntu customer acceptance.
 
 Local verification for the simplification (2026-10-27): 108 Linux root/deployment tests, 1,576 web tests, 12 gateway tests and 8 desktop tests passed. The existing Docker production build with frozen dependencies, workspace typechecks, Vite build, Compose/shell validation and Nginx/API/compatibility/WebSocket/asset-retention smoke checks passed. Docker verification used the local Linux ARM64 engine; the production GitHub workflow builds AMD64. No customer server was contacted.
+
+## In-app desktop and web updates
+
+The frontend now mounts the dedicated public `$ORYX_DEPLOY_STATE/downloads` directory read-only for signed desktop update artifacts. Installer releases remain independent of Docker frontend releases. Follow [desktop updater setup, release publishing and compatibility](../../docs/desktop-updates.md). The main installer supports both Windows x86 and x64. Only the public downloads directory is 0755; customer configuration, credentials and private deployment state retain their restrictions.

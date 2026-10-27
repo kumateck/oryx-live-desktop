@@ -1,3 +1,4 @@
+import { hasUnsavedUpdateWork } from "../updates/leave-safety";
 // A window opened before a release still runs the previous build. When it opens a page it has not loaded yet, it asks
 // for that page's code under the old file name. The server keeps earlier builds' files (deploy/nginx.conf.template),
 // but if one is gone anyway, the window loads the new release instead of showing a dead end.
@@ -14,6 +15,7 @@ export function isStaleBuildError(error: Error | null | undefined): boolean {
 
 /** Loads the current release once. Returns false when it just did, so the caller shows the error instead of looping. */
 export function reloadForNewRelease(now = Date.now()): boolean {
+  if (typeof window.dispatchEvent === "function" && hasUnsavedUpdateWork()) return false;
   let last = 0;
   try { last = Number(sessionStorage.getItem(reloadedKey) ?? "0"); } catch { /* storage unavailable */ }
   if (now - last < quietMs) return false;
