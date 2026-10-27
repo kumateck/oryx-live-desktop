@@ -32,6 +32,11 @@ ENV RELEASE_SHA=${RELEASE_SHA} RELEASE_BRANCH=${RELEASE_BRANCH}
 RUN bun run check && bun run build:web
 RUN node deploy/customer-docker/build-metadata.ts
 
+# CI and pre-push use the same isolated installation checks; this stage is never deployed.
+FROM web-build AS customer-validation
+RUN apt-get update -qq && apt-get install -y --no-install-recommends nginx systemd util-linux && rm -rf /var/lib/apt/lists/*
+RUN ORYX_CUSTOMER_INSTALL_FIXTURE=container-only node scripts/customer-install-fixture.ts
+
 # The web application: static files, with /api passed to the backend and /realtime to the gateway.
 FROM ${NGINX_IMAGE} AS web
 ARG RELEASE_SHA

@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-const workflow=readFileSync(".github/workflows/deploy-testing.yml","utf8");
+const pipeline=readFileSync(".github/workflows/customer-docker.yml","utf8");
+const workflow=pipeline.slice(pipeline.indexOf("  windows-installer:"));
 
 test("customer Windows installer is manually dispatched from entrance-server and cannot deploy services", () => {
-  assert.match(workflow,/workflow_dispatch:/);
+  assert.match(pipeline,/workflow_dispatch:/);
+  assert.match(workflow,/needs: web/);
+  assert.match(workflow,/&& inputs\.build_windows/);
   assert.doesNotMatch(workflow,/^\s+(?:push|pull_request|schedule):/m);
   assert.match(workflow,/if: github.event_name == 'workflow_dispatch' && github.ref == 'refs\/heads\/entrance-server'/);
   assert.match(workflow,/runs-on: windows-latest/);
