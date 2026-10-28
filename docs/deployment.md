@@ -10,7 +10,7 @@ The `testing` branch deploys a site for people to try the app, on the same serve
 | Windows installer | http://164.90.142.68:3011/downloads/OryxLiveDesktop-Setup.exe |
 | Backend | http://164.90.142.68:8086 (the Oryx Next demo backend; same accounts and data) |
 
-The single **Customer release pipeline** (`.github/workflows/customer-docker.yml`) serves both branches, with one global queue and sequential jobs. A pull request only validates; its green check does **not** publish the site. A push to `testing`, after validation succeeds:
+The single **Customer release pipeline** (`.github/workflows/customer-docker.yml`) serves both branches, with one global queue and sequential jobs. `queue: max` retains up to 100 waiting runs while `cancel-in-progress: false` protects the active run; the default single-pending queue can replace a waiting deployment when another run arrives. **Development is a quiet working branch:** pushes to it and opening/updating pull requests do not start GitHub Actions. Merge a milestone PR into `testing` (or push directly to `testing`) to publish for QA. The merge creates the testing-branch push event, producing one release run after validation succeeds:
 
 1. builds the existing `deploy/Dockerfile` web and gateway targets and publishes exact-SHA images to GHCR;
 2. validates the candidate without stopping the working site, then replaces only `oryx-live-web` and `oryx-live-gateway` on `sail`, exposing port **3011**;
@@ -23,7 +23,7 @@ For a manual testing-site retry, select **testing**, enable **deploy_testing**, 
 
 The testing deployment reuses the existing SSH/RabbitMQ repository secrets. It discovers the demo backend route on `sail` through host port 8086 and leaves the running site alone if connectivity or candidate verification fails. It neither prunes Docker images globally nor changes the backend, Oryx Next, or databases. The desktop publisher runs only after the web deployment and native smoke checks succeed; a web-only run does not copy desktop files.
 
-To identify what is actually served, open [`/deployment.json`](http://164.90.142.68:3011/deployment.json) and compare `commit` with the **testing push** run's SHA. `unversioned` identifies an older build without commit metadata. A successful PR validation, an open PR to production, or a commit on another branch does not update the testing site. After the workflow correction is manually pushed to `testing`, its push run must complete **Deploy testing web** before the web changes appear.
+To identify what is actually served, open [`/deployment.json`](http://164.90.142.68:3011/deployment.json) and compare `commit` with the **testing push** run's SHA. `unversioned` identifies an older build without commit metadata. An open PR or a commit on `development` does not update the testing site. Merging the PR into `testing` starts its QA release; merging into `entrance-server` starts customer release approval. After the workflow correction is manually pushed to `testing`, its push run must complete **Deploy testing web** before the web changes appear.
 
 ## The Windows installer
 

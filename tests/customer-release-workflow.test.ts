@@ -12,6 +12,13 @@ const path = ".github/workflows/customer-docker.yml";
 const workflow = readFileSync(path, "utf8");
 const sha = "a".repeat(40);
 
+test("development work and open PRs stay quiet until a milestone reaches a release branch", () => {
+  const triggers = workflow.slice(workflow.indexOf("\non:\n"), workflow.indexOf("\npermissions:"));
+  assert.deepEqual([...triggers.matchAll(/^ {2}([\w_]+):/gm)].map((match) => match[1]), ["push", "workflow_dispatch"]);
+  assert.match(triggers, /push:\s+branches: \[testing, entrance-server\]/);
+  assert.doesNotMatch(triggers, /development|pull_request|workflow_run/);
+});
+
 test("CI validates its checked-out commit without a workstation disk-space admission gate", () => {
   const validator = readFileSync("scripts/customer-release-validation.ts", "utf8");
   assert.doesNotMatch(validator, /statfs|requireValidationDiskSpace|ORYX_MIN_FREE_GB|Free disk space/);
@@ -49,8 +56,10 @@ test("one production workflow queues all runs and validates before optional Wind
   assert.equal(existsSync(".github/workflows/customer-server.yml"), false);
   assert.equal(existsSync(".github/workflows/deploy-testing.yml"), false);
   assert.match(workflow, /push:\s+branches: \[testing, entrance-server\]/);
-  assert.match(workflow, /pull_request:\s+branches: \[testing, entrance-server\]/);
-  assert.match(workflow, /concurrency:\s+group: customer-release\s+cancel-in-progress: false/);
+  assert.doesNotMatch(workflow, /^\s*(?:pull_request|pull_request_target|workflow_run):/m);
+  assert.doesNotMatch(workflow, /github\.base_ref/);
+  assert.match(workflow, /if: github.ref == 'refs\/heads\/entrance-server' \|\| github.ref == 'refs\/heads\/testing'/);
+  assert.match(workflow, /concurrency:\s+group: customer-release\s+cancel-in-progress: false\s+queue: max/);
   assert.equal((workflow.match(/concurrency:/g) ?? []).length, 1);
   assert.doesNotMatch(workflow, /group:.*github\.ref|strategy:|matrix:/);
   assert.match(workflow, /build_windows:[\s\S]*?type: boolean[\s\S]*?default: false/);
@@ -85,7 +94,8 @@ test("local and CI validation build the same frozen AMD64 release sequentially a
   assert.throws(() => releaseBuildArguments("testing", "web", "fixture:web"), /full Git commit SHA/);
   const validator = readFileSync("scripts/customer-release-validation.ts", "utf8");
   assert.match(validator, /\["archive", "--format=tar", sha\]/);
-  assert.match(validator, /rhysd\/actionlint:1\.7\.12@sha256:[a-f0-9]{64}/);
+  assert.match(validator, /ghcr.io\/kjanat\/actionlint:1\.17\.0@sha256:[a-f0-9]{64}/);
+  assert.doesNotMatch(validator, /"-ignore"|"--ignore"/);
   assert.match(validator, /"--network", "none"/);
   assert.ok(validator.indexOf('releaseBuildArguments(sha, "customer-validation"') < validator.indexOf('releaseBuildArguments(sha, "web"'));
   assert.ok(validator.indexOf('releaseBuildArguments(sha, "web"') < validator.indexOf('"deploy/customer-docker/smoke.ts"'));
