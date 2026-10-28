@@ -7,14 +7,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/shared/navigation/page-header";
-import { Skeleton } from "@/shared/skeleton/skeleton";
-import { ReportResults } from "@/shared/reports/report-results";
 import { reportCatalog } from "../lib/catalog";
 import { reportFilterFields } from "../lib/filter-fields";
 import { reportFiltersSchema, emptyReportFilters, type ReportFilters } from "../schemas/report-filters";
 import { useReportLookups } from "../hooks/use-report-lookups";
 import { useReportRunner } from "../hooks/use-report-runner";
-import type { ReportDefinition, ReportGroup, ReportKey } from "../lib/report-model";
+import { ReportKey, type ReportDefinition, type ReportGroup } from "../lib/report-model";
+import { ReportSnapshot } from "./report-snapshot";
 function SelectedReport({ definition, requirement, initialFilters }: { definition: ReportDefinition; requirement?: string | undefined; initialFilters?: Partial<ReportFilters> | undefined }) {
   const schema = useMemo(() => reportFiltersSchema.superRefine((values, ctx) => {
     for (const name of definition.required ?? []) if (!values[name]) ctx.addIssue({ code: "custom", path: [name], message: "This filter is required." });
@@ -29,15 +28,17 @@ function SelectedReport({ definition, requirement, initialFilters }: { definitio
   const fields = useMemo(() => reportFilterFields(definition, (entity) => (search, page, signal) => load(entity, search, page, signal)).map((field) => "name" in field && field.name === "asOfDate" ? { ...field, disabled: history.disabled, description: history.message } : field), [definition, load, history.disabled, history.message]);
   const closeFilters = (open: boolean) => { if (!open) resetFilters(structuredClone(applied.current)); setFiltersOpen(open); };
   const runner = useReportRunner(definition, requirement);
-  return <div className="space-y-5"><p className="text-sm text-muted-foreground">{definition.description}</p>
-    <div className="flex flex-wrap items-center gap-2"><Button disabled={runner.busy} onClick={() => setFiltersOpen(true)}>{runner.book ? "Edit filters" : "Choose filters"}</Button>
+  const production = [ReportKey.MonthlySchedule, ReportKey.DailySchedule, ReportKey.ProductReadiness].includes(definition.key);
+  const filterButton = <Button disabled={runner.busy} onClick={() => setFiltersOpen(true)}>{runner.book ? "Edit filters" : "Choose filters"}</Button>;
+  return <div className={production ? "space-y-3" : "space-y-5"}>{!runner.readiness ? <p className="text-sm text-muted-foreground">{definition.description}</p> : null}
+    {!runner.readiness || runner.busy ? <div className="flex flex-wrap items-center gap-2">{filterButton}
       {runner.busy ? <Button variant="outline" onClick={runner.cancel}>Cancel generation</Button> : null}
       <span className="text-sm text-muted-foreground">{runner.book ? "The report shows the last submitted filters." : "Set filters, then generate the complete report."}</span>
-    </div>
+    </div> : null}
     <ReportFilterDialog title={definition.title} open={filtersOpen} onOpenChange={closeFilters} form={form} fields={fields}
       submit={(values) => { setFiltersOpen(false); void runner.run(values).then((success) => { if (success) applied.current = structuredClone(values); }); }} reset={() => resetFilters({ ...emptyReportFilters(), ...initialFilters })} />
     {runner.error ? <p role="alert" className="text-destructive">{runner.error}</p> : null}
-    {runner.busy ? <div aria-label="Generating report" className="space-y-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-64 w-full" /></div> : runner.book ? <ReportResults book={runner.book} /> : <p className="text-sm text-muted-foreground">Choose filters and generate a report to view, print or export the complete snapshot.</p>}
+    <ReportSnapshot book={runner.book} readiness={runner.readiness} busy={runner.busy} production={production} actions={filterButton} />
   </div>;
 }
 export function ReportWorkbench({ group, initialKey, allowedKeys, requirement, initialFilters }: { group: ReportGroup; initialKey?: ReportKey; allowedKeys?: readonly ReportKey[]; requirement?: string; initialFilters?: Partial<ReportFilters> }) {

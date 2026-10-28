@@ -31,7 +31,13 @@ export function ApprovalConfigurationsWorkspace() {
     </SettingsHeader>
     <Input className="w-full sm:w-72" aria-label="Search approval workflows" placeholder="Search workflows…" value={state.search} onChange={(event) => state.setSearch(event.target.value)} />
     <p className="text-xs text-muted-foreground">Timed delegation is unavailable: the current server does not persist delegation requests.</p>
-    {state.unreadable.length ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">{state.unreadable.join(", ")} {state.unreadable.length === 1 ? "has a workflow" : "have workflows"} with a stage that names no approver or repeats an order, so {state.unreadable.length === 1 ? "it is" : "they are"} not listed. Recreate {state.unreadable.length === 1 ? "it" : "them"} to route those documents.</p> : null}
+    {state.unreadable.length ? <div role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
+      <p>{state.unreadable.join(", ")} {state.unreadable.length === 1 ? "has a workflow" : "have workflows"} that cannot be read safely, so {state.unreadable.length === 1 ? "it is" : "they are"} not listed. Review stage assignments, unique stage numbers starting at 1, and the escalation delay before changing routing.</p>
+      {state.unreadable.includes("Stock") ? <p className="mt-2">The legacy Stock configuration is separate from Stock Requisition routing. Check historical references before removing it.</p> : null}
+      <PermissionGuard require="CanEditApprovalWorkflow"><div className="mt-2 flex flex-wrap gap-2">
+        {state.repairable.map((record) => <Button key={record.id} asChild size="sm" variant="outline"><Link to={`/settings/approvals/edit/${record.id}`}>Repair {approvalDocumentLabel(record.itemType)} workflow</Link></Button>)}
+      </div></PermissionGuard>
+    </div> : null}
     <ApprovalConfigurationsTable label="Approval workflows" rows={state.rows} {...state.paging} loading={state.loading} refreshing={state.refreshing} error={state.error} onRetry={state.retry} onEdit={edit} onRemove={setDeleting} />
     {deleting ? <ConfirmActionDialog require={"CanDeleteApprovals"} title="Remove approval workflow" description={`Remove the ${approvalDocumentLabel(deleting.itemType)} workflow? This changes routing for documents that use this policy.`} confirmLabel="Remove workflow" busyLabel="Removing…" onConfirm={confirm} onClose={() => setDeleting(null)} /> : null}
   </section>;

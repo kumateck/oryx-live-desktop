@@ -11,8 +11,9 @@ metadata, so the file input reopened empty with no saved-file links.
 The response writer now acknowledges the exact submitted fingerprint on a
 successful draft response. The saved check updates immediately; a later edit
 still differs from that acknowledgment and remains unsaved. Final submission
-skips acknowledged drafts, preventing the same selected file from being sent a
-second time just because its server marker differs. The response ID is retained
+requires every answer to be complete and explicitly saved as a draft. It never
+uploads or saves answers implicitly, so a selected file is not sent a second
+time just because its server marker differs. The response ID is retained
 immediately for later writes/finalization before the refetch completes. Local
 acknowledgments are scoped to the form/test context; permissions are rechecked
 after asynchronous file conversion and before the request.
