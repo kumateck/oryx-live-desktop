@@ -1,11 +1,56 @@
 import { expect, it } from "vitest";
-import { materialFigures, materialRequests, packingMaterials, packingProblem, returnedMaterials, yieldFigures, type YieldInputs } from "./final-packing";
-import { finalPackingFormSchema, issuedPackagingSchema, recordedPackingSchema } from "../schemas/final-packing-schema";
+import { finalPackingRequest, materialFigures, materialRequests, packCategory, packingMaterials, packingProblem, returnedMaterials, yieldFigures, yieldTerms, type YieldInputs } from "./final-packing";
+import { finalPackingFormSchema, issuedPackagingSchema, packingFormSchema, recordedPackingSchema } from "../schemas/final-packing-schema";
 
 const inputs: YieldInputs = { received: 120, averageFilled: 500, actualPacked: 240_000, qcSample: 0, retained: 0, stability: 0 };
 const source = { category: "tablet" as const, receivedUnit: "kg", packingExpectedYield: 1, packsPerShipper: 100 };
+
+it("identifies syrup with generic or absent packing-unit names without overriding explicit non-syrup categories", () => {
+  for (const unitName of [null, "Bottle", "Bottles", "PCS"]) {
+    expect(packCategory(unitName, { categoryName: "Syrup", unit: "ml" })).toBe("syrup");
+    expect(packCategory(unitName, { categoryName: null, unit: "L" })).toBe("syrup");
+  }
+  expect(packCategory("dry powder", { categoryName: null, unit: "ml" })).toBe("dry powder");
+  expect(packCategory("Bottle", { categoryName: "dry powder", unit: "ml" })).toBe("dry powder");
+  expect(packCategory("Box", { categoryName: null, unit: "mg" })).toBeNull();
+});
+
+it("reconciles the syrup paper example by volume and counts each sample once", () => {
+  const source = { category: "syrup" as const, receivedUnit: "L", packingExpectedYield: 20_000, packsPerShipper: 30 };
+  const input = { received: null, averageFilled: 150, actualPacked: 20_025, qcSample: 3, retained: 12, stability: 0 };
+  const figures = yieldFigures(input, source);
+  expect(figures).toMatchObject({ expected: 20_000, samples: 15, afterSamples: 20_010, totalPacked: 20_010,
+    gainOrLoss: 25, percent: 0.125, fullShippers: 667, leftOver: 0, needsReason: false });
+  expect(packingProblem({ category: "syrup", inputs: input, figures, batchSize: 3000, packsPerShipper: 30,
+    reason: "", materials: [], entries: {}, unitIds: {} })).toBeNull();
+  expect(finalPackingRequest({ category: "syrup", batchId: "batch", stepId: "step", packingId: "style", batchSize: 3000,
+    inputs: input, figures, packsPerShipper: 30, reason: "", materials: [] })).toMatchObject({
+    totalWeightReceived: 0, yieldTotalQuantityPacked: 20_025, totalNumberOfBottles: 20_010, totalQuantityPacked: 20_010,
+    qualityControlAnalyticalSample: 3, retainedSamples: 12, totalGainOrLoss: 25,
+  });
+});
+
+it("does not count syrup samples as loss and preserves the preloaded expected yield", () => {
+  const source = { category: "syrup" as const, receivedUnit: "L", packingExpectedYield: 50_000, packsPerShipper: 60 };
+  const input = { received: null, averageFilled: 60, actualPacked: 50_000, qcSample: 3, retained: 0, stability: 0 };
+  expect(yieldFigures(input, source)).toMatchObject({ expected: 50_000, afterSamples: 49_997, gainOrLoss: 0, percent: 0, fullShippers: 833, leftOver: 17 });
+  expect(yieldFigures({ ...input, averageFilled: 75 }, source).expected).toBe(50_000);
+  expect(yieldFigures(input, { ...source, packingExpectedYield: 25_000 }).expected).toBe(25_000);
+  expect(yieldFigures(input, { ...source, packingExpectedYield: 0 }).expected).toBe(0);
+});
+
+it("requires received weight only for the weight-based forms and never substitutes the style's expected count", () => {
+  const values = { averageFilled: 150, actualPacked: 20_025, qcSample: 3, retained: 12, stability: 0 };
+  expect(packingFormSchema("syrup").safeParse(values).success).toBe(true);
+  expect(yieldTerms("syrup", "ml").requiresReceived).toBe(false);
+  for (const category of ["tablet", "capsules", "tube", "dry powder", "sachet"] as const) {
+    expect(packingFormSchema(category).safeParse(values).success).toBe(false);
+    expect(yieldTerms(category, "mg").requiresReceived).toBe(true);
+    expect(yieldFigures({ ...inputs, received: null }, { ...source, category }).expected).toBe(0);
+  }
+});
 const validate = (patch: Partial<YieldInputs> = {}) => { const values = { ...inputs, ...patch }; return packingProblem({
-  inputs: values, figures: yieldFigures(values, source), batchSize: 240_000, packsPerShipper: 100, reason: "", materials: [], entries: {}, unitIds: {},
+  category: source.category, inputs: values, figures: yieldFigures(values, source), batchSize: 240_000, packsPerShipper: 100, reason: "", materials: [], entries: {}, unitIds: {},
 }); };
 
 it("rejects non-finite, fractional and over-sampled pack counts at the write boundary", () => {
@@ -40,7 +85,7 @@ it("merges split issue lines once and conserves raw quantities through reconcili
   const request = materialRequests(materials, entries).at(0);
   expect(request).toMatchObject({ packedQuantity: 100_000, sampledQuantity: 200_000, returnedQuantity: 100_000, totalAccountedForQuantity: 400_000 });
   for (const rejected of [-0.1, NaN, Infinity]) expect(materialFigures(material, { ...entries.m1, rejected }).problem).toContain("non-negative");
-  expect(packingProblem({ inputs, figures: yieldFigures(inputs, source), batchSize: 240_000, packsPerShipper: 100,
+  expect(packingProblem({ category: source.category, inputs, figures: yieldFigures(inputs, source), batchSize: 240_000, packsPerShipper: 100,
     reason: "", materials, entries, unitIds: {} })).toContain("unit of measure is missing");
 });
 

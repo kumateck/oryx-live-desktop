@@ -10,7 +10,7 @@ type YieldRow = { label: string; value: string } | { label: string; field: Count
 const count = (value: number) => formatQuantityNumber(value, "calculated");
 
 /** Editable yield measurements and read-only results in the batch record's row order. */
-export function YieldRows({ form, inputs, batchSize, batchUnit, packingName, terms, figures, reasonField }: {
+export function YieldRows({ form, inputs, batchSize, batchUnit, packingName, terms, figures, preloadedAverage, reasonField }: {
   form: UseFormReturn<FinalPackingFormValues>;
   inputs: YieldInputs;
   batchSize: number;
@@ -18,22 +18,24 @@ export function YieldRows({ form, inputs, batchSize, batchUnit, packingName, ter
   packingName: string;
   terms: ReturnType<typeof yieldTerms>;
   figures: YieldFigures;
+  preloadedAverage: boolean;
   reasonField: readonly WizardField<FinalPackingFormValues>[];
 }) {
   const quantity = (value: number) => `${count(value)} ${terms.countUnit}`;
   const entered = inputs.actualPacked !== null && inputs.actualPacked > 0;
   const rows: YieldRow[] = [
     { label: "Batch size (theoretical yield of batch)", value: `${count(batchSize)} ${batchUnit}` },
-    { label: terms.receivedLabel, field: "received", unit: terms.receivedUnit, required: true },
-    { label: terms.averageLabel, field: "averageFilled", unit: terms.averageUnit, required: true },
+    ...(terms.requiresReceived ? [{ label: terms.receivedLabel, field: "received" as const, unit: terms.receivedUnit, required: true }] : []),
+    ...(preloadedAverage ? [{ label: terms.averageLabel, value: `${formatQuantityNumber(inputs.averageFilled ?? 0, "entered")} ${terms.averageUnit}` }]
+      : [{ label: terms.averageLabel, field: "averageFilled" as const, unit: terms.averageUnit, required: true }]),
     { label: "Pack size", value: packingName },
-    { label: "Expected packs", value: quantity(figures.expected) },
-    { label: "Actual quantity packed", field: "actualPacked", unit: terms.countUnit, required: true },
+    { label: "Expected yield", value: figures.expected > 0 ? quantity(figures.expected) : "–" },
+    { label: "Total quantity packed (including samples)", field: "actualPacked", unit: terms.countUnit, required: true },
     { label: "Quality control analytical sample", field: "qcSample", unit: terms.countUnit },
     { label: "Retained sample", field: "retained", unit: terms.countUnit },
     { label: "Stability/Registration sample", field: "stability", unit: terms.countUnit },
-    { label: "Total quantity after samples", value: entered ? quantity(figures.afterSamples) : "–" },
-    { label: "Total gain or loss on packed", value: entered ? `${figures.gainOrLoss > 0 ? "+" : ""}${quantity(figures.gainOrLoss)}` : "–" },
+    { label: "Available for warehouse transfer", value: entered ? quantity(figures.afterSamples) : "–" },
+    { label: "Total gain or loss on packed", value: entered && figures.expected > 0 ? `${figures.gainOrLoss > 0 ? "+" : ""}${quantity(figures.gainOrLoss)}` : "–" },
     { label: "Percentage gain or loss", value: figures.percent === null ? "–" : `${figures.percent > 0 ? "+" : ""}${count(figures.percent)}%` },
   ];
   return <div className="min-w-0">

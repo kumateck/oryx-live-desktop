@@ -1,16 +1,22 @@
 import { z } from "zod";
+import type { PackCategory } from "../lib/final-packing";
 
 const positive = (message: string) => z.number({ message }).finite(message).positive(message);
 const count = (label: string) => z.number({ message: `Enter the ${label}, or 0` }).finite().int(`The ${label} must be a whole number`).min(0, `The ${label} cannot be negative`).max(Number.MAX_SAFE_INTEGER);
 
 export const finalPackingFormSchema = z.object({
-  received: positive("Enter how much was received"),
-  averageFilled: positive("Enter the average fill"),
+  received: positive("Enter how much was received").optional(),
+  averageFilled: positive("Enter the average fill").optional(),
   actualPacked: count("actual quantity packed").positive("Enter the actual quantity packed"),
   qcSample: count("QC sample"), retained: count("retained sample"), stability: count("stability sample"),
   reason: z.string().trim().nullish(),
 });
 export type FinalPackingFormValues = z.infer<typeof finalPackingFormSchema>;
+
+export const packingFormSchema = (category: PackCategory | null) => finalPackingFormSchema.superRefine((value, context) => {
+  if (category !== "syrup" && value.received === undefined) context.addIssue({ code: "custom", path: ["received"], message: "Enter how much was received" });
+  if (category !== "syrup" && value.averageFilled === undefined) context.addIssue({ code: "custom", path: ["averageFilled"], message: "Enter the average fill" });
+});
 
 const text = z.string().nullish().transform((value) => value?.trim() ?? "");
 const amount = z.number().finite().nonnegative();
@@ -28,11 +34,16 @@ export const extraIssuedSchema = z.array(z.object({ material: z.object({ id: z.s
 /** The batch record's packing style, with what the yield section needs from it. */
 export const packingSourceSchema = z.object({
   batchNumber: z.string().nullish(), manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(),
-  productionScheduleProduct: z.object({ productPacking: z.object({
+  productionScheduleProduct: z.object({
+    product: z.object({ fullBatchSize: z.number().nullish(), baseQuantity: z.number().nullish(),
+      category: z.object({ name: z.string().nullish() }).nullish(), baseUoM: z.object({ symbol: z.string().nullish() }).nullish() }).nullish(),
+    productPacking: z.object({
     id: z.string().nullish(), name: text, packPerShipper: z.number().nullish(), expectedYield: z.number().nullish(), basePackingUoM: z.object({ name: z.string().nullish() }).nullish(),
   }).nullish() }).nullish(),
-}).transform((record) => { const packing = record.productionScheduleProduct?.productPacking; return {
+}).transform((record) => { const packing = record.productionScheduleProduct?.productPacking; const product = record.productionScheduleProduct?.product; return {
   batchNumber: record.batchNumber ?? null, manufacturingDate: record.manufacturingDate ?? null, expiryDate: record.expiryDate ?? null,
+  product: { fullBatchSize: product?.fullBatchSize ?? null, compositionVolume: product?.baseQuantity ?? null,
+    categoryName: product?.category?.name ?? null, unit: product?.baseUoM?.symbol ?? null },
   packing: packing?.id ? { id: packing.id, name: packing.name || "Unnamed style", packsPerShipper: packing.packPerShipper && packing.packPerShipper > 0 ? packing.packPerShipper : null,
     expectedYield: packing.expectedYield ?? 0, unitName: packing.basePackingUoM?.name ?? null } : null,
 }; });
