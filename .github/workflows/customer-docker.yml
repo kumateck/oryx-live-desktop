@@ -23,12 +23,7 @@ concurrency:
 jobs:
   web:
     name: Validate customer release
-    permissions:
-      contents: read
-      actions: read
     if: github.ref == 'refs/heads/entrance-server' || github.ref == 'refs/heads/testing'
-    outputs:
-      desktop_changed: ${{ steps.desktop.outputs.desktop_changed }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -36,17 +31,10 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-          fetch-depth: 0
       - uses: docker/setup-buildx-action@v4
       - uses: actions/setup-node@v5
         with:
           node-version: 24.22.1
-      - name: Detect installed desktop changes
-        id: desktop
-        env:
-          DESKTOP_DIFF_BASE: ${{ github.event.before }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/testing-desktop-changes.ts
       - name: Run the same complete release validation as pre-push
         run: node scripts/customer-release-validation.ts --sha "${{ github.sha }}"
 
@@ -96,6 +84,8 @@ jobs:
 
   testing-deploy:
     name: Deploy testing web
+    outputs:
+      desktop_changed: ${{ steps.desktop.outputs.desktop_changed }}
     needs: testing-images
     if: github.ref == 'refs/heads/testing' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy_testing))
     runs-on: ubuntu-latest
@@ -236,6 +226,43 @@ jobs:
             if [ "$web_saved" = 1 ]; then docker rm "$OLD_WEB" >/dev/null; fi
             if [ "$gateway_saved" = 1 ]; then docker rm "$OLD_GATEWAY" >/dev/null; fi
             echo "Testing release verified: $TAG on port 3011"
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.22.1
+      - name: Read verified desktop publication
+        id: desktop_source
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          capture_stdout: true
+          script: |
+            set -eu
+            record="$HOME/oryx-live/desktop-release.sha"
+            installer="$HOME/oryx-live/downloads/OryxLiveDesktop-Setup.exe"
+            if [ ! -f "$record" ] || [ ! -s "$installer" ]; then
+              printf '%s\n' 'ORYX_DESKTOP_PUBLISHED_SHA=none'
+              exit 0
+            fi
+            [ ! -L "$record" ] && [ ! -L "$installer" ] || exit 1
+            IFS=' ' read -r source digest extra < "$record"
+            case "$source$digest" in *[!a-f0-9]*|'') echo 'Invalid desktop publication record' >&2; exit 1;; esac
+            [ "${#source}" -eq 40 ] && [ "${#digest}" -eq 64 ] && [ -z "$extra" ] || exit 1
+            actual=$(sha256sum "$installer" | cut -d' ' -f1)
+            [ "$actual" = "$digest" ] || { echo 'Published installer checksum no longer matches its source record.' >&2; exit 1; }
+            printf 'ORYX_DESKTOP_PUBLISHED_SHA=%s\n' "$source"
+      - name: Compare with the published desktop source
+        id: desktop
+        env:
+          DESKTOP_PUBLISHED_OUTPUT: ${{ steps.desktop_source.outputs.stdout }}
+        run: node scripts/testing-desktop-changes.ts
 
   windows-installer:
     name: Build Windows installer
@@ -244,7 +271,7 @@ jobs:
       signed: ${{ steps.signing.outputs.configured }}
     if: >-
       always() && needs.web.result == 'success' &&
-      ((github.ref == 'refs/heads/testing' && needs.testing-deploy.result == 'success' && needs.web.outputs.desktop_changed == 'true') ||
+      ((github.ref == 'refs/heads/testing' && needs.testing-deploy.result == 'success' && needs.testing-deploy.outputs.desktop_changed == 'true') ||
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/entrance-server' && inputs.build_windows))
     runs-on: windows-latest
     timeout-minutes: 45
@@ -482,4 +509,11 @@ jobs:
             cp "$stage/OryxLiveDesktop-Setup.exe" "$public/OryxLiveDesktop-Setup.exe.pending-$TAG"
             chmod 644 "$public/OryxLiveDesktop-Setup.exe.pending-$TAG"
             mv -f "$public/OryxLiveDesktop-Setup.exe.pending-$TAG" "$public/OryxLiveDesktop-Setup.exe"
+            (cd "$public" && sha256sum OryxLiveDesktop-Setup.exe) > "$public/OryxLiveDesktop-Setup.exe.sha256.pending-$TAG"
+            chmod 644 "$public/OryxLiveDesktop-Setup.exe.sha256.pending-$TAG"
+            mv -f "$public/OryxLiveDesktop-Setup.exe.sha256.pending-$TAG" "$public/OryxLiveDesktop-Setup.exe.sha256"
+            digest=$(cut -d' ' -f1 "$public/OryxLiveDesktop-Setup.exe.sha256")
+            umask 077
+            printf '%s %s\n' "$TAG" "$digest" > "$HOME/oryx-live/desktop-release.sha.pending-$TAG"
+            mv -f "$HOME/oryx-live/desktop-release.sha.pending-$TAG" "$HOME/oryx-live/desktop-release.sha"
             rm -rf "$HOME/oryx-live/desktop-staging-$TAG"
