@@ -44,6 +44,14 @@ released ATR and workflow states were preserved. See
 `docs/coldrilif-4862-stage-review.md`; QA must reconcile the released ATR before
 another Finished test can be requested.
 
+The user clarified that execution belongs on the production server, using Docker
+(API container `oryx-erp-api-demo`, database `entrancedb`, database user `root`).
+The SQL exporter packages standalone read-only inspection/preview and separate
+apply files without connecting or copying credentials. Run through psql in the
+existing PostgreSQL container; no Bun installation or application deployment is
+needed on that host. Confirm its database container and identities before applying;
+the earlier configured endpoint is not assumed to identify another deployment.
+
 ## Combined production readiness endpoint (2026-10-28)
 
 The user requested one parameterized backend endpoint returning all information
