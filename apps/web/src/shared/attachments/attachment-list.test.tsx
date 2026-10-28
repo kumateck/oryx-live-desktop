@@ -1,13 +1,24 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it, vi } from "vitest";
+import { strToU8, zipSync } from "fflate";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AttachmentList } from "./attachment-list";
+import { officeFixture } from "./preview-fixtures";
 
 const state = vi.hoisted(() => ({ mode: "ready" as "ready" | "error" }));
 vi.mock("./use-preview-document", () => ({ usePreviewDocument: () => state.mode === "error" ? { state: "error", message: "The file link expired." }
   : { state: "ready", format: "docx", bytes: new ArrayBuffer(2), wasm: new ArrayBuffer(2), glue: "", channel: "trusted-channel" } }));
-afterEach(() => { cleanup(); state.mode = "ready"; });
+afterEach(() => { cleanup(); state.mode = "ready"; vi.unstubAllGlobals(); });
+// The server's bytes for each sample file, so the viewer detects types the way it does in production.
+const served: Record<string, Uint8Array> = {
+  docx: officeFixture("docx"), xlsx: officeFixture("xlsx"), pdf: new TextEncoder().encode("%PDF-1.7\n"), zip: zipSync({ "a.txt": strToU8("a") }),
+  png: new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), xls: new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
+};
+beforeEach(() => {
+  vi.stubGlobal("fetch", vi.fn<typeof fetch>(async (input) => new Response(served[String(input).split(".").at(-1) ?? ""] as BodyInit)));
+  vi.stubGlobal("URL", class extends URL { static override createObjectURL = () => "blob:viewer-image"; static override revokeObjectURL = () => {}; });
+});
 const files = ["analysis.docx", "results.xlsx", "certificate.pdf", "archive.zip", "old.xls"].map((name) => ({ id: name, name, link: `https://minio.example/${name}` }));
 
 it("offers native Oryx previews for all three document formats, using one viewer for all attached files", async () => {
@@ -65,6 +76,6 @@ it.each(["certificate.pdf", "analysis.docx", "results.xlsx", "photo.png", "archi
   await user.keyboard("{Enter}");
   expect(await screen.findByRole("dialog", { name })).toBeTruthy();
   expect(screen.queryByRole("link", { name: "Open original" })).toBeNull();
-  if (name.endsWith(".zip") || name.endsWith(".xls")) expect(screen.getByRole("alert").textContent).toContain("This file format is not supported by the viewer yet");
-  if (name.endsWith(".png")) expect(screen.getByRole("img", { name }).getAttribute("src")).toBe(`https://minio.example/${name}`);
+  if (name.endsWith(".zip") || name.endsWith(".xls")) expect((await screen.findByRole("alert")).textContent).toContain(name.endsWith(".zip") ? "Compressed archives" : "Older Word, Excel");
+  if (name.endsWith(".png")) expect((await screen.findByRole("img", { name })).getAttribute("src")).toBe(`https://minio.example/${name}`);
 });

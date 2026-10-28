@@ -31,7 +31,7 @@ it("opens persisted and selected uploads without submitting or changing the form
   await user.click(await screen.findByRole("button", { name: "saved.png" }));
   expect(await screen.findByRole("dialog", { name: "saved.png" })).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Close preview" }));
-  const file = new File(["selected image"], "selected.png", { type: "image/png" });
+  const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], "selected.png", { type: "image/png" });
   await user.upload(screen.getByLabelText("Documents"), file);
   await user.click(await screen.findByRole("button", { name: "selected.png" }));
   expect(await screen.findByRole("dialog", { name: "selected.png" })).toBeTruthy();

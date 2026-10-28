@@ -66,9 +66,9 @@ it("validates local file bytes and only fetches engine assets", async () => {
 
 it("rejects oversized local files before document validation", async () => {
   const blob = new Blob(["x"]);
-  Object.defineProperty(blob, "size", { value: 17 * 1024 * 1024 });
+  Object.defineProperty(blob, "size", { value: 21 * 1024 * 1024 });
   vi.stubGlobal("fetch", vi.fn<typeof fetch>(async () => new Response("asset")));
   render(<Harness source={{ id: "local", name: "large.pdf", link: null, blob }} />);
-  await screen.findByText("The preview supports files up to 16 MiB.");
+  await screen.findByText("The preview supports files up to 20 MB.");
   expect(validate).not.toHaveBeenCalled();
 });
