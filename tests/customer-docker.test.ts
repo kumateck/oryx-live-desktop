@@ -13,7 +13,8 @@ test("customer package restricts fetches and CI approval to entrance-server and 
   assert.doesNotMatch(lib.split("\n").filter((line)=>!line.trimStart().startsWith("#")).join("\n"),/compose .*\bdown\b|docker (?:system|image) prune/);
   assert.match(lib,/docker image save/); assert.match(lib,/docker image load/);
   const workflow=readFileSync(".github/workflows/customer-docker.yml","utf8");
-  assert.equal((workflow.match(/branches: \[entrance-server\]/g)??[]).length,2); assert.doesNotMatch(workflow,/branches: \[(?:main|testing)\]/);
+  assert.equal((workflow.match(/branches: \[testing, entrance-server\]/g)??[]).length,1);
+  assert.match(workflow, /testing-deploy:[\s\S]*?if: github.ref == 'refs\/heads\/testing'/);
 });
 
 test("rollback reloads a checksum-verified archived image after external image pruning", linux, () => {

@@ -5,7 +5,8 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 
-export const actionlintImage = "rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667";
+// This maintained fork validates GitHub's concurrency.queue setting; upstream 1.7.12 rejects it.
+export const actionlintImage = "ghcr.io/kjanat/actionlint:1.17.0@sha256:d484cccadf56b6a356466ade9af4c8e05c5dce1badaf0a9ecd0d7639d68d9c92";
 
 export function releaseBuildArguments(sha: string, target: "customer-validation" | "web", tag: string): string[] {
   if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Validation requires a full Git commit SHA.");

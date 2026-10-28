@@ -9,10 +9,10 @@ export const varianceLimitPercent = 2;
 
 export type PackCategory = "syrup" | "tube" | "capsules" | "tablet" | "dry powder" | "sachet";
 const categories: readonly PackCategory[] = ["syrup", "tube", "capsules", "tablet", "dry powder", "sachet"];
-/** The kind of pack, taken from the name of the packing style's unit, which is how the product is set up. */
-export function packCategory(unitName: string | null | undefined): PackCategory | null {
-  const name = unitName?.trim().toLowerCase();
-  return categories.find((category) => category === name) ?? null;
+/** Prefer declared product/style categories. Legacy liquid styles may use a generic bottle unit. */
+export function packCategory(unitName: string | null | undefined, product?: { categoryName: string | null; unit: string | null }): PackCategory | null {
+  const declared = [product?.categoryName, unitName].map((name) => name?.trim().toLowerCase());
+  return declared.flatMap((name) => categories.filter((category) => category === name))[0] ?? (isVolumeUnit(product?.unit) ? "syrup" : null);
 }
 
 const counted: Record<PackCategory, string> = { syrup: "bottles", tube: "tubes", capsules: "capsules", tablet: "tablets", "dry powder": "bottles", sachet: "sachets" };
@@ -23,9 +23,10 @@ const average: Partial<Record<PackCategory, string>> = { tube: "Average weight o
 
 /** The words and units the yield section uses for a kind of pack and the unit the product is measured in. */
 export function yieldTerms(category: PackCategory | null, productUnit: string | null) {
-  const volume = isVolumeUnit(productUnit);
+  const volume = category === "syrup" || (category === null && isVolumeUnit(productUnit));
   return {
     countUnit: category ? counted[category] : "packs",
+    requiresReceived: category !== "syrup",
     receivedLabel: (category && received[category]) ?? (volume ? "Total volume received" : "Total weight received"), receivedUnit: volume ? "L" : "kg",
     averageLabel: (category && average[category]) ?? "Average volume filled per bottle", averageUnit: volume ? "ml" : "mg",
   };
@@ -41,13 +42,14 @@ const amount = (value: number | null) => value !== null && Number.isFinite(value
  * is typed in: expected packs, what is left after samples, the gain or loss, and how it packs into shippers.
  */
 export function yieldFigures(inputs: YieldInputs, source: YieldSource) {
-  // For anything but syrup, the expected number of packs is what the received bulk makes at the average fill.
-  const fromBulk = source.category !== "syrup" && amount(inputs.received) > 0 && amount(inputs.averageFilled) > 0
-    ? Math.round(toSmallestUnit(amount(inputs.received), source.receivedUnit) / amount(inputs.averageFilled)) : null;
-  const expected = fromBulk ?? source.packingExpectedYield;
+  // Syrup uses its preloaded packing-style yield. Other categories retain weight-based calculations.
+  const bulk = toSmallestUnit(amount(inputs.received), source.receivedUnit);
+  const expected = source.category === "syrup" ? amount(source.packingExpectedYield)
+    : bulk > 0 && amount(inputs.averageFilled) > 0 ? Math.round(bulk / amount(inputs.averageFilled)) : 0;
   const samples = amount(inputs.qcSample) + amount(inputs.retained) + amount(inputs.stability);
   const afterSamples = amount(inputs.actualPacked) - samples;
-  const gainOrLoss = afterSamples - expected;
+  // Samples remain accounted product. Only warehouse availability is reduced by sampling.
+  const gainOrLoss = amount(inputs.actualPacked) - expected;
   const percent = expected > 0 && amount(inputs.actualPacked) > 0 ? (gainOrLoss / expected) * 100 : null;
   const perShipper = source.packsPerShipper;
   const fullShippers = perShipper && afterSamples > 0 ? Math.floor(afterSamples / perShipper) : 0;
@@ -98,10 +100,12 @@ export function materialFigures(material: PackingMaterial, entry: MaterialEntry)
 }
 
 /** Recheck the complete snapshot at the write boundary, independently of the form's UI. */
-export function packingProblem(input: { inputs: YieldInputs; figures: YieldFigures; batchSize: number; packsPerShipper: number; reason: string;
+export function packingProblem(input: { category: PackCategory; inputs: YieldInputs; figures: YieldFigures; batchSize: number; packsPerShipper: number; reason: string;
   materials: readonly PackingMaterial[]; entries: Readonly<Record<string, MaterialEntry>>; unitIds: Readonly<Record<string, string>> }): string | null {
-  if (![input.batchSize, input.packsPerShipper, input.inputs.received, input.inputs.averageFilled].every((value) => value !== null && Number.isFinite(value) && value > 0))
-    return "Batch size, packs per shipper, received quantity, and average fill must be positive finite numbers.";
+  const measurements = [input.batchSize, input.packsPerShipper, input.inputs.averageFilled];
+  if (input.category !== "syrup") measurements.push(input.inputs.received);
+  if (!measurements.every((value) => value !== null && Number.isFinite(value) && value > 0))
+    return "Batch size, packs per shipper, average fill, and any required received quantity must be positive finite numbers.";
   if (!Number.isSafeInteger(input.packsPerShipper)) return "Packs per shipper must be a whole number.";
   const counts = [input.inputs.actualPacked, input.inputs.qcSample, input.inputs.retained, input.inputs.stability];
   if (!counts.every((value) => value !== null && Number.isSafeInteger(value) && value >= 0) || !(amount(input.inputs.actualPacked) > 0))
@@ -142,12 +146,13 @@ export function returnedMaterials(materials: readonly PackingMaterial[], entries
   });
 }
 
-export function finalPackingRequest(input: { batchId: string; stepId: string; packingId: string; batchSize: number; inputs: YieldInputs; figures: YieldFigures; packsPerShipper: number;
+export function finalPackingRequest(input: { category: PackCategory; batchId: string; stepId: string; packingId: string; batchSize: number; inputs: YieldInputs; figures: YieldFigures; packsPerShipper: number;
   reason: string; materials: MaterialRequest[] }): FinalPackingRequest {
   const { inputs, figures } = input;
   return {
     productionScheduleProductId: input.batchId, productionActivityStepId: input.stepId, productPackingId: input.packingId, materials: input.materials,
-    batchSize: input.batchSize, totalWeightReceived: amount(inputs.received), averageVolumeFilledPerBottle: amount(inputs.averageFilled),
+    // The legacy decimal property remains 0 for syrup: no received weight is measured on that form.
+    batchSize: input.batchSize, totalWeightReceived: input.category === "syrup" ? 0 : amount(inputs.received), averageVolumeFilledPerBottle: amount(inputs.averageFilled),
     yieldTotalQuantityPacked: amount(inputs.actualPacked), qualityControlAnalyticalSample: amount(inputs.qcSample), retainedSamples: amount(inputs.retained), stabilitySamples: amount(inputs.stability),
     totalNumberOfBottles: figures.afterSamples, totalGainOrLoss: figures.gainOrLoss,
     numberOfBottlesPerShipper: input.packsPerShipper, nUmberOfFullShipperPacked: figures.fullShippers, leftOver: figures.leftOver, totalQuantityPacked: figures.totalPacked,

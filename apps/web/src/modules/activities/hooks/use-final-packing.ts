@@ -14,6 +14,7 @@ import { activityAudit } from "../lib/activity-access";
 import { activitySchema, extraMaterialsSchema, type Activity } from "../schemas/activity-schema";
 import { extraMaterialStatus } from "../lib/step-status";
 import { stepPolicy } from "../lib/step-policy";
+import { fromSmallestUnit, isVolumeUnit } from "@/shared/units/quantity";
 import { extraIssuedSchema, issuedPackagingSchema, packingSourceSchema, recordedPackingSchema } from "../schemas/final-packing-schema";
 import { absentFinalPacking } from "../lib/packing-record-absence";
 
@@ -87,11 +88,15 @@ export function useFinalPacking(batchId: string, activity: Activity) {
     const denied = permission.check();
     if (denied || error) { setMessage(denied ?? error ?? "Packing data could not be verified."); return false; }
     if (!source?.packing?.packsPerShipper) { setMessage("The packing style must have a valid number of packs per shipper."); return false; }
-    const category = packCategory(source.packing.unitName);
+    const productUnit = source.product.unit ?? activity.batch.unit;
+    const category = packCategory(source.packing.unitName, { categoryName: source.product.categoryName, unit: productUnit });
     if (!category) { setMessage("The packing category is missing or unsupported. Correct the packing style before saving."); return false; }
-    const figures = yieldFigures(input.inputs, { category, receivedUnit: yieldTerms(category, activity.batch.unit).receivedUnit,
+    if (category === "syrup" && !isVolumeUnit(productUnit)) { setMessage("Syrup requires a volume unit on the product."); return false; }
+    const inputs = category === "syrup" ? { ...input.inputs, received: null, averageFilled: source.product.compositionVolume } : input.inputs;
+    const batchSize = category === "syrup" ? fromSmallestUnit(source.product.fullBatchSize ?? 0, "L") : source.packing.expectedYield;
+    const figures = yieldFigures(inputs, { category, receivedUnit: yieldTerms(category, productUnit).receivedUnit,
       packingExpectedYield: source.packing.expectedYield, packsPerShipper: source.packing.packsPerShipper });
-    const problem = packingProblem({ ...input, figures, packsPerShipper: source.packing.packsPerShipper, materials, unitIds });
+    const problem = packingProblem({ ...input, inputs, batchSize, category, figures, packsPerShipper: source.packing.packsPerShipper, materials, unitIds });
     if (problem) { setMessage(problem); return false; }
     busy.current = true;
     setMessage(""); setSaving(true);
@@ -122,7 +127,7 @@ export function useFinalPacking(batchId: string, activity: Activity) {
       if (accessChanged) { setMessage(accessChanged); return false; }
       writeStarted = true;
       const result = await savePacking({ ...audit, domainEntitiesProductionSchedulesPackingCreateFinalPacking: finalPackingRequest({
-        batchId, stepId: input.stepId, packingId: source.packing.id, batchSize: input.batchSize, inputs: input.inputs, packsPerShipper: source.packing.packsPerShipper,
+        category, batchId, stepId: input.stepId, packingId: source.packing.id, batchSize, inputs, packsPerShipper: source.packing.packsPerShipper,
         figures, reason: input.reason, materials: materialRequests(materials, input.entries) }) });
       if ("error" in result) { if (result.error && ambiguous(result.error)) setUncertain(true); setMessage(apiErrorMessage(result.error)); return false; }
       created.current = true;

@@ -155,8 +155,8 @@ it("counts what is left to transfer and marks anything but one full transfer as 
 it("works out the yield, the shippers, and when a reason is owed", () => {
   const source = { category: "syrup" as const, receivedUnit: "L", packingExpectedYield: 75_000, packsPerShipper: 150 };
   const figures = yieldFigures({ received: 1500, averageFilled: 20, actualPacked: 75_300, qcSample: 20, retained: 20, stability: 10 }, source);
-  expect(figures).toMatchObject({ expected: 75_000, samples: 50, afterSamples: 75_250, gainOrLoss: 250, fullShippers: 501, leftOver: 100, totalPacked: 75_250, needsReason: false });
-  expect(figures.percent).toBeCloseTo(0.3333, 3);
+  expect(figures).toMatchObject({ expected: 75_000, samples: 50, afterSamples: 75_250, gainOrLoss: 300, fullShippers: 501, leftOver: 100, totalPacked: 75_250, needsReason: false });
+  expect(figures.percent).toBeCloseTo(0.4, 3);
   expect(yieldFigures({ received: 1500, averageFilled: 20, actualPacked: 73_000, qcSample: 0, retained: 0, stability: 0 }, source)).toMatchObject({ gainOrLoss: -2000, needsReason: true });
   // Tablets: the expected count comes from the bulk received and the average tablet weight (120 kg at 500 mg each).
   expect(yieldFigures({ received: 120, averageFilled: 500, actualPacked: null, qcSample: null, retained: null, stability: null }, { category: "tablet", receivedUnit: "kg", packingExpectedYield: 1, packsPerShipper: 100 }))
