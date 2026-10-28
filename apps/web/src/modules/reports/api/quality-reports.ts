@@ -1,18 +1,16 @@
 import { historyParams } from "../lib/history";
 import { singleReportFilters, selectedReportValue } from "../lib/selections";
 import type { ApiDispatch } from "@/shared/api/api-provider";
-import { productionApi } from "@/shared/api/generated/production";
 import { materialsApi } from "@/shared/api/generated/materials";
 import { reportSheet, reportEnum } from "@/shared/reports/report-data";
 import { richTextToPlain } from "@/shared/rich-text/rich-text-view";
 import type { ReportFilters } from "../schemas/report-filters";
 import { ReportKey, reportsAudit, type ReportOutput } from "../lib/report-model";
-import { binaryChoice, reportBoundary } from "../lib/filter-params";
-import { planSheet, plannedProducts, schedulePlan } from "../lib/schedule-plan";
+import { binaryChoice } from "../lib/filter-params";
 import { allReportPages } from "./all-pages";
 import { reportRequest } from "./request";
 import { loadCommercialReport } from "./commercial-reports";
-import { readinessSheet } from "./readiness-report";
+import { loadProductionReadiness } from "./production-readiness";
 const options = { subscribe: false, forceRefetch: true };
 export async function loadQualityReport(dispatch: ApiDispatch, key: ReportKey, filters: ReportFilters, signal: AbortSignal): Promise<ReportOutput> {
   const f = singleReportFilters(filters);
@@ -28,14 +26,5 @@ export async function loadQualityReport(dispatch: ApiDispatch, key: ReportKey, f
     ])] };
   }
   if (![ReportKey.MonthlySchedule, ReportKey.DailySchedule, ReportKey.ProductReadiness].includes(key)) throw new Error("Invalid quality report.");
-  if (!f.department) throw new Error("Choose a department.");
-  let start: Date; let end: Date;
-  if (key === ReportKey.DailySchedule) { if (!f.date) throw new Error("Choose a date."); start = new Date(reportBoundary(f.date)); end = new Date(reportBoundary(f.date, true)); }
-  else { if (!f.month || !/^\d{4}-(0[1-9]|1[0-2])$/.test(f.month)) throw new Error("Choose a valid month."); start = new Date(`${f.month}-01T00:00:00Z`); end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1) - 1); }
-  const schedules = await allReportPages((page) => reportRequest(dispatch(productionApi.endpoints.getApiV1ProductionSchedule.initiate({ ...reportsAudit, ...historyParams(filters), page, pageSize: 100 }, options)), signal), (row) => row.id, signal);
-  const plan = schedulePlan(schedules, start, end, f.department.value);
-  const warnings = plan.some((row) => row.expectedYield === null || row.shippers === null) ? ["Some packing definitions are missing yield or packs per shipper. Their output is shown as unrecorded, not zero."] : [];
-  if (key === ReportKey.MonthlySchedule) return { sheets: [planSheet(plan)], warnings };
-  const readiness = await readinessSheet(dispatch, plannedProducts(plan), signal);
-  return { sheets: [planSheet(plan), ...readiness.sheets], warnings: [...warnings, ...readiness.warnings] };
+  return loadProductionReadiness(dispatch, key, filters, signal);
 }

@@ -1,4 +1,5 @@
 export { ClientDataTable, type ClientDataTableProps } from "./components/client-data-table";
+export { DataTableFooter } from "./components/data-table-footer";
 export { ServerDataTable, type ServerDataTableProps } from "./components/server-data-table";
 export { ListDataTable, type ListDataTableProps } from "./components/list-data-table";
 export { DraggableDataTable, type DraggableDataTableProps } from "./components/draggable-data-table";

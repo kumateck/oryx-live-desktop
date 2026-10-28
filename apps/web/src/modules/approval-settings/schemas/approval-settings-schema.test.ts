@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { approvalDefaults, approvalFormSchema, approvalPayload, approvalRecordSchema, approvalsListSchema, newApprovalStage, readApprovalRows } from "./approval-settings-schema";
+import { approvalDefaults, approvalFormSchema, approvalPayload, approvalRecordSchema, approvalRepairRecordSchema, approvalsListSchema, newApprovalStage, readApprovalRows } from "./approval-settings-schema";
 const role = { id: "role-one", name: "QA" };
 export const sampleApproval = { id: "approval-one", itemType: "PurchaseOrder", escalationDuration: "1.02:03:04.1234567", approvalStages: [
   { role, user: null, required: true, order: 2 }, { role: null, user: { id: "user-one", name: "Ada" }, required: false, order: 1 },
@@ -30,4 +30,14 @@ it("lists the readable workflows and names one whose stages cannot be read, inst
   const read = readApprovalRows(page.data);
   expect(read.rows.map((row) => row.id)).toEqual(["approval-one"]);
   expect(read.unreadable).toHaveLength(1);
+  expect(read.repairable).toEqual([{ id: "stock", itemType: "Stock" }]);
+});
+it("preserves empty legacy stages for explicit repair, but refuses ambiguous or unreadable evidence", () => {
+  const broken = { id: "stock", itemType: "Stock", escalationDuration: "00:00:00", approvalStages: [false, true, false].map((required) => ({ required, order: 0, role: null, user: null })) };
+  const draft = approvalDefaults(approvalRepairRecordSchema.parse(broken));
+  expect(draft.stages.map((stage) => stage.required)).toEqual([false, true, false]);
+  expect(draft.stages.every((stage) => stage.type === "Role" && stage.role === null)).toBe(true);
+  expect(approvalFormSchema.safeParse(draft).success).toBe(false);
+  expect(approvalRepairRecordSchema.safeParse({ ...broken, approvalStages: [{ role, user: role, required: true, order: 0 }] }).success).toBe(false);
+  expect(approvalRepairRecordSchema.safeParse({ ...broken, escalationDuration: "invalid" }).success).toBe(false);
 });

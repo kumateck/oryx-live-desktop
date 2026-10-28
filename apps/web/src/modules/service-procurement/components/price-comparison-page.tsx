@@ -10,11 +10,12 @@ import { Spinner } from "@/components/ui/spinner";
 import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { servicesApi } from "@/shared/api/generated/services";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
+import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDate } from "@/shared/format/dates";
 import { jobOrderSchema, type JobOrder } from "@/shared/services/job-order";
-import { amount, quotationPageSchema, serviceAudit, serviceKeys, type Quotation } from "../lib/service-procurement";
+import { amount, quotationPageSchema, serviceAudit, serviceKeys, servicePaths, type Quotation } from "../lib/service-procurement";
 
 const QUOTATIONS_RECEIVED = 2;
 const select = { kind: "all" as const, permissions: [serviceKeys.pricingView, serviceKeys.pricingApply] };
@@ -60,7 +61,7 @@ function CompareDialog({ order, onClose }: { order: JobOrder; onClose: () => voi
     if (list.data.data.map(fingerprint).sort().join(",") !== [...confirming.seen].sort().join(",")) { setMessage("The quotations changed after you opened them. Close this and compare them again."); return; }
     const result = await choose({ ...serviceAudit, domainEntitiesJobRequestsSelectQuotationRequest: { jobOrderId: order.id, quotationId: confirming.quotation.id } });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    toast.success("Quotation selected", { description: `${confirming.quotation.provider} will be asked for a proforma invoice.` });
+    toast.success("Quotation selected", { description: `Next, request ${confirming.quotation.provider}'s proforma invoice under Service proforma requests. Approve it before raising a memo.` });
     onClose();
   };
   return <Dialog open onOpenChange={(open) => { if (!open && !choosing.isLoading) onClose(); }}>
@@ -98,7 +99,10 @@ export function ServicePriceComparisonPage() {
   ]), []);
   return <section className="page-fill">
     <header><p className="eyebrow">SERVICES</p><h1 className="text-xl font-semibold">Service price comparison</h1>
-      <p className="text-sm text-muted-foreground">Compare the quotations for each job order and choose the one to go ahead with.</p></header>
+      <p className="text-sm text-muted-foreground">Select a quotation, then request and approve its proforma invoice before raising a service memo.</p>
+      <PermissionGuard require={serviceKeys.proformaRequestsView}>
+        <Button asChild size="sm" variant="outline" className="mt-2"><Link to={servicePaths.proformas}>Service proforma requests</Link></Button>
+      </PermissionGuard></header>
     <ServerDataTable label="Job orders awaiting a choice" columns={columns} rows={rows} getRowId={(o) => o.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows}
       onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange} loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()}
       onRowOpen={setComparing} error={query.error ? apiErrorMessage(query.error) : null} emptyTitle="No job orders are waiting for a choice" />

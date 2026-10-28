@@ -1,6 +1,24 @@
 import { api } from "../base-api";
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
+    getProductionReadinessReport: build.query<
+      GetProductionReadinessReportApiResponse,
+      GetProductionReadinessReportApiArg
+    >({
+      providesTags: [{ type: "report/production-readiness", id: "LIST" }, { type: "report", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/report/production-readiness`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          departmentId: queryArg.departmentId,
+          startDate: queryArg.startDate,
+          endDate: queryArg.endDate,
+        },
+      }),
+    }),
     getApiV1ReportProduction: build.query<
       GetApiV1ReportProductionApiResponse,
       GetApiV1ReportProductionApiArg
@@ -1949,6 +1967,17 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 });
 export { injectedRtkApi as reportsApi };
+export type GetProductionReadinessReportApiResponse =
+  /** status 200 OK */ DomainEntitiesReportsProductionReadinessReportDto;
+export type GetProductionReadinessReportApiArg = {
+  departmentId: string;
+  startDate: string;
+  endDate: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type GetApiV1ReportProductionApiResponse =
   /** status 200 OK */ DomainEntitiesReportsProductionReportDto;
 export type GetApiV1ReportProductionApiArg = {
@@ -3177,6 +3206,81 @@ export type GetApiV1ReportHistoryVendorsApiArg = {
   /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
   asOfDate?: string | null;
 };
+export type DomainEntitiesReportsReadinessMarketDto = {
+  id?: string | null;
+  name?: string | null;
+};
+export type DomainEntitiesReportsDefinitionReadiness = 0 | 1 | 2;
+export type DomainEntitiesReportsProductReadiness = 0 | 1 | 2;
+export type DomainEntitiesReportsProductConfigurationDto = {
+  specification?: DomainEntitiesReportsDefinitionReadiness;
+  stp?: DomainEntitiesReportsDefinitionReadiness;
+  ard?: DomainEntitiesReportsDefinitionReadiness;
+  procedure?: DomainEntitiesReportsDefinitionReadiness;
+  bom?: DomainEntitiesReportsDefinitionReadiness;
+  packaging?: DomainEntitiesReportsDefinitionReadiness;
+  packingStyle?: DomainEntitiesReportsDefinitionReadiness;
+  readiness?: DomainEntitiesReportsProductReadiness;
+};
+export type DomainEntitiesReportsProductionReadinessRowDto = {
+  productId?: string;
+  productCode?: string | null;
+  productName?: string | null;
+  productPackingId?: string | null;
+  packingStyle?: string | null;
+  scheduleProductIds?: string[] | null;
+  batches?: number;
+  unitPrice?: number | null;
+  priceUnit?: string | null;
+  expectedYield?: number | null;
+  packsPerShipper?: number | null;
+  shippers?: number | null;
+  loosePacks?: number | null;
+  configuration?: DomainEntitiesReportsProductConfigurationDto;
+};
+export type DomainEntitiesReportsProductionReadinessTotalsDto = {
+  batches?: number;
+  expectedYield?: number | null;
+  shippers?: number | null;
+  loosePacks?: number | null;
+};
+export type DomainEntitiesReportsProductionReadinessGroupDto = {
+  market?: DomainEntitiesReportsReadinessMarketDto;
+  rows?: DomainEntitiesReportsProductionReadinessRowDto[] | null;
+  totals?: DomainEntitiesReportsProductionReadinessTotalsDto;
+};
+export type DomainEntitiesReportsPlannedProductReadinessDto = {
+  productId?: string;
+  productCode?: string | null;
+  productName?: string | null;
+  batches?: number;
+  markets?: DomainEntitiesReportsReadinessMarketDto[] | null;
+  configuration?: DomainEntitiesReportsProductConfigurationDto;
+};
+export type DomainEntitiesReportsProductionReadinessReportDto = {
+  departmentId?: string;
+  departmentName?: string | null;
+  startDate?: string;
+  endDate?: string;
+  generatedAt?: string;
+  productCount?: number;
+  readyProductCount?: number;
+  actionNeededProductCount?: number;
+  unavailableProductCount?: number;
+  markets?: DomainEntitiesReportsProductionReadinessGroupDto[] | null;
+  products?: DomainEntitiesReportsPlannedProductReadinessDto[] | null;
+  totals?: DomainEntitiesReportsProductionReadinessTotalsDto;
+  warnings?: string[] | null;
+};
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
+export type MicrosoftAspNetCoreMvcProblemDetails = {
+  type?: string | null;
+  title?: string | null;
+  status?: number | null;
+  detail?: string | null;
+  instance?: string | null;
+  [key: string]: JsonValue | undefined;
+};
 export type DomainEntitiesReportsProductionReportDto = {
   numberOfPurchaseRequisitions?: number;
   numberOfNewPurchaseRequisitions?: number;
@@ -3192,15 +3296,6 @@ export type DomainEntitiesReportsProductionReportDto = {
   numberOfOutgoingStockTransfers?: number;
   numberOfOutgoingPendingStockTransfers?: number;
   numberOfOutgoingCompletedStockTransfers?: number;
-};
-export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
-export type MicrosoftAspNetCoreMvcProblemDetails = {
-  type?: string | null;
-  title?: string | null;
-  status?: number | null;
-  detail?: string | null;
-  instance?: string | null;
-  [key: string]: JsonValue | undefined;
 };
 export type DomainEntitiesMaterialsMaterialKind = 0 | 1;
 export type SharedDepartmentType = 0 | 1 | 2;
@@ -5541,6 +5636,8 @@ export type DomainEntitiesReportsReportHistoryCapabilitiesDto = {
   basis?: string | null;
 };
 export const {
+  useGetProductionReadinessReportQuery,
+  useLazyGetProductionReadinessReportQuery,
   useGetApiV1ReportProductionQuery,
   useLazyGetApiV1ReportProductionQuery,
   useGetApiV1ReportProductionMaterialsBelowMinimumQuery,

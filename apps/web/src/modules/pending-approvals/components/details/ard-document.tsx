@@ -1,5 +1,7 @@
 import { formatDate, formatMonthYear } from "@/shared/format/dates";
-import { PrintFacts, PrintHeader, PrintSignatures } from "@/shared/print/print-sheet";
+import { PrintFacts, PrintHeader } from "@/shared/print/print-sheet";
+import { ArdSignatures } from "./ard-signatures";
+import type { ArdSignatories } from "../../lib/ard-signatories";
 import { ArdResultsTable } from "./ard-results-table";
 import type { ArdResultSection } from "../../schemas/ard-result-schema";
 import type { RecordedAnswer } from "../../lib/ard-results";
@@ -12,11 +14,11 @@ export interface CertificateFacts {
 }
 
 export interface ArdDocumentProps {
-  facts: CertificateFacts; sections: readonly CertificateSection[]; recorded: ReadonlyMap<string, RecordedAnswer>;
+  facts: CertificateFacts; sections: readonly CertificateSection[]; recorded: ReadonlyMap<string, RecordedAnswer>; signatories?: ArdSignatories;
 }
 
 /** Shared certificate content for on-page review and printing; worksheets retain the full recorded evidence. */
-export function ArdDocument({ facts, sections, recorded, worksheet = false }: ArdDocumentProps & { worksheet?: boolean }) {
+export function ArdDocument({ facts, sections, recorded, signatories, worksheet = false }: ArdDocumentProps & { worksheet?: boolean }) {
   const title = `${worksheet ? "Worksheet" : "Certificate of analysis"} · ${facts.kind}`;
   return <div className="ard-document">
     <PrintHeader title={title} reference={facts.arNumber ? `QC AR ${facts.arNumber}` : null} aside={<p>Quality Control Department</p>} />
@@ -27,6 +29,6 @@ export function ArdDocument({ facts, sections, recorded, worksheet = false }: Ar
       { label: "Sampled", value: formatDate(facts.sampled) }, { label: "Analysed", value: formatDate(facts.analysed) },
     ]} />
     <ArdResultsTable sections={sections} recorded={recorded} certificate={!worksheet} />
-    <PrintSignatures roles={["Analysed by", "Checked by", "Approved by"]} />
+    <ArdSignatures signatories={signatories} />
   </div>;
 }

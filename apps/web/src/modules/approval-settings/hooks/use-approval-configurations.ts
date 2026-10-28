@@ -14,8 +14,8 @@ export function useApprovalConfigurations() {
   const query = approvalSettingsApi.useGetApiV1ApprovalQuery({ ...approvalSettingsAudit, page: paging.page, pageSize: paging.pageSize, searchQuery: debounced }, { skip: !has("CanViewApprovals") });
   const parsed = useMemo(() => query.currentData ? approvalsListSchema.safeParse(query.currentData) : null, [query.currentData]);
   // One malformed workflow is set aside and named, rather than hiding every other workflow.
-  const read = useMemo(() => parsed?.success ? readApprovalRows(parsed.data.data) : { rows: [], unreadable: [] }, [parsed]);
-  return { search, setSearch, rows: read.rows, unreadable: read.unreadable, paging: { page: paging.page, pageSize: paging.pageSize, onPageChange: paging.onPageChange, onPageSizeChange: paging.onPageSizeChange, totalRows: parsed?.success ? parsed.data.totalRecordCount : 0 },
+  const read = useMemo(() => parsed?.success ? readApprovalRows(parsed.data.data) : { rows: [], unreadable: [], repairable: [] }, [parsed]);
+  return { search, setSearch, rows: read.rows, unreadable: read.unreadable, repairable: read.repairable, paging: { page: paging.page, pageSize: paging.pageSize, onPageChange: paging.onPageChange, onPageSizeChange: paging.onPageSizeChange, totalRows: parsed?.success ? parsed.data.totalRecordCount : 0 },
     loading: query.isFetching && !query.currentData, refreshing: query.isFetching && Boolean(query.currentData),
     error: query.error ? apiErrorMessage(query.error) : parsed?.success === false ? "These workflows cannot be read safely." : null,
     retry: () => { void query.refetch(); },

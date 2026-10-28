@@ -13,7 +13,8 @@ import { useAccess } from "@/shared/auth/use-access";
 import { PrintButton } from "@/shared/print/print-button";
 import { ArdDocument, type CertificateFacts } from "./ard-document";
 import { ArdWorksheet } from "./ard-worksheet";
-import { ardAnswersSchema as answers, ardFormSchema as formSchema } from "../../schemas/ard-result-schema";
+import { ardAnswersSchema as answers, ardFormSchema as formSchema, ardPersonSchema as person } from "../../schemas/ard-result-schema";
+import { ardSignatories } from "../../lib/ard-signatories";
 import { answerFails, answersByField } from "../../lib/ard-results";
 import { audit } from "../../lib/approval-documents";
 import { ArdCertificate } from "./ard-certificate";
@@ -27,7 +28,6 @@ const { useGetApiV1ProductionScheduleManufacturingByBatchManufacturingRecordIdQu
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const item = z.object({ id: z.string().nullish(), name: text, code: text }).nullish();
-const person = z.object({ firstName: text, lastName: text }).nullish();
 const responseSchema = z.object({ form: item, materialBatch: item, batchManufacturingRecord: item, formResponses: answers, checkedBy: person, checkedAt: z.string().nullish(), productionActivityStepId: z.string().nullish(), approved: z.boolean().nullish() });
 const materialSchema = z.object({ arNumber: text, grnNumber: text, specNumber: text, stpNumber: text, supplier: item, manufacturer: item, sampledDate: z.string().nullish(), sampledBy: person, quantityReceived: z.number().nullish(), quantitySampled: z.number().nullish(),
   materialBatch: z.object({ batchNumber: text, material: item, uoM: z.object({ symbol: text }).nullish(), manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), analysedDate: z.string().nullish() }).nullish() });
@@ -76,6 +76,7 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
     const own = (batchAnswers ?? []).filter((entry) => !entry.responseId || entry.responseId === id);
     return answersByField(own.length > 0 ? own : response?.formResponses ?? []);
   }, [batchAnswers, response, id]);
+  const signatories = useMemo(() => ardSignatories(id, response?.formResponses ?? [], batchAnswers ?? [], response?.checkedBy), [id, response, batchAnswers]);
   const sections = useMemo(() => [...(form?.sections ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [form]);
   const state = queryState(query);
   const loading = state.loading || formQuery.isLoading || materialQuery.isLoading || materialAnswers.isLoading || batchQuery.isLoading || productAnswers.isLoading || ardsQuery.isLoading || productQuery.isLoading;
@@ -103,8 +104,8 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
         {rejection && has(oosPermission) ? <Button type="button" size="sm" variant="outline" className="text-destructive" onClick={() => setStartingOos(true)}><TriangleAlert />Start OOS investigation</Button> : null}
         {coaTarget ? <GenerateCoaButton approved={approved} target={coaTarget} /> : null}
         {sections.length > 0 ? <>
-          <PrintButton label="Print COA" preview={(close) => <ArdCertificate sections={certificateSections} recorded={recorded} onClose={close} facts={facts} />} />
-          <PrintButton label="Print Worksheet" preview={(close) => <ArdWorksheet sections={certificateSections} recorded={recorded} onClose={close} facts={facts} />} />
+          <PrintButton label="Print COA" preview={(close) => <ArdCertificate sections={certificateSections} recorded={recorded} signatories={signatories} onClose={close} facts={facts} />} />
+          <PrintButton label="Print Worksheet" preview={(close) => <ArdWorksheet sections={certificateSections} recorded={recorded} signatories={signatories} onClose={close} facts={facts} />} />
         </> : null}
       </div>
       {startingOos && rejection && query.data ? <StartOosDialog evidence={query.data} responseId={id} onClose={() => setStartingOos(false)} subject={{ kind: isMaterial ? "material" : "product", materialBatchId, analyticalTestRequestId: atr?.id ?? null,
@@ -126,7 +127,7 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
       {sections.length === 0 ? <p role="alert" className="rounded-md border border-destructive/50 p-3 text-sm">The tests on this data sheet could not be read, so the results cannot be laid out.</p> : <>
         <p role="status" className={`rounded-md border p-3 text-sm ${failures > 0 ? "border-destructive/50 bg-destructive/5" : "bg-muted/50"}`}>{failures > 0 ? `${failures} ${failures === 1 ? "result does" : "results do"} not comply with the specification.` : "No result is recorded as not complying."}</p>
         <article aria-label="Certificate of analysis" className="print-sheet min-w-0">
-          <ArdDocument sections={certificateSections} recorded={recorded} facts={facts} />
+          <ArdDocument sections={certificateSections} recorded={recorded} signatories={signatories} facts={facts} />
         </article></>}
     </div>; }}</DetailState>;
 }

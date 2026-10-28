@@ -33,5 +33,7 @@ export async function loadScopedReport(definition: ReportDefinition, filters: Re
     }));
     outputs.push(...results);
   }
+  const single = outputs[0];
+  if (scopes.length === 1 && single) return single;
   return { sheets: outputs.flatMap((output) => output.sheets), warnings: [...new Set(outputs.flatMap((output) => output.warnings ?? [])), ...(scopes.length > 1 ? ["Results are separated by selected scope. Each section's totals apply to that scope; overlapping department assignments must not be added together."] : [])] };
 }

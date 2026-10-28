@@ -28,7 +28,7 @@ function Entry({ answers }: { answers: StoredAnswers }) {
     context={{ materialBatchId: "batch-1" }} audit={{ module: "QC", subModule: "Test" }} require="CanStartRawMaterialTest"
     summary={null} onReload={() => {}} onDone={() => {}} /></ApiProvider> : null;
 }
-function open({ persisted = false, fail = false, pending = false }: { persisted?: boolean; fail?: boolean; pending?: boolean } = {}) {
+function open({ persisted = false, fail = false, pending = false, missingConfirmation = false }: { persisted?: boolean; fail?: boolean; pending?: boolean; missingConfirmation?: boolean } = {}) {
   const backend = stubBackend({ permissions: ["CanStartRawMaterialTest", "CanExecuteFormulaResponse"] });
   const auth = backend.fetcher.getMockImplementation();
   const requests: { path: string; body: string }[] = [];
@@ -41,7 +41,7 @@ function open({ persisted = false, fail = false, pending = false }: { persisted?
     requests.push({ path, body });
     if (path === "/api/v1/form/responses/draft") {
       if (pending) await gate;
-      return fail ? Response.json({ detail: "Upload failed" }, { status: 500 }) : Response.json("response-1");
+      return fail ? Response.json({ detail: "Upload failed" }, { status: 500 }) : Response.json(missingConfirmation ? null : "response-1");
     }
     if (path === "/api/v1/form/responses/finalize/response-1") return new Response(null, { status: 204 });
     return new Response(null, { status: 404 });
@@ -68,6 +68,18 @@ it("marks the successful file draft saved without a reload and does not upload i
   expect(requests.filter(item => item.path.endsWith("/draft"))).toHaveLength(1);
 });
 
+it("blocks submit, including a direct form submit, until the selected file draft is saved", async () => {
+  const { requests } = open();
+  await choose();
+  const submit = screen.getByRole("button", { name: "Submit results" }) as HTMLButtonElement;
+  expect(submit.disabled).toBe(true);
+  const form = submit.closest("form");
+  if (!form) throw new Error("Missing answer form");
+  fireEvent.submit(form);
+  await screen.findByRole("alert");
+  expect(requests.filter(item => item.path.endsWith("/draft") || item.path.includes("finalize"))).toHaveLength(0);
+});
+
 it("restores multiple saved attachment links after reopening and satisfies the required file field", async () => {
   open({ persisted: true });
   expect(await screen.findByRole("button", { name: "report.pdf" })).toBeTruthy();
@@ -81,10 +93,12 @@ it("keeps an edit made during upload unsaved when the earlier file is acknowledg
   await choose("first.pdf");
   fireEvent.click(await screen.findByRole("button", { name: /Save this answer as a draft: Result file/ }));
   await screen.findByRole("button", { name: /Saving…: Result file/ });
+  expect((screen.getByRole("button", { name: "Submit results" }) as HTMLButtonElement).disabled).toBe(true);
   await choose("second.pdf");
   release();
   expect(await screen.findByRole("button", { name: /Save this answer as a draft: Result file/ })).toBeTruthy();
   expect(screen.getByRole("button", { name: "second.pdf" })).toBeTruthy();
+  expect((screen.getByRole("button", { name: "Submit results" }) as HTMLButtonElement).disabled).toBe(true);
 });
 
 it("shows upload failure instead of a saved check", async () => {
@@ -93,4 +107,14 @@ it("shows upload failure instead of a saved check", async () => {
   await userEvent.click(await screen.findByRole("button", { name: /Save this answer as a draft: Result file/ }));
   expect(await screen.findByRole("button", { name: /The draft was not saved/ })).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Draft saved: Result file" })).toBeNull();
+  expect((screen.getByRole("button", { name: "Submit results" }) as HTMLButtonElement).disabled).toBe(true);
+});
+
+it("does not acknowledge a draft when the server returns a null response ID", async () => {
+  const { requests } = open({ missingConfirmation: true });
+  await choose();
+  await userEvent.click(await screen.findByRole("button", { name: /Save this answer as a draft: Result file/ }));
+  expect(await screen.findByText(/server did not confirm a saved draft/)).toBeTruthy();
+  expect((screen.getByRole("button", { name: "Submit results" }) as HTMLButtonElement).disabled).toBe(true);
+  expect(requests.some(item => item.path.includes("finalize"))).toBe(false);
 });

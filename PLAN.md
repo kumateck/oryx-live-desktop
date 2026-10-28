@@ -2,6 +2,45 @@
 
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
+## Production ATR data repair tooling (2026-10-28)
+
+The user requested scripts to repair existing production activity flow data, starting
+with the missing test stage on Coldrilif Syrup batch 4862. The user confirmed
+Intermediate for the reported step. The first maintenance
+command inspects one activity and previews filling null ARD links on its existing
+ATR assignments. Stage, worksheet, step, product, batch, assignment count, operator
+and reason are explicit inputs; no stage is inferred from step order. Applying is
+an explicit flag, with existing planning permission and product department checks,
+QC snapshot validation, contention timeouts, atomic before/after audit and activity
+log. Repairing the corresponding procedure instructions is a separate explicit
+flag. Production statuses, approvals, test requests, assignments, stock and financial
+records are outside this repair. See `docs/production-activity-repairs.md`.
+Local fixture verification does not establish that the example batch was repaired.
+
+## Combined production readiness endpoint (2026-10-28)
+
+The user requested one parameterized backend endpoint returning all information
+needed for the production schedule/readiness report. The local implementation uses
+`GET /api/v1/report/production-readiness` with required production department and
+inclusive UTC start/end dates. Return market/product/packing identities, batches,
+price/unit, expected yield, shippers/loose packs, all seven configuration checks,
+overall readiness, unique-product summaries, market/grand totals and warnings.
+Use one projected read for the plan and checks, live existing report permissions,
+and null affected calculations/totals when definitions are missing. Daily and
+monthly reports use the same endpoint. Configuration readiness is not stock or
+release approval. No schema migration or deployment is part of this work.
+The user authorized the frontend improvement after reviewing Oryx Next. Daily and
+monthly schedules now use a market-grouped matrix with production quantities,
+all checks, readiness, subtotals and grand totals. Product readiness uses one row
+per product across its markets. At narrower container widths or larger text sizes,
+checks move into a labelled band beneath that product instead of a details dialog.
+Print pairs quantities with all checks and repeats table headers; Excel/CSV retain
+the complete snapshot, including IDs. Shared filters, guards, applied snapshots,
+cancellation and permission-revocation behavior remain in place. There is no
+fallback to per-product requests on older backends. Generate the typed client from
+the companion export and retain the endpoint's server timestamp. See
+`docs/reports.md` and the companion backend's `docs/production-readiness-report.md`.
+
 ## Product direction
 
 Oryx Live Desktop is a small Electron Forge shell that opens a React single-page application served from each customer's own server. Staff connect to that server by its configured address. The customer-server deployment package pulls the selected release branch (`entrance-server` for the Entrance installation) and builds the application; customer installation and acceptance remain pending. A new web build reaches installed clients without a manual reinstall; Electron and native-bridge changes use a separate signed shell update served by that same site.
