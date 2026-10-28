@@ -217,7 +217,7 @@ Local verification for the simplification (2026-10-27): 108 Linux root/deploymen
 
 ## In-app desktop and web updates
 
-The frontend now mounts the dedicated public `$ORYX_DEPLOY_STATE/downloads` directory read-only for signed desktop update artifacts. Installer releases remain independent of Docker frontend releases. Follow [desktop updater setup, release publishing and compatibility](../../docs/desktop-updates.md). The main installer supports both Windows x86 and x64. Only the public downloads directory is 0755; customer configuration, credentials and private deployment state retain their restrictions.
+The frontend now mounts the dedicated public `$ORYX_DEPLOY_STATE/downloads` directory read-only for signed desktop update artifacts. Installer releases remain independent of Docker frontend releases. The public EXE must be copied there once after a successful dual-architecture Windows build; see [first customer installer publication](../../docs/customer-windows-installer.md#publish-the-first-customer-download). Creating the downloads directory or deploying web assets does not generate an installer. Follow [desktop updater setup, release publishing and compatibility](../../docs/desktop-updates.md). The main installer supports both Windows x86 and x64. Only the public downloads directory is 0755; customer configuration, credentials and private deployment state retain their restrictions.
 
 
 ## One pipeline and mandatory pre-push validation

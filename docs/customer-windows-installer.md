@@ -4,7 +4,9 @@ The installed Electron shell and the customer Docker frontend are independent. P
 
 ## Build and download
 
-The single production workflow is `.github/workflows/customer-docker.yml` (**Customer release pipeline**). Its Windows job is opt-in and runs after release validation. The same workflow handles testing; web-only testing pushes skip Windows, while desktop changes build and publish the installer after the testing web deployment. See [testing deployment](deployment.md#testing-site).
+The single production workflow is `.github/workflows/customer-docker.yml` (**Customer release pipeline**). Its Windows job is opt-in and runs after release validation. The same workflow handles testing; web-only testing pushes skip Windows, while unpublished desktop changes build and publish the installer after the testing web deployment. A missing publication record triggers the initial dual-architecture release, including replacement of the old x64-only download. See [testing deployment](deployment.md#testing-site).
+
+For manual dispatch, GitHub requires this workflow file on the repository default branch as well as on the selected release branch. The repository default is `main`; register the same workflow there before relying on **Run workflow**. Its push filters still allow only testing and entrance-server, so registering it does not deploy main. The automatic testing publication path does not require manual dispatch. See [GitHub's manual workflow requirements](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
 
 1. Open [the installer workflow in GitHub Actions](https://github.com/kumateck/oryx-live-desktop/actions/workflows/customer-docker.yml).
 2. Choose **Run workflow**, select branch **entrance-server**, enable **build_windows**, and run it.
@@ -21,6 +23,29 @@ gh run download RUN_ID --repo kumateck/oryx-live-desktop --name oryx-live-window
 ```
 
 The production job refuses other branches and checks out the exact dispatched SHA. Selecting `entrance-server` is essential: other branches contain their own workflow definitions. There is no publication or SSH step in the production installer workflow. The same workflow validates the frontend first, then runs this job sequentially. Automatic frontend updates skip the installer job.
+
+## Publish the first customer download
+
+The customer Docker web build does not include an EXE. A missing `/home/entrance/.local/state/oryx-live/downloads/OryxLiveDesktop-Setup.exe` means the desktop release has not been copied to that server. Web deployment and Cron polling do not download native artifacts automatically.
+
+The main v0.2.0 installer contains **both x86 and x64**. The older v0.1.0 artifact is x64-only; do not mistake it for the dual-architecture release. After the corrected testing pipeline's **Build Windows installer** and **Publish tested desktop to testing** jobs succeed, its main download at `http://164.90.142.68:3011/downloads/OryxLiveDesktop-Setup.exe` is updated. Use the successful run's artifact and SHA-256 summary for the approved installer you distribute to customers.
+
+Download and extract `oryx-live-windows-installer` on your computer, then copy the EXE to the administrator's home directory (run this outside the customer SSH session):
+
+```bash
+scp /path/to/extracted/OryxLiveDesktop-Setup.exe entrance@CUSTOMER_SERVER_IP:/home/entrance/OryxLiveDesktop-Setup.exe
+```
+
+On the customer server, check its SHA-256 against the successful Windows run summary, then publish it atomically:
+
+```bash
+sha256sum /home/entrance/OryxLiveDesktop-Setup.exe
+install -d -m 0755 /home/entrance/.local/state/oryx-live/downloads
+install -m 0644 /home/entrance/OryxLiveDesktop-Setup.exe /home/entrance/.local/state/oryx-live/downloads/OryxLiveDesktop-Setup.exe.pending
+mv -f /home/entrance/.local/state/oryx-live/downloads/OryxLiveDesktop-Setup.exe.pending /home/entrance/.local/state/oryx-live/downloads/OryxLiveDesktop-Setup.exe
+```
+
+The existing read-only downloads bind mount serves the file immediately; no container restart is required. Users can then download it from `http://CUSTOMER_SERVER_IP:3001/downloads/OryxLiveDesktop-Setup.exe`. Use `/downloads/` with the **a** included. The installed shell connects to that customer's frontend origin; the installer does not embed the testing server's address.
 
 ## Install and connect
 
