@@ -21,7 +21,9 @@ test("Linux flock excludes overlapping deployment processes and releases after p
     const ownerPid = spawnSync("pgrep", ["-P", String(first.pid)], { encoding: "utf8" });
     for (const value of ownerPid.stdout.trim().split(/\s+/)) if (value && Number.isInteger(Number(value))) process.kill(Number(value), "SIGKILL");
     first.kill("SIGKILL"); await finished;
-    const third = spawnSync("flock", ["-n", "-E", "9", lock, process.execPath, "-e", "require('node:fs').writeFileSync(process.argv[1],'recovered')", protectedFile]);
+    // flock's parent can exit before the killed child closes its inherited lock descriptor.
+    // Keep the overlapping attempt nonblocking; allow bounded kernel teardown for recovery.
+    const third = spawnSync("flock", ["-w", "5", "-E", "9", lock, process.execPath, "-e", "require('node:fs').writeFileSync(process.argv[1],'recovered')", protectedFile]);
     assert.equal(third.status, 0); assert.equal(await readFile(protectedFile, "utf8"), "recovered");
   } finally { first.kill("SIGKILL"); await rm(directory, { recursive: true, force: true }); }
 });
