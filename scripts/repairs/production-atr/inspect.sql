@@ -8,6 +8,9 @@ END $inspect$;
 SELECT jsonb_pretty(jsonb_build_object(
   'activityId', a."Id", 'activityStatus', a."Status", 'completedAt', a."CompletedAt",
   'productId', p."Id", 'productName', p."Name", 'batch', b."BatchNumber", 'cancelled', b."Cancelled",
+  'batchRecords', (SELECT coalesce(jsonb_agg(jsonb_build_object('id', bmr."Id", 'batchNumber', bmr."BatchNumber",
+    'status', bmr."Status", 'deletedAt', bmr."DeletedAt")), '[]') FROM public."BatchManufacturingRecords" bmr
+    WHERE bmr."ProductionScheduleProductId" = b."Id"),
   'steps', (SELECT jsonb_agg(jsonb_build_object(
     'id', s."Id", 'order', s."Order", 'operationId', s."OperationId", 'operation', o."Name",
     'status', s."Status", 'startedAt', s."StartedAt", 'completedAt', s."CompletedAt", 'deletedAt', s."DeletedAt",
@@ -24,7 +27,8 @@ SELECT jsonb_pretty(jsonb_build_object(
         'ardId', ru."ProductAnalyticalRawDataId", 'deletedAt', ru."DeletedAt")), '[]')
         FROM public."RouteResponsibleUsers" ru WHERE ru."RouteId" = r."Id"),
       'roles', (SELECT coalesce(jsonb_agg(jsonb_build_object('id', rr."Id", 'action', rr."Action",
-        'ardId', rr."ProductAnalyticalRawDataId", 'deletedAt', rr."DeletedAt")), '[]')
+        'ardId', rr."ProductAnalyticalRawDataId", 'roleId', rr."RoleId",
+        'roleName', (SELECT role."Name" FROM public.roles role WHERE role."Id" = rr."RoleId"), 'deletedAt', rr."DeletedAt")), '[]')
         FROM public."RouteResponsibleRoles" rr WHERE rr."RouteId" = r."Id"))), '[]')
       FROM public."Routes" r WHERE r."ProductId" = p."Id" AND r."OperationId" = s."OperationId" AND r."Order" = s."Order")
     ) ORDER BY s."Order") FROM public."ProductionActivitySteps" s

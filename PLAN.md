@@ -5,8 +5,10 @@ Status: foundation and first module implementation in progress, 2026-10-01. This
 ## Production ATR data repair tooling (2026-10-28)
 
 The user requested scripts to repair existing production activity flow data, starting
-with the missing test stage on Coldrilif Syrup batch 4862. The user confirmed
-Intermediate for the reported step. The first maintenance
+with the missing test stage on Coldrilif Syrup batch 4862. The user initially
+selected Intermediate, requested stage review after live inspection showed
+conflicting released history, then confirmed Finished for step 12. Altering the
+existing released ATR is outside that configuration decision. The first maintenance
 command inspects one activity and previews filling null ARD links on its existing
 ATR assignments. Stage, worksheet, step, product, batch, assignment count, operator
 and reason are explicit inputs; no stage is inferred from step order. Applying is
@@ -15,7 +17,18 @@ QC snapshot validation, contention timeouts, atomic before/after audit and activ
 log. Repairing the corresponding procedure instructions is a separate explicit
 flag. Production statuses, approvals, test requests, assignments, stock and financial
 records are outside this repair. See `docs/production-activity-repairs.md`.
-Local fixture verification does not establish that the example batch was repaired.
+Read-only inspection found step 6 mixes stages and already has a released Finished
+ATR, while step 12 has 11 missing activity links and three missing procedure links.
+The user supplied Eunice Lariba Adams as audit operator; live preview verified her
+planning grant and department. An explicit configuration-only mode may restore
+missing links while preserving an exactly named Released ATR on another step. It
+records the unresolved request-creation blocker in its preview/audit and retains
+the backend duplicate-stage guard. Live preflight found the master procedure was
+already corrected separately; the applied repair changed only 11 activity links,
+audited to Eunice with repair ID `fb00a099-3529-421f-92f0-8335e7a4320d`. The existing
+released ATR and workflow states were preserved. See
+`docs/coldrilif-4862-stage-review.md`; QA must reconcile the released ATR before
+another Finished test can be requested.
 
 ## Combined production readiness endpoint (2026-10-28)
 

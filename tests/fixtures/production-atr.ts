@@ -12,7 +12,7 @@ const schemas: Record<string, string> = {
   Products: '"Name" text, "DepartmentId" uuid',
   ProductionSchedules: '"Status" integer NOT NULL DEFAULT 1',
   Operations: '"Name" text',
-  ProductionScheduleProducts: '"ProductId" uuid NOT NULL, "ProductionScheduleId" uuid NOT NULL, "BatchNumber" text NOT NULL, "Cancelled" boolean NOT NULL DEFAULT false',
+  ProductionScheduleProducts: '"ProductId" uuid NOT NULL, "ProductionScheduleId" uuid NOT NULL, "BatchNumber" text, "Cancelled" boolean NOT NULL DEFAULT false',
   ProductionActivities: '"ProductionScheduleProductId" uuid NOT NULL REFERENCES "ProductionScheduleProducts"("Id"), "Status" integer NOT NULL DEFAULT 1, "StartedAt" timestamptz NOT NULL DEFAULT now(), "CompletedAt" timestamptz',
   ProductionActivitySteps: '"ProductionActivityId" uuid NOT NULL REFERENCES "ProductionActivities"("Id"), "OperationId" uuid NOT NULL, "Order" integer NOT NULL, "Status" integer NOT NULL DEFAULT 1, "StartedAt" timestamptz, "CompletedAt" timestamptz',
   Forms: '"Name" text',
@@ -23,7 +23,7 @@ const schemas: Record<string, string> = {
   RouteResponsibleUsers: '"RouteId" uuid NOT NULL, "UserId" uuid, "Action" integer NOT NULL DEFAULT 7, "ProductAnalyticalRawDataId" uuid REFERENCES "ProductAnalyticalRawData"("Id")',
   RouteResponsibleRoles: '"RouteId" uuid NOT NULL, "RoleId" uuid, "Action" integer NOT NULL DEFAULT 7, "ProductAnalyticalRawDataId" uuid REFERENCES "ProductAnalyticalRawData"("Id")',
   AnalyticalTestRequests: '"ProductionActivityStepId" uuid NOT NULL, "ProductionScheduleProductId" uuid NOT NULL, "Stage" integer NOT NULL, "Status" integer NOT NULL DEFAULT 0',
-  BatchManufacturingRecords: '"ProductionScheduleProductId" uuid NOT NULL',
+  BatchManufacturingRecords: '"ProductionScheduleProductId" uuid NOT NULL, "BatchNumber" text, "Status" integer NOT NULL DEFAULT 2',
   MicrobialRequirements: '"ProductId" uuid, "Subject" integer NOT NULL DEFAULT 1, "Stage" integer, "Required" boolean NOT NULL DEFAULT true, "IsVerified" boolean NOT NULL DEFAULT true, "VerifiedAt" timestamptz',
   ProductionActivityLogs: '"ProductionActivityId" uuid NOT NULL REFERENCES "ProductionActivities"("Id"), "Message" varchar(1000), "UserId" uuid REFERENCES users("Id"), "Timestamp" timestamptz NOT NULL',
 };
@@ -51,6 +51,6 @@ INSERT INTO "ProductionActivityStepUsers" ("Id", "ProductionActivityStepId", "Us
 INSERT INTO "Routes" ("Id", "ProductId", "OperationId", "Order") VALUES ('${ids.route}', '${ids.product}', '${ids.other}', 10);
 INSERT INTO "RouteResponsibleUsers" ("Id", "RouteId", "ProductAnalyticalRawDataId") VALUES ('${ids.other}', '${ids.route}', '${ids.ard}');
 INSERT INTO "RouteResponsibleRoles" ("Id", "RouteId", "ProductAnalyticalRawDataId") VALUES ('${ids.other}', '${ids.route}', '${ids.ard}');
-INSERT INTO "BatchManufacturingRecords" ("Id", "ProductionScheduleProductId") VALUES ('${ids.other}', '${ids.batch}');`;
+INSERT INTO "BatchManufacturingRecords" ("Id", "ProductionScheduleProductId", "BatchNumber") VALUES ('${ids.other}', '${ids.batch}', '4862');`;
 
 export const dropSql = `DROP TABLE IF EXISTS "_ProductionAtrRepairs", ${[...Object.keys(schemas), "userroles", "roleclaims", "PermissionTypes"].map((name) => `"${name}"`).join(", ")} CASCADE;`;

@@ -32,8 +32,9 @@ privileges and does not impersonate an application user.
 ## Inspect one activity
 
 The reported example is **Coldrilif Syrup, batch 4862**, activity
-`01a1757c-7819-7e2f-ad68-d5e10a1a35cf`. The user confirmed **Intermediate** for the reported blocked step; this is an
-explicit business decision, not an inference from the screenshot. `0 = Intermediate`, `1 = Bulk`, `2 = Finished`; `Action = 7` means ATR.
+`01a1757c-7819-7e2f-ad68-d5e10a1a35cf`. After reviewing conflicting released history, the user confirmed **Finished for
+step 12**. The existing released Finished ATR still requires reconciliation before
+this batch can continue; see [the batch review](coldrilif-4862-stage-review.md). `0 = Intermediate`, `1 = Bulk`, `2 = Finished`; `Action = 7` means ATR.
 
 Set `PGHOST`, `PGPORT`, `PGDATABASE`, and your normal libpq authentication externally.
 Explicit host/database arguments prevent an accidental default connection.
@@ -45,7 +46,7 @@ bun scripts/repairs/production-atr/index.ts inspect \
 ```
 
 The JSON includes product/batch identity, every step and assignment, matching source
-routes, existing ATR history including deleted records, and product ARDs with stage,
+routes, existing ATR history including deleted records, BMR batch numbers (which can differ from a blank schedule number), and product ARDs with stage,
 analysis type and verification state. Confirm the exact blocked step with production
 and the correct stage/verified Chemical ARD with QC. Inspection makes no writes.
 
@@ -61,7 +62,7 @@ bun scripts/repairs/production-atr/index.ts repair \
   --host "$PGHOST" --port "$PGPORT" --database "$PGDATABASE" \
   --activity 01a1757c-7819-7e2f-ad68-d5e10a1a35cf \
   --step "$STEP_ID" --product "$PRODUCT_ID" --batch 4862 \
-  --ard "$CHEMICAL_ARD_ID" --stage intermediate \
+  --ard "$CHEMICAL_ARD_ID" --stage "$STAGE" \
   --actor "$OPERATOR_ID" --expected-assignments "$EXPECTED_ASSIGNMENTS" \
   --reason 'Restore missing ATR linkage for Coldrilif Syrup batch 4862'
 ```
@@ -86,8 +87,17 @@ missing/ambiguous source instructions, unverified/ambiguous/wrong-product or
 wrong-stage ARDs and deleted worksheets. It requires a unique verified Chemical
 ARD and the separate verified Microbial worksheet when required for Finished
 products, matching the backend's `QualityAnalysisSnapshot.ForProductAsync` rules.
-An existing ATR for the step **or batch/stage**, including deleted history, blocks
-repair and requires reconciliation rather than a second request.
+An existing ATR for the target step, including deleted history, always blocks
+repair. Existing batch/stage history also blocks the default repair.
+
+If the authorized work is limited to restoring configuration while preserving a
+known released ATR on another step, explicitly use `--configuration-only` together
+with `--existing-stage-request <reviewed-ATR-ID>`. This requires exactly that single
+active Released ATR on another step for the same batch/stage; missing, changed,
+additional, deleted or unreleased history is refused. The preview and durable audit
+include the existing request and `requestCreationBlocked: true`. This option changes
+only the missing configuration links. It does not create or move an ATR, and the
+backend still refuses another request until QA reconciles the existing history.
 
 ## Evidence and recovery
 
@@ -99,8 +109,10 @@ One transaction writes the links, `UpdatedAt`/`LastUpdatedById`, full before/aft
 rows in `_ProductionAtrRepairs`, the database session identity, actor, reason and a
 normal `ProductionActivityLog` referencing the repair ID. Audit/log failure rolls
 back the links too. Running the same repair again before any ATR is created is a
-no-op with `rowsToChange: 0` and creates no duplicate audit event. Once an ATR exists,
-the refusal above takes precedence over the no-op path.
+no-op with `rowsToChange: 0` and creates no duplicate audit event. Once an ATR exists on the target step,
+the refusal above takes precedence over the no-op path. The explicitly named
+configuration-only path may repeat as a no-op while its reviewed other-step ATR
+remains unchanged in identity and Released state.
 
 After success, rerun `inspect`, refresh the board, and confirm that the intended
 stage appears. Users then submit and process the test through the normal authorized
@@ -134,7 +146,7 @@ node --test tests/production-atr-repair.test.ts
 Coverage includes read-only previews, audited atomic repair, explicit procedure
 repair, repeat execution, preserving other actions and workflow state, stage zero,
 Finished Microbial requirements, conflicting links, deleted history, permission
-and department denials, stale/ambiguous inputs, audit failure rollback and an ATR
+and department denials, stale/ambiguous inputs, BMR identity checks, post-write verification, audit failure rollback and an ATR
 committed while the repair waits for locks. Fixtures exercise actual PostgreSQL,
 not a simulated transaction engine. They are not acceptance against a customer's
 migrated database or an authenticated board session.

@@ -21,6 +21,8 @@ DECLARE
   actor_id uuid := current_setting('oryx_repair.actor')::uuid;
   test_stage integer := current_setting('oryx_repair.stage')::integer;
   fix_procedure boolean := current_setting('oryx_repair.repairprocedure')::boolean;
+  configuration_only boolean := current_setting('oryx_repair.configurationonly')::boolean;
+  existing_stage_requests jsonb;
   batch_id uuid;
   route_id uuid;
   source_count integer;
@@ -50,19 +52,38 @@ BEGIN
     JOIN public."Operations" o ON o."Id" = s."OperationId"
     WHERE a."Id" = activity_id AND s."Id" = step_id AND b."ProductId" = product_id
       AND EXISTS (SELECT 1 FROM public.users operator WHERE operator."Id" = actor_id AND operator."DepartmentId" = p."DepartmentId")
-      AND b."BatchNumber" = current_setting('oryx_repair.batch') AND NOT b."Cancelled"
+      AND (nullif(b."BatchNumber", '') IS NULL OR b."BatchNumber" = current_setting('oryx_repair.batch'))
+      AND NOT b."Cancelled"
       AND a."DeletedAt" IS NULL AND a."CompletedAt" IS NULL AND a."Status" IN (0, 1, 3)
       AND s."DeletedAt" IS NULL AND s."CompletedAt" IS NULL AND s."Status" IN (0, 1, 3)
       AND p."DeletedAt" IS NULL AND o."DeletedAt" IS NULL AND schedule."DeletedAt" IS NULL;
   IF batch_id IS NULL THEN RAISE EXCEPTION 'Activity/step/product/batch/department mismatch, deleted record, or terminal production'; END IF;
 
-  IF EXISTS (SELECT 1 FROM public."AnalyticalTestRequests"
-    WHERE "ProductionActivityStepId" = step_id OR ("ProductionScheduleProductId" = batch_id AND "Stage" = test_stage)) THEN
-    RAISE EXCEPTION 'An ATR already exists for this step or batch/stage (including deleted history); reconcile manually';
+  IF EXISTS (SELECT 1 FROM public."AnalyticalTestRequests" WHERE "ProductionActivityStepId" = step_id) THEN
+    RAISE EXCEPTION 'An ATR already exists for this step (including deleted history); reconcile manually';
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM public."BatchManufacturingRecords"
-    WHERE "ProductionScheduleProductId" = batch_id AND "DeletedAt" IS NULL) THEN
-    RAISE EXCEPTION 'Batch manufacturing record is missing';
+  SELECT coalesce(jsonb_agg(jsonb_build_object('id', "Id", 'stepId', "ProductionActivityStepId",
+    'stage', "Stage", 'status', "Status", 'deletedAt', "DeletedAt")), '[]') INTO existing_stage_requests
+    FROM public."AnalyticalTestRequests" WHERE "ProductionScheduleProductId" = batch_id AND "Stage" = test_stage;
+  IF NOT configuration_only AND jsonb_array_length(existing_stage_requests) > 0 THEN
+    RAISE EXCEPTION 'An ATR already exists for this batch/stage; reconcile manually or explicitly repair configuration only';
+  END IF;
+  -- A named, reviewed released request on another step may remain while missing
+  -- configuration is corrected. This never authorizes a second request or release.
+  IF configuration_only THEN
+    IF jsonb_array_length(existing_stage_requests) <> 1 OR NOT EXISTS (
+      SELECT 1 FROM public."AnalyticalTestRequests"
+      WHERE "Id" = current_setting('oryx_repair.existingstagerequest')::uuid
+        AND "ProductionScheduleProductId" = batch_id AND "Stage" = test_stage
+        AND "ProductionActivityStepId" <> step_id AND "Status" = 5 AND "DeletedAt" IS NULL
+    ) THEN RAISE EXCEPTION 'Configuration-only repair requires the exact single active released ATR on another step'; END IF;
+  END IF;
+  IF (SELECT count(*) FROM public."BatchManufacturingRecords"
+    WHERE "ProductionScheduleProductId" = batch_id AND "DeletedAt" IS NULL) <> 1
+    OR NOT EXISTS (SELECT 1 FROM public."BatchManufacturingRecords"
+      WHERE "ProductionScheduleProductId" = batch_id AND "DeletedAt" IS NULL
+        AND "BatchNumber" = current_setting('oryx_repair.batch')) THEN
+    RAISE EXCEPTION 'Batch manufacturing record is missing/ambiguous or its batch number differs';
   END IF;
 
   -- Match backend QualityAnalysisSnapshot.ForProductAsync: one verified Chemical
@@ -150,7 +171,9 @@ BEGIN
     'activityId', activity_id, 'stepId', step_id, 'productId', product_id, 'batchId', batch_id,
     'batch', current_setting('oryx_repair.batch'), 'routeId', route_id, 'ardId', ard_id,
     'stage', test_stage, 'actorId', actor_id, 'reason', current_setting('oryx_repair.reason'),
-    'repairProcedure', fix_procedure, 'rowsToChange', changed_count, 'before', before_rows);
+    'repairProcedure', fix_procedure, 'configurationOnly', configuration_only,
+    'existingStageRequests', existing_stage_requests, 'requestCreationBlocked', jsonb_array_length(existing_stage_requests) > 0,
+    'rowsToChange', changed_count, 'before', before_rows);
   IF current_setting('oryx_repair.apply')::boolean AND changed_count > 0 THEN
     CREATE TABLE IF NOT EXISTS public."_ProductionAtrRepairs" (
       "Id" uuid PRIMARY KEY, "CreatedAt" timestamptz NOT NULL,

@@ -14,6 +14,8 @@ export interface AtrRepair extends RepairTarget {
   reason: string;
   expectedAssignments: number;
   repairProcedure: boolean;
+  configurationOnly: boolean;
+  existingStageRequest: string | null;
   apply: boolean;
 }
 export type RepairCommand = { mode: "inspect"; target: RepairTarget } | { mode: "repair"; target: AtrRepair };
@@ -24,9 +26,9 @@ export function parseCommand(args: readonly string[]): RepairCommand {
   if (mode !== "inspect" && mode !== "repair") throw new Error("Choose inspect or repair. See docs/production-activity-repairs.md.");
   const values = new Map<string, string>();
   const switches = new Set<string>();
-  const flags = new Set(["--apply", "--repair-procedure"]);
+  const flags = new Set(["--apply", "--repair-procedure", "--configuration-only"]);
   const permitted = new Set(["--host", "--port", "--database", "--activity", ...(mode === "repair"
-    ? ["--step", "--product", "--batch", "--ard", "--stage", "--actor", "--reason", "--expected-assignments", ...flags] : [])]);
+    ? ["--step", "--product", "--batch", "--ard", "--stage", "--actor", "--reason", "--expected-assignments", "--existing-stage-request", ...flags] : [])]);
   for (let index = 0; index < rest.length; index += 1) {
     const key = rest[index];
     if (!key || !permitted.has(key) || values.has(key) || switches.has(key)) throw new Error(`Invalid or duplicate option: ${key}`);
@@ -63,7 +65,10 @@ export function parseCommand(args: readonly string[]): RepairCommand {
   if (stage < 0) throw new Error("--stage must be intermediate, bulk or finished; it cannot be inferred from step order");
   const reason = required("--reason").trim();
   if (reason.length < 10 || reason.length > 1000) throw new Error("--reason must contain 10–1000 characters");
-  return { mode, target: { ...target, step: uuid("--step"), product: uuid("--product"), batch: required("--batch"),
+  const configurationOnly = switches.has("--configuration-only");
+  if (!configurationOnly && values.has("--existing-stage-request")) throw new Error("--existing-stage-request requires --configuration-only");
+  const existingStageRequest = configurationOnly ? uuid("--existing-stage-request") : null;
+  return { mode, target: { ...target, configurationOnly, existingStageRequest, step: uuid("--step"), product: uuid("--product"), batch: required("--batch"),
     ard: uuid("--ard"), stage, actor: uuid("--actor"), reason, expectedAssignments: positive("--expected-assignments"),
     repairProcedure: switches.has("--repair-procedure"), apply: switches.has("--apply") } };
 }

@@ -15,6 +15,12 @@ const target = parsed.target;
 test("repair defaults to read-only preview and requires exact identities and stage", () => {
   assert.equal(target.apply, false);
   assert.equal(target.repairProcedure, false);
+  assert.equal(target.configurationOnly, false);
+  assert.equal(target.existingStageRequest, null);
+  assert.throws(() => parseCommand([...args, "--configuration-only"]));
+  assert.throws(() => parseCommand([...args, "--existing-stage-request", ids.other]));
+  const configured = parseCommand([...args, "--configuration-only", "--existing-stage-request", ids.other]);
+  assert.equal(configured.mode === "repair" && configured.target.existingStageRequest, ids.other);
   assert.match(repairSql(parsed), /REPEATABLE READ READ ONLY/);
   assert.equal(parseCommand([...args, "--apply"]).mode, "repair");
   for (const flag of ["--step", "--product", "--batch", "--ard", "--actor", "--stage", "--reason", "--expected-assignments", "--database", "--host"]) {
@@ -98,6 +104,38 @@ test("PostgreSQL: preview, audited repair, idempotency and refusal paths", { ski
     assert.equal(ok('SELECT jsonb_array_length("After") FROM "_ProductionAtrRepairs";'), "3");
     assert.equal(ok('SELECT "ProductAnalyticalRawDataId" IS NULL FROM "ProductionActivityStepUsers" WHERE "Action" = 0;'), "t");
   });
+  await t.test("configuration-only repair preserves the reviewed released ATR and reports the request blocker", () => {
+    ok(resetSql);
+    ok(`INSERT INTO "AnalyticalTestRequests" ("Id", "ProductionActivityStepId", "ProductionScheduleProductId", "Stage", "Status") VALUES ('${ids.other}', '${ids.other}', '${ids.batch}', 1, 5);`);
+    const originalRequest = ok('SELECT to_jsonb(atr) FROM "AnalyticalTestRequests" atr;');
+    const originalStep = ok('SELECT to_jsonb(s) FROM "ProductionActivitySteps" s;');
+    assert.notEqual(run({ apply: true }).status, 0);
+    const choice = { configurationOnly: true, existingStageRequest: ids.other };
+    const preview = run(choice);
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.match(preview.stderr, /"requestCreationBlocked": true/);
+    assert.equal(links(), "missing");
+    const applied = run({ ...choice, apply: true });
+    assert.equal(applied.status, 0, applied.stderr);
+    assert.equal(links(), ids.ard);
+    assert.equal(ok('SELECT to_jsonb(atr) FROM "AnalyticalTestRequests" atr;'), originalRequest);
+    assert.equal(ok('SELECT to_jsonb(s) FROM "ProductionActivitySteps" s;'), originalStep);
+    assert.equal(ok(`SELECT "Plan"->>'requestCreationBlocked' FROM "_ProductionAtrRepairs";`), "true");
+    assert.equal(run({ ...choice, apply: true }).status, 0);
+    assert.equal(ok('SELECT count(*) FROM "_ProductionAtrRepairs";'), "1");
+  });
+  await t.test("configuration-only repair refuses unreviewed or changed history", () => {
+    for (const state of ["missing", "wrong-id", "unreleased", "deleted", "same-step", "multiple"]) {
+      ok(resetSql);
+      if (state !== "missing") ok(`INSERT INTO "AnalyticalTestRequests" ("Id", "ProductionActivityStepId", "ProductionScheduleProductId", "Stage", "Status", "DeletedAt")
+        VALUES ('${ids.other}', '${state === "same-step" ? ids.step : ids.other}', '${ids.batch}', 1, ${state === "unreleased" ? 0 : 5}, ${state === "deleted" ? "now()" : "NULL"});`);
+      if (state === "multiple") ok(`INSERT INTO "AnalyticalTestRequests" ("Id", "ProductionActivityStepId", "ProductionScheduleProductId", "Stage", "Status") VALUES ('${ids.actor}', '${ids.other}', '${ids.batch}', 1, 5);`);
+      const result = run({ apply: true, configurationOnly: true, existingStageRequest: state === "wrong-id" ? ids.actor : ids.other });
+      assert.notEqual(result.status, 0, state);
+      assert.equal(links(), "missing");
+      assert.equal(ok('SELECT count(*) FROM "ProductionActivityLogs";'), "0");
+    }
+  });
   const refusals: [string, string, Partial<AtrRepair>][] = [
     ["missing ATR instruction", 'UPDATE "ProductionActivityStepUsers" SET "Action" = 0;', {}],
     ["deleted activity", 'UPDATE "ProductionActivities" SET "DeletedAt" = now();', {}],
@@ -118,6 +156,8 @@ test("PostgreSQL: preview, audited repair, idempotency and refusal paths", { ski
     ["unverified ARD", 'UPDATE "ProductAnalyticalRawData" SET "IsVerified" = false;', {}],
     ["deleted form", 'UPDATE "Forms" SET "DeletedAt" = now();', {}],
     ["deleted STP", 'UPDATE "ProductStandardTestProcedures" SET "DeletedAt" = now();', {}],
+    ["BMR batch mismatch", `UPDATE "BatchManufacturingRecords" SET "BatchNumber" = '4863';`, {}],
+    ["ambiguous BMR", `INSERT INTO "BatchManufacturingRecords" ("Id", "ProductionScheduleProductId", "BatchNumber") VALUES ('${ids.actor}', '${ids.batch}', '4862');`, {}],
     ["missing BMR", 'DELETE FROM "BatchManufacturingRecords";', {}],
     ["existing deleted ATR", `INSERT INTO "AnalyticalTestRequests" ("Id", "ProductionActivityStepId", "ProductionScheduleProductId", "Stage", "DeletedAt") VALUES ('${ids.other}', '${ids.step}', '${ids.batch}', 1, now());`, {}],
     ["ambiguous route", `INSERT INTO "Routes" ("Id", "ProductId", "OperationId", "Order") VALUES ('${ids.other}', '${ids.product}', '${ids.other}', 10);`, {}],
@@ -132,6 +172,12 @@ test("PostgreSQL: preview, audited repair, idempotency and refusal paths", { ski
     assert.equal(links(), linksBefore);
     assert.equal(ok('SELECT count(*) FROM "ProductionActivityLogs";'), "0");
     assert.equal(ok('SELECT count(*) FROM "_ProductionAtrRepairs";'), "0");
+  });
+  await t.test("BMR batch number validates a legacy schedule with no batch number", () => {
+    ok(resetSql); ok('UPDATE "ProductionScheduleProducts" SET "BatchNumber" = NULL;');
+    const result = run({ apply: true });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(links(), ids.ard);
   });
   await t.test("intermediate stage zero is preserved", () => {
     ok(resetSql); ok('UPDATE "ProductAnalyticalRawData" SET "Stage" = 0;');
@@ -166,6 +212,16 @@ test("PostgreSQL: preview, audited repair, idempotency and refusal paths", { ski
     assert.match(result.stderr, /An ATR already exists/);
     assert.equal(await completed, 0);
     assert.equal(links(), "missing");
+  });
+  await t.test("a trigger that suppresses the link is detected and rolled back", () => {
+    ok(resetSql);
+    ok(`CREATE FUNCTION suppress_ard() RETURNS trigger LANGUAGE plpgsql AS $fn$ BEGIN NEW."ProductAnalyticalRawDataId" := NULL; RETURN NEW; END $fn$;
+      CREATE TRIGGER suppress_ard BEFORE UPDATE ON "ProductionActivityStepUsers" FOR EACH ROW EXECUTE FUNCTION suppress_ard();`);
+    const result = run({ apply: true });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Post-write verification failed/);
+    assert.equal(links(), "missing");
+    ok('DROP TRIGGER suppress_ard ON "ProductionActivityStepUsers"; DROP FUNCTION suppress_ard();');
   });
   await t.test("audit failure rolls the data changes back", () => {
     ok(resetSql);
