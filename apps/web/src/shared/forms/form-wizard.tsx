@@ -1,10 +1,12 @@
-import { lazy, Suspense, useId, useMemo } from "react";
-import { FormProvider, type FieldValues, type UseFormReturn } from "react-hook-form";
+import { lazy, Suspense, useId, useMemo, useState } from "react";
+import { FormProvider, useFormState, type FieldValues, type UseFormReturn } from "react-hook-form";
 import { cn } from "cn";
+import { CustomFieldBoundary } from "./custom-field-boundary";
 import { FieldFrame } from "./field-frame";
 import { fieldDescription } from "./field-description";
 import { useFieldError } from "./field-state";
 import type { CustomField, ExtendedWizardField, WizardField } from "./form-wizard-types";
+import { useFormUpdateSafety } from "../updates/form-update-safety";
 import { InputTypes } from "./input-types";
 
 const TextInputField = lazy(() => import("./fields/text-field"));
@@ -38,12 +40,18 @@ function CustomInputField<TValues extends FieldValues>({ field, form }: {
   field: CustomField<TValues>;
   form: UseFormReturn<TValues>;
 }) {
-  const Renderer = useMemo(() => lazy(field.load), [field.load]);
+  const [attempt, setAttempt] = useState(0);
+  // A retry must create a fresh lazy loader; React caches a rejected loader.
+  const Renderer = useMemo(() => lazy(field.load), [field.load, attempt]);
   const id = useId();
   const error = useFieldError(field.name);
   return <FieldFrame id={id} label={field.label} description={field.description} required={field.required} error={error} className={field.className}>
-    <Renderer id={id} name={field.name} control={form.control} disabled={field.disabled ?? false}
-      required={field.required ?? false} invalid={Boolean(error)} describedBy={fieldDescription(id, field.description, error)} />
+    <CustomFieldBoundary key={attempt} label={field.label} onRetry={() => setAttempt((value) => value + 1)}>
+      <Suspense fallback={<div role="status" className="animate-pulse rounded-md border p-4 text-sm text-muted-foreground">Loading {field.label}…</div>}>
+        <Renderer id={id} name={field.name} control={form.control} disabled={field.disabled ?? false}
+          required={field.required ?? false} invalid={Boolean(error)} describedBy={fieldDescription(id, field.description, error)} />
+      </Suspense>
+    </CustomFieldBoundary>
   </FieldFrame>;
 }
 
@@ -106,6 +114,8 @@ function WizardFieldSlot<TValues extends FieldValues>({ field, form }: {
 }
 
 export function FormWizard<TValues extends FieldValues>({ form, fields, className }: FormWizardProps<TValues>) {
+  const { isDirty, isSubmitting } = useFormState({ control: form.control });
+  useFormUpdateSafety(isDirty || isSubmitting);
   return <FormProvider {...form}><div className={cn("grid min-w-0 grid-cols-1 gap-4", className)}>
     {fields.map((field) => <Suspense key={"name" in field ? field.name : field.id} fallback={<div className="h-14 min-w-0 animate-pulse rounded-lg bg-muted" aria-label={`Loading ${"label" in field ? field.label : "form layout"}`} />}>
       <WizardFieldSlot field={field} form={form} />

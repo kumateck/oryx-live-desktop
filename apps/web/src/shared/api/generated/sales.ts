@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1CustomersApiResponse,
       PostApiV1CustomersApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "customer", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/customers`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1CustomersApiResponse,
       GetApiV1CustomersApiArg
     >({
+      providesTags: [{ type: "customer", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/customers`,
         headers: {
@@ -36,6 +38,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1CustomersByIdApiResponse,
       GetApiV1CustomersByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "customer", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/customers/${queryArg.id}`,
         headers: {
@@ -48,6 +51,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1CustomersByIdApiResponse,
       PutApiV1CustomersByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "customer", id: "LIST" }, { type: "customer", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/customers/${queryArg.id}`,
         method: "PUT",
@@ -62,6 +66,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1CustomersByIdApiResponse,
       DeleteApiV1CustomersByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "customer", id: "LIST" }, { type: "customer", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/customers/${queryArg.id}`,
         method: "DELETE",
@@ -75,6 +80,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PaymentsApiResponse,
       GetApiV1PaymentsApiArg
     >({
+      providesTags: [{ type: "payment", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/payments`,
         headers: {
@@ -94,6 +100,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1PaymentsApiResponse,
       PostApiV1PaymentsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "payment", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/payments`,
         method: "POST",
@@ -108,6 +115,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PaymentsCurrencyConfigurationApiResponse,
       GetApiV1PaymentsCurrencyConfigurationApiArg
     >({
+      providesTags: [{ type: "payment/currency-configuration", id: "LIST" }, { type: "payment", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/payments/currency-configuration`,
         headers: {
@@ -123,6 +131,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PaymentsByPaymentIdApiResponse,
       GetApiV1PaymentsByPaymentIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "payment", id: queryArg.paymentId }],
       query: (queryArg) => ({
         url: `/api/v1/payments/${queryArg.paymentId}`,
         headers: {
@@ -135,6 +144,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PaymentsByPaymentIdApprovalDetailsApiResponse,
       GetApiV1PaymentsByPaymentIdApprovalDetailsApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "payment", id: queryArg.paymentId }],
       query: (queryArg) => ({
         url: `/api/v1/payments/${queryArg.paymentId}/approval-details`,
         headers: {
@@ -147,6 +157,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1PaymentsByPaymentIdReviewApiResponse,
       PostApiV1PaymentsByPaymentIdReviewApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "payment", id: "LIST" }, { type: "payment", id: queryArg.paymentId }]),
       query: (queryArg) => ({
         url: `/api/v1/payments/${queryArg.paymentId}/review`,
         method: "POST",
@@ -161,6 +172,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PaymentsApAgingApiResponse,
       GetApiV1PaymentsApAgingApiArg
     >({
+      providesTags: [{ type: "payment/ap-aging", id: "LIST" }, { type: "payment", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/payments/ap-aging`,
         headers: {
@@ -176,6 +188,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PaymentsArAgingApiResponse,
       GetApiV1PaymentsArAgingApiArg
     >({
+      providesTags: [{ type: "payment/ar-aging", id: "LIST" }, { type: "payment", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/payments/ar-aging`,
         headers: {
@@ -191,6 +204,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PaymentsCashflowSummaryApiResponse,
       GetApiV1PaymentsCashflowSummaryApiArg
     >({
+      providesTags: [{ type: "payment/cashflow-summary", id: "LIST" }, { type: "payment", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/payments/cashflow-summary`,
         headers: {
@@ -206,6 +220,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1PaymentsBaseCurrencyByCurrencyIdApiResponse,
       PutApiV1PaymentsBaseCurrencyByCurrencyIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "payment/base-currency", id: "LIST" }, { type: "payment", id: "LIST" }, { type: "payment/base-currency", id: queryArg.currencyId }]),
       query: (queryArg) => ({
         url: `/api/v1/payments/base-currency/${queryArg.currencyId}`,
         method: "PUT",
@@ -219,6 +234,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1PaymentsExchangeRatesApiResponse,
       PostApiV1PaymentsExchangeRatesApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "payment/exchange-rate", id: "LIST" }, { type: "payment", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/payments/exchange-rates`,
         method: "POST",
@@ -233,6 +249,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PaymentsExchangeRatesByCurrencyIdApiResponse,
       GetApiV1PaymentsExchangeRatesByCurrencyIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "payment/exchange-rate", id: queryArg.currencyId }],
       query: (queryArg) => ({
         url: `/api/v1/payments/exchange-rates/${queryArg.currencyId}`,
         headers: {

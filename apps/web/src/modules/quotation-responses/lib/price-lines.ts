@@ -1,5 +1,6 @@
 import { formatMoney, formatUnitPrice, isNegligibleLine, lineCost } from "@/shared/procurement/price";
-import { relatedUnits, toLargestUnit } from "@/shared/units/quantity";
+import type { DomainEntitiesProcurementSuppliersSupplierManufacturerDto } from "@/shared/api/generated/procurement";
+import { convertUnit, relatedUnits, toLargestUnit } from "@/shared/units/quantity";
 import type { PricingAgreement } from "@/modules/suppliers/relationship/types";
 import type { SupplierQuotation } from "../schemas/quotation-response-schema";
 import { activeAgreement } from "./agreements";
@@ -14,13 +15,14 @@ export interface PriceLine {
  * The lines of a quotation ready for price entry. A price already recorded is kept; otherwise the supplier's
  * standing agreement for the material, if one is in force, is offered as the starting point.
  */
-export function startPriceLines(quotation: SupplierQuotation, agreements: readonly PricingAgreement[], now = new Date()): PriceLine[] {
+export function startPriceLines(quotation: SupplierQuotation, agreements: readonly PricingAgreement[], now = new Date(), associations: readonly DomainEntitiesProcurementSuppliersSupplierManufacturerDto[] = []): PriceLine[] {
   return quotation.items.map((item) => {
     const agreement = item.materialId && item.unitId ? activeAgreement(agreements, item.materialId, item.unitId, now) : null;
     const units = relatedUnits(item.unit);
+    const purchaseUnit = associations.find((row) => row.material?.id === item.materialId)?.purchaseUnit;
     return { id: item.id, materialId: item.materialId, materialName: item.materialName, manufacturer: item.manufacturer, quantity: item.quantity, unit: item.unit, unitId: item.unitId,
       price: item.quotedPrice ?? agreement?.agreedPrice ?? null,
-      priceUnit: item.priceUnit ?? agreement?.priceUoM ?? (units.length === 1 ? units[0] ?? "" : ""), agreementId: agreement?.id ?? null };
+      priceUnit: item.priceUnit ?? agreement?.priceUoM ?? purchaseUnit ?? (units.length === 1 ? units[0] ?? "" : ""), agreementId: agreement?.id ?? null };
   });
 }
 
@@ -31,6 +33,7 @@ export function priceLineProblems(lines: readonly PriceLine[]): PriceLineProblem
   return lines.flatMap((line): PriceLineProblem[] => {
     if (line.price === null || !Number.isFinite(line.price) || line.price <= 0) return [{ id: line.id, field: "price", message: `Enter the price quoted for ${line.materialName}` }];
     if (!line.priceUnit.trim()) return [{ id: line.id, field: "priceUnit", message: `Choose the unit ${line.materialName} is priced per` }];
+    if (convertUnit(1, line.unit, line.priceUnit) === null) return [{ id: line.id, field: "priceUnit", message: `${line.materialName}: the price unit cannot be reconciled with the quantity unit` }];
     return [];
   });
 }

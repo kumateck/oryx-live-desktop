@@ -1,13 +1,14 @@
 import { api } from "@/shared/api/base-api";
 import { analyticalApi } from "@/shared/api/generated/analytical";
+import { addTags } from "@/shared/api/add-tags";
 
 const byProduct = { type: "ProductArd" as const, id: "by-product" };
 
 export const ardApi = analyticalApi.enhanceEndpoints({
   endpoints: {
-    getApiV1ProductArdProductByProductId: { providesTags: [byProduct] },
-    postApiV1ProductArd: { invalidatesTags: (_result, error) => error ? [] : [byProduct] },
-    putApiV1ProductArdById: { invalidatesTags: (_result, error) => error ? [] : [byProduct] },
+    getApiV1ProductArdProductByProductId: (definition) => { definition.providesTags = addTags(definition.providesTags, [byProduct]); },
+    postApiV1ProductArd: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [byProduct]); },
+    putApiV1ProductArdById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [byProduct]); },
   },
 });
 

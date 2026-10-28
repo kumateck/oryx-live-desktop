@@ -1,0 +1,71 @@
+diff --git a/crates/ui-egui/src/editing.rs b/crates/ui-egui/src/editing.rs
+index 6c20eb2..488f78d 100644
+--- a/crates/ui-egui/src/editing.rs
++++ b/crates/ui-egui/src/editing.rs
+@@ -138,7 +138,14 @@ impl PdfCraftApp {
+             // Nor may a shortcut pressed with it (⌘S right after Enter) run behind the refusal.
+             self.deferred_commands.clear();
+         }
+-        match self.views.get_mut(i).and_then(|v| v.pending_action.take()) {
++        let action = self.views.get_mut(i).and_then(|v| v.pending_action.take());
++        if self.workspace_save.is_some() && matches!(action,
++            Some(crate::canvas::ViewAction::InsertFromFile | crate::canvas::ViewAction::InsertFromFileAt(_)
++                | crate::canvas::ViewAction::Extract | crate::canvas::ViewAction::Split)) {
++            self.notify("This file operation is unavailable in the offline editor.");
++            return applied;
++        }
++        match action {
+             Some(crate::canvas::ViewAction::InsertFromFile) => self.insert_from_file_dialog(),
+             Some(crate::canvas::ViewAction::InsertFromFileAt(at)) => self.insert_from_file_at(Some(at)),
+             Some(crate::canvas::ViewAction::Save) => {
+@@ -378,6 +385,10 @@ impl PdfCraftApp {
+             return false;
+         }
+         let Some(id) = self.views.get(index).map(|v| v.id) else { return false };
++        if let Some(save) = &self.workspace_save {
++            save();
++            return false;
++        }
+         let Some(doc) = self.session.get(id) else { return false };
+         let (name, path) = (doc.name.clone(), doc.path.clone());
+         #[cfg(not(target_arch = "wasm32"))]
+@@ -681,22 +692,8 @@ fn short_name(path: &str) -> String {
+ 
+ /// Offer bytes as a browser download.
+ #[cfg(target_arch = "wasm32")]
+-pub(crate) fn download(name: &str, bytes: &[u8]) -> Result<(), String> {
+-    use wasm_bindgen::JsCast;
+-    let err = |e: wasm_bindgen::JsValue| format!("{e:?}");
+-    let array = js_sys::Uint8Array::from(bytes);
+-    let parts = js_sys::Array::of1(&array);
+-    let opts = web_sys::BlobPropertyBag::new();
+-    opts.set_type("application/pdf");
+-    let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&parts, &opts).map_err(err)?;
+-    let url = web_sys::Url::create_object_url_with_blob(&blob).map_err(err)?;
+-    let document = web_sys::window().and_then(|w| w.document()).ok_or("no document")?;
+-    let a: web_sys::HtmlAnchorElement = document.create_element("a").map_err(err)?.dyn_into().map_err(|_| "anchor")?;
+-    a.set_href(&url);
+-    a.set_download(name);
+-    a.click();
+-    let _ = web_sys::Url::revoke_object_url(&url);
+-    Ok(())
++pub(crate) fn download(_name: &str, _bytes: &[u8]) -> Result<(), String> {
++    Err("Use Workspace Documents to export the saved PDF.".into())
+ }
+ 
+ impl PdfCraftApp {
+diff --git a/crates/ui-egui/src/pickers.rs b/crates/ui-egui/src/pickers.rs
+index dcb0120..b64414d 100644
+--- a/crates/ui-egui/src/pickers.rs
++++ b/crates/ui-egui/src/pickers.rs
+@@ -144,6 +144,10 @@ impl PdfCraftApp {
+     /// Show a native picker for `pick_for` without blocking the frame. The choice is used on a
+     /// later frame by [`Self::process_picked`].
+     pub(crate) fn pick(&mut self, pick_for: PickFor, dialog: rfd::AsyncFileDialog, multiple: bool) {
++        if self.workspace_save.is_some() {
++            self.notify("Use Workspace Documents to import files.");
++            return;
++        }
+         // Insert and Replace edit the active document: remember which one.
+         let target = match pick_for {
+             PickFor::Files(purpose) if purpose.edits_active_document() => self.active_ids().map(|(_, id)| id),

@@ -5,7 +5,7 @@ their OpenAPI contract would produce `any` or `unknown`. Declare the response or
 controller (for example `[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), run
 `bun run api:export` and `bun run api:generate`, and the hook appears.
 
-Typed operations: 1078. Skipped: 246.
+Typed operations: 1117. Skipped: 244.
 
 ## identity
 
@@ -27,7 +27,6 @@ Typed operations: 1078. Skipped: 246.
 | --- | --- | --- |
 | AttendanceRecord | `POST /api/v1/attendance-records/upload/{date}` | 200 response has no declared body type |
 | AttendanceRecord | `GET /api/v1/attendance-records/export` | 200 response has no declared body type |
-| Employee | `POST /api/v1/employee/register` | 200 response has no declared body type |
 | Employee | `POST /api/v1/employee/upload` | 200 response has no declared body type |
 | Payroll | `POST /api/v1/payroll/compensation` | 200 response has no declared body type |
 | Payroll | `GET /api/v1/payroll/compensation/{employeeId}` | 200 response has no declared body type |
@@ -66,13 +65,11 @@ Typed operations: 1078. Skipped: 246.
 | Performance | `GET /api/v1/performance/cycles` | 200 response has no declared body type |
 | Performance | `GET /api/v1/performance/cycles/{id}` | 200 response has no declared body type |
 | Performance | `PUT /api/v1/performance/cycles/{id}/status` | 200 response has no declared body type |
-| Performance | `POST /api/v1/performance/goals` | 200 response has no declared body type |
 | Performance | `GET /api/v1/performance/goals` | 200 response has no declared body type |
-| Performance | `PUT /api/v1/performance/goals/{id}` | 200 response has no declared body type |
-| Performance | `DELETE /api/v1/performance/goals/{id}` | 200 response has no declared body type |
 | Performance | `GET /api/v1/performance/goals/{id}` | 200 response has no declared body type |
 | Performance | `POST /api/v1/performance/reviews` | 200 response has no declared body type |
 | Performance | `GET /api/v1/performance/reviews` | 200 response has no declared body type |
+| Performance | `GET /api/v1/performance/reviews/mine` | 200 response has no declared body type |
 | Performance | `GET /api/v1/performance/reviews/{id}` | 200 response has no declared body type |
 | Performance | `POST /api/v1/performance/reviews/{id}/self-assessment` | 200 response has no declared body type |
 | Performance | `POST /api/v1/performance/reviews/{id}/manager-review` | 200 response has no declared body type |
@@ -194,6 +191,7 @@ Typed operations: 1078. Skipped: 246.
 | CommercialCertificate | `GET /api/v1/qc/commercial-certificates/{id}` | 200 response has no declared body type |
 | MicrobialRequirement | `GET /api/v1/qc/microbial-requirements` | 200 response has no declared body type |
 | MicrobialRequirement | `POST /api/v1/qc/microbial-requirements` | 200 response has no declared body type |
+| QcWorksheetFiles | `GET /api/v1/qc/worksheets/instances/{id}/files/{reference}` | 200 response has no declared body type |
 | RoutineQc | `POST /api/v1/qc/routines/ards` | 200 response has no declared body type |
 | RoutineQc | `GET /api/v1/qc/routines/ards` | 200 response has no declared body type |
 | RoutineQc | `GET /api/v1/qc/routines/definitions` | 200 response has no declared body type |

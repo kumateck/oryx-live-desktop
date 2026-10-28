@@ -13,7 +13,7 @@ const none = <span className="text-muted-foreground">Not raised yet</span>;
 /** Where the records behind a step stand: the requisitions, the batch record, the test request. Only what the step involves is shown. */
 export function StepRecordsView({ policy, records }: { policy: StepPolicy; records: StepRecords }) {
   const shows = policy.has.stockRequisition || policy.has.bmr || policy.has.atr;
-  if (!shows && !records.extraMaterialPending) return null;
+  if (!shows && !records.extraMaterialOpen) return null;
   const wait = <Skeleton className="h-5 w-24" />;
   return <div className="space-y-3">
     {shows ? <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -26,6 +26,9 @@ export function StepRecordsView({ policy, records }: { policy: StepPolicy; recor
       {policy.has.bmr ? <Record label="BMR and BPR">{records.loading ? wait : records.bmr ? <Badge variant="secondary">{bmrStatusLabel(records.bmr.status)}</Badge> : none}</Record> : null}
       {policy.has.atr ? <Record label="Analytical test request">{records.loading ? wait : records.atr ? <Badge variant="secondary">{atrStatusLabel(records.atr.status)}</Badge> : none}</Record> : null}
     </dl> : null}
-    {records.extraMaterialPending ? <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">An extra material request for this batch is waiting for approval. The step cannot be started until it is decided.</p> : null}
+    {records.extraMaterialOpen ? <p role="status" className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
+      {records.extraMaterialPending ? "Extra material is waiting for approval. The step cannot start while approval is pending and cannot complete until all extra material is approved and issued."
+        : "Approved extra material has not been issued. The step cannot complete until all extra material has been issued by the warehouse."}
+    </p> : null}
   </div>;
 }

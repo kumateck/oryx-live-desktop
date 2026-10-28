@@ -1,15 +1,15 @@
 .oryx-rich-text[data-invalid="true"] { border-color: var(--destructive); }
-.oryx-rich-text .tiptap { min-height: 100%; padding: 0.625rem; outline: none; overflow-wrap: anywhere; white-space: pre-wrap; }
-.oryx-rich-text .tiptap p { margin: 0 0 0.5rem; }
-.oryx-rich-text .tiptap h1 { font-size: 1.5rem; font-weight: 650; line-height: 1.25; margin: 0.75rem 0 0.5rem; }
-.oryx-rich-text .tiptap h2 { font-size: 1.25rem; font-weight: 650; line-height: 1.3; margin: 0.75rem 0 0.5rem; }
-.oryx-rich-text .tiptap h3, .oryx-rich-text .tiptap h4, .oryx-rich-text .tiptap h5, .oryx-rich-text .tiptap h6 { font-size: 1.05rem; font-weight: 650; margin: 0.625rem 0 0.375rem; }
-.oryx-rich-text .tiptap ul { list-style: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
-.oryx-rich-text .tiptap ol { list-style: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
-.oryx-rich-text .tiptap blockquote { border-left: 2px solid var(--border); padding-left: 0.75rem; color: var(--muted-foreground); }
+.oryx-rich-text .tiptap { min-height: 100%; padding: var(--document-space-0_625rem); outline: none; overflow-wrap: anywhere; white-space: pre-wrap; }
+.oryx-rich-text .tiptap p { margin: 0 0 var(--document-space-0_5rem); }
+.oryx-rich-text .tiptap h1 { font-size: var(--document-font-1_5rem); font-weight: 650; line-height: 1.25; margin: var(--document-space-0_75rem) 0 var(--document-space-0_5rem); }
+.oryx-rich-text .tiptap h2 { font-size: var(--document-font-1_25rem); font-weight: 650; line-height: 1.3; margin: var(--document-space-0_75rem) 0 var(--document-space-0_5rem); }
+.oryx-rich-text .tiptap h3, .oryx-rich-text .tiptap h4, .oryx-rich-text .tiptap h5, .oryx-rich-text .tiptap h6 { font-size: var(--document-font-1_05rem); font-weight: 650; margin: var(--document-space-0_625rem) 0 var(--document-space-0_375rem); }
+.oryx-rich-text .tiptap ul { list-style: disc; padding-left: var(--document-space-1_5rem); margin: var(--document-space-0_5rem) 0; }
+.oryx-rich-text .tiptap ol { list-style: decimal; padding-left: var(--document-space-1_5rem); margin: var(--document-space-0_5rem) 0; }
+.oryx-rich-text .tiptap blockquote { border-left: 2px solid var(--border); padding-left: var(--document-space-0_75rem); color: var(--muted-foreground); }
 .oryx-rich-text .tiptap a { color: var(--primary); text-decoration: underline; }
-.oryx-rich-text .tiptap table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0.625rem 0; }
-.oryx-rich-text .tiptap th, .oryx-rich-text .tiptap td { min-width: 0; border: 1px solid var(--border); padding: 0.35rem; overflow-wrap: anywhere; vertical-align: top; }
+.oryx-rich-text .tiptap table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: var(--document-space-0_625rem) 0; }
+.oryx-rich-text .tiptap th, .oryx-rich-text .tiptap td { min-width: 0; border: 1px solid var(--border); padding: var(--document-space-0_35rem); overflow-wrap: anywhere; vertical-align: top; }
 .oryx-rich-text .tiptap th { background: var(--muted); }
 .oryx-rich-text .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--muted-foreground); pointer-events: none; float: left; height: 0; }
 .oryx-rich-text .oryx-rich-reference { color: var(--primary); font-weight: 550; }
@@ -17,9 +17,9 @@
 /* Read-only display of saved rich text (RichTextView). */
 .rich-text-content > :first-child { margin-top: 0; }
 .rich-text-content > :last-child { margin-bottom: 0; }
-.rich-text-content p { margin: 0 0 0.4em; }
-.rich-text-content ul, .rich-text-content ol { margin: 0 0 0.4em; padding-left: 1.25em; }
+.rich-text-content p { margin: 0 0 var(--document-space-0_4em); }
+.rich-text-content ul, .rich-text-content ol { margin: 0 0 var(--document-space-0_4em); padding-left: var(--document-space-1_25em); }
 .rich-text-content ul { list-style: disc; }
 .rich-text-content ol { list-style: decimal; }
 .rich-text-content table { width: 100%; border-collapse: collapse; }
-.rich-text-content th, .rich-text-content td { padding: 4px 6px; border: 1px solid var(--border); text-align: left; }
+.rich-text-content th, .rich-text-content td { padding: var(--document-space-4px) var(--document-space-6px); border: 1px solid var(--border); text-align: left; }

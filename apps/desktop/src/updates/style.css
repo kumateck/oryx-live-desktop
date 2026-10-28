@@ -1,0 +1,14 @@
+@import "../connection/style.css";
+body { display: block; padding: 24px; }
+.update-panel { display: flex; flex-direction: column; height: calc(100dvh - 48px); min-height: 0; }
+.update-panel header, .update-panel footer { flex-shrink: 0; }
+.update-body { flex: 1; min-height: 0; overflow-y: auto; }
+.update-panel h1 { margin: 0 0 12px; font-size: 20px; }
+.update-panel p { margin: 0 0 16px; overflow-wrap: anywhere; }
+.update-panel #version { font-size: 12px; }
+.update-panel #error { color: var(--message); }
+.update-panel progress { width: 100%; height: 14px; accent-color: var(--brand); margin-bottom: 16px; }
+.update-panel footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: auto; padding-top: 16px; }
+.update-panel button { padding: 0 14px; margin: 0; }
+.update-panel #later { background: var(--card); color: inherit; border: 1px solid var(--border); }
+.update-panel button:disabled { cursor: default; opacity: .6; }

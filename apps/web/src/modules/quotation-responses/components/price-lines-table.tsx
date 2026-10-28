@@ -2,7 +2,9 @@ import { createContext, useContext, useMemo } from "react";
 import { TriangleAlert } from "lucide-react";
 import { EditableNumberCell, EditableSelectCell, ListDataTable, dataTableColumns } from "@/shared/datatable";
 import { formatMoney, formatUnitPrice, isNegligibleLine, lineCost } from "@/shared/procurement/price";
-import { relatedUnits, toLargestUnit } from "@/shared/units/quantity";
+import { purchaseUnitOptions } from "@/shared/procurement/purchase-units";
+import { useMaterialPurchaseUnitsQuery } from "@/shared/reference-data/material-purchase-units";
+import { convertUnit, relatedUnits, toLargestUnit } from "@/shared/units/quantity";
 import type { PriceLine } from "../lib/price-lines";
 
 interface Editing {
@@ -27,7 +29,9 @@ function PriceCell({ line }: { line: PriceLine }) {
 }
 function PriceUnitCell({ line }: { line: PriceLine }) {
   const { invalid, disabled, locked, onChange } = useEditing();
-  const units = relatedUnits(line.unit);
+  const linked = useMaterialPurchaseUnitsQuery({ materialId: line.materialId ?? "", module: "Procurement", subModule: "Quotation responses" }, { skip: !line.materialId || !onChange });
+  const offered = purchaseUnitOptions(linked.currentData ?? []);
+  const units = offered.length ? offered.map((unit) => unit.value).filter((symbol) => convertUnit(1, line.unit, symbol) !== null) : relatedUnits(line.unit);
   return onChange && !locked?.has(line.id) && units.length > 1 ? <EditableSelectCell label={`Unit ${line.materialName} is priced per`} value={line.priceUnit || null} disabled={disabled} invalid={invalid.get(line.id) === "priceUnit"}
     options={units.map((unit) => ({ value: unit, label: unit }))} placeholder="Unit" onCommit={(priceUnit) => onChange(line.id, { priceUnit })} /> : <span>{line.priceUnit || "–"}</span>;
 }

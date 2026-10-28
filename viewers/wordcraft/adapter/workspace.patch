@@ -1,0 +1,51 @@
+diff --git a/crates/ui-egui/src/chrome.rs b/crates/ui-egui/src/chrome.rs
+index c057992..00714ba 100644
+--- a/crates/ui-egui/src/chrome.rs
++++ b/crates/ui-egui/src/chrome.rs
+@@ -251,6 +251,7 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
+                 ui.spacing_mut().item_spacing = vec2(2.0, 0.0);
+                 // AutoSave switch: greyed out, with the reason as its tooltip, when AutoSave can't
+                 // cover the document (#196, #176); clicking it then offers Save As where that helps.
++                if app.services.download.is_none() {
+                 let block = app.autosave_block();
+                 let on = app.autosaves();
+                 let label = if block.is_some() { t.text_dim.gamma_multiply(0.6) } else { t.text_dim };
+@@ -279,6 +280,7 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
+                         Some(b) => app.status(b.reason()),
+                     }
+                 }
++                }
+                 ui.add_space(8.0);
+                 quick_access(ui, app);
+                 qat_end = ui.min_rect().max.x;
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 662516f..f5b95cd 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -809,6 +809,11 @@ impl WordApp {
+     /// Run a command for a script or an agent (control channel, MCP bridge): never asks first.
+     /// UI-level commands (`ui.*`) are handled here, the rest by the engine.
+     pub fn execute(&mut self, id: &str, params: Value) -> Result<Value, String> {
++        if self.services.download.is_some() && matches!(id, "file.new" | "file.open" | "file.close") {
++            let message = "Open or import documents from the Dodo Documents library.";
++            self.status(message);
++            return Err(message.into());
++        }
+         // A pending Change Picture only survives until the next action (#147).
+         if !matches!(id, "ui.changePicture" | "picture.change" | "insert.picture") {
+             self.change_picture_target = None;
+diff --git a/crates/ui-egui/src/theme.rs b/crates/ui-egui/src/theme.rs
+index d67361e..6f3ef13 100644
+--- a/crates/ui-egui/src/theme.rs
++++ b/crates/ui-egui/src/theme.rs
+@@ -5,8 +5,8 @@ use std::sync::Arc;
+ use egui::{Align2, Color32, CornerRadius, FontData, FontDefinitions, FontFamily, FontId, Rect, Stroke, Visuals};
+ 
+ /// WordCraft's app colour (and its darker ink for text on light backgrounds).
+-pub const APP_COLOR: Color32 = Color32::from_rgb(0x3B, 0x5B, 0xDB);
+-pub const APP_INK: Color32 = Color32::from_rgb(0x2B, 0x47, 0xB5);
++pub const APP_COLOR: Color32 = Color32::from_rgb(0x00, 0x00, 0xFF);
++pub const APP_INK: Color32 = Color32::from_rgb(0x00, 0x00, 0xC0);
+ 
+ /// The interface theme setting (File › Options › General, View › Interface Theme): a fixed light or
+ /// dark palette, or `System`, which follows the OS light/dark appearance live (#115). Dark page

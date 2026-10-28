@@ -2,13 +2,14 @@ import { api } from "@/shared/api/base-api";
 import { productsApi } from "@/shared/api/generated/products";
 import { salesApi } from "@/shared/api/generated/sales";
 import { auditFor } from "../lib/customers";
+import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "Customers" as const, id: "all" };
 const one = (id: string) => ({ type: "Customers" as const, id });
 const changed = (_result: unknown, error: unknown) => error ? [] : [list];
 
 export const customerApi = salesApi.enhanceEndpoints({ endpoints: {
-  getApiV1Customers: { providesTags: [list] }, postApiV1Customers: { invalidatesTags: changed }, putApiV1CustomersById: { invalidatesTags: changed }, deleteApiV1CustomersById: { invalidatesTags: changed } } });
+  getApiV1Customers: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, postApiV1Customers: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, putApiV1CustomersById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, deleteApiV1CustomersById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); } } });
 export const { useGetApiV1CustomersQuery, useLazyGetApiV1CustomersQuery, usePostApiV1CustomersMutation, usePutApiV1CustomersByIdMutation, useDeleteApiV1CustomersByIdMutation } = customerApi;
 export const { useLazyGetApiV1ProductQuery, useLazyGetApiV1ProductByProductIdPackingQuery } = productsApi;
 

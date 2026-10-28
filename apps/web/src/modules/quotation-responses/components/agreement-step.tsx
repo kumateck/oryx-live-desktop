@@ -24,7 +24,7 @@ export function AgreementStep({ changes, currency, saving, message, onBack, onRe
   return <form noValidate onSubmit={(event) => { event.stopPropagation(); void form.handleSubmit((values) => onSubmit(values.agreedDate))(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
     <DialogBody className="space-y-4">
       <p className="text-sm">{changes.length === 1 ? "One quoted price differs" : `${changes.length} quoted prices differ`} from this supplier's standing price agreements.
-        You can record the prices for this quotation only, or also propose them as the agreed prices. Proposals are reviewed by the agreement's approvers before they take effect.</p>
+        You can record these prices, or also propose them as agreed prices. Changes to a standing price’s unit always submit an agreement revision from today; other proposed price changes use the date below. Agreement changes follow the configured approval workflow.</p>
       <ul aria-label="Agreement changes" className="max-h-48 space-y-1.5 overflow-y-auto rounded-md border p-3 text-sm">{changes.map(({ line, agreement }) => <li key={line.id} className="flex flex-wrap justify-between gap-x-4">
         <span className="font-medium">{line.materialName}</span>
         <span className="text-muted-foreground">{agreement ? formatUnitPrice(agreement.agreedPrice, currency, agreement.priceUoM) : "No agreement"} → {formatUnitPrice(line.price, currency, line.priceUnit)}</span></li>)}</ul>

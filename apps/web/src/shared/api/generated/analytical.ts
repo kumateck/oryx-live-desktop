@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QaAnalyticalTestsApiResponse,
       PostApiV1QaAnalyticalTestsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qa/analytical-test", id: "LIST" }, { type: "qa", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QaAnalyticalTestsApiResponse,
       GetApiV1QaAnalyticalTestsApiArg
     >({
+      providesTags: [{ type: "qa/analytical-test", id: "LIST" }, { type: "qa", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests`,
         headers: {
@@ -37,6 +39,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QaAnalyticalTestsByIdApiResponse,
       GetApiV1QaAnalyticalTestsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qa/analytical-test", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests/${queryArg.id}`,
         headers: {
@@ -49,6 +52,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaAnalyticalTestsByIdApiResponse,
       PutApiV1QaAnalyticalTestsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/analytical-test", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/analytical-test", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests/${queryArg.id}`,
         method: "PUT",
@@ -63,6 +67,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1QaAnalyticalTestsByIdApiResponse,
       DeleteApiV1QaAnalyticalTestsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/analytical-test", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/analytical-test", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests/${queryArg.id}`,
         method: "DELETE",
@@ -76,6 +81,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaAnalyticalTestsStatusByIdApiResponse,
       PutApiV1QaAnalyticalTestsStatusByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/analytical-test", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/analytical-test", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests/status/${queryArg.id}`,
         method: "PUT",
@@ -90,6 +96,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaAnalyticalTestsAssignByIdApiResponse,
       PutApiV1QaAnalyticalTestsAssignByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/analytical-test", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/analytical-test", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests/assign/${queryArg.id}`,
         method: "PUT",
@@ -104,6 +111,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaAnalyticalTestsReassignByIdApiResponse,
       PutApiV1QaAnalyticalTestsReassignByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/analytical-test", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/analytical-test", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests/reassign/${queryArg.id}`,
         method: "PUT",
@@ -118,6 +126,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QaAnalyticalTestsRequestRetestByIdApiResponse,
       PostApiV1QaAnalyticalTestsRequestRetestByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/analytical-test", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/analytical-test", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests/request-retest/${queryArg.id}`,
         method: "POST",
@@ -131,6 +140,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QaAnalyticalTestsCompleteRetestByIdApiResponse,
       PostApiV1QaAnalyticalTestsCompleteRetestByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/analytical-test", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/analytical-test", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests/complete-retest/${queryArg.id}`,
         method: "POST",
@@ -147,6 +157,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QaAnalyticalTestsActivityStepByActivityStepIdApiResponse,
       GetApiV1QaAnalyticalTestsActivityStepByActivityStepIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qa/analytical-test", id: queryArg.activityStepId }],
       query: (queryArg) => ({
         url: `/api/v1/qa/analytical-tests/activity-step/${queryArg.activityStepId}`,
         headers: {
@@ -159,6 +170,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialArdApiResponse,
       PostApiV1MaterialArdApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material-ard", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material-ard`,
         method: "POST",
@@ -173,6 +185,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialArdApiResponse,
       GetApiV1MaterialArdApiArg
     >({
+      providesTags: [{ type: "material-ard", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material-ard`,
         headers: {
@@ -192,6 +205,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialArdByIdApiResponse,
       GetApiV1MaterialArdByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-ard", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/material-ard/${queryArg.id}`,
         headers: {
@@ -204,6 +218,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1MaterialArdByIdApiResponse,
       PutApiV1MaterialArdByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-ard", id: "LIST" }, { type: "material-ard", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/material-ard/${queryArg.id}`,
         method: "PUT",
@@ -218,6 +233,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1MaterialArdByIdApiResponse,
       DeleteApiV1MaterialArdByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-ard", id: "LIST" }, { type: "material-ard", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/material-ard/${queryArg.id}`,
         method: "DELETE",
@@ -231,6 +247,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialArdMaterialByMaterialIdApiResponse,
       GetApiV1MaterialArdMaterialByMaterialIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-ard/material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material-ard/material/${queryArg.materialId}`,
         headers: {
@@ -243,6 +260,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialArdMaterialBatchByMaterialBatchIdApiResponse,
       GetApiV1MaterialArdMaterialBatchByMaterialBatchIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-ard/material", id: queryArg.materialBatchId }],
       query: (queryArg) => ({
         url: `/api/v1/material-ard/material/batch/${queryArg.materialBatchId}`,
         headers: {
@@ -255,6 +273,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialArdMaterialBatchDetailsByMaterialBatchIdApiResponse,
       GetApiV1MaterialArdMaterialBatchDetailsByMaterialBatchIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-ard/material", id: queryArg.materialBatchId }],
       query: (queryArg) => ({
         url: `/api/v1/material-ard/material/batch-details/${queryArg.materialBatchId}`,
         headers: {
@@ -267,6 +286,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1MaterialArdStartTestByMaterialBatchIdApiResponse,
       PutApiV1MaterialArdStartTestByMaterialBatchIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-ard/start-test", id: "LIST" }, { type: "material-ard", id: "LIST" }, { type: "material-ard/start-test", id: queryArg.materialBatchId }]),
       query: (queryArg) => ({
         url: `/api/v1/material-ard/start-test/${queryArg.materialBatchId}`,
         method: "PUT",
@@ -280,6 +300,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialArdUniformityOfWeightApiResponse,
       PostApiV1MaterialArdUniformityOfWeightApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material-ard/uniformity-of-weight", id: "LIST" }, { type: "material-ard", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material-ard/uniformity-of-weight`,
         method: "POST",
@@ -294,6 +315,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialArdUniformityOfWeightApiResponse,
       GetApiV1MaterialArdUniformityOfWeightApiArg
     >({
+      providesTags: [{ type: "material-ard/uniformity-of-weight", id: "LIST" }, { type: "material-ard", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material-ard/uniformity-of-weight`,
         headers: {
@@ -311,6 +333,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialArdUniformityOfWeightByIdApiResponse,
       GetApiV1MaterialArdUniformityOfWeightByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-ard/uniformity-of-weight", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/material-ard/uniformity-of-weight/${queryArg.id}`,
         headers: {
@@ -323,6 +346,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1MaterialArdUniformityOfWeightByIdApiResponse,
       PutApiV1MaterialArdUniformityOfWeightByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-ard/uniformity-of-weight", id: "LIST" }, { type: "material-ard", id: "LIST" }, { type: "material-ard/uniformity-of-weight", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/material-ard/uniformity-of-weight/${queryArg.id}`,
         method: "PUT",
@@ -337,6 +361,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1MaterialArdUniformityOfWeightByIdApiResponse,
       DeleteApiV1MaterialArdUniformityOfWeightByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-ard/uniformity-of-weight", id: "LIST" }, { type: "material-ard", id: "LIST" }, { type: "material-ard/uniformity-of-weight", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/material-ard/uniformity-of-weight/${queryArg.id}`,
         method: "DELETE",
@@ -350,6 +375,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialArdUniformityOfWeightResponseApiResponse,
       PostApiV1MaterialArdUniformityOfWeightResponseApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material-ard/uniformity-of-weight", id: "LIST" }, { type: "material-ard", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material-ard/uniformity-of-weight/response`,
         method: "POST",
@@ -377,6 +403,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialSamplingsApiResponse,
       PostApiV1MaterialSamplingsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material-sampling", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material-samplings`,
         method: "POST",
@@ -391,6 +418,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1MaterialSamplingsByMaterialSamplingIdApiResponse,
       PutApiV1MaterialSamplingsByMaterialSamplingIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-sampling", id: "LIST" }, { type: "material-sampling", id: queryArg.materialSamplingId }]),
       query: (queryArg) => ({
         url: `/api/v1/material-samplings/${queryArg.materialSamplingId}`,
         method: "PUT",
@@ -407,6 +435,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialSamplingsByGrnIdAndBatchIdApiResponse,
       GetApiV1MaterialSamplingsByGrnIdAndBatchIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-sampling", id: queryArg.grnId }],
       query: (queryArg) => ({
         url: `/api/v1/material-samplings/${queryArg.grnId}/${queryArg.batchId}`,
         headers: {
@@ -419,6 +448,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialSamplingsPreSampleApiResponse,
       PostApiV1MaterialSamplingsPreSampleApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material-sampling/pre-sample", id: "LIST" }, { type: "material-sampling", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material-samplings/pre-sample`,
         method: "POST",
@@ -433,6 +463,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialSamplingsPreSampleByGrnIdAndBatchIdApiResponse,
       GetApiV1MaterialSamplingsPreSampleByGrnIdAndBatchIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-sampling/pre-sample", id: queryArg.grnId }],
       query: (queryArg) => ({
         url: `/api/v1/material-samplings/pre-sample/${queryArg.grnId}/${queryArg.batchId}`,
         headers: {
@@ -445,6 +476,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialSpecificationsApiResponse,
       PostApiV1MaterialSpecificationsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material-specification", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material-specifications`,
         method: "POST",
@@ -459,6 +491,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialSpecificationsApiResponse,
       GetApiV1MaterialSpecificationsApiArg
     >({
+      providesTags: [{ type: "material-specification", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material-specifications`,
         headers: {
@@ -478,6 +511,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialSpecificationsByIdApiResponse,
       GetApiV1MaterialSpecificationsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-specification", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/material-specifications/${queryArg.id}`,
         headers: {
@@ -490,6 +524,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1MaterialSpecificationsByIdApiResponse,
       PutApiV1MaterialSpecificationsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-specification", id: "LIST" }, { type: "material-specification", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/material-specifications/${queryArg.id}`,
         method: "PUT",
@@ -504,6 +539,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1MaterialSpecificationsByIdApiResponse,
       DeleteApiV1MaterialSpecificationsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-specification", id: "LIST" }, { type: "material-specification", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/material-specifications/${queryArg.id}`,
         method: "DELETE",
@@ -517,6 +553,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialSpecificationsMaterialsNotLinkedApiResponse,
       GetApiV1MaterialSpecificationsMaterialsNotLinkedApiArg
     >({
+      providesTags: [{ type: "material-specification/material", id: "LIST" }, { type: "material-specification", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material-specifications/materials/not-linked`,
         headers: {
@@ -535,6 +572,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialSpecificationsMaterialByMaterialIdApiResponse,
       GetApiV1MaterialSpecificationsMaterialByMaterialIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-specification/material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material-specifications/material/${queryArg.materialId}`,
         headers: {
@@ -547,6 +585,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialSpecificationsMaterialsApiResponse,
       GetApiV1MaterialSpecificationsMaterialsApiArg
     >({
+      providesTags: [{ type: "material-specification/material", id: "LIST" }, { type: "material-specification", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material-specifications/materials`,
         headers: {
@@ -562,6 +601,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialSpecificationsAddRemoveMaterialsApiResponse,
       PostApiV1MaterialSpecificationsAddRemoveMaterialsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material-specification/add-remove-material", id: "LIST" }, { type: "material-specification", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material-specifications/add-remove-materials`,
         method: "POST",
@@ -576,6 +616,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialSpecificationsImportApiResponse,
       PostApiV1MaterialSpecificationsImportApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material-specification/import", id: "LIST" }, { type: "material-specification", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material-specifications/import`,
         method: "POST",
@@ -593,6 +634,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialStpsApiResponse,
       PostApiV1MaterialStpsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material-stp", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material-stps`,
         method: "POST",
@@ -607,6 +649,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialStpsApiResponse,
       GetApiV1MaterialStpsApiArg
     >({
+      providesTags: [{ type: "material-stp", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material-stps`,
         headers: {
@@ -627,6 +670,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialStpsByIdApiResponse,
       GetApiV1MaterialStpsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-stp", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/material-stps/${queryArg.id}`,
         headers: {
@@ -639,6 +683,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1MaterialStpsByIdApiResponse,
       PutApiV1MaterialStpsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-stp", id: "LIST" }, { type: "material-stp", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/material-stps/${queryArg.id}`,
         method: "PUT",
@@ -653,6 +698,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1MaterialStpsByIdApiResponse,
       DeleteApiV1MaterialStpsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-stp", id: "LIST" }, { type: "material-stp", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/material-stps/${queryArg.id}`,
         method: "DELETE",
@@ -666,6 +712,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialStpsByMaterialIdMaterialApiResponse,
       GetApiV1MaterialStpsByMaterialIdMaterialApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-stp", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material-stps/${queryArg.materialId}/material`,
         headers: {
@@ -678,6 +725,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialStpsByStpNumberMaterialsApiResponse,
       GetApiV1MaterialStpsByStpNumberMaterialsApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-stp", id: queryArg.stpNumber }],
       query: (queryArg) => ({
         url: `/api/v1/material-stps/${queryArg.stpNumber}/materials`,
         headers: {
@@ -690,6 +738,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialStpsAddRemoveMaterialsApiResponse,
       PostApiV1MaterialStpsAddRemoveMaterialsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material-stp/add-remove-material", id: "LIST" }, { type: "material-stp", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material-stps/add-remove-materials`,
         method: "POST",
@@ -704,6 +753,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialStpsUnusedMaterialsApiResponse,
       GetApiV1MaterialStpsUnusedMaterialsApiArg
     >({
+      providesTags: [{ type: "material-stp/unused-material", id: "LIST" }, { type: "material-stp", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material-stps/unused-materials`,
         headers: {
@@ -722,6 +772,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1QaOosInvestigationsInitiateApiResponse,
       PostApiV1QaOosInvestigationsInitiateApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "qa/oos-investigation", id: "LIST" }, { type: "qa", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/oos-investigations/initiate`,
         method: "POST",
@@ -736,6 +787,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaOosInvestigationsByIdApiResponse,
       PutApiV1QaOosInvestigationsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/oos-investigation", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/oos-investigation", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/oos-investigations/${queryArg.id}`,
         method: "PUT",
@@ -750,6 +802,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QaOosInvestigationsByIdApiResponse,
       GetApiV1QaOosInvestigationsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "qa/oos-investigation", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/qa/oos-investigations/${queryArg.id}`,
         headers: {
@@ -762,6 +815,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaOosInvestigationsByIdSubmitApiResponse,
       PutApiV1QaOosInvestigationsByIdSubmitApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/oos-investigation", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/oos-investigation", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/oos-investigations/${queryArg.id}/submit`,
         method: "PUT",
@@ -775,6 +829,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1QaOosInvestigationsByIdQaReviewApiResponse,
       PutApiV1QaOosInvestigationsByIdQaReviewApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "qa/oos-investigation", id: "LIST" }, { type: "qa", id: "LIST" }, { type: "qa/oos-investigation", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/qa/oos-investigations/${queryArg.id}/qa-review`,
         method: "PUT",
@@ -789,6 +844,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1QaOosInvestigationsApiResponse,
       GetApiV1QaOosInvestigationsApiArg
     >({
+      providesTags: [{ type: "qa/oos-investigation", id: "LIST" }, { type: "qa", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/qa/oos-investigations`,
         headers: {
@@ -807,6 +863,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductArdApiResponse,
       PostApiV1ProductArdApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "product-ard", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/product-ard`,
         method: "POST",
@@ -821,6 +878,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductArdApiResponse,
       GetApiV1ProductArdApiArg
     >({
+      providesTags: [{ type: "product-ard", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product-ard`,
         headers: {
@@ -839,6 +897,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductArdByIdApiResponse,
       GetApiV1ProductArdByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-ard", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/product-ard/${queryArg.id}`,
         headers: {
@@ -851,6 +910,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductArdByIdApiResponse,
       PutApiV1ProductArdByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-ard", id: "LIST" }, { type: "product-ard", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/product-ard/${queryArg.id}`,
         method: "PUT",
@@ -865,6 +925,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductArdByIdApiResponse,
       DeleteApiV1ProductArdByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-ard", id: "LIST" }, { type: "product-ard", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/product-ard/${queryArg.id}`,
         method: "DELETE",
@@ -878,6 +939,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductArdProductByProductIdApiResponse,
       GetApiV1ProductArdProductByProductIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-ard/product", id: queryArg.productId }],
       query: (queryArg) => ({
         url: `/api/v1/product-ard/product/${queryArg.productId}`,
         headers: {
@@ -903,6 +965,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductArdStartTestByBatchManufacturingRecordIdApiResponse,
       PutApiV1ProductArdStartTestByBatchManufacturingRecordIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-ard/start-test", id: "LIST" }, { type: "product-ard", id: "LIST" }, { type: "product-ard/start-test", id: queryArg.batchManufacturingRecordId }]),
       query: (queryArg) => ({
         url: `/api/v1/product-ard/start-test/${queryArg.batchManufacturingRecordId}`,
         method: "PUT",
@@ -916,6 +979,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductSamplingsApiResponse,
       PostApiV1ProductSamplingsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "product-sampling", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/product-samplings`,
         method: "POST",
@@ -930,6 +994,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductSamplingsByBmrIdApiResponse,
       GetApiV1ProductSamplingsByBmrIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-sampling", id: queryArg.bmrId }],
       query: (queryArg) => ({
         url: `/api/v1/product-samplings/${queryArg.bmrId}`,
         headers: {
@@ -942,6 +1007,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductSamplingsByProductSamplingIdApiResponse,
       PutApiV1ProductSamplingsByProductSamplingIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-sampling", id: "LIST" }, { type: "product-sampling", id: queryArg.productSamplingId }]),
       query: (queryArg) => ({
         url: `/api/v1/product-samplings/${queryArg.productSamplingId}`,
         method: "PUT",
@@ -958,6 +1024,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductSpecificationsApiResponse,
       PostApiV1ProductSpecificationsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "product-specification", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/product-specifications`,
         method: "POST",
@@ -972,6 +1039,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductSpecificationsApiResponse,
       GetApiV1ProductSpecificationsApiArg
     >({
+      providesTags: [{ type: "product-specification", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product-specifications`,
         headers: {
@@ -990,6 +1058,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductSpecificationsByIdApiResponse,
       GetApiV1ProductSpecificationsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-specification", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/product-specifications/${queryArg.id}`,
         headers: {
@@ -1002,6 +1071,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductSpecificationsByIdApiResponse,
       PutApiV1ProductSpecificationsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-specification", id: "LIST" }, { type: "product-specification", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/product-specifications/${queryArg.id}`,
         method: "PUT",
@@ -1016,6 +1086,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductSpecificationsByIdApiResponse,
       DeleteApiV1ProductSpecificationsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-specification", id: "LIST" }, { type: "product-specification", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/product-specifications/${queryArg.id}`,
         method: "DELETE",
@@ -1029,6 +1100,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductSpecificationsProductsNotLinkedApiResponse,
       GetApiV1ProductSpecificationsProductsNotLinkedApiArg
     >({
+      providesTags: [{ type: "product-specification/product", id: "LIST" }, { type: "product-specification", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product-specifications/products/not-linked`,
         headers: {
@@ -1046,6 +1118,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductSpecificationsProductByIdApiResponse,
       GetApiV1ProductSpecificationsProductByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-specification/product", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/product-specifications/product/${queryArg.id}`,
         headers: {
@@ -1058,6 +1131,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductSpecificationsProductsApiResponse,
       GetApiV1ProductSpecificationsProductsApiArg
     >({
+      providesTags: [{ type: "product-specification/product", id: "LIST" }, { type: "product-specification", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product-specifications/products`,
         headers: {
@@ -1073,6 +1147,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductSpecificationsAddRemoveProductsApiResponse,
       PostApiV1ProductSpecificationsAddRemoveProductsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "product-specification/add-remove-product", id: "LIST" }, { type: "product-specification", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/product-specifications/add-remove-products`,
         method: "POST",
@@ -1087,6 +1162,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductStpsApiResponse,
       PostApiV1ProductStpsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "product-stp", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/product-stps`,
         method: "POST",
@@ -1101,6 +1177,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductStpsApiResponse,
       GetApiV1ProductStpsApiArg
     >({
+      providesTags: [{ type: "product-stp", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product-stps`,
         headers: {
@@ -1118,6 +1195,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductStpsByStpNumberProductsApiResponse,
       GetApiV1ProductStpsByStpNumberProductsApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-stp", id: queryArg.stpNumber }],
       query: (queryArg) => ({
         url: `/api/v1/product-stps/${queryArg.stpNumber}/products`,
         headers: {
@@ -1130,6 +1208,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductStpsByIdApiResponse,
       GetApiV1ProductStpsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-stp", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/product-stps/${queryArg.id}`,
         headers: {
@@ -1142,6 +1221,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductStpsByIdApiResponse,
       PutApiV1ProductStpsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-stp", id: "LIST" }, { type: "product-stp", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/product-stps/${queryArg.id}`,
         method: "PUT",
@@ -1156,6 +1236,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductStpsByIdApiResponse,
       DeleteApiV1ProductStpsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-stp", id: "LIST" }, { type: "product-stp", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/product-stps/${queryArg.id}`,
         method: "DELETE",
@@ -1169,6 +1250,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductStpsByProductIdProductApiResponse,
       GetApiV1ProductStpsByProductIdProductApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-stp", id: queryArg.productId }],
       query: (queryArg) => ({
         url: `/api/v1/product-stps/${queryArg.productId}/product`,
         headers: {
@@ -1181,6 +1263,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductStpsAddRemoveProductsApiResponse,
       PostApiV1ProductStpsAddRemoveProductsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "product-stp/add-remove-product", id: "LIST" }, { type: "product-stp", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/product-stps/add-remove-products`,
         method: "POST",
@@ -1195,6 +1278,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductStpsUnusedProductsApiResponse,
       GetApiV1ProductStpsUnusedProductsApiArg
     >({
+      providesTags: [{ type: "product-stp/unused-product", id: "LIST" }, { type: "product-stp", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product-stps/unused-products`,
         headers: {
@@ -1212,6 +1296,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductStpsUnlinkedToArdApiResponse,
       GetApiV1ProductStpsUnlinkedToArdApiArg
     >({
+      providesTags: [{ type: "product-stp/unlinked-to-ard", id: "LIST" }, { type: "product-stp", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/product-stps/unlinked-to-ard`,
         headers: {
@@ -1231,6 +1316,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1StpDocumentsByOwnerTypeAndOwnerIdApiResponse,
       GetApiV1StpDocumentsByOwnerTypeAndOwnerIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stp-document", id: queryArg.ownerType }],
       query: (queryArg) => ({
         url: `/api/v1/stp-documents/${queryArg.ownerType}/${queryArg.ownerId}`,
         headers: {
@@ -1243,6 +1329,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1StpDocumentsByOwnerTypeAndOwnerIdVersionsApiResponse,
       PostApiV1StpDocumentsByOwnerTypeAndOwnerIdVersionsApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stp-document", id: "LIST" }, { type: "stp-document", id: queryArg.ownerType }]),
       query: (queryArg) => ({
         url: `/api/v1/stp-documents/${queryArg.ownerType}/${queryArg.ownerId}/versions`,
         method: "POST",
@@ -1257,6 +1344,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1StpDocumentsByOwnerTypeAndOwnerIdNewApiResponse,
       PostApiV1StpDocumentsByOwnerTypeAndOwnerIdNewApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stp-document", id: "LIST" }, { type: "stp-document", id: queryArg.ownerType }]),
       query: (queryArg) => ({
         url: `/api/v1/stp-documents/${queryArg.ownerType}/${queryArg.ownerId}/new`,
         method: "POST",
@@ -1283,6 +1371,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1StpDocumentsDocumentsByDocumentIdSubmitReviewApiResponse,
       PostApiV1StpDocumentsDocumentsByDocumentIdSubmitReviewApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stp-document/document", id: "LIST" }, { type: "stp-document", id: "LIST" }, { type: "stp-document/document", id: queryArg.documentId }]),
       query: (queryArg) => ({
         url: `/api/v1/stp-documents/documents/${queryArg.documentId}/submit-review`,
         method: "POST",
@@ -1296,6 +1385,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1StpDocumentsDocumentsByDocumentIdApproveApiResponse,
       PostApiV1StpDocumentsDocumentsByDocumentIdApproveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stp-document/document", id: "LIST" }, { type: "stp-document", id: "LIST" }, { type: "stp-document/document", id: queryArg.documentId }]),
       query: (queryArg) => ({
         url: `/api/v1/stp-documents/documents/${queryArg.documentId}/approve`,
         method: "POST",
@@ -1310,6 +1400,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1StpDocumentsDocumentsByDocumentIdRejectApiResponse,
       PostApiV1StpDocumentsDocumentsByDocumentIdRejectApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stp-document/document", id: "LIST" }, { type: "stp-document", id: "LIST" }, { type: "stp-document/document", id: queryArg.documentId }]),
       query: (queryArg) => ({
         url: `/api/v1/stp-documents/documents/${queryArg.documentId}/reject`,
         method: "POST",
@@ -3191,6 +3282,7 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     stopPageIndex?: number;
   };
 export type DomainEntitiesOosInvestigationsInitiateOosInvestigationRequest = {
+  responseId?: string | null;
   analyticalTestRequestId?: string | null;
   materialBatchId?: string | null;
   coaNumber: string;

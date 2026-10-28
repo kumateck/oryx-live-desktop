@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { batchNumber } from "@/modules/stock-issue/lib/stock-issue";
@@ -31,6 +32,7 @@ const columns = column.columns([
 
 /** Batches whose expiry date falls in a period: already expired, or coming up. Raw and packaging are listed apart. */
 export function ExpiryReportPage({ mode }: { mode: "expired" | "soon" }) {
+  const navigate = useNavigate();
   const title = mode === "expired" ? "Expired materials" : "About to expire materials";
   const audit = { module: "Warehouse", subModule: mode === "expired" ? "Expired Materials" : "About To Expire Materials" };
   const [kind, setKind] = useState<MaterialKind>(0);
@@ -55,6 +57,7 @@ export function ExpiryReportPage({ mode }: { mode: "expired" | "soon" }) {
       <div className="flex flex-wrap items-end gap-3"><div className="w-72"><FormWizard form={form} fields={fields} /></div><KindSwitch tabs={kinds} kind={kind} onSelect={setKind} /></div>
     </div>
     {from ? <ServerDataTable label={title} columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
+      onRowOpen={(row) => void navigate(`/warehouse/${mode === "expired" ? "expired-materials" : "about-to-expire-materials"}/${encodeURIComponent(row.id)}?kind=${kind}`)}
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned batches the app could not read." : null}
       emptyTitle="No batches in this period" emptyDescription={mode === "expired" ? "No batch of this kind expired in these months." : "No batch of this kind expires in these months."} />
       : <p role="status" className="rounded-md border bg-muted/50 p-3 text-sm">Choose the months to look at.</p>}

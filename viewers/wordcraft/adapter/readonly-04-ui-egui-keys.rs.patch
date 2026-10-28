@@ -1,0 +1,13 @@
+--- a/crates/ui-egui/src/keys.rs
++++ b/crates/ui-egui/src/keys.rs
+@@ -212,6 +212,10 @@
+         return;
+     }
+     let events = ctx.input(|i| i.events.clone());
++    if app.session.read_only {
++        crate::readonly::keys(app, ctx, &events);
++        return;
++    }
+     if app.session.view.read_mode {
+         // Read Mode is for navigation and selection, not typing into the document. The ribbon's
+         // Edit Document button or Escape returns to Print Layout before editing.

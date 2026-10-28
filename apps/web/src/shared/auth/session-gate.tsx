@@ -15,7 +15,7 @@ export function SessionGate({ children }: { children: ReactNode }) {
   if (state.status === "anonymous") {
     // After a deliberate sign-out the next person starts at their own home, not the previous user's page.
     if (state.reason === "signed-out") return <Navigate to="/login" replace />;
-    const next = encodeURIComponent(`${location.pathname}${location.search}`);
+    const next = encodeURIComponent(`${location.pathname}${location.search}${location.hash}`);
     return <Navigate to={`/login?next=${next}`} replace />;
   }
   return children;

@@ -9,7 +9,28 @@ const stageRecord = z.object({ role: referenceSchema.nullish(), user: referenceS
 export const approvalRecordSchema = z.object({ id: z.string().min(1), itemType: z.string().min(1), escalationDuration: timeSpanSchema, approvalStages: z.array(stageRecord) })
   .refine((value) => new Set(value.approvalStages.map((stage) => stage.order)).size === value.approvalStages.length, "Stage orders must be distinct");
 export type ApprovalConfiguration = z.infer<typeof approvalRecordSchema>;
+/** A repair draft may retain empty assignments and invalid orders, but never discard an ambiguous assignee. */
+export const approvalRepairRecordSchema = z.object({ id: z.string().min(1), itemType: z.string().min(1), escalationDuration: timeSpanSchema,
+  approvalStages: z.array(z.object({ role: referenceSchema.nullish(), user: referenceSchema.nullish(), required: z.boolean(), order: z.number().int() })
+    .refine((stage) => !(stage.role && stage.user), "An ambiguous approver must be reviewed before editing")) });
 export const approvalsPageSchema = settingsPageSchema(approvalRecordSchema);
+/** The page as sent, each workflow still unchecked, so that one malformed workflow does not hide the others. */
+export const approvalsListSchema = settingsPageSchema(z.looseObject({ itemType: z.string().nullish() }));
+export function readApprovalRows(rows: readonly z.infer<typeof approvalsListSchema>["data"][number][]): { rows: ApprovalConfiguration[]; unreadable: string[]; repairable: { id: string; itemType: string }[] } {
+  const read: ApprovalConfiguration[] = [];
+  const unreadable: string[] = [];
+  const repairable: { id: string; itemType: string }[] = [];
+  for (const row of rows) {
+    const parsed = approvalRecordSchema.safeParse(row);
+    if (parsed.success) read.push(parsed.data);
+    else {
+      unreadable.push(row.itemType ? approvalDocumentLabel(row.itemType) : "Unnamed document");
+      const draft = approvalRepairRecordSchema.safeParse(row);
+      if (draft.success) repairable.push({ id: draft.data.id, itemType: draft.data.itemType });
+    }
+  }
+  return { rows: read, unreadable, repairable };
+}
 const stageSchema = z.object({ type: z.enum(["Role", "User"]), role: optionSchema.nullable(), user: optionSchema.nullable(), required: z.boolean() })
   .superRefine((value, context) => {
     const name = value.type === "Role" ? "role" : "user";
@@ -27,7 +48,7 @@ export const newApprovalStage = (): ApprovalValues["stages"][number] => ({ type:
 export function approvalDefaults(record?: ApprovalConfiguration): ApprovalValues {
   return { document: record ? { value: record.itemType, label: approvalDocumentLabel(record.itemType) } : null,
     delay: record ? readDelay(record.escalationDuration) ?? { days: 0, hours: 0, minutes: 0, seconds: "0" } : { days: 0, hours: 0, minutes: 0, seconds: "0" },
-    stages: record ? [...record.approvalStages].sort((a, b) => a.order - b.order).map((stage) => ({ type: stage.role ? "Role" : "User",
+    stages: record ? [...record.approvalStages].sort((a, b) => a.order - b.order).map((stage) => ({ type: stage.role || !stage.user ? "Role" : "User",
       role: stage.role ? { value: stage.role.id, label: stage.role.name || "Unnamed role" } : null,
       user: stage.user ? { value: stage.user.id, label: stage.user.name || "Unnamed user" } : null, required: stage.required })) : [newApprovalStage()],
   };

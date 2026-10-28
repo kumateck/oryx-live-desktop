@@ -6,8 +6,9 @@ it("never treats HTTP 200 without success true as a password change", () => {
   expect(passwordFailure({ success: true })).toBeNull();
 });
 it("validates confirmation without trimming password secrets", () => {
-  const values = { currentPassword: " old password ", newPassword: " new password ", confirmNewPassword: " new password " };
+  const values = { currentPassword: " old password ", newPassword: "New passw0rd! ", confirmNewPassword: "New passw0rd! " };
   expect(passwordSchema.parse(values)).toEqual(values);
   expect(passwordSchema.safeParse({ ...values, confirmNewPassword: "different" }).success).toBe(false);
   expect(passwordSchema.safeParse({ ...values, newPassword: "short", confirmNewPassword: "short" }).success).toBe(false);
+  expect(passwordSchema.safeParse({ ...values, newPassword: "longenough", confirmNewPassword: "longenough" }).success).toBe(false);
 });

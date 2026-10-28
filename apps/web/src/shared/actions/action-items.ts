@@ -5,6 +5,7 @@ interface ActionBase {
   /** Identifies the action within its menu. */
   id: string;
   label: string;
+  description?: string;
   icon?: LucideIcon;
   /** Shown in red; for actions that remove or block something. */
   destructive?: boolean;

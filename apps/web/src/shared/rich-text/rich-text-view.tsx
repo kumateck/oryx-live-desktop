@@ -1,4 +1,6 @@
 import { createElement, type ReactNode } from "react";
+import { AttachmentOpener } from "@/shared/attachments/attachment-opener";
+import { attachmentFromLink } from "@/shared/attachments/file-type";
 import { isSafeEditorLink } from "./link-url";
 import "./rich-text.css";
 
@@ -19,6 +21,8 @@ function convert(node: Node, key: number): ReactNode {
   if (empty.has(tag)) return createElement(tag, { key });
   if (tag === "a") {
     const href = node.getAttribute("href") ?? "";
+    const file = isSafeEditorLink(href) ? attachmentFromLink(href, node.textContent ?? "", window.location.origin) : null;
+    if (file) return createElement(AttachmentOpener, { key, file }, children);
     return isSafeEditorLink(href)
       ? createElement("a", { key, href, target: "_blank", rel: "noopener noreferrer", className: "underline underline-offset-2" }, children)
       : createElement("span", { key }, children);

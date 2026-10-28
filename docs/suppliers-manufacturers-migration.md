@@ -18,8 +18,8 @@ The sidebar inventory from Oryx Next omitted the supplier entry and placed Manuf
 - Lists reuse the existing server datatable, with search and pagination. Opening a row loads that record only.
 - The detail pages use compact, wrapping information grids and searchable supplier associations. The app shell owns vertical scrolling; no detail section requires a wide table.
 - Create and edit forms use FormWizard, React Hook Form, and Zod. Material options load by search and page. The supplier form requests country, currency, and unit options together; the manufacturer form requests country and currency; banking and pricing request currency only.
-- A supplier material link now records its purchase unit. Oryx Next omitted the available `uoMId` field, leaving pricing agreements with no material/unit choice. Editing reads the dedicated association endpoint so existing unit IDs are preserved; legacy links without a unit must be completed before saving.
-- The material-specific UoM endpoint currently declares a list in OpenAPI but returns one department UoM from the repository. The supplier form uses the typed `UnitOfMeasure` collection instead of trusting that mismatched contract.
+- A supplier material link records a `purchaseUnit` symbol. Its legacy `uoMId` remains a compatible quantity reference. Editing reads dedicated associations and retains saved symbols; pricing and quotation updates share the configured approval workflow.
+- Purchase-unit options combine linked units from every department, deduplicate symbols and use requisition-family ordering (`mg`, `g`, `kg`; `ml`, `L`; linked counted units). Failed lookups or incompatible units block saving. The backend migration/API must precede the frontend release. See [supplier-purchase-units.md](supplier-purchase-units.md).
 - The relationship workspace loads only the active section's code and data. It uses shadcn Tabs, Dialog, Badge, Input, Button, and a small skeleton while the section chunk loads.
 - Contacts and banking have separate sections, so permissioned banking details are not mixed into a long contact page. Pricing agreements use wrapping records instead of Oryx Next's fixed-width table and horizontal scrollbar.
 - Bank account numbers start masked and can be revealed deliberately. Pricing cards show approval status and distinguish new, replacement, and archive proposals.
@@ -94,3 +94,17 @@ Certifications, Contacts, Bank accounts, Pricing agreements, and Scorecards are 
 The backend has no request for "which suppliers offer this manufacturer's materials", so the page does not list them; a supplier's own page lists its manufacturers.
 
 Shared by both pages: `shared/detail/record-alerts.tsx`, `shared/detail/key-facts.tsx`, and `shared/format/due-dates.ts` (60 days counts as "due soon").
+
+Quotation-response agreement feedback now checks the refreshed approved list to identify immediately approved changes. Submission alone is not labelled approved. Partial failure shows the backend error reason rather than only a failed count. The existing no-workflow auto-approval and assigned-workflow behavior remains backend-owned; no frontend approval-setting inference is used.
+
+Verification: 14 focused backend supplier-pricing/purchase-unit tests passed, including no-workflow automatic approval, empty-stage automatic approval, and configured assigned-review behavior. Twelve quotation/outcome frontend tests and web typecheck passed. React Doctor found no new issues. No backend code, customer configuration, or live pricing record was changed in this task. The screenshot’s underlying API failure is not identified by its old generic toast; new feedback preserves the actual reason. Documentation updated: this migration note and workflows.
+
+The running app exposed the earlier agreement failure as the backend AgreedPrice 0.01 minimum. The paired backend fix aligns model validation with positive repository/frontend values, so fractional per-unit prices can create configured approval stages. Pending-approval invalidation and fresh-on-entry queries prevent cached empty queues. This does not approve, recreate or retry any live record automatically.
+
+Verification for the missing-approval fix: 13 focused queue/outcome tests passed; paired backend supplier-pricing tests passed (15). React Doctor reported no new issues. The actual running UI error was inspected; no business submission or approval was performed during diagnosis.
+
+## Material editor controls (2026-10-27)
+
+**Add material** prepends a new row in both supplier and manufacturer editors and resets the material filter so the blank row is visible. Clickable filters show live counts for All materials, Raw materials, Packaging materials and Unassigned. Filtering hides rows without removing their form values; every row is validated and included when saving. A hidden invalid row, including a supplier purchase unit rejected by the fresh lookup, restores the All materials view. The shared multi-select now labels its option toggle **Select All / Unselect All**.
+
+Regression tests cover preserving hidden associations and precise manufacturer quantities, adding at the top under an active filter, and revealing hidden validation errors. Mocked browser checks at 1280×720, 1366×768 and 853×480 found no horizontal overflow or browser exceptions.

@@ -13,8 +13,9 @@ import { useKindTabs } from "@/shared/reference-data/kind-tabs";
 import { usePageSearch } from "@/shared/search/page-search";
 import { toLargestUnit } from "@/shared/units/quantity";
 import { audit, availableStockSchema, departmentOptionsSchema, stockPermissions, type AvailableStockRow } from "./available-stock";
+import { addTags } from "@/shared/api/add-tags";
 
-const { useGetApiV1MaterialDepartmentApprovedMaterialsQuery } = materialsApi.enhanceEndpoints({ endpoints: { getApiV1MaterialDepartmentApprovedMaterials: { providesTags: [{ type: "StockOnShelves", id: "all" }] } } });
+const { useGetApiV1MaterialDepartmentApprovedMaterialsQuery } = materialsApi.enhanceEndpoints({ endpoints: { getApiV1MaterialDepartmentApprovedMaterials: (definition) => { definition.providesTags = addTags(definition.providesTags, [{ type: "StockOnShelves", id: "all" }]); } } });
 const { useGetApiV1DepartmentQuery } = identityApi;
 const show = (value: number, unit: string | null) => toLargestUnit(value, unit, "calculated")?.text ?? String(value);
 interface Filter { department: SelectOption | null }

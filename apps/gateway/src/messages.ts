@@ -3,7 +3,7 @@ export const notificationExchange = "DOMAIN.Entities.Notifications:NotificationD
 export const boardExchange = "DOMAIN.Entities.ProductionSchedules:ProductionActivityStepStatusChangedEvent";
 
 /** What a client is told about a notification. The list of recipients stays on the server. */
-export interface ClientNotification { message: string; type: number | null; sentAt: string | null }
+export interface ClientNotification { id?: string; message: string; type: number | null; sentAt: string | null; priority?: string; shipmentDocumentId?: string }
 export interface RoutedNotification { recipients: string[]; payload: ClientNotification }
 /** A step of a production run changed. Carries identifiers only; clients read the details from the backend. */
 export interface BoardUpdate { activityId: string; stepId: string | null; status: number | null; changedAt: string | null }
@@ -34,7 +34,7 @@ export function readNotification(raw: Buffer | string): RoutedNotification | nul
     return id && guid.test(id) ? [id.toLowerCase()] : [];
   }))];
   if (recipients.length === 0) return null;
-  return { recipients, payload: { message, type: typeof body.type === "number" ? body.type : null, sentAt: text(body.sentAt) } };
+  return { recipients, payload: { ...(typeof body.priority === "string" && body.priority.length <= 32 ? { priority: body.priority } : {}), ...(typeof body.id === "string" && guid.test(body.id) ? { id: body.id.toLowerCase() } : {}), ...(typeof body.shipmentDocumentId === "string" && guid.test(body.shipmentDocumentId) ? { shipmentDocumentId: body.shipmentDocumentId.toLowerCase() } : {}), message, type: typeof body.type === "number" ? body.type : null, sentAt: text(body.sentAt) } };
 }
 
 export function readBoardUpdate(raw: Buffer | string): BoardUpdate | null {
@@ -48,3 +48,11 @@ export function readBoardUpdate(raw: Buffer | string): BoardUpdate | null {
 export const userRoom = (userId: string) => `user:${userId.toLowerCase()}`;
 /** The room of every signed-in socket, for updates that are not addressed to anyone in particular. */
 export const everyoneRoom = "signed-in";
+
+export const notificationReadExchange = "DOMAIN.Entities.Notifications:NotificationReadEvent";
+export interface ReadUpdate { userId: string; notificationId: string }
+export function readNotificationRead(raw: Buffer | string): ReadUpdate | null {
+  const body = content(raw), userId = text(body?.userId), notificationId = text(body?.notificationId);
+  return userId && notificationId && guid.test(userId) && guid.test(notificationId)
+    ? { userId: userId.toLowerCase(), notificationId: notificationId.toLowerCase() } : null;
+}

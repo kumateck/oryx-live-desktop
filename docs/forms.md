@@ -106,3 +106,11 @@ A `SELECT` field with `source: "async"` loads its options page by page from `loa
 - Previous and Next are always present and keep focus in the search box, so paging never closes the list. While a page loads, the previous options stay on screen, dimmed.
 - Enter in the search box picks the highlighted option; it never submits the surrounding form. Arrow keys move the highlight.
 - Keep the `loadOptions` function stable (`useCallback`/`useMemo`): the options reload whenever the function changes.
+
+## Analytical test answers
+
+The shared answer sheet renders section and field descriptions through `RichTextView`. Saved paragraphs, emphasis, lists, and subscripts display as content; inline colors and unsafe HTML are discarded so the current theme remains readable. Formula questions stay lazy custom fields in FormWizard. Evaluators load directly without importing their builders. Nested JSON definitions and legacy `settings`, `schema`, `data`, `value`, and `formula` envelopes are normalized without changing calculation metadata or answer serialization. An unreadable definition shows an explicit configuration error.
+
+A specialized field shows a named loading state. A failed import/render shows **Retry field** and reports the error through the application error reporter; retry remounts only that renderer and preserves the form's other unsaved answers. Universal worksheets use container queries to stack inputs at narrow content widths, assign unique input IDs, and omit empty input groups and data tables. Calculation overflow stays within its section.
+
+The answer-sheet interaction tests exercise rich descriptions, the Loss on Drying calculation, Assay inputs/table readings, serialized answer values, and disabled fieldsets. Custom-field recovery has a separate regression test. Permissions, assignment checks, required-answer validation, draft writes, final submission, and backend audit responsibilities retain their existing contracts.

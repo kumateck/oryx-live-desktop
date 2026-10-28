@@ -24,7 +24,7 @@ The production board fills the available content height below its heading. Opera
 
 These are in `lib/step-policy.ts` and are the same wherever a step is shown.
 
-- **Nothing changes because a page was opened.** Every start, completion, request, and return is something a person chooses to do. Oryx Next started "automated" steps from the browser of whoever happened to have the board open.
+- **Only the active non-critical step starts automatically** after its record checks settle; a person completes it. Upcoming steps wait until they become active. Critical steps still require a start from someone responsible for them. Opening a page never starts a critical step or carries out one of its records.
 - **A critical step is carried out by the people responsible for it.** The server refuses anyone else; the page says so instead of showing buttons that would fail.
 - **A step carried out through a record moves with that record.** The server starts and finishes these steps itself: a stock requisition starts its step when raised and finishes it when the stock is issued, and likewise the batch record, the test request, final packing, and the finished goods transfer. Such a step has no Start or Complete button; the page says what it is waiting for. Oryx Next decided this from the step's position in the procedure (hard-coded step numbers 3 to 15), which breaks as soon as a product's procedure is ordered differently.
 - **Only the batch's current step can be acted on**, and nothing can be done on a cancelled batch.
@@ -36,7 +36,7 @@ These are in `lib/step-policy.ts` and are the same wherever a step is shown.
 
 | Instruction | What the page offers |
 | --- | --- |
-| Any step without a record of its own | Start step, Complete step |
+| Any step without a record of its own | Non-critical steps start automatically; a person completes them. Critical steps are started and completed by their responsible people. |
 | Stock requisition | Request stock: one voucher for every material the batch needs. Once raised, the status of the raw and packaging requisitions is shown. |
 | BMR and BPR requisition | The batch record's status. |
 | Analytical test request | Request analysis: product state and filled volume; the stage comes from the analytical raw data set on the step in the product's procedure. |
@@ -57,15 +57,34 @@ These are in `lib/step-policy.ts` and are the same wherever a step is shown.
 - **Extra material**: quantities are checked against what the warehouse has free, the unit is chosen per line, and earlier requests are listed. Oryx Next had this check written but never ran it.
 - **Finished goods transfer**: the quantity is checked against what is left, and a transfer is marked partial by the server's own rule (anything but one transfer of everything packed), so the remainder of an earlier partial transfer is accepted.
 - **Final packing**:
-  - Everything is on one page; Oryx Next split it over three tabs, so errors on a hidden tab only showed as "Some fields have errors".
+  - Yield calculations were reviewed against Next and the customer's forms. Only syrup preloads product full batch size, composition volume per bottle, and packing-style expected yield as read-only values, without a received measurement. Samples remain included in total production yield and reduce only warehouse availability. See [final packing yield](final-packing-yield.md) for formulas, API mapping and the companion expected-yield persistence fix.
+  - Summary and three tabs follow Oryx Next. The active tab is carried in `?tab=` so reload restores it. Yield uses the numbered batch-record table with plain text calculated values. Failed validation opens the relevant tab and shows each field's error.
   - Worked-out figures (expected packs, after samples, gain or loss, shippers, leftovers, what to return, loss per material) are calculated from what is entered and cannot be typed over.
+  - Material entry units come from `toLargestUnit` applied to the raw total received in its smallest family unit. They remain stable while editing; displayed quantities use the same converter, and entries/returns convert back to raw API quantities. Small weights use g or mg instead of being forced into kg and displayed as `< 0.0001 kg`.
   - Packed, rejected, and sampled cannot add up to more than was received. Oryx Next silently returned zero.
   - The packing record is saved first, then the leftovers are returned. If the return is refused, the page says the packing was saved and offers to send only the return again. Oryx Next sent both at once, so either could succeed without the other.
   - Once recorded, the page shows the record and offers no second entry.
+  - Immediately before saving, the client reloads the active step, assignment, packing style, issued materials, and existing record. Changed or unreadable data blocks the write. Permissions are checked again after those reads and before the return write.
+  - Pack and sample counts must be whole finite numbers. Measurements and material amounts must be finite and non-negative; missing return units block saving. Split issue lines are merged once and an unmatched extra material blocks saving rather than being dropped.
+  - Double submissions are locked for the entire save/return sequence. A definitive rejected return can be retried without resending packing. Uncertain outcomes (network errors, unreadable responses, or server errors) require checking the server records before another write.
 - **Failures show the server's reason with Retry.** Oryx Next logged several of them to the console and showed an empty page.
 
 ## Checking
 
 Unit tests cover the rules (`lib/activity.test.ts`): step policy, progress and durations, the board, the stock voucher, the test request, extra material, the transfer rules, and the final packing calculations. Page tests (`components/activities.test.tsx`) cover the board, a batch's progress, starting and completing a step, a critical step seen by someone not responsible, that opening a page sends nothing, the stock requisition, and a cancelled batch.
 
-The dialogs for the test request and the finished goods transfer, and the extra material and final packing pages, are covered by their rule tests only; they have not been exercised against a live server.
+Final packing also has regression coverage in `lib/final-packing.test.ts` and `components/final-packing/final-packing.test.tsx` for validation, unit conversion, duplicate submission, stale steps, invalid reads, missing return units, and the save/return failure sequence. These use a simulated API; the flow has not been exercised against a live server. The other dialogs and extra material page retain rule coverage.
+
+### Backend requirements for final packing
+
+The inspected backend `ProductionScheduleRepository.CreateFinalPacking` inserts the record and then completes the step in separate saves. `ReturnLeftOverStockAfterProductionEnds` separately inserts the return note and its lines. The controller requires authentication, but these methods do not themselves check current-step ownership, reconcile quantities, or deduplicate repeated requests. Client checks cannot close races between sessions or recover an atomic transaction after a browser reload.
+
+Production hardening therefore also requires backend validation and authorization, a unique packing record per batch, a transaction covering packing/step/return intent, and idempotency keys for packing and returns with a durable operation status to query after uncertain responses. Pending returns currently survive only while this page remains open; leaving or reloading after a partial save requires staff to reconcile the saved record and return note. Do not treat the desktop guard as a substitute for those server guarantees.
+
+## Extra-material completion gate (2026-10-27)
+
+Manual **Complete step** remains visible and disabled while any batch extra-material request awaits approval or warehouse issue. A status message distinguishes those two waits. The backend's legacy extra-material status `Approved` (`2`) means **issued**; approval alone moves a request to `InProgress` (`1`). Earlier requests now label these states “Awaiting warehouse issue” and “Issued”. A mixture of issued and outstanding requests still blocks completion.
+
+The active batch's extra-material evidence refreshes every 30 seconds while focused, on focus and on reconnect. Loading, failed reads and malformed evidence disable completion. Confirmation rereads the requests without cached evidence, then rechecks permission before sending the update. Final packing also checks the gate before its write because it completes a step. The companion backend refuses manual completion and final packing before changing records when any request has not reached issued status; a pending approval also refuses a new step start. No DTO, database migration or generated endpoint change is needed. Deploy the companion backend guard with this UI.
+
+Verification: pending, approved/unissued, mixed requests, all-issued and no-request cases; stale confirmations; unreadable evidence; final-packing preflight; direct backend completion/start and packing refusal, valid issued final packing, and rejection of a mismatched batch/step. The selected backend quality/discrepancy/production suite passed 98 tests. Browser fixtures checked both waiting states and the enabled issued state at 1280×720, 1366×768 and 853×480 with no horizontal overflow or browser exceptions. Native Windows and real database concurrency acceptance remain separate from these local checks; the final-packing transaction/idempotency limitations above are unchanged.

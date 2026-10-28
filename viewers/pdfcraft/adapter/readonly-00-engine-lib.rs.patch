@@ -1,0 +1,86 @@
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -2034,6 +2034,7 @@
+ 
+ #[derive(Default)]
+ pub struct Session {
++    pub read_only: bool,
+     docs: Vec<Document>,
+     next_id: u64,
+     /// Seconds since the Unix epoch, injected so saves are deterministic in tests.
+@@ -2370,7 +2371,7 @@
+         xfa: Option<XfaLayout>,
+     ) -> Result<DocId, OpenError> {
+         let config = RenderConfig { password: render_password.as_deref().map(Arc::from), ..Default::default() };
+-        let (mut editor, read_only_reason) = match cos {
++        let (mut editor, mut read_only_reason) = match cos {
+             Ok(Ok(cos)) => {
+                 let keys = Keys { render: render_password.clone(), reopen: password.map(str::to_owned) };
+                 (Some(Editor { cos, undo: Vec::new(), redo: Vec::new(), keys }), None)
+@@ -2404,6 +2405,10 @@
+         let signatures = editor.as_ref().map(|e| signatures_of(&e.cos, &bytes, &self.trust, &sig_cache)).unwrap_or_default();
+         self.next_id += 1;
+         let id = DocId(self.next_id);
++        if self.read_only {
++            editor = None;
++            read_only_reason = Some("Attachments are read-only".into());
++        }
+         self.docs.push(Document {
+             id,
+             name,
+@@ -2440,6 +2445,7 @@
+ 
+     /// Apply an edit. On success the previous state is undoable and the view data is refreshed.
+     pub fn apply(&mut self, id: DocId, edit: Edit) -> Result<(), EditError> {
++        if self.read_only { return Err(EditError::ReadOnly("Attachments are read-only".into())); }
+         let now = self.now();
+         let today = self.today();
+         let js_off = self.js_off;
+@@ -2558,6 +2564,7 @@
+     }
+ 
+     pub fn undo(&mut self, id: DocId) -> Result<String, EditError> {
++        if self.read_only { return Err(EditError::ReadOnly("Attachments are read-only".into())); }
+         let doc = self.doc_mut(id)?;
+         let editor = doc.editor.as_mut().ok_or(EditError::NothingToUndo)?;
+         let (label, prev, keys, scope) = editor.undo.pop().ok_or(EditError::NothingToUndo)?;
+@@ -2572,6 +2579,7 @@
+     }
+ 
+     pub fn redo(&mut self, id: DocId) -> Result<String, EditError> {
++        if self.read_only { return Err(EditError::ReadOnly("Attachments are read-only".into())); }
+         let doc = self.doc_mut(id)?;
+         let editor = doc.editor.as_mut().ok_or(EditError::NothingToRedo)?;
+         let (label, next, keys, scope) = editor.redo.pop().ok_or(EditError::NothingToRedo)?;
+@@ -2697,6 +2705,7 @@
+     /// The bytes to write for Save: an incremental update of the file as opened/last saved,
+     /// with `/ModDate` stamped. Call `mark_saved` after writing them successfully.
+     pub fn save_bytes(&self, id: DocId) -> Result<Arc<Vec<u8>>, EditError> {
++        if self.read_only { return Err(EditError::ReadOnly("Attachments are read-only".into())); }
+         let doc = self.get(id).ok_or(EditError::NoDocument)?;
+         let Some(editor) = doc.editor.as_ref() else { return Ok(doc.bytes.clone()) };
+         if !editor.cos.is_modified() {
+@@ -2708,6 +2717,7 @@
+ 
+     /// A compact, garbage-collected rewrite (Save As ▸ "Optimized" / Reduce File Size groundwork).
+     pub fn save_full_bytes(&self, id: DocId) -> Result<Arc<Vec<u8>>, EditError> {
++        if self.read_only { return Err(EditError::ReadOnly("Attachments are read-only".into())); }
+         let doc = self.get(id).ok_or(EditError::NoDocument)?;
+         if doc.is_signed() {
+             return Err(EditError::Signed);
+@@ -2720,6 +2730,7 @@
+     /// Record a successful save of `bytes` (to `path`, if any): rebase editing on the saved file
+     /// so the next save appends only newer edits. Undo history is kept.
+     pub fn mark_saved(&mut self, id: DocId, bytes: Arc<Vec<u8>>, path: Option<String>) -> Result<(), EditError> {
++        if self.read_only { return Err(EditError::ReadOnly("Attachments are read-only".into())); }
+         let doc = self.doc_mut(id)?;
+         if let Some(editor) = doc.editor.as_mut() {
+             // An encrypted file needs the password it is protected with now (the owner
+@@ -3234,6 +3245,7 @@
+     /// Record that the signed file `bytes` was saved (to `path`): like [`Session::mark_saved`],
+     /// and the edit history before signing is dropped (signing can't be undone).
+     pub fn mark_signed(&mut self, id: DocId, bytes: Arc<Vec<u8>>, path: Option<String>) -> Result<(), EditError> {
++        if self.read_only { return Err(EditError::ReadOnly("Attachments are read-only".into())); }
+         self.mark_saved(id, bytes, path)?;
+         let doc = self.doc_mut(id)?;
+         if let Some(e) = doc.editor.as_mut() {

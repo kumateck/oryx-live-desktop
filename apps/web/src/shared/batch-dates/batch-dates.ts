@@ -28,3 +28,9 @@ export function batchDateBounds(made: string | null | undefined, expires: string
   const after = made ? shift(made, 1) : undefined;
   return { made: { maxMonth: before && before < now ? before : now }, expires: after ? { minMonth: after } : {} };
 }
+
+/** A batch is made from the first day of its month and can be used until the last day of the month it expires in; the server stores full dates. */
+export const monthStartIso = (month: string) => `${month}-01T00:00:00.000Z`;
+export const monthEndIso = (month: string) => new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).toISOString();
+/** The "YYYY-MM" of a stored date, read in UTC so a last-day-of-month expiry is not moved by the time zone. */
+export const monthOfIso = (value: string | null | undefined) => value && /^\d{4}-\d{2}/.test(value) && Number(value.slice(0, 4)) >= 1900 ? value.slice(0, 7) : null;

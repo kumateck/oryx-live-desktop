@@ -1,0 +1,20 @@
+[Unit]
+Description=ORYX customer frontend deployment
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=oryx-deploy
+Group=oryx-deploy
+ExecStart=@NODE@ @AGENT@/cli.ts --env @ENV@ poll
+TimeoutStartSec=2h
+KillMode=control-group
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=@REPO@ @ROOT@ @STATE@
+UMask=0022
+StandardOutput=journal
+StandardError=journal

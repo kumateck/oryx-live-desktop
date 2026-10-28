@@ -1,3 +1,4 @@
+import { UpdateButton } from "@/shared/updates/update-button";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser, useSession } from "@/shared/auth/session-provider";
@@ -19,6 +20,7 @@ export function HeaderActions({ pages }: HeaderActionsProps) {
   const user = useCurrentUser();
   return <div className="header-actions"><AnimatedSearch groups={pages} />
     <Button type="button" size="icon-sm" variant="outline" className="header-action" onClick={theme.toggle} aria-label={`Switch to ${theme.resolved === "dark" ? "light" : "dark"} theme`} title="Switch theme">{theme.resolved === "dark" ? <Sun /> : <Moon />}</Button>
+    <UpdateButton />
     <NotificationSheet />
     <AccountMenu user={user} onLogout={logout} />
   </div>;

@@ -1,13 +1,14 @@
 import { api } from "@/shared/api/base-api";
 import { procurementApi } from "@/shared/api/generated/procurement";
+import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "PurchaseOrderList" as const, id: "all" };
 
 export const purchaseOrderApi = procurementApi.enhanceEndpoints({
   endpoints: {
-    getApiV1ProcurementPurchaseOrder: { providesTags: [list] },
-    postApiV1ProcurementPurchaseOrderProformaInvoiceByPurchaseOrderId: { invalidatesTags: (_result, error) => error ? [] : [list] },
-    putApiV1ProcurementPurchaseOrderFirstStepByPurchaseOrderId: { invalidatesTags: (_result, error) => error ? [] : [list] },
+    getApiV1ProcurementPurchaseOrder: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+    postApiV1ProcurementPurchaseOrderProformaInvoiceByPurchaseOrderId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list]); },
+    putApiV1ProcurementPurchaseOrderFirstStepByPurchaseOrderId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list]); },
   },
 });
 

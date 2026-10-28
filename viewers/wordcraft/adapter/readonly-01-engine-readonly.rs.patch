@@ -1,0 +1,41 @@
+--- /dev/null
++++ b/crates/engine/src/readonly.rs
+@@ -0,0 +1,38 @@
++//! Allow only selection, search and display operations in an attachment session.
++pub fn allowed(id: &str) -> bool {
++    matches!(id,
++        "caret.left" | "caret.right" | "caret.up" | "caret.down" | "caret.home" | "caret.end"
++        | "caret.docStart" | "caret.docEnd" | "caret.pageUp" | "caret.pageDown"
++        | "caret.wordLeft" | "caret.wordRight" | "caret.set"
++        | "select.all" | "select.word" | "select.paragraph" | "select.range" | "select.text"
++        | "select.collapse" | "select.line" | "select.sentence" | "select.dragUnit"
++        |
++        "edit.copy" | "edit.find" | "edit.findNext" | "edit.findPrevious"
++        | "view.zoom" | "view.zoom100" | "view.zoomIn" | "view.zoomOut")
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::{Session, blank_document};
++    use serde_json::json;
++
++    #[test]
++    fn attachment_refuses_content_formatting_undo_and_file_commands() {
++        let mut s = Session::new(blank_document(&Default::default()));
++        s.run("text.insert", &json!({"text":"Original attachment"})).unwrap();
++        s.read_only = true;
++        let before = s.doc.clone();
++        let revision = s.rev();
++        for id in ["text.insert", "edit.cut", "edit.paste", "edit.undo", "format.bold", "file.save", "file.new", "insert.table", "edit.replaceAll"] {
++            assert!(s.run(id, &json!({"text":"Changed"})).is_err(), "{id}");
++        }
++        assert_eq!(s.doc, before);
++        assert_eq!(s.rev(), revision);
++        assert!(s.run("select.all", &json!({})).is_ok());
++        assert!(s.run("edit.copy", &json!({})).is_ok());
++        assert!(s.run("edit.find", &json!({"text":"Original"})).is_ok());
++        assert!(s.run("view.zoom100", &json!({})).is_ok());
++        assert_eq!(s.doc, before);
++    }
++}

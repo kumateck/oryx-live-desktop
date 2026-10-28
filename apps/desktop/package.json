@@ -1,24 +1,31 @@
 {
   "name": "@oryx/desktop",
   "productName": "Oryx Live Desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "description": "Desktop shell for the Oryx ERP",
+  "author": "Kumateck",
   "private": true,
   "type": "module",
   "main": ".vite/build/main.cjs",
-  "config": { "forge": "forge.config.ts" },
+  "config": {
+    "forge": "forge.config.ts"
+  },
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "make:windows": "bun ../../scripts/make-windows.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test tests",
+    "make:windows:x86": "bun ../../scripts/make-windows.ts --arch ia32"
   },
   "devDependencies": {
     "@electron-forge/cli": "7.11.2",
-    "@electron-forge/maker-squirrel": "7.11.2",
     "@electron-forge/maker-zip": "7.11.2",
     "@electron-forge/plugin-vite": "7.11.2",
     "@electron-forge/shared-types": "7.11.2",
     "electron": "^44.4.3",
+    "electron-builder": "26.15.3",
     "vite": "^8.3.1"
   }
 }

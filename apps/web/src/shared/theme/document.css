@@ -1,0 +1,90 @@
+/* Document measurements stay stable when the interface's density changes. */
+:root {
+  --document-font-family: var(--font-family-system);
+  --document-font-10_5px: 10.5px;
+  --document-font-10px: 10px;
+  --document-font-11px: 11px;
+  --document-font-12px: 12px;
+  --document-font-13px: 13px;
+  --document-font-17px: 17px;
+  --document-font-1_05rem: 1.05rem;
+  --document-font-1_25rem: 1.25rem;
+  --document-font-1_5rem: 1.5rem;
+  --document-radius-4px: 4px;
+  --document-space-0_35rem: 0.35rem;
+  --document-space-0_375rem: 0.375rem;
+  --document-space-0_4em: 0.4em;
+  --document-space-0_5rem: 0.5rem;
+  --document-space-0_625rem: 0.625rem;
+  --document-space-0_75rem: 0.75rem;
+  --document-space-12px: 12px;
+  --document-space-14px: 14px;
+  --document-space-16px: 16px;
+  --document-space-1_25em: 1.25em;
+  --document-space-1_5rem: 1.5rem;
+  --document-space-20px: 20px;
+  --document-space-24px: 24px;
+  --document-space-28px: 28px;
+  --document-space-2px: 2px;
+  --document-space-32px: 32px;
+  --document-space-44px: 44px;
+  --document-space-4px: 4px;
+  --document-space-5px: 5px;
+  --document-space-6px: 6px;
+  --document-space-8px: 8px;
+}
+
+@theme inline {
+  --text-document-8: 8px;
+  --text-document-8--line-height: 1.45;
+  --text-document-9: 9px;
+  --text-document-9--line-height: 1.45;
+  --text-document-10: 10px;
+  --text-document-10--line-height: 1.45;
+  --text-document-11: 11px;
+  --text-document-11--line-height: 1.45;
+  --text-document-12: 12px;
+  --text-document-12--line-height: 1.45;
+  --text-math-parenthesis: 1.15em;
+  --text-math-fraction: 0.92em;
+}
+
+.print-sheet, .print-portal { --density-scale: 1; }
+
+/* Printed documents. They are always black on white, whatever the app's theme, and sized in print units. */
+.print-portal { display: none; }
+.print-sheet { padding: var(--document-space-28px) var(--document-space-32px); border-radius: var(--document-radius-4px); background: #fff; color: #111; font-family: var(--document-font-family); font-size: var(--document-font-12px); line-height: 1.45; }
+.print-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--document-space-24px); padding-bottom: var(--document-space-12px); border-bottom: 2px solid #111; }
+.print-company { display: flex; align-items: flex-start; gap: var(--document-space-12px); min-width: 0; }
+.print-company img { width: auto; height: 52px; object-fit: contain; }
+.print-company div { display: flex; flex-direction: column; color: #444; font-size: var(--document-font-10_5px); }
+.print-company strong { color: #111; font-size: var(--document-font-13px); }
+.print-title { flex: none; max-width: 45%; text-align: right; }
+.print-title h1 { margin: 0; font-size: var(--document-font-17px); font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.print-title p { margin: var(--document-space-2px) 0 0; font-size: var(--document-font-12px); font-weight: 600; }
+.print-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--document-space-8px) var(--document-space-24px); margin: var(--document-space-14px) 0; }
+.print-facts dt { color: #555; font-size: var(--document-font-10px); letter-spacing: .04em; text-transform: uppercase; }
+.print-facts dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.print-table { width: 100%; margin-top: var(--document-space-12px); border-collapse: collapse; }
+.print-table caption { padding-bottom: var(--document-space-6px); font-size: var(--document-font-12px); font-weight: 700; text-align: left; }
+.print-table th, .print-table td { padding: var(--document-space-5px) var(--document-space-8px); border: 1px solid #999; vertical-align: top; overflow-wrap: anywhere; }
+.print-table th { background: #eee; font-size: var(--document-font-10_5px); font-weight: 700; }
+.print-table tfoot td { font-weight: 700; }
+.print-table small { display: block; color: #555; font-size: var(--document-font-10px); }
+.print-empty { color: #555; text-align: center; }
+.print-note { margin: var(--document-space-12px) 0 0; color: #333; }
+.print-section { margin: var(--document-space-16px) 0 0; font-size: var(--document-font-12px); font-weight: 700; }
+.print-blank { display: block; height: 16px; border-bottom: 1px solid #111; }
+.print-signatures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--document-space-32px); margin-top: var(--document-space-44px); font-size: var(--document-font-11px); }
+.print-signatures span { display: block; margin-bottom: var(--document-space-4px); border-bottom: 1px solid #111; height: 28px; }
+.print-footer { margin-top: var(--document-space-20px); padding-top: var(--document-space-6px); border-top: 1px solid #bbb; color: #666; font-size: var(--document-font-10px); }
+@media print {
+  @page { margin: 14mm; }
+  html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
+  body > * { display: none !important; }
+  body > .print-portal { display: block !important; }
+  .print-sheet { padding: 0; border-radius: 0; }
+  .print-table thead { display: table-header-group; }
+  .print-table tr { break-inside: avoid; }
+  .print-signatures { break-inside: avoid; }
+}

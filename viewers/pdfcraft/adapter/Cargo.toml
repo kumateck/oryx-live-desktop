@@ -1,0 +1,33 @@
+[package]
+name = "dodo-pdfcraft"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+publish = false
+
+[workspace]
+
+[dependencies]
+pdfcraft-engine = { path = "../pdfcraft-source/crates/engine" }
+pdfcraft-ui-egui = { path = "../pdfcraft-source/crates/ui-egui" }
+eframe = { version = "=0.36.2", default-features = false, features = ["default_fonts", "wgpu", "accesskit"] }
+egui = "=0.36.2"
+wasm-bindgen = "=0.2.129"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["Window", "Document", "HtmlCanvasElement", "Element"] }
+
+[patch.crates-io]
+hayro-interpret = { path = "../pdfcraft-source/vendor/hayro-interpret" }
+hayro = { path = "../pdfcraft-source/vendor/hayro" }
+hayro-syntax = { path = "../pdfcraft-source/vendor/hayro-syntax" }
+hayro-jbig2 = { path = "../pdfcraft-source/vendor/hayro-jbig2" }
+lopdf = { path = "../pdfcraft-source/vendor/lopdf" }
+winit = { path = "../pdfcraft-source/vendor/winit" }
+egui-wgpu = { path = "../pdfcraft-source/vendor/egui-wgpu" }
+
+[profile.release]
+opt-level = "s"
+lto = false
+codegen-units = 1
+strip = true

@@ -76,13 +76,16 @@ Batches grouped by product, size, packing style, and market. Kept: tick batches,
 - **"Take off N" replaces the group's selection** and can be cleared. In Oryx Next each press added to it.
 - **Requests go one at a time**, so the server is not sent many deletes for one schedule at once.
 
-## Not yet migrated
+## Also on the schedule pages
 
 A running batch opens its production board from the schedule page; see `production-board-migration.md`.
 
-- The purchase requisition raised from a batch that is short of materials.
-- The breakdown of a material's stock in other warehouses ("All other stock" shows the total only).
-- Product flow and product requisition pages.
-- The monthly report.
+- **Purchase requisition from a short batch** (`components/detail/raise-shortage-requisition.tsx`).
+- **All other stock**: the figure opens where the material is held, store by store and on production floors, and what is on its way in (`shared/stock/stock-availability-dialog.tsx`, shared with requisitions).
+- **Monthly report** `/production/schedules/monthly-report` (`components/monthly-report.tsx`, `lib/monthly-plan.ts`): every batch of a schedule that runs during the month except cancelled ones, grouped by market, product and packing style, with expected batches (a half batch counts half), unit price, expected yield from the packing style, shippers and loose packs, and a grand total. Moving between months does not ask the server again. Printable.
+  - The server cannot filter schedules by date, so every page is read once (250 a page), as Oryx Next does.
+  - **The schedule endpoints do not send a batch's market** (neither the list nor the detail includes it), so Oryx Next grouped every batch under "Unspecified market". The page groups such batches under "No market recorded" and says why.
+  - Shipper and loose totals are given only when every row has them, rather than a short total.
+- Product flow and product requisition pages are not carried over: nothing in Oryx Next links to the flow page, and the requisition page is replaced by the shortage requisition above.
 
 Backend behavior worth knowing (unchanged, shared with Oryx Next): the update endpoint accepts only the dates and remarks; the code and products sent with it are ignored. A batch that has started cannot be removed.

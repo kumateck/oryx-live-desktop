@@ -1,0 +1,53 @@
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -1735,6 +1735,7 @@
+ const KEY_SCROLL_LINE: f32 = 40.0;
+ 
+ pub fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
++    let read_only = app.session.read_only;
+     let t = Tokens::get(ui.ctx());
+     // Keyboard scrolling applies to this frame's page view only, never later.
+     let key_scroll = std::mem::take(&mut app.views[index].key_scroll);
+@@ -1937,11 +1938,11 @@
+         | QuickTool::Snapshot => false,
+     };
+     let prefs = &app.comment_prefs;
+-    let allowed = doc.allows_annotation();
++    let allowed = doc.allows_annotation() && !read_only;
+     let comments_hidden = doc.comments_hidden();
+     let form = doc.form.clone();
+-    let can_fill = doc.allows_form_filling();
+-    let can_crop = doc.allows_assembly();
++    let can_fill = doc.allows_form_filling() && !read_only;
++    let can_crop = doc.allows_assembly() && !read_only;
+     let mut open_boxes = false;
+     let signature = app.signature.clone();
+     let initials = app.initials.clone();
+@@ -1966,7 +1967,7 @@
+     let mut open_props: Option<(usize, usize)> = None;
+     let mut field_props = false;
+     let mut field_placed = false;
+-    let can_modify = doc.allows_modification();
++    let can_modify = doc.allows_modification() && !read_only;
+     if preparing {
+         crate::prepare::after_refresh(view, &form);
+     } else {
+@@ -2548,6 +2549,7 @@
+             }
+         }
+         resp.context_menu(|ui| {
++            if read_only { ui.label("Read-only attachment"); return; }
+             // Preparing a form: the selected field's menu.
+             if preparing && let Some((name, wi)) = view.prepare.selected.clone() {
+                 // Several fields: Align, Center, Distribute, Set Fields to Same Size.
+@@ -2649,6 +2651,10 @@
+         });
+     }
+     find_bar(view, info.pages.len(), avail, ui, &t);
++    if read_only {
++        if let Some(LinkTarget::Page(p, dest)) = clicked_link { view.go_to_dest(p, dest, info); }
++        return;
++    }
+     if let Some(e) = comments::composer(ui.ctx(), view, info, prefs) {
+         view.pending_edit = Some(e);
+     }

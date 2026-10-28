@@ -2,7 +2,11 @@
 
 Electron Forge shell plus a separately deployed React application for Oryx customer servers. The shell connects to a site-specific HTTP or HTTPS frontend origin. The React app is built and served by that customer server; ordinary UI releases therefore do not require reinstalling clients.
 
-This repository is in the first module stage. It has a typed file-route generator, compact workspace, configurable appearance, desktop connection screen, sign-in against the existing Oryx backend (the same one Oryx Next uses, unchanged), the backend's published OpenAPI contract, and strictly typed generated hooks for 20 API domains (1,078 of 1,324 backend operations; the rest are listed in `docs/api-untyped-operations.md`). Roles and Users are the migrated modules. Most ERP routes, live notification data, and native updates are **not yet integrated**. See [PLAN.md](PLAN.md) for the sequence and open decisions.
+This repository is in the first module stage. It has a typed file-route generator, compact workspace, configurable appearance, desktop connection screen, sign-in against the existing Oryx backend (the same one Oryx Next uses, unchanged), the backend's published OpenAPI contract, and strictly typed generated hooks for 20 API domains (1,079 of 1,325 backend operations; the rest are listed in `docs/api-untyped-operations.md`). Roles and Users are the migrated modules. Most ERP routes, live notification data, and native updates are **not yet integrated**. See [PLAN.md](PLAN.md) for the sequence and open decisions.
+
+Purchase-unit synchronization requires the companion backend migration/API before
+frontend rollout. See [supplier purchase units](docs/supplier-purchase-units.md)
+for symbol storage, approval behavior and verification.
 
 ## Requirements
 
@@ -48,6 +52,7 @@ The local connection view links its stylesheet directly and keeps its wordmark a
 The module boundary and migration rules are in [docs/module-architecture.md](docs/module-architecture.md).
 API generation and its current scope are in [docs/api-codegen.md](docs/api-codegen.md).
 Session handling, permission guards, and user display are in [docs/session-and-access.md](docs/session-and-access.md).
+Attachment filenames and View actions across the application use Oryx’s built-in read-only viewer for PDF, DOCX, XLSX and images, with an in-viewer explanation for unsupported formats; see [docs/attachment-viewers.md](docs/attachment-viewers.md) and the [application-wide attachment audit](docs/attachment-audit.md). Web development/build commands verify and extract pinned local engines automatically, with no Rust toolchain or Artcraft/Dodo service required.
 The four data tables (server-paged, client-paged, list, draggable) are in [docs/datatable.md](docs/datatable.md).
 Appearance behavior and the Oryx accent list are in [docs/appearance.md](docs/appearance.md).
 
@@ -55,4 +60,18 @@ Appearance behavior and the Oryx accent list are in [docs/appearance.md](docs/ap
 
 `bun run routes:check` ensures generated routes are current and enforces the 200-line page limit. `bun run api:check` checks generated API drift, rejects untyped output, and fails on a backend tag with no domain. `bun run test` covers route collisions/nesting, appearance tokens, session behavior, role permissions and table paging, and server URL validation. `bun run typecheck` checks application and generated TypeScript. `bun run build:web` builds the hosted SPA. The `AGENTS.md` guide defines ownership, business safeguards, and verification requirements for later migration work.
 
-No packaged-app or customer-server deployment has been validated yet; those are explicit phase gates in `PLAN.md`.
+A testing site and Windows installer are deployed from the `testing` branch; see [docs/deployment.md](docs/deployment.md). The [customer-server deployment package](deploy/customer-server/README.md) polls `entrance-server`, uses a permanent customer `.env` for the existing backend, and provides validated releases and rollback. Customer installation/acceptance and signed shell updates remain phase gates in `PLAN.md`.
+
+Engine maintainers can rebuild reviewed viewer-only WASM adapters with `bun scripts/build-readonly-viewers.ts /absolute/isolated-workspace <engine>`; see the attachment viewer guide for pinned toolchain, source and provenance requirements. Ordinary builds continue to use verified local bundles.
+
+## Desktop companion
+
+View → Show / Hide ORYX Companion controls the optional local Operations Watch character. Click the character for notifications, or click an alert in its growing feed to open the linked shipment details; drag to move; right-click for quiet mode. See [companion behavior and limits](docs/companion.md).
+
+System alerts also appear while Oryx is in front. Closing to the tray keeps delivery running; use Quit Oryx to exit. Missed alerts remain in backend unread history. [Notification delivery and backend requirements](docs/notifications.md).
+
+Companion device controls are under Settings → Appearance. Run `bun run --filter @oryx/desktop test` for renderer/persistence tests; these also run in the root `bun run test` command. Native alert clicks locate the matching unread/history entry without marking it read.
+
+## Manual customer Docker installation
+
+Use [the customer Docker package](deploy/customer-docker/README.md) for the Ubuntu `entrance` account: production follows **`origin/entrance-server` only**, project **`oryx-live`**, port **3001**, existing external **`sail`** network and backend **`oryx_api:5001`**. It reuses the existing web Docker build with pinned **Bun 1.4.4**. The administrator installs it through SSH commands and enables Cron; no Codex installation is needed. Deployment checks, Discord reporting, locking, pause/resume and archived-image rollback are included. The host-Nginx agent remains separate.

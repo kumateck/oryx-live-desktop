@@ -2,12 +2,14 @@ import { Pencil } from "lucide-react";
 import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PrintButton } from "@/shared/print/print-button";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { PageBreadcrumbs } from "@/shared/navigation/page-breadcrumbs";
 import { formatDateTime } from "@/shared/format/dates";
 import { divisionLabel, productEditPath, productPermissions } from "../../lib/product-access";
 import type { ProductDetail } from "../../schemas/product-detail-schema";
 import { QualityBadge, VerifyProductButton } from "../verify-product-button";
+import { ProductPrint } from "./product-print";
 
 export function ProductHeader({ product }: { product: ProductDetail }) {
   const created = formatDateTime(product.createdAt);
@@ -16,6 +18,7 @@ export function ProductHeader({ product }: { product: ProductDetail }) {
     <div className="flex flex-wrap items-center justify-between gap-2">
       <PageBreadcrumbs items={[{ label: product.name ?? "Unnamed product" }]} />
       <div className="flex flex-wrap items-center gap-2">
+        <PrintButton preview={(close) => <ProductPrint product={product} onClose={close} />} />
         <PermissionGuard require={productPermissions.verify}><VerifyProductButton product={product} /></PermissionGuard>
         <PermissionGuard require={productPermissions.edit}>
           <Button asChild size="sm" variant="outline"><Link to={productEditPath(product.id)}><Pencil />Edit product</Link></Button>

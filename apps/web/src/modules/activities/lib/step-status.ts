@@ -12,11 +12,11 @@ const requisition = ["New", "Pending", "Sourced", "Completed", "Rejected"] as co
 export function requisitionStatusLabel(status: number | null | undefined): string { return typeof status === "number" ? requisition[status] ?? "Unknown" : "Unknown"; }
 const bmr = ["Requested", "Issued"] as const;
 export function bmrStatusLabel(status: number | null | undefined): string { return typeof status === "number" ? bmr[status] ?? "Unknown" : "Unknown"; }
-export const extraMaterialStatus = { pending: 0, inProgress: 1, approved: 2 } as const;
+export const extraMaterialStatus = { pending: 0, inProgress: 1, issued: 2 } as const;
 
 const atr = ["New", "Sampled", "Acknowledged", "Testing", "Test taken", "Released", "Assigned", "Rejected"] as const;
 export function atrStatusLabel(status: number | null | undefined): string { return typeof status === "number" ? atr[status] ?? "Raised" : "Raised"; }
 const stages = ["Intermediate", "Bulk", "Finished"] as const;
 export function testStageLabel(stage: number): string { return stages[stage] ?? "Unknown stage"; }
-const extraMaterial = ["Waiting for approval", "Being issued", "Approved"] as const;
+const extraMaterial = ["Waiting for approval", "Awaiting warehouse issue", "Issued"] as const;
 export function extraMaterialStatusLabel(status: number): string { return extraMaterial[status] ?? "Unknown"; }

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { api } from "@/shared/api/base-api";
 import { settingsApi } from "@/shared/api/generated/settings";
 import { parseClockValue } from "@/shared/forms/time-value";
+import { addTags } from "@/shared/api/add-tags";
 
 export const workingDayPermissions = { view: "CanViewWorkingDays", save: "CanCreateWorkingDays", reset: "CanResetWorkingDays" } as const;
 export const workingDayAudit = { module: "Settings", subModule: "Working Days" } as const;
@@ -15,7 +16,7 @@ const saveApi = api.injectEndpoints({ endpoints: (build) => ({
   saveWorkingDays: build.mutation<unknown, WorkingDayBody[]>({ query: (body) => ({ url: "/api/v1/working-days", method: "POST", body, headers: { Module: workingDayAudit.module, SubModule: workingDayAudit.subModule } }), invalidatesTags: (_result, error) => error ? [] : [list] }),
 }) });
 export const { useSaveWorkingDaysMutation } = saveApi;
-export const workingDayApi = settingsApi.enhanceEndpoints({ endpoints: { getApiV1WorkingDays: { providesTags: [list] } } });
+export const workingDayApi = settingsApi.enhanceEndpoints({ endpoints: { getApiV1WorkingDays: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); } } });
 
 const text = z.string().nullish().transform((value) => value ?? "");
 export const workingDaysSchema = z.object({ data: z.array(z.object({ day: z.number().nullish(), isWorkingDay: z.boolean().nullish(), startTime: text, endTime: text })).nullish() })

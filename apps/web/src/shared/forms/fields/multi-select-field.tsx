@@ -62,7 +62,7 @@ function OptionList({ options, selected, onChange }: {
     ? selected.filter((item) => !enabled.some((option) => option.value === item.value))
     : [...selected, ...enabled.filter((option) => !selectedValues.has(option.value))]);
   return <><div className="flex justify-end"><Button type="button" size="xs" variant="ghost" disabled={!enabled.length} onClick={toggleAll}>
-    {allSelected ? "Unselect page" : "Select page"}</Button></div>
+    {allSelected ? "Unselect All" : "Select All"}</Button></div>
     <div className="max-h-56 overflow-y-auto" role="group" aria-label="Options">
       {options.length ? options.map((option) => <label key={option.value} className="flex min-h-8 cursor-pointer items-center gap-2 rounded-md px-2 hover:bg-accent has-disabled:cursor-not-allowed has-disabled:opacity-50">
         <Checkbox checked={selectedValues.has(option.value)} onCheckedChange={() => toggle(option)} disabled={option.disabled ?? false} />

@@ -21,11 +21,12 @@ import { PrintFacts, PrintHeader, PrintSignatures, PrintTable, type PrintColumn 
 import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { audit, restocked, restockedLabels, returnNoteRowsSchema, returnNoteSchema, returnPath, returnsPath, type ReturnLine, type ReturnNote } from "../returns";
+import { addTags } from "@/shared/api/add-tags";
 
 const tag = { type: "MaterialReturns" as const, id: "all" };
 const { useGetApiV1ProductionScheduleMaterialReturnNoteQuery, useGetApiV1ProductionScheduleMaterialReturnNoteByMaterialReturnNoteIdQuery } = productionApi.enhanceEndpoints({ endpoints: {
-  getApiV1ProductionScheduleMaterialReturnNote: { providesTags: [tag] }, getApiV1ProductionScheduleMaterialReturnNoteByMaterialReturnNoteId: { providesTags: [tag] } } });
-const { usePostApiV1MaterialBatchSupplyMutation } = materialsApi.enhanceEndpoints({ endpoints: { postApiV1MaterialBatchSupply: { invalidatesTags: (_result, error) => error ? [] : [tag, "StockOnShelves"] } } });
+  getApiV1ProductionScheduleMaterialReturnNote: (definition) => { definition.providesTags = addTags(definition.providesTags, [tag]); }, getApiV1ProductionScheduleMaterialReturnNoteByMaterialReturnNoteId: (definition) => { definition.providesTags = addTags(definition.providesTags, [tag]); } } });
+const { usePostApiV1MaterialBatchSupplyMutation } = materialsApi.enhanceEndpoints({ endpoints: { postApiV1MaterialBatchSupply: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [tag, "StockOnShelves"]); } } });
 
 function Standing({ note }: { note: Pick<ReturnNote, "lines"> }) {
   const state = restocked(note);

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,10 @@ import { usePartnerCollections } from "@/shared/reference-data/use-partner-colle
 import { usePostApiV1ProcurementSupplierMutation, usePutApiV1ProcurementSupplierBySupplierIdMutation } from "../api/supplier-api";
 import { supplierAudit, supplierPath, suppliersPath, supplierPermissions } from "../lib/supplier-access";
 import { emptyAssociation, emptySupplier, supplierDefaults, supplierFormSchema, supplierPayload, type SupplierFormValues } from "../schemas/supplier-form-schema";
+import { usePurchaseUnitValidation } from "../hooks/use-purchase-unit-validation";
 import { SupplierAssociationRow } from "./supplier-association-row";
+import { MaterialRowFilters } from "@/shared/procurement/material-row-filters";
+import { matchesMaterialRow, type MaterialRowFilter } from "@/shared/procurement/material-row-filter";
 
 export function SupplierEditor({ supplier, associations }: {
   supplier?: DomainEntitiesProcurementSuppliersSupplierDto;
@@ -23,6 +26,7 @@ export function SupplierEditor({ supplier, associations }: {
 }) {
   const navigate = useNavigate();
   const collections = usePartnerCollections("supplier");
+  const unitValidation = usePurchaseUnitValidation();
   const [create, creating] = usePostApiV1ProcurementSupplierMutation();
   const [update, updating] = usePutApiV1ProcurementSupplierBySupplierIdMutation();
   const [message, setMessage] = useState("");
@@ -30,6 +34,8 @@ export function SupplierEditor({ supplier, associations }: {
   const [saved, setSaved] = useState(false);
   const form = useForm<SupplierFormValues>({ resolver: zodResolver(supplierFormSchema), defaultValues: supplier ? supplierDefaults(supplier, associations) : emptySupplier() });
   const rows = useFieldArray({ control: form.control, name: "associations" });
+  const associationsInForm = useWatch({ control: form.control, name: "associations" });
+  const [materialFilter, setMaterialFilter] = useState<MaterialRowFilter>("all");
   const fields = [
     { type: InputTypes.TEXT, name: "name", label: "Supplier name", required: true },
     { type: InputTypes.TEXT, name: "contactPerson", label: "Contact person", required: true },
@@ -39,13 +45,22 @@ export function SupplierEditor({ supplier, associations }: {
     { type: InputTypes.SELECT, name: "country", label: "Country", mode: "single", source: "sync", options: collections.countries, required: true },
     { type: InputTypes.SELECT, name: "currency", label: "Currency", mode: "single", source: "sync", options: collections.currencies, required: true },
   ] as const satisfies readonly WizardField<SupplierFormValues>[];
-  const saving = creating.isLoading || updating.isLoading;
+  const saving = creating.isLoading || updating.isLoading || unitValidation.validating;
 
   const save = async (event: FormEvent) => {
     event.preventDefault(); setMessage("");
     await form.handleSubmit(async (values) => {
       const denied = permission.check();
       if (denied) { setMessage(denied); return; }
+      const failures = (await unitValidation.validate(values.associations)).filter((failure) => failure !== null);
+      if (failures.length) {
+        setMaterialFilter("all");
+        for (const failure of failures) form.setError(`associations.${failure.index}.uom`, { type: "validate", message: failure.message });
+        setMessage("Review the purchase units before saving this supplier.");
+        return;
+      }
+      const deniedAfterValidation = permission.check();
+      if (deniedAfterValidation) { setMessage(deniedAfterValidation); return; }
       const payload = supplierPayload(values);
       const result = supplier?.id
         ? await update({ ...supplierAudit, supplierId: supplier.id, domainEntitiesProcurementSuppliersCreateSupplierRequest: payload })
@@ -55,7 +70,7 @@ export function SupplierEditor({ supplier, associations }: {
       toast.success(supplier ? "Supplier updated" : "Supplier created");
       const savedId = supplier?.id ?? result.data;
       void navigate(savedId ? supplierPath(savedId) : suppliersPath);
-    })();
+    }, (errors) => { if (errors.associations) setMaterialFilter("all"); })();
   };
 
   return <form noValidate onSubmit={(event) => void save(event)} className="min-w-0 space-y-4">
@@ -67,9 +82,12 @@ export function SupplierEditor({ supplier, associations }: {
     </section>
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-2"><div><h2 className="text-sm font-semibold">Materials and manufacturers</h2>
-        <p className="text-xs text-muted-foreground">Choose a purchase unit and one default manufacturer for each material. Pricing agreements require the unit.</p></div>
-        <Button type="button" size="sm" variant="outline" onClick={() => rows.append(emptyAssociation())}>Add material</Button></div>
-      {rows.fields.map((row, index) => <SupplierAssociationRow key={row.id} form={form} index={index} units={collections.units} onRemove={() => rows.remove(index)} />)}
+        <p className="text-xs text-muted-foreground">Choose a purchase unit and one default manufacturer for each material. The same symbol is used for pricing. Changes to standing price units go through pricing approval.</p></div>
+        <Button type="button" size="sm" variant="outline" onClick={() => { setMaterialFilter("all"); rows.prepend(emptyAssociation()); }}>Add material</Button></div>
+      <MaterialRowFilters kinds={associationsInForm.map((row) => row.kind?.value)} value={materialFilter} onChange={setMaterialFilter} />
+      {rows.fields.map((row, index) => <div key={row.id} hidden={!matchesMaterialRow(materialFilter, associationsInForm[index]?.kind?.value)}>
+        <SupplierAssociationRow form={form} index={index} onRemove={() => rows.remove(index)} />
+      </div>)}
       {form.formState.errors.associations?.message ? <p role="alert" className="text-sm text-destructive">{form.formState.errors.associations.message}</p> : null}
     </section>
     {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}

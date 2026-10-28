@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1TicketsApiResponse,
       PostApiV1TicketsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "ticket", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/tickets`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1TicketsApiResponse,
       GetApiV1TicketsApiArg
     >({
+      providesTags: [{ type: "ticket", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/tickets`,
         headers: {
@@ -41,6 +43,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1TicketsByIdApiResponse,
       GetApiV1TicketsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "ticket", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/tickets/${queryArg.id}`,
         headers: {
@@ -53,6 +56,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1TicketsByIdAssignApiResponse,
       PutApiV1TicketsByIdAssignApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "ticket", id: "LIST" }, { type: "ticket", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/tickets/${queryArg.id}/assign`,
         method: "PUT",
@@ -67,6 +71,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1TicketsByIdStartApiResponse,
       PutApiV1TicketsByIdStartApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "ticket", id: "LIST" }, { type: "ticket", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/tickets/${queryArg.id}/start`,
         method: "PUT",
@@ -80,6 +85,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1TicketsByIdDoneApiResponse,
       PutApiV1TicketsByIdDoneApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "ticket", id: "LIST" }, { type: "ticket", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/tickets/${queryArg.id}/done`,
         method: "PUT",
@@ -93,6 +99,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1TicketsByIdCloseApiResponse,
       PutApiV1TicketsByIdCloseApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "ticket", id: "LIST" }, { type: "ticket", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/tickets/${queryArg.id}/close`,
         method: "PUT",
@@ -106,6 +113,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1TicketsByIdReopenApiResponse,
       PutApiV1TicketsByIdReopenApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "ticket", id: "LIST" }, { type: "ticket", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/tickets/${queryArg.id}/reopen`,
         method: "PUT",
@@ -120,6 +128,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1TicketsByIdCommentsApiResponse,
       PostApiV1TicketsByIdCommentsApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "ticket", id: "LIST" }, { type: "ticket", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/tickets/${queryArg.id}/comments`,
         method: "POST",
@@ -134,6 +143,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1TicketsByIdActivityApiResponse,
       GetApiV1TicketsByIdActivityApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "ticket", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/tickets/${queryArg.id}/activity`,
         headers: {
@@ -146,6 +156,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobOrdersApiResponse,
       PostApiV1JobOrdersApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-orders`,
         method: "POST",
@@ -160,6 +171,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1JobOrdersApiResponse,
       GetApiV1JobOrdersApiArg
     >({
+      providesTags: [{ type: "job-order", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/job-orders`,
         headers: {
@@ -179,6 +191,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1JobOrdersByIdApiResponse,
       GetApiV1JobOrdersByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "job-order", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/job-orders/${queryArg.id}`,
         headers: {
@@ -191,6 +204,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1JobOrdersServiceProvidersApiResponse,
       GetApiV1JobOrdersServiceProvidersApiArg
     >({
+      providesTags: [{ type: "job-order/service-provider", id: "LIST" }, { type: "job-order", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/job-orders/service-providers`,
         headers: {
@@ -208,6 +222,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobOrdersSendToProvidersApiResponse,
       PostApiV1JobOrdersSendToProvidersApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-order/send-to-provider", id: "LIST" }, { type: "job-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-orders/send-to-providers`,
         method: "POST",
@@ -222,6 +237,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobOrdersSelectQuotationApiResponse,
       PostApiV1JobOrdersSelectQuotationApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-order/select-quotation", id: "LIST" }, { type: "job-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-orders/select-quotation`,
         method: "POST",
@@ -236,6 +252,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobOrdersStartExecutionApiResponse,
       PostApiV1JobOrdersStartExecutionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-order/start-execution", id: "LIST" }, { type: "job-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-orders/start-execution`,
         method: "POST",
@@ -250,6 +267,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobOrdersExecutionsByIdActivitiesApiResponse,
       PostApiV1JobOrdersExecutionsByIdActivitiesApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "job-order/execution", id: "LIST" }, { type: "job-order", id: "LIST" }, { type: "job-order/execution", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/job-orders/executions/${queryArg.id}/activities`,
         method: "POST",
@@ -264,6 +282,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobOrdersExecutionsByIdConsumedItemsApiResponse,
       PostApiV1JobOrdersExecutionsByIdConsumedItemsApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "job-order/execution", id: "LIST" }, { type: "job-order", id: "LIST" }, { type: "job-order/execution", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/job-orders/executions/${queryArg.id}/consumed-items`,
         method: "POST",
@@ -278,6 +297,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobOrdersCompleteExecutionApiResponse,
       PostApiV1JobOrdersCompleteExecutionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-order/complete-execution", id: "LIST" }, { type: "job-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-orders/complete-execution`,
         method: "POST",
@@ -292,6 +312,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobOrdersVerifyExecutionApiResponse,
       PostApiV1JobOrdersVerifyExecutionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-order/verify-execution", id: "LIST" }, { type: "job-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-orders/verify-execution`,
         method: "POST",
@@ -306,6 +327,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobOrdersApproveExecutionApiResponse,
       PostApiV1JobOrdersApproveExecutionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-order/approve-execution", id: "LIST" }, { type: "job-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-orders/approve-execution`,
         method: "POST",
@@ -320,6 +342,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobRequestsApiResponse,
       PostApiV1JobRequestsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-request", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-requests`,
         method: "POST",
@@ -334,6 +357,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1JobRequestsApiResponse,
       GetApiV1JobRequestsApiArg
     >({
+      providesTags: [{ type: "job-request", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/job-requests`,
         headers: {
@@ -353,6 +377,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1JobRequestsByIdApiResponse,
       GetApiV1JobRequestsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "job-request", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/job-requests/${queryArg.id}`,
         headers: {
@@ -365,6 +390,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1JobRequestsByIdApiResponse,
       PutApiV1JobRequestsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "job-request", id: "LIST" }, { type: "job-request", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/job-requests/${queryArg.id}`,
         method: "PUT",
@@ -379,6 +405,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1JobRequestsByIdApiResponse,
       DeleteApiV1JobRequestsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "job-request", id: "LIST" }, { type: "job-request", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/job-requests/${queryArg.id}`,
         method: "DELETE",
@@ -392,6 +419,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1JobRequestsOrdersApiResponse,
       GetApiV1JobRequestsOrdersApiArg
     >({
+      providesTags: [{ type: "job-request/order", id: "LIST" }, { type: "job-request", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/job-requests/orders`,
         headers: {
@@ -404,6 +432,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobRequestsAssignInternalApiResponse,
       PostApiV1JobRequestsAssignInternalApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-request/assign-internal", id: "LIST" }, { type: "job-request", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-requests/assign-internal`,
         method: "POST",
@@ -418,6 +447,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1JobRequestsStatusByIdApiResponse,
       PutApiV1JobRequestsStatusByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "job-request/status", id: "LIST" }, { type: "job-request", id: "LIST" }, { type: "job-request/status", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/job-requests/status/${queryArg.id}`,
         method: "PUT",
@@ -432,6 +462,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1JobRequestsCompletedInternalApiResponse,
       GetApiV1JobRequestsCompletedInternalApiArg
     >({
+      providesTags: [{ type: "job-request/completed", id: "LIST" }, { type: "job-request", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/job-requests/completed/internal`,
         headers: {
@@ -450,6 +481,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobRequestsCompleteApiResponse,
       PostApiV1JobRequestsCompleteApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-request/complete", id: "LIST" }, { type: "job-request", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-requests/complete`,
         method: "POST",
@@ -464,6 +496,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1JobExecutionsApiResponse,
       GetApiV1JobExecutionsApiArg
     >({
+      providesTags: [{ type: "job-execution", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/job-executions`,
         headers: {
@@ -483,6 +516,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1JobExecutionsByIdApiResponse,
       GetApiV1JobExecutionsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "job-execution", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/job-executions/${queryArg.id}`,
         headers: {
@@ -495,6 +529,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobExecutionsAcknowledgeApiResponse,
       PostApiV1JobExecutionsAcknowledgeApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-execution/acknowledge", id: "LIST" }, { type: "job-execution", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-executions/acknowledge`,
         method: "POST",
@@ -509,6 +544,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobExecutionsStartApiResponse,
       PostApiV1JobExecutionsStartApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-execution/start", id: "LIST" }, { type: "job-execution", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-executions/start`,
         method: "POST",
@@ -523,6 +559,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobExecutionsByIdActivitiesApiResponse,
       PostApiV1JobExecutionsByIdActivitiesApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "job-execution", id: "LIST" }, { type: "job-execution", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/job-executions/${queryArg.id}/activities`,
         method: "POST",
@@ -537,6 +574,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobExecutionsByIdConsumedItemsApiResponse,
       PostApiV1JobExecutionsByIdConsumedItemsApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "job-execution", id: "LIST" }, { type: "job-execution", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/job-executions/${queryArg.id}/consumed-items`,
         method: "POST",
@@ -551,6 +589,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobExecutionsCompleteApiResponse,
       PostApiV1JobExecutionsCompleteApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-execution/complete", id: "LIST" }, { type: "job-execution", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-executions/complete`,
         method: "POST",
@@ -565,6 +604,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobExecutionsReassignApiResponse,
       PostApiV1JobExecutionsReassignApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-execution/reassign", id: "LIST" }, { type: "job-execution", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-executions/reassign`,
         method: "POST",
@@ -579,6 +619,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobExecutionsVerifyApiResponse,
       PostApiV1JobExecutionsVerifyApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-execution/verify", id: "LIST" }, { type: "job-execution", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-executions/verify`,
         method: "POST",
@@ -593,6 +634,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1JobExecutionsApproveApiResponse,
       PostApiV1JobExecutionsApproveApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "job-execution/approve", id: "LIST" }, { type: "job-execution", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/job-executions/approve`,
         method: "POST",
@@ -607,6 +649,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ServiceMemosApiResponse,
       PostApiV1ServiceMemosApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "service-memo", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/service-memos`,
         method: "POST",
@@ -621,6 +664,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServiceMemosApiResponse,
       GetApiV1ServiceMemosApiArg
     >({
+      providesTags: [{ type: "service-memo", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/service-memos`,
         headers: {
@@ -640,6 +684,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServiceMemosByIdApiResponse,
       GetApiV1ServiceMemosByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "service-memo", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/service-memos/${queryArg.id}`,
         headers: {
@@ -652,6 +697,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ServiceMemosByIdApiResponse,
       PutApiV1ServiceMemosByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "service-memo", id: "LIST" }, { type: "service-memo", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/service-memos/${queryArg.id}`,
         method: "PUT",
@@ -666,6 +712,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ServiceMemosPaidByIdApiResponse,
       PutApiV1ServiceMemosPaidByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "service-memo/paid", id: "LIST" }, { type: "service-memo", id: "LIST" }, { type: "service-memo/paid", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/service-memos/paid/${queryArg.id}`,
         method: "PUT",
@@ -679,6 +726,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ServiceMemosIssueApiResponse,
       PostApiV1ServiceMemosIssueApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "service-memo/issue", id: "LIST" }, { type: "service-memo", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/service-memos/issue`,
         method: "POST",
@@ -693,6 +741,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ServiceProformaInvoicesRequestApiResponse,
       PostApiV1ServiceProformaInvoicesRequestApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "service-proforma-invoice/request", id: "LIST" }, { type: "service-proforma-invoice", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/service-proforma-invoices/request`,
         method: "POST",
@@ -707,6 +756,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ServiceProformaInvoicesRespondApiResponse,
       PostApiV1ServiceProformaInvoicesRespondApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "service-proforma-invoice/respond", id: "LIST" }, { type: "service-proforma-invoice", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/service-proforma-invoices/respond`,
         method: "POST",
@@ -721,6 +771,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ServiceProformaInvoicesApproveApiResponse,
       PostApiV1ServiceProformaInvoicesApproveApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "service-proforma-invoice/approve", id: "LIST" }, { type: "service-proforma-invoice", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/service-proforma-invoices/approve`,
         method: "POST",
@@ -735,6 +786,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServiceProformaInvoicesApiResponse,
       GetApiV1ServiceProformaInvoicesApiArg
     >({
+      providesTags: [{ type: "service-proforma-invoice", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/service-proforma-invoices`,
         headers: {
@@ -747,6 +799,7 @@ const injectedRtkApi = api.injectEndpoints({
           status: queryArg.status,
           jobOrderId: queryArg.jobOrderId,
           serviceProviderId: queryArg.serviceProviderId,
+          memoPending: queryArg.memoPending,
         },
       }),
     }),
@@ -754,6 +807,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServiceProformaInvoicesByIdApiResponse,
       GetApiV1ServiceProformaInvoicesByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "service-proforma-invoice", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/service-proforma-invoices/${queryArg.id}`,
         headers: {
@@ -766,6 +820,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ServiceProvidersApiResponse,
       PostApiV1ServiceProvidersApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "service-provider", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/service-providers`,
         method: "POST",
@@ -780,6 +835,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServiceProvidersApiResponse,
       GetApiV1ServiceProvidersApiArg
     >({
+      providesTags: [{ type: "service-provider", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/service-providers`,
         headers: {
@@ -798,6 +854,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServiceProvidersByIdApiResponse,
       GetApiV1ServiceProvidersByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "service-provider", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/service-providers/${queryArg.id}`,
         headers: {
@@ -810,6 +867,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ServiceProvidersByIdApiResponse,
       PutApiV1ServiceProvidersByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "service-provider", id: "LIST" }, { type: "service-provider", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/service-providers/${queryArg.id}`,
         method: "PUT",
@@ -824,6 +882,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ServiceProvidersByIdApiResponse,
       DeleteApiV1ServiceProvidersByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "service-provider", id: "LIST" }, { type: "service-provider", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/service-providers/${queryArg.id}`,
         method: "DELETE",
@@ -837,6 +896,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServiceProvidersServiceByServiceIdApiResponse,
       GetApiV1ServiceProvidersServiceByServiceIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "service-provider/service", id: queryArg.serviceId }],
       query: (queryArg) => ({
         url: `/api/v1/service-providers/service/${queryArg.serviceId}`,
         headers: {
@@ -849,6 +909,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ServiceQuotationsApiResponse,
       PostApiV1ServiceQuotationsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "service-quotation", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/service-quotations`,
         method: "POST",
@@ -863,6 +924,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServiceQuotationsApiResponse,
       GetApiV1ServiceQuotationsApiArg
     >({
+      providesTags: [{ type: "service-quotation", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/service-quotations`,
         headers: {
@@ -884,6 +946,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServiceQuotationsByIdApiResponse,
       GetApiV1ServiceQuotationsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "service-quotation", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/service-quotations/${queryArg.id}`,
         headers: {
@@ -896,6 +959,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ServiceQuotationsByIdApiResponse,
       PutApiV1ServiceQuotationsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "service-quotation", id: "LIST" }, { type: "service-quotation", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/service-quotations/${queryArg.id}`,
         method: "PUT",
@@ -910,6 +974,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ServiceQuotationsNegotiateApiResponse,
       PostApiV1ServiceQuotationsNegotiateApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "service-quotation/negotiate", id: "LIST" }, { type: "service-quotation", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/service-quotations/negotiate`,
         method: "POST",
@@ -924,6 +989,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ServiceQuotationsCompareByJobOrderIdApiResponse,
       PostApiV1ServiceQuotationsCompareByJobOrderIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "service-quotation/compare", id: "LIST" }, { type: "service-quotation", id: "LIST" }, { type: "service-quotation/compare", id: queryArg.jobOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/service-quotations/compare/${queryArg.jobOrderId}`,
         method: "POST",
@@ -937,6 +1003,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ServicesApiResponse,
       PostApiV1ServicesApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "service", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/services`,
         method: "POST",
@@ -951,6 +1018,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServicesApiResponse,
       GetApiV1ServicesApiArg
     >({
+      providesTags: [{ type: "service", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/services`,
         headers: {
@@ -971,6 +1039,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ServicesByIdApiResponse,
       GetApiV1ServicesByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "service", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/services/${queryArg.id}`,
         headers: {
@@ -983,6 +1052,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ServicesByIdApiResponse,
       PutApiV1ServicesByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "service", id: "LIST" }, { type: "service", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/services/${queryArg.id}`,
         method: "PUT",
@@ -997,6 +1067,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ServicesByIdApiResponse,
       DeleteApiV1ServicesByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "service", id: "LIST" }, { type: "service", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/services/${queryArg.id}`,
         method: "DELETE",
@@ -1522,6 +1593,8 @@ export type GetApiV1ServiceProformaInvoicesApiArg = {
   jobOrderId?: string;
   /** Filter by service provider ID */
   serviceProviderId?: string;
+  /** Only approved proformas whose job order has no service memo yet */
+  memoPending?: boolean;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */

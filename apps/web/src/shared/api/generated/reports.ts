@@ -1,10 +1,29 @@
 import { api } from "../base-api";
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
+    getProductionReadinessReport: build.query<
+      GetProductionReadinessReportApiResponse,
+      GetProductionReadinessReportApiArg
+    >({
+      providesTags: [{ type: "report/production-readiness", id: "LIST" }, { type: "report", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/report/production-readiness`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          departmentId: queryArg.departmentId,
+          startDate: queryArg.startDate,
+          endDate: queryArg.endDate,
+        },
+      }),
+    }),
     getApiV1ReportProduction: build.query<
       GetApiV1ReportProductionApiResponse,
       GetApiV1ReportProductionApiArg
     >({
+      providesTags: [{ type: "report/production", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/production`,
         headers: {
@@ -22,6 +41,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportProductionMaterialsBelowMinimumApiResponse,
       GetApiV1ReportProductionMaterialsBelowMinimumApiArg
     >({
+      providesTags: [{ type: "report/production", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/production/materials-below-minimum`,
         headers: {
@@ -34,6 +54,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseApiResponse,
       GetApiV1ReportWarehouseApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse`,
         headers: {
@@ -51,6 +72,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportLogisticsApiResponse,
       GetApiV1ReportLogisticsApiArg
     >({
+      providesTags: [{ type: "report/logistic", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/logistics`,
         headers: {
@@ -68,6 +90,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportReservedMaterialBatchesApiResponse,
       GetApiV1ReportReservedMaterialBatchesApiArg
     >({
+      providesTags: [{ type: "report/reserved-material-batch", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/reserved-material-batches`,
         headers: {
@@ -85,6 +108,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHumanResourceApiResponse,
       GetApiV1ReportHumanResourceApiArg
     >({
+      providesTags: [{ type: "report/human-resource", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/human-resource`,
         headers: {
@@ -106,6 +130,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportStaffReportApiResponse,
       GetApiV1ReportStaffReportApiArg
     >({
+      providesTags: [{ type: "report/staff-report", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/staff-report`,
         headers: {
@@ -114,6 +139,7 @@ const injectedRtkApi = api.injectEndpoints({
         },
         params: {
           departmentId: queryArg.departmentId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -121,6 +147,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportEmployeeMovementApiResponse,
       GetApiV1ReportEmployeeMovementApiArg
     >({
+      providesTags: [{ type: "report/employee-movement", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/employee-movement`,
         headers: {
@@ -139,6 +166,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportStaffTotalReportApiResponse,
       GetApiV1ReportStaffTotalReportApiArg
     >({
+      providesTags: [{ type: "report/staff-total-report", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/staff-total-report`,
         headers: {
@@ -157,6 +185,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportStaffGenderRatioReportApiResponse,
       GetApiV1ReportStaffGenderRatioReportApiArg
     >({
+      providesTags: [{ type: "report/staff-gender-ratio-report", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/staff-gender-ratio-report`,
         headers: {
@@ -175,6 +204,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportStaffLeaveReportApiResponse,
       GetApiV1ReportStaffLeaveReportApiArg
     >({
+      providesTags: [{ type: "report/staff-leave-report", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/staff-leave-report`,
         headers: {
@@ -193,6 +223,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportStaffTurnoverReportApiResponse,
       GetApiV1ReportStaffTurnoverReportApiArg
     >({
+      providesTags: [{ type: "report/staff-turnover-report", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/staff-turnover-report`,
         headers: {
@@ -211,6 +242,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportMaterialsReadyForChecklistApiResponse,
       GetApiV1ReportMaterialsReadyForChecklistApiArg
     >({
+      providesTags: [{ type: "report/materials-ready-for-checklist", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/materials-ready-for-checklist`,
         headers: {
@@ -229,6 +261,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportMaterialsReadyForAssignmentApiResponse,
       GetApiV1ReportMaterialsReadyForAssignmentApiArg
     >({
+      providesTags: [{ type: "report/materials-ready-for-assignment", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/materials-ready-for-assignment`,
         headers: {
@@ -246,6 +279,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportQaDashboardApiResponse,
       GetApiV1ReportQaDashboardApiArg
     >({
+      providesTags: [{ type: "report/qa-dashboard", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/qa-dashboard`,
         headers: {
@@ -264,6 +298,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportQcDashboardApiResponse,
       GetApiV1ReportQcDashboardApiArg
     >({
+      providesTags: [{ type: "report/qc-dashboard", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/qc-dashboard`,
         headers: {
@@ -283,6 +318,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportFinishedGoodsTransferSummaryApiResponse,
       GetApiV1ReportFinishedGoodsTransferSummaryApiArg
     >({
+      providesTags: [{ type: "report/finished-goods-transfer-summary", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/finished-goods-transfer-summary`,
         headers: {
@@ -302,6 +338,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportFinishedGoodsTransferDetailedApiResponse,
       GetApiV1ReportFinishedGoodsTransferDetailedApiArg
     >({
+      providesTags: [{ type: "report/finished-goods-transfer-detailed", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/finished-goods-transfer-detailed`,
         headers: {
@@ -321,6 +358,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportProductStockSummaryApiResponse,
       GetApiV1ReportProductStockSummaryApiArg
     >({
+      providesTags: [{ type: "report/product-stock-summary", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/product-stock-summary`,
         headers: {
@@ -331,6 +369,7 @@ const injectedRtkApi = api.injectEndpoints({
           productId: queryArg.productId,
           warehouseId: queryArg.warehouseId,
           departmentId: queryArg.departmentId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -338,6 +377,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportProductStockDetailedApiResponse,
       GetApiV1ReportProductStockDetailedApiArg
     >({
+      providesTags: [{ type: "report/product-stock-detailed", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/product-stock-detailed`,
         headers: {
@@ -351,6 +391,7 @@ const injectedRtkApi = api.injectEndpoints({
           batchNumber: queryArg.batchNumber,
           expiryDateFrom: queryArg.expiryDateFrom,
           expiryDateTo: queryArg.expiryDateTo,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -358,6 +399,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportFgtnDashboardKpiApiResponse,
       GetApiV1ReportFgtnDashboardKpiApiArg
     >({
+      providesTags: [{ type: "report/fgtn", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/fgtn/dashboard-kpi`,
         headers: {
@@ -378,6 +420,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportSupplierMaterialsApiResponse,
       GetApiV1ReportSupplierMaterialsApiArg
     >({
+      providesTags: [{ type: "report/supplier-material", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/supplier-materials`,
         headers: {
@@ -400,6 +443,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportItemsPerStoreTypeApiResponse,
       GetApiV1ReportItemsPerStoreTypeApiArg
     >({
+      providesTags: [{ type: "report/items-per-store-type", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/items-per-store-type`,
         headers: {
@@ -411,6 +455,7 @@ const injectedRtkApi = api.injectEndpoints({
           inventoryClassification: queryArg.inventoryClassification,
           itemId: queryArg.itemId,
           categoryId: queryArg.categoryId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -418,11 +463,15 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportStockSummaryPerStoreTypeApiResponse,
       GetApiV1ReportStockSummaryPerStoreTypeApiArg
     >({
+      providesTags: [{ type: "report/stock-summary-per-store-type", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/stock-summary-per-store-type`,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -430,6 +479,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportVendorItemApiResponse,
       GetApiV1ReportVendorItemApiArg
     >({
+      providesTags: [{ type: "report/vendor-item", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/vendor-item`,
         headers: {
@@ -442,6 +492,7 @@ const injectedRtkApi = api.injectEndpoints({
           itemId: queryArg.itemId,
           categoryId: queryArg.categoryId,
           classification: queryArg.classification,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -449,6 +500,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportVendorItemSummaryApiResponse,
       GetApiV1ReportVendorItemSummaryApiArg
     >({
+      providesTags: [{ type: "report/vendor-item", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/vendor-item/summary`,
         headers: {
@@ -460,6 +512,7 @@ const injectedRtkApi = api.injectEndpoints({
           categoryId: queryArg.categoryId,
           classification: queryArg.classification,
           store: queryArg.store,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -467,6 +520,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportShipmentApiResponse,
       GetApiV1ReportShipmentApiArg
     >({
+      providesTags: [{ type: "report/shipment", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/shipment`,
         headers: {
@@ -485,6 +539,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportPurchaseOrdersApiResponse,
       GetApiV1ReportPurchaseOrdersApiArg
     >({
+      providesTags: [{ type: "report/purchase-order", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/purchase-orders`,
         headers: {
@@ -504,6 +559,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportPurchasedPoReportApiResponse,
       GetApiV1ReportPurchasedPoReportApiArg
     >({
+      providesTags: [{ type: "report/purchased-po-report", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/purchased-po-report`,
         headers: {
@@ -523,6 +579,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportProductionDashboardApiResponse,
       GetApiV1ReportProductionDashboardApiArg
     >({
+      providesTags: [{ type: "report/production-dashboard", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/production-dashboard`,
         headers: {
@@ -535,6 +592,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportProcurementDashboardApiResponse,
       GetApiV1ReportProcurementDashboardApiArg
     >({
+      providesTags: [{ type: "report/procurement-dashboard", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/procurement-dashboard`,
         headers: {
@@ -550,6 +608,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseDashboardApiResponse,
       GetApiV1ReportWarehouseDashboardApiArg
     >({
+      providesTags: [{ type: "report/warehouse-dashboard", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse-dashboard`,
         headers: {
@@ -565,6 +624,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportExpiredMaterialsApiResponse,
       GetApiV1ReportExpiredMaterialsApiArg
     >({
+      providesTags: [{ type: "report/expired-material", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/expired-materials`,
         headers: {
@@ -577,6 +637,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportReservedMaterialsApiResponse,
       GetApiV1ReportReservedMaterialsApiArg
     >({
+      providesTags: [{ type: "report/reserved-material", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/reserved-materials`,
         headers: {
@@ -592,6 +653,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportMaterialsBelowReorderApiResponse,
       GetApiV1ReportMaterialsBelowReorderApiArg
     >({
+      providesTags: [{ type: "report/materials-below-reorder", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/materials-below-reorder`,
         headers: {
@@ -604,6 +666,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportMaterialsChecklistApiResponse,
       GetApiV1ReportMaterialsChecklistApiArg
     >({
+      providesTags: [{ type: "report/materials-checklist", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/materials-checklist`,
         headers: {
@@ -616,6 +679,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportShipmentStatusSummaryApiResponse,
       GetApiV1ReportShipmentStatusSummaryApiArg
     >({
+      providesTags: [{ type: "report/shipment-status-summary", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/shipment-status-summary`,
         headers: {
@@ -631,6 +695,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportGeneralInventoryDashboardApiResponse,
       GetApiV1ReportGeneralInventoryDashboardApiArg
     >({
+      providesTags: [{ type: "report/general-inventory-dashboard", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/general-inventory-dashboard`,
         headers: {
@@ -646,6 +711,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportItemsBelowReorderApiResponse,
       GetApiV1ReportItemsBelowReorderApiArg
     >({
+      providesTags: [{ type: "report/items-below-reorder", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/items-below-reorder`,
         headers: {
@@ -658,6 +724,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportServicesDashboardApiResponse,
       GetApiV1ReportServicesDashboardApiArg
     >({
+      providesTags: [{ type: "report/services-dashboard", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/services-dashboard`,
         headers: {
@@ -673,6 +740,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportInvoicedProductsSummaryApiResponse,
       GetApiV1ReportInvoicedProductsSummaryApiArg
     >({
+      providesTags: [{ type: "report/invoiced-products-summary", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/invoiced-products-summary`,
         headers: {
@@ -692,6 +760,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportInvoicedProductsDetailedApiResponse,
       GetApiV1ReportInvoicedProductsDetailedApiArg
     >({
+      providesTags: [{ type: "report/invoiced-products-detailed", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/invoiced-products-detailed`,
         headers: {
@@ -711,6 +780,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseKpiCapacityUtilisationApiResponse,
       GetApiV1ReportWarehouseKpiCapacityUtilisationApiArg
     >({
+      providesTags: [{ type: "report/warehouse-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse-kpi/capacity-utilisation`,
         headers: {
@@ -728,6 +798,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseKpiDockToStockApiResponse,
       GetApiV1ReportWarehouseKpiDockToStockApiArg
     >({
+      providesTags: [{ type: "report/warehouse-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse-kpi/dock-to-stock`,
         headers: {
@@ -748,6 +819,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseKpiStockTransferFulfilmentApiResponse,
       GetApiV1ReportWarehouseKpiStockTransferFulfilmentApiArg
     >({
+      providesTags: [{ type: "report/warehouse-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse-kpi/stock-transfer-fulfilment`,
         headers: {
@@ -767,6 +839,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseKpiReceivingPipelineApiResponse,
       GetApiV1ReportWarehouseKpiReceivingPipelineApiArg
     >({
+      providesTags: [{ type: "report/warehouse-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse-kpi/receiving-pipeline`,
         headers: {
@@ -784,6 +857,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseKpiExpiryRiskIndexApiResponse,
       GetApiV1ReportWarehouseKpiExpiryRiskIndexApiArg
     >({
+      providesTags: [{ type: "report/warehouse-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse-kpi/expiry-risk-index`,
         headers: {
@@ -802,6 +876,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseKpiReorderAlertCountApiResponse,
       GetApiV1ReportWarehouseKpiReorderAlertCountApiArg
     >({
+      providesTags: [{ type: "report/warehouse-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse-kpi/reorder-alert-count`,
         headers: {
@@ -817,6 +892,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseKpiSwapRequestActivityApiResponse,
       GetApiV1ReportWarehouseKpiSwapRequestActivityApiArg
     >({
+      providesTags: [{ type: "report/warehouse-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse-kpi/swap-request-activity`,
         headers: {
@@ -837,6 +913,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseKpiMaterialMovementCountApiResponse,
       GetApiV1ReportWarehouseKpiMaterialMovementCountApiArg
     >({
+      providesTags: [{ type: "report/warehouse-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse-kpi/material-movement-count`,
         headers: {
@@ -857,6 +934,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseKpiFreshnessApiResponse,
       GetApiV1ReportWarehouseKpiFreshnessApiArg
     >({
+      providesTags: [{ type: "report/warehouse-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse-kpi/freshness`,
         headers: {
@@ -874,6 +952,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportKpiBmrReleaseRateApiResponse,
       GetApiV1ReportKpiBmrReleaseRateApiArg
     >({
+      providesTags: [{ type: "report/kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/kpi/bmr-release-rate`,
         headers: {
@@ -891,6 +970,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportKpiYieldPerformanceApiResponse,
       GetApiV1ReportKpiYieldPerformanceApiArg
     >({
+      providesTags: [{ type: "report/kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/kpi/yield-performance`,
         headers: {
@@ -908,6 +988,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportKpiScheduleAdherenceApiResponse,
       GetApiV1ReportKpiScheduleAdherenceApiArg
     >({
+      providesTags: [{ type: "report/kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/kpi/schedule-adherence`,
         headers: {
@@ -925,6 +1006,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportKpiProductionOutputVolumeApiResponse,
       GetApiV1ReportKpiProductionOutputVolumeApiArg
     >({
+      providesTags: [{ type: "report/kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/kpi/production-output-volume`,
         headers: {
@@ -942,6 +1024,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportKpiAtrTestingBacklogApiResponse,
       GetApiV1ReportKpiAtrTestingBacklogApiArg
     >({
+      providesTags: [{ type: "report/kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/kpi/atr-testing-backlog`,
         headers: {
@@ -959,6 +1042,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportKpiStockRequisitionPendingApiResponse,
       GetApiV1ReportKpiStockRequisitionPendingApiArg
     >({
+      providesTags: [{ type: "report/kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/kpi/stock-requisition-pending`,
         headers: {
@@ -976,6 +1060,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportKpiFgtnPendingApprovalApiResponse,
       GetApiV1ReportKpiFgtnPendingApprovalApiArg
     >({
+      providesTags: [{ type: "report/kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/kpi/fgtn-pending-approval`,
         headers: {
@@ -993,6 +1078,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportKpiProductionOrderDeliveryStatusApiResponse,
       GetApiV1ReportKpiProductionOrderDeliveryStatusApiArg
     >({
+      providesTags: [{ type: "report/kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/kpi/production-order-delivery-status`,
         headers: {
@@ -1011,6 +1097,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportKpiMaterialReturnRateApiResponse,
       GetApiV1ReportKpiMaterialReturnRateApiArg
     >({
+      providesTags: [{ type: "report/kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/kpi/material-return-rate`,
         headers: {
@@ -1028,6 +1115,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseMaterialsStockSummaryApiResponse,
       GetApiV1ReportWarehouseMaterialsStockSummaryApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/materials-stock-summary`,
         headers: {
@@ -1038,6 +1126,7 @@ const injectedRtkApi = api.injectEndpoints({
           departmentId: queryArg.departmentId,
           materialKind: queryArg.materialKind,
           materialId: queryArg.materialId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -1045,6 +1134,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseMaterialsStockBatchDetailApiResponse,
       GetApiV1ReportWarehouseMaterialsStockBatchDetailApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/materials-stock-batch-detail`,
         headers: {
@@ -1057,6 +1147,8 @@ const injectedRtkApi = api.injectEndpoints({
           batchNumber: queryArg.batchNumber,
           expiryDateFrom: queryArg.expiryDateFrom,
           expiryDateTo: queryArg.expiryDateTo,
+          materialId: queryArg.materialId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -1064,6 +1156,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseShelfUtilisationDetailApiResponse,
       GetApiV1ReportWarehouseShelfUtilisationDetailApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/shelf-utilisation-detail`,
         headers: {
@@ -1082,6 +1175,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseGoodsReceivingRegisterApiResponse,
       GetApiV1ReportWarehouseGoodsReceivingRegisterApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/goods-receiving-register`,
         headers: {
@@ -1101,6 +1195,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseReceivingPerformanceDetailApiResponse,
       GetApiV1ReportWarehouseReceivingPerformanceDetailApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/receiving-performance-detail`,
         headers: {
@@ -1120,6 +1215,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehousePutawayRegisterApiResponse,
       GetApiV1ReportWarehousePutawayRegisterApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/putaway-register`,
         headers: {
@@ -1139,6 +1235,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseStockAdjustmentAuditApiResponse,
       GetApiV1ReportWarehouseStockAdjustmentAuditApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/stock-adjustment-audit`,
         headers: {
@@ -1158,6 +1255,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseBatchTraceabilityApiResponse,
       GetApiV1ReportWarehouseBatchTraceabilityApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/batch-traceability`,
         headers: {
@@ -1176,6 +1274,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseInterWarehouseSwapRequestsApiResponse,
       GetApiV1ReportWarehouseInterWarehouseSwapRequestsApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/inter-warehouse-swap-requests`,
         headers: {
@@ -1195,6 +1294,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseStockTransferInterDepartmentApiResponse,
       GetApiV1ReportWarehouseStockTransferInterDepartmentApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/stock-transfer-inter-department`,
         headers: {
@@ -1215,6 +1315,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseMaterialExpiryProjectionApiResponse,
       GetApiV1ReportWarehouseMaterialExpiryProjectionApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/material-expiry-projection`,
         headers: {
@@ -1233,6 +1334,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseSlowMovingInventoryApiResponse,
       GetApiV1ReportWarehouseSlowMovingInventoryApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/slow-moving-inventory`,
         headers: {
@@ -1251,6 +1353,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseBinCardTransactionLedgerApiResponse,
       GetApiV1ReportWarehouseBinCardTransactionLedgerApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/bin-card-transaction-ledger`,
         headers: {
@@ -1269,6 +1372,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseOperationsSummaryApiResponse,
       GetApiV1ReportWarehouseOperationsSummaryApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/operations-summary`,
         headers: {
@@ -1287,6 +1391,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseQcPendingApiResponse,
       GetApiV1ReportWarehouseQcPendingApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/qc-pending`,
         headers: {
@@ -1304,6 +1409,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseReorderLevelVsStockApiResponse,
       GetApiV1ReportWarehouseReorderLevelVsStockApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/reorder-level-vs-stock`,
         headers: {
@@ -1320,6 +1426,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseInventoryValuationSummaryApiResponse,
       GetApiV1ReportWarehouseInventoryValuationSummaryApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/inventory-valuation-summary`,
         headers: {
@@ -1338,6 +1445,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseInventoryValuationDetailApiResponse,
       GetApiV1ReportWarehouseInventoryValuationDetailApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/inventory-valuation-detail`,
         headers: {
@@ -1353,6 +1461,7 @@ const injectedRtkApi = api.injectEndpoints({
           expiryDateFrom: queryArg.expiryDateFrom,
           expiryDateTo: queryArg.expiryDateTo,
           departmentId: queryArg.departmentId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -1360,6 +1469,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseEmployeeActivityApiResponse,
       GetApiV1ReportWarehouseEmployeeActivityApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/employee-activity`,
         headers: {
@@ -1379,6 +1489,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportWarehouseArrivalLocationStatusApiResponse,
       GetApiV1ReportWarehouseArrivalLocationStatusApiArg
     >({
+      providesTags: [{ type: "report/warehouse", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/warehouse/arrival-location-status`,
         headers: {
@@ -1397,6 +1508,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiEmployeeHeadcountApiResponse,
       GetApiV1ReportHrKpiEmployeeHeadcountApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/employee-headcount`,
         headers: {
@@ -1414,6 +1526,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiEmployeeGenderRatioApiResponse,
       GetApiV1ReportHrKpiEmployeeGenderRatioApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/employee-gender-ratio`,
         headers: {
@@ -1429,6 +1542,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiLeaveRequestPipelineApiResponse,
       GetApiV1ReportHrKpiLeaveRequestPipelineApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/leave-request-pipeline`,
         headers: {
@@ -1446,6 +1560,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiOvertimeRequestActivityApiResponse,
       GetApiV1ReportHrKpiOvertimeRequestActivityApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/overtime-request-activity`,
         headers: {
@@ -1463,6 +1578,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiDailyAttendanceRateApiResponse,
       GetApiV1ReportHrKpiDailyAttendanceRateApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/daily-attendance-rate`,
         headers: {
@@ -1479,6 +1595,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiStaffRequisitionPipelineApiResponse,
       GetApiV1ReportHrKpiStaffRequisitionPipelineApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/staff-requisition-pipeline`,
         headers: {
@@ -1496,6 +1613,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiEmployeeGradeLevelDistributionApiResponse,
       GetApiV1ReportHrKpiEmployeeGradeLevelDistributionApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/employee-grade-level-distribution`,
         headers: {
@@ -1511,6 +1629,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiNewHiresThisPeriodApiResponse,
       GetApiV1ReportHrKpiNewHiresThisPeriodApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/new-hires-this-period`,
         headers: {
@@ -1528,6 +1647,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiEmployeeTurnoverRateApiResponse,
       GetApiV1ReportHrKpiEmployeeTurnoverRateApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/employee-turnover-rate`,
         headers: {
@@ -1545,6 +1665,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiLeaveUtilisationRateApiResponse,
       GetApiV1ReportHrKpiLeaveUtilisationRateApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/leave-utilisation-rate`,
         headers: {
@@ -1561,6 +1682,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrKpiActiveDisciplinaryActionsApiResponse,
       GetApiV1ReportHrKpiActiveDisciplinaryActionsApiArg
     >({
+      providesTags: [{ type: "report/hr-kpi", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr-kpi/active-disciplinary-actions`,
         headers: {
@@ -1576,6 +1698,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrEmployeeMasterListApiResponse,
       GetApiV1ReportHrEmployeeMasterListApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/employee-master-list`,
         headers: {
@@ -1587,6 +1710,7 @@ const injectedRtkApi = api.injectEndpoints({
           employeeType: queryArg.employeeType,
           gradeLevel: queryArg.gradeLevel,
           status: queryArg.status,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -1594,6 +1718,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrEmployeeDirectoryByDepartmentApiResponse,
       GetApiV1ReportHrEmployeeDirectoryByDepartmentApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/employee-directory-by-department`,
         headers: {
@@ -1611,6 +1736,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrEmployeeDemographicsApiResponse,
       GetApiV1ReportHrEmployeeDemographicsApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/employee-demographics`,
         headers: {
@@ -1626,6 +1752,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrStaffGradeLevelApiResponse,
       GetApiV1ReportHrStaffGradeLevelApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/staff-grade-level`,
         headers: {
@@ -1641,6 +1768,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrLeaveRegisterApiResponse,
       GetApiV1ReportHrLeaveRegisterApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/leave-register`,
         headers: {
@@ -1660,6 +1788,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrLeaveBalanceApiResponse,
       GetApiV1ReportHrLeaveBalanceApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/leave-balance`,
         headers: {
@@ -1677,6 +1806,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrLeaveApprovalAuditApiResponse,
       GetApiV1ReportHrLeaveApprovalAuditApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/leave-approval-audit`,
         headers: {
@@ -1695,6 +1825,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrOvertimeRequestRegisterApiResponse,
       GetApiV1ReportHrOvertimeRequestRegisterApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/overtime-request-register`,
         headers: {
@@ -1713,6 +1844,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrStaffRequisitionRegisterApiResponse,
       GetApiV1ReportHrStaffRequisitionRegisterApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/staff-requisition-register`,
         headers: {
@@ -1732,6 +1864,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrEmployeeDisciplinaryReportApiResponse,
       GetApiV1ReportHrEmployeeDisciplinaryReportApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/employee-disciplinary-report`,
         headers: {
@@ -1748,6 +1881,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrEmployeeExitReportApiResponse,
       GetApiV1ReportHrEmployeeExitReportApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/employee-exit-report`,
         headers: {
@@ -1766,6 +1900,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrEmployeeAnniversaryBirthdayApiResponse,
       GetApiV1ReportHrEmployeeAnniversaryBirthdayApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/employee-anniversary-birthday`,
         headers: {
@@ -1784,6 +1919,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ReportHrShiftScheduleRegisterApiResponse,
       GetApiV1ReportHrShiftScheduleRegisterApiArg
     >({
+      providesTags: [{ type: "report/hr", id: "LIST" }, { type: "report", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/report/hr/shift-schedule-register`,
         headers: {
@@ -1798,10 +1934,50 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1ReportHistoryCapabilities: build.query<
+      GetApiV1ReportHistoryCapabilitiesApiResponse,
+      GetApiV1ReportHistoryCapabilitiesApiArg
+    >({
+      providesTags: [{ type: "report/history", id: "LIST" }, { type: "report", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/report/history/capabilities`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1ReportHistoryVendors: build.query<
+      GetApiV1ReportHistoryVendorsApiResponse,
+      GetApiV1ReportHistoryVendorsApiArg
+    >({
+      providesTags: [{ type: "report/history", id: "LIST" }, { type: "report", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/report/history/vendors`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          asOfDate: queryArg.asOfDate,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
 export { injectedRtkApi as reportsApi };
+export type GetProductionReadinessReportApiResponse =
+  /** status 200 OK */ DomainEntitiesReportsProductionReadinessReportDto;
+export type GetProductionReadinessReportApiArg = {
+  departmentId: string;
+  startDate: string;
+  endDate: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type GetApiV1ReportProductionApiResponse =
   /** status 200 OK */ DomainEntitiesReportsProductionReportDto;
 export type GetApiV1ReportProductionApiArg = {
@@ -1877,6 +2053,8 @@ export type GetApiV1ReportStaffReportApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportEmployeeMovementApiResponse =
   /** status 200 OK */ DomainEntitiesReportsHumanResourceEmployeeMovementReportDtoRead[];
@@ -2022,6 +2200,8 @@ export type GetApiV1ReportProductStockSummaryApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportProductStockDetailedApiResponse =
   /** status 200 OK */ DomainEntitiesReportsFinishedGoodsTransferNotesProductStockDetailedReportDto[];
@@ -2036,6 +2216,8 @@ export type GetApiV1ReportProductStockDetailedApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportFgtnDashboardKpiApiResponse =
   /** status 200 OK */ DomainEntitiesReportsFinishedGoodsTransferNotesDashboardKpiReportDto;
@@ -2078,6 +2260,8 @@ export type GetApiV1ReportItemsPerStoreTypeApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportStockSummaryPerStoreTypeApiResponse =
   /** status 200 OK */ DomainEntitiesItemsStoreItemStockSummaryDto[];
@@ -2086,6 +2270,8 @@ export type GetApiV1ReportStockSummaryPerStoreTypeApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportVendorItemApiResponse =
   /** status 200 OK */ DomainEntitiesItemsVendorStoreItemStockSummaryDto[];
@@ -2099,6 +2285,8 @@ export type GetApiV1ReportVendorItemApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportVendorItemSummaryApiResponse =
   /** status 200 OK */ DomainEntitiesItemsVendorStoreItemStockSummaryDto[];
@@ -2111,6 +2299,8 @@ export type GetApiV1ReportVendorItemSummaryApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportShipmentApiResponse =
   /** status 200 OK */ DomainEntitiesReportsShipmentsShipmentReportDto[];
@@ -2489,6 +2679,8 @@ export type GetApiV1ReportWarehouseMaterialsStockSummaryApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportWarehouseMaterialsStockBatchDetailApiResponse =
   /** status 200 OK */ DomainEntitiesReportsWarehouseMaterialsStockBatchDetailDto[];
@@ -2498,10 +2690,13 @@ export type GetApiV1ReportWarehouseMaterialsStockBatchDetailApiArg = {
   batchNumber?: string;
   expiryDateFrom?: string;
   expiryDateTo?: string;
+  materialId?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportWarehouseShelfUtilisationDetailApiResponse =
   /** status 200 OK */ DomainEntitiesReportsWarehouseShelfUtilisationDetailDto[];
@@ -2702,6 +2897,8 @@ export type GetApiV1ReportWarehouseInventoryValuationDetailApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportWarehouseEmployeeActivityApiResponse =
   /** status 200 OK */ DomainEntitiesReportsWarehouseWarehouseEmployeeActivityDto[];
@@ -2852,6 +3049,8 @@ export type GetApiV1ReportHrEmployeeMasterListApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1ReportHrEmployeeDirectoryByDepartmentApiResponse =
   /** status 200 OK */ DomainEntitiesReportsHumanResourceEmployeeDirectoryByDepartmentDto[];
@@ -2989,6 +3188,99 @@ export type GetApiV1ReportHrShiftScheduleRegisterApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetApiV1ReportHistoryCapabilitiesApiResponse =
+  /** status 200 OK */ DomainEntitiesReportsReportHistoryCapabilitiesDto;
+export type GetApiV1ReportHistoryCapabilitiesApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1ReportHistoryVendorsApiResponse =
+  /** status 200 OK */ SharedCollectionItemDto[];
+export type GetApiV1ReportHistoryVendorsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
+};
+export type DomainEntitiesReportsReadinessMarketDto = {
+  id?: string | null;
+  name?: string | null;
+};
+export type DomainEntitiesReportsDefinitionReadiness = 0 | 1 | 2;
+export type DomainEntitiesReportsProductReadiness = 0 | 1 | 2;
+export type DomainEntitiesReportsProductConfigurationDto = {
+  specification?: DomainEntitiesReportsDefinitionReadiness;
+  stp?: DomainEntitiesReportsDefinitionReadiness;
+  ard?: DomainEntitiesReportsDefinitionReadiness;
+  procedure?: DomainEntitiesReportsDefinitionReadiness;
+  bom?: DomainEntitiesReportsDefinitionReadiness;
+  packaging?: DomainEntitiesReportsDefinitionReadiness;
+  packingStyle?: DomainEntitiesReportsDefinitionReadiness;
+  readiness?: DomainEntitiesReportsProductReadiness;
+};
+export type DomainEntitiesReportsProductionReadinessRowDto = {
+  productId?: string;
+  productCode?: string | null;
+  productName?: string | null;
+  productPackingId?: string | null;
+  packingStyle?: string | null;
+  scheduleProductIds?: string[] | null;
+  batches?: number;
+  unitPrice?: number | null;
+  priceUnit?: string | null;
+  expectedYield?: number | null;
+  packsPerShipper?: number | null;
+  shippers?: number | null;
+  loosePacks?: number | null;
+  configuration?: DomainEntitiesReportsProductConfigurationDto;
+};
+export type DomainEntitiesReportsProductionReadinessTotalsDto = {
+  batches?: number;
+  expectedYield?: number | null;
+  shippers?: number | null;
+  loosePacks?: number | null;
+};
+export type DomainEntitiesReportsProductionReadinessGroupDto = {
+  market?: DomainEntitiesReportsReadinessMarketDto;
+  rows?: DomainEntitiesReportsProductionReadinessRowDto[] | null;
+  totals?: DomainEntitiesReportsProductionReadinessTotalsDto;
+};
+export type DomainEntitiesReportsPlannedProductReadinessDto = {
+  productId?: string;
+  productCode?: string | null;
+  productName?: string | null;
+  batches?: number;
+  markets?: DomainEntitiesReportsReadinessMarketDto[] | null;
+  configuration?: DomainEntitiesReportsProductConfigurationDto;
+};
+export type DomainEntitiesReportsProductionReadinessReportDto = {
+  departmentId?: string;
+  departmentName?: string | null;
+  startDate?: string;
+  endDate?: string;
+  generatedAt?: string;
+  productCount?: number;
+  readyProductCount?: number;
+  actionNeededProductCount?: number;
+  unavailableProductCount?: number;
+  markets?: DomainEntitiesReportsProductionReadinessGroupDto[] | null;
+  products?: DomainEntitiesReportsPlannedProductReadinessDto[] | null;
+  totals?: DomainEntitiesReportsProductionReadinessTotalsDto;
+  warnings?: string[] | null;
+};
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
+export type MicrosoftAspNetCoreMvcProblemDetails = {
+  type?: string | null;
+  title?: string | null;
+  status?: number | null;
+  detail?: string | null;
+  instance?: string | null;
+  [key: string]: JsonValue | undefined;
+};
 export type DomainEntitiesReportsProductionReportDto = {
   numberOfPurchaseRequisitions?: number;
   numberOfNewPurchaseRequisitions?: number;
@@ -3004,15 +3296,6 @@ export type DomainEntitiesReportsProductionReportDto = {
   numberOfOutgoingStockTransfers?: number;
   numberOfOutgoingPendingStockTransfers?: number;
   numberOfOutgoingCompletedStockTransfers?: number;
-};
-export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
-export type MicrosoftAspNetCoreMvcProblemDetails = {
-  type?: string | null;
-  title?: string | null;
-  status?: number | null;
-  detail?: string | null;
-  instance?: string | null;
-  [key: string]: JsonValue | undefined;
 };
 export type DomainEntitiesMaterialsMaterialKind = 0 | 1;
 export type SharedDepartmentType = 0 | 1 | 2;
@@ -3493,6 +3776,7 @@ export type DomainEntitiesReportsMaterialReadyForChecklistDto = {
   departmentId?: string | null;
   departmentName?: string | null;
 };
+export type DomainEntitiesShipmentsShipmentInvoiceKind = 0 | 1;
 export type DomainEntitiesShipmentsShipmentInvoiceListDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -3506,6 +3790,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceListDto = {
   amountPaid?: number;
   outstandingBalance?: number;
   isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
 };
 export type DomainEntitiesShipmentsShipmentInvoiceItemDto = {
   id?: string;
@@ -3522,6 +3807,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceItemDto = {
   totalCost?: number;
   currency?: DomainEntitiesCurrenciesCurrencyDto;
   reason?: string | null;
+  fulfillsDiscrepancyItemId?: string | null;
 };
 export type DomainEntitiesProcurementDistributionMaterialItemDistributionDto = {
   shipmentInvoiceItem?: DomainEntitiesShipmentsShipmentInvoiceItemDto;
@@ -3667,6 +3953,8 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
   manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
   material?: DomainEntitiesMaterialsMaterialDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  purchaseUnit?: string | null;
+  pendingPurchaseUnit?: string | null;
   default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierDto = {
@@ -3701,6 +3989,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceDto = {
   amountPaid?: number;
   outstandingBalance?: number;
   isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
 };
 export type DomainEntitiesChecklistsIntactness = 0 | 1;
 export type DomainEntitiesChecklistsConsignmentCarrier = 0 | 1 | 2 | 3 | 4 | 5;
@@ -5339,7 +5628,16 @@ export type DomainEntitiesReportsHumanResourceShiftScheduleRegisterReportDto = {
   rotationType?: string | null;
 };
 export type DomainEntitiesShiftSchedulesScheduleStatus = 0 | 1 | 2 | 3 | 4;
+export type DomainEntitiesReportsReportHistoryCapabilitiesDto = {
+  protocolVersion?: number;
+  serverTime?: string;
+  available?: boolean;
+  availableFrom?: string | null;
+  basis?: string | null;
+};
 export const {
+  useGetProductionReadinessReportQuery,
+  useLazyGetProductionReadinessReportQuery,
   useGetApiV1ReportProductionQuery,
   useLazyGetApiV1ReportProductionQuery,
   useGetApiV1ReportProductionMaterialsBelowMinimumQuery,
@@ -5548,4 +5846,8 @@ export const {
   useLazyGetApiV1ReportHrEmployeeAnniversaryBirthdayQuery,
   useGetApiV1ReportHrShiftScheduleRegisterQuery,
   useLazyGetApiV1ReportHrShiftScheduleRegisterQuery,
+  useGetApiV1ReportHistoryCapabilitiesQuery,
+  useLazyGetApiV1ReportHistoryCapabilitiesQuery,
+  useGetApiV1ReportHistoryVendorsQuery,
+  useLazyGetApiV1ReportHistoryVendorsQuery,
 } = injectedRtkApi;

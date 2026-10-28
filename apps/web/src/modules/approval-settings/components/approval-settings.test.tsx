@@ -39,3 +39,17 @@ it("hides unauthorized workflow actions and never calls the non-persisting deleg
   expect(screen.getByText(/Timed delegation is unavailable/)).toBeTruthy();
   expect(calls.every((call) => call.path === "/api/v1/approval" && call.method === "GET")).toBe(true);
 });
+
+it("explains the malformed legacy Stock configuration without recreating or changing routing", async () => {
+  const stock = { id: "legacy-stock", itemType: "Stock", escalationDuration: "00:00:00", approvalStages: [false, true, false].map((required) => ({ required, order: 0, role: null, user: null })) };
+  const current = { ...record, id: "current-stock-requisition", itemType: "StockRequisition" };
+  const calls = settingsBackend(["CanViewApprovals", "CanEditApprovalWorkflow"], () => Response.json({ data: [stock, current], totalRecordCount: 2 }));
+  mountSettings(<ApprovalConfigurationsWorkspace />, "/settings/approvals");
+  expect(await screen.findByText("Stock Requisition")).toBeTruthy();
+  expect(screen.getByText(/legacy Stock configuration is separate from Stock Requisition routing/)).toBeTruthy();
+  expect(screen.getByText(/unique stage numbers starting at 1/)).toBeTruthy();
+  expect(screen.queryByText(/Recreate/)).toBeNull();
+  expect(screen.queryByRole("button", { name: /Actions for Stock$/ })).toBeNull();
+  expect(screen.getByRole("link", { name: "Repair Stock workflow" }).getAttribute("href")).toBe("/settings/approvals/edit/legacy-stock");
+  expect(calls.every((call) => call.method === "GET")).toBe(true);
+});

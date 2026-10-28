@@ -42,7 +42,7 @@ Where the app already has the document's page, the same components are used (ord
 
 Notes on particular documents:
 
-- **Analytical raw data** shows each test with its result beside its specification, counts the results that do not comply, and shows only the answers of the data sheet being approved (a batch can carry answers from other sheets). The certificate of analysis preview and starting an out-of-specification investigation are not here.
+- **Analytical raw data** shows each test with its result beside its specification, counts the results that do not comply, and shows only the answers of the data sheet being approved (a batch can carry answers from other sheets). The certificate preview and OOS investigation actions are described below.
 - **Supplier pricing agreement** shows the proposed price beside the current one and the difference between them, and says when approving would archive the agreement.
 - **Technology transfer** is shown with its project and the formula being transferred.
 - Customer quotation, pricing proposal, payroll run and performance review are read from endpoints the server publishes without a response type, so they are declared by hand in `api/evidence-api.ts`.
@@ -102,12 +102,37 @@ Rules:
 - A leave request whose paid days exceed the balance is flagged.
 - A decision refreshes the queue and the lists the document appears in (orders, billing sheets, shipments, requisitions, the production board).
 
-## Not migrated yet
+## Analytical raw data: certificate and OOS investigation
 
-- Delegating approvals for a period. The dialog in `oryx-next` never sent anything, so there is nothing to carry over; the server has an endpoint for it.
-- For analytical raw data: the certificate of analysis preview and starting an out-of-specification investigation.
+- **Certificate of analysis** (`components/details/ard-certificate.tsx`): a print preview of the certificate from the recorded results, with each test's result, specification and compliance. Nothing is generated or saved. A test with no result is "Not recorded"; Oryx Next printed "Complies". Oryx Next also printed "Each uncoated tablet contains" and an empty composition on every certificate, and a fixed comment; those are left out.
+- **Start OOS investigation** (`components/details/start-oos-dialog.tsx`), on results rejected earlier and sent again, with `CanInitiateOosInvestigation`. The certificate number, name, batch and the rejection reason are filled in. The dialog says what the server also does: a material batch goes back to quarantine; a product's test request (found from the tested step) goes back to testing. The server does not check for an investigation already open, so the dialog says to start one only once. The investigation is continued in the web app until Quality Assurance is migrated.
+
+## Delegating approvals
+
+Built with a backend change in `oryx-backend` (the old `POST approval/delegate` only checked that the user existed and saved nothing; the Oryx Next dialog never called it). See `oryx-backend/docs/approval-delegation.md`.
+
+- **My pending approvals** has a Delegation panel (`components/delegation-panel.tsx`): **Delegate my approvals** (who, first and last day, an optional reason), the delegations the user gave and received (including ones ended in the last 30 days), and **End** / **Give back** after a confirmation.
+- Whole local days: the first day starts at midnight, or now when it is today; the last day runs to the next midnight. At most 90 days and one delegation at a time; the server enforces both.
+- Requests reached through a delegation show **For <name>** in the list, and the request page says the decision is recorded as that person's, with a note that the user made it.
+- Signed QC documents are never delegated.
+- The three endpoints are declared by hand (`api/delegation-api.ts`) until `contracts/openapi/backend.v1.json` is exported again from a backend that has them.
+
+## Not migrated
+
 - The pages where QC documents, revisions and payments are decided.
 
 ## Tests
 
 `modules/approval-settings/components/workflows.test.tsx` covers the workflow rules, the list, edit, create and delete, and the transfer page. `modules/pending-approvals/components/approvals.test.tsx`: naming and routing of document types, the reason rule, counts and their fallback, the list filter, the detail page (document, history, sanitised text), reject and approve request bodies, documents that cannot be decided here, a request not waiting for the user, and every readable document laid out from full and from empty data.
+
+## Formula evidence in COA approvals (2026-10-19)
+
+The approval route follows Oryx Next: `ArdTemplateBody` renders the specification/result summary, uniformity sections, and full **Test & Observations** worksheet. Its COA dialog reports compact numeric results and compliance through `getResponsesForSection`; equations belong to the worksheet. `ardDisplayData` adapts parsed approval records without dropping formula metadata, field descriptions, or attachments. Existing response-ID filtering and recorded compliance flags remain in force.
+
+The shared formula reader normalizes nested JSON strings, value envelopes, lowercase response keys, and legacy settings wrappers. It renders both the approval worksheet and the material/product COA preview. Read-only views never use a debug formula override. Governed formulas always display the authoritative stored results, including their draft/finalized state. Missing authoritative results never trigger a legacy recalculation.
+
+The compact COA reader preserves a genuine zero but does not convert missing, blank, or invalid values into zero. An unresolved formula shows **Result unavailable** on the COA and on each affected sample equation. The screenshot's empty `spltwt` reading is not silently bound to a different variable. Captured inputs and the unresolved equation remain visible for review.
+
+Issued commercial/routine certificates render their frozen observations as sanitized rich text and show explicitly stored result values as readable results. A historical snapshot containing only input JSON shows those recorded inputs and states that its final result was not included. It does not fetch today's template or compute a new result for an already issued certificate.
+
+The endpoints, approval/rejection/OOS permissions, transitions, stored formula arithmetic/bindings, and audit responsibilities are unchanged. Rendering and opening a COA/print preview perform no writes. Tests cover actual approval/commercial certificate routes, material/product COA previews, wrapped QC shorthand responses, authoritative values, missing readings, and legacy input-only snapshots.

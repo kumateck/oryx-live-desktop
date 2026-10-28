@@ -1,0 +1,519 @@
+name: Customer release pipeline
+on:
+  push:
+    branches: [testing, entrance-server]
+  workflow_dispatch:
+    inputs:
+      deploy_testing:
+        description: Publish the testing site (testing branch only)
+        type: boolean
+        required: false
+        default: false
+      build_windows:
+        description: Build and smoke-test the Windows installer after release validation
+        type: boolean
+        required: false
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: customer-release
+  cancel-in-progress: false
+  queue: max
+jobs:
+  web:
+    name: Validate customer release
+    if: github.ref == 'refs/heads/entrance-server' || github.ref == 'refs/heads/testing'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.22.1
+      - name: Run the same complete release validation as pre-push
+        run: node scripts/customer-release-validation.ts --sha "${{ github.sha }}"
+
+  testing-images:
+    name: Publish testing images
+    needs: web
+    if: github.ref == 'refs/heads/testing' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy_testing))
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/Dockerfile
+          target: web
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/kumateck/oryx-live-web:${{ github.sha }}
+          build-args: |
+            RELEASE_SHA=${{ github.sha }}
+            RELEASE_BRANCH=testing
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/Dockerfile
+          target: gateway
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/kumateck/oryx-live-gateway:${{ github.sha }}
+          cache-from: type=gha,scope=gateway
+          cache-to: type=gha,scope=gateway,mode=max
+
+  testing-deploy:
+    name: Deploy testing web
+    outputs:
+      desktop_changed: ${{ steps.desktop.outputs.desktop_changed }}
+    needs: testing-images
+    if: github.ref == 'refs/heads/testing' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy_testing))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Validate and activate only the testing containers on port 3011
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST }}
+          RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
+          TAG: ${{ github.sha }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          command_timeout: 15m
+          envs: REGISTRY_USER,REGISTRY_TOKEN,RABBITMQ_HOST,RABBITMQ_PASS,TAG
+          script: |
+            set -eu
+            case "$TAG" in *[!a-f0-9]*|'') echo 'Invalid testing commit'; exit 1;; esac
+            [ "${#TAG}" -eq 40 ] || exit 1
+            WEB_IMAGE="ghcr.io/kumateck/oryx-live-web:$TAG"
+            CHECK_IMAGE="ghcr.io/kumateck/oryx-live-gateway:$TAG"
+            WEB=oryx-live-web
+            GATEWAY=oryx-live-gateway
+            CANDIDATE="oryx-live-web-candidate-$TAG"
+            OLD_WEB="oryx-live-web-previous-$TAG"
+            OLD_GATEWAY="oryx-live-gateway-previous-$TAG"
+            # Refuse an unfinished previous activation instead of destroying recovery containers.
+            for name in "$CANDIDATE" "$OLD_WEB" "$OLD_GATEWAY"; do
+              if docker container inspect "$name" >/dev/null 2>&1; then echo "Resolve unfinished testing activation: $name"; exit 1; fi
+            done
+            DOCKER_CONFIG=$(mktemp -d)
+            export DOCKER_CONFIG
+            active=0; web_saved=0; gateway_saved=0; web_created=0; gateway_created=0
+            cleanup() {
+              result=$?
+              trap - EXIT
+              if [ "$active" = 0 ]; then
+                echo 'Testing activation failed; restoring previous containers.'
+                if [ "$web_created" = 1 ]; then docker rm -f "$WEB" >/dev/null 2>&1 || true; fi
+                if [ "$gateway_created" = 1 ]; then docker rm -f "$GATEWAY" >/dev/null 2>&1 || true; fi
+                if [ "$web_saved" = 1 ]; then docker rename "$OLD_WEB" "$WEB" && docker start "$WEB" || result=1; fi
+                if [ "$gateway_saved" = 1 ]; then docker rename "$OLD_GATEWAY" "$GATEWAY" && docker start "$GATEWAY" || result=1; fi
+              fi
+              docker rm -f "$CANDIDATE" >/dev/null 2>&1 || true
+              rm -rf "$DOCKER_CONFIG"
+              exit "$result"
+            }
+            trap cleanup EXIT
+            printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "$REGISTRY_USER" --password-stdin
+            docker pull "$WEB_IMAGE"
+            docker pull "$CHECK_IMAGE"
+            docker network inspect sail >/dev/null
+            mkdir -p "$HOME/oryx-live/downloads" "$HOME/oryx-live/assets"
+            chmod 755 "$HOME/oryx-live/downloads" "$HOME/oryx-live/assets"
+
+            reach() { docker run --rm --net sail "$CHECK_IMAGE" node -e "$1" "$2" >/dev/null 2>&1; }
+            HTTP_OK='fetch(process.argv[1] + "/api/v1/user/authenticated", { signal: AbortSignal.timeout(6000) }).then(r => process.exit([200,401,403].includes(r.status) ? 0 : 1), () => process.exit(1))'
+            TCP_OK='const [h, p] = process.argv[1].split(":"); const s = require("node:net").connect(Number(p), h); s.setTimeout(5000, () => process.exit(1)); s.on("connect", () => process.exit(0)); s.on("error", () => process.exit(1))'
+            published() {
+              for name in $(docker ps --filter "publish=$1" --format '{{.Names}}'); do
+                docker inspect "$name" --format '{{range $net, $v := .NetworkSettings.Networks}}{{$net}} {{end}}' | grep -qw sail || continue
+                inner=$(docker port "$name" | grep -E ":$1\$" | head -n 1 | cut -d/ -f1)
+                [ -z "$inner" ] || echo "$name:$inner"
+              done
+            }
+            SERVER=$(docker network inspect sail --format '{{range .IPAM.Config}}{{.Gateway}} {{end}}' | awk '{print $1}')
+            API_UPSTREAM=""
+            for candidate in $(published 8086 | sed 's#^#http://#') "http://$SERVER:8086" http://164.90.142.68:8086; do
+              if reach "$HTTP_OK" "$candidate"; then API_UPSTREAM="$candidate"; break; fi
+              echo "backend: no healthy answer at $candidate"
+            done
+            [ -n "$API_UPSTREAM" ] || { echo 'Testing backend unreachable; current site preserved.'; exit 1; }
+            BROKER_PORT="${RABBITMQ_HOST##*:}"; BROKER_NAME="${RABBITMQ_HOST%:*}"
+            if [ "$BROKER_PORT" = "$RABBITMQ_HOST" ]; then BROKER_PORT=5672; BROKER_NAME="$RABBITMQ_HOST"; fi
+            BROKER=""
+            for candidate in "$BROKER_NAME:$BROKER_PORT" $(published "$BROKER_PORT") "$SERVER:$BROKER_PORT"; do
+              if reach "$TCP_OK" "$candidate"; then BROKER="$candidate"; break; fi
+            done
+            if [ -z "$BROKER" ]; then echo 'Broker unreachable; notifications use polling.'; BROKER="$RABBITMQ_HOST"; fi
+
+            # Probe the exact web release without publishing a port or stopping the working site.
+            docker run -d --net sail --name "$CANDIDATE" \
+              --env ORYX_API_ORIGIN="$API_UPSTREAM" \
+              --volume "$HOME/oryx-live/downloads:/srv/downloads:ro" \
+              --volume "$HOME/oryx-live/assets:/srv/assets" "$WEB_IMAGE"
+            RELEASE_OK='const origin=process.argv[1], sha=process.argv[2]; const get=async p=>{const r=await fetch(origin+p,{signal:AbortSignal.timeout(10000)}); if(!r.ok)throw Error(p+": HTTP "+r.status); return r;}; const m=await (await get("/deployment.json")).json(); if(m.commit!==sha||m.branch!=="testing")throw Error("Wrong deployed SHA/branch"); await get("/healthz"); const api=await fetch(origin+"/api/v1/user/authenticated",{signal:AbortSignal.timeout(10000)}); if(![200,401,403].includes(api.status))throw Error("API: HTTP "+api.status);'
+            ready=0
+            deadline=$(($(date +%s) + 180))
+            for attempt in $(seq 1 90); do
+              [ "$(date +%s)" -le "$deadline" ] || break
+              if docker run --rm --network "container:$CANDIDATE" "$CHECK_IMAGE" node --input-type=module -e "$RELEASE_OK" http://127.0.0.1 "$TAG"; then ready=1; break; fi
+              sleep 2
+            done
+            [ "$ready" = 1 ] || { docker logs --tail 40 "$CANDIDATE"; exit 1; }
+
+            # Rename before stopping, retaining independently runnable rollback containers.
+            if docker container inspect "$WEB" >/dev/null 2>&1; then docker rename "$WEB" "$OLD_WEB"; web_saved=1; fi
+            if docker container inspect "$GATEWAY" >/dev/null 2>&1; then docker rename "$GATEWAY" "$OLD_GATEWAY"; gateway_saved=1; fi
+            if [ "$web_saved" = 1 ]; then docker stop "$OLD_WEB" >/dev/null; fi
+            if [ "$gateway_saved" = 1 ]; then docker stop "$OLD_GATEWAY" >/dev/null; fi
+            gateway_created=1
+            docker run -d --init --restart always --net sail --name "$GATEWAY" \
+              --env ORYX_API_ORIGIN="$API_UPSTREAM" \
+              --env ORYX_GATEWAY_ALLOWED_ORIGINS=http://164.90.142.68:3011 \
+              --env ORYX_GATEWAY_ALLOW_INSECURE=1 \
+              --env RABBITMQ_HOST="$BROKER" --env RABBITMQ_DEFAULT_USER=root \
+              --env RABBITMQ_DEFAULT_PASS="$RABBITMQ_PASS" "$CHECK_IMAGE"
+            web_created=1
+            docker run -d --restart always --net sail -p 3011:80 --name "$WEB" \
+              --env ORYX_API_ORIGIN="$API_UPSTREAM" --env ORYX_GATEWAY_UPSTREAM="$GATEWAY:4100" \
+              --volume "$HOME/oryx-live/downloads:/srv/downloads:ro" \
+              --volume "$HOME/oryx-live/assets:/srv/assets" "$WEB_IMAGE"
+            ready=0
+            deadline=$(($(date +%s) + 180))
+            for attempt in $(seq 1 90); do
+              [ "$(date +%s)" -le "$deadline" ] || break
+              if docker run --rm --network host "$CHECK_IMAGE" node --input-type=module -e "$RELEASE_OK" http://127.0.0.1:3011 "$TAG"; then ready=1; break; fi
+              sleep 2
+            done
+            [ "$ready" = 1 ] || { docker logs --tail 40 "$WEB"; exit 1; }
+            SITE=http://127.0.0.1:3011
+            FILES=$(curl -fsS -m 10 "$SITE/" | grep -oE '/assets/[^" ]+\.(js|css)' | sort -u)
+            [ -n "$FILES" ] || { echo 'The testing page names no assets.'; exit 1; }
+            for file in $FILES; do
+              served=$(curl -fsS -m 10 "$SITE$file" | sha256sum | cut -d' ' -f1)
+              built=$(docker exec "$WEB" sha256sum "/usr/share/nginx/html$file" | cut -d' ' -f1)
+              [ "$served" = "$built" ] || { echo "Wrong content for $file"; exit 1; }
+            done
+            active=1
+            if [ "$web_saved" = 1 ]; then docker rm "$OLD_WEB" >/dev/null; fi
+            if [ "$gateway_saved" = 1 ]; then docker rm "$OLD_GATEWAY" >/dev/null; fi
+            echo "Testing release verified: $TAG on port 3011"
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.22.1
+      - name: Read verified desktop publication
+        id: desktop_source
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          capture_stdout: true
+          script: |
+            set -eu
+            record="$HOME/oryx-live/desktop-release.sha"
+            installer="$HOME/oryx-live/downloads/OryxLiveDesktop-Setup.exe"
+            if [ ! -f "$record" ] || [ ! -s "$installer" ]; then
+              printf '%s\n' 'ORYX_DESKTOP_PUBLISHED_SHA=none'
+              exit 0
+            fi
+            [ ! -L "$record" ] && [ ! -L "$installer" ] || exit 1
+            IFS=' ' read -r source digest extra < "$record"
+            case "$source$digest" in *[!a-f0-9]*|'') echo 'Invalid desktop publication record' >&2; exit 1;; esac
+            [ "${#source}" -eq 40 ] && [ "${#digest}" -eq 64 ] && [ -z "$extra" ] || exit 1
+            actual=$(sha256sum "$installer" | cut -d' ' -f1)
+            [ "$actual" = "$digest" ] || { echo 'Published installer checksum no longer matches its source record.' >&2; exit 1; }
+            printf 'ORYX_DESKTOP_PUBLISHED_SHA=%s\n' "$source"
+      - name: Compare with the published desktop source
+        id: desktop
+        env:
+          DESKTOP_PUBLISHED_OUTPUT: ${{ steps.desktop_source.outputs.stdout }}
+        run: node scripts/testing-desktop-changes.ts
+
+  windows-installer:
+    name: Build Windows installer
+    needs: [web, testing-deploy]
+    outputs:
+      signed: ${{ steps.signing.outputs.configured }}
+    if: >-
+      always() && needs.web.result == 'success' &&
+      ((github.ref == 'refs/heads/testing' && needs.testing-deploy.result == 'success' && needs.testing-deploy.outputs.desktop_changed == 'true') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/entrance-server' && inputs.build_windows))
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      ORYX_DESKTOP_UPDATE_PUBLIC_KEY: ${{ vars.ORYX_DESKTOP_UPDATE_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.22.1
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - name: Validate desktop update signing configuration
+        id: signing
+        env:
+          ORYX_DESKTOP_UPDATE_PRIVATE_KEY: ${{ secrets.ORYX_DESKTOP_UPDATE_PRIVATE_KEY }}
+        run: bun scripts/check-desktop-signing.ts
+      - name: Check the desktop shell
+        run: |
+          bun run --filter @oryx/desktop test
+          bun run --filter @oryx/desktop typecheck
+      - name: Build the main Windows x86 and x64 NSIS installer
+        run: bun run --filter @oryx/desktop make:windows
+      - name: Verify and collect the installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = Get-Item 'apps/desktop/out/make/nsis/OryxLiveDesktop-Setup.exe'
+          if ($installer.Length -lt 1MB) { throw 'The installer is missing or unexpectedly small.' }
+          $header = [System.IO.File]::ReadAllBytes($installer.FullName)
+          if ($header[0] -ne 0x4d -or $header[1] -ne 0x5a) { throw 'The installer is not a Windows executable.' }
+          # NSIS itself is a 32-bit bootstrapper; both embedded application payloads must be present.
+          foreach ($target in @(@{ Folder='win-ia32-unpacked'; Machine=0x14c }, @{ Folder='win-unpacked'; Machine=0x8664 })) {
+            $path = Join-Path 'apps/desktop/out/make/nsis' ($target.Folder + '/OryxLiveDesktop.exe')
+            $app = [System.IO.File]::ReadAllBytes((Resolve-Path $path))
+            $pe = [BitConverter]::ToInt32($app, 0x3c)
+            if ([BitConverter]::ToUInt32($app, $pe) -ne 0x4550 -or [BitConverter]::ToUInt16($app, $pe + 4) -ne $target.Machine) { throw "Wrong application architecture: $path" }
+          }
+          New-Item -ItemType Directory downloads -Force | Out-Null
+          Copy-Item $installer.FullName 'downloads/OryxLiveDesktop-Setup.exe'
+          $hash = (Get-FileHash 'downloads/OryxLiveDesktop-Setup.exe' -Algorithm SHA256).Hash
+          "Installer SHA256: $hash"
+          "Windows x86 + x64 installer from commit $env:GITHUB_SHA`n`nSHA256: $hash" >> $env:GITHUB_STEP_SUMMARY
+      - name: Install and launch on the disposable Windows runner
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $setup = Start-Process (Resolve-Path downloads/OryxLiveDesktop-Setup.exe) -ArgumentList '/S' -Wait -PassThru
+          if ($setup.ExitCode -ne 0) { throw "Installer failed: $($setup.ExitCode)" }
+          Start-Sleep 3
+          Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue | Stop-Process -Force
+          $exe = Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter OryxLiveDesktop.exe | Select-Object -First 1
+          if (-not $exe) { throw 'The installer did not install OryxLiveDesktop.exe' }
+          "Installed: $($exe.FullName)"
+          $shortcuts = @((Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Oryx Live Desktop.lnk'), (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Oryx Live Desktop.lnk'))
+          foreach ($link in $shortcuts) { if (-not (Test-Path $link)) { throw "Missing shortcut: $link" }; "Shortcut: $link" }
+          New-Item -ItemType Directory shots -Force | Out-Null
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          # The companion is a second window of the same process, so read every top-level title instead of
+          # Process.MainWindowTitle, which picks one of them arbitrarily.
+          Add-Type @'
+          using System;
+          using System.Collections.Generic;
+          using System.Runtime.InteropServices;
+          using System.Text;
+          public static class OryxWindows {
+            [DllImport("user32.dll")] private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr extra);
+            [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
+            [DllImport("user32.dll")] private static extern int GetWindowText(IntPtr window, StringBuilder text, int max);
+            [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr window);
+            private delegate bool EnumWindowsProc(IntPtr window, IntPtr extra);
+            public static string[] Titles(int[] processes) {
+              var wanted = new HashSet<int>(processes);
+              var titles = new List<string>();
+              EnumWindows((window, extra) => {
+                uint owner;
+                GetWindowThreadProcessId(window, out owner);
+                if (wanted.Contains((int)owner) && IsWindowVisible(window)) {
+                  var text = new StringBuilder(512);
+                  GetWindowText(window, text, text.Capacity);
+                  if (text.Length > 0) titles.Add(text.ToString());
+                }
+                return true;
+              }, IntPtr.Zero);
+              return titles.ToArray();
+            }
+          }
+          '@
+          function Launch([string] $name, [scriptblock] $ok) {
+            Start-Process $exe.FullName | Out-Null
+            Start-Sleep 20
+            $running = @(Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue)
+            $titles = if ($running) { [OryxWindows]::Titles([int[]] @($running | ForEach-Object { $_.Id })) } else { @() }
+            try {
+              $bounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+              $bitmap = New-Object System.Drawing.Bitmap $bounds.Width, $bounds.Height
+              [System.Drawing.Graphics]::FromImage($bitmap).CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size)
+              $bitmap.Save("shots/$name.png")
+            } catch { "Screenshot failed: $_" }
+            Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep 2
+            if (-not $titles) { throw "${name}: the app shows no window" }
+            $shown = $titles -join ' | '
+            "${name}: windows $shown"
+            if (-not (& $ok $titles)) { throw "${name}: unexpected windows $shown" }
+          }
+          $config = Join-Path $env:APPDATA 'Oryx Live Desktop'
+          if (Test-Path $config) { Remove-Item $config -Recurse -Force }
+          Launch 'first-launch' { param($titles) ($titles -contains 'Connect to Oryx') -and ($titles -contains 'ORYX Companion') }
+          $installedExe = $exe
+          $exe = Get-Item 'apps/desktop/out/make/nsis/win-ia32-unpacked/OryxLiveDesktop.exe'
+          Launch 'x86-runtime' { param($titles) ($titles -contains 'Connect to Oryx') -and ($titles -contains 'ORYX Companion') }
+          $exe = $installedExe
+          $config = Join-Path $env:APPDATA 'Oryx Live Desktop'
+          New-Item -ItemType Directory $config -Force | Out-Null
+          $fixture = Start-Process node -ArgumentList 'scripts/windows-installer-site.ts' -RedirectStandardOutput 'shots/site.log' -RedirectStandardError 'shots/site-error.log' -PassThru
+          try {
+            $ready = $false
+            for ($attempt = 0; $attempt -lt 30; $attempt++) {
+              if ($fixture.HasExited) { throw 'The local port 3001 fixture exited; inspect the smoke logs.' }
+              try { $ready = (Invoke-WebRequest 'http://127.0.0.1:3001' -TimeoutSec 2).StatusCode -eq 200 } catch { }
+              if ($ready) { break }
+              Start-Sleep 1
+            }
+            if (-not $ready) { throw 'The local port 3001 fixture did not start.' }
+            Set-Content -NoNewline -Path (Join-Path $config 'site-url.txt') -Value 'http://127.0.0.1:3001'
+            Launch 'connected' { param($titles) ($titles -contains 'Oryx installer smoke site') -and ($titles -contains 'ORYX Companion') }
+          } finally {
+            Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue | Stop-Process -Force
+            if (-not $fixture.HasExited) { Stop-Process -Id $fixture.Id -Force }
+          }
+      - name: Verify an installed desktop upgrade using disposable signing keys
+        shell: pwsh
+        run: |
+          bun scripts/windows-update-smoke.ts 2>&1 | Tee-Object -FilePath 'shots/update-smoke.log'
+          if ($LASTEXITCODE -ne 0) { throw 'The installed desktop update smoke failed. See update-smoke.log.' }
+      - name: Prepare the signed in-app update bundle
+        if: steps.signing.outputs.configured == 'true'
+        env:
+          ORYX_DESKTOP_UPDATE_PRIVATE_KEY: ${{ secrets.ORYX_DESKTOP_UPDATE_PRIVATE_KEY }}
+        run: bun scripts/create-desktop-update.ts publish downloads/OryxLiveDesktop-Setup.exe desktop-update
+      - uses: actions/upload-artifact@v6
+        if: steps.signing.outputs.configured == 'true'
+        with:
+          name: oryx-live-desktop-update
+          path: desktop-update/
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: oryx-live-windows-smoke
+          path: shots/
+          retention-days: 14
+      - uses: actions/upload-artifact@v6
+        with:
+          name: oryx-live-windows-installer
+          path: downloads/OryxLiveDesktop-Setup.exe
+          if-no-files-found: error
+          retention-days: 30
+
+  testing-desktop-publish:
+    name: Publish tested desktop to testing
+    needs: [testing-deploy, windows-installer]
+    if: github.ref == 'refs/heads/testing'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: oryx-live-windows-installer
+          path: desktop-publish/downloads
+      - uses: actions/download-artifact@v7
+        if: needs.windows-installer.outputs.signed == 'true'
+        with:
+          name: oryx-live-desktop-update
+          path: desktop-publish/downloads
+      - name: Stage verified desktop files separately from the web release
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: desktop-publish/downloads
+          target: oryx-live/desktop-staging-${{ github.sha }}
+          strip_components: 1
+      - name: Publish immutable desktop payload before its update feed
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          TAG: ${{ github.sha }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: TAG
+          script: |
+            set -eu
+            case "$TAG" in *[!a-f0-9]*|'') exit 1;; esac
+            [ "${#TAG}" -eq 40 ] || exit 1
+            stage="$HOME/oryx-live/desktop-staging-$TAG/downloads"
+            public="$HOME/oryx-live/downloads"
+            test -s "$stage/OryxLiveDesktop-Setup.exe"
+            mkdir -p "$public"
+            chmod 755 "$public"
+            if [ -d "$stage/desktop/windows" ]; then
+              mkdir -p "$public/desktop/windows"
+              chmod 755 "$public/desktop" "$public/desktop/windows"
+              for directory in "$stage/desktop/windows"/*/; do
+                version=$(basename "$directory")
+                case "$version" in *[!0-9.]*|'') echo 'Invalid desktop version'; exit 1;; esac
+                target="$public/desktop/windows/$version"
+                if [ -d "$target" ]; then
+                  cmp "$directory/OryxLiveDesktop-Setup.exe" "$target/OryxLiveDesktop-Setup.exe" || { echo 'Desktop version already published with different bytes; bump apps/desktop/package.json.'; exit 1; }
+                else
+                  rm -rf "$target.pending-$TAG"
+                  cp -R "$directory" "$target.pending-$TAG"
+                  chmod 755 "$target.pending-$TAG"
+                  chmod 644 "$target.pending-$TAG/OryxLiveDesktop-Setup.exe"
+                  mv "$target.pending-$TAG" "$target"
+                fi
+                chmod 755 "$target"
+                chmod 644 "$target/OryxLiveDesktop-Setup.exe"
+              done
+              cp "$stage/desktop/windows/latest.json" "$public/desktop/windows/latest.json.pending-$TAG"
+              chmod 644 "$public/desktop/windows/latest.json.pending-$TAG"
+              mv -f "$public/desktop/windows/latest.json.pending-$TAG" "$public/desktop/windows/latest.json"
+            fi
+            cp "$stage/OryxLiveDesktop-Setup.exe" "$public/OryxLiveDesktop-Setup.exe.pending-$TAG"
+            chmod 644 "$public/OryxLiveDesktop-Setup.exe.pending-$TAG"
+            mv -f "$public/OryxLiveDesktop-Setup.exe.pending-$TAG" "$public/OryxLiveDesktop-Setup.exe"
+            (cd "$public" && sha256sum OryxLiveDesktop-Setup.exe) > "$public/OryxLiveDesktop-Setup.exe.sha256.pending-$TAG"
+            chmod 644 "$public/OryxLiveDesktop-Setup.exe.sha256.pending-$TAG"
+            mv -f "$public/OryxLiveDesktop-Setup.exe.sha256.pending-$TAG" "$public/OryxLiveDesktop-Setup.exe.sha256"
+            digest=$(cut -d' ' -f1 "$public/OryxLiveDesktop-Setup.exe.sha256")
+            umask 077
+            printf '%s %s\n' "$TAG" "$digest" > "$HOME/oryx-live/desktop-release.sha.pending-$TAG"
+            mv -f "$HOME/oryx-live/desktop-release.sha.pending-$TAG" "$HOME/oryx-live/desktop-release.sha"
+            rm -rf "$HOME/oryx-live/desktop-staging-$TAG"

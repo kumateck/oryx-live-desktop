@@ -32,6 +32,8 @@ export function readConfig(env: Env): GatewayConfig {
     if (value === "*") throw new Error("ORYX_GATEWAY_ALLOWED_ORIGINS must list the origins; it cannot be *");
     return origin(value, "ORYX_GATEWAY_ALLOWED_ORIGINS", env);
   });
+  const brokerHost = env.RABBITMQ_HOST?.trim();
+  if (!env.RABBITMQ_URL?.trim() && brokerHost?.includes("://")) throw new Error("RABBITMQ_HOST must be a host name or host:port, without http:// or https://. Use RABBITMQ_URL for a complete amqp:// address.");
   const brokerUrl = env.RABBITMQ_URL?.trim()
     || `amqp://${encodeURIComponent(need("RABBITMQ_DEFAULT_USER"))}:${encodeURIComponent(need("RABBITMQ_DEFAULT_PASS"))}@${need("RABBITMQ_HOST")}`;
   return { port, host: env.ORYX_GATEWAY_HOST?.trim() || "127.0.0.1", apiOrigin: origin(need("ORYX_API_ORIGIN"), "ORYX_API_ORIGIN", env), allowedOrigins, brokerUrl, socketPath: "/realtime/socket.io" };

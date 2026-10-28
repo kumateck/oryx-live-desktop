@@ -1,4 +1,5 @@
-import { Link, useParams } from "react-router";
+import { useEffect } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { ActivityPageState, CancelledNotice } from "@/modules/activities/components/activity-page-state";
 import { FinalPackingForm } from "@/modules/activities/components/final-packing/final-packing-form";
@@ -13,18 +14,21 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { FormPageSkeleton } from "@/shared/skeleton/page-skeletons";
 
 function Packing({ activity, batchId }: { activity: Activity; batchId: string }) {
+  const navigate = useNavigate();
   const user = useCurrentUser();
-  const state = useFinalPacking(batchId);
+  const state = useFinalPacking(batchId, activity);
+  useEffect(() => { if (state.completed) void navigate(batchBoardPath(activity.id)); }, [state.completed, activity.id, navigate]);
   const step = activity.steps.find((item) => item.id === activity.currentStepId);
   // The same rule as the button that leads here, so the address alone does not open the form.
-  const policy = step ? stepPolicy({ step, currentStepId: activity.currentStepId, cancelled: activity.batch.cancelled, userId: user?.id ?? null, extraMaterialPending: false, atrExists: false }) : null;
-  if (state.loading) return <FormPageSkeleton label="Loading final packing" sections={[6, 4]} />;
-  if (state.error) return <div role="alert" className="flex flex-wrap items-center gap-2 text-sm">{state.error}<Button type="button" size="sm" variant="outline" onClick={state.retry}>Retry</Button></div>;
-  if (state.recorded && !state.pendingReturn) return <RecordedPackingView recorded={state.recorded} />;
-  if (!step || !(policy?.canFinalPack || state.pendingReturn)) return <div role="alert" className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 p-3 text-sm">
+  const policy = step ? stepPolicy({ step, currentStepId: activity.currentStepId, cancelled: activity.batch.cancelled, userId: user?.id ?? null, extraMaterialPending: false, extraMaterialOpen: false, atrExists: false }) : null;
+  const processing = state.saving || state.pendingReturn || state.uncertain || state.completed;
+  if (state.loading && !processing) return <FormPageSkeleton label="Loading final packing" sections={[6, 4]} />;
+  if (state.error && !processing) return <div role="alert" className="flex flex-wrap items-center gap-2 text-sm">{state.error}<Button type="button" size="sm" variant="outline" onClick={state.retry}>Retry</Button></div>;
+  if (state.recorded && !processing) return <RecordedPackingView recorded={state.recorded} />;
+  if (!processing && (!step || !policy?.canFinalPack)) return <div role="alert" className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 p-3 text-sm">
     {policy?.blocked ?? "Final packing can be recorded only while the batch is at its final packing step and that step is in progress."}
     <Button asChild size="sm" variant="outline"><Link to={batchBoardPath(activity.id)}>Back to the batch</Link></Button></div>;
-  return <FinalPackingForm activity={activity} stepId={step.id} state={state} />;
+  return <FinalPackingForm activity={activity} stepId={step?.id ?? ""} state={state} />;
 }
 
 function FinalPacking({ id }: { id: string }) {

@@ -5,6 +5,7 @@ import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, expect, it } from "vitest";
 import IssueStockRequisitionPage from "../../../pages/(workspace)/warehouse/stock-requisition/[id]/page";
 import StockRequisitionsPage from "../../../pages/(workspace)/warehouse/stock-requisition/page";
+import { BatchBreakdown } from "./batch-breakdown";
 import { ApiProvider } from "../../../shared/api/api-provider";
 import { SessionProvider } from "../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../test/backend";
@@ -26,6 +27,11 @@ it("reads batch numbers, expiry and what stops an issue", () => {
   expect(issueBlock({ approved: true, status: 1, items: [line(5, [{ quantity: 5, expires: "2026-10-02T00:00:00" }])] }, today)).toContain("expired or expires today");
   expect(issueBlock({ approved: true, status: 1, items: [good, line(5, [])] }, today)).toContain("No stock is set aside");
   expect(issueBlock({ approved: true, status: 1, items: [good] }, today)).toBeNull();
+});
+
+it("labels an issued batch with no batch number", () => {
+  render(<BatchBreakdown line={{ unit: "kg", batches: [{ key: "missing-number", number: null, quantity: 5, expires: null, returned: false }] }} />);
+  expect(screen.getByText("No batch")).toBeTruthy();
 });
 
 const requisition = (id: string, extra: object = {}) => ({ id, code: id.toUpperCase(), status: 1, approved: true, createdAt: "2026-10-01T09:00:00Z", requestedBy: { firstName: "Ama", lastName: "Owusu" }, department: { name: "Production" },

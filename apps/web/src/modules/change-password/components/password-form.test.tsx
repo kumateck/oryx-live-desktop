@@ -7,8 +7,8 @@ import { PasswordForm } from "./password-form";
 afterEach(() => { cleanup(); forgetSession(); });
 async function fillPasswords() {
   fireEvent.change(await screen.findByLabelText(/^Current password/), { target: { value: " old password " } });
-  fireEvent.change(await screen.findByLabelText(/^New password/), { target: { value: " new password " } });
-  fireEvent.change(await screen.findByLabelText(/^Confirm new password/), { target: { value: " new password " } });
+  fireEvent.change(await screen.findByLabelText(/^New password/), { target: { value: "New passw0rd! " } });
+  fireEvent.change(await screen.findByLabelText(/^Confirm new password/), { target: { value: "New passw0rd! " } });
   fireEvent.click(screen.getByRole("button", { name: "Change password" }));
 }
 it("uses the self-service endpoint with all secrets and preserves the form after a 200 rejection", async () => {
@@ -18,7 +18,7 @@ it("uses the self-service endpoint with all secrets and preserves the form after
   expect(calls).toHaveLength(1);
   expect(calls[0]?.path).toBe("/api/v1/auth/user-reset-password");
   expect(calls[0]?.subModule).toBe("Change Password");
-  expect(JSON.parse(calls[0]?.body ?? "null")).toEqual({ currentPassword: " old password ", newPassword: " new password ", confirmNewPassword: " new password " });
+  expect(JSON.parse(calls[0]?.body ?? "null")).toEqual({ currentPassword: " old password ", newPassword: "New passw0rd! ", confirmNewPassword: "New passw0rd! " });
   expect(screen.queryByText("Signed out")).toBeNull();
 });
 it("signs out only after a confirmed successful change", async () => {

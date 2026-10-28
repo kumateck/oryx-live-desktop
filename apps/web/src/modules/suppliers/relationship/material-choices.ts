@@ -6,11 +6,11 @@ export interface MaterialChoice {
 
 export function materialChoices(associations: readonly DomainEntitiesProcurementSuppliersSupplierManufacturerDto[] = []): MaterialChoice[] {
   const choices = new Map<string, MaterialChoice>();
-  for (const { material, uoM } of associations) {
+  for (const { material, uoM, purchaseUnit } of associations) {
     if (!material?.id || !uoM?.id) continue;
     const key = `${material.id}:${uoM.id}`;
     if (choices.has(key)) continue;
-    const uomSymbol = uoM.symbol?.trim() || uoM.name?.trim() || "unit";
+    const uomSymbol = purchaseUnit?.trim() || uoM.symbol?.trim() || uoM.name?.trim() || "unit";
     choices.set(key, {
       key, materialId: material.id, materialName: material.name?.trim() || "Unnamed material",
       uomId: uoM.id, uomName: uoM.name?.trim() || uomSymbol, uomSymbol,

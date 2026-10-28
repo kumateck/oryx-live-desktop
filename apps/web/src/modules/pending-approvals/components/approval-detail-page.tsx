@@ -1,3 +1,5 @@
+import { skipToken } from "@reduxjs/toolkit/query";
+import { decisionEvidenceApi, type DecisionEvidence } from "../api/decision-evidence";
 import { useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -9,7 +11,7 @@ import { formatDateTime } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetApiV1ApprovalMyPendingByModelTypeAndModelIdQuery } from "../api/approval-api";
-import { approvalListPath, approvalPermissions, approvalsPath, audit, decidedElsewhere, documentLabel, isReadable, type Decision } from "../lib/approval-documents";
+import { approvalListPath, approvalsPath, audit, decidedElsewhere, decisionPermission, decisionViewPermission, documentLabel, isReadable, type Decision } from "../lib/approval-documents";
 import { approvalSchema } from "../schemas/approval-schema";
 import { ActivityTimeline } from "./activity-timeline";
 import { ApprovalContent } from "./approval-content";
@@ -20,7 +22,9 @@ function Detail({ type, id }: { type: string; id: string }) {
   const { has } = useAccess();
   const query = useGetApiV1ApprovalMyPendingByModelTypeAndModelIdQuery({ ...audit, modelType: type, modelId: id });
   const approval = useMemo(() => { const parsed = approvalSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data : null; }, [query.data]);
-  const [decision, setDecision] = useState<Decision | null>(null);
+  const [decision, setDecision] = useState<{ kind: Decision; evidence: DecisionEvidence } | null>(null);
+  const canDecideHere = isReadable(type) && !decidedElsewhere(type) && has(decisionViewPermission(type));
+  const evidence = decisionEvidenceApi.useDecisionEvidenceQuery(canDecideHere && approval && isReadable(type) ? { type, id, supplierId: approval.supplierId } : skipToken);
   const label = documentLabel(type);
   const back = approvalListPath(type);
   if (query.isLoading) return <DetailPageSkeleton label="Loading request" groups={3} />;
@@ -34,9 +38,11 @@ function Detail({ type, id }: { type: string; id: string }) {
   const rejected = approval.logs.at(-1)?.status === 2 ? approval.logs.at(-1) : null;
   return <article className="min-w-0 space-y-4">
     <PageHeader title={`${label}${approval.code ? ` · ${approval.code}` : ""}`} crumbs={[{ label: "My pending approvals", to: approvalsPath }, { label, to: back }, { label: approval.code ?? "Request" }]}
-      actions={<>{has(approvalPermissions.reject) ? <Button type="button" variant="outline" className="text-destructive" disabled={block !== null} onClick={() => setDecision("reject")}><X />Reject</Button> : null}
-        {has(approvalPermissions.approve) ? <Button type="button" disabled={block !== null} onClick={() => setDecision("approve")}><Check />Approve</Button> : null}</>} />
-    {block ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">{block}</p> : null}
+      actions={<>{has(decisionPermission(type, "reject")) ? <Button type="button" variant="outline" className="text-destructive" disabled={block !== null || !evidence.data || evidence.isFetching || !!evidence.error} onClick={() => { if (evidence.data) setDecision({ kind: "reject", evidence: evidence.data }); }}><X />Reject</Button> : null}
+        {has(decisionPermission(type, "approve")) ? <Button type="button" disabled={block !== null || !evidence.data || evidence.isFetching || !!evidence.error} onClick={() => { if (evidence.data) setDecision({ kind: "approve", evidence: evidence.data }); }}><Check />Approve</Button> : null}</>} />
+    {evidence.error ? <p role="alert" className="text-sm text-destructive">Decision evidence could not be verified. <Button variant="outline" size="sm" onClick={() => void evidence.refetch()}>Retry evidence</Button></p> : null}
+    {block ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">{block}{type === "Payment" && has("CanApprovePayment") ? <> <Link className="underline" to={`/finance/payment-approvals/${encodeURIComponent(id)}`}>Review payment in Finance</Link></> : null}{type === "PerformanceReview" && has("CanViewPerformanceReviews") ? <> <Link className="underline" to={`/hr/performance-reviews/${encodeURIComponent(id)}`}>Review assessment in HR</Link></> : null}{type === "PayrollRun" && has("CanViewPayrollRuns") ? <> <Link className="underline" to={`/hr/payroll-runs/${encodeURIComponent(id)}`}>Review and reconcile payroll in HR</Link></> : null}</p> : null}
+    {approval.onBehalfOf ? <p role="status" className="rounded-md border border-sky-500/50 bg-sky-500/10 p-3 text-sm">This request waits for {approval.onBehalfOf}, who delegated their approvals to you. Your decision is recorded as theirs, with a note that you made it.</p> : null}
     {rejected ? <p role="status" className="rounded-md border border-destructive/50 bg-destructive/5 p-3 text-sm">This request was rejected earlier by {rejected.by ?? "an approver"} and has been sent again. Their reason is in the history below.</p> : null}
     <KeyFacts>
       <KeyFact label="Request" value={label} note={approval.code ?? undefined} />
@@ -44,9 +50,9 @@ function Detail({ type, id }: { type: string; id: string }) {
       <KeyFact label="Requested on" value={formatDateTime(approval.createdAt) ?? "–"} />
       <KeyFact label="Earlier decisions" value={approval.logs.length === 0 ? "None" : String(approval.logs.length)} note={approval.logs.length === 0 ? "You are the first approver" : undefined} />
     </KeyFacts>
-    <section aria-label={`${label} details`} className="space-y-3"><h2 className="text-sm font-semibold">{label} details</h2><ApprovalContent type={type} id={id} supplierId={approval.supplierId} /></section>
+    <section aria-label={`${label} details`} className="space-y-3"><h2 className="text-sm font-semibold">{label} details</h2><ApprovalContent type={type} id={id} supplierId={approval.supplierId} rejection={rejected ? { reason: rejected.comments, code: approval.code } : null} /></section>
     <section className="space-y-3"><h2 className="text-sm font-semibold">Approval history</h2><ActivityTimeline logs={approval.logs} /></section>
-    {decision ? <DecisionDialog approval={approval} decision={decision} onClose={() => setDecision(null)} onDone={() => { setDecision(null); void navigate(back); }} /> : null}
+    {decision ? <DecisionDialog approval={approval} decision={decision.kind} evidence={decision.evidence} onClose={() => setDecision(null)} onDone={() => { setDecision(null); void navigate(back); }} /> : null}
   </article>;
 }
 

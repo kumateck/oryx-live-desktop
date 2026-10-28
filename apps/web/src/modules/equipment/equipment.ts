@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { productsApi } from "@/shared/api/generated/products";
 import { toLargestUnit } from "@/shared/units/quantity";
+import { addTags } from "@/shared/api/add-tags";
 
 export const equipmentPermissions = { view: "CanViewEquipment", add: "CanCreateEquipment", edit: "CanEditEquipmentDetails", remove: "CanDeleteEquipment" } as const;
 export const equipmentAudit = { module: "Settings", subModule: "Equipment" } as const;
@@ -8,8 +9,8 @@ export const equipmentPath = "/settings/equipments";
 
 const list = { type: "Equipment" as const, id: "all" };
 const changed = (_result: unknown, error: unknown) => error ? [] : [list];
-export const equipmentApi = productsApi.enhanceEndpoints({ endpoints: { getApiV1ProductEquipment: { providesTags: [list] }, getApiV1ProductEquipmentByEquipmentId: { providesTags: [list] }, postApiV1ProductEquipment: { invalidatesTags: changed },
-  putApiV1ProductEquipmentByEquipmentId: { invalidatesTags: changed }, deleteApiV1ProductEquipmentByEquipmentId: { invalidatesTags: changed } } });
+export const equipmentApi = productsApi.enhanceEndpoints({ endpoints: { getApiV1ProductEquipment: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, getApiV1ProductEquipmentByEquipmentId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, postApiV1ProductEquipment: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+  putApiV1ProductEquipmentByEquipmentId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, deleteApiV1ProductEquipmentByEquipmentId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); } } });
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const equipment = z.object({ id: z.string().nullish(), name: text, equipmentNumber: text, isStorage: z.boolean().nullish(), capacityQuantity: z.number().nullish(), relevanceCheck: z.boolean().nullish(), location: text, model: text, serialNumber: text, createdAt: text,

@@ -98,3 +98,24 @@ Receiving (checklists and goods received notes) is in [inbound-logistics-migrati
 ## Tests
 
 `modules/location-chart/lib/location.test.ts` (move rules, units, rack reading, stock levels) and `modules/location-chart/components/locations.test.tsx` (the five pages, permissions, the move flow and a refused move).
+
+## Searchable shelving racks (2026-10-24)
+
+The Rack field in the shared shelf destination row uses FormWizard's existing
+searchable single select. Search filters the already loaded department racks
+by their displayed location/rack label, ignoring case and surrounding spaces;
+no extra endpoint or request is introduced. This applies to received stock,
+transferred stock, returned materials and shelf moves that reuse the destination row. Changing a
+rack still clears an incompatible shelf. Shelf choices, quantity validation,
+permissions, audit metadata and stock writes retain their existing behavior.
+
+Documentation updated: this warehouse stock note.
+
+### Shelving component reuse
+
+`PlaceStockDialog` is the common put-on-shelves dialog for distributed receipts
+(via `ShelveStockDialog`), transfer allocations, and returned materials. Each
+caller supplies its stock details, labels and `onPlace` API callback.
+`MoveStockDialog` is a separate dialog for moving existing shelf stock, used by
+Location Chart and Material Location. Both dialogs render the same `MoveLine`
+fields, including the searchable Rack selector and dependent Shelf selector.

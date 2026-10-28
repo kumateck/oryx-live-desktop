@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { api } from "@/shared/api/base-api";
 import { settingsApi } from "@/shared/api/generated/settings";
+import { addTags } from "@/shared/api/add-tags";
 
 export const unitPermissions = { view: "CanViewUnitOfMeasure", add: "CanCreateUnitOfMeasure", edit: "CanEditUnitOfMeasure", remove: "CanDeleteUnitOfMeasure" } as const;
 export const unitAudit = { module: "Settings", subModule: "Unit of Measure" } as const;
@@ -18,7 +19,7 @@ const listApi = api.injectEndpoints({ endpoints: (build) => ({
   getUnitsPage: build.query<unknown, { page: number; pageSize: number; searchQuery: string; types?: number[] }>({ query: (body) => ({ url: "/api/v1/collection/uom/paginated", method: "POST", body: { types: [], ...body }, headers: { Module: unitAudit.module, SubModule: unitAudit.subModule } }), providesTags: [list] }),
 }) });
 export const { useGetUnitsPageQuery } = listApi;
-export const unitApi = settingsApi.enhanceEndpoints({ endpoints: { postApiV1CollectionUom: { invalidatesTags: changed }, putApiV1CollectionUomByUomId: { invalidatesTags: changed }, deleteApiV1CollectionUomByUomId: { invalidatesTags: changed } } });
+export const unitApi = settingsApi.enhanceEndpoints({ endpoints: { postApiV1CollectionUom: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, putApiV1CollectionUomByUomId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, deleteApiV1CollectionUomByUomId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); } } });
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 export const unitPageSchema = z.object({ totalRecordCount: z.number().nullish(), data: z.array(z.object({ id: z.string().nullish(), name: text, symbol: text, description: text, isScalable: z.boolean().nullish(), type: z.number().nullish(), category: z.number().nullish() })).nullish() })

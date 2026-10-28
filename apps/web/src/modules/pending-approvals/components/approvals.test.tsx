@@ -8,16 +8,16 @@ import PendingApprovalsPage from "../../../pages/(workspace)/qa/pending-approval
 import { ApiProvider } from "../../../shared/api/api-provider";
 import { SessionProvider } from "../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../test/backend";
-import { decidedElsewhere, decisionProblem, documentLabel, isReadable, waitingDocuments } from "../lib/approval-documents";
+import { decidedElsewhere, decisionPermission, decisionProblem, documentLabel, isReadable, waitingDocuments } from "../lib/approval-documents";
 
 afterEach(() => { cleanup(); forgetSession(); });
 
 it("names documents, says where each is decided, and asks for a reason only when rejecting", () => {
-  expect([documentLabel("PurchaseOrder"), documentLabel("ProductionExtraPacking"), documentLabel("QcCoa"), documentLabel("QcOosCase"), documentLabel("TemplateFormRevision"), documentLabel(null)])
-    .toEqual(["Purchase order", "Production extra material", "QC COA", "QC OOS case", "Template form revision", "Document"]);
+  expect([documentLabel("PurchaseOrder"), documentLabel("ProductionExtraPacking"), documentLabel("QcCoa"), documentLabel("QcOosCase"), documentLabel("TemplateFormRevision"), documentLabel(null), documentLabel("Response")])
+    .toEqual(["Purchase order", "Production extra material", "QC COA", "QC OOS case", "Template form revision", "Document", "Certificate of analysis"]);
   expect([isReadable("LeaveRequest"), isReadable("PayrollRun"), isReadable("ServiceMemo"), isReadable("QcCoa")]).toEqual([true, true, false, false]);
   expect(decidedElsewhere("PurchaseOrder")).toBeNull();
-  expect(decidedElsewhere("PayrollRun")).toBeNull();
+  expect(decidedElsewhere("PayrollRun")).toContain("reconciled");
   expect(decidedElsewhere("QcSpecification")).toContain("Quality Control");
   expect(decidedElsewhere("Payment")).toContain("Finance");
   expect(decidedElsewhere("TemplateSectionRevision")).toContain("template");
@@ -26,11 +26,12 @@ it("names documents, says where each is decided, and asks for a reason only when
   expect(decisionProblem("reject", "  ")).toBe("Say why the request is rejected");
   expect(decisionProblem("reject", "Wrong supplier")).toBeNull();
   expect(decisionProblem("approve", "x".repeat(2001))).toContain("2000");
+  expect(decisionPermission("Response", "approve")).toBe("CanApproveResponse");
+  expect(decisionPermission("Response", "reject")).toBe("CanRejectResponse");
+  expect(decisionPermission("LeaveRequest", "approve")).toBe("CanApprovePendingApproval");
 });
 
-const entity = (type: string, id: string, extra: object = {}) => ({ id, modelType: type, code: id.toUpperCase(), createdAt: "2026-09-30T09:00:00Z", department: { name: "Production" }, requestedBy: { firstName: "Ama", lastName: "Owusu" }, approvalLogs: [], ...extra });
-const leave = { requestCategory: 0, leaveType: { name: "Annual leave", isPaid: true }, startDate: "2026-10-12T00:00:00Z", endDate: "2026-10-16T00:00:00Z", numberOfDays: 5, paidDays: 5, unpaidDays: 0, leaveBalance: 3,
-  justification: "<p>Family event</p><script>alert(1)</script>", employee: { firstName: "Ama", lastName: "Owusu", staffNumber: "S-014", department: { name: "Production" } } };
+import { entity, leave } from "./__fixtures__/approval-records";
 interface Call { method: string; path: string; body: unknown }
 
 function open(address: string, options: { countsFail?: boolean; permissions?: string[] } = {}) {
@@ -46,8 +47,12 @@ function open(address: string, options: { countsFail?: boolean; permissions?: st
     calls.push({ method: input.method, path, body: text ? JSON.parse(text) as unknown : null });
     if (path === "/api/v1/approval/my-pending/document-counts") return options.countsFail ? new Response(null, { status: 404 }) : Response.json({ LeaveRequest: 2, PurchaseOrder: 1, QcCoa: 3, PayrollRun: 1, BillingSheet: 0 });
     if (path === "/api/v1/approval/my-pending/stats") return Response.json({ LeaveRequest: 2 });
-    if (path === "/api/v1/approval/my-pending") return Response.json([entity("LeaveRequest", "lr-1"), entity("LeaveRequest", "lr-2", { approvalLogs: [{ user: { name: "K. Mensah" }, status: 1, approvedAt: "2026-10-01T08:00:00Z" }] }), entity("PurchaseOrder", "po-9")]);
+    if (path === "/api/v1/approval/my-pending") return Response.json([entity("LeaveRequest", "lr-1"), entity("LeaveRequest", "lr-2", { approvalLogs: [{ user: { name: "K. Mensah" }, status: 1, approvedAt: "2026-10-01T08:00:00Z" }], onBehalfOf: { name: "Ama Owusu" } }), entity("PurchaseOrder", "po-9")]);
+    if (path === "/api/v1/approval/delegations/mine") return Response.json({ given: [{ id: "dg-1", delegator: { name: "Ada Mensah" }, delegate: { name: "Kofi Boateng" }, startsAt: "2026-10-14T08:00:00Z", endsAt: "2026-10-20T00:00:00Z", reason: "Annual leave", status: 1 }],
+      received: [{ id: "dg-2", delegator: { name: "Ama Owusu" }, delegate: { name: "Ada Mensah" }, startsAt: "2026-10-01T08:00:00Z", endsAt: "2026-10-03T00:00:00Z", status: 2 }] });
+    if (path === "/api/v1/approval/delegations/dg-1" && input.method === "DELETE") return new Response(null, { status: 204 });
     if (path === "/api/v1/approval/my-pending/LeaveRequest/lr-1") return Response.json(entity("LeaveRequest", "lr-1", { approvalLogs: [{ user: { name: "K. Mensah" }, status: 2, approvedAt: "2026-09-30T12:00:00Z", comments: "Dates clash with the audit" }] }));
+    if (path === "/api/v1/approval/my-pending/Response/doc-1") return Response.json(entity("Response", "doc-1"));
     if (path === "/api/v1/approval/my-pending/ServiceMemo/sm-1") return Response.json(entity("ServiceMemo", "sm-1"));
     if (path === "/api/v1/approval/my-pending/LeaveRequest/gone") return new Response(null, { status: 403 });
     if (path === "/api/v1/leave-request/lr-1") return Response.json(leave);
@@ -68,14 +73,34 @@ it("shows what is waiting by document, linking only those decided here", async (
   expect(cards.queryByText("Billing sheet")).toBeNull();
   expect(cards.queryByRole("link", { name: /QC COA/ })).toBeNull();
   expect(cards.getByText(/Decided in Quality Control/)).toBeTruthy();
-  expect(cards.getByRole("link", { name: "Payroll run, 1 waiting" })).toBeTruthy();
+  expect(cards.queryByRole("link", { name: "Payroll run, 1 waiting" })).toBeNull();
+  expect(cards.getByText(/Decided in Human resources/)).toBeTruthy();
   await userEvent.setup().click(cards.getByRole("link", { name: "Leave request, 2 waiting" }));
   await waitFor(() => expect(router.state.location.search).toBe("?type=LeaveRequest"));
   expect(await screen.findByText("LR-1")).toBeTruthy();
   // The purchase order the server also sent is not shown under leave requests.
   expect(screen.queryByText("PO-9")).toBeNull();
   expect(screen.getByText("1 recorded")).toBeTruthy();
+  // A request reached through a delegation says whose it is.
+  expect(screen.getByText("For Ama Owusu")).toBeTruthy();
 });
+
+it("lists delegations given and received, and ends one only after confirming", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/qa/pending-approvals");
+  // The page may be drawn again once the session settles, so the panel is looked up after it has loaded.
+  expect(await screen.findByText("Kofi Boateng")).toBeTruthy();
+  const panel = within(screen.getByRole("region", { name: "Delegation" }));
+  expect(panel.getByText("Annual leave")).toBeTruthy();
+  // An ended delegation cannot be ended again.
+  expect(panel.getAllByRole("button", { name: /^(End|Give back)$/ })).toHaveLength(1);
+  await user.click(panel.getByRole("button", { name: "End" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(dialog.textContent).toContain("Kofi Boateng stops seeing and deciding your approvals now");
+  expect(writes(calls)).toEqual([]);
+  await user.click(within(dialog).getByRole("button", { name: "End delegation" }));
+  await waitFor(() => expect(writes(calls).map((call) => [call.method, call.path])).toEqual([["DELETE", "/api/v1/approval/delegations/dg-1"]]));
+}, 20_000);
 
 it("falls back to the older count when the full one is not there", async () => {
   open("/qa/pending-approvals", { countsFail: true });
@@ -93,6 +118,7 @@ it("shows the document and its history, and rejects only with a reason", async (
   expect(within(screen.getByRole("list", { name: "Approval history" })).getByText("Dates clash with the audit")).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Reject" }));
   const dialog = await screen.findByRole("dialog");
+  await within(dialog).findByRole("textbox", { name: /Reason for rejecting/ });
   await user.click(within(dialog).getByRole("button", { name: "Reject request" }));
   expect(await within(dialog).findByText("Say why the request is rejected")).toBeTruthy();
   expect(writes(calls)).toEqual([]);
@@ -135,6 +161,18 @@ it("offers approving and rejecting each to those who hold that permission", asyn
   expect(screen.getByRole("button", { name: "Reject" })).toBeTruthy();
 });
 
+it("requires the dedicated Response permission for each certificate decision", async () => {
+  open("/qa/pending-approvals/Response/doc-1", { permissions: ["CanViewPendingApprovals", "CanApprovePendingApproval", "CanRejectPendingApproval"] });
+  await screen.findByRole("region", { name: "Certificate of analysis details" });
+  expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Reject" })).toBeNull();
+  cleanup();
+
+  open("/qa/pending-approvals/Response/doc-1", { permissions: ["CanViewPendingApprovals", "CanApproveResponse"] });
+  await screen.findByRole("button", { name: "Approve" });
+  expect(screen.queryByRole("button", { name: "Reject" })).toBeNull();
+}, 15_000);
+
 it("lays out every readable document without failing, from full or sparse data", async () => {
   const documents: Record<string, object> = {
     StockAdjustment: { adjustmentNumber: "ADJ-1", targetType: 1, lines: [{ id: "l1", materialName: "Maize starch", batchNumber: "B-1", systemQuantitySnapshot: 5000, physicalCount: 4000, variance: -1000, uom: { symbol: "g" }, reasonCode: "PhysicalCount" }] },
@@ -156,10 +194,10 @@ it("lays out every readable document without failing, from full or sparse data",
     "/api/v1/form/responses/material-batch/mb-1": [{ responseId: "doc-1", formField: { id: "fld-1" }, value: "94.1% Does not comply" }, { responseId: "other", formField: { id: "fld-1" }, value: "99.9%" }],
     "/api/v1/material-ard/material/batch-details/mb-1": { arNumber: "AR-55", materialBatch: { batchNumber: "B-1", material: { name: "Maize starch" } } } };
   const expected: Record<string, string> = { CustomerQuotation: "GH₵ 1,140.00", SupplierPricingAgreement: "10% above the current one", PayrollRun: "190,000.00", PerformanceReview: "Exceeds expectations", RndProject: "On hold",
-    RndFormulation: "V3", RndTechnologyTransfer: "Execution in progress", Response: "1 result does not comply with the specification.Tests, results and specificationsNo.TestResultSpecification1Assay94.1% Does not comply98.0% to 102.0%", StockAdjustment: "-1 kg", ProductionOrder: "Kinapharma", AllocateProductionOrder: "FG-7", OvertimeRequest: "6 for 2 people" };
+    RndFormulation: "V3", RndTechnologyTransfer: "Execution in progress", Response: "94.1%", StockAdjustment: "-1 kg", ProductionOrder: "Kinapharma", AllocateProductionOrder: "FG-7", OvertimeRequest: "6 for 2 people" };
   for (const type of ["StockAdjustment", "ProductionOrder", "AllocateProductionOrder", "OvertimeRequest", "ProformaInvoice", "FinishedGoodsTransferNote", "ProductionExtraPacking", "StaffRequisition", "JobRequest", "PurchaseOrder", "BillingSheet", "ShipmentDocument", "PurchaseRequisition",
     "CustomerQuotation", "SupplierPricingAgreement", "PayrollRun", "PerformanceReview", "RndProject", "RndFormulation", "RndTechnologyTransfer", "Response"]) {
-    const backend = stubBackend({ permissions: ["CanViewPendingApprovals", "CanApprovePendingApproval"] });
+    const backend = stubBackend({ permissions: ["CanViewPendingApprovals", "CanApprovePendingApproval", "CanApproveResponse"] });
     rememberSession();
     const session = backend.fetcher.getMockImplementation();
     backend.fetcher.mockImplementation(async (input, init) => {
@@ -175,7 +213,16 @@ it("lays out every readable document without failing, from full or sparse data",
     await waitFor(() => expect(within(section).queryByText(/^Loading the/)).toBeNull());
     const text = expected[type];
     if (text) expect(section.textContent).toContain(text);
-    expect((screen.getByRole("button", { name: "Approve" }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: "Approve" }) as HTMLButtonElement).disabled).toBe(type === "PayrollRun" || type === "PerformanceReview");
     cleanup(); forgetSession();
   }
 }, 60_000);
+
+it("refreshes pending approval counts on demand instead of keeping an old empty queue", async () => {
+  const { calls } = open("/qa/pending-approvals");
+  await screen.findByText("7 requests are waiting for your decision.");
+  const before = calls.filter((call) => call.path === "/api/v1/approval/my-pending/document-counts").length;
+  await userEvent.setup().click(screen.getByRole("button", { name: "Refresh approvals" }));
+  await waitFor(() => expect(calls.filter((call) => call.path === "/api/v1/approval/my-pending/document-counts").length).toBeGreaterThan(before));
+  expect(writes(calls)).toHaveLength(0);
+});

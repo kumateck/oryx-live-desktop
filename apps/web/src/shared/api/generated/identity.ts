@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1DepartmentApiResponse,
       PostApiV1DepartmentApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "department", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/department`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1DepartmentApiResponse,
       GetApiV1DepartmentApiArg
     >({
+      providesTags: [{ type: "department", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/department`,
         headers: {
@@ -30,6 +32,7 @@ const injectedRtkApi = api.injectEndpoints({
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
           type: queryArg["type"],
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -37,6 +40,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1DepartmentByDepartmentIdApiResponse,
       GetApiV1DepartmentByDepartmentIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "department", id: queryArg.departmentId }],
       query: (queryArg) => ({
         url: `/api/v1/department/${queryArg.departmentId}`,
         headers: {
@@ -49,6 +53,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1DepartmentByDepartmentIdApiResponse,
       PutApiV1DepartmentByDepartmentIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "department", id: "LIST" }, { type: "department", id: queryArg.departmentId }]),
       query: (queryArg) => ({
         url: `/api/v1/department/${queryArg.departmentId}`,
         method: "PUT",
@@ -63,6 +68,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1DepartmentByDepartmentIdApiResponse,
       DeleteApiV1DepartmentByDepartmentIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "department", id: "LIST" }, { type: "department", id: queryArg.departmentId }]),
       query: (queryArg) => ({
         url: `/api/v1/department/${queryArg.departmentId}`,
         method: "DELETE",
@@ -76,6 +82,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PermissionModulesApiResponse,
       GetApiV1PermissionModulesApiArg
     >({
+      providesTags: [{ type: "permission/module", id: "LIST" }, { type: "permission", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/permission/modules`,
         headers: {
@@ -88,6 +95,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PermissionApiResponse,
       GetApiV1PermissionApiArg
     >({
+      providesTags: [{ type: "permission", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/permission`,
         headers: {
@@ -100,6 +108,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PermissionUserByUserIdApiResponse,
       GetApiV1PermissionUserByUserIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "permission/user", id: queryArg.userId }],
       query: (queryArg) => ({
         url: `/api/v1/permission/user/${queryArg.userId}`,
         headers: {
@@ -112,6 +121,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PermissionRoleByRoleIdApiResponse,
       GetApiV1PermissionRoleByRoleIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "permission/role", id: queryArg.roleId }],
       query: (queryArg) => ({
         url: `/api/v1/permission/role/${queryArg.roleId}`,
         headers: {
@@ -124,6 +134,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1PermissionRoleByRoleIdApiResponse,
       PutApiV1PermissionRoleByRoleIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "permission/role", id: "LIST" }, { type: "permission", id: "LIST" }, { type: "permission/role", id: queryArg.roleId }]),
       query: (queryArg) => ({
         url: `/api/v1/permission/role/${queryArg.roleId}`,
         method: "PUT",
@@ -138,6 +149,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1PermissionMenuApiResponse,
       GetApiV1PermissionMenuApiArg
     >({
+      providesTags: [{ type: "permission/menu", id: "LIST" }, { type: "permission", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/permission/menu`,
         headers: {
@@ -147,6 +159,7 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     getApiV1Role: build.query<GetApiV1RoleApiResponse, GetApiV1RoleApiArg>({
+      providesTags: [{ type: "role", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/role`,
         headers: {
@@ -159,6 +172,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RoleApiResponse,
       PostApiV1RoleApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "role", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/role`,
         method: "POST",
@@ -173,6 +187,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RoleWithPermissionsApiResponse,
       GetApiV1RoleWithPermissionsApiArg
     >({
+      providesTags: [{ type: "role/with-permission", id: "LIST" }, { type: "role", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/role/with-permissions`,
         headers: {
@@ -190,6 +205,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RoleByIdApiResponse,
       GetApiV1RoleByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "role", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/role/${queryArg.id}`,
         headers: {
@@ -202,6 +218,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1RoleByIdApiResponse,
       PutApiV1RoleByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "role", id: "LIST" }, { type: "role", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/role/${queryArg.id}`,
         method: "PUT",
@@ -216,6 +233,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1RoleByIdApiResponse,
       DeleteApiV1RoleByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "role", id: "LIST" }, { type: "role", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/role/${queryArg.id}`,
         method: "DELETE",
@@ -229,6 +247,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RoleCheckByIdApiResponse,
       GetApiV1RoleCheckByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "role/check", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/role/check/${queryArg.id}`,
         headers: {
@@ -238,6 +257,7 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     getApiV1User: build.query<GetApiV1UserApiResponse, GetApiV1UserApiArg>({
+      providesTags: [{ type: "user", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/user`,
         headers: {
@@ -256,6 +276,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1UserByPermissionApiResponse,
       GetApiV1UserByPermissionApiArg
     >({
+      providesTags: [{ type: "user/by-permission", id: "LIST" }, { type: "user", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/user/by-permission`,
         headers: {
@@ -274,6 +295,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1UserAuthenticatedApiResponse,
       GetApiV1UserAuthenticatedApiArg
     >({
+      providesTags: [{ type: "user/authenticated", id: "LIST" }, { type: "user", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/user/authenticated`,
         headers: {
@@ -286,6 +308,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1UserRoleByRoleIdApiResponse,
       GetApiV1UserRoleByRoleIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "user/role", id: queryArg.roleId }],
       query: (queryArg) => ({
         url: `/api/v1/user/role/${queryArg.roleId}`,
         headers: {
@@ -301,6 +324,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1UserByIdApiResponse,
       PutApiV1UserByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "user", id: "LIST" }, { type: "user", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/user/${queryArg.id}`,
         method: "PUT",
@@ -315,6 +339,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1UserByIdApiResponse,
       DeleteApiV1UserByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "user", id: "LIST" }, { type: "user", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/user/${queryArg.id}`,
         method: "DELETE",
@@ -328,6 +353,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1UserRoleByIdApiResponse,
       PutApiV1UserRoleByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "user/role", id: "LIST" }, { type: "user", id: "LIST" }, { type: "user/role", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/user/role/${queryArg.id}`,
         method: "PUT",
@@ -342,6 +368,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1UserAvatarByIdApiResponse,
       PostApiV1UserAvatarByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "user/avatar", id: "LIST" }, { type: "user", id: "LIST" }, { type: "user/avatar", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/user/avatar/${queryArg.id}`,
         method: "POST",
@@ -356,6 +383,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1UserSignatureByIdApiResponse,
       PostApiV1UserSignatureByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "user/signature", id: "LIST" }, { type: "user", id: "LIST" }, { type: "user/signature", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/user/signature/${queryArg.id}`,
         method: "POST",
@@ -370,6 +398,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1UserToggleDisableByIdApiResponse,
       PutApiV1UserToggleDisableByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "user/toggle-disable", id: "LIST" }, { type: "user", id: "LIST" }, { type: "user/toggle-disable", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/user/toggle-disable/${queryArg.id}`,
         method: "PUT",
@@ -407,6 +436,8 @@ export type GetApiV1DepartmentApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1DepartmentByDepartmentIdApiResponse =
   /** status 200 OK */ DomainEntitiesDepartmentsDepartmentDto;

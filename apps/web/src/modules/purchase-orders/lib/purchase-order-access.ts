@@ -11,6 +11,11 @@ export const sendOrderPermissions: Record<SupplierType, string> = { 0: "CanSendA
 
 /** Changing the lines of an order that has already gone to its supplier. */
 export const reviseOrderPermissions: Record<SupplierType, string> = { 0: "CanReviseForeignPurchaseOrder", 1: "CanReviseLocalPurchaseOrder" };
+/**
+ * Cancelling an order. The server has no permission of its own for it (any signed-in user may call it),
+ * so the app asks for the permission to revise orders of that kind, the nearest the server has.
+ */
+export const cancelOrderPermissions = reviseOrderPermissions;
 
 export const ordersPath = "/procurement/purchase-orders";
 export const orderListPath = "/procurement/purchase-order-lists";
@@ -26,3 +31,11 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
   6: "Approved", 7: "Sent to supplier", 8: "Partly invoiced", 9: "Fully invoiced", 10: "Revised", 11: "Cancelled",
 };
 export const isOrderStatus = (value: number): value is OrderStatus => Number.isInteger(value) && value >= 0 && value <= 11;
+
+/**
+ * An order can be cancelled until a shipment invoice has been raised against it. The server does not check
+ * this: it marks any order cancelled, which would strand invoiced goods.
+ */
+export function mayCancelOrder(status: number): boolean {
+  return isOrderStatus(status) && status !== orderStatus.partlyInvoiced && status !== orderStatus.invoiced && status !== orderStatus.cancelled;
+}

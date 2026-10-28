@@ -1,0 +1,82 @@
+# Rendered by the nginx image at start-up: ${ORYX_API_ORIGIN} and ${ORYX_GATEWAY_UPSTREAM} come from the container's environment.
+
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  ""      close;
+}
+
+server {
+  listen 80;
+  server_name _;
+  root /usr/share/nginx/html;
+  client_max_body_size 100m;
+  server_tokens off;
+  add_header X-Content-Type-Options nosniff always;
+  add_header Referrer-Policy same-origin always;
+
+  location = /healthz { add_header Cache-Control "no-store" always; try_files /deployment.json =503; }
+  location = /deployment.json { add_header Cache-Control "no-store" always; try_files $uri =404; }
+  location ~ /\. { deny all; }
+  # Docker's DNS, so the gateway is looked up per request and nginx starts even while it is down.
+  resolver 127.0.0.11 valid=30s ipv6=off;
+
+  location /api/ {
+    # Through a variable, so a backend container's name is looked up again when it is recreated.
+    set $api ${ORYX_API_ORIGIN};
+    proxy_pass $api;
+    proxy_http_version 1.1;
+    # The backend writes file, avatar and signature links from the Host it was called with, so it must see the
+    # site's own address (as the browser used it), not the container name it is reached by.
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto ${ORYX_PUBLIC_PROTO};
+    proxy_set_header Authorization $http_authorization;
+    proxy_ssl_server_name on;
+    proxy_ssl_verify on;
+    proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+    proxy_read_timeout 300s;
+  }
+
+  location /realtime/ {
+    set $gateway http://${ORYX_GATEWAY_UPSTREAM};
+    if ($gateway = "http://disabled.invalid:4100") { return 503; }
+    proxy_pass $gateway;
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_read_timeout 1h;
+  }
+
+  # Installers for the desktop shell, mounted from the host.
+  location /downloads/ {
+    alias /srv/downloads/;
+    add_header Cache-Control "no-cache";
+  }
+
+  # Hashed build output never changes under the same name. Served from /srv/assets, which keeps earlier releases'
+  # files (deploy/keep-assets.sh), so a window opened before a release can still load its pages.
+  location /assets/ {
+    root /srv;
+    try_files $uri =404;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+  }
+
+  # Pinned document engines must resolve as files, never the SPA's HTML fallback.
+  # Keep older engine revisions on the same persistent volume as app chunks.
+  location /viewers/ {
+    root /srv/assets;
+    try_files $uri =404;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+    add_header X-Content-Type-Options "nosniff";
+  }
+
+  # Client-side routes all load index.html, which is always revalidated so a new release is picked up.
+  location / {
+    try_files $uri /index.html;
+    add_header Cache-Control "no-store" always;
+    add_header X-Content-Type-Options nosniff always;
+  }
+}

@@ -436,6 +436,7 @@ export const navigationCatalog = [
         "label": "Shipment Management",
         "permissions": [
           "CanViewShipmentDocument",
+          "CanViewShipmentDiscrepancy",
           "CanViewBillingSheet"
         ],
         "children": [
@@ -445,6 +446,14 @@ export const navigationCatalog = [
             "path": "/logistics/shipment-documents",
             "permissions": [
               "CanViewShipmentDocument"
+            ]
+          },
+          {
+            "id": "logistics.shipment-management.shipment-discrepancies",
+            "label": "Shipment Discrepancies",
+            "path": "/logistics/shipment-discrepancies",
+            "permissions": [
+              "CanViewShipmentDiscrepancy"
             ]
           },
           {
@@ -697,6 +706,7 @@ export const navigationCatalog = [
           "CanIssueRawMaterialRequisitions",
           "CanIssuePackagingMaterialRequisitions",
           "CanViewMaterialStockAdjustment",
+          "CanViewStockDiscrepancy",
           "CanViewRawMaterialLocationChartList",
           "CanViewPackagingMaterialLocationChartList",
           "CanAssignRawMaterialsStockToShelves",
@@ -740,6 +750,14 @@ export const navigationCatalog = [
             "path": "/warehouse/stock-adjustments?target=1",
             "permissions": [
               "CanViewMaterialStockAdjustment"
+            ]
+          },
+          {
+            "id": "warehouse-management.stock-movement.stock-discrepancies",
+            "label": "Stock Discrepancies",
+            "path": "/warehouse/stock-discrepancies",
+            "permissions": [
+              "CanViewStockDiscrepancy"
             ]
           },
           {
@@ -883,7 +901,9 @@ export const navigationCatalog = [
           "CanViewProductAnalyticalTestRequests",
           "CanViewProductAnalyticalTestRequestsForAnalysing",
           "CanViewRawMaterialGoodsReceiptNotes",
-          "CanViewPackagingMaterialGoodsReceiptNotes"
+          "CanViewPackagingMaterialGoodsReceiptNotes",
+          "CanViewMaterialRetests",
+          "CanViewResponseReworkTasks"
         ],
         "children": [
           {
@@ -902,6 +922,22 @@ export const navigationCatalog = [
             "permissions": [
               "CanViewRawMaterialGoodsReceiptNotes",
               "CanViewPackagingMaterialGoodsReceiptNotes"
+            ]
+          },
+          {
+            "id": "quality-control.testing.retest",
+            "label": "Retest",
+            "path": "/qc/material-retests",
+            "permissions": [
+              "CanViewMaterialRetests"
+            ]
+          },
+          {
+            "id": "quality-control.testing.rework",
+            "label": "Rework",
+            "path": "/qc/rework-tasks",
+            "permissions": [
+              "CanViewResponseReworkTasks"
             ]
           }
         ]

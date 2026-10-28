@@ -22,7 +22,7 @@ export function ActivityCard({ card }: { card: BoardCard }) {
       <p className="text-xs text-muted-foreground">{[card.productCode, size, card.scheduleCode].filter(Boolean).join(" · ")}</p></div>
     <div className="flex items-center justify-between gap-2">
       <People people={card.team} />
-      <span className="text-xs text-muted-foreground">{card.stepStatus === stepStatus.new ? "waiting" : "running"}{waiting ? ` ${waiting}` : ""}{card.critical ? " · critical" : ""}</span>
+      <span className="text-xs text-muted-foreground">{card.stepStatus === stepStatus.new ? "waiting" : "running"}{waiting ? ` ${waiting}` : ""}{card.critical ? " · critical" : " · automated"}</span>
     </div>
   </Link>;
 }

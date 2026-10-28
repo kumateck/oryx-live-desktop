@@ -1,5 +1,6 @@
 import { useId, useState, type ChangeEvent, type DragEvent } from "react";
 import { useController, useFormContext, type FieldValues } from "react-hook-form";
+import { AttachmentOpener } from "@/shared/attachments/attachment-opener";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldFrame } from "../field-frame";
@@ -42,13 +43,12 @@ export default function UploadInputField({ field }: { field: UploadField<FieldVa
     {selectionError ? <p role="alert" className="text-xs text-destructive">{selectionError}</p> : null}
     {files.length || persisted.length ? <ul className="min-w-0 space-y-1 text-sm">
       {persisted.map((item) => <li key={item.id} className="flex min-w-0 items-center justify-between gap-2">
-        {item.url ? <a href={item.url} target="_blank" rel="noopener noreferrer" className="truncate underline">{item.name}</a>
-          : <span className="truncate">{item.name}</span>}
+        <AttachmentOpener file={{ id: item.id, name: item.name, link: item.url ?? null }} />
         {field.onPersistedChange ? <Button type="button" size="xs" variant="ghost" disabled={field.disabled}
           aria-label={`Remove ${item.name}`} onClick={() => field.onPersistedChange?.(persisted.filter((entry) => entry.id !== item.id))}>Remove</Button> : null}
       </li>)}
       {files.map((file) => <li key={`${file.name}:${file.size}:${file.lastModified}`} className="flex min-w-0 items-center justify-between gap-2">
-        <span className="truncate">{file.name}</span>
+        <AttachmentOpener file={{ id: `${file.name}:${file.lastModified}`, name: file.name, link: null, blob: file }} />
         <Button type="button" size="xs" variant="ghost" disabled={field.disabled} aria-label={`Remove ${file.name}`}
           onClick={() => control.onChange(field.mode === "single" ? null : files.filter((entry) => entry !== file))}>Remove</Button>
       </li>)}

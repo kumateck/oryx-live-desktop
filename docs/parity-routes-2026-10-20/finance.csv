@@ -1,0 +1,6 @@
+area,next_route,status,live_destination,next_source,live_source,finding
+finance,/finance/cashflow,unported,,src/app/(private)/finance/cashflow/page.tsx,,"No equivalent complete screen identified in Live. Related dashboard, generated API or generic approval evidence does not replace the domain workflow."
+finance,/finance/payment-approvals/[id],unported,,src/app/(private)/finance/payment-approvals/[id]/page.tsx,,"No equivalent complete screen identified in Live. Related dashboard, generated API or generic approval evidence does not replace the domain workflow."
+finance,/finance/payment-approvals,unported,,src/app/(private)/finance/payment-approvals/page.tsx,,"No equivalent complete screen identified in Live. Related dashboard, generated API or generic approval evidence does not replace the domain workflow."
+finance,/finance/payments/[id],unported,,src/app/(private)/finance/payments/[id]/page.tsx,,"No equivalent complete screen identified in Live. Related dashboard, generated API or generic approval evidence does not replace the domain workflow."
+finance,/finance/payments,unported,,src/app/(private)/finance/payments/page.tsx,,"No equivalent complete screen identified in Live. Related dashboard, generated API or generic approval evidence does not replace the domain workflow."

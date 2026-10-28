@@ -3,6 +3,7 @@ import { hrApi } from "@/shared/api/generated/hr";
 import { settingsApi } from "@/shared/api/generated/settings";
 import { parseClockValue } from "@/shared/forms/time-value";
 import { daysOfWeek } from "@/modules/working-days/working-days";
+import { addTags } from "@/shared/api/add-tags";
 
 // Shift types, shift categories, shift schedules and the working hours policy share the rules in this file.
 export const shiftPermissions = {
@@ -27,10 +28,10 @@ const types = tag("ShiftTypes"), categories = tag("ShiftCategories"), schedules 
 // A schedule shows its shift types, so it is read again when a shift type changes.
 const typeChanged = (_result: unknown, error: unknown) => error ? [] : [types.list, schedules.list];
 export const shiftApi = hrApi.enhanceEndpoints({ endpoints: {
-  getApiV1ShiftType: { providesTags: [types.list] }, postApiV1ShiftType: { invalidatesTags: typeChanged }, putApiV1ShiftTypeById: { invalidatesTags: typeChanged }, deleteApiV1ShiftTypeById: { invalidatesTags: typeChanged },
-  getApiV1ShiftCategory: { providesTags: [categories.list] }, postApiV1ShiftCategory: { invalidatesTags: categories.changed }, putApiV1ShiftCategoryById: { invalidatesTags: categories.changed }, deleteApiV1ShiftCategoryById: { invalidatesTags: categories.changed },
-  getApiV1ShiftSchedules: { providesTags: [schedules.list] }, postApiV1ShiftSchedules: { invalidatesTags: schedules.changed }, putApiV1ShiftSchedulesById: { invalidatesTags: schedules.changed }, deleteApiV1ShiftSchedulesById: { invalidatesTags: schedules.changed } } });
-export const policyApi = settingsApi.enhanceEndpoints({ endpoints: { getApiV1WorkingHoursPolicy: { providesTags: [policies.list] }, postApiV1WorkingHoursPolicy: { invalidatesTags: policies.changed }, deleteApiV1WorkingHoursPolicyById: { invalidatesTags: policies.changed } } });
+  getApiV1ShiftType: (definition) => { definition.providesTags = addTags(definition.providesTags, [types.list]); }, postApiV1ShiftType: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, typeChanged); }, putApiV1ShiftTypeById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, typeChanged); }, deleteApiV1ShiftTypeById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, typeChanged); },
+  getApiV1ShiftCategory: (definition) => { definition.providesTags = addTags(definition.providesTags, [categories.list]); }, postApiV1ShiftCategory: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, categories.changed); }, putApiV1ShiftCategoryById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, categories.changed); }, deleteApiV1ShiftCategoryById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, categories.changed); },
+  getApiV1ShiftSchedules: (definition) => { definition.providesTags = addTags(definition.providesTags, [schedules.list]); }, postApiV1ShiftSchedules: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, schedules.changed); }, putApiV1ShiftSchedulesById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, schedules.changed); }, deleteApiV1ShiftSchedulesById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, schedules.changed); } } });
+export const policyApi = settingsApi.enhanceEndpoints({ endpoints: { getApiV1WorkingHoursPolicy: (definition) => { definition.providesTags = addTags(definition.providesTags, [policies.list]); }, postApiV1WorkingHoursPolicy: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, policies.changed); }, deleteApiV1WorkingHoursPolicyById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, policies.changed); } } });
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const option = z.object({ value: z.string().min(1), label: z.string() });

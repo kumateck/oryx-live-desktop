@@ -38,11 +38,12 @@ const invoice = (id: string, type: number) => ({ id, code: id.toUpperCase(), sup
 const shipment = (id: string, status: number, extra: object = {}) => ({ id, code: id.toUpperCase(), status, createdAt: "2026-09-20T08:00:00Z", atPortAt: status >= 1 ? "2026-09-25T08:00:00Z" : null, shipmentInvoice: invoice("inv-a", 0), attachments: [], ...extra });
 interface Call { method: string; path: string; body: unknown }
 
-function open(address: string, permissions: string[], options: { uploadFails?: boolean } = {}) {
+function open(address: string, permissions: string[], options: { uploadFails?: boolean; codeFailsOnce?: boolean } = {}) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: Call[] = [];
   let uploads = 0;
+  let codeCounts = 0;
   const session = backend.fetcher.getMockImplementation();
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
@@ -54,7 +55,13 @@ function open(address: string, permissions: string[], options: { uploadFails?: b
     if (path === "/api/v1/procurement/waybill") return input.method === "GET" ? Response.json({ data: [{ ...shipment("wb-1", 0), shipmentInvoice: invoice("inv-l", 1) }], pageIndex: 1, pageCount: 1, totalRecordCount: 1 }) : Response.json("wb-9", { status: 201 });
     if (path === "/api/v1/procurement/shipment-document/sd-9") return Response.json(shipment("sd-9", 0));
     if (path === "/api/v1/procurement/shipment-invoice/unattached") return Response.json([invoice("inv-a", 0), invoice("inv-l", 1)]);
-    if (path === "/api/v1/configuration/by-model-type/ShipmentDocument" || path === "/api/v1/configuration/by-model-type/Waybill") return Response.json({ prefix: "SD-", namingType: 0, minimumNameLength: 4, maximumNameLength: 6 });
+    if (path === "/api/v1/configuration/by-model-type/ShipmentDocument") return Response.json({ prefix: "SD-", namingType: 0, minimumNameLength: 4, maximumNameLength: 6 });
+    if (path === "/api/v1/configuration/by-model-type/Waybill") return Response.json({ prefix: "WB", namingType: 0, minimumNameLength: 3, maximumNameLength: 3 });
+    if (path.endsWith("/Waybill/count")) return Response.json({ description: "Invalid model type sent" }, { status: 400 });
+    if (path.endsWith("/ShipmentDocument/count")) {
+      codeCounts++;
+      return options.codeFailsOnce && codeCounts === 1 ? Response.json({ description: "Invalid model type sent" }, { status: 400 }) : Response.json(new URL(input.url).searchParams.get("prefix") === "WB" ? 8 : 4);
+    }
     if (path.startsWith("/api/v1/configuration/")) return Response.json(4);
     if (path === "/api/v1/file/ShipmentDocument/sd-9") { uploads += 1; return options.uploadFails && uploads === 1 ? Response.json({ errors: [{ code: "File", description: "The file store is unavailable." }] }, { status: 500 }) : new Response(null, { status: 200 }); }
     if (path.endsWith("/status")) return new Response(null, { status: 204 });
@@ -120,3 +127,23 @@ it("creates the document, then attaches its papers; a failed upload is retried w
   expect(writes(calls).map((call) => `${call.method} ${call.path}`)).toEqual(["POST /api/v1/procurement/shipment-document", "POST /api/v1/file/ShipmentDocument/sd-9", "POST /api/v1/file/ShipmentDocument/sd-9"]);
   expect(writes(calls)[0]?.body).toMatchObject({ shipmentInvoiceId: "inv-a" });
 }, 30_000);
+
+it("waybill code generation uses its configured rule and recovers from a failed count without creating a document", async () => {
+  const { calls } = open("/logistics/waybill/create", ["CanViewWaybill", "CanCreateWaybill"], { codeFailsOnce: true });
+  await screen.findByText(/The document number could not be generated/);
+  const number = screen.getByRole("textbox", { name: /Document number/ });
+  expect((number as HTMLInputElement).value).toBe("");
+  await userEvent.setup().click(screen.getByRole("button", { name: "Retry document number" }));
+  await waitFor(() => expect((number as HTMLInputElement).value).toBe("WB009"));
+  expect(calls.filter((call) => call.path.endsWith("/ShipmentDocument/count"))).toHaveLength(2);
+  expect(calls.some((call) => call.path.endsWith("/Waybill/count"))).toBe(false);
+  expect(writes(calls)).toHaveLength(0);
+});
+it("retrying a waybill code never overwrites a manual document number", async () => {
+  open("/logistics/waybill/create", ["CanViewWaybill", "CanCreateWaybill"]);
+  await waitFor(() => expect((screen.getByRole("textbox", { name: /Document number/ }) as HTMLInputElement).value).toBe("WB009"));
+  const number = screen.getByRole("textbox", { name: /Document number/ });
+  const user = userEvent.setup(); await user.clear(number); await user.type(number, "MANUAL-123");
+  await user.click(screen.getByRole("button", { name: "Retry document number" }));
+  expect((number as HTMLInputElement).value).toBe("MANUAL-123");
+}, 15000);

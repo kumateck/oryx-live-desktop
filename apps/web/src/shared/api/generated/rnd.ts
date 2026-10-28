@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RndProjectsByRndProjectIdAnalyticalMethodsApiResponse,
       PostApiV1RndProjectsByRndProjectIdAnalyticalMethodsApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "rnd/project", id: "LIST" }, { type: "rnd", id: "LIST" }, { type: "rnd/project", id: queryArg.rndProjectId }]),
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/analytical-methods`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsByRndProjectIdAnalyticalMethodsApiResponse,
       GetApiV1RndProjectsByRndProjectIdAnalyticalMethodsApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/project", id: queryArg.rndProjectId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/analytical-methods`,
         headers: {
@@ -50,6 +52,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsByRndProjectIdAnalyticalMethodsAndMethodIdApiResponse,
       GetApiV1RndProjectsByRndProjectIdAnalyticalMethodsAndMethodIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/project", id: queryArg.rndProjectId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/analytical-methods/${queryArg.methodId}`,
         headers: {
@@ -92,6 +95,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RndProjectsByRndProjectIdFormulationsApiResponse,
       PostApiV1RndProjectsByRndProjectIdFormulationsApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "rnd/project", id: "LIST" }, { type: "rnd", id: "LIST" }, { type: "rnd/project", id: queryArg.rndProjectId }]),
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/formulations`,
         method: "POST",
@@ -106,6 +110,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsByRndProjectIdFormulationsApiResponse,
       GetApiV1RndProjectsByRndProjectIdFormulationsApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/project", id: queryArg.rndProjectId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/formulations`,
         headers: {
@@ -152,6 +157,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsByRndProjectIdFormulationsAndFormulationIdApiResponse,
       GetApiV1RndProjectsByRndProjectIdFormulationsAndFormulationIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/project", id: queryArg.rndProjectId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/formulations/${queryArg.formulationId}`,
         headers: {
@@ -179,6 +185,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndFormulationReviewsByFormulationIdApiResponse,
       GetApiV1RndFormulationReviewsByFormulationIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/formulation-review", id: queryArg.formulationId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/formulation-reviews/${queryArg.formulationId}`,
         headers: {
@@ -191,6 +198,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndFormulationReviewsApiResponse,
       GetApiV1RndFormulationReviewsApiArg
     >({
+      providesTags: [{ type: "rnd/formulation-review", id: "LIST" }, { type: "rnd", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/formulation-reviews`,
         headers: {
@@ -207,6 +215,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RndProjectsApiResponse,
       PostApiV1RndProjectsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "rnd/project", id: "LIST" }, { type: "rnd", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects`,
         method: "POST",
@@ -221,6 +230,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsApiResponse,
       GetApiV1RndProjectsApiArg
     >({
+      providesTags: [{ type: "rnd/project", id: "LIST" }, { type: "rnd", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects`,
         headers: {
@@ -239,6 +249,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1RndProjectsByIdApiResponse,
       PutApiV1RndProjectsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "rnd/project", id: "LIST" }, { type: "rnd", id: "LIST" }, { type: "rnd/project", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.id}`,
         method: "PUT",
@@ -253,6 +264,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1RndProjectsByIdApiResponse,
       DeleteApiV1RndProjectsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "rnd/project", id: "LIST" }, { type: "rnd", id: "LIST" }, { type: "rnd/project", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.id}`,
         method: "DELETE",
@@ -266,6 +278,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsByIdApiResponse,
       GetApiV1RndProjectsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/project", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.id}`,
         headers: {
@@ -278,6 +291,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1RndProjectsByIdStatusApiResponse,
       PutApiV1RndProjectsByIdStatusApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "rnd/project", id: "LIST" }, { type: "rnd", id: "LIST" }, { type: "rnd/project", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.id}/status`,
         method: "PUT",
@@ -292,6 +306,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RndStabilityChambersApiResponse,
       PostApiV1RndStabilityChambersApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "rnd/stability-chamber", id: "LIST" }, { type: "rnd", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/rnd/stability-chambers`,
         method: "POST",
@@ -306,6 +321,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndStabilityChambersApiResponse,
       GetApiV1RndStabilityChambersApiArg
     >({
+      providesTags: [{ type: "rnd/stability-chamber", id: "LIST" }, { type: "rnd", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/stability-chambers`,
         headers: {
@@ -322,6 +338,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RndProjectsByRndProjectIdStabilityStudiesApiResponse,
       PostApiV1RndProjectsByRndProjectIdStabilityStudiesApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "rnd/project", id: "LIST" }, { type: "rnd", id: "LIST" }, { type: "rnd/project", id: queryArg.rndProjectId }]),
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/stability-studies`,
         method: "POST",
@@ -336,6 +353,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsByRndProjectIdStabilityStudiesApiResponse,
       GetApiV1RndProjectsByRndProjectIdStabilityStudiesApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/project", id: queryArg.rndProjectId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/stability-studies`,
         headers: {
@@ -382,6 +400,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsByRndProjectIdStabilityStudiesAndStudyIdApiResponse,
       GetApiV1RndProjectsByRndProjectIdStabilityStudiesAndStudyIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/project", id: queryArg.rndProjectId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/stability-studies/${queryArg.studyId}`,
         headers: {
@@ -394,6 +413,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RndProjectsByRndProjectIdTechnologyTransfersApiResponse,
       PostApiV1RndProjectsByRndProjectIdTechnologyTransfersApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "rnd/project", id: "LIST" }, { type: "rnd", id: "LIST" }, { type: "rnd/project", id: queryArg.rndProjectId }]),
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/technology-transfers`,
         method: "POST",
@@ -408,6 +428,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsByRndProjectIdTechnologyTransfersApiResponse,
       GetApiV1RndProjectsByRndProjectIdTechnologyTransfersApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/project", id: queryArg.rndProjectId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/technology-transfers`,
         headers: {
@@ -466,6 +487,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndTechnologyTransferReviewsByTransferIdApiResponse,
       GetApiV1RndTechnologyTransferReviewsByTransferIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/technology-transfer-review", id: queryArg.transferId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/technology-transfer-reviews/${queryArg.transferId}`,
         headers: {
@@ -478,6 +500,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1RndProjectsByRndProjectIdTrialBatchesApiResponse,
       PostApiV1RndProjectsByRndProjectIdTrialBatchesApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "rnd/project", id: "LIST" }, { type: "rnd", id: "LIST" }, { type: "rnd/project", id: queryArg.rndProjectId }]),
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/trial-batches`,
         method: "POST",
@@ -492,6 +515,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsByRndProjectIdTrialBatchesApiResponse,
       GetApiV1RndProjectsByRndProjectIdTrialBatchesApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/project", id: queryArg.rndProjectId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/trial-batches`,
         headers: {
@@ -523,6 +547,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1RndProjectsByRndProjectIdTrialBatchesAndTrialBatchIdApiResponse,
       GetApiV1RndProjectsByRndProjectIdTrialBatchesAndTrialBatchIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "rnd/project", id: queryArg.rndProjectId }],
       query: (queryArg) => ({
         url: `/api/v1/rnd/projects/${queryArg.rndProjectId}/trial-batches/${queryArg.trialBatchId}`,
         headers: {

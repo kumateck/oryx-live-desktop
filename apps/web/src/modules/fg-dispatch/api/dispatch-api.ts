@@ -1,16 +1,17 @@
 import { api } from "@/shared/api/base-api";
 import { productionApi } from "@/shared/api/generated/production";
 import { settingsApi } from "@/shared/api/generated/settings";
+import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "ProductionOrders" as const, id: "all" };
 const goods = { type: "FinishedGoods" as const, id: "all" };
 const changed = (_result: unknown, error: unknown) => error ? [] : [list, goods];
 
 export const dispatchApi = productionApi.enhanceEndpoints({ endpoints: {
-  getApiV1ProductionOrdersAllocate: { providesTags: [list] }, getApiV1ProductionOrdersAllocateByAllocateProductionOrderId: { providesTags: [list] },
-  getApiV1ProductionOrdersProformaInvoice: { providesTags: [list] }, getApiV1ProductionOrdersProformaInvoiceByProformaInvoiceId: { providesTags: [list] },
-  putApiV1ProductionOrdersLoadByAllocateProductionOrderId: { invalidatesTags: changed }, putApiV1ProductionOrdersDeliverByAllocateProductionOrderId: { invalidatesTags: changed },
-  postApiV1ProductionOrdersByAllocateProductionOrderIdWaybill: { invalidatesTags: changed }, postApiV1ProductionOrdersProformaInvoice: { invalidatesTags: changed },
+  getApiV1ProductionOrdersAllocate: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, getApiV1ProductionOrdersAllocateByAllocateProductionOrderId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+  getApiV1ProductionOrdersProformaInvoice: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, getApiV1ProductionOrdersProformaInvoiceByProformaInvoiceId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+  putApiV1ProductionOrdersLoadByAllocateProductionOrderId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, putApiV1ProductionOrdersDeliverByAllocateProductionOrderId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
+  postApiV1ProductionOrdersByAllocateProductionOrderIdWaybill: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, postApiV1ProductionOrdersProformaInvoice: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
 } });
 export const { useGetApiV1ProductionOrdersAllocateQuery, useGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery, useLazyGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery, useGetApiV1ProductionOrdersProformaInvoiceQuery,
   useGetApiV1ProductionOrdersProformaInvoiceByProformaInvoiceIdQuery, usePutApiV1ProductionOrdersLoadByAllocateProductionOrderIdMutation, usePutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdMutation,

@@ -1,17 +1,18 @@
 import { settingsApi } from "@/shared/api/generated/settings";
 import type { PostApiV1CollectionUomByUomIdApiResponse } from "@/shared/api/generated/settings";
 import { collectionAudit } from "../lib/collections";
+import { addTags } from "@/shared/api/add-tags";
 
 const collectionTag = (model: string) => [{ type: "ConfigurationCollection" as const, id: model }];
 
 export const collectionApi = settingsApi.enhanceEndpoints({ addTagTypes: ["ConfigurationCollection", "ConfigurationUnit"], endpoints: {
-  getApiV1CollectionByItemType: { providesTags: (_result, _error, arg) => collectionTag(arg.itemType) },
-  postApiV1CollectionByItemType: { invalidatesTags: (_result, error, arg) => error ? [] : collectionTag(arg.itemType) },
-  putApiV1CollectionByItemTypeAndItemId: { invalidatesTags: (_result, error, arg) => error ? [] : collectionTag(arg.itemType) },
-  deleteApiV1CollectionByItemTypeAndItemId: { invalidatesTags: (_result, error, arg) => error ? [] : collectionTag(arg.itemType) },
-  postApiV1CollectionUom: { invalidatesTags: (_result, error) => error ? [] : collectionTag("UnitOfMeasure") },
-  putApiV1CollectionUomByUomId: { invalidatesTags: (_result, error, arg) => error ? [] : [...collectionTag("UnitOfMeasure"), { type: "ConfigurationUnit", id: arg.uomId }] },
-  deleteApiV1CollectionUomByUomId: { invalidatesTags: (_result, error, arg) => error ? [] : [...collectionTag("UnitOfMeasure"), { type: "ConfigurationUnit", id: arg.uomId }] },
+  getApiV1CollectionByItemType: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => collectionTag(arg.itemType)); },
+  postApiV1CollectionByItemType: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : collectionTag(arg.itemType)); },
+  putApiV1CollectionByItemTypeAndItemId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : collectionTag(arg.itemType)); },
+  deleteApiV1CollectionByItemTypeAndItemId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : collectionTag(arg.itemType)); },
+  postApiV1CollectionUom: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : collectionTag("UnitOfMeasure")); },
+  putApiV1CollectionUomByUomId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [...collectionTag("UnitOfMeasure"), { type: "ConfigurationUnit", id: arg.uomId }]); },
+  deleteApiV1CollectionUomByUomId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [...collectionTag("UnitOfMeasure"), { type: "ConfigurationUnit", id: arg.uomId }]); },
 } }).injectEndpoints({ endpoints: (build) => ({
   // These read endpoints use POST in the contract. Query aliases let RTK Query cache them.
   getConfigurationUnit: build.query<PostApiV1CollectionUomByUomIdApiResponse, string>({

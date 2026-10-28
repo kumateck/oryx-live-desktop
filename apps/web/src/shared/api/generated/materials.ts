@@ -2,6 +2,7 @@ import { api } from "../base-api";
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     postApiV1Bom: build.mutation<PostApiV1BomApiResponse, PostApiV1BomApiArg>({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "bom", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/bom`,
         method: "POST",
@@ -16,6 +17,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1BomByBillOfMaterialIdApiResponse,
       PutApiV1BomByBillOfMaterialIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "bom", id: "LIST" }, { type: "bom", id: queryArg.billOfMaterialId }]),
       query: (queryArg) => ({
         url: `/api/v1/bom/${queryArg.billOfMaterialId}`,
         method: "PUT",
@@ -30,6 +32,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1BomByBillOfMaterialIdApiResponse,
       DeleteApiV1BomByBillOfMaterialIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "bom", id: "LIST" }, { type: "bom", id: queryArg.billOfMaterialId }]),
       query: (queryArg) => ({
         url: `/api/v1/bom/${queryArg.billOfMaterialId}`,
         method: "DELETE",
@@ -43,6 +46,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialApiResponse,
       PostApiV1MaterialApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material`,
         method: "POST",
@@ -57,6 +61,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialApiResponse,
       GetApiV1MaterialApiArg
     >({
+      providesTags: [{ type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material`,
         headers: {
@@ -68,6 +73,7 @@ const injectedRtkApi = api.injectEndpoints({
           page: queryArg.page,
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -75,11 +81,15 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdApiResponse,
       GetApiV1MaterialByMaterialIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}`,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -87,6 +97,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1MaterialByMaterialIdApiResponse,
       PutApiV1MaterialByMaterialIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material", id: "LIST" }, { type: "material", id: queryArg.materialId }]),
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}`,
         method: "PUT",
@@ -101,6 +112,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1MaterialByMaterialIdApiResponse,
       DeleteApiV1MaterialByMaterialIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material", id: "LIST" }, { type: "material", id: queryArg.materialId }]),
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}`,
         method: "DELETE",
@@ -114,6 +126,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialNotLinkedToArdsApiResponse,
       GetApiV1MaterialNotLinkedToArdsApiArg
     >({
+      providesTags: [{ type: "material/not-linked-to-ard", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/not-linked-to-ards`,
         headers: {
@@ -133,6 +146,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialCategoryApiResponse,
       GetApiV1MaterialCategoryApiArg
     >({
+      providesTags: [{ type: "material/category", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/category`,
         headers: {
@@ -148,11 +162,15 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialAllApiResponse,
       GetApiV1MaterialAllApiArg
     >({
+      providesTags: [{ type: "material/all", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/all`,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -160,6 +178,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1MaterialByMaterialIdReorderLevelApiResponse,
       PutApiV1MaterialByMaterialIdReorderLevelApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material", id: "LIST" }, { type: "material", id: queryArg.materialId }]),
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/reorder-level`,
         method: "PUT",
@@ -174,6 +193,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdStockLevelApiResponse,
       GetApiV1MaterialByMaterialIdStockLevelApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/stock-level`,
         headers: {
@@ -186,6 +206,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdBatchesApiResponse,
       GetApiV1MaterialByMaterialIdBatchesApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/batches`,
         headers: {
@@ -198,6 +219,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdInTransitApiResponse,
       GetApiV1MaterialByMaterialIdInTransitApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/in-transit`,
         headers: {
@@ -210,6 +232,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialBatchApiResponse,
       PostApiV1MaterialBatchApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material/batch`,
         method: "POST",
@@ -224,6 +247,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialBatchApiResponse,
       GetApiV1MaterialBatchApiArg
     >({
+      providesTags: [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/batch`,
         headers: {
@@ -241,6 +265,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialBatchByBatchIdApiResponse,
       GetApiV1MaterialBatchByBatchIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material/batch", id: queryArg.batchId }],
       query: (queryArg) => ({
         url: `/api/v1/material/batch/${queryArg.batchId}`,
         headers: {
@@ -253,6 +278,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1MaterialBatchByBatchIdApproveApiResponse,
       PutApiV1MaterialBatchByBatchIdApproveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }, { type: "material/batch", id: queryArg.batchId }]),
       query: (queryArg) => ({
         url: `/api/v1/material/batch/${queryArg.batchId}/approve`,
         method: "PUT",
@@ -266,6 +292,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdStockAndWarehouseIdApiResponse,
       GetApiV1MaterialByMaterialIdStockAndWarehouseIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/stock/${queryArg.warehouseId}`,
         headers: {
@@ -278,6 +305,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdStockAcrossWarehousesApiResponse,
       GetApiV1MaterialByMaterialIdStockAcrossWarehousesApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/stock/across-warehouses`,
         headers: {
@@ -290,6 +318,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdStockPipelineApiResponse,
       GetApiV1MaterialByMaterialIdStockPipelineApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/stock/pipeline`,
         headers: {
@@ -302,6 +331,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdDepartmentStockAndQuantityApiResponse,
       GetApiV1MaterialByMaterialIdDepartmentStockAndQuantityApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/department-stock/${queryArg.quantity}`,
         headers: {
@@ -314,6 +344,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1MaterialBatchStatusApiResponse,
       PutApiV1MaterialBatchStatusApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material/batch/status`,
         method: "PUT",
@@ -328,6 +359,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialBatchByBatchIdRequestRetestApiResponse,
       PostApiV1MaterialBatchByBatchIdRequestRetestApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }, { type: "material/batch", id: queryArg.batchId }]),
       query: (queryArg) => ({
         url: `/api/v1/material/batch/${queryArg.batchId}/request-retest`,
         method: "POST",
@@ -342,6 +374,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialBatchByBatchIdCompleteRetestApiResponse,
       PostApiV1MaterialBatchByBatchIdCompleteRetestApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }, { type: "material/batch", id: queryArg.batchId }]),
       query: (queryArg) => ({
         url: `/api/v1/material/batch/${queryArg.batchId}/complete-retest`,
         method: "POST",
@@ -356,6 +389,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialBatchSupplyApiResponse,
       PostApiV1MaterialBatchSupplyApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material/batch/supply`,
         method: "POST",
@@ -370,6 +404,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialApprovedMaterialsApiResponse,
       GetApiV1MaterialApprovedMaterialsApiArg
     >({
+      providesTags: [{ type: "material/approved-material", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/approved-materials`,
         headers: {
@@ -388,6 +423,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialDepartmentApprovedMaterialsApiResponse,
       GetApiV1MaterialDepartmentApprovedMaterialsApiArg
     >({
+      providesTags: [{ type: "material/department", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/department/approved-materials`,
         headers: {
@@ -408,6 +444,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialDepartmentApprovedMaterialsV2ApiResponse,
       GetApiV1MaterialDepartmentApprovedMaterialsV2ApiArg
     >({
+      providesTags: [{ type: "material/department", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/department/approved-materials/v2`,
         headers: {
@@ -418,6 +455,7 @@ const injectedRtkApi = api.injectEndpoints({
           departmentId: queryArg.departmentId,
           kind: queryArg.kind,
           materialCategoryId: queryArg.materialCategoryId,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -425,6 +463,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdBatchesV2AndDepartmentIdApiResponse,
       GetApiV1MaterialByMaterialIdBatchesV2AndDepartmentIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/batches/v2/${queryArg.departmentId}`,
         headers: {
@@ -442,6 +481,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdStockWarehousesApiResponse,
       GetApiV1MaterialByMaterialIdStockWarehousesApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/stock/warehouses`,
         headers: {
@@ -454,6 +494,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdStockDepartmentsApiResponse,
       GetApiV1MaterialByMaterialIdStockDepartmentsApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/stock/departments`,
         headers: {
@@ -466,6 +507,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialDepartmentApiResponse,
       PostApiV1MaterialDepartmentApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material/department", id: "LIST" }, { type: "material", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material/department`,
         method: "POST",
@@ -480,6 +522,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1MaterialDepartmentApiResponse,
       DeleteApiV1MaterialDepartmentApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material/department", id: "LIST" }, { type: "material", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material/department`,
         method: "DELETE",
@@ -496,6 +539,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialDepartmentApiResponse,
       GetApiV1MaterialDepartmentApiArg
     >({
+      providesTags: [{ type: "material/department", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/department`,
         headers: {
@@ -517,6 +561,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialDepartmentNotLinkedApiResponse,
       GetApiV1MaterialDepartmentNotLinkedApiArg
     >({
+      providesTags: [{ type: "material/department", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/department/not-linked`,
         headers: {
@@ -535,6 +580,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdUomApiResponse,
       GetApiV1MaterialByMaterialIdUomApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/uom`,
         headers: {
@@ -547,6 +593,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialHoldingApiResponse,
       GetApiV1MaterialHoldingApiArg
     >({
+      providesTags: [{ type: "material/holding", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/holding`,
         headers: {
@@ -566,6 +613,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialBatchesImportApiResponse,
       PostApiV1MaterialBatchesImportApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material/batches/import`,
         method: "POST",
@@ -580,6 +628,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialBatchesExpiredApiResponse,
       GetApiV1MaterialBatchesExpiredApiArg
     >({
+      providesTags: [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/batches/expired`,
         headers: {
@@ -602,6 +651,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialBatchesAboutToExpireApiResponse,
       GetApiV1MaterialBatchesAboutToExpireApiArg
     >({
+      providesTags: [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/batches/about-to-expire`,
         headers: {
@@ -624,6 +674,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialMaterialSpecsNotLinkedApiResponse,
       GetApiV1MaterialMaterialSpecsNotLinkedApiArg
     >({
+      providesTags: [{ type: "material/material-spec", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/material-specs/not-linked`,
         headers: {
@@ -639,6 +690,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialRejectsApiResponse,
       GetApiV1MaterialRejectsApiArg
     >({
+      providesTags: [{ type: "material/reject", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/rejects`,
         headers: {
@@ -657,6 +709,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdShelfApiResponse,
       GetApiV1MaterialByMaterialIdShelfApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/shelf`,
         headers: {
@@ -673,6 +726,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialShelfApiResponse,
       GetApiV1MaterialShelfApiArg
     >({
+      providesTags: [{ type: "material/shelf", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/shelf`,
         headers: {
@@ -688,6 +742,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1MaterialDistributeMaterialMoveBatchApiResponse,
       PostApiV1MaterialDistributeMaterialMoveBatchApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "material/distribute-material", id: "LIST" }, { type: "material", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/material/distribute-material/move-batch`,
         method: "POST",
@@ -702,6 +757,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialByMaterialIdReservedApiResponse,
       GetApiV1MaterialByMaterialIdReservedApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
       query: (queryArg) => ({
         url: `/api/v1/material/${queryArg.materialId}/reserved`,
         headers: {
@@ -717,6 +773,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialDownloadStockApiResponse,
       GetApiV1MaterialDownloadStockApiArg
     >({
+      providesTags: [{ type: "material/download", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/download/stock`,
         headers: {
@@ -733,6 +790,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialBatchesDistinctByWarehouseIdApiResponse,
       GetApiV1MaterialBatchesDistinctByWarehouseIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material/batch", id: queryArg.warehouseId }],
       query: (queryArg) => ({
         url: `/api/v1/material/batches/distinct/${queryArg.warehouseId}`,
         headers: {
@@ -750,6 +808,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialBatchesDepartmentsApiResponse,
       GetApiV1MaterialBatchesDepartmentsApiArg
     >({
+      providesTags: [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/batches/departments`,
         headers: {
@@ -769,8 +828,22 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1MaterialDiagnosticsInconsistenciesApiResponse,
       GetApiV1MaterialDiagnosticsInconsistenciesApiArg
     >({
+      providesTags: [{ type: "material/diagnostic", id: "LIST" }, { type: "material", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/material/diagnostics/inconsistencies`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1MaterialByMaterialIdPurchaseUnits: build.query<
+      GetApiV1MaterialByMaterialIdPurchaseUnitsApiResponse,
+      GetApiV1MaterialByMaterialIdPurchaseUnitsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/material/${queryArg.materialId}/purchase-units`,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -834,6 +907,8 @@ export type GetApiV1MaterialApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1MaterialByMaterialIdApiResponse =
   /** status 200 OK */ DomainEntitiesMaterialsMaterialDto;
@@ -844,6 +919,8 @@ export type GetApiV1MaterialByMaterialIdApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type PutApiV1MaterialByMaterialIdApiResponse = void;
 export type PutApiV1MaterialByMaterialIdApiArg = {
@@ -900,6 +977,8 @@ export type GetApiV1MaterialAllApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type PutApiV1MaterialByMaterialIdReorderLevelApiResponse = void;
 export type PutApiV1MaterialByMaterialIdReorderLevelApiArg = {
@@ -1111,6 +1190,8 @@ export type GetApiV1MaterialDepartmentApprovedMaterialsV2ApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type GetApiV1MaterialByMaterialIdBatchesV2AndDepartmentIdApiResponse =
   /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericList601DomainEntitiesWarehousesShelfMaterialBatchDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798ERead;
@@ -1388,6 +1469,15 @@ export type GetApiV1MaterialDiagnosticsInconsistenciesApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetApiV1MaterialByMaterialIdPurchaseUnitsApiResponse =
+  /** status 200 OK */ DomainEntitiesBaseUnitOfMeasureDto[];
+export type GetApiV1MaterialByMaterialIdPurchaseUnitsApiArg = {
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -1552,6 +1642,7 @@ export type DomainEntitiesQualityRoutinesAnalysisType = 0 | 1;
 export type DomainEntitiesMaterialsUpdateReOrderLevelRequest = {
   reOrderLevel?: number;
 };
+export type DomainEntitiesShipmentsShipmentInvoiceKind = 0 | 1;
 export type DomainEntitiesShipmentsShipmentInvoiceListDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -1565,6 +1656,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceListDto = {
   amountPaid?: number;
   outstandingBalance?: number;
   isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
 };
 export type DomainEntitiesBaseUnitOfMeasureType = 0 | 1 | 2 | 3;
 export type DomainEntitiesBaseUnitOfMeasureCategory = 0 | 1 | 2 | 3 | 4;
@@ -1594,6 +1686,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceItemDto = {
   totalCost?: number;
   currency?: DomainEntitiesCurrenciesCurrencyDto;
   reason?: string | null;
+  fulfillsDiscrepancyItemId?: string | null;
 };
 export type DomainEntitiesProcurementDistributionMaterialItemDistributionDto = {
   shipmentInvoiceItem?: DomainEntitiesShipmentsShipmentInvoiceItemDto;
@@ -1741,6 +1834,8 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
   manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
   material?: DomainEntitiesMaterialsMaterialDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  purchaseUnit?: string | null;
+  pendingPurchaseUnit?: string | null;
   default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierDto = {
@@ -1775,6 +1870,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceDto = {
   amountPaid?: number;
   outstandingBalance?: number;
   isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
 };
 export type DomainEntitiesChecklistsIntactness = 0 | 1;
 export type DomainEntitiesChecklistsConsignmentCarrier = 0 | 1 | 2 | 3 | 4 | 5;
@@ -2574,4 +2670,6 @@ export const {
   useLazyGetApiV1MaterialBatchesDepartmentsQuery,
   useGetApiV1MaterialDiagnosticsInconsistenciesQuery,
   useLazyGetApiV1MaterialDiagnosticsInconsistenciesQuery,
+  useGetApiV1MaterialByMaterialIdPurchaseUnitsQuery,
+  useLazyGetApiV1MaterialByMaterialIdPurchaseUnitsQuery,
 } = injectedRtkApi;

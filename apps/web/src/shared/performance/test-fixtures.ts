@@ -1,0 +1,10 @@
+import { CycleType,CycleStatus,GoalStatus,ReviewStatus,PerformanceRating,type Cycle,type Goal,type Review } from "./contracts";
+export const cycleId="01a152ee-6948-7e40-a0f0-8c01e2a43ea9";
+export const employeeId="79e15fc7-4f91-45e3-abbb-330d35956510";
+export const goalId="02157256-a433-4895-a50d-ea5d67beb3b9";
+export const reviewId="ed4432b7-bcf9-4d0c-8dd4-c8c570cb3bf4";
+export const reviewerId="39f594e4-bd37-4318-9a83-8f6fe31be7ce";
+export const requesterId="02c045ac-b9fb-4229-a007-a6c9e2ac0bc2";
+export const cycle:Cycle={ id:cycleId,name:"2026 Annual",periodStart:"2026-01-01T00:00:00Z",periodEnd:"2026-12-31T00:00:00Z",type:CycleType.Annual,status:CycleStatus.Active,goalCount:1,reviewCount:1 };
+export const goal:Goal={ id:goalId,employeeId,employeeName:"Employee",cycleId,cycleName:cycle.name,title:"Reconcile all inventory",description:"Reconcile every month",weight:100,targetDate:"2026-12-20T00:00:00Z",status:GoalStatus.Completed,progressPercentage:100,managerComments:"Verified" };
+export const review:Review={ id:reviewId,employeeId,employeeName:"Employee",cycleId,cycleName:cycle.name,reviewerId,reviewerName:"Reviewer",status:ReviewStatus.PendingApproval,selfAssessmentComments:"Complete",selfAssessmentSubmittedAt:"2026-12-21T12:00:00Z",managerComments:"Verified",managerSubmittedAt:"2026-12-22T12:00:00Z",overallRating:PerformanceRating.Unsatisfactory,approved:false,goalRatings:[{ goalId,goalTitle:goal.title,achievementPercentage:0,comments:"Explicit zero" }] };

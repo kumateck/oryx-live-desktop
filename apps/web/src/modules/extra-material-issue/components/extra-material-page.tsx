@@ -12,11 +12,12 @@ import { KindSwitch } from "@/shared/reference-data/kind-switch";
 import { useKindTabs, type MaterialKind } from "@/shared/reference-data/kind-tabs";
 import { usePageSearch } from "@/shared/search/page-search";
 import { audit, extraIssueBlock, extraRowsSchema, issueBody, type ExtraMaterial } from "../extra-material";
+import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "StockIssue" as const, id: "extra" };
 const { useGetApiV1ProductionScheduleExtraPackingQuery, usePostApiV1ProductionScheduleExtraPackingApproveByProductionExtraPackingIdMutation } = productionApi.enhanceEndpoints({ endpoints: {
-  getApiV1ProductionScheduleExtraPacking: { providesTags: [list] },
-  postApiV1ProductionScheduleExtraPackingApproveByProductionExtraPackingId: { invalidatesTags: (_result, error) => error ? [] : [list, "StockOnShelves", "ActivityBoard"] } } });
+  getApiV1ProductionScheduleExtraPacking: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+  postApiV1ProductionScheduleExtraPackingApproveByProductionExtraPackingId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list, "StockOnShelves", "ActivityBoard"]); } } });
 const issuePermissions: Record<MaterialKind, string> = { 0: "CanIssueRawMaterialRequisitions", 1: "CanIssuePackagingMaterialRequisitions" };
 const column = dataTableColumns<ExtraMaterial>();
 

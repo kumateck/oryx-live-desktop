@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useGetApiV1WarehouseGrnByIdQuery, useGetApiV1WarehouseGrnsQuery } from "@/modules/receiving-area/api/receiving-api";
-import type { ReceivedBatch } from "@/modules/receiving-area/schemas/receiving-schema";
-import { ClientDataTable, ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
+import { useGetApiV1WarehouseGrnByIdQuery, useGetApiV1WarehouseGrnsQuery } from "../api/quarantine-api";
+import type { ReceivedBatch } from "@/shared/material-batches/received-batch";
+import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDateTime, formatMonthYear } from "@/shared/format/dates";
@@ -16,11 +16,16 @@ import { KindSwitch } from "@/shared/reference-data/kind-switch";
 import { useKindTabs } from "@/shared/reference-data/kind-tabs";
 import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
-import { toLargestUnit } from "@/shared/units/quantity";
-import { audit, batchStatusLabels, grnPath, grnStatusLabels, quarantinePath, quarantinePermissions } from "../lib/quarantine";
+import { PermissionGuard } from "@/shared/auth/permission-guard";
+import { NoAccess } from "@/shared/auth/no-access";
+import { useAccess } from "@/shared/auth/use-access";
+import { stockQuantity } from "../lib/distribution-plan";
+import { DistributionAction } from "./distribution-action";
+import { GrnBatchTable } from "./grn-batch-table";
+import { audit, grnPath, grnStatusLabels, quarantinePath, quarantinePermissions } from "../lib/quarantine";
 import { grnRowsSchema, grnSchema, type Grn } from "../schemas/grn-schema";
 
-const show = (value: number, unit: string | null) => toLargestUnit(value, unit, "calculated")?.text ?? String(value);
+const show = stockQuantity;
 const grnColumn = dataTableColumns<Grn>();
 const grnColumns = grnColumn.columns([
   grnColumn.accessor("number", { header: "GRN", size: 200, cell: ({ row }) => <span className="break-words font-medium">{row.original.number}</span> }),
@@ -55,17 +60,6 @@ export function QuarantineListPage() {
   </section>;
 }
 
-const batchColumn = dataTableColumns<ReceivedBatch>();
-const batchColumns = batchColumn.columns([
-  batchColumn.accessor((row) => row.number ?? "", { id: "number", header: "Batch", cell: ({ row }) => <span className="break-words font-medium">{row.original.number ?? "No number"}</span> }),
-  batchColumn.accessor((row) => row.materialName ?? "", { id: "material", header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words">{row.original.materialName ?? "–"}</div>
-    <div className="break-words text-xs text-muted-foreground">{row.original.manufacturer ? `Made by ${row.original.manufacturer}` : "Manufacturer not recorded"}</div></div> }),
-  batchColumn.accessor((row) => row.invoice ?? "", { id: "invoice", header: "Invoice", size: 140, cell: ({ row }) => row.original.invoice ?? "–" }),
-  batchColumn.accessor("total", { header: "Received", size: 140, cell: ({ row }) => show(row.original.total, row.original.unit) }),
-  batchColumn.accessor((row) => row.made ?? "", { id: "made", header: "Manufactured", size: 140, cell: ({ row }) => formatMonthYear(row.original.made) ?? "–" }),
-  batchColumn.accessor((row) => row.expires ?? "", { id: "expires", header: "Expires", size: 140, cell: ({ row }) => formatMonthYear(row.original.expires) ?? "–" }),
-  batchColumn.accessor((row) => row.status ?? -1, { id: "status", header: "Status", size: 140, cell: ({ row }) => row.original.status === null ? "–" : <Badge variant={row.original.status === 3 ? "default" : row.original.status === 4 ? "destructive" : "outline"}>{batchStatusLabels[row.original.status] ?? "Unknown"}</Badge> }),
-]);
 const printColumns: PrintColumn<ReceivedBatch>[] = [
   { id: "n", header: "#", cell: (_row, index) => index + 1, width: "6%" },
   { id: "material", header: "Material", cell: (row) => <>{row.materialName ?? "–"}<small>{row.manufacturer ?? ""}</small></> },
@@ -77,20 +71,22 @@ const printColumns: PrintColumn<ReceivedBatch>[] = [
 ];
 
 function GrnDetail({ id }: { id: string }) {
+  const access = useAccess();
   const query = useGetApiV1WarehouseGrnByIdQuery({ ...audit, id });
   const grn = useMemo(() => { const parsed = grnSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data : null; }, [query.data]);
   if (query.isLoading) return <DetailPageSkeleton label="Loading goods received note" />;
   if (!grn) return <div role="alert" className="mx-auto max-w-md space-y-3 py-12 text-center">
     <h1 className="text-lg font-semibold">Note unavailable</h1><p className="text-sm text-muted-foreground">{query.error ? apiErrorMessage(query.error) : "The server returned a note the app could not read."}</p>
     <div className="flex justify-center gap-2"><Button size="sm" variant="outline" onClick={() => void query.refetch()}>Retry</Button><Button asChild size="sm"><Link to={quarantinePath}>Quarantine area</Link></Button></div></div>;
+  if (grn.batches.some((batch) => (batch.materialKind === 0 || batch.materialKind === 1) && !access.has(quarantinePermissions[batch.materialKind]))) return <NoAccess />;
   const suppliers = [...new Set(grn.batches.flatMap((batch) => batch.supplier ? [batch.supplier] : []))].join(", ");
   return <article className="min-w-0 space-y-4">
-    <PageHeader title={`GRN ${grn.number}`} crumbs={[{ label: "Quarantine area", to: quarantinePath }, { label: grn.number }]} actions={<PrintButton preview={(close) => <PrintPreviewDialog title={`Goods received note · ${grn.number}`} onClose={close}>
+    <PageHeader title={`GRN ${grn.number}`} crumbs={[{ label: "Quarantine area", to: quarantinePath }, { label: grn.number }]} actions={<><DistributionAction key={grn.id} grn={grn} refreshing={query.isFetching} /><PrintButton preview={(close) => <PrintPreviewDialog title={`Goods received note · ${grn.number}`} onClose={close}>
       <PrintHeader title="Goods received note" reference={grn.number} />
       <PrintFacts facts={[{ label: "Received", value: formatDateTime(grn.createdAt) }, { label: "Supplier", value: suppliers }, { label: "Carrier", value: grn.carrier }, { label: "Vehicle", value: grn.vehicle }, { label: "Declaration number", value: grn.declaration }, { label: "Remarks", value: grn.remarks }]} />
       <PrintTable columns={printColumns} rows={grn.batches} rowKey={(row) => row.id} empty="No batches on this note" />
       <PrintSignatures roles={["Received by", "Checked by", "Quality control"]} />
-    </PrintPreviewDialog>} />} />
+    </PrintPreviewDialog>} /></>} />
     <KeyFacts>
       <KeyFact label="Received" value={formatDateTime(grn.createdAt) ?? "–"} />
       <KeyFact label="Supplier" value={suppliers || "–"} />
@@ -99,11 +95,11 @@ function GrnDetail({ id }: { id: string }) {
       <KeyFact label="Batches" value={grn.batches.length} />
     </KeyFacts>
     {grn.remarks ? <p className="text-sm"><span className="text-muted-foreground">Remarks: </span>{grn.remarks}</p> : null}
-    <ClientDataTable label="Batches on this note" columns={batchColumns} rows={grn.batches} getRowId={(row) => row.id} fill={false} emptyTitle="No batches on this note" />
+    <GrnBatchTable grn={grn} refreshing={query.isFetching} />
   </article>;
 }
 
 export function GrnDetailPage() {
   const { id } = useParams();
-  return id ? <GrnDetail id={id} /> : null;
+  return id ? <PermissionGuard require={{ kind: "some", permissions: Object.values(quarantinePermissions) }} fallback={<NoAccess />}><GrnDetail id={id} /></PermissionGuard> : null;
 }

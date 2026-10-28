@@ -1,5 +1,6 @@
 export const schedulesPath = "/production/schedules";
 export const scheduleCreatePath = `${schedulesPath}/create`;
+export const monthlyReportPath = `${schedulesPath}/monthly-report`;
 export const scheduleDetailPath = (id: string) => `${schedulesPath}/${id}/details`;
 export const scheduleAddProductsPath = (id: string) => `${schedulesPath}/${id}/products/add`;
 export const scheduleRemoveProductsPath = (id: string) => `${schedulesPath}/${id}/products/remove`;

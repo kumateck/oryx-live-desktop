@@ -55,6 +55,7 @@ test("the gateway refuses to start half-configured or open to every origin", () 
   const env = { ORYX_API_ORIGIN: "https://erp.example.com", ORYX_GATEWAY_ALLOWED_ORIGINS: "https://erp.example.com, http://127.0.0.1:5173", RABBITMQ_HOST: "broker", RABBITMQ_DEFAULT_USER: "svc", RABBITMQ_DEFAULT_PASS: "p@ss/word" };
   const config = readConfig(env);
   assert.equal(config.port, 4100);
+  assert.throws(() => readConfig({ ...env, RABBITMQ_HOST: "http://broker" }), /must be a host name/);
   assert.equal(readConfig({ ...env, SOCKET_PORT: "3002" }).port, 3002);
   assert.equal(readConfig({ ...env, SOCKET_PORT: "3002", ORYX_GATEWAY_PORT: "4200" }).port, 4200);
   assert.deepEqual(config.allowedOrigins, ["https://erp.example.com", "http://127.0.0.1:5173"]);
@@ -64,4 +65,10 @@ test("the gateway refuses to start half-configured or open to every origin", () 
   assert.equal(readConfig({ ...env, ORYX_API_ORIGIN: "http://10.0.0.5:8086", ORYX_GATEWAY_ALLOW_INSECURE: "1" }).apiOrigin, "http://10.0.0.5:8086");
   assert.throws(() => readConfig({ ...env, RABBITMQ_HOST: "" }), /RABBITMQ_HOST is not set/);
   assert.throws(() => readConfig({ ...env, ORYX_API_ORIGIN: undefined }), /ORYX_API_ORIGIN is not set/);
+});
+
+test("retains the persisted notification id for replay deduplication", () => {
+  const id = "01a080c6-876a-74ca-beda-6c3dfbdc053c";
+  const item = readNotification(JSON.stringify({ message: { id, message: "Review required", type: 13, recipients: [id] } }));
+  assert.equal(item?.payload.id, id);
 });

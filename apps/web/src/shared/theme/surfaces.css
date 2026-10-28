@@ -1,4 +1,4 @@
-/* Crisp surface geometry shared by the shell, cards and shadcn controls. */
+/* Shape defaults. ThemeProvider applies the user's corner-radius preference. */
 :root {
   --radius: 6px;
   --card-radius: 8px;

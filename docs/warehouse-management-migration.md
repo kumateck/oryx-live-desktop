@@ -57,10 +57,17 @@ Frontend-only. No backend change. Rebuilt from `oryx-next` (`components/pages/su
 - Stock and stock levels are kept in the smallest unit of the unit's family, as `oryx-next` writes them.
 - Transfers and holding stock are not filtered by kind on the server for the "to supply" list; rows of a kind the user may not see are left out on the page, so a page can show fewer rows than its size.
 
+## Stock adjustments for items and finished products
+
+The adjustment pages follow `?target=`: `1` materials (the default), `0` general store items, `2` finished products, with a switch on the list. The stores menu's **Stock adjustment** entry opens `/new?target=0`, which earlier showed the material form.
+
+- **Items** are searched from the general inventory and counted in the item's unit. Counts must be whole numbers: the server keeps an item's quantity as an integer and drops any fraction when the adjustment is applied.
+- **Finished products** are counted against a finished goods transfer note the store has received (`onlyApproved`); approving changes the quantity that note records.
+- The same rules as materials: no repeated line, no count equal to the system's, a note for "Other". The server has only the material permissions (`CanViewMaterialStockAdjustment`, `CanCreateMaterialStockAdjustment`); they cover all three.
+
 ## Not migrated
 
 - **Products allocation** (`/warehouse/products-allocation`). In `oryx-next` this screen is non-functional: its own code notes that it feeds one record type into another's columns and links to a page that does not exist. There is nothing sound to carry over.
-- Stock adjustments for general-store items and finished products.
 - Batch approve/reject from a goods received note (quality control).
 
 ## Tests

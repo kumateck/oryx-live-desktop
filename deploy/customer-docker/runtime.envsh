@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+# Rendered upstreams are origins only, never paths, credentials or Nginx directives.
+validate_origin() {
+  printf '%s' "$1" | grep -Eq '^https?://[A-Za-z0-9_.-]+(:[0-9]{1,5})?$' || {
+    echo 'oryx: upstream must be an HTTP(S) origin without path, credentials or trailing slash' >&2; exit 1;
+  }
+}
+validate_origin "$ORYX_API_ORIGIN"
+printf '%s' "$ORYX_GATEWAY_UPSTREAM" | grep -Eq '^[A-Za-z0-9_.-]+:[0-9]{1,5}$' || exit 1
+case "$ORYX_PUBLIC_PROTO" in
+  auto) ORYX_PUBLIC_PROTO='$scheme';;
+  http|https) ;;
+  *) echo 'oryx: ORYX_PUBLIC_PROTO must be auto, http or https' >&2; exit 1;;
+esac
+# This entrypoint file is sourced by the official entrypoint (.envsh suffix is required).
+export ORYX_PUBLIC_PROTO

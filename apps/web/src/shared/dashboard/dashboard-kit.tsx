@@ -43,7 +43,7 @@ export function MetricTile({ label, value, note, icon: Icon, to, loading = false
   const body = <><dt className="flex items-center justify-between gap-2 text-xs text-muted-foreground"><span>{label}</span>{Icon ? <Icon aria-hidden="true" className="size-4 shrink-0" /> : null}</dt>
     <dd className={cn("mt-1 text-2xl font-semibold leading-tight", tone === "danger" && "text-destructive", tone === "warning" && "text-amber-700 dark:text-amber-400")}>{loading ? <span className="inline-block h-7 w-12 animate-pulse rounded bg-muted" /> : failed ? "–" : typeof value === "number" ? number(value) : value}</dd>
     <dd className="mt-0.5 text-xs text-muted-foreground">{failed ? "Could not be loaded" : note}</dd></>;
-  return to ? <Link to={to} className="block min-w-0 rounded-lg border bg-card p-3 hover:border-primary focus-visible:outline-2">{body}</Link> : <div className="min-w-0 rounded-lg border bg-card p-3">{body}</div>;
+  return to ? <Link to={to} className="block min-w-0 ui-card border bg-card hover:border-primary focus-visible:outline-2">{body}</Link> : <div className="min-w-0 ui-card border bg-card">{body}</div>;
 }
 export function MetricGrid({ children, columns = "xl:grid-cols-4" }: { children: ReactNode; columns?: string }) {
   return <dl className={cn("grid gap-3 sm:grid-cols-2 lg:grid-cols-3", columns)}>{children}</dl>;
@@ -52,7 +52,7 @@ export function MetricGrid({ children, columns = "xl:grid-cols-4" }: { children:
 /** A titled card of a dashboard, with its own loading, failed and empty states. */
 export function DashboardCard({ title, note, query, empty = false, emptyMessage = "Nothing for this period.", action, className, children }: { title: string; note?: string; query?: Pick<ReportQuery, "isLoading" | "error" | "refetch"> | undefined;
   empty?: boolean; emptyMessage?: string; action?: ReactNode; className?: string; children: ReactNode }) {
-  return <section aria-label={title} className={cn("min-w-0 space-y-3 rounded-lg border bg-card p-4", className)}>
+  return <section aria-label={title} className={cn("min-w-0 space-y-3 ui-card border bg-card", className)}>
     <div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0"><h2 className="text-sm font-semibold">{title}</h2>{note ? <p className="text-xs text-muted-foreground">{note}</p> : null}</div>{action}</div>
     {query?.isLoading ? <div role="status" aria-label={`Loading ${title.toLowerCase()}`} className="h-24 animate-pulse rounded-md bg-muted" />
       : query?.error ? <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive"><span>{apiErrorMessage(query.error)}</span><Button type="button" size="sm" variant="outline" onClick={() => void query.refetch()}>Retry</Button></div>

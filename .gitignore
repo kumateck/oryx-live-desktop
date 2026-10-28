@@ -8,3 +8,9 @@ coverage/
 .env
 .env.*
 !.env.example
+
+# Reproducibly extracted from the checked-in Craft bundles.
+apps/web/public/viewers/
+
+# Customer Docker release state and local smoke artifacts.
+.oryx-customer-docker-state/

@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionOrdersApiResponse,
       PostApiV1ProductionOrdersApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionOrdersApiResponse,
       GetApiV1ProductionOrdersApiArg
     >({
+      providesTags: [{ type: "production-order", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-orders`,
         headers: {
@@ -37,6 +39,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionOrdersByIdApiResponse,
       GetApiV1ProductionOrdersByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-order", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/production-orders/${queryArg.id}`,
         headers: {
@@ -49,6 +52,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionOrdersByIdApiResponse,
       PutApiV1ProductionOrdersByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order", id: "LIST" }, { type: "production-order", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/${queryArg.id}`,
         method: "PUT",
@@ -63,6 +67,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductionOrdersByIdApiResponse,
       DeleteApiV1ProductionOrdersByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order", id: "LIST" }, { type: "production-order", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/${queryArg.id}`,
         method: "DELETE",
@@ -76,6 +81,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionOrdersProformaInvoiceApiResponse,
       PostApiV1ProductionOrdersProformaInvoiceApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-order/proforma-invoice", id: "LIST" }, { type: "production-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/proforma-invoice`,
         method: "POST",
@@ -90,6 +96,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionOrdersProformaInvoiceApiResponse,
       GetApiV1ProductionOrdersProformaInvoiceApiArg
     >({
+      providesTags: [{ type: "production-order/proforma-invoice", id: "LIST" }, { type: "production-order", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-orders/proforma-invoice`,
         headers: {
@@ -123,6 +130,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionOrdersProformaInvoiceByProformaInvoiceIdApiResponse,
       GetApiV1ProductionOrdersProformaInvoiceByProformaInvoiceIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-order/proforma-invoice", id: queryArg.proformaInvoiceId }],
       query: (queryArg) => ({
         url: `/api/v1/production-orders/proforma-invoice/${queryArg.proformaInvoiceId}`,
         headers: {
@@ -135,6 +143,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionOrdersProformaInvoiceByIdApiResponse,
       PutApiV1ProductionOrdersProformaInvoiceByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order/proforma-invoice", id: "LIST" }, { type: "production-order", id: "LIST" }, { type: "production-order/proforma-invoice", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/proforma-invoice/${queryArg.id}`,
         method: "PUT",
@@ -149,6 +158,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductionOrdersProformaInvoiceByIdApiResponse,
       DeleteApiV1ProductionOrdersProformaInvoiceByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order/proforma-invoice", id: "LIST" }, { type: "production-order", id: "LIST" }, { type: "production-order/proforma-invoice", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/proforma-invoice/${queryArg.id}`,
         method: "DELETE",
@@ -162,6 +172,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionOrdersInvoiceApiResponse,
       PostApiV1ProductionOrdersInvoiceApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-order/invoice", id: "LIST" }, { type: "production-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/invoice`,
         method: "POST",
@@ -176,6 +187,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionOrdersInvoiceApiResponse,
       GetApiV1ProductionOrdersInvoiceApiArg
     >({
+      providesTags: [{ type: "production-order/invoice", id: "LIST" }, { type: "production-order", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-orders/invoice`,
         headers: {
@@ -193,6 +205,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionOrdersInvoiceByIdApiResponse,
       GetApiV1ProductionOrdersInvoiceByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-order/invoice", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/production-orders/invoice/${queryArg.id}`,
         headers: {
@@ -205,6 +218,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionOrdersInvoiceByIdApiResponse,
       PutApiV1ProductionOrdersInvoiceByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order/invoice", id: "LIST" }, { type: "production-order", id: "LIST" }, { type: "production-order/invoice", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/invoice/${queryArg.id}`,
         method: "PUT",
@@ -219,6 +233,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductionOrdersInvoiceByIdApiResponse,
       DeleteApiV1ProductionOrdersInvoiceByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order/invoice", id: "LIST" }, { type: "production-order", id: "LIST" }, { type: "production-order/invoice", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/invoice/${queryArg.id}`,
         method: "DELETE",
@@ -232,6 +247,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionOrdersAllocateApiResponse,
       PostApiV1ProductionOrdersAllocateApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-order/allocate", id: "LIST" }, { type: "production-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/allocate`,
         method: "POST",
@@ -246,6 +262,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionOrdersAllocateApiResponse,
       GetApiV1ProductionOrdersAllocateApiArg
     >({
+      providesTags: [{ type: "production-order/allocate", id: "LIST" }, { type: "production-order", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-orders/allocate`,
         headers: {
@@ -265,6 +282,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiResponse,
       GetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-order/allocate", id: queryArg.allocateProductionOrderId }],
       query: (queryArg) => ({
         url: `/api/v1/production-orders/allocate/${queryArg.allocateProductionOrderId}`,
         headers: {
@@ -277,6 +295,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdApiResponse,
       PutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order/deliver", id: "LIST" }, { type: "production-order", id: "LIST" }, { type: "production-order/deliver", id: queryArg.allocateProductionOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/deliver/${queryArg.allocateProductionOrderId}`,
         method: "PUT",
@@ -290,6 +309,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionOrdersLoadByAllocateProductionOrderIdApiResponse,
       PutApiV1ProductionOrdersLoadByAllocateProductionOrderIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order/load", id: "LIST" }, { type: "production-order", id: "LIST" }, { type: "production-order/load", id: queryArg.allocateProductionOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/load/${queryArg.allocateProductionOrderId}`,
         method: "PUT",
@@ -303,6 +323,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionOrdersByAllocateProductionOrderIdWaybillApiResponse,
       PostApiV1ProductionOrdersByAllocateProductionOrderIdWaybillApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order", id: "LIST" }, { type: "production-order", id: queryArg.allocateProductionOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/production-orders/${queryArg.allocateProductionOrderId}/waybill`,
         method: "POST",
@@ -317,6 +338,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionOrdersWaybillApiResponse,
       GetApiV1ProductionOrdersWaybillApiArg
     >({
+      providesTags: [{ type: "production-order/waybill", id: "LIST" }, { type: "production-order", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-orders/waybill`,
         headers: {
@@ -335,6 +357,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionOrdersWaybillByProductionOrderWaybillIdApiResponse,
       GetApiV1ProductionOrdersWaybillByProductionOrderWaybillIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-order/waybill", id: queryArg.productionOrderWaybillId }],
       query: (queryArg) => ({
         url: `/api/v1/production-orders/waybill/${queryArg.productionOrderWaybillId}`,
         headers: {
@@ -361,6 +384,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionScheduleApiResponse,
       PostApiV1ProductionScheduleApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-schedule", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule`,
         method: "POST",
@@ -375,6 +399,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleApiResponse,
       GetApiV1ProductionScheduleApiArg
     >({
+      providesTags: [{ type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule`,
         headers: {
@@ -392,6 +417,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleByScheduleIdApiResponse,
       GetApiV1ProductionScheduleByScheduleIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule", id: queryArg.scheduleId }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/${queryArg.scheduleId}`,
         headers: {
@@ -404,6 +430,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionScheduleByScheduleIdApiResponse,
       PutApiV1ProductionScheduleByScheduleIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule", id: "LIST" }, { type: "production-schedule", id: queryArg.scheduleId }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/${queryArg.scheduleId}`,
         method: "PUT",
@@ -418,6 +445,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductionScheduleByScheduleIdApiResponse,
       DeleteApiV1ProductionScheduleByScheduleIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule", id: "LIST" }, { type: "production-schedule", id: queryArg.scheduleId }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/${queryArg.scheduleId}`,
         method: "DELETE",
@@ -444,6 +472,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionScheduleByScheduleIdAddProductsApiResponse,
       PutApiV1ProductionScheduleByScheduleIdAddProductsApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule", id: "LIST" }, { type: "production-schedule", id: queryArg.scheduleId }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/${queryArg.scheduleId}/add-products`,
         method: "PUT",
@@ -472,6 +501,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleProductionStatusApiResponse,
       GetApiV1ProductionScheduleProductionStatusApiArg
     >({
+      providesTags: [{ type: "production-schedule/production-status", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/production-status`,
         headers: {
@@ -484,6 +514,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleByScheduleIdDetailsApiResponse,
       GetApiV1ProductionScheduleByScheduleIdDetailsApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule", id: queryArg.scheduleId }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/${queryArg.scheduleId}/details`,
         headers: {
@@ -568,6 +599,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleActivityApiResponse,
       GetApiV1ProductionScheduleActivityApiArg
     >({
+      providesTags: [{ type: "production-schedule/activity", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/activity`,
         headers: {
@@ -588,6 +620,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleActivityByProductionActivityIdApiResponse,
       GetApiV1ProductionScheduleActivityByProductionActivityIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/activity", id: queryArg.productionActivityId }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/activity/${queryArg.productionActivityId}`,
         headers: {
@@ -613,6 +646,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleActivityStatusGroupedApiResponse,
       GetApiV1ProductionScheduleActivityStatusGroupedApiArg
     >({
+      providesTags: [{ type: "production-schedule/activity", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/activity/status-grouped`,
         headers: {
@@ -625,6 +659,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleActivityOperationGroupedApiResponse,
       GetApiV1ProductionScheduleActivityOperationGroupedApiArg
     >({
+      providesTags: [{ type: "production-schedule/activity", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/activity/operation-grouped`,
         headers: {
@@ -657,6 +692,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleActivityStepApiResponse,
       GetApiV1ProductionScheduleActivityStepApiArg
     >({
+      providesTags: [{ type: "production-schedule/activity-step", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/activity-step`,
         headers: {
@@ -690,6 +726,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleActivityStepStatusGroupedApiResponse,
       GetApiV1ProductionScheduleActivityStepStatusGroupedApiArg
     >({
+      providesTags: [{ type: "production-schedule/activity-step", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/activity-step/status-grouped`,
         headers: {
@@ -702,6 +739,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleActivityStepOperationGroupedApiResponse,
       GetApiV1ProductionScheduleActivityStepOperationGroupedApiArg
     >({
+      providesTags: [{ type: "production-schedule/activity-step", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/activity-step/operation-grouped`,
         headers: {
@@ -714,6 +752,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionScheduleManufacturingApiResponse,
       PostApiV1ProductionScheduleManufacturingApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-schedule/manufacturing", id: "LIST" }, { type: "production-schedule", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/manufacturing`,
         method: "POST",
@@ -728,6 +767,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleManufacturingApiResponse,
       GetApiV1ProductionScheduleManufacturingApiArg
     >({
+      providesTags: [{ type: "production-schedule/manufacturing", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/manufacturing`,
         headers: {
@@ -786,6 +826,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionScheduleFinishedGoodsTransferNoteApiResponse,
       PostApiV1ProductionScheduleFinishedGoodsTransferNoteApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-schedule/finished-goods-transfer-note", id: "LIST" }, { type: "production-schedule", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/finished-goods-transfer-note`,
         method: "POST",
@@ -800,6 +841,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleFinishedGoodsTransferNoteApiResponse,
       GetApiV1ProductionScheduleFinishedGoodsTransferNoteApiArg
     >({
+      providesTags: [{ type: "production-schedule/finished-goods-transfer-note", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/finished-goods-transfer-note`,
         headers: {
@@ -821,6 +863,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleFinishedGoodsTransferNoteByIdApiResponse,
       GetApiV1ProductionScheduleFinishedGoodsTransferNoteByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/finished-goods-transfer-note", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/finished-goods-transfer-note/${queryArg.id}`,
         headers: {
@@ -864,6 +907,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionScheduleByIdApiResponse,
       PutApiV1ProductionScheduleByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule", id: "LIST" }, { type: "production-schedule", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/${queryArg.id}`,
         method: "PUT",
@@ -891,6 +935,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionScheduleManufacturingByIdApiResponse,
       PutApiV1ProductionScheduleManufacturingByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/manufacturing", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/manufacturing", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/manufacturing/${queryArg.id}`,
         method: "PUT",
@@ -905,6 +950,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionScheduleManufacturingIssueByIdApiResponse,
       PutApiV1ProductionScheduleManufacturingIssueByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/manufacturing", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/manufacturing", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/manufacturing/issue/${queryArg.id}`,
         method: "PUT",
@@ -918,6 +964,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionSchedulePackagingApiResponse,
       PostApiV1ProductionSchedulePackagingApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-schedule/packaging", id: "LIST" }, { type: "production-schedule", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/packaging`,
         method: "POST",
@@ -932,6 +979,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionSchedulePackagingApiResponse,
       GetApiV1ProductionSchedulePackagingApiArg
     >({
+      providesTags: [{ type: "production-schedule/packaging", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/packaging`,
         headers: {
@@ -949,6 +997,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionSchedulePackagingByIdApiResponse,
       GetApiV1ProductionSchedulePackagingByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/packaging", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/packaging/${queryArg.id}`,
         headers: {
@@ -961,6 +1010,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionSchedulePackagingByIdApiResponse,
       PutApiV1ProductionSchedulePackagingByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/packaging", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/packaging", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/packaging/${queryArg.id}`,
         method: "PUT",
@@ -975,6 +1025,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionSchedulePackagingIssueByIdApiResponse,
       PutApiV1ProductionSchedulePackagingIssueByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/packaging", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/packaging", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/packaging/issue/${queryArg.id}`,
         method: "PUT",
@@ -988,6 +1039,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionScheduleStockTransferApiResponse,
       PostApiV1ProductionScheduleStockTransferApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-schedule/stock-transfer", id: "LIST" }, { type: "production-schedule", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/stock-transfer`,
         method: "POST",
@@ -1002,6 +1054,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleStockTransferApiResponse,
       GetApiV1ProductionScheduleStockTransferApiArg
     >({
+      providesTags: [{ type: "production-schedule/stock-transfer", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/stock-transfer`,
         headers: {
@@ -1019,6 +1072,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleStockTransferUserApiResponse,
       GetApiV1ProductionScheduleStockTransferUserApiArg
     >({
+      providesTags: [{ type: "production-schedule/stock-transfer", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/stock-transfer/user`,
         headers: {
@@ -1038,6 +1092,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleStockTransferInBoundApiResponse,
       GetApiV1ProductionScheduleStockTransferInBoundApiArg
     >({
+      providesTags: [{ type: "production-schedule/stock-transfer", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/stock-transfer/in-bound`,
         headers: {
@@ -1057,6 +1112,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleStockTransferOutBoundApiResponse,
       GetApiV1ProductionScheduleStockTransferOutBoundApiArg
     >({
+      providesTags: [{ type: "production-schedule/stock-transfer", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/stock-transfer/out-bound`,
         headers: {
@@ -1076,6 +1132,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleStockTransferByStockTransferIdApiResponse,
       GetApiV1ProductionScheduleStockTransferByStockTransferIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/stock-transfer", id: queryArg.stockTransferId }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/stock-transfer/${queryArg.stockTransferId}`,
         headers: {
@@ -1116,6 +1173,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleStockTransferBatchByStockTransferIdApiResponse,
       GetApiV1ProductionScheduleStockTransferBatchByStockTransferIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/stock-transfer", id: queryArg.stockTransferId }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/stock-transfer/batch/${queryArg.stockTransferId}`,
         headers: {
@@ -1143,6 +1201,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionScheduleFinalPackingApiResponse,
       PostApiV1ProductionScheduleFinalPackingApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-schedule/final-packing", id: "LIST" }, { type: "production-schedule", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/final-packing`,
         method: "POST",
@@ -1157,6 +1216,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleFinalPackingApiResponse,
       GetApiV1ProductionScheduleFinalPackingApiArg
     >({
+      providesTags: [{ type: "production-schedule/final-packing", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/final-packing`,
         headers: {
@@ -1174,6 +1234,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleFinalPackingByFinalPackingIdApiResponse,
       GetApiV1ProductionScheduleFinalPackingByFinalPackingIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/final-packing", id: queryArg.finalPackingId }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/final-packing/${queryArg.finalPackingId}`,
         headers: {
@@ -1186,6 +1247,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProductionScheduleFinalPackingByFinalPackingIdApiResponse,
       PutApiV1ProductionScheduleFinalPackingByFinalPackingIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/final-packing", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/final-packing", id: queryArg.finalPackingId }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/final-packing/${queryArg.finalPackingId}`,
         method: "PUT",
@@ -1200,6 +1262,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProductionScheduleFinalPackingByFinalPackingIdApiResponse,
       DeleteApiV1ProductionScheduleFinalPackingByFinalPackingIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/final-packing", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/final-packing", id: queryArg.finalPackingId }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/final-packing/${queryArg.finalPackingId}`,
         method: "DELETE",
@@ -1252,6 +1315,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionScheduleReturnBeforeProductionApiResponse,
       PostApiV1ProductionScheduleReturnBeforeProductionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-schedule/return-before-production", id: "LIST" }, { type: "production-schedule", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/return-before-production`,
         method: "POST",
@@ -1269,6 +1333,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProductionScheduleReturnAfterProductionApiResponse,
       PostApiV1ProductionScheduleReturnAfterProductionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "production-schedule/return-after-production", id: "LIST" }, { type: "production-schedule", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/return-after-production`,
         method: "POST",
@@ -1286,6 +1351,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleMaterialReturnNoteApiResponse,
       GetApiV1ProductionScheduleMaterialReturnNoteApiArg
     >({
+      providesTags: [{ type: "production-schedule/material-return-note", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/material-return-note`,
         headers: {
@@ -1345,6 +1411,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleExtraPackingApiResponse,
       GetApiV1ProductionScheduleExtraPackingApiArg
     >({
+      providesTags: [{ type: "production-schedule/extra-packing", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/extra-packing`,
         headers: {
@@ -1417,6 +1484,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleApprovedProductsApiResponse,
       GetApiV1ProductionScheduleApprovedProductsApiArg
     >({
+      providesTags: [{ type: "production-schedule/approved-product", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/approved-products`,
         headers: {
@@ -1429,6 +1497,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleApprovedProductsProductByProductIdApiResponse,
       GetApiV1ProductionScheduleApprovedProductsProductByProductIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/approved-product", id: queryArg.productId }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/approved-products/product/${queryArg.productId}`,
         headers: {
@@ -1441,6 +1510,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleApprovedProductsByProductIdApiResponse,
       GetApiV1ProductionScheduleApprovedProductsByProductIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/approved-product", id: queryArg.productId }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/approved-products/${queryArg.productId}`,
         headers: {
@@ -1453,6 +1523,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleSummaryReportApiResponse,
       GetApiV1ProductionScheduleSummaryReportApiArg
     >({
+      providesTags: [{ type: "production-schedule/summary-report", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/summary-report`,
         headers: {
@@ -1471,6 +1542,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleDetailedReportApiResponse,
       GetApiV1ProductionScheduleDetailedReportApiArg
     >({
+      providesTags: [{ type: "production-schedule/detailed-report", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/detailed-report`,
         headers: {
@@ -1489,6 +1561,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProductionScheduleForecastApiResponse,
       GetApiV1ProductionScheduleForecastApiArg
     >({
+      providesTags: [{ type: "production-schedule/forecast", id: "LIST" }, { type: "production-schedule", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/production-schedule/forecast`,
         headers: {
@@ -1507,6 +1580,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1WorkOrderApiResponse,
       PostApiV1WorkOrderApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "work-order", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/work-order`,
         method: "POST",
@@ -1524,6 +1598,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WorkOrderByWorkOrderIdApiResponse,
       GetApiV1WorkOrderByWorkOrderIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "work-order", id: queryArg.workOrderId }],
       query: (queryArg) => ({
         url: `/api/v1/work-order/${queryArg.workOrderId}`,
         headers: {
@@ -1536,6 +1611,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1WorkOrderByWorkOrderIdApiResponse,
       PutApiV1WorkOrderByWorkOrderIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "work-order", id: "LIST" }, { type: "work-order", id: queryArg.workOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/work-order/${queryArg.workOrderId}`,
         method: "PUT",
@@ -1553,6 +1629,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1WorkOrderByWorkOrderIdApiResponse,
       DeleteApiV1WorkOrderByWorkOrderIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "work-order", id: "LIST" }, { type: "work-order", id: queryArg.workOrderId }]),
       query: (queryArg) => ({
         url: `/api/v1/work-order/${queryArg.workOrderId}`,
         method: "DELETE",
@@ -3822,6 +3899,8 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
   manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
   material?: DomainEntitiesMaterialsMaterialDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  purchaseUnit?: string | null;
+  pendingPurchaseUnit?: string | null;
   default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierDto = {
@@ -3857,7 +3936,9 @@ export type DomainEntitiesShipmentsShipmentInvoiceItemDto = {
   totalCost?: number;
   currency?: DomainEntitiesCurrenciesCurrencyDto;
   reason?: string | null;
+  fulfillsDiscrepancyItemId?: string | null;
 };
+export type DomainEntitiesShipmentsShipmentInvoiceKind = 0 | 1;
 export type DomainEntitiesShipmentsShipmentInvoiceDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -3872,6 +3953,7 @@ export type DomainEntitiesShipmentsShipmentInvoiceDto = {
   amountPaid?: number;
   outstandingBalance?: number;
   isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
 };
 export type DomainEntitiesChecklistsIntactness = 0 | 1;
 export type DomainEntitiesChecklistsConsignmentCarrier = 0 | 1 | 2 | 3 | 4 | 5;

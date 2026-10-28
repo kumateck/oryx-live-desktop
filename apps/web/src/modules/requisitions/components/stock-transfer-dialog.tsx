@@ -6,13 +6,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useCurrentUser } from "@/shared/auth/session-provider";
 import { useGeneratedCode } from "@/shared/codes/use-generated-code";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
 import { relatedUnits, toLargestUnit } from "@/shared/units/quantity";
-import { useGetApiV1MaterialByMaterialIdDepartmentStockAndQuantityQuery, usePostApiV1ProductionScheduleStockTransferMutation } from "../api/stock-api";
+import { useGetApiV1MaterialByMaterialIdDepartmentStockAndQuantityQuery, useLazyGetApiV1MaterialByMaterialIdDepartmentStockAndQuantityQuery, usePostApiV1ProductionScheduleStockTransferMutation } from "../api/stock-api";
 import { inMaterialUnit, sourceProblems, stockTransferRequest, type TransferMaterial } from "../lib/stock-transfer";
 import { departmentOptionsSchema, stockTransferFormSchema, type StockTransferFormValues } from "../schemas/stock-schema";
 
@@ -46,7 +47,12 @@ function SourceLine({ form, index, material, units, onRemove }: { form: Form; in
 }
 
 /** Asks other departments to release stock of a material to the user's department, instead of buying it. */
-export function StockTransferDialog({ material, onClose }: { material: TransferMaterial; onClose: () => void }) {
+export function StockTransferDialog({ material, require, onClose }: { material: TransferMaterial; require: string; onClose: () => void }) {
+  const permission = usePermissionAction(require);
+  const departmentId = useCurrentUser()?.departmentId ?? null;
+  const [readStock] = useLazyGetApiV1MaterialByMaterialIdDepartmentStockAndQuantityQuery();
+  const [checking, setChecking] = useState(false);
+  const inFlight = useRef(false);
   const units = useMemo(() => { const family = relatedUnits(material.unit); return family.length ? family : [material.unit ?? ""]; }, [material.unit]);
   // Quantities are typed in the largest unit of the material's family unless another is chosen.
   const unit = useMemo(() => { const largest = units.at(-1) ?? ""; return { value: largest, label: largest }; }, [units]);
@@ -68,16 +74,35 @@ export function StockTransferDialog({ material, onClose }: { material: TransferM
   }, [code, form]);
 
   const submit = form.handleSubmit(async (values) => {
+    if (inFlight.current) return;
     setMessage("");
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return; }
+    if (!departmentId || !material.unitId) { setMessage("A department and material unit are required to request a transfer."); return; }
     const problems = sourceProblems(values.sources);
     for (const problem of problems) form.setError(`sources.${problem.index}.department`, { message: problem.message });
     if (problems.length > 0) return;
-    const result = await create({ ...audit, domainEntitiesProductionSchedulesStockTransfersRequestCreateStockTransferRequest: stockTransferRequest(material, values) });
-    if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    toast.success("Stock transfer requested", { description: "The departments asked will see it in their transfer requests." });
-    onClose();
+    inFlight.current = true; setChecking(true);
+    try {
+      for (const source of values.sources) {
+        const quantity = inMaterialUnit(source.quantity, source.unit.value, material);
+        if (!source.department || source.department.value === departmentId) { setMessage("Choose another supplying department."); return; }
+        const fresh = await readStock({ ...audit, materialId: material.id, quantity }, false);
+        if ("error" in fresh) { setMessage(apiErrorMessage(fresh.error)); return; }
+        const parsed = departmentOptionsSchema.safeParse(fresh.data);
+        if (!parsed.success || !parsed.data.some((entry) => entry.value === source.department?.value)) {
+          setMessage(`${source.department.label} no longer holds enough for this request. Review the quantities and sources.`); return;
+        }
+      }
+      const revoked = permission.check();
+      if (revoked) { setMessage(revoked); return; }
+      const result = await create({ ...audit, domainEntitiesProductionSchedulesStockTransfersRequestCreateStockTransferRequest: stockTransferRequest(material, values) });
+      if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
+      toast.success("Stock transfer requested", { description: "The departments asked will see it in their transfer requests." });
+      onClose();
+    } finally { inFlight.current = false; setChecking(false); }
   });
-  const saving = mutation.isLoading;
+  const saving = mutation.isLoading || checking;
   const show = (value: number) => toLargestUnit(value, material.unit, "calculated")?.text ?? String(value);
 
   return <Dialog open onOpenChange={(open) => { if (!open && !saving) onClose(); }}>
@@ -99,7 +124,7 @@ export function StockTransferDialog({ material, onClose }: { material: TransferM
         </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" disabled={saving} onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={saving}>{saving ? <><Spinner />Sending…</> : "Send request"}</Button>
+          <Button type="submit" disabled={saving || !permission.allowed}>{saving ? <><Spinner />Sending…</> : "Send request"}</Button>
         </DialogFooter>
       </form>
     </DialogContent>

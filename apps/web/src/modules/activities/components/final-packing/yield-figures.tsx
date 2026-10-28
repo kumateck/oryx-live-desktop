@@ -13,11 +13,11 @@ function Figure({ label, value, note, alert = false }: { label: string; value: R
 export function YieldFiguresView({ figures, countUnit, packsPerShipper, entered }: { figures: YieldFigures; countUnit: string; packsPerShipper: number | null; entered: boolean }) {
   const blank = "–";
   return <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Worked out from what was entered">
-    <Figure label="Expected packs" value={`${count(figures.expected)} ${countUnit}`} />
-    <Figure label="After samples" value={entered ? `${count(figures.afterSamples)} ${countUnit}` : blank} note={figures.samples ? `${count(figures.samples)} taken as samples` : undefined} alert={entered && figures.afterSamples <= 0} />
-    <Figure label="Gain or loss" value={entered ? `${figures.gainOrLoss > 0 ? "+" : ""}${count(figures.gainOrLoss)} ${countUnit}` : blank}
-      note={entered && figures.percent !== null ? `${figures.percent > 0 ? "+" : ""}${figures.percent.toFixed(2)}% (limit ±${varianceLimitPercent}%)` : undefined} alert={figures.needsReason} />
-    <Figure label="Quantity packed" value={entered && packsPerShipper ? `${count(figures.totalPacked)} ${countUnit}` : blank}
+    <Figure label="Expected yield" value={figures.expected > 0 ? `${count(figures.expected)} ${countUnit}` : blank} />
+    <Figure label="Total packed including samples" value={entered ? `${count(figures.afterSamples + figures.samples)} ${countUnit}` : blank} note={figures.samples ? `${count(figures.samples)} set aside as samples` : undefined} />
+    <Figure label="Gain or loss" value={entered && figures.expected > 0 ? `${figures.gainOrLoss > 0 ? "+" : ""}${count(figures.gainOrLoss)} ${countUnit}` : blank}
+      note={entered && figures.percent !== null ? `${figures.percent > 0 ? "+" : ""}${count(figures.percent)}% (limit ±${varianceLimitPercent}%)` : undefined} alert={figures.needsReason} />
+    <Figure label="Available for warehouse transfer" value={entered && packsPerShipper ? `${count(figures.totalPacked)} ${countUnit}` : blank} alert={entered && figures.afterSamples <= 0}
       note={entered && packsPerShipper ? `${figures.fullShippers} full ${figures.fullShippers === 1 ? "shipper" : "shippers"} of ${packsPerShipper}${figures.leftOver ? ` and ${count(figures.leftOver)} left over` : ""}` : undefined} />
   </dl>;
 }

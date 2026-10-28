@@ -18,7 +18,7 @@ function ExtraMaterial({ id }: { id: string }) {
     <ActivityPageState state={state}>{(activity) => {
       const step = activity.steps.find((item) => item.id === activity.currentStepId);
       // The same rule as the button that leads here, so the address alone does not open the form.
-      const policy = step ? stepPolicy({ step, currentStepId: activity.currentStepId, cancelled: activity.batch.cancelled, userId: user?.id ?? null, extraMaterialPending: false, atrExists: false }) : null;
+      const policy = step ? stepPolicy({ step, currentStepId: activity.currentStepId, cancelled: activity.batch.cancelled, userId: user?.id ?? null, extraMaterialPending: false, extraMaterialOpen: false, atrExists: false }) : null;
       const batchId = activity.batch.id;
       return <>
         <p className="text-sm text-muted-foreground">{activity.batch.productName}{activity.batch.batchNumber ? ` · batch ${activity.batch.batchNumber}` : ""}{step ? ` · step ${step.order}: ${step.name}` : ""}</p>

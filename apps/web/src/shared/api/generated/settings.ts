@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ActivityLogApiResponse,
       GetApiV1ActivityLogApiArg
     >({
+      providesTags: [{ type: "activity-log", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/activity-log`,
         headers: {
@@ -26,6 +27,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1AlertApiResponse,
       PostApiV1AlertApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "alert", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/alert`,
         method: "POST",
@@ -37,6 +39,7 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     getApiV1Alert: build.query<GetApiV1AlertApiResponse, GetApiV1AlertApiArg>({
+      providesTags: [{ type: "alert", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/alert`,
         headers: {
@@ -55,6 +58,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1AlertByAlertIdApiResponse,
       GetApiV1AlertByAlertIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "alert", id: queryArg.alertId }],
       query: (queryArg) => ({
         url: `/api/v1/alert/${queryArg.alertId}`,
         headers: {
@@ -67,6 +71,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1AlertByAlertIdApiResponse,
       PutApiV1AlertByAlertIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "alert", id: "LIST" }, { type: "alert", id: queryArg.alertId }]),
       query: (queryArg) => ({
         url: `/api/v1/alert/${queryArg.alertId}`,
         method: "PUT",
@@ -81,6 +86,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1AlertByIdToggleDisableApiResponse,
       PutApiV1AlertByIdToggleDisableApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "alert", id: "LIST" }, { type: "alert", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/alert/${queryArg.id}/toggle-disable`,
         method: "PUT",
@@ -94,6 +100,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1AlertByIdApiResponse,
       DeleteApiV1AlertByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "alert", id: "LIST" }, { type: "alert", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/alert/${queryArg.id}`,
         method: "DELETE",
@@ -107,6 +114,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1AlertByIdMarkAsReadApiResponse,
       PutApiV1AlertByIdMarkAsReadApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "alert", id: "LIST" }, { type: "alert", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/alert/${queryArg.id}/mark-as-read`,
         method: "PUT",
@@ -120,6 +128,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1AlertNotificationsApiResponse,
       GetApiV1AlertNotificationsApiArg
     >({
+      providesTags: [{ type: "alert/notification", id: "LIST" }, { type: "alert", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/alert/notifications`,
         headers: {
@@ -135,6 +144,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1CollectionApiResponse,
       PostApiV1CollectionApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "collection", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/collection`,
         method: "POST",
@@ -152,6 +162,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1CollectionByItemTypeApiResponse,
       GetApiV1CollectionByItemTypeApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "collection", id: queryArg.itemType }],
       query: (queryArg) => ({
         url: `/api/v1/collection/${queryArg.itemType}`,
         headers: {
@@ -160,6 +171,7 @@ const injectedRtkApi = api.injectEndpoints({
         },
         params: {
           materialKind: queryArg.materialKind,
+          asOfDate: queryArg.asOfDate,
         },
       }),
     }),
@@ -167,6 +179,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1CollectionByItemTypeApiResponse,
       PostApiV1CollectionByItemTypeApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "collection", id: "LIST" }, { type: "collection", id: queryArg.itemType }]),
       query: (queryArg) => ({
         url: `/api/v1/collection/${queryArg.itemType}`,
         method: "POST",
@@ -181,6 +194,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1CollectionItemTypesApiResponse,
       GetApiV1CollectionItemTypesApiArg
     >({
+      providesTags: [{ type: "collection/item-type", id: "LIST" }, { type: "collection", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/collection/item-types`,
         headers: {
@@ -193,6 +207,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1CollectionByItemTypeAndItemIdApiResponse,
       PutApiV1CollectionByItemTypeAndItemIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "collection", id: "LIST" }, { type: "collection", id: queryArg.itemType }]),
       query: (queryArg) => ({
         url: `/api/v1/collection/${queryArg.itemType}/${queryArg.itemId}`,
         method: "PUT",
@@ -207,6 +222,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1CollectionByItemTypeAndItemIdApiResponse,
       DeleteApiV1CollectionByItemTypeAndItemIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "collection", id: "LIST" }, { type: "collection", id: queryArg.itemType }]),
       query: (queryArg) => ({
         url: `/api/v1/collection/${queryArg.itemType}/${queryArg.itemId}`,
         method: "DELETE",
@@ -220,6 +236,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1CollectionPackageStylesApiResponse,
       GetApiV1CollectionPackageStylesApiArg
     >({
+      providesTags: [{ type: "collection/package-style", id: "LIST" }, { type: "collection", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/collection/package-styles`,
         headers: {
@@ -232,6 +249,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1CollectionUomApiResponse,
       PostApiV1CollectionUomApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "collection/uom", id: "LIST" }, { type: "collection", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/collection/uom`,
         method: "POST",
@@ -246,6 +264,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1CollectionUomPaginatedApiResponse,
       PostApiV1CollectionUomPaginatedApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "collection/uom", id: "LIST" }, { type: "collection", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/collection/uom/paginated`,
         method: "POST",
@@ -260,6 +279,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1CollectionOperationsApiResponse,
       GetApiV1CollectionOperationsApiArg
     >({
+      providesTags: [{ type: "collection/operation", id: "LIST" }, { type: "collection", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/collection/operations`,
         headers: {
@@ -275,6 +295,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1CollectionUomByUomIdApiResponse,
       PostApiV1CollectionUomByUomIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "collection/uom", id: "LIST" }, { type: "collection", id: "LIST" }, { type: "collection/uom", id: queryArg.uomId }]),
       query: (queryArg) => ({
         url: `/api/v1/collection/uom/${queryArg.uomId}`,
         method: "POST",
@@ -288,6 +309,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1CollectionUomByUomIdApiResponse,
       PutApiV1CollectionUomByUomIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "collection/uom", id: "LIST" }, { type: "collection", id: "LIST" }, { type: "collection/uom", id: queryArg.uomId }]),
       query: (queryArg) => ({
         url: `/api/v1/collection/uom/${queryArg.uomId}`,
         method: "PUT",
@@ -302,6 +324,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1CollectionUomByUomIdApiResponse,
       DeleteApiV1CollectionUomByUomIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "collection/uom", id: "LIST" }, { type: "collection", id: "LIST" }, { type: "collection/uom", id: queryArg.uomId }]),
       query: (queryArg) => ({
         url: `/api/v1/collection/uom/${queryArg.uomId}`,
         method: "DELETE",
@@ -315,6 +338,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WorkingDaysApiResponse,
       GetApiV1WorkingDaysApiArg
     >({
+      providesTags: [{ type: "working-day", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/working-days`,
         headers: {
@@ -332,6 +356,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ConfigurationApiResponse,
       PostApiV1ConfigurationApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "configuration", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/configuration`,
         method: "POST",
@@ -346,6 +371,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ConfigurationApiResponse,
       GetApiV1ConfigurationApiArg
     >({
+      providesTags: [{ type: "configuration", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/configuration`,
         headers: {
@@ -363,6 +389,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ConfigurationByConfigurationIdApiResponse,
       GetApiV1ConfigurationByConfigurationIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "configuration", id: queryArg.configurationId }],
       query: (queryArg) => ({
         url: `/api/v1/configuration/${queryArg.configurationId}`,
         headers: {
@@ -375,6 +402,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ConfigurationByConfigurationIdApiResponse,
       PutApiV1ConfigurationByConfigurationIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "configuration", id: "LIST" }, { type: "configuration", id: queryArg.configurationId }]),
       query: (queryArg) => ({
         url: `/api/v1/configuration/${queryArg.configurationId}`,
         method: "PUT",
@@ -389,6 +417,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ConfigurationByConfigurationIdApiResponse,
       DeleteApiV1ConfigurationByConfigurationIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "configuration", id: "LIST" }, { type: "configuration", id: queryArg.configurationId }]),
       query: (queryArg) => ({
         url: `/api/v1/configuration/${queryArg.configurationId}`,
         method: "DELETE",
@@ -402,6 +431,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ConfigurationByModelTypeByModelTypeApiResponse,
       GetApiV1ConfigurationByModelTypeByModelTypeApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "configuration/by-model-type", id: queryArg.modelType }],
       query: (queryArg) => ({
         url: `/api/v1/configuration/by-model-type/${queryArg.modelType}`,
         headers: {
@@ -414,6 +444,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ConfigurationNamingTypesApiResponse,
       GetApiV1ConfigurationNamingTypesApiArg
     >({
+      providesTags: [{ type: "configuration/naming-type", id: "LIST" }, { type: "configuration", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/configuration/naming-types`,
         headers: {
@@ -426,6 +457,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ConfigurationByModelTypeCountApiResponse,
       GetApiV1ConfigurationByModelTypeCountApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "configuration", id: queryArg.modelType }],
       query: (queryArg) => ({
         url: `/api/v1/configuration/${queryArg.modelType}/count`,
         headers: {
@@ -441,6 +473,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ConfigurationThresholdApiResponse,
       PostApiV1ConfigurationThresholdApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "configuration/threshold", id: "LIST" }, { type: "configuration", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/configuration/threshold`,
         method: "POST",
@@ -455,6 +488,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ConfigurationThresholdApiResponse,
       GetApiV1ConfigurationThresholdApiArg
     >({
+      providesTags: [{ type: "configuration/threshold", id: "LIST" }, { type: "configuration", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/configuration/threshold`,
         headers: {
@@ -467,6 +501,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1CountriesApiResponse,
       GetApiV1CountriesApiArg
     >({
+      providesTags: [{ type: "country", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/countries`,
         headers: {
@@ -479,6 +514,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FileByModelTypeAndModelIdReferenceApiResponse,
       PostApiV1FileByModelTypeAndModelIdReferenceApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "file", id: "LIST" }, { type: "file", id: queryArg.modelType }]),
       query: (queryArg) => ({
         url: `/api/v1/file/${queryArg.modelType}/${queryArg.modelId}/${queryArg.reference}`,
         method: "POST",
@@ -493,6 +529,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FileByModelTypeAndModelIdReferenceApiResponse,
       GetApiV1FileByModelTypeAndModelIdReferenceApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "file", id: queryArg.modelType }],
       query: (queryArg) => ({
         url: `/api/v1/file/${queryArg.modelType}/${queryArg.modelId}/${queryArg.reference}`,
         headers: {
@@ -505,6 +542,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1FileByModelTypeAndModelIdApiResponse,
       PostApiV1FileByModelTypeAndModelIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "file", id: "LIST" }, { type: "file", id: queryArg.modelType }]),
       query: (queryArg) => ({
         url: `/api/v1/file/${queryArg.modelType}/${queryArg.modelId}`,
         method: "POST",
@@ -519,6 +557,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1FileByModelIdApiResponse,
       DeleteApiV1FileByModelIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "file", id: "LIST" }, { type: "file", id: queryArg.modelId }]),
       query: (queryArg) => ({
         url: `/api/v1/file/${queryArg.modelId}`,
         method: "DELETE",
@@ -532,6 +571,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1FileByModelIdAndReferenceApiResponse,
       DeleteApiV1FileByModelIdAndReferenceApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "file", id: "LIST" }, { type: "file", id: queryArg.modelId }]),
       query: (queryArg) => ({
         url: `/api/v1/file/${queryArg.modelId}/${queryArg.reference}`,
         method: "DELETE",
@@ -545,6 +585,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1FileByModelTypeAndReferenceApiResponse,
       GetApiV1FileByModelTypeAndReferenceApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "file", id: queryArg.modelType }],
       query: (queryArg) => ({
         url: `/api/v1/file/${queryArg.modelType}/${queryArg.reference}`,
         headers: {
@@ -557,6 +598,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1HolidaysApiResponse,
       PostApiV1HolidaysApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "holiday", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/holidays`,
         method: "POST",
@@ -571,6 +613,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1HolidaysApiResponse,
       GetApiV1HolidaysApiArg
     >({
+      providesTags: [{ type: "holiday", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/holidays`,
         headers: {
@@ -586,6 +629,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1HolidaysByIdApiResponse,
       GetApiV1HolidaysByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "holiday", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/holidays/${queryArg.id}`,
         headers: {
@@ -598,6 +642,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1HolidaysByIdApiResponse,
       PutApiV1HolidaysByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "holiday", id: "LIST" }, { type: "holiday", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/holidays/${queryArg.id}`,
         method: "PUT",
@@ -612,6 +657,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1HolidaysByIdApiResponse,
       DeleteApiV1HolidaysByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "holiday", id: "LIST" }, { type: "holiday", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/holidays/${queryArg.id}`,
         method: "DELETE",
@@ -625,6 +671,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1WorkingHoursPolicyApiResponse,
       PostApiV1WorkingHoursPolicyApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "working-hours-policy", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/working-hours-policy`,
         method: "POST",
@@ -639,6 +686,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1WorkingHoursPolicyApiResponse,
       GetApiV1WorkingHoursPolicyApiArg
     >({
+      providesTags: [{ type: "working-hours-policy", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/working-hours-policy`,
         headers: {
@@ -651,6 +699,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1WorkingHoursPolicyByIdApiResponse,
       DeleteApiV1WorkingHoursPolicyByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "working-hours-policy", id: "LIST" }, { type: "working-hours-policy", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/working-hours-policy/${queryArg.id}`,
         method: "DELETE",
@@ -774,6 +823,8 @@ export type GetApiV1CollectionByItemTypeApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
+  asOfDate?: string | null;
 };
 export type PostApiV1CollectionByItemTypeApiResponse =
   /** status 201 Created */ string;
@@ -1282,6 +1333,13 @@ export type DomainEntitiesNotificationsNotificationDto = {
   id?: string;
   message?: string | null;
   type?: DomainEntitiesNotificationsNotificationType;
+  shipmentDocumentId?: string | null;
+  relatedEntityType?: string | null;
+  relatedEntityId?: string | null;
+  relatedEntityCode?: string | null;
+  relatedEntityName?: string | null;
+  relatedEntityStatus?: string | null;
+  relatedEntityPriority?: string | null;
   recipients?: DomainEntitiesUsersUserDto[] | null;
   sentAt?: string;
 };

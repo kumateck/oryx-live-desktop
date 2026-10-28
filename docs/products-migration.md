@@ -171,6 +171,8 @@ Improved:
 
 Not carried over: after saving, Oryx Next goes to a Quality Control screen where the specification's test parameters are filled in, and the specification number opens a Quality Control detail page. Those belong to the Quality Control module, which is not migrated yet; until then that step is done in Oryx Next, on the same data.
 
-## Not yet migrated
+## Print
 
-The product print preview.
+**Print** on the product page prints the product as the head of a batch manufacturing record (`components/detail/product-print.tsx`): product facts, the active bill of materials scaled to a full batch with each material's specification number, function and grade, the packaging materials, and the procedure. The batch's own details (batch number, manufacturing and expiry dates, started, completed, issued on, by and to) are lines to fill in by hand.
+
+Changed from Oryx Next: it filled "Date started" and "Issued by" with when and by whom the product was created; printed a fixed "Page 1 of 21"; looked a packaging material's specification up in the raw materials' list, so it never found one (it is now read for the packaging material itself); and printed every non-critical step as "Automated".

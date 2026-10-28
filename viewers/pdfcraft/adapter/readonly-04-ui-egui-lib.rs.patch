@@ -1,0 +1,40 @@
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -25,6 +25,7 @@
+ mod a11y_ui;
+ mod actions_ui;
+ pub mod canvas;
++mod readonly;
+ mod chrome;
+ mod combine_grid;
+ pub use combine_grid::ThumbState as CombineThumb;
+@@ -1927,6 +1928,17 @@
+         }
+         self.sync_theme(ctx);
+         ui_scale::sync(ctx, ui_scale::factor(self.ui_scale, self.system_text_scale), &mut self.ui_scale_applied);
++        if self.session.read_only {
++            self.mode = Mode::Read;
++            self.quick_tool = QuickTool::Select;
++            self.left_open = false;
++            self.right = None;
++            if let Some(i) = self.active {
++                self.views[i].organize = false;
++                canvas::shortcuts(&mut self.views[i], ctx);
++            }
++            return;
++        }
+         // Remember user work even if its tab is subsequently closed or Home is selected.
+         self.startup_superseded |= !self.views.is_empty() || self.combine_showing() || self.dialog.is_some() || self.password_prompt.is_some();
+         // Before taking this frame's drop: the grid must be drawn once with the pointer where
+@@ -2045,6 +2057,11 @@
+         }
+         for view in &mut self.views {
+             view.begin_render_frame();
++        }
++        if self.session.read_only {
++            readonly::show(self, ui);
++            self.finish_render_frame(&ctx);
++            return;
+         }
+         // The window shows the active document's name (or title, if it asks for that).
+         let title = self

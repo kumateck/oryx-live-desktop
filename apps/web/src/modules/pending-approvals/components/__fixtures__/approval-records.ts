@@ -1,0 +1,3 @@
+export const entity = (type: string, id: string, extra: object = {}) => ({ id, modelType: type, code: id.toUpperCase(), createdAt: "2026-09-30T09:00:00Z", department: { name: "Production" }, requestedBy: { firstName: "Ama", lastName: "Owusu" }, approvalLogs: [], ...extra });
+export const leave = { requestCategory: 0, leaveType: { name: "Annual leave", isPaid: true }, startDate: "2026-10-12T00:00:00Z", endDate: "2026-10-16T00:00:00Z", numberOfDays: 5, paidDays: 5, unpaidDays: 0, leaveBalance: 3,
+  justification: "<p>Family event</p><script>alert(1)</script>", employee: { firstName: "Ama", lastName: "Owusu", staffNumber: "S-014", department: { name: "Production" } } };

@@ -21,7 +21,7 @@ export function PermissionSubmodules({ groups, selected, onChange }: {
           {Array.from(groups, ([name, children]) => <TabsTrigger key={name} value={name}
             aria-label={`${name}, ${accessCount(children)} of ${children.length} enabled`}
             className="flex h-auto min-h-8 w-full flex-none items-center justify-start gap-2 px-2 py-2 text-left whitespace-normal data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <span className="min-w-0 flex-1 break-words text-left">{name}</span><span className="ml-auto shrink-0 text-right text-[11px] tabular-nums opacity-70">{accessCount(children)}/{children.length}</span>
+            <span className="min-w-0 flex-1 break-words text-left">{name}</span><span className="ml-auto shrink-0 text-right text-sm tabular-nums opacity-70">{accessCount(children)}/{children.length}</span>
           </TabsTrigger>)}
         </TabsList>
       </div>

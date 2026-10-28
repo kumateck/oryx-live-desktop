@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1AuthLoginApiResponse,
       PostApiV1AuthLoginApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "auth/login", id: "LIST" }, { type: "auth", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/auth/login`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1AuthLoginWithRefreshTokenApiResponse,
       PostApiV1AuthLoginWithRefreshTokenApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "auth/login-with-refresh-token", id: "LIST" }, { type: "auth", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/auth/login-with-refresh-token`,
         method: "POST",
@@ -33,6 +35,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1AuthSetPasswordApiResponse,
       PostApiV1AuthSetPasswordApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "auth/set-password", id: "LIST" }, { type: "auth", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/auth/set-password`,
         method: "POST",
@@ -47,6 +50,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1AuthChangePasswordApiResponse,
       PostApiV1AuthChangePasswordApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "auth/change-password", id: "LIST" }, { type: "auth", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/auth/change-password`,
         method: "POST",
@@ -61,6 +65,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1AuthForgotPasswordApiResponse,
       PostApiV1AuthForgotPasswordApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "auth/forgot-password", id: "LIST" }, { type: "auth", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/auth/forgot-password`,
         method: "POST",
@@ -75,6 +80,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1AuthUserResetPasswordApiResponse,
       PostApiV1AuthUserResetPasswordApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "auth/user-reset-password", id: "LIST" }, { type: "auth", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/auth/user-reset-password`,
         method: "POST",
@@ -89,6 +95,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1VerificationApiResponse,
       PostApiV1VerificationApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "verification", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/verification`,
         method: "POST",

@@ -3,10 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "bun ../../scripts/prepare-viewers.ts && vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
-    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "build": "bun ../../scripts/prepare-viewers.ts && tsc --noEmit -p tsconfig.json && vite build",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
@@ -31,7 +31,12 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "date-fns": "^4.4.0",
+    "exceljs": "4.4.0",
+    "fast-xml-parser": "5.11.2",
+    "fflate": "0.8.3",
     "lucide-react": "^1.49.0",
+    "mathjs": "15.2.0",
+    "pdf-lib": "1.17.1",
     "radix-ui": "^1.6.7",
     "react": "19.3.0",
     "react-day-picker": "^10.0.2",

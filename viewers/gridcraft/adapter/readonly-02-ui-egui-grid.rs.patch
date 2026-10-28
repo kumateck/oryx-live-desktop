@@ -1,0 +1,21 @@
+--- a/crates/ui-egui/src/grid.rs
++++ b/crates/ui-egui/src/grid.rs
+@@ -748,6 +748,10 @@
+     if geo.paper.is_some() {
+         crate::paper_view::paint_rulers(app, &painter, rect, &geo, &t);
+     }
++    // Attachment interaction is limited to selection and copying.
++    if app.session.read_only {
++        crate::readonly::interact(app, ui, &resp, &geo, sh);
++    } else {
+     // Interaction.
+     let previous_popups = (app.grid.filter_menu, app.grid.list_picker, app.grid.header_menu);
+     crate::paper_view::interact(app, ui, &resp, &geo, sh, &wb);
+@@ -760,6 +764,7 @@
+     list_picker(app, ui, &geo, previous_popups.1 == app.grid.list_picker);
+     header_menu(app, ui, previous_popups.2 == app.grid.header_menu);
+     context_menu(app, ui);
++    }
+     let track_x = if rtl { (available.left(), rect.left()) } else { (rect.right(), available.right()) };
+     vertical_scrollbar(app, ui, sh, &geo, track_x, max_y, &t);
+     if app.session.clipboard.is_some() {

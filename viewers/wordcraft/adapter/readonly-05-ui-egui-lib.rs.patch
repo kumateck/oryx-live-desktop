@@ -1,0 +1,49 @@
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -24,6 +24,7 @@
+ pub mod a11y_pane;
+ pub mod async_saves;
+ pub mod autoscroll;
++mod readonly;
+ pub mod backstage;
+ pub mod canvas;
+ pub mod caret_glide;
+@@ -751,6 +752,9 @@
+     /// Close, Envelopes, Labels and Finish & Merge on a document with unsaved changes first ask
+     /// Save / Don't Save / Cancel, and the command runs once that is answered (`ui.saveChanges`).
+     pub fn run(&mut self, id: &str, params: Value) -> Result<Value, String> {
++        if self.session.read_only && !wordcraft_engine::readonly::allowed(id) {
++            return Err("Attachments are read-only".into());
++        }
+         if id == "file.recover" && params.as_object().is_none_or(|p| p.is_empty()) {
+             self.ui.backstage = true;
+             self.ui.backstage_page = "recover".into();
+@@ -809,6 +813,9 @@
+     /// Run a command for a script or an agent (control channel, MCP bridge): never asks first.
+     /// UI-level commands (`ui.*`) are handled here, the rest by the engine.
+     pub fn execute(&mut self, id: &str, params: Value) -> Result<Value, String> {
++        if self.session.read_only && !wordcraft_engine::readonly::allowed(id) {
++            return Err("Attachments are read-only".into());
++        }
+         if self.services.download.is_some() && matches!(id, "file.new" | "file.open" | "file.close") {
+             let message = "Open or import documents from the Dodo Documents library.";
+             self.status(message);
+@@ -1819,6 +1826,7 @@
+         self.drain_inbox();
+         self.drain_pasted();
+         self.watch_fonts(ctx);
++        if self.session.read_only { return; }
+         let document = self.session.document_id();
+         self.session.recovery_tick();
+         if self.session.document_id() != document {
+@@ -1994,6 +2002,10 @@
+         if self.fonts_frames < 2 {
+             self.fonts_frames += 1;
+             ctx.request_repaint();
++            return;
++        }
++        if self.session.read_only {
++            readonly::show(self, ui);
+             return;
+         }
+         let t = theme::Tokens::get(&ctx);

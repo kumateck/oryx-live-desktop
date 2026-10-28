@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link } from "react-router";
+import { AttachmentList } from "@/shared/attachments/attachment-list";
 import { BillingSheetStatus, ChargeStateBadge } from "@/modules/billing-sheets/components/billing-status";
 import { useBillingSheet } from "@/modules/billing-sheets/hooks/use-billing-sheets";
 import { chargeTotals } from "@/modules/billing-sheets/lib/billing-rules";
@@ -30,6 +30,7 @@ export function PurchaseOrderDetails({ id }: { id: string }) {
   const order = useMemo(() => { const parsed = purchaseOrderSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data : null; }, [query.data]);
   return <DetailState {...queryState(query)} value={order} label="purchase order">{(value) => <div className="space-y-4">
     <SupplierSummary supplier={value.supplier} /><OrderTerms order={value} /><PurchaseOrderLines order={value} />
+    <AttachmentList title="Attachments" files={value.attachments} />
     {value.supplier.type === null ? <p className="text-sm text-muted-foreground">The supplier's type is not recorded, so the charges cannot be laid out.</p> : <OrderTotals order={value} type={value.supplier.type} />}
   </div>}</DetailState>;
 }
@@ -69,7 +70,7 @@ export function ShipmentDetails({ id }: { id: string }) {
         <DetailItem label="Invoice value" value={value.invoice.total === null ? null : formatMoney(value.invoice.total, value.invoice.currency)} /></DetailGroup>
       <ClientDataTable label="Materials on this delivery" columns={lineColumns} rows={value.invoice.items} getRowId={(row) => row.id} fill={false} emptyTitle="No materials recorded" /></>
       : <p role="alert" className="text-sm">The invoice this delivery carries could not be read.</p>}
-    {value.attachments.length ? <p className="text-sm text-muted-foreground">{value.attachments.length} shipping {value.attachments.length === 1 ? "document is" : "documents are"} attached; open the <Link className="text-primary underline-offset-2 hover:underline" to={`/logistics/shipment-documents/${value.id}/details`}>shipment</Link> to read them.</p> : null}
+    <AttachmentList title="Shipping documents" files={value.attachments} />
   </div>}</DetailState>;
 }
 
@@ -92,6 +93,7 @@ export function BillingSheetDetails({ id }: { id: string }) {
         <DetailItem label="Description" value={value.packageDescription} /><DetailItem label="Payment due" value={formatDate(value.dueDate)} /></DetailGroup>
     </div>
     <ClientDataTable label="Charges" columns={chargeColumns} rows={value.charges} getRowId={(row) => row.id} fill={false} emptyTitle="No charges on this sheet" />
+    <AttachmentList title="Supporting documents" files={value.attachments} />
     <p className="text-right text-sm font-semibold">{chargeTotals(value.charges).map((item) => `Total ${formatMoney(item.total, item.currency)}`).join(" · ")}</p>
   </div>}</DetailState>;
 }

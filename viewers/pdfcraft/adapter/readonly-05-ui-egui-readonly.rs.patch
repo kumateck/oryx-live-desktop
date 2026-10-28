@@ -1,0 +1,36 @@
+--- /dev/null
++++ b/crates/ui-egui/src/readonly.rs
+@@ -0,0 +1,33 @@
++//! Assigned-file PDF viewer. Editing tools and file operations have no entry point.
++use crate::{PdfCraftApp, canvas};
++pub fn allowed(id: &str) -> bool {
++    matches!(id, "edit.find" | "view.layout.continuous" | "view.layout.single"
++        | "view.fit_width_scrolling" | "view.fit_one_page" | "view.fit_visible")
++}
++
++pub fn show(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
++    egui::Panel::top("attachment-toolbar").show(ui, |ui| {
++        ui.horizontal_wrapped(|ui| {
++            ui.strong("Read-only");
++            let Some(index) = app.active else { return; };
++            let pages = app.session.get(app.views[index].id).map_or(0, |d| d.info.pages.len());
++            let view = &mut app.views[index];
++            if ui.button("Previous page").clicked() {
++                let page = view.current.saturating_sub(1); view.page_changed(page); view.goto = Some((page, 0.0));
++            }
++            ui.label(format!("{} / {}", view.current + 1, pages));
++            if ui.button("Next page").clicked() {
++                let page = (view.current + 1).min(pages.saturating_sub(1)); view.page_changed(page); view.goto = Some((page, 0.0));
++            }
++            let mut zoom = view.zoom * 100.0;
++            if ui.add(egui::Slider::new(&mut zoom, 25.0..=300.0).text("Zoom %")).changed() { view.set_zoom(zoom / 100.0); }
++            if ui.button("Fit page").clicked() { view.fit = canvas::Fit::Page; }
++            if ui.button("Fit width").clicked() { view.fit = canvas::Fit::Width; }
++            if ui.button("Find").clicked() { view.open_find(); }
++        });
++    });
++    let t = crate::theme::Tokens::get(ui.ctx());
++    egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.pasteboard)).show(ui, |ui| {
++        if let Some(index) = app.active { canvas::document_area(app, index, ui); }
++    });
++}

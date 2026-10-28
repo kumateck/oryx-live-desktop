@@ -21,7 +21,7 @@ const raw = { id: "a1", status: 1, startedAt: "2026-10-01T08:00:00Z", currentSte
   ] };
 const activity = activitySchema.parse(raw);
 const step = (id: string, change: Partial<ActivityStep> = {}): ActivityStep => ({ ...activity.steps.find((item) => item.id === id)!, ...change });
-const context = { currentStepId: "s3", cancelled: false, userId: "u1", extraMaterialPending: false, atrExists: false };
+const context = { currentStepId: "s3", cancelled: false, userId: "u1", extraMaterialPending: false, extraMaterialOpen: false, atrExists: false };
 
 it("orders the steps, puts the newest log first, and measures progress", () => {
   expect(activity.steps.map((item) => item.order)).toEqual([1, 2, 3, 4]);
@@ -47,19 +47,20 @@ it("lets the responsible person start and finish a critical step, and no one els
   const stranger = stepPolicy({ ...context, userId: "u9", step: step("s3") });
   expect(stranger).toMatchObject({ allowed: false, canStart: false });
   expect(stranger.blocked).toContain("Only the people responsible");
-  // A step that is not critical has no responsible-person rule, but still waits for someone to act.
-  expect(stepPolicy({ ...context, currentStepId: "s4", userId: "u9", step: step("s4") })).toMatchObject({ allowed: true, canStart: true });
+  // A non-critical current step starts itself and is completed by a person.
+  expect(stepPolicy({ ...context, currentStepId: "s4", userId: "u9", step: step("s4") })).toMatchObject({ allowed: true, canStart: false, shouldAutoStart: true });
   expect(stepPolicy({ ...context, currentStepId: "s4", userId: "u9", step: step("s4", { status: 1 }) })).toMatchObject({ allowed: true, canComplete: true });
 });
 
 it("closes a step that is not current, is finished, or belongs to a cancelled batch", () => {
-  expect(stepPolicy({ ...context, step: step("s4") })).toMatchObject({ open: false, blocked: "This is not the batch's current step." });
+  expect(stepPolicy({ ...context, step: step("s4") })).toMatchObject({ open: false, shouldAutoStart: false, blocked: "This is not the batch's current step." });
   expect(stepPolicy({ ...context, currentStepId: "s1", step: step("s1") })).toMatchObject({ open: false, blocked: "This step is completed." });
   expect(stepPolicy({ ...context, cancelled: true, step: step("s3") })).toMatchObject({ open: false, canStart: false, blocked: "The batch was cancelled." });
 });
 
 it("holds a start while extra material is pending, and a completion while a test request is open", () => {
   expect(stepPolicy({ ...context, extraMaterialPending: true, step: step("s3") }).canStart).toBe(false);
+  expect(stepPolicy({ ...context, currentStepId: "s4", extraMaterialPending: true, step: step("s4") })).toMatchObject({ canStart: false, shouldAutoStart: false });
   expect(stepPolicy({ ...context, atrExists: true, step: step("s3", { status: 1 }) }).canComplete).toBe(false);
   // A step carried out through its own record moves with that record, wherever it sits in the procedure.
   expect(stepPolicy({ ...context, currentStepId: "s2", userId: "u2", step: step("s2", { status: 0 }) })).toMatchObject({ canStart: false, canRequestStock: true, waitsFor: 1 });
@@ -67,6 +68,14 @@ it("holds a start while extra material is pending, and a completion while a test
   const packing = step("s3", { status: 0, team: [{ ...step("s3").team[0]!, action: 4 }] });
   expect(stepPolicy({ ...context, step: packing })).toMatchObject({ canStart: true, waitsFor: 4 });
   expect(stepPolicy({ ...context, step: { ...packing, status: 1 } })).toMatchObject({ canComplete: false, canFinalPack: true });
+});
+
+it("holds manual completion for pending approval and approved but unissued extra material", () => {
+  const running = step("s3", { status: 1 });
+  expect(stepPolicy({ ...context, step: running, extraMaterialPending: true, extraMaterialOpen: true }))
+    .toMatchObject({ canManuallyComplete: true, canComplete: false });
+  expect(stepPolicy({ ...context, step: running, extraMaterialPending: false, extraMaterialOpen: true }).canComplete).toBe(false);
+  expect(stepPolicy({ ...context, step: running, extraMaterialOpen: false }).canComplete).toBe(true);
 });
 
 it("raises a test request once, for the stage set on the step's instruction", () => {
@@ -146,8 +155,8 @@ it("counts what is left to transfer and marks anything but one full transfer as 
 it("works out the yield, the shippers, and when a reason is owed", () => {
   const source = { category: "syrup" as const, receivedUnit: "L", packingExpectedYield: 75_000, packsPerShipper: 150 };
   const figures = yieldFigures({ received: 1500, averageFilled: 20, actualPacked: 75_300, qcSample: 20, retained: 20, stability: 10 }, source);
-  expect(figures).toMatchObject({ expected: 75_000, samples: 50, afterSamples: 75_250, gainOrLoss: 250, fullShippers: 501, leftOver: 100, totalPacked: 75_250, needsReason: false });
-  expect(figures.percent).toBeCloseTo(0.3333, 3);
+  expect(figures).toMatchObject({ expected: 75_000, samples: 50, afterSamples: 75_250, gainOrLoss: 300, fullShippers: 501, leftOver: 100, totalPacked: 75_250, needsReason: false });
+  expect(figures.percent).toBeCloseTo(0.4, 3);
   expect(yieldFigures({ received: 1500, averageFilled: 20, actualPacked: 73_000, qcSample: 0, retained: 0, stability: 0 }, source)).toMatchObject({ gainOrLoss: -2000, needsReason: true });
   // Tablets: the expected count comes from the bulk received and the average tablet weight (120 kg at 500 mg each).
   expect(yieldFigures({ received: 120, averageFilled: 500, actualPacked: null, qcSample: null, retained: null, stability: null }, { category: "tablet", receivedUnit: "kg", packingExpectedYield: 1, packsPerShipper: 100 }))

@@ -1,6 +1,8 @@
+import { CompanionSettings } from "../notifications/companion-settings";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { InterfaceSettings } from "./interface-settings";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -24,10 +26,6 @@ function AdvancedSettings({ setEditing }: { setEditing: (theme: ResolvedTheme) =
   const { settings } = theme;
   return <div className="advanced-groups">
     <div className="appearance-card">
-      <SettingRow label="UI font size" hint="Base size used across the workspace"><Input aria-label="UI font size" type="number" min={12} max={20} value={settings.uiFontSize} onChange={(event) => theme.update({ uiFontSize: Math.min(20, Math.max(12, Number(event.target.value) || 14)) })} /> px</SettingRow>
-      <SettingRow label="Code font size" hint="Base size for code and technical values"><Input aria-label="Code font size" type="number" min={10} max={20} value={settings.codeFontSize} onChange={(event) => theme.update({ codeFontSize: Math.min(20, Math.max(10, Number(event.target.value) || 12)) })} /> px</SettingRow>
-    </div>
-    <div className="appearance-card">
       <SettingRow label="Reduce motion" hint="Reduce animations or match your system"><Select value={settings.reduceMotion} onValueChange={(value) => { if (value === "system" || value === "on" || value === "off") theme.update({ reduceMotion: value }); }}><SelectTrigger size="sm" aria-label="Reduce motion"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="system">System</SelectItem><SelectItem value="on">On</SelectItem><SelectItem value="off">Off</SelectItem></SelectContent></Select></SettingRow>
       <SettingRow label="Separate light and dark modes" hint="Customize colors and font for each mode"><Switch aria-label="Separate light and dark modes" checked={settings.separateModes} onCheckedChange={(checked) => { theme.update({ separateModes: checked }); setEditing(theme.resolved); }} /></SettingRow>
     </div>
@@ -50,13 +48,16 @@ export function AppearanceSettings() {
   const profileTheme = settings.separateModes ? editing : theme.resolved;
   return <section className="appearance-page" aria-labelledby="appearance-title">
     <h1 id="appearance-title">Appearance</h1>
-    <p className="appearance-section-title">Visual style</p>
+    <p className="appearance-description">Choose how your workspace looks. Changes save automatically on this device.</p>
+    <InterfaceSettings />
+    <CompanionSettings />
+    <h2 className="appearance-section-title">Visual style</h2>
     <div className="appearance-card mode-card"><SettingRow label="Mode"><div className="mode-options" role="group" aria-label="Theme mode">
       {(["system", "light", "dark"] as const).map((mode: ThemeMode) => <Button key={mode} size="sm" variant={settings.mode === mode ? "secondary" : "ghost"} aria-pressed={settings.mode === mode} onClick={() => theme.update({ mode })}>{mode.charAt(0).toUpperCase() + mode.slice(1)}</Button>)}
     </div></SettingRow></div>
     {settings.separateModes && <div className="profile-tabs" role="group" aria-label="Edit color profile">{(["light", "dark"] as const).map((mode) => <Button key={mode} size="sm" variant={editing === mode ? "secondary" : "ghost"} aria-pressed={editing === mode} onClick={() => setEditing(mode)}>{mode.charAt(0).toUpperCase() + mode.slice(1)}</Button>)}</div>}
     <ProfileControls profile={settings.profiles[profileTheme]} theme={profileTheme} update={theme.updateProfile} />
-    <div className="advanced-heading"><Button size="sm" variant="ghost" aria-expanded={advanced} onClick={() => setAdvanced((value) => !value)}>Advanced {advanced ? "⌄" : "›"}</Button><Button size="sm" variant="ghost" onClick={theme.reset}>Reset to default</Button></div>
+    <div className="advanced-heading"><Button size="sm" variant="ghost" aria-expanded={advanced} onClick={() => setAdvanced((value) => !value)}>Advanced {advanced ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}</Button><Button size="sm" variant="ghost" onClick={theme.reset}>Reset to default</Button></div>
     {advanced && <AdvancedSettings setEditing={setEditing} />}
   </section>;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -6,30 +6,29 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { departmentApi, departmentAudit } from "@/modules/departments/departments";
 import { SettingsFormDialog } from "@/modules/settings-support/ui";
 import { ConfirmActionDialog, TableMenu, TableMenuHeader } from "@/shared/actions";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { DetailGroup, DetailItem } from "@/shared/detail/detail-list";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
+import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
 import type { WizardField } from "@/shared/forms/form-wizard";
+import type { SelectLoader, SelectOption } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
+import { useReferenceOptions } from "./hooks/use-reference-options";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import { usePageSearch } from "@/shared/search/page-search";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { designationAudit, designationFormSchema, designationPermissions, designationRowsSchema, leaveTypeAudit, leaveTypeBody, leaveTypeFormSchema, leaveTypePermissions, leaveTypeRowsSchema, staffSetupApi,
-  type Designation, type DesignationFormValues, type LeaveType, type LeaveTypeFormValues } from "./designations";
+import { changedSinceOpened, designationAudit, designationBody, designationFormSchema, designationPermissions, designationRowsSchema, leaveTypeAudit, leaveTypeBody, leaveTypeFormSchema, leaveTypePermissions, leaveTypeRowsSchema,
+  sameDesignation, sameLeaveType, staffSetupApi, type Designation, type DesignationFormValues, type LeaveType, type LeaveTypeFormValues } from "./designations";
 
 const ALL = "all";
+const allDepartments: SelectOption = { value: ALL, label: "All departments" };
 const yes = (value: boolean) => value ? "Yes" : "No";
 function Header({ title, description, children }: { title: string; description: string; children?: React.ReactNode }) {
   return <header className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><p className="eyebrow">HUMAN RESOURCES</p><h1 className="text-xl font-semibold">{title}</h1><p className="text-sm text-muted-foreground">{description}</p></div>
     <div className="flex flex-wrap items-center gap-2">{children}</div></header>;
-}
-function useDepartmentOptions() {
-  const query = departmentApi.useGetApiV1DepartmentQuery({ ...departmentAudit, page: 1, pageSize: 1000 });
-  return { options: useMemo(() => (query.data?.data ?? []).flatMap((row) => row.id && row.name ? [{ value: row.id, label: row.name }] : []), [query.data]), loading: query.isLoading };
 }
 function Chips({ items, empty }: { items: readonly { value: string; label: string }[]; empty: string }) {
   return items.length === 0 ? <span className="text-muted-foreground">{empty}</span> : <span className="flex flex-wrap gap-1">{items.map((item) => <Badge key={item.value} variant="secondary">{item.label}</Badge>)}</span>;
@@ -43,19 +42,29 @@ function ViewDialog({ title, description, onClose, children }: { title: string; 
 function DesignationDialog({ item, onClose }: { item: Designation | null; onClose: () => void }) {
   const [create, creating] = staffSetupApi.usePostApiV1DesignationMutation();
   const [update, updating] = staffSetupApi.usePutApiV1DesignationByIdMutation();
-  const departments = useDepartmentOptions();
+  const [reread] = staffSetupApi.useLazyGetApiV1DesignationByIdQuery();
+  const references = useReferenceOptions();
+  const permission = usePermissionAction(item ? designationPermissions.edit : designationPermissions.add);
   const [message, setMessage] = useState("");
   const form = useForm<DesignationFormValues>({ resolver: zodResolver(designationFormSchema), defaultValues: item ? { name: item.name, departments: item.departments, leaveDays: item.leaveDays, description: item.description ?? "" } : { name: "", departments: [], description: "" } });
   const fields: WizardField<DesignationFormValues>[] = [
     { type: InputTypes.TEXT, name: "name", label: "Designation name", required: true },
     { type: InputTypes.NUMBER, name: "leaveDays", label: "Paid leave days entitled", required: true, min: 0, description: "Days a year." },
-    { type: InputTypes.SELECT, mode: "multiple", source: "sync", name: "departments", label: "Associated departments", required: true, placeholder: departments.loading ? "Loading departments…" : "Select departments", options: departments.options, className: "md:col-span-2" },
+    { type: InputTypes.SELECT, mode: "multiple", name: "departments", label: "Associated departments", required: true, placeholder: "Search for departments", source: "async", loadOptions: references.departments, className: "md:col-span-2" },
     { type: InputTypes.RICHTEXT, name: "description", label: "Description", className: "md:col-span-2" },
   ];
   return <SettingsFormDialog title={item ? `Edit ${item.name}` : "Add a designation"} description="A job title, the departments it exists in, and its paid leave." form={form} fields={fields} saving={creating.isLoading || updating.isLoading} message={message}
     submitLabel={item ? "Save designation" : "Add designation"} onClose={onClose} onSubmit={async (values) => {
       setMessage("");
-      const body = { name: values.name, description: values.description ?? "", departmentIds: values.departments.map((department) => department.value), maximumLeaveDays: values.leaveDays };
+      const denied = permission.check();
+      if (denied) { setMessage(denied); return; }
+      if (item) {
+        const fresh = await reread({ ...designationAudit, id: item.id }, false);
+        if (fresh.error) { setMessage(apiErrorMessage(fresh.error)); return; }
+        const current = designationRowsSchema.safeParse([fresh.data]);
+        if (!current.success || !current.data[0] || !sameDesignation(item, current.data[0])) { setMessage(changedSinceOpened); return; }
+      }
+      const body = designationBody(values);
       const result = item ? await update({ ...designationAudit, id: item.id, domainEntitiesDesignationsCreateDesignationRequest: body }) : await create({ ...designationAudit, domainEntitiesDesignationsCreateDesignationRequest: body });
       if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
       toast.success(item ? "Designation updated" : "Designation added"); onClose();
@@ -65,9 +74,14 @@ const designationColumn = dataTableColumns<Designation>();
 export function DesignationsPage() {
   const [busy, setBusy] = useState(false);
   const search = usePageSearch("designations", busy);
-  const [departmentId, setDepartmentId] = useState<string>();
+  const [department, setDepartment] = useState<SelectOption>(allDepartments);
+  const departmentId = department.value === ALL ? undefined : department.value;
   const table = useServerTable({ pageSize: 50, resetKey: `${search}|${departmentId ?? ""}` });
-  const departments = useDepartmentOptions();
+  const references = useReferenceOptions();
+  const filterOptions = useCallback<SelectLoader>(async (term, page, signal) => {
+    const result = await references.departments(term, page, signal);
+    return page === 1 && !term.trim() ? { ...result, options: [allDepartments, ...result.options] } : result;
+  }, [references]);
   const query = staffSetupApi.useGetApiV1DesignationQuery({ ...designationAudit, page: table.page, pageSize: table.pageSize, searchQuery: search, ...(departmentId ? { departmentId } : {}) });
   const [remove] = staffSetupApi.useDeleteApiV1DesignationByIdMutation();
   const parsed = useMemo(() => query.data ? designationRowsSchema.safeParse(query.data.data ?? []) : null, [query.data]);
@@ -89,8 +103,7 @@ export function DesignationsPage() {
   ]), []);
   return <section className="page-fill">
     <Header title="Designation management" description="Job titles, the departments they exist in, and their paid leave.">
-      <Select value={departmentId ?? ALL} onValueChange={(value) => setDepartmentId(value === ALL ? undefined : value)}><SelectTrigger aria-label="Filter by department" size="sm" className="w-full sm:w-56"><SelectValue /></SelectTrigger>
-        <SelectContent position="popper"><SelectItem value={ALL}>All departments</SelectItem>{departments.options.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select>
+      <div className="w-full sm:w-56"><AsyncOptionPicker label="Filter by department" value={department} onChange={setDepartment} loadOptions={filterOptions} /></div>
       <PermissionGuard require={designationPermissions.add}><Button type="button" size="sm" onClick={() => setEditing("new")}><Plus />Add designation</Button></PermissionGuard>
     </Header>
     <ServerDataTable label="Designations" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
@@ -109,8 +122,9 @@ export function DesignationsPage() {
 function LeaveTypeDialog({ item, onClose }: { item: LeaveType | null; onClose: () => void }) {
   const [create, creating] = staffSetupApi.usePostApiV1LeaveTypeMutation();
   const [update, updating] = staffSetupApi.usePutApiV1LeaveTypeByIdMutation();
-  const designations = staffSetupApi.useGetApiV1DesignationQuery({ ...leaveTypeAudit, page: 1, pageSize: 1000 });
-  const designationOptions = useMemo(() => { const parsed = designationRowsSchema.safeParse(designations.data?.data ?? []); return parsed.success ? parsed.data.map((row) => ({ value: row.id, label: row.name })) : []; }, [designations.data]);
+  const [reread] = staffSetupApi.useLazyGetApiV1LeaveTypeByIdQuery();
+  const references = useReferenceOptions();
+  const permission = usePermissionAction(item ? leaveTypePermissions.edit : leaveTypePermissions.add);
   const [message, setMessage] = useState("");
   const form = useForm<LeaveTypeFormValues>({ resolver: zodResolver(leaveTypeFormSchema), defaultValues: item ? { name: item.name, isPaid: item.isPaid, deductFromBalance: item.deductFromBalance, days: item.days, designations: item.designations }
     : { name: "", isPaid: false, deductFromBalance: false, designations: [] } });
@@ -119,12 +133,23 @@ function LeaveTypeDialog({ item, onClose }: { item: LeaveType | null; onClose: (
     { type: InputTypes.NUMBER, name: "days", label: "Maximum duration (days)", required: true, min: 1, step: 1 },
     { type: InputTypes.SWITCH, name: "isPaid", label: "Paid leave" },
     { type: InputTypes.SWITCH, name: "deductFromBalance", label: "Deduct from leave balance" },
-    { type: InputTypes.SELECT, mode: "multiple", source: "sync", name: "designations", label: "Designations", required: true, placeholder: designations.isLoading ? "Loading designations…" : "Select designations", options: designationOptions, className: "md:col-span-2" },
+    { type: InputTypes.SELECT, mode: "multiple", source: "async", name: "designations", label: "Designations", required: true, placeholder: "Search for designations", loadOptions: references.designations, className: "md:col-span-2" },
   ];
   return <SettingsFormDialog title={item ? `Edit ${item.name}` : "Add a leave type"} description="A kind of leave, how long it can be, and who may take it." form={form} fields={fields} saving={creating.isLoading || updating.isLoading} message={message}
     submitLabel={item ? "Save leave type" : "Add leave type"} onClose={onClose} onSubmit={async (values) => {
       setMessage("");
-      const body = leaveTypeBody(values, item);
+      const denied = permission.check();
+      if (denied) { setMessage(denied); return; }
+      let current = item;
+      if (item) {
+        const fresh = await reread({ ...leaveTypeAudit, id: item.id }, false);
+        if (fresh.error) { setMessage(apiErrorMessage(fresh.error)); return; }
+        const parsed = leaveTypeRowsSchema.safeParse([fresh.data]);
+        current = parsed.success ? parsed.data[0] ?? null : null;
+        if (!current || !sameLeaveType(item, current)) { setMessage(changedSinceOpened); return; }
+      }
+      // Built from the fresh copy, so its active state and deduction limit are the current ones.
+      const body = leaveTypeBody(values, current);
       const result = item ? await update({ ...leaveTypeAudit, id: item.id, domainEntitiesLeaveTypesCreateLeaveTypeRequest: body }) : await create({ ...leaveTypeAudit, domainEntitiesLeaveTypesCreateLeaveTypeRequest: body });
       if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
       toast.success(item ? "Leave type updated" : "Leave type added"); onClose();

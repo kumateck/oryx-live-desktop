@@ -1,0 +1,78 @@
+context,label,path,has_page
+Finance & Cashflow,Payments & receipts,/finance/payments,False
+Finance & Cashflow,My payment approvals,/finance/payment-approvals,False
+Finance & Cashflow,Cashflow command center,/finance/cashflow,False
+Warehouse Management / Stock Movement,Products Allocation,/warehouse/products-allocation,False
+Production Planning,Stock Transfer Requests,/production/stock-transfer-requests,False
+R&D,Formula Builder,/formula,False
+R&D,Projects,/rnd/projects,False
+R&D,Formula Reviews,/rnd/formulation-reviews,False
+R&D,Stability Chambers,/rnd/stability-chambers,False
+Quality Control / QC Worksheets,Standard Test Procedures,/qc/worksheets/stps,False
+Quality Control / QC Worksheets,Worksheet Templates,/qc/worksheets/templates,False
+Quality Control / QC Worksheets,Import Templates,/qc/worksheets/templates/import,False
+Quality Control / QC Worksheets,Specifications,/qc/worksheets/specifications,False
+Quality Control / QC Worksheets,Specification Proposals,/qc/worksheets/specifications/proposals,False
+Quality Control / QC Worksheets,Sampling Point Groups,/qc/worksheets/sampling-point-groups,False
+Quality Control / QC Worksheets,Test Requests,/qc/worksheets/test-requests,False
+Quality Control / QC Worksheets,Test Room,/qc/worksheets/test-room,False
+Quality Control / QC Worksheets,Worksheet Review,/qc/worksheets/review,False
+Quality Control / QC Worksheets,OOS Cases,/qc/worksheets/oos-cases,False
+Quality Control / QC Worksheets,Certificates,/qc/worksheets/certificates,False
+Quality Control / QC Worksheets,Monitoring Programs,/qc/worksheets/monitoring-programs,False
+Quality Control / QC Worksheets,Water Quality,/qc/worksheets/water-quality,False
+Quality Control / QC Worksheets,QC Approvals,/qc/worksheets/approvals,False
+Quality Assurance,OOS Investigations,/qa/oos-investigations,False
+Quality Assurance,Formula Reviews,/qa/formula-reviews,False
+Quality Assurance,Formula Approvals,/qa/formula-approvals,False
+Audit,Quality Audits,/audit/quality-audits,False
+Inventory & Stores / Stores,General Inventory,/extrals/general-inventory-config,False
+Inventory & Stores / Stores,Receiving Area,/extrals/receiving-area,False
+Inventory & Stores / Stores,Available Stocks,/extrals/available-stocks,False
+Inventory & Stores / Stores,Purchase Requisition,/extrals/purchase-requisitions,False
+Inventory & Stores / Stores,Stock Requisition,/extrals/stock-requisitions,False
+Inventory & Stores / Stores,Return Items,/extrals/return-items,False
+Inventory & Stores / Stores,Issue Stock,/extrals/issue-stock,False
+Inventory & Stores / Stores,Damage/Missing Items,/extrals/damage-missing-items,False
+Inventory & Stores / Stores,Vendors,/extrals/vendors,False
+Inventory & Stores / Procurement,Requisition Sourcing,/extrals/procurement/purchase-requisition-sourcing,False
+Inventory & Stores / Procurement,Open Market Collection,/extrals/procurement/open-market-collection,False
+Inventory & Stores / Procurement,Supplier Quote Requests,/extrals/procurement/vendor-quotations,False
+Inventory & Stores / Procurement,Quotation Responses,/extrals/procurement/quotation-responses,False
+Inventory & Stores / Procurement,Price Comparison,/extrals/procurement/price-comparison,False
+Inventory & Stores / Procurement,Memo,/extrals/procurement/memo,False
+Inventory & Stores / Procurement,Purchased Items,/extrals/procurement/purchased-items,False
+Inventory & Stores / Service,Services,/extrals/services,False
+Inventory & Stores / Service,Service Providers,/extrals/services-providers,False
+Inventory & Stores / Service,Job Requests,/extrals/job-requests,False
+Inventory & Stores / Service,Job Orders,/extrals/job-orders,False
+Inventory & Stores / Service,Service Quote Responses,/extrals/service-quotation-response,False
+Inventory & Stores / Service,Service Proforma Invoice,/extrals/service-proforma-request,False
+Inventory & Stores / Service,Price Comparison,/extrals/service-price-comparison,False
+Inventory & Stores / Service,Service Memo,/extrals/service-memo,False
+Human Resource / Employee Management,Employee Management,/hr/employee-management,False
+Human Resource / Employee Management,Export Department Staff,/hr/department-employee-export,False
+Human Resource / Employee Management,Staff Requisition,/hr/staff-requisition,False
+Human Resource / Leave Management,Leave Management,/hr/leave-management,False
+Human Resource / Attendance & Schedule,Attendance Report Upload,/hr/attendance-report-upload,False
+Human Resource / Attendance & Schedule,Overtime Management,/hr/overtime-management,False
+Human Resource / Shift Scheduling,Planned Shift,/plan-shift,False
+Human Resource / Shift Scheduling,Upload Shift Reports,/hr/shift-schedule-upload,False
+Human Resource / Payroll,Employee Compensation,/hr/employee-compensation,False
+Human Resource / Payroll,Payroll Runs,/hr/payroll-runs,False
+Human Resource / Payroll,Payroll Configuration,/hr/payroll-configuration,False
+Human Resource / Performance Management,Performance Cycles,/hr/performance-cycles,False
+Human Resource / Performance Management,Goals,/hr/goals,False
+Human Resource / Performance Management,Performance Reviews,/hr/performance-reviews,False
+System Settings,Procedure Areas,/settings/full-procedures/areas,False
+System Settings,Procedure Questions,/settings/full-procedures/templates/questions,False
+System Settings,Procedure Sections,/settings/full-procedures/templates/sections,False
+System Settings,Procedure Forms,/settings/full-procedures/templates/forms,False
+System Settings,Procedure Activities,/settings/full-procedures/templates/activities,False
+System Settings,Workflow Templates,/settings/full-procedures/workflows,False
+Reports,Human Resources Report,/reports/human-resources-report,False
+Reports,QC and QA Report,/reports/qc-qa-reports,False
+Reports,Warehouse Report,/reports/warehouse-report,False
+Reports,Store & Inventory Report,/reports/store-inventory-report,False
+Reports,Procurement Report,/reports/procurement-report,False
+Reports,FGTN Report,/reports/finish-goods-transfernote-report,False

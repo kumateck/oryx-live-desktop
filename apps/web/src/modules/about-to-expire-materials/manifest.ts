@@ -5,5 +5,6 @@ export const manifest = {
   label: "About to expire materials",
   root: "/warehouse/about-to-expire-materials",
   order: 64,
+  routes: [{ pattern: "/warehouse/about-to-expire-materials/:id", access: { kind: "all", permissions: ["CanViewAboutToExpireMaterials"] } }],
   access: { kind: "all", permissions: ["CanViewAboutToExpireMaterials"] },
 } satisfies ModuleManifest<"about-to-expire-materials", "/warehouse/about-to-expire-materials">;

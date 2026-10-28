@@ -4,18 +4,20 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import { Provider } from "react-redux";
 import { useCurrentUser } from "../auth/session-provider";
 import { api } from "./base-api";
+import { cacheEffectsMiddleware } from "./cache-effects";
 
 function createApiStore() {
   return configureStore({
     reducer: { [api.reducerPath]: api.reducer },
-    middleware: (defaults) => defaults().concat(api.middleware),
+    middleware: (defaults) => defaults().concat(api.middleware, cacheEffectsMiddleware.middleware),
   });
 }
 
+export type ApiDispatch = ReturnType<typeof createApiStore>["dispatch"];
+
 function ApiStore({ children }: { children: ReactNode }) {
   const [store] = useState(createApiStore);
-  // Lets a query ask to be read again when the window comes back into focus or the network returns.
-  // Only queries that opt in are affected; notifications do.
+  // Reads queries again when the window comes back into focus or the network returns (see base-api.ts).
   useEffect(() => setupListeners(store.dispatch), [store]);
   return <Provider store={store}>{children}</Provider>;
 }

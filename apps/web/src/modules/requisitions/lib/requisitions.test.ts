@@ -3,7 +3,7 @@ import { openLines, reviewSourcing, sourcingBlock, sourcingRequest } from "../..
 import { pickRowsSchema, requisitionRowsSchema, requisitionSchema } from "../schemas/requisition-schema";
 import { newOrderLine, orderLineProblems, shortOfMaximum, toRequisitionItems } from "./order-lines";
 import { statusLabel } from "./requisition-status";
-import { pipelineSchema, warehouseStockSchema } from "../schemas/stock-schema";
+import { pipelineSchema, warehouseStockSchema } from "../../../shared/stock/stock-schema";
 import { sourceProblems, stockTransferRequest } from "./stock-transfer";
 
 const [starch, film] = pickRowsSchema.parse([

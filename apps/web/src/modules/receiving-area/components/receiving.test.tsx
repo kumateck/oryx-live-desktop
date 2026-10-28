@@ -84,7 +84,7 @@ function open(address: string, permissions: string[], options: { status?: number
       materialBatches: [{ id: "b1", batchNumber: "B-1", material: { name: "Maize starch" }, totalQuantity: 50_000_000, uoM: { symbol: "mg" }, status: 1, supplierName: "Acme Chemicals", checklist: { shipmentInvoice: { code: "INV-A" } } }] });
     if (path === "/api/v1/warehouse/checklist") return Response.json("cl-1", { status: 201 });
     if (path === "/api/v1/collection") return Response.json({ PackageStyle: [{ id: "ps", name: "Drum" }] });
-    if (path === "/api/v1/configuration/GRNNumber/count") return Response.json(7);
+    if (path === "/api/v1/configuration/GrnNumber/count") return Response.json(7);
     return new Response(null, { status: 404 });
   });
   const router = createMemoryRouter([{ path: "/warehouse/receiving-area", element: <ReceivingAreaPage /> }, { path: "/warehouse/receiving-area/:id/create-checklist", element: <CreateChecklistRoute /> },

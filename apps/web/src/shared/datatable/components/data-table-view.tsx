@@ -26,11 +26,14 @@ export function DataTableView<TData extends DataTableRow>({
   const selectionControls = useRowSelection(selection, visible);
   const columnCount = table.getVisibleLeafColumns().length + (selection ? 1 : 0) + (rowSlot ? 1 : 0);
 
-  // Columns with a declared width keep it, and the others share what is left. In a narrow space nothing would be
-  // left for them, so the table is never laid out narrower than every column needs; it scrolls sideways instead.
-  const minWidth = table.getVisibleLeafColumns().reduce((sum, column) => sum + (column.columnDef.size || flexibleColumnWidth), 0) + (selection ? 40 : 0) + (rowSlot ? 40 : 0);
+  const visibleColumns = table.getVisibleLeafColumns();
+  const hasColumnWidths = visibleColumns.some((column) => Boolean(column.columnDef.size));
+  // Unsized tables follow their content. Preserve the existing layout for callers that declare widths.
+  const minWidth = hasColumnWidths
+    ? visibleColumns.reduce((sum, column) => sum + (column.columnDef.size || flexibleColumnWidth), 0) + (selection ? 40 : 0) + (rowSlot ? 40 : 0)
+    : undefined;
   const scrolls = fill || Boolean(maxHeight);
-  return <div className={cn("min-w-0 overflow-hidden rounded-lg border bg-card", fill && "flex min-h-0 flex-1 flex-col", className)}
+  return <div className={cn("min-w-0 overflow-hidden ui-card-flush border bg-card", fill && "flex min-h-0 flex-1 flex-col", className)}
     aria-busy={loading || refreshing}>
     {toolbar || columnToggle ? <div className="flex flex-none flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
       <div className="min-w-0 flex-1">{toolbar}</div>
@@ -39,7 +42,7 @@ export function DataTableView<TData extends DataTableRow>({
     {error && visible.length > 0 ? <StaleRowsNotice error={error} onRetry={onRetry} /> : null}
     <div data-slot="table-container" className={cn("relative w-full overflow-x-auto", scrolls && "overflow-y-auto", fill && "min-h-0 flex-1")}
       {...(maxHeight && !fill ? { style: { maxHeight } } : {})}>
-      <table className={cn("w-full table-fixed caption-bottom text-sm", refreshing && "opacity-70 transition-opacity")} style={{ minWidth }}>
+      <table className={cn("w-full caption-bottom text-sm", hasColumnWidths ? "table-fixed" : "table-auto", refreshing && "opacity-70 transition-opacity")} style={{ minWidth }}>
         <caption className="sr-only">{label}</caption>
         <DataTableHead table={table} selection={selectionControls} leadingHeader={rowSlot ? rowSlot.leadingHeader : null} sticky={scrolls} />
         <DataTableBody table={table} rows={visible} columnCount={columnCount} skeletonRows={Math.min(paging?.pageSize ?? 8, 8)}

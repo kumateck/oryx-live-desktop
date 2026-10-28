@@ -5,6 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementInventoryApiResponse,
       PostApiV1ProcurementInventoryApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory`,
         method: "POST",
@@ -19,6 +20,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryApiResponse,
       GetApiV1ProcurementInventoryApiArg
     >({
+      providesTags: [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory`,
         headers: {
@@ -30,6 +32,8 @@ const injectedRtkApi = api.injectEndpoints({
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
           status: queryArg.status,
+          anyStatus: queryArg.anyStatus,
+          store: queryArg.store,
         },
       }),
     }),
@@ -37,6 +41,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ProcurementInventoryByIdApiResponse,
       PutApiV1ProcurementInventoryByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/inventory", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/${queryArg.id}`,
         method: "PUT",
@@ -51,6 +56,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ProcurementInventoryByIdApiResponse,
       DeleteApiV1ProcurementInventoryByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/inventory", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/${queryArg.id}`,
         method: "DELETE",
@@ -64,6 +70,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryByIdApiResponse,
       GetApiV1ProcurementInventoryByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/inventory", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/${queryArg.id}`,
         headers: {
@@ -76,6 +83,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementInventorySourceApiResponse,
       PostApiV1ProcurementInventorySourceApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/source`,
         method: "POST",
@@ -90,6 +98,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementInventoryMarketApiResponse,
       PostApiV1ProcurementInventoryMarketApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/market`,
         method: "POST",
@@ -104,6 +113,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryMarketApiResponse,
       GetApiV1ProcurementInventoryMarketApiArg
     >({
+      providesTags: [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/market`,
         headers: {
@@ -113,6 +123,7 @@ const injectedRtkApi = api.injectEndpoints({
         params: {
           page: queryArg.page,
           pageSize: queryArg.pageSize,
+          closed: queryArg.closed,
         },
       }),
     }),
@@ -120,6 +131,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryMarketByIdApiResponse,
       GetApiV1ProcurementInventoryMarketByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/inventory", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/market/${queryArg.id}`,
         headers: {
@@ -132,6 +144,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryPriceComparisonApiResponse,
       GetApiV1ProcurementInventoryPriceComparisonApiArg
     >({
+      providesTags: [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/price-comparison`,
         headers: {
@@ -147,6 +160,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementInventoryMemoOpenMarketApiResponse,
       PostApiV1ProcurementInventoryMemoOpenMarketApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/memo/open-market`,
         method: "POST",
@@ -161,6 +175,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementInventoryMemoTrustedVendorApiResponse,
       PostApiV1ProcurementInventoryMemoTrustedVendorApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/memo/trusted-vendor`,
         method: "POST",
@@ -175,6 +190,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementInventoryVendorByVendorIdSendQuotationApiResponse,
       PostApiV1ProcurementInventoryVendorByVendorIdSendQuotationApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/inventory", id: queryArg.vendorId }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/vendor/${queryArg.vendorId}/send-quotation`,
         method: "POST",
@@ -188,6 +204,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryVendorQuotationsApiResponse,
       GetApiV1ProcurementInventoryVendorQuotationsApiArg
     >({
+      providesTags: [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/vendor/quotations`,
         headers: {
@@ -205,6 +222,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryVendorQuotationByVendorQuotationIdApiResponse,
       GetApiV1ProcurementInventoryVendorQuotationByVendorQuotationIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/inventory", id: queryArg.vendorQuotationId }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/vendor/quotation/${queryArg.vendorQuotationId}`,
         headers: {
@@ -232,6 +250,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryMarketVendorsApiResponse,
       GetApiV1ProcurementInventoryMarketVendorsApiArg
     >({
+      providesTags: [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/market/vendors`,
         headers: {
@@ -242,6 +261,7 @@ const injectedRtkApi = api.injectEndpoints({
           page: queryArg.page,
           pageSize: queryArg.pageSize,
           complete: queryArg.complete,
+          marketRequisitionId: queryArg.marketRequisitionId,
         },
       }),
     }),
@@ -249,6 +269,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementInventoryMarketVendorsApiResponse,
       PostApiV1ProcurementInventoryMarketVendorsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/market/vendors`,
         method: "POST",
@@ -277,6 +298,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryMemoApiResponse,
       GetApiV1ProcurementInventoryMemoApiArg
     >({
+      providesTags: [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/memo`,
         headers: {
@@ -295,6 +317,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryMemoByIdApiResponse,
       GetApiV1ProcurementInventoryMemoByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "procurement/inventory", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/memo/${queryArg.id}`,
         headers: {
@@ -307,9 +330,23 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementInventoryMemoItemByIdMarkPaidApiResponse,
       PostApiV1ProcurementInventoryMemoItemByIdMarkPaidApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/inventory", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/memo-item/${queryArg.id}/mark-paid`,
         method: "POST",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1ProcurementInventoryMemoCodeGenerate: build.query<
+      GetApiV1ProcurementInventoryMemoCodeGenerateApiResponse,
+      GetApiV1ProcurementInventoryMemoCodeGenerateApiArg
+    >({
+      providesTags: [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/procurement/inventory/memo/code/generate`,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -320,6 +357,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ProcurementInventoryPurchasedItemsApiResponse,
       GetApiV1ProcurementInventoryPurchasedItemsApiArg
     >({
+      providesTags: [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/purchased-items`,
         headers: {
@@ -338,6 +376,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementInventoryItemsByIdApproveApiResponse,
       PostApiV1ProcurementInventoryItemsByIdApproveApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/inventory", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/items/${queryArg.id}/approve`,
         method: "POST",
@@ -351,6 +390,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ProcurementInventoryItemsByIdRejectApiResponse,
       PostApiV1ProcurementInventoryItemsByIdRejectApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "procurement/inventory", id: "LIST" }, { type: "procurement", id: "LIST" }, { type: "procurement/inventory", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/procurement/inventory/items/${queryArg.id}/reject`,
         method: "POST",
@@ -360,98 +400,22 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getApiV1ProcurementInventoryMemoCodeGenerate: build.query<
-      GetApiV1ProcurementInventoryMemoCodeGenerateApiResponse,
-      GetApiV1ProcurementInventoryMemoCodeGenerateApiArg
+    getApiV1ItemsChoices: build.query<
+      GetApiV1ItemsChoicesApiResponse,
+      GetApiV1ItemsChoicesApiArg
     >({
+      providesTags: [{ type: "item/choice", id: "LIST" }, { type: "item", id: "LIST" }],
       query: (queryArg) => ({
-        url: `/api/v1/procurement/inventory/memo/code/generate`,
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-      }),
-    }),
-    postApiV1Items: build.mutation<
-      PostApiV1ItemsApiResponse,
-      PostApiV1ItemsApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/v1/items`,
-        method: "POST",
-        body: queryArg.domainEntitiesItemsCreateItemsRequest,
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-      }),
-    }),
-    getApiV1Items: build.query<GetApiV1ItemsApiResponse, GetApiV1ItemsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/v1/items`,
+        url: `/api/v1/items/choices`,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
         params: {
           store: queryArg.store,
+          searchQuery: queryArg.searchQuery,
           page: queryArg.page,
           pageSize: queryArg.pageSize,
-          searchQuery: queryArg.searchQuery,
-        },
-      }),
-    }),
-    getApiV1ItemsById: build.query<
-      GetApiV1ItemsByIdApiResponse,
-      GetApiV1ItemsByIdApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/v1/items/${queryArg.id}`,
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-      }),
-    }),
-    putApiV1ItemsById: build.mutation<
-      PutApiV1ItemsByIdApiResponse,
-      PutApiV1ItemsByIdApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/v1/items/${queryArg.id}`,
-        method: "PUT",
-        body: queryArg.domainEntitiesItemsCreateItemsRequest,
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-      }),
-    }),
-    deleteApiV1ItemsById: build.mutation<
-      DeleteApiV1ItemsByIdApiResponse,
-      DeleteApiV1ItemsByIdApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/v1/items/${queryArg.id}`,
-        method: "DELETE",
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-      }),
-    }),
-    getApiV1ItemsByItemCodeTransactions: build.query<
-      GetApiV1ItemsByItemCodeTransactionsApiResponse,
-      GetApiV1ItemsByItemCodeTransactionsApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/v1/items/${queryArg.itemCode}/transactions`,
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
-        },
-        params: {
-          transactionType: queryArg.transactionType,
         },
       }),
     }),
@@ -459,6 +423,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ItemsShipmentInvoiceApiResponse,
       PostApiV1ItemsShipmentInvoiceApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item/shipment-invoice", id: "LIST" }, { type: "item", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-invoice`,
         method: "POST",
@@ -473,6 +438,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsShipmentInvoiceApiResponse,
       GetApiV1ItemsShipmentInvoiceApiArg
     >({
+      providesTags: [{ type: "item/shipment-invoice", id: "LIST" }, { type: "item", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-invoice`,
         headers: {
@@ -490,6 +456,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsShipmentInvoiceByInvoiceIdApiResponse,
       GetApiV1ItemsShipmentInvoiceByInvoiceIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item/shipment-invoice", id: queryArg.invoiceId }],
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-invoice/${queryArg.invoiceId}`,
         headers: {
@@ -502,6 +469,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ItemsShipmentInvoiceByInvoiceIdApiResponse,
       PutApiV1ItemsShipmentInvoiceByInvoiceIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/shipment-invoice", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/shipment-invoice", id: queryArg.invoiceId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-invoice/${queryArg.invoiceId}`,
         method: "PUT",
@@ -516,6 +484,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ItemsShipmentInvoiceByInvoiceIdApiResponse,
       DeleteApiV1ItemsShipmentInvoiceByInvoiceIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/shipment-invoice", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/shipment-invoice", id: queryArg.invoiceId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-invoice/${queryArg.invoiceId}`,
         method: "DELETE",
@@ -529,6 +498,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsShipmentInvoiceUnattachedApiResponse,
       GetApiV1ItemsShipmentInvoiceUnattachedApiArg
     >({
+      providesTags: [{ type: "item/shipment-invoice", id: "LIST" }, { type: "item", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-invoice/unattached`,
         headers: {
@@ -541,6 +511,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ItemsShipmentInvoiceByInvoiceIdPaidApiResponse,
       PutApiV1ItemsShipmentInvoiceByInvoiceIdPaidApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/shipment-invoice", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/shipment-invoice", id: queryArg.invoiceId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-invoice/${queryArg.invoiceId}/paid`,
         method: "PUT",
@@ -557,6 +528,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ItemsShipmentDocumentApiResponse,
       PostApiV1ItemsShipmentDocumentApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item/shipment-document", id: "LIST" }, { type: "item", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-document`,
         method: "POST",
@@ -571,6 +543,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsShipmentDocumentApiResponse,
       GetApiV1ItemsShipmentDocumentApiArg
     >({
+      providesTags: [{ type: "item/shipment-document", id: "LIST" }, { type: "item", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-document`,
         headers: {
@@ -589,6 +562,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsShipmentDocumentByShipmentDocumentIdApiResponse,
       GetApiV1ItemsShipmentDocumentByShipmentDocumentIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item/shipment-document", id: queryArg.shipmentDocumentId }],
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-document/${queryArg.shipmentDocumentId}`,
         headers: {
@@ -601,6 +575,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ItemsShipmentDocumentByShipmentDocumentIdApiResponse,
       PutApiV1ItemsShipmentDocumentByShipmentDocumentIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/shipment-document", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/shipment-document", id: queryArg.shipmentDocumentId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-document/${queryArg.shipmentDocumentId}`,
         method: "PUT",
@@ -615,6 +590,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ItemsShipmentDocumentByShipmentDocumentIdApiResponse,
       DeleteApiV1ItemsShipmentDocumentByShipmentDocumentIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/shipment-document", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/shipment-document", id: queryArg.shipmentDocumentId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-document/${queryArg.shipmentDocumentId}`,
         method: "DELETE",
@@ -628,6 +604,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ItemsShipmentDocumentByShipmentDocumentIdArrivedApiResponse,
       PutApiV1ItemsShipmentDocumentByShipmentDocumentIdArrivedApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/shipment-document", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/shipment-document", id: queryArg.shipmentDocumentId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/shipment-document/${queryArg.shipmentDocumentId}/arrived`,
         method: "PUT",
@@ -641,6 +618,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ItemsWaybillApiResponse,
       PostApiV1ItemsWaybillApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item/waybill", id: "LIST" }, { type: "item", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/items/waybill`,
         method: "POST",
@@ -655,6 +633,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsWaybillApiResponse,
       GetApiV1ItemsWaybillApiArg
     >({
+      providesTags: [{ type: "item/waybill", id: "LIST" }, { type: "item", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/items/waybill`,
         headers: {
@@ -673,6 +652,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsWaybillByWaybillIdApiResponse,
       GetApiV1ItemsWaybillByWaybillIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item/waybill", id: queryArg.waybillId }],
       query: (queryArg) => ({
         url: `/api/v1/items/waybill/${queryArg.waybillId}`,
         headers: {
@@ -685,6 +665,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ItemsWaybillByWaybillIdApiResponse,
       PutApiV1ItemsWaybillByWaybillIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/waybill", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/waybill", id: queryArg.waybillId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/waybill/${queryArg.waybillId}`,
         method: "PUT",
@@ -699,6 +680,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ItemsWaybillByWaybillIdApiResponse,
       DeleteApiV1ItemsWaybillByWaybillIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/waybill", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/waybill", id: queryArg.waybillId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/waybill/${queryArg.waybillId}`,
         method: "DELETE",
@@ -712,6 +694,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ItemsBillingSheetApiResponse,
       PostApiV1ItemsBillingSheetApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item/billing-sheet", id: "LIST" }, { type: "item", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/items/billing-sheet`,
         method: "POST",
@@ -726,6 +709,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsBillingSheetApiResponse,
       GetApiV1ItemsBillingSheetApiArg
     >({
+      providesTags: [{ type: "item/billing-sheet", id: "LIST" }, { type: "item", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/items/billing-sheet`,
         headers: {
@@ -744,6 +728,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsBillingSheetByBillingSheetIdApiResponse,
       GetApiV1ItemsBillingSheetByBillingSheetIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item/billing-sheet", id: queryArg.billingSheetId }],
       query: (queryArg) => ({
         url: `/api/v1/items/billing-sheet/${queryArg.billingSheetId}`,
         headers: {
@@ -756,6 +741,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ItemsBillingSheetByBillingSheetIdApiResponse,
       PutApiV1ItemsBillingSheetByBillingSheetIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/billing-sheet", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/billing-sheet", id: queryArg.billingSheetId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/billing-sheet/${queryArg.billingSheetId}`,
         method: "PUT",
@@ -770,6 +756,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ItemsBillingSheetByBillingSheetIdApiResponse,
       DeleteApiV1ItemsBillingSheetByBillingSheetIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/billing-sheet", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/billing-sheet", id: queryArg.billingSheetId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/billing-sheet/${queryArg.billingSheetId}`,
         method: "DELETE",
@@ -783,6 +770,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsBillingSheetInvoiceByInvoiceIdApiResponse,
       GetApiV1ItemsBillingSheetInvoiceByInvoiceIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item/billing-sheet", id: queryArg.invoiceId }],
       query: (queryArg) => ({
         url: `/api/v1/items/billing-sheet/invoice/${queryArg.invoiceId}`,
         headers: {
@@ -795,6 +783,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ItemsBillingSheetByBillingSheetIdChargesApiResponse,
       PutApiV1ItemsBillingSheetByBillingSheetIdChargesApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/billing-sheet", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/billing-sheet", id: queryArg.billingSheetId }]),
       query: (queryArg) => ({
         url: `/api/v1/items/billing-sheet/${queryArg.billingSheetId}/charges`,
         method: "PUT",
@@ -809,6 +798,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ItemsBillingSheetChargesPaidApiResponse,
       PutApiV1ItemsBillingSheetChargesPaidApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item/billing-sheet", id: "LIST" }, { type: "item", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/items/billing-sheet/charges/paid`,
         method: "PUT",
@@ -819,10 +809,100 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1Items: build.mutation<
+      PostApiV1ItemsApiResponse,
+      PostApiV1ItemsApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/items`,
+        method: "POST",
+        body: queryArg.domainEntitiesItemsCreateItemsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1Items: build.query<GetApiV1ItemsApiResponse, GetApiV1ItemsApiArg>({
+      providesTags: [{ type: "item", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/items`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          store: queryArg.store,
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          searchQuery: queryArg.searchQuery,
+        },
+      }),
+    }),
+    getApiV1ItemsById: build.query<
+      GetApiV1ItemsByIdApiResponse,
+      GetApiV1ItemsByIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/items/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1ItemsById: build.mutation<
+      PutApiV1ItemsByIdApiResponse,
+      PutApiV1ItemsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item", id: "LIST" }, { type: "item", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/items/${queryArg.id}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesItemsCreateItemsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    deleteApiV1ItemsById: build.mutation<
+      DeleteApiV1ItemsByIdApiResponse,
+      DeleteApiV1ItemsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item", id: "LIST" }, { type: "item", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/items/${queryArg.id}`,
+        method: "DELETE",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1ItemsByItemCodeTransactions: build.query<
+      GetApiV1ItemsByItemCodeTransactionsApiResponse,
+      GetApiV1ItemsByItemCodeTransactionsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item", id: queryArg.itemCode }],
+      query: (queryArg) => ({
+        url: `/api/v1/items/${queryArg.itemCode}/transactions`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          transactionType: queryArg.transactionType,
+        },
+      }),
+    }),
     postApiV1ItemGrns: build.mutation<
       PostApiV1ItemGrnsApiResponse,
       PostApiV1ItemGrnsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item-grn", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/item-grns`,
         method: "POST",
@@ -837,6 +917,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemGrnsApiResponse,
       GetApiV1ItemGrnsApiArg
     >({
+      providesTags: [{ type: "item-grn", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/item-grns`,
         headers: {
@@ -854,6 +935,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemGrnsByIdApiResponse,
       GetApiV1ItemGrnsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item-grn", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/item-grns/${queryArg.id}`,
         headers: {
@@ -866,6 +948,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ItemGrnsByIdApiResponse,
       PutApiV1ItemGrnsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item-grn", id: "LIST" }, { type: "item-grn", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/item-grns/${queryArg.id}`,
         method: "PUT",
@@ -880,6 +963,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1ItemGrnsByIdApiResponse,
       DeleteApiV1ItemGrnsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item-grn", id: "LIST" }, { type: "item-grn", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/item-grns/${queryArg.id}`,
         method: "DELETE",
@@ -893,6 +977,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemInventoryTransactionsByMemoIdApiResponse,
       GetApiV1ItemInventoryTransactionsByMemoIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item-inventory-transaction", id: queryArg.memoId }],
       query: (queryArg) => ({
         url: `/api/v1/item-inventory-transactions/${queryArg.memoId}`,
         headers: {
@@ -905,6 +990,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1ItemsStockRequisitionsApiResponse,
       PostApiV1ItemsStockRequisitionsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "item/stock-requisition", id: "LIST" }, { type: "item", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/items/stock-requisitions`,
         method: "POST",
@@ -919,6 +1005,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsStockRequisitionsApiResponse,
       GetApiV1ItemsStockRequisitionsApiArg
     >({
+      providesTags: [{ type: "item/stock-requisition", id: "LIST" }, { type: "item", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/items/stock-requisitions`,
         headers: {
@@ -929,19 +1016,8 @@ const injectedRtkApi = api.injectEndpoints({
           page: queryArg.page,
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
-        },
-      }),
-    }),
-    deleteApiV1ItemsStockRequisitions: build.mutation<
-      DeleteApiV1ItemsStockRequisitionsApiResponse,
-      DeleteApiV1ItemsStockRequisitionsApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/v1/items/stock-requisitions`,
-        method: "DELETE",
-        headers: {
-          Module: queryArg["module"],
-          SubModule: queryArg.subModule,
+          store: queryArg.store,
+          status: queryArg.status,
         },
       }),
     }),
@@ -949,6 +1025,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1ItemsStockRequisitionsByIdApiResponse,
       GetApiV1ItemsStockRequisitionsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "item/stock-requisition", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/items/stock-requisitions/${queryArg.id}`,
         headers: {
@@ -961,10 +1038,25 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1ItemsStockRequisitionsByIdApiResponse,
       PutApiV1ItemsStockRequisitionsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/stock-requisition", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/stock-requisition", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/items/stock-requisitions/${queryArg.id}`,
         method: "PUT",
         body: queryArg.domainEntitiesItemStockRequisitionsCreateItemStockRequisitionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    deleteApiV1ItemsStockRequisitionsById: build.mutation<
+      DeleteApiV1ItemsStockRequisitionsByIdApiResponse,
+      DeleteApiV1ItemsStockRequisitionsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "item/stock-requisition", id: "LIST" }, { type: "item", id: "LIST" }, { type: "item/stock-requisition", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/items/stock-requisitions/${queryArg.id}`,
+        method: "DELETE",
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -1005,6 +1097,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostV1RecoverableItemsReportsApiResponse,
       PostV1RecoverableItemsReportsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "v1/recoverable-items-report", id: "LIST" }, { type: "v1", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/v1/recoverable-items-reports`,
         method: "POST",
@@ -1019,8 +1112,37 @@ const injectedRtkApi = api.injectEndpoints({
       GetV1RecoverableItemsReportsApiResponse,
       GetV1RecoverableItemsReportsApiArg
     >({
+      providesTags: [{ type: "v1/recoverable-items-report", id: "LIST" }, { type: "v1", id: "LIST" }],
       query: (queryArg) => ({
         url: `/v1/recoverable-items-reports`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1RecoverableItemsReports: build.mutation<
+      PostApiV1RecoverableItemsReportsApiResponse,
+      PostApiV1RecoverableItemsReportsApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "recoverable-items-report", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/recoverable-items-reports`,
+        method: "POST",
+        body: queryArg.domainEntitiesRecoverableItemsReportsCreateRecoverableItemReportRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1RecoverableItemsReports: build.query<
+      GetApiV1RecoverableItemsReportsApiResponse,
+      GetApiV1RecoverableItemsReportsApiArg
+    >({
+      providesTags: [{ type: "recoverable-items-report", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/recoverable-items-reports`,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -1031,6 +1153,7 @@ const injectedRtkApi = api.injectEndpoints({
       PostApiV1VendorsApiResponse,
       PostApiV1VendorsApiArg
     >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "vendor", id: "LIST" }]),
       query: (queryArg) => ({
         url: `/api/v1/vendors`,
         method: "POST",
@@ -1045,6 +1168,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1VendorsApiResponse,
       GetApiV1VendorsApiArg
     >({
+      providesTags: [{ type: "vendor", id: "LIST" }],
       query: (queryArg) => ({
         url: `/api/v1/vendors`,
         headers: {
@@ -1062,6 +1186,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1VendorsByIdApiResponse,
       GetApiV1VendorsByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "vendor", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/vendors/${queryArg.id}`,
         headers: {
@@ -1074,6 +1199,7 @@ const injectedRtkApi = api.injectEndpoints({
       PutApiV1VendorsByIdApiResponse,
       PutApiV1VendorsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "vendor", id: "LIST" }, { type: "vendor", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/vendors/${queryArg.id}`,
         method: "PUT",
@@ -1088,6 +1214,7 @@ const injectedRtkApi = api.injectEndpoints({
       DeleteApiV1VendorsByIdApiResponse,
       DeleteApiV1VendorsByIdApiArg
     >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "vendor", id: "LIST" }, { type: "vendor", id: queryArg.id }]),
       query: (queryArg) => ({
         url: `/api/v1/vendors/${queryArg.id}`,
         method: "DELETE",
@@ -1101,6 +1228,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetApiV1VendorsItemByIdApiResponse,
       GetApiV1VendorsItemByIdApiArg
     >({
+      providesTags: (_result, _error, queryArg) => [{ type: "vendor/item", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/vendors/item/${queryArg.id}`,
         headers: {
@@ -1133,6 +1261,8 @@ export type GetApiV1ProcurementInventoryApiArg = {
   /** Search query for filtering requisitions by code. */
   searchQuery?: string;
   status?: DomainEntitiesItemsRequisitionsInventoryPurchaseRequisitionStatus;
+  anyStatus?: boolean;
+  store?: DomainEntitiesItemsStore;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1193,6 +1323,7 @@ export type GetApiV1ProcurementInventoryMarketApiArg = {
   page?: number;
   /** The number of items per page. */
   pageSize?: number;
+  closed?: boolean;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1290,6 +1421,7 @@ export type GetApiV1ProcurementInventoryMarketVendorsApiArg = {
   pageSize?: number;
   /** A boolean to filter by completed or pending open market requisitions. */
   complete?: boolean;
+  marketRequisitionId?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1349,6 +1481,14 @@ export type PostApiV1ProcurementInventoryMemoItemByIdMarkPaidApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetApiV1ProcurementInventoryMemoCodeGenerateApiResponse =
+  /** status 200 OK */ string;
+export type GetApiV1ProcurementInventoryMemoCodeGenerateApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type GetApiV1ProcurementInventoryPurchasedItemsApiResponse =
   /** status 200 OK */ DomainEntitiesStockEntriesStockEntryDtoRead[];
 export type GetApiV1ProcurementInventoryPurchasedItemsApiArg = {
@@ -1377,68 +1517,13 @@ export type PostApiV1ProcurementInventoryItemsByIdRejectApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
-export type GetApiV1ProcurementInventoryMemoCodeGenerateApiResponse =
-  /** status 200 OK */ string;
-export type GetApiV1ProcurementInventoryMemoCodeGenerateApiArg = {
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-};
-export type PostApiV1ItemsApiResponse = /** status 200 OK */ string;
-export type PostApiV1ItemsApiArg = {
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-  domainEntitiesItemsCreateItemsRequest: DomainEntitiesItemsCreateItemsRequest;
-};
-export type GetApiV1ItemsApiResponse =
-  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesItemsItemDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
-export type GetApiV1ItemsApiArg = {
+export type GetApiV1ItemsChoicesApiResponse =
+  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601ApiControllersStoreItemChoiceDto20Api20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
+export type GetApiV1ItemsChoicesApiArg = {
   store?: DomainEntitiesItemsStore;
+  searchQuery?: string;
   page?: number;
   pageSize?: number;
-  searchQuery?: string;
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-};
-export type GetApiV1ItemsByIdApiResponse =
-  /** status 200 OK */ DomainEntitiesItemsItemDto;
-export type GetApiV1ItemsByIdApiArg = {
-  id: string;
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-};
-export type PutApiV1ItemsByIdApiResponse =
-  /** status 204 No Content */ DomainEntitiesItemsItemDto;
-export type PutApiV1ItemsByIdApiArg = {
-  id: string;
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-  domainEntitiesItemsCreateItemsRequest: DomainEntitiesItemsCreateItemsRequest;
-};
-export type DeleteApiV1ItemsByIdApiResponse = void;
-export type DeleteApiV1ItemsByIdApiArg = {
-  id: string;
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-};
-export type GetApiV1ItemsByItemCodeTransactionsApiResponse =
-  /** status 200 OK */ DomainEntitiesItemTransactionLogsItemTransactionLogDto[];
-export type GetApiV1ItemsByItemCodeTransactionsApiArg = {
-  /** The item code */
-  itemCode: string;
-  /** The transaction type */
-  transactionType?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1680,6 +1765,65 @@ export type PutApiV1ItemsBillingSheetChargesPaidApiArg = {
   subModule?: string;
   domainEntitiesPurchaseOrdersRequestMarkBillingSheetCharge: DomainEntitiesPurchaseOrdersRequestMarkBillingSheetCharge;
 };
+export type PostApiV1ItemsApiResponse = /** status 200 OK */ string;
+export type PostApiV1ItemsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesItemsCreateItemsRequest: DomainEntitiesItemsCreateItemsRequest;
+};
+export type GetApiV1ItemsApiResponse =
+  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesItemsItemDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
+export type GetApiV1ItemsApiArg = {
+  store?: DomainEntitiesItemsStore;
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1ItemsByIdApiResponse =
+  /** status 200 OK */ DomainEntitiesItemsItemDto;
+export type GetApiV1ItemsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PutApiV1ItemsByIdApiResponse =
+  /** status 204 No Content */ DomainEntitiesItemsItemDto;
+export type PutApiV1ItemsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesItemsCreateItemsRequest: DomainEntitiesItemsCreateItemsRequest;
+};
+export type DeleteApiV1ItemsByIdApiResponse = void;
+export type DeleteApiV1ItemsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1ItemsByItemCodeTransactionsApiResponse =
+  /** status 200 OK */ DomainEntitiesItemTransactionLogsItemTransactionLogDto[];
+export type GetApiV1ItemsByItemCodeTransactionsApiArg = {
+  /** The item code */
+  itemCode: string;
+  /** The transaction type */
+  transactionType?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type PostApiV1ItemGrnsApiResponse = /** status 200 OK */ string;
 export type PostApiV1ItemGrnsApiArg = {
   /** The module this request falls under */
@@ -1750,14 +1894,8 @@ export type GetApiV1ItemsStockRequisitionsApiArg = {
   page?: number;
   pageSize?: number;
   searchQuery?: string;
-  /** The module this request falls under */
-  module?: string;
-  /** The sub module this request falls under */
-  subModule?: string;
-};
-export type DeleteApiV1ItemsStockRequisitionsApiResponse = void;
-export type DeleteApiV1ItemsStockRequisitionsApiArg = {
-  id: string;
+  store?: DomainEntitiesItemsStore;
+  status?: DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionStatus;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1772,8 +1910,7 @@ export type GetApiV1ItemsStockRequisitionsByIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
-export type PutApiV1ItemsStockRequisitionsByIdApiResponse =
-  /** status 204 No Content */ DomainEntitiesItemStockRequisitionsItemStockRequisitionDtoRead;
+export type PutApiV1ItemsStockRequisitionsByIdApiResponse = void;
 export type PutApiV1ItemsStockRequisitionsByIdApiArg = {
   id: string;
   /** The module this request falls under */
@@ -1782,8 +1919,15 @@ export type PutApiV1ItemsStockRequisitionsByIdApiArg = {
   subModule?: string;
   domainEntitiesItemStockRequisitionsCreateItemStockRequisitionRequest: DomainEntitiesItemStockRequisitionsCreateItemStockRequisitionRequest;
 };
-export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainstRequisitionApiResponse =
-  /** status 204 No Content */ DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionDtoRead;
+export type DeleteApiV1ItemsStockRequisitionsByIdApiResponse = void;
+export type DeleteApiV1ItemsStockRequisitionsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainstRequisitionApiResponse = void;
 export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainstRequisitionApiArg =
   {
     stockRequisitionId: string;
@@ -1793,8 +1937,7 @@ export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainst
     subModule?: string;
     domainEntitiesItemStockRequisitionsIssueStockAgainstRequisitionRequest: DomainEntitiesItemStockRequisitionsIssueStockAgainstRequisitionRequest;
   };
-export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdPartialIssueStockAgainstRequisitionApiResponse =
-  /** status 204 No Content */ DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionDtoRead;
+export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdPartialIssueStockAgainstRequisitionApiResponse = void;
 export type PostApiV1ItemsStockRequisitionsByStockRequisitionIdPartialIssueStockAgainstRequisitionApiArg =
   {
     stockRequisitionId: string;
@@ -1816,6 +1959,23 @@ export type PostV1RecoverableItemsReportsApiArg = {
 export type GetV1RecoverableItemsReportsApiResponse =
   /** status 200 OK */ DomainEntitiesRecoverableItemsReportsRecoverableItemReportDto[];
 export type GetV1RecoverableItemsReportsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1RecoverableItemsReportsApiResponse =
+  /** status 200 OK */ string;
+export type PostApiV1RecoverableItemsReportsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesRecoverableItemsReportsCreateRecoverableItemReportRequest: DomainEntitiesRecoverableItemsReportsCreateRecoverableItemReportRequest;
+};
+export type GetApiV1RecoverableItemsReportsApiResponse =
+  /** status 200 OK */ DomainEntitiesRecoverableItemsReportsRecoverableItemReportDto[];
+export type GetApiV1RecoverableItemsReportsApiArg = {
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -2043,6 +2203,10 @@ export type DomainEntitiesItemsRequisitionsMarketRequisitionDto = {
   item?: DomainEntitiesItemsItemDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   quantity?: number;
+  requisitionCode?: string | null;
+  inventoryPurchaseRequisitionId?: string | null;
+  vendorCount?: number;
+  closed?: boolean;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesItemsRequisitionsMarketRequisitionDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -2176,6 +2340,7 @@ export type DomainEntitiesItemsRequisitionsMarketRequisitionVendorDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
   createdAt?: string;
+  marketRequisitionId?: string;
   vendorName?: string | null;
   vendorAddress?: string | null;
   vendorPhoneNumber?: string | null;
@@ -2219,6 +2384,9 @@ export type DomainEntitiesMemosMemoItemDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
   createdAt?: string;
+  purchasedAt?: string | null;
+  vendorQuotationItemId?: string | null;
+  marketRequisitionVendorId?: string | null;
   memo?: SharedCollectionItemDto;
   vendor?: SharedCollectionItemDto;
   item?: SharedCollectionItemDto;
@@ -2234,6 +2402,9 @@ export type DomainEntitiesMemosMemoItemDtoRead = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
   createdAt?: string;
+  purchasedAt?: string | null;
+  vendorQuotationItemId?: string | null;
+  marketRequisitionVendorId?: string | null;
   memo?: SharedCollectionItemDto;
   vendor?: SharedCollectionItemDto;
   item?: SharedCollectionItemDto;
@@ -2308,22 +2479,20 @@ export type DomainEntitiesStockEntriesStockEntryDtoRead = {
   quantity?: number;
   status?: DomainEntitiesApprovalsApprovalStatus;
 };
-export type DomainEntitiesItemsCreateItemsRequest = {
-  name: string;
-  code: string;
-  classification: DomainEntitiesItemsInventoryClassification;
-  unitOfMeasureId: string;
-  minimumLevel?: number;
-  maximumLevel?: number;
-  reorderLevel?: number;
-  store: DomainEntitiesItemsStore;
-  isActive: boolean;
-  itemCategoryId?: string | null;
-  description?: string | null;
+export type ApiControllersStoreItemChoiceDto = {
+  id?: string;
+  name?: string | null;
+  code?: string | null;
+  store?: DomainEntitiesItemsStore;
+  classification?: DomainEntitiesItemsInventoryClassification;
+  availableQuantity?: number;
+  unitOfMeasureId?: string;
+  unitOfMeasureName?: string | null;
+  unitOfMeasureSymbol?: string | null;
 };
-export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesItemsItemDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601ApiControllersStoreItemChoiceDto20Api20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
-    data?: DomainEntitiesItemsItemDto[] | null;
+    data?: ApiControllersStoreItemChoiceDto[] | null;
     pageIndex?: number;
     pageCount?: number;
     totalRecordCount?: number;
@@ -2331,18 +2500,6 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
-export type DomainEntitiesItemTransactionLogsItemTransactionLogDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  date?: string;
-  transactionType?: string | null;
-  itemCode?: string | null;
-  credit?: number;
-  debit?: number;
-  totalBalance?: number;
-  shadowHold?: number;
-};
 export type DomainEntitiesItemShipmentsCreateItemShipmentInvoiceItem = {
   itemId?: string;
   uoMId?: string;
@@ -2450,6 +2607,8 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
   manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
   material?: DomainEntitiesMaterialsMaterialDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  purchaseUnit?: string | null;
+  pendingPurchaseUnit?: string | null;
   default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierDto = {
@@ -2612,6 +2771,41 @@ export type DomainEntitiesItemShipmentsUpdateItemBillingSheetRequest = {
 };
 export type DomainEntitiesPurchaseOrdersRequestMarkBillingSheetCharge = {
   billingSheetChargeIds?: string[] | null;
+};
+export type DomainEntitiesItemsCreateItemsRequest = {
+  name: string;
+  code: string;
+  classification: DomainEntitiesItemsInventoryClassification;
+  unitOfMeasureId: string;
+  minimumLevel?: number;
+  maximumLevel?: number;
+  reorderLevel?: number;
+  store: DomainEntitiesItemsStore;
+  isActive: boolean;
+  itemCategoryId?: string | null;
+  description?: string | null;
+};
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesItemsItemDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+  {
+    data?: DomainEntitiesItemsItemDto[] | null;
+    pageIndex?: number;
+    pageCount?: number;
+    totalRecordCount?: number;
+    numberOfPagesToShow?: number;
+    startPageIndex?: number;
+    stopPageIndex?: number;
+  };
+export type DomainEntitiesItemTransactionLogsItemTransactionLogDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  date?: string;
+  transactionType?: string | null;
+  itemCode?: string | null;
+  credit?: number;
+  debit?: number;
+  totalBalance?: number;
+  shadowHold?: number;
 };
 export type DomainEntitiesItemGrnsCreateItemGrnRequest = {
   itemId: string;
@@ -5627,6 +5821,7 @@ export type DomainEntitiesFormsResponseApprovalRead = {
   formulaSubmissionSetId?: string | null;
   formulaSubmissionSet?: DomainEntitiesFormulasResponseFormulaSubmissionSetRead;
 };
+export type DomainEntitiesFormsResponseRejectionOutcome = 0 | 1;
 export type DomainEntitiesFormsResponse = {
   id?: string;
   createdAt?: string;
@@ -5659,6 +5854,8 @@ export type DomainEntitiesFormsResponse = {
   checkedAt?: string | null;
   approved?: boolean;
   rejected?: boolean;
+  rejectionOutcome?: DomainEntitiesFormsResponseRejectionOutcome;
+  reworkSequence?: number;
 };
 export type DomainEntitiesFormsResponseRead = {
   id?: string;
@@ -5692,6 +5889,8 @@ export type DomainEntitiesFormsResponseRead = {
   checkedAt?: string | null;
   approved?: boolean;
   rejected?: boolean;
+  rejectionOutcome?: DomainEntitiesFormsResponseRejectionOutcome;
+  reworkSequence?: number;
 };
 export type DomainEntitiesMaterialSpecificationsMaterialSpecification = {
   id?: string;
@@ -6964,6 +7163,7 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturer = {
   material?: DomainEntitiesMaterialsMaterial;
   uoMId?: string | null;
   uoM?: DomainEntitiesBaseUnitOfMeasure;
+  purchaseUnit?: string | null;
   default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierManufacturerRead = {
@@ -6985,6 +7185,7 @@ export type DomainEntitiesProcurementSuppliersSupplierManufacturerRead = {
   material?: DomainEntitiesMaterialsMaterialRead;
   uoMId?: string | null;
   uoM?: DomainEntitiesBaseUnitOfMeasureRead;
+  purchaseUnit?: string | null;
   default?: boolean;
 };
 export type DomainEntitiesProcurementSuppliersSupplierCertificationType =
@@ -7331,6 +7532,7 @@ export type DomainEntitiesProcurementSuppliersSupplierRead = {
   performanceRecords?:
     DomainEntitiesProcurementSuppliersSupplierPerformanceRecordRead[] | null;
 };
+export type DomainEntitiesShipmentsShipmentInvoiceKind = 0 | 1;
 export type DomainEntitiesShipmentsShipmentInvoice = {
   id?: string;
   createdAt?: string;
@@ -7351,6 +7553,8 @@ export type DomainEntitiesShipmentsShipmentInvoice = {
   currency?: DomainEntitiesCurrenciesCurrency;
   paidAt?: string | null;
   dueDate?: string | null;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
+  fulfillmentRequestKey?: string | null;
 };
 export type DomainEntitiesShipmentsShipmentInvoiceRead = {
   id?: string;
@@ -7372,6 +7576,8 @@ export type DomainEntitiesShipmentsShipmentInvoiceRead = {
   currency?: DomainEntitiesCurrenciesCurrencyRead;
   paidAt?: string | null;
   dueDate?: string | null;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
+  fulfillmentRequestKey?: string | null;
 };
 export type DomainEntitiesRequisitionsProcurementSource = 0 | 1;
 export type DomainEntitiesRequisitionsSourceRequisitionItem = {
@@ -7707,6 +7913,256 @@ export type DomainEntitiesPurchaseOrdersPurchaseOrderRead = {
   department?: DomainEntitiesDepartmentsDepartment;
   approved?: boolean;
 };
+export type DomainEntitiesShipmentsShipmentDocumentApproval = {
+  userId?: string | null;
+  user?: DomainEntitiesUsersUser;
+  roleId?: string | null;
+  role?: DomainEntitiesRolesRole;
+  required?: boolean;
+  order?: number;
+  stageStartTime?: string | null;
+  status?: DomainEntitiesApprovalsApprovalStatus;
+  approvalTime?: string | null;
+  approvedById?: string | null;
+  approvedBy?: DomainEntitiesUsersUser;
+  createdAt?: string;
+  activatedAt?: string | null;
+  comments?: string | null;
+  id?: string;
+  shipmentDocumentId?: string;
+  shipmentDocument?: DomainEntitiesShipmentsShipmentDocument;
+  approvalId?: string;
+  approval?: DomainEntitiesApprovalsApproval;
+};
+export type DomainEntitiesShipmentsShipmentDocumentApprovalRead = {
+  userId?: string | null;
+  user?: DomainEntitiesUsersUser;
+  roleId?: string | null;
+  role?: DomainEntitiesRolesRole;
+  required?: boolean;
+  order?: number;
+  stageStartTime?: string | null;
+  status?: DomainEntitiesApprovalsApprovalStatus;
+  approvalTime?: string | null;
+  approvedById?: string | null;
+  approvedBy?: DomainEntitiesUsersUser;
+  createdAt?: string;
+  activatedAt?: string | null;
+  comments?: string | null;
+  id?: string;
+  shipmentDocumentId?: string;
+  shipmentDocument?: DomainEntitiesShipmentsShipmentDocument;
+  approvalId?: string;
+  approval?: DomainEntitiesApprovalsApprovalRead;
+};
+export type DomainEntitiesShipmentsShipmentDocument = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  code?: string | null;
+  discrepancies?: DomainEntitiesShipmentsShipmentDiscrepancy[] | null;
+  shipmentInvoiceId?: string | null;
+  shipmentInvoice?: DomainEntitiesShipmentsShipmentInvoice;
+  arrivedAt?: string | null;
+  clearedAt?: string | null;
+  transitStartedAt?: string | null;
+  atPortAt?: string | null;
+  type?: DomainEntitiesShipmentsDocType;
+  completedDistributionAt?: string | null;
+  status?: DomainEntitiesShipmentsShipmentStatus;
+  approved?: boolean;
+  approvals?: DomainEntitiesShipmentsShipmentDocumentApproval[] | null;
+};
+export type DomainEntitiesShipmentsShipmentDocumentRead = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  code?: string | null;
+  discrepancies?: DomainEntitiesShipmentsShipmentDiscrepancy[] | null;
+  shipmentInvoiceId?: string | null;
+  shipmentInvoice?: DomainEntitiesShipmentsShipmentInvoiceRead;
+  arrivedAt?: string | null;
+  clearedAt?: string | null;
+  transitStartedAt?: string | null;
+  atPortAt?: string | null;
+  type?: DomainEntitiesShipmentsDocType;
+  completedDistributionAt?: string | null;
+  status?: DomainEntitiesShipmentsShipmentStatus;
+  approved?: boolean;
+  approvals?: DomainEntitiesShipmentsShipmentDocumentApprovalRead[] | null;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyApproval = {
+  userId?: string | null;
+  user?: DomainEntitiesUsersUser;
+  roleId?: string | null;
+  role?: DomainEntitiesRolesRole;
+  required?: boolean;
+  order?: number;
+  stageStartTime?: string | null;
+  status?: DomainEntitiesApprovalsApprovalStatus;
+  approvalTime?: string | null;
+  approvedById?: string | null;
+  approvedBy?: DomainEntitiesUsersUser;
+  createdAt?: string;
+  activatedAt?: string | null;
+  comments?: string | null;
+  id?: string;
+  shipmentDiscrepancyId?: string;
+  shipmentDiscrepancy?: DomainEntitiesShipmentsShipmentDiscrepancy;
+  approvalId?: string;
+  approval?: DomainEntitiesApprovalsApproval;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyApprovalRead = {
+  userId?: string | null;
+  user?: DomainEntitiesUsersUser;
+  roleId?: string | null;
+  role?: DomainEntitiesRolesRole;
+  required?: boolean;
+  order?: number;
+  stageStartTime?: string | null;
+  status?: DomainEntitiesApprovalsApprovalStatus;
+  approvalTime?: string | null;
+  approvedById?: string | null;
+  approvedBy?: DomainEntitiesUsersUser;
+  createdAt?: string;
+  activatedAt?: string | null;
+  comments?: string | null;
+  id?: string;
+  shipmentDiscrepancyId?: string;
+  shipmentDiscrepancy?: DomainEntitiesShipmentsShipmentDiscrepancy;
+  approvalId?: string;
+  approval?: DomainEntitiesApprovalsApprovalRead;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancy = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  shipmentDocumentId?: string;
+  shipmentDocument?: DomainEntitiesShipmentsShipmentDocument;
+  items?: DomainEntitiesShipmentsShipmentDiscrepancyItem[] | null;
+  approved?: boolean;
+  approvals?: DomainEntitiesShipmentsShipmentDiscrepancyApproval[] | null;
+  rejected?: boolean;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyRead = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  shipmentDocumentId?: string;
+  shipmentDocument?: DomainEntitiesShipmentsShipmentDocumentRead;
+  items?: DomainEntitiesShipmentsShipmentDiscrepancyItem[] | null;
+  approved?: boolean;
+  approvals?: DomainEntitiesShipmentsShipmentDiscrepancyApprovalRead[] | null;
+  rejected?: boolean;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyType = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  name?: string | null;
+  description?: string | null;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyTypeRead = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  name?: string | null;
+  description?: string | null;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyItem = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  shipmentDiscrepancyId?: string;
+  shipmentDiscrepancy?: DomainEntitiesShipmentsShipmentDiscrepancy;
+  materialId?: string;
+  material?: DomainEntitiesMaterialsMaterial;
+  uoMId?: string;
+  uoM?: DomainEntitiesBaseUnitOfMeasure;
+  receivedQuantity?: number;
+  declaredQuantitySnapshot?: number;
+  shipmentInvoiceItemId?: string | null;
+  shipmentInvoiceItem?: DomainEntitiesShipmentsShipmentInvoiceItem;
+  typeId?: string | null;
+  type?: DomainEntitiesShipmentsShipmentDiscrepancyType;
+  reason?: string | null;
+  resolved?: boolean;
+};
+export type DomainEntitiesShipmentsShipmentDiscrepancyItemRead = {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  createdById?: string | null;
+  createdBy?: DomainEntitiesUsersUser;
+  lastUpdatedById?: string | null;
+  lastUpdatedBy?: DomainEntitiesUsersUser;
+  deletedAt?: string | null;
+  lastDeletedById?: string | null;
+  lastDeletedBy?: DomainEntitiesUsersUser;
+  shipmentDiscrepancyId?: string;
+  shipmentDiscrepancy?: DomainEntitiesShipmentsShipmentDiscrepancyRead;
+  materialId?: string;
+  material?: DomainEntitiesMaterialsMaterialRead;
+  uoMId?: string;
+  uoM?: DomainEntitiesBaseUnitOfMeasureRead;
+  receivedQuantity?: number;
+  declaredQuantitySnapshot?: number;
+  shipmentInvoiceItemId?: string | null;
+  shipmentInvoiceItem?: DomainEntitiesShipmentsShipmentInvoiceItem;
+  typeId?: string | null;
+  type?: DomainEntitiesShipmentsShipmentDiscrepancyTypeRead;
+  reason?: string | null;
+  resolved?: boolean;
+};
 export type DomainEntitiesShipmentsShipmentInvoiceItem = {
   id?: string;
   createdAt?: string;
@@ -7737,6 +8193,8 @@ export type DomainEntitiesShipmentsShipmentInvoiceItem = {
   totalCost?: number;
   currencyId?: string | null;
   currency?: DomainEntitiesCurrenciesCurrency;
+  fulfillsDiscrepancyItemId?: string | null;
+  fulfillsDiscrepancyItem?: DomainEntitiesShipmentsShipmentDiscrepancyItem;
 };
 export type DomainEntitiesShipmentsShipmentInvoiceItemRead = {
   id?: string;
@@ -7768,6 +8226,8 @@ export type DomainEntitiesShipmentsShipmentInvoiceItemRead = {
   totalCost?: number;
   currencyId?: string | null;
   currency?: DomainEntitiesCurrenciesCurrencyRead;
+  fulfillsDiscrepancyItemId?: string | null;
+  fulfillsDiscrepancyItem?: DomainEntitiesShipmentsShipmentDiscrepancyItemRead;
 };
 export type DomainEntitiesWarehousesMaterialItemDistribution = {
   id?: string;
@@ -8923,6 +9383,7 @@ export type DomainEntitiesEmployeesEmployee = {
   religion?: DomainEntitiesEmployeesReligion;
   staffNumber?: string | null;
   email?: string | null;
+  userId?: string | null;
   phoneNumber?: string | null;
   bankAccountNumber?: string | null;
   ssnitNumber?: string | null;
@@ -8978,6 +9439,7 @@ export type DomainEntitiesEmployeesEmployeeRead = {
   religion?: DomainEntitiesEmployeesReligion;
   staffNumber?: string | null;
   email?: string | null;
+  userId?: string | null;
   phoneNumber?: string | null;
   bankAccountNumber?: string | null;
   ssnitNumber?: string | null;
@@ -9303,6 +9765,7 @@ export type DomainEntitiesItemsItemStockRequisitionItemDto = {
   itemId?: string;
   item?: DomainEntitiesItemsItem;
   quantityRequested?: number;
+  quantityIssued?: number;
 };
 export type DomainEntitiesItemsItemStockRequisitionItemDtoRead = {
   id?: string;
@@ -9313,6 +9776,8 @@ export type DomainEntitiesItemsItemStockRequisitionItemDtoRead = {
   itemId?: string;
   item?: DomainEntitiesItemsItemRead;
   quantityRequested?: number;
+  quantityIssued?: number;
+  quantityRemaining?: number;
 };
 export type DomainEntitiesItemStockRequisitionsItemStockRequisitionDto = {
   id?: string;
@@ -9324,6 +9789,8 @@ export type DomainEntitiesItemStockRequisitionsItemStockRequisitionDto = {
   department?: DomainEntitiesDepartmentsDepartmentDto;
   justification?: string | null;
   status?: DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionStatus;
+  store?: DomainEntitiesItemsStore;
+  issueHistoryAttributed?: boolean;
   requisitionItems?: DomainEntitiesItemsItemStockRequisitionItemDto[] | null;
 };
 export type DomainEntitiesItemStockRequisitionsItemStockRequisitionDtoRead = {
@@ -9336,6 +9803,8 @@ export type DomainEntitiesItemStockRequisitionsItemStockRequisitionDtoRead = {
   department?: DomainEntitiesDepartmentsDepartmentDto;
   justification?: string | null;
   status?: DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionStatus;
+  store?: DomainEntitiesItemsStore;
+  issueHistoryAttributed?: boolean;
   requisitionItems?:
     DomainEntitiesItemsItemStockRequisitionItemDtoRead[] | null;
 };
@@ -9360,23 +9829,6 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
-export type DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  itemStockRequisitionId?: string;
-  itemStockRequisition?: DomainEntitiesItemStockRequisitionsItemStockRequisitionDto;
-  quantityIssued?: number;
-};
-export type DomainEntitiesItemStockRequisitionsIssueItemStockRequisitionDtoRead =
-  {
-    id?: string;
-    createdBy?: DomainEntitiesUsersUserDto;
-    createdAt?: string;
-    itemStockRequisitionId?: string;
-    itemStockRequisition?: DomainEntitiesItemStockRequisitionsItemStockRequisitionDtoRead;
-    quantityIssued?: number;
-  };
 export type DomainEntitiesItemStockRequisitionsIssueQuantityDto = {
   itemId?: string;
   quantity?: number;
@@ -9391,6 +9843,7 @@ export type DomainEntitiesRecoverableItemsReportsCreateRecoverableItemReportRequ
     itemId: string;
     quantity: number;
     reason?: string | null;
+    itemStockRequisitionItemId?: string | null;
   };
 export type DomainEntitiesRecoverableItemsReportsRecoverableItemReportDto = {
   id?: string;
@@ -9399,6 +9852,10 @@ export type DomainEntitiesRecoverableItemsReportsRecoverableItemReportDto = {
   item?: DomainEntitiesItemsItemDto;
   quantity?: number;
   reason?: string | null;
+  store?: DomainEntitiesItemsStore;
+  itemStockRequisitionId?: string | null;
+  itemStockRequisitionItemId?: string | null;
+  requisitionNumber?: string | null;
 };
 export type DomainEntitiesVendorsCreateVendorRequest = {
   name: string;
@@ -9453,21 +9910,14 @@ export const {
   useGetApiV1ProcurementInventoryMemoByIdQuery,
   useLazyGetApiV1ProcurementInventoryMemoByIdQuery,
   usePostApiV1ProcurementInventoryMemoItemByIdMarkPaidMutation,
+  useGetApiV1ProcurementInventoryMemoCodeGenerateQuery,
+  useLazyGetApiV1ProcurementInventoryMemoCodeGenerateQuery,
   useGetApiV1ProcurementInventoryPurchasedItemsQuery,
   useLazyGetApiV1ProcurementInventoryPurchasedItemsQuery,
   usePostApiV1ProcurementInventoryItemsByIdApproveMutation,
   usePostApiV1ProcurementInventoryItemsByIdRejectMutation,
-  useGetApiV1ProcurementInventoryMemoCodeGenerateQuery,
-  useLazyGetApiV1ProcurementInventoryMemoCodeGenerateQuery,
-  usePostApiV1ItemsMutation,
-  useGetApiV1ItemsQuery,
-  useLazyGetApiV1ItemsQuery,
-  useGetApiV1ItemsByIdQuery,
-  useLazyGetApiV1ItemsByIdQuery,
-  usePutApiV1ItemsByIdMutation,
-  useDeleteApiV1ItemsByIdMutation,
-  useGetApiV1ItemsByItemCodeTransactionsQuery,
-  useLazyGetApiV1ItemsByItemCodeTransactionsQuery,
+  useGetApiV1ItemsChoicesQuery,
+  useLazyGetApiV1ItemsChoicesQuery,
   usePostApiV1ItemsShipmentInvoiceMutation,
   useGetApiV1ItemsShipmentInvoiceQuery,
   useLazyGetApiV1ItemsShipmentInvoiceQuery,
@@ -9504,6 +9954,15 @@ export const {
   useLazyGetApiV1ItemsBillingSheetInvoiceByInvoiceIdQuery,
   usePutApiV1ItemsBillingSheetByBillingSheetIdChargesMutation,
   usePutApiV1ItemsBillingSheetChargesPaidMutation,
+  usePostApiV1ItemsMutation,
+  useGetApiV1ItemsQuery,
+  useLazyGetApiV1ItemsQuery,
+  useGetApiV1ItemsByIdQuery,
+  useLazyGetApiV1ItemsByIdQuery,
+  usePutApiV1ItemsByIdMutation,
+  useDeleteApiV1ItemsByIdMutation,
+  useGetApiV1ItemsByItemCodeTransactionsQuery,
+  useLazyGetApiV1ItemsByItemCodeTransactionsQuery,
   usePostApiV1ItemGrnsMutation,
   useGetApiV1ItemGrnsQuery,
   useLazyGetApiV1ItemGrnsQuery,
@@ -9516,15 +9975,18 @@ export const {
   usePostApiV1ItemsStockRequisitionsMutation,
   useGetApiV1ItemsStockRequisitionsQuery,
   useLazyGetApiV1ItemsStockRequisitionsQuery,
-  useDeleteApiV1ItemsStockRequisitionsMutation,
   useGetApiV1ItemsStockRequisitionsByIdQuery,
   useLazyGetApiV1ItemsStockRequisitionsByIdQuery,
   usePutApiV1ItemsStockRequisitionsByIdMutation,
+  useDeleteApiV1ItemsStockRequisitionsByIdMutation,
   usePostApiV1ItemsStockRequisitionsByStockRequisitionIdIssueStockAgainstRequisitionMutation,
   usePostApiV1ItemsStockRequisitionsByStockRequisitionIdPartialIssueStockAgainstRequisitionMutation,
   usePostV1RecoverableItemsReportsMutation,
   useGetV1RecoverableItemsReportsQuery,
   useLazyGetV1RecoverableItemsReportsQuery,
+  usePostApiV1RecoverableItemsReportsMutation,
+  useGetApiV1RecoverableItemsReportsQuery,
+  useLazyGetApiV1RecoverableItemsReportsQuery,
   usePostApiV1VendorsMutation,
   useGetApiV1VendorsQuery,
   useLazyGetApiV1VendorsQuery,

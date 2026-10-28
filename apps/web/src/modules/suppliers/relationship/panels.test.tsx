@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import userEvent from "@testing-library/user-event";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 import { ApiProvider } from "../../../shared/api/api-provider";
@@ -18,7 +19,7 @@ const data: Record<string, object[]> = {
   contacts: [{ id: "k2", supplierId: "s1", name: "Kofi Boateng", role: "Accounts", email: null, phone: null, isPrimary: false },
     { id: "k1", supplierId: "s1", name: "Ama Owusu", role: "Sales", email: "ama@acme.test", phone: "+233 20 000 0000", isPrimary: true }],
   "bank-details": [{ id: "b1", supplierId: "s1", bankName: "GCB", accountNumber: "1234567890", accountName: "Acme Chemicals", swiftCode: "GHCBGHAC", iban: null, branchAddress: null, currency: usd }],
-  certifications: [{ id: "c-ok", supplierId: "s1", certificationType: 0, certificateNumber: "GMP-1", issuingBody: "FDA", issueDate: iso(-100), expiryDate: iso(300), attachments: [] },
+  certifications: [{ id: "c-ok", supplierId: "s1", certificationType: 0, certificateNumber: "GMP-1", issuingBody: "FDA", issueDate: iso(-100), expiryDate: iso(300), attachments: [{ id: "file1", name: "gmp.png", link: "https://files.test/gmp.png" }] },
     { id: "c-old", supplierId: "s1", certificationType: 1, certificateNumber: "ISO-0", issuingBody: "BSI", issueDate: iso(-800), expiryDate: iso(-10), attachments: [] }],
   "pricing-agreements": [
     { id: "p1", supplierId: "s1", status: 1, changeKind: 0, materialId: "m1", materialName: "Albendazole", uoMId: "u1", uoMName: "Kilogram", agreedPrice: 42.5, priceUoM: "kg", currency: usd, effectiveFrom: iso(-30), effectiveTo: null },
@@ -62,14 +63,22 @@ it("keeps account numbers hidden until one is shown", async () => {
   expect([maskAccount("12"), maskAccount("123456")]).toEqual(["••••", "•••• 3456"]);
 });
 
-it("puts the expired certificate first and offers actions only to those who manage certificates", async () => {
+it("puts the expired certificate first and keeps certificate mutations restricted", async () => {
   open(<CertificationsPanel supplierId="s1" />, ["CanViewSupplierCertifications"]);
   await screen.findByText("ISO-0");
   expect(screen.getAllByRole("row").slice(1).map((row) => within(row).getAllByRole("cell")[0]?.textContent)).toEqual(["ISO 9001ISO-0", "GMPGMP-1"]);
   expect(within(rowOf("ISO-0")).getByText("Expired")).toBeTruthy();
   expect(within(rowOf("GMP-1")).getByText("Valid")).toBeTruthy();
-  expect(screen.queryByRole("button", { name: /^Actions for/ })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Actions for certificate ISO-0" })).toBeNull();
+  await openMenu("Actions for certificate GMP-1");
+  expect(screen.queryByRole("menuitem", { name: "Edit" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Remove" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Add certification" })).toBeNull();
+  await userEvent.click(screen.getByRole("menuitem", { name: "View attachments" }));
+  await screen.findByRole("dialog", { name: "Certificate GMP-1" });
+  await userEvent.click(screen.getByRole("button", { name: "gmp.png" }));
+  expect(await screen.findByRole("dialog", { name: "gmp.png" })).toBeTruthy();
+  expect(screen.getByRole("img", { name: "gmp.png" }).getAttribute("src")).toBe("https://files.test/gmp.png");
 });
 
 it("shows a proposed price against the one it replaces, and only lets an approved agreement be changed", async () => {
