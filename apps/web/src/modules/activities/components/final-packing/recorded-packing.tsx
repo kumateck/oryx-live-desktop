@@ -6,8 +6,9 @@ const count = (value: number) => formatQuantityNumber(value, "calculated");
 
 /** Final packing as it was recorded. It is recorded once; the page shows it and offers no second entry. */
 export function RecordedPackingView({ recorded }: { recorded: RecordedPacking }) {
-  const facts = [["Quantity packed", count(recorded.totalPacked)], ["Full shippers", `${count(recorded.fullShippers)} of ${count(recorded.perShipper)}`], ["Left over", count(recorded.leftOver)],
-    ["Actual packed before samples", count(recorded.actualPacked)], ["Gain or loss", `${recorded.gainOrLoss > 0 ? "+" : ""}${count(recorded.gainOrLoss)}`], ["Recorded", formatDateTime(recorded.createdAt) ?? "–"]];
+  const facts = [["Expected yield", recorded.expected > 0 ? count(recorded.expected) : "Not recorded"],
+    ["Available for warehouse transfer", count(recorded.totalPacked)], ["Full shippers", `${count(recorded.fullShippers)} of ${count(recorded.perShipper)}`], ["Left over", count(recorded.leftOver)],
+    ["Total packed including samples", count(recorded.actualPacked)], ["Gain or loss", `${recorded.gainOrLoss > 0 ? "+" : ""}${count(recorded.gainOrLoss)}`], ["Recorded", formatDateTime(recorded.createdAt) ?? "–"]];
   return <section className="min-w-0 space-y-3 rounded-lg border bg-card p-4">
     <h2 className="text-sm font-semibold">Final packing is recorded</h2>
     <dl className="grid gap-x-8 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">{facts.map(([label, value]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="text-sm font-medium">{value}</dd></div>)}</dl>
