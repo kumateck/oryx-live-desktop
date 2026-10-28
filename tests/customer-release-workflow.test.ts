@@ -48,15 +48,15 @@ test("one production workflow queues all runs and validates before optional Wind
   assert.deepEqual(entries, ["customer-docker.yml"]);
   assert.equal(existsSync(".github/workflows/customer-server.yml"), false);
   assert.equal(existsSync(".github/workflows/deploy-testing.yml"), false);
-  assert.match(workflow, /push:\s+branches: \[entrance-server\]/);
-  assert.match(workflow, /pull_request:\s+branches: \[entrance-server\]/);
+  assert.match(workflow, /push:\s+branches: \[testing, entrance-server\]/);
+  assert.match(workflow, /pull_request:\s+branches: \[testing, entrance-server\]/);
   assert.match(workflow, /concurrency:\s+group: customer-release\s+cancel-in-progress: false/);
   assert.equal((workflow.match(/concurrency:/g) ?? []).length, 1);
   assert.doesNotMatch(workflow, /group:.*github\.ref|strategy:|matrix:/);
   assert.match(workflow, /build_windows:[\s\S]*?type: boolean[\s\S]*?default: false/);
-  assert.match(workflow, /windows-installer:[\s\S]*?needs: web[\s\S]*?if:.*workflow_dispatch.*refs\/heads\/entrance-server.*inputs\.build_windows/);
+  assert.match(workflow, /windows-installer:[\s\S]*?needs: \[web, testing-deploy\][\s\S]*?workflow_dispatch.*refs\/heads\/entrance-server.*inputs\.build_windows/);
   assert.match(workflow, /node scripts\/customer-release-validation\.ts --sha "\$\{\{ github.sha \}\}"/);
-  assert.doesNotMatch(workflow, /docker\/build-push-action|run: bun run check|run: bun run build:web/);
+  assert.doesNotMatch(workflow.slice(0, workflow.indexOf("  testing-images:")), /docker\/build-push-action|run: bun run check|run: bun run build:web/);
 });
 
 test("production approval retains the existing workflow path and requires the complete exact-SHA push run", () => {
