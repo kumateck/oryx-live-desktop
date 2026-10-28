@@ -2,6 +2,20 @@
 
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
+## Step detail action evidence (2026-10-28)
+
+The user requested the detailed records of every performed step action on its own
+page, explicitly including analytical tests, finished-goods transfers and final
+packing. Add a separate read-only selected-step evidence section, including completed
+and cancelled production; preserve the existing current-step mutation guards.
+A typed backend endpoint joins exact step evidence and conditionally adds legacy
+batch-only records with explicit batch scope. It checks the existing production-board
+permission and the authenticated actor's production department before reading and
+rechecks grants before returning. Show the request's recorded stage, audit people,
+events, quantities, packing samples/reconciliation, transfers and returns; never
+infer a historical record's stage from the current procedure. No schema migration,
+workflow writes, live data repair or deployment is part of this feature.
+
 ## Production ATR data repair tooling (2026-10-28)
 
 The user requested scripts to repair existing production activity flow data, starting

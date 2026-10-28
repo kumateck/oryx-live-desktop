@@ -12,6 +12,7 @@ import type { Activity, ActivityStep } from "../../schemas/activity-schema";
 import { ActivityLog } from "../batch/activity-log";
 import { StepStatusBadge } from "../step-status-badge";
 import { StepTypeBadge } from "../step-type-badge";
+import { StepActionRecords } from "./records/step-action-records";
 import { StepWorkspace } from "./step-workspace";
 
 const positions = { done: "Completed step", current: "Current step", upcoming: "Upcoming step" } as const;
@@ -38,6 +39,7 @@ export function StepDetail({ activity, step }: { activity: Activity; step: Activ
         {step.description ? <p className="break-words text-sm text-muted-foreground">{step.description}</p> : null}
         <StepWorkspace activity={activity} step={step} />
       </section>
+      <StepActionRecords activity={activity} step={step} />
       <section className="min-w-0 space-y-3 rounded-lg border bg-card p-4">
         <h2 className="text-sm font-semibold">Responsible <span className="font-normal text-muted-foreground">({team.length})</span></h2>
         {team.length === 0 ? <p className="text-sm text-muted-foreground">No one is assigned to this step.</p>
