@@ -10,7 +10,7 @@ test("Windows builds follow native testing changes or explicit production dispat
   assert.match(workflow,/&& inputs\.build_windows/);
   assert.doesNotMatch(workflow,/^\s+(?:push|pull_request|schedule):/m);
   assert.match(workflow,/github.event_name == 'workflow_dispatch' && github.ref == 'refs\/heads\/entrance-server'/);
-  assert.match(workflow, /needs.web.outputs.desktop_changed == 'true'/);
+  assert.match(workflow, /needs.testing-deploy.outputs.desktop_changed == 'true'/);
   assert.match(workflow, /github.ref == 'refs\/heads\/testing' && needs.testing-deploy.result == 'success'/);
   assert.match(workflow, /always\(\) && needs.web.result == 'success'/);
   assert.match(workflow,/runs-on: windows-latest/);
