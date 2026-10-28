@@ -2,14 +2,17 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 const pipeline=readFileSync(".github/workflows/customer-docker.yml","utf8");
-const workflow=pipeline.slice(pipeline.indexOf("  windows-installer:"));
+const workflow=pipeline.slice(pipeline.indexOf("  windows-installer:"), pipeline.indexOf("  testing-desktop-publish:"));
 
-test("customer Windows installer is manually dispatched from entrance-server and cannot deploy services", () => {
+test("Windows builds follow native testing changes or explicit production dispatch and cannot deploy services", () => {
   assert.match(pipeline,/workflow_dispatch:/);
-  assert.match(workflow,/needs: web/);
+  assert.match(workflow,/needs: \[web, testing-deploy\]/);
   assert.match(workflow,/&& inputs\.build_windows/);
   assert.doesNotMatch(workflow,/^\s+(?:push|pull_request|schedule):/m);
-  assert.match(workflow,/if: github.event_name == 'workflow_dispatch' && github.ref == 'refs\/heads\/entrance-server'/);
+  assert.match(workflow,/github.event_name == 'workflow_dispatch' && github.ref == 'refs\/heads\/entrance-server'/);
+  assert.match(workflow, /needs.web.outputs.desktop_changed == 'true'/);
+  assert.match(workflow, /github.ref == 'refs\/heads\/testing' && needs.testing-deploy.result == 'success'/);
+  assert.match(workflow, /always\(\) && needs.web.result == 'success'/);
   assert.match(workflow,/runs-on: windows-latest/);
   assert.match(workflow,/ref: \$\{\{ github.sha \}\}/);
   assert.doesNotMatch(workflow,/ssh-action|scp-action|docker\/|docker (?:run|build|compose)|SSH_HOST|SSH_PRIVATE_KEY|RABBITMQ_PASS/);

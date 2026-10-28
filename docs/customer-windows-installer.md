@@ -1,10 +1,10 @@
 # Customer Windows x86 and x64 installer
 
-The installed Electron shell and the customer Docker frontend are independent. Shell releases are manual; frontend updates on `entrance-server` do not build a Windows installer. This workflow does not connect to Ubuntu or change containers.
+The installed Electron shell and the customer Docker frontend are independent. Production shell releases are manual; frontend updates on `entrance-server` do not build a Windows installer. The production installer path does not connect to customer Ubuntu or change its containers. Testing-only stages publish the demo frontend and build a testing installer only when desktop inputs change.
 
 ## Build and download
 
-The single production workflow is `.github/workflows/customer-docker.yml` (**Customer release pipeline**). Its Windows job is opt-in and runs after release validation. The testing branch retains its own testing-deployment definition.
+The single production workflow is `.github/workflows/customer-docker.yml` (**Customer release pipeline**). Its Windows job is opt-in and runs after release validation. The same workflow handles testing; web-only testing pushes skip Windows, while desktop changes build and publish the installer after the testing web deployment. See [testing deployment](deployment.md#testing-site).
 
 1. Open [the installer workflow in GitHub Actions](https://github.com/kumateck/oryx-live-desktop/actions/workflows/customer-docker.yml).
 2. Choose **Run workflow**, select branch **entrance-server**, enable **build_windows**, and run it.
