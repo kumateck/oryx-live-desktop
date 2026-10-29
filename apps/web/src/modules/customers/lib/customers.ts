@@ -1,3 +1,4 @@
+import { shipperSplit } from "@/shared/packing/packs";
 export const customersPath = "/crm/customers";
 export const customerPath = (id: string) => `${customersPath}/${id}`;
 export const createQuotationPath = (customerId: string) => `${customersPath}/${customerId}/quotations/create`;
@@ -16,9 +17,7 @@ export const orderStatusLabels: Record<number, string> = { 0: "Pending", 1: "Par
 
 /** How an order quantity breaks into full shippers and loose packs. With no shipper size everything is loose. */
 export function splitPacking(quantity: number, perShipper: number): { shippers: number; loose: number } {
-  const total = Math.max(0, Math.trunc(Number.isFinite(quantity) ? quantity : 0));
-  const size = Math.max(0, Math.trunc(Number.isFinite(perShipper) ? perShipper : 0));
-  return size === 0 ? { shippers: 0, loose: total } : { shippers: Math.floor(total / size), loose: total % size };
+  return shipperSplit(Math.trunc(Number.isFinite(quantity) ? quantity : 0), Math.trunc(Number.isFinite(perShipper) ? perShipper : 0));
 }
 
 /** What one quotation line comes to after its discount. Null until it has a quantity and a price. */

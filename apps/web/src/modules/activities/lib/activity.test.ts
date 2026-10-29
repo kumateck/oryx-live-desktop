@@ -131,7 +131,7 @@ it("asks for extra material in the unit typed, stored in the smallest unit, and 
 });
 
 it("counts what is left to transfer and marks anything but one full transfer as partial", () => {
-  const record = { id: "bmr-1", batchNumber: "WM-001", manufacturingDate: null, expiryDate: null, packing: { id: "s1", name: "150 X 20ml", packsPerShipper: 150, unit: { id: "u-b", name: "Bottle" } } };
+  const record = { id: "bmr-1", batchNumber: "WM-001", manufacturingDate: null, expiryDate: null, packing: { id: "s1", name: "150 X 20ml", packsPerShipper: 150, unit: { id: "u-b", name: "Bottle" }, packName: "Bottle" } };
   const first = transferTotals(75_300, []);
   expect(first).toEqual({ packed: 75_300, transferred: 0, remaining: 75_300 });
   expect(shipperBreakdown(75_300, 150)).toEqual({ shippers: 502, loose: 0 });

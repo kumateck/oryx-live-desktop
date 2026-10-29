@@ -34,7 +34,7 @@ export function PackingStyleSection({ productId, fullBatchSize, baseUnit }: { pr
     {units.error ? <p role="alert" className="flex flex-wrap items-center gap-2 text-sm">Units of measure could not be loaded, so styles cannot be added or edited. {units.error}
       <Button type="button" size="xs" variant="outline" onClick={units.retry}>Retry</Button></p> : null}
     {packing.saveError ? <p role="alert" className="text-sm text-destructive">{packing.saveError}</p> : null}
-    <PackingStylesTable styles={packing.styles} loading={packing.loading} error={packing.error} onRetry={packing.retry} onEdit={onEdit} onRemove={onRemove} />
+    <PackingStylesTable styles={packing.styles} baseUnit={baseUnit} loading={packing.loading} error={packing.error} onRetry={packing.retry} onEdit={onEdit} onRemove={onRemove} />
 
     {open?.mode === "add" || open?.mode === "edit" ? <PackingStyleDialog key={open.mode === "edit" ? open.style.key : "new"}
       editing={open.mode === "edit" ? open.style : null} styles={packing.styles} packingUnits={units.ofType(unitType.packing)} allUnits={units.all}

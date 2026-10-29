@@ -12,7 +12,7 @@ const planColumns: ReportColumn<ProductionReadinessRow>[] = [
   { label: "Product", read: (row) => row.productName }, { label: "Code", read: (row) => row.productCode },
   { label: "Packing style", read: (row) => row.packingStyle }, { label: "Expected batches", read: (row) => row.batches },
   { label: "Unit price", read: (row) => row.unitPrice }, { label: "Price unit", read: (row) => row.priceUnit },
-  { label: "Expected yield", read: (row) => row.expectedYield }, { label: "Packs per shipper", read: (row) => row.packsPerShipper },
+  { label: "Expected yield", read: (row) => row.expectedYield }, { label: "Packs", read: (row) => row.packs }, { label: "Packs per shipper", read: (row) => row.packsPerShipper },
   { label: "Shippers", read: (row) => row.shippers }, { label: "Loose packs", read: (row) => row.loosePacks },
   ...checks<ProductionReadinessRow>(),
   { label: "Product ID", read: (row) => row.productId }, { label: "Packing ID", read: (row) => row.productPackingId },
@@ -34,7 +34,7 @@ export function productionReadinessSheets(report: ProductionReadinessReport) {
     { label: "Grand total", id: null, ...report.totals },
   ], [{ label: "Market", read: (row) => row.label }, { label: "Market ID", read: (row) => row.id },
     { label: "Expected batches", read: (row) => row.batches }, { label: "Expected yield", read: (row) => row.expectedYield },
-    { label: "Shippers", read: (row) => row.shippers }, { label: "Loose packs", read: (row) => row.loosePacks }]);
+    { label: "Packs", read: (row) => row.packs }, { label: "Shippers", read: (row) => row.shippers }, { label: "Loose packs", read: (row) => row.loosePacks }]);
   const summary = reportSheet("Readiness summary", [report], [
     { label: "Products", read: (row) => row.productCount }, { label: "Ready", read: (row) => row.readyProductCount },
     { label: "Action needed", read: (row) => row.actionNeededProductCount },
