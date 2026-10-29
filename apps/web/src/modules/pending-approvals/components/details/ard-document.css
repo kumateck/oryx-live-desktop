@@ -9,3 +9,8 @@
   --border: #999;
   color: var(--foreground);
 }
+.ard-document .print-signatures p {
+  margin: var(--document-space-4px) 0 0;
+  font-size: var(--document-font-12px);
+  overflow-wrap: anywhere;
+}

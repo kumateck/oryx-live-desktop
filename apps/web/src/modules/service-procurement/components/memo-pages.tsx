@@ -48,7 +48,7 @@ export function ServiceMemosPage() {
     loading: active.isLoading, refreshing: active.isFetching && !active.isLoading, onRetry: () => void active.refetch(), error: active.error ? apiErrorMessage(active.error) : null };
   return <section className="page-fill">
     <header className="flex flex-wrap items-start justify-between gap-3"><div><p className="eyebrow">SERVICES</p><h1 className="text-xl font-semibold">Service memos</h1>
-      <p className="text-sm text-muted-foreground">The agreed terms sent to the provider, from draft to payment.</p></div>
+      <p className="text-sm text-muted-foreground">After price comparison, request and approve the provider's proforma invoice. Then open Ready for a memo to raise the memo.</p></div>
       <div className="flex gap-2" role="group" aria-label="View"><Button size="sm" variant={view === "memos" ? "default" : "outline"} aria-pressed={view === "memos"} onClick={() => setView("memos")}>Memos</Button>
         <Button size="sm" variant={view === "ready" ? "default" : "outline"} aria-pressed={view === "ready"} onClick={() => setView("ready")}>Ready for a memo</Button></div></header>
     {view === "memos"

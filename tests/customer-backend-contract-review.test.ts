@@ -72,11 +72,31 @@ test("historical reporting adds optional read parameters without changing existi
       assert.deepEqual(operation, original, `${verb.toUpperCase()} ${path}`);
     }
   }
-  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))), ["/api/v1/report/history/capabilities", "/api/v1/report/history/vendors"]);
+  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))), ["/api/v1/report/production-readiness", "/api/v1/report/history/capabilities", "/api/v1/report/history/vendors"]);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   delete schemas["DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"];
+  for (const name of ["DefinitionReadiness", "PlannedProductReadinessDto", "ProductConfigurationDto", "ProductReadiness",
+    "ProductionReadinessGroupDto", "ProductionReadinessReportDto", "ProductionReadinessRowDto", "ProductionReadinessTotalsDto", "ReadinessMarketDto"])
+    delete schemas[`DOMAIN.Entities.Reports.${name}`];
   assert.deepEqual(current.components, before.components);
   assert.deepEqual(current.security, before.security);
+});
+
+test("production readiness adds one typed, authenticated, parameterized operation", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const operation = object(object(object(current.paths ?? null)["/api/v1/report/production-readiness"] ?? null).get ?? null);
+  assert.equal(operation.operationId, "GetProductionReadinessReport");
+  assert.deepEqual(operation.tags, ["Report"]);
+  const parameters = operation.parameters;
+  assert.ok(Array.isArray(parameters));
+  assert.deepEqual(parameters.map((entry) => object(entry)).filter((entry) => entry.in === "query")
+    .map((entry) => ({ name: entry.name, required: entry.required })), [
+      { name: "departmentId", required: true }, { name: "startDate", required: true }, { name: "endDate", required: true },
+    ]);
+  const response = object(object(operation.responses ?? null)["200"] ?? null);
+  assert.deepEqual(object(object(response.content ?? null)["application/json"] ?? null).schema,
+    { $ref: "#/components/schemas/DOMAIN.Entities.Reports.ProductionReadinessReportDto" });
+  assert.deepEqual(current.security, reviewedImport().security);
 });
 
 test("the separate legacy host-Nginx verifier retains both reviewed exact documents", async () => {

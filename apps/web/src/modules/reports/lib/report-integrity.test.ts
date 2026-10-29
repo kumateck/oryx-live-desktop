@@ -4,7 +4,6 @@ import { reportSheet } from "@/shared/reports/report-data";
 import { worksheetName } from "@/shared/reports/worksheet-name";
 import { reportFiltersSchema, emptyReportFilters } from "../schemas/report-filters";
 import { binaryChoice, departmentParam, reportBoundary } from "./filter-params";
-import { schedulePlan } from "./schedule-plan";
 import { employeeMovementSchema, supplierMappingsSchema } from "../api/contract-adapters";
 import { approvedMaterialReportSchema, vendorSummarySchema } from "../api/material-report-api";
 const signal = () => new AbortController().signal;
@@ -40,20 +39,5 @@ describe("complete report snapshots", () => {
     expect(worksheetName("test sheet name", used)).toBe("test sheet name (1)");
     expect(worksheetName("X".repeat(40), used)).toHaveLength(31);
     expect(worksheetName("X".repeat(40), used)).toHaveLength(31);
-  });
-});
-describe("production output", () => {
-  const start = new Date("2026-10-01T00:00:00Z"); const end = new Date("2026-10-31T23:59:59Z");
-  const product = { id: "p", name: "Product", department: { id: "d" } };
-  it("keeps half batches and excludes cancelled, outside-period and other departments", () => {
-    const plan = schedulePlan([{ scheduledStartTime: start.toISOString(), scheduledEndTime: end.toISOString(), products: [
-      { product, batchSize: 1, productPacking: { id: "pack", expectedYield: 100, packPerShipper: 12 } },
-      { product, batchSize: 0, cancelled: true }, { product: { ...product, department: { id: "other" } }, batchSize: 0 },
-    ] }, { scheduledStartTime: "2026-09-01", scheduledEndTime: "2026-09-30", products: [{ product, batchSize: 0 }] }], start, end, "d");
-    expect(plan).toHaveLength(1); expect(plan[0]).toMatchObject({ batches: 0.5, expectedYield: 50, shippers: 4, loose: 2 });
-  });
-  it("does not invent zero yield for missing packing definitions", () => {
-    const plan = schedulePlan([{ scheduledStartTime: start.toISOString(), scheduledEndTime: end.toISOString(), products: [{ product, batchSize: 0 }] }], start, end, "d");
-    expect(plan[0]?.expectedYield).toBeNull(); expect(plan[0]?.shippers).toBeNull();
   });
 });

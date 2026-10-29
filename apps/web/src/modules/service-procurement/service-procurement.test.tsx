@@ -96,6 +96,8 @@ it("records a provider's quotation with its charges and refuses it without a cur
 it("selects a quotation only when the quotations are as they were compared", async () => {
   const user = userEvent.setup();
   const app = open(<ServicePriceComparisonPage />, ["CanViewServicesPricingSelection", "CanApplyChangesForServicesPricingSelection"]);
+  expect(screen.getByText(/request and approve its proforma invoice before raising a service memo/)).toBeTruthy();
+  expect(screen.queryByRole("link", { name: "Service proforma requests" })).toBeNull();
   await openMenu(/Actions for JO-001/); await user.click(screen.getByRole("menuitem", { name: "Compare and select" }));
   const dialog = await screen.findByRole("dialog");
   const options = await within(dialog).findAllByRole("radio");

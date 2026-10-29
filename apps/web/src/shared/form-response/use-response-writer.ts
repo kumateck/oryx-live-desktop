@@ -4,7 +4,8 @@ import type { DomainEntitiesFormsRequestSaveResponseDraftRequest } from "@/share
 import type { PermissionRequirement } from "@/shared/auth/access";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { answerFingerprint, answerToStored, storedFingerprint, type AnswerValue } from "./answers";
+import { answerFingerprint, answerToStored, type AnswerValue } from "./answers";
+import { draftStatus } from "./draft-status";
 import type { FormField } from "./form-model";
 import type { StoredAnswers } from "./use-answer-form";
 import { sharedResponseId } from "./use-answer-form";
@@ -14,8 +15,7 @@ export type ResponseContext = Omit<DomainEntitiesFormsRequestSaveResponseDraftRe
 export const finalizePermission = "CanExecuteFormulaResponse";
 
 /**
- * Saves answers as drafts one field at a time and submits the response. Writes are sequential: the first draft
- * creates the response and every later one names it, which is what the server requires.
+ * Saves answers as drafts and submits only when every field is complete and saved.
  */
 export function useResponseWriter({ formId, context, stored, audit, require, onChange }: {
   formId: string; context: ResponseContext; stored: StoredAnswers; audit: { module: string; subModule: string }; require: PermissionRequirement; onChange: () => void;
@@ -27,6 +27,8 @@ export function useResponseWriter({ formId, context, stored, audit, require, onC
   const [saving, setSaving] = useState<ReadonlySet<string>>(new Set());
   const [failed, setFailed] = useState<ReadonlyMap<string, string>>(new Map());
   const [busy, setBusy] = useState(false);
+  const pendingWrites = useRef(0);
+  const submitting = useRef(false);
   const scope = JSON.stringify({ formId, context });
   const response = useRef<{ scope: string; id: string } | null>(null);
   const [confirmed, setConfirmed] = useState<{ scope: string; fields: ReadonlyMap<string, string> }>({ scope, fields: new Map() });
@@ -45,6 +47,7 @@ export function useResponseWriter({ formId, context, stored, audit, require, onC
     if (stillAllowed) return { error: stillAllowed };
     const result = await saveDraft({ ...audit, domainEntitiesFormsRequestSaveResponseDraftRequest: { ...context, formId, formFieldId: field.id, value: stringValue, responseId } });
     if ("error" in result) return { error: apiErrorMessage(result.error) };
+    if (typeof result.data !== "string" || !result.data.trim()) return { error: "The server did not confirm a saved draft. Save this answer again." };
     if (activeScope.current !== scope) return { responseId: result.data };
     response.current = { scope, id: result.data };
     if (fingerprint !== null) setConfirmed(current => ({ scope, fields: new Map(current.scope === scope ? current.fields : []).set(field.id, fingerprint) }));
@@ -53,35 +56,48 @@ export function useResponseWriter({ formId, context, stored, audit, require, onC
 
   const mark = (id: string, error: string | null) => setFailed((current) => { const next = new Map(current); if (error) next.set(id, error); else next.delete(id); return next; });
   const saveOne = useCallback(async (field: FormField, value: AnswerValue | undefined) => {
+    if (submitting.current) return "Wait for submission to finish.";
+    pendingWrites.current += 1;
     setSaving((current) => new Set(current).add(field.id));
-    const result = await write(field, value, currentResponseId());
-    setSaving((current) => { const next = new Set(current); next.delete(field.id); return next; });
-    mark(field.id, "error" in result ? result.error : null);
-    if (!("error" in result)) onChange();
-    return "error" in result ? result.error : null;
+    try {
+      const result = await write(field, value, currentResponseId());
+      mark(field.id, "error" in result ? result.error : null);
+      if (!("error" in result)) onChange();
+      return "error" in result ? result.error : null;
+    } finally {
+      pendingWrites.current -= 1;
+      setSaving((current) => { const next = new Set(current); next.delete(field.id); return next; });
+    }
   }, [onChange, write, currentResponseId]);
 
-  /** Saves every answer that differs from what is stored, then submits. A failure stops before the submit, and what was saved stays saved. */
-  const submit = useCallback(async (fields: readonly FormField[], values: Readonly<Record<string, AnswerValue | undefined>>): Promise<string | null> => {
+  const submissionProblem = (fields: readonly FormField[], editable: ReadonlySet<string>, values: Readonly<Record<string, AnswerValue | undefined>>): string | null => {
+    if (saving.size > 0) return "Wait until all drafts have finished saving.";
+    for (const field of fields) {
+      const status = draftStatus(field, values[field.id], editable.has(field.id), stored, acknowledged);
+      if (status === "incomplete") return `${field.question.label}: Complete this answer and save its draft before submitting.`;
+      if (status === "unsaved" || failed.has(field.id)) return `${field.question.label}: Save this draft before submitting.`;
+    }
+    return null;
+  };
+
+  /** Never writes drafts implicitly: keyboard and programmatic submissions use the same saved-answer checks. */
+  const submit = async (fields: readonly FormField[], editable: ReadonlySet<string>, values: Readonly<Record<string, AnswerValue | undefined>>): Promise<string | null> => {
+    if (submitting.current) return "Submission is already in progress.";
+    if (pendingWrites.current > 0) return "Wait until all drafts have finished saving.";
+    const problem = submissionProblem(fields, editable, values);
+    if (problem) return problem;
+    submitting.current = true;
     setBusy(true);
     try {
-      let responseId = currentResponseId();
-      for (const field of fields) {
-        const value = values[field.id];
-        const current = answerFingerprint(value, field.question.type);
-        if (current === null || current === (acknowledged.get(field.id) ?? storedFingerprint(stored.get(field.id)?.value, field.question.type))) continue;
-        const result = await write(field, value, responseId);
-        if ("error" in result) { mark(field.id, result.error); onChange(); return `${field.question.label}: ${result.error}`; }
-        responseId = result.responseId;
-      }
+      const responseId = currentResponseId();
       if (!responseId) return "Answer at least one question before submitting.";
       const denied = submitter.check();
       if (denied) return denied;
       const result = await finalize({ ...audit, responseId });
       onChange();
       return "error" in result ? apiErrorMessage(result.error) : null;
-    } finally { setBusy(false); }
-  }, [audit, finalize, onChange, stored, submitter, write, acknowledged, currentResponseId]);
+    } finally { submitting.current = false; setBusy(false); }
+  };
 
-  return { saveOne, submit, saving, failed, busy, acknowledged, canSubmit: submitter.allowed };
+  return { saveOne, submit, submissionProblem, saving, failed, busy, acknowledged, canSubmit: submitter.allowed };
 }

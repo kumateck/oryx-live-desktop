@@ -75484,6 +75484,204 @@
         }
       }
     },
+    "/api/v1/report/production-readiness": {
+      "get": {
+        "tags": [
+          "Report"
+        ],
+        "summary": "Complete market-grouped production plan and current product configuration readiness.",
+        "operationId": "GetProductionReadinessReport",
+        "parameters": [
+          {
+            "name": "departmentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionReadinessReportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionReadinessReportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionReadinessReportDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/report/production": {
       "get": {
         "tags": [
@@ -154893,6 +155091,15 @@
         },
         "additionalProperties": false
       },
+      "DOMAIN.Entities.Reports.DefinitionReadiness": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
       "DOMAIN.Entities.Reports.FgtnPendingApprovalDto": {
         "type": "object",
         "properties": {
@@ -157367,6 +157574,38 @@
         },
         "additionalProperties": false
       },
+      "DOMAIN.Entities.Reports.PlannedProductReadinessDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "batches": {
+            "type": "number",
+            "format": "double"
+          },
+          "markets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ReadinessMarketDto"
+            },
+            "nullable": true
+          },
+          "configuration": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductConfigurationDto"
+          }
+        },
+        "additionalProperties": false
+      },
       "DOMAIN.Entities.Reports.Procurement.MaterialDistributionStatusCountDto": {
         "type": "object",
         "properties": {
@@ -157531,6 +157770,45 @@
         },
         "additionalProperties": false
       },
+      "DOMAIN.Entities.Reports.ProductConfigurationDto": {
+        "type": "object",
+        "properties": {
+          "specification": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.DefinitionReadiness"
+          },
+          "stp": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.DefinitionReadiness"
+          },
+          "ard": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.DefinitionReadiness"
+          },
+          "procedure": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.DefinitionReadiness"
+          },
+          "bom": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.DefinitionReadiness"
+          },
+          "packaging": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.DefinitionReadiness"
+          },
+          "packingStyle": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.DefinitionReadiness"
+          },
+          "readiness": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductReadiness"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ProductReadiness": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
       "DOMAIN.Entities.Reports.ProductionDashboardDto": {
         "type": "object",
         "properties": {
@@ -157611,6 +157889,187 @@
           },
           "uom": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ProductionReadinessGroupDto": {
+        "type": "object",
+        "properties": {
+          "market": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ReadinessMarketDto"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionReadinessRowDto"
+            },
+            "nullable": true
+          },
+          "totals": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionReadinessTotalsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ProductionReadinessReportDto": {
+        "type": "object",
+        "properties": {
+          "departmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "departmentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "readyProductCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "actionNeededProductCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unavailableProductCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "markets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionReadinessGroupDto"
+            },
+            "nullable": true
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Reports.PlannedProductReadinessDto"
+            },
+            "nullable": true
+          },
+          "totals": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionReadinessTotalsDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ProductionReadinessRowDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "productPackingId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "packingStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduleProductIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          },
+          "batches": {
+            "type": "number",
+            "format": "double"
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "priceUnit": {
+            "type": "string",
+            "nullable": true
+          },
+          "expectedYield": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "packsPerShipper": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "shippers": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "loosePacks": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "configuration": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductConfigurationDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ProductionReadinessTotalsDto": {
+        "type": "object",
+        "properties": {
+          "batches": {
+            "type": "number",
+            "format": "double"
+          },
+          "expectedYield": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "shippers": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "loosePacks": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           }
         },
@@ -157897,6 +158356,21 @@
           "numberOfPackingMaterials": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ReadinessMarketDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

@@ -25,10 +25,10 @@ it("reviews the COA on the page and prints detailed worksheet or COA previews wi
     const path = new URL(input.url).pathname;
     if (input.method !== "GET") writes.push(path);
     if (path === "/api/v1/approval/my-pending/Response/doc-1") return Response.json({ id: "doc-1", modelType: "Response", approvalLogs: [] });
-    if (path === "/api/v1/form/responses/doc-1") return Response.json({ form: { id: "form-1" }, materialBatch: { id: "mb-1" }, formResponses: [] });
+    if (path === "/api/v1/form/responses/doc-1") return Response.json({ form: { id: "form-1" }, materialBatch: { id: "mb-1" }, formResponses: [], checkedBy: { id: "checker-1", firstName: "Recorded", lastName: "Checker" } });
     if (path === "/api/v1/form/form-1") return Response.json(formulaForm);
-    if (path === "/api/v1/form/responses/material-batch/mb-1") return Response.json([...formulaAnswers,
-      { ...formulaAnswers[0], responseId: "other-document", value: "Unrelated result" }]);
+    if (path === "/api/v1/form/responses/material-batch/mb-1") return Response.json([...formulaAnswers.map((answer) => ({ ...answer, createdBy: { id: "analyst-1", firstName: "Recorded", lastName: "Analyst" } })),
+      { ...formulaAnswers[0], responseId: "other-document", value: "Unrelated result", createdBy: { firstName: "Other", lastName: "Analyst" } }]);
     if (path === "/api/v1/material-ard/material/batch-details/mb-1") return Response.json({ arNumber: "AR-1", materialBatch: { batchNumber: "B-1", material: { name: "Synthetic material" } } });
     return new Response(null, { status: 404 });
   });
@@ -48,7 +48,12 @@ it("reviews the COA on the page and prints detailed worksheet or COA previews wi
   expect(within(worksheet).getByText("Test & Observations")).toBeTruthy();
   expect(worksheet.textContent).toContain("10.04%");
   expect(worksheet.textContent).not.toContain("Unrelated result");
+  expect(within(worksheet).getByText("Recorded Analyst")).toBeTruthy();
+  expect(within(worksheet).getByText("Recorded Checker")).toBeTruthy();
+  expect(worksheet.textContent).not.toContain("Other Analyst");
   expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Test & Observations");
+  expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Recorded Analyst");
+  expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Recorded Checker");
   expect(print).not.toHaveBeenCalled();
   await userEvent.click(within(worksheet).getByRole("button", { name: "Print" }));
   expect(print).toHaveBeenCalledTimes(1);
@@ -61,7 +66,12 @@ it("reviews the COA on the page and prints detailed worksheet or COA previews wi
   expect(preview.textContent).toContain("Does not comply");
   expect(preview.textContent).not.toContain('"manualVars"');
   expect(within(preview).queryByText("Test & Observations")).toBeNull();
+  expect(within(preview).getByText("Recorded Analyst")).toBeTruthy();
+  expect(within(preview).getByText("Recorded Checker")).toBeTruthy();
+  expect(preview.textContent).not.toContain("Other Analyst");
   expect(document.body.querySelector(":scope > .print-portal")?.textContent).not.toContain("Test & Observations");
+  expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Recorded Analyst");
+  expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Recorded Checker");
   await userEvent.click(within(preview).getByRole("button", { name: "Print" }));
   expect(print).toHaveBeenCalledTimes(2);
   expect(writes).toEqual([]);
