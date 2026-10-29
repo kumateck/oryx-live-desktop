@@ -27,7 +27,7 @@ const bom = z.object({
 
 const packing = z.object({
   id: text, name: text, description: text, packPerShipper: num, basePackingUoM: uom, basePackingQuantity: num, expectedYield: num,
-  isDefault: flag, packingLists: list(z.object({ uom: symbol, quantity: num, order: num })),
+  isDefault: flag, packingLists: list(z.object({ uom, quantity: num, order: num })),
 });
 const productPackage = z.object({
   id: text, material: item, directLinkMaterial: item, baseQuantity: num, unitCapacity: num, packingExcessMargin: num,
