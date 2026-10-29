@@ -14,6 +14,7 @@ function ScheduleRow({ row, paper = false }: { row: ProductionReadinessRow; pape
     <TableCell className="readiness-number"><span className="readiness-small-label">Expected yield</span>{reportNumber(row.expectedYield)}</TableCell>
     <TableCell className="readiness-number"><span className="readiness-small-label">Shippers</span>{reportNumber(row.shippers)}
       <span className="readiness-secondary">{reportNumber(row.loosePacks)} loose</span>
+      {row.packs !== null ? <span className="readiness-secondary">{reportNumber(row.packs)} packs</span> : null}
       <span className="readiness-secondary">{reportNumber(row.packsPerShipper, "entered")} / shipper</span></TableCell>
     {!paper ? readinessChecks.map(({ key, name }) => <TableCell key={key} className="readiness-desktop-check"><ReadinessMark label={name} value={row.configuration[key]} /></TableCell>) : null}
     <TableCell className="readiness-result"><ReadinessBadge configuration={row.configuration} /></TableCell>
@@ -32,7 +33,8 @@ function TotalsRow({ label, totals, grand = false, paper = false }: {
     <TableCell className="readiness-price-total" />
     <TableCell className="readiness-number"><span className="readiness-small-label">Expected yield</span>{reportNumber(totals.expectedYield)}</TableCell>
     <TableCell className="readiness-number"><span className="readiness-small-label">Shippers</span>{reportNumber(totals.shippers)}
-      <span className="readiness-secondary">{reportNumber(totals.loosePacks)} loose</span></TableCell>
+      <span className="readiness-secondary">{reportNumber(totals.loosePacks)} loose</span>
+      {totals.packs !== null ? <span className="readiness-secondary">{reportNumber(totals.packs)} packs</span> : null}</TableCell>
     {!paper ? <TableCell colSpan={7} className="readiness-desktop-check" /> : null}<TableCell className="readiness-total-end" />
   </TableRow>;
 }

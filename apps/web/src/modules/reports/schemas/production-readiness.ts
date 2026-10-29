@@ -18,10 +18,12 @@ const configuration = z.object({ specification: state, stp: state, ard: state, p
 const amount = z.number().finite().nonnegative();
 const market = z.object({ id: z.uuid().nullable(), name: z.string().min(1) });
 const identity = { productId: z.uuid(), productCode: z.string(), productName: z.string().min(1) };
-const totals = z.object({ batches: amount, expectedYield: amount.nullable(), shippers: amount.nullable(), loosePacks: amount.nullable() });
+// Expected yield counts tablets or bottles; packs is that yield as whole packs, which shippers and loose packs split. Older servers leave packs out.
+const packs = amount.nullish().transform((value) => value ?? null);
+const totals = z.object({ batches: amount, expectedYield: amount.nullable(), packs, shippers: amount.nullable(), loosePacks: amount.nullable() });
 const row = z.object({ ...identity, productPackingId: z.uuid().nullable(), packingStyle: z.string().min(1),
   scheduleProductIds: z.array(z.uuid()).min(1), batches: amount.positive(), unitPrice: z.number().finite().nullable(),
-  priceUnit: z.string().nullable(), expectedYield: amount.nullable(), packsPerShipper: amount.int().positive().nullable(),
+  priceUnit: z.string().nullable(), expectedYield: amount.nullable(), packs, packsPerShipper: amount.int().positive().nullable(),
   shippers: amount.int().nullable(), loosePacks: amount.nullable(), configuration });
 export const productionReadinessSchema = z.object({
   departmentId: z.uuid(), departmentName: z.string().min(1), startDate: z.iso.date(), endDate: z.iso.date(),

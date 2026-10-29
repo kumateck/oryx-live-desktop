@@ -11,7 +11,7 @@ import { SessionProvider } from "../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
 import { openMenu } from "../../test/menu";
 import { lineTotal, quotationNextStep, splitPacking } from "./lib/customers";
-import { customerFormSchema, quotationFormSchema } from "./schemas/customer-schema";
+import { customerFormSchema, orderedPacks, quotationFormSchema } from "./schemas/customer-schema";
 
 HTMLElement.prototype.hasPointerCapture = () => false;
 HTMLElement.prototype.setPointerCapture = () => {};
@@ -25,8 +25,21 @@ it("splits quantities into shippers, totals a discounted line and says what a qu
   expect([quotationNextStep({ status: 0, approved: false }).action, quotationNextStep({ status: 1, approved: false }).action, quotationNextStep({ status: 2, approved: false }).action, quotationNextStep({ status: 2, approved: true }).action, quotationNextStep({ status: 5, approved: true }).action])
     .toEqual(["send", null, null, "convert", null]);
   expect(customerFormSchema.safeParse({ name: "Ac", address: "", email: "x", phone: "12" }).error?.issues.map((issue) => issue.path[0])).toEqual(["name", "address", "email", "phone"]);
-  const line = { product: { value: "p1", label: "P" }, packing: { value: "k1", label: "K" }, perShipper: 10, quantity: 5, unitPrice: Number.NaN, discount: 0, fromAgreement: null };
+  const line = { product: { value: "p1", label: "P" }, packing: { value: "k1", label: "K" }, perShipper: 10, shippers: 0, loose: 5, unitPrice: Number.NaN, discount: 0, fromAgreement: null };
   expect(quotationFormSchema.safeParse({ code: "Q-1", validUntil: new Date(), items: [line, line] }).error?.issues[0]?.message).toBe("This product and packing style is already on the quotation");
+});
+
+it("takes orders as shippers and loose packs and totals them in packs", () => {
+  const line = { product: { value: "p1", label: "P" }, packing: { value: "k1", label: "K" }, perShipper: 80, shippers: 25, loose: 10, unitPrice: Number.NaN, discount: 0, fromAgreement: null };
+  const parse = (patch: object) => quotationFormSchema.safeParse({ code: "Q-1", validUntil: new Date(), items: [{ ...line, ...patch }] });
+  expect(orderedPacks(line)).toBe(2010);
+  expect(orderedPacks({ ...line, shippers: Number.NaN })).toBe(10);
+  expect(parse({}).success).toBe(true);
+  expect(parse({ loose: 80 }).error?.issues[0]?.message).toBe("Loose packs must be fewer than 80, a full shipper. Add a shipper instead.");
+  expect(parse({ shippers: 0, loose: 0 }).error?.issues[0]).toMatchObject({ path: ["items", 0, "shippers"], message: "Enter at least one shipper or loose pack" });
+  expect(parse({ shippers: 1.5 }).error?.issues[0]?.message).toBe("Enter a whole number of shippers, 0 or more");
+  // A packing style with no shipper size takes loose packs only.
+  expect(orderedPacks({ ...line, perShipper: 0 })).toBe(10);
 });
 
 const quotation = (status: number, approved: boolean) => ({ id: "q-1", customerId: "c-1", customerName: "Acme Pharmacy", currency: { id: "cur", name: "Ghana cedi", symbol: "GHS" }, code: "QT-7", status, validUntil: "2026-12-31T23:59:59Z", approved, totalValue: 450,
