@@ -115,3 +115,13 @@ it("fails closed on invalid stock amounts and accepts a recorded negative yield 
   expect(recordedPackingSchema.safeParse({ id: "fp", totalQuantityPacked: 98, nUmberOfFullShipperPacked: 9, leftOver: 8,
     numberOfBottlesPerShipper: 10, yieldTotalQuantityPacked: 98, totalGainOrLoss: -2, expectedYield: 100 }).success).toBe(true);
 });
+
+it("turns counted tablets into packs, then shippers, loose packs and leftover tablets", () => {
+  // 80 X 20 X 10: 80 outer cartons per shipper, 200 tablets in each outer carton.
+  const tablets = { category: "tablet" as const, receivedUnit: "kg", packingExpectedYield: 1, packsPerShipper: 80, baseUnitsPerPack: 200 };
+  const figures = yieldFigures({ received: 329, averageFilled: 329, actualPacked: 1_000_150, qcSample: 50, retained: 50, stability: 0 }, tablets);
+  expect(figures).toMatchObject({ expected: 1_000_000, afterSamples: 1_000_050, totalPacked: 5000, fullShippers: 62, leftOver: 40, leftoverUnits: 50, perPack: 200 });
+  // Fewer tablets than one pack: nothing to transfer.
+  expect(yieldFigures({ received: 329, averageFilled: 329, actualPacked: 150, qcSample: 0, retained: 0, stability: 0 }, tablets))
+    .toMatchObject({ totalPacked: 0, fullShippers: 0, leftOver: 0, leftoverUnits: 150 });
+});

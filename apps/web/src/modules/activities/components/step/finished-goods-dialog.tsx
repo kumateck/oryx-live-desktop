@@ -11,6 +11,7 @@ import { formatDateTime, formatMonthYear } from "@/shared/format/dates";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
 import { Skeleton } from "@/shared/skeleton/skeleton";
+import { pluralUnit } from "@/shared/packing/packs";
 import { formatQuantityNumber } from "@/shared/units/quantity";
 import {
   useGetApiV1ProductionScheduleFinalPackingProductByProductionScheduleProductIdQuery, useGetApiV1ProductionScheduleFinishedGoodsTransferNoteBmrByBatchManufacturingRecordIdQuery,
@@ -48,7 +49,9 @@ export function FinishedGoodsDialog({ batchId, stepId, productName, onClose }: {
 
   const form = useForm<TransferFormValues>({ resolver: zodResolver(transferFormSchema) });
   const quantity = useWatch({ control: form.control, name: "quantity" });
-  const unit = record?.packing?.unit?.name ?? "";
+  // Final packing records packs, so transfers count packs too.
+  const packName = record?.packing?.packName ?? null;
+  const unit = packName ? pluralUnit(packName) : "packs";
   const breakdown = shipperBreakdown(typeof quantity === "number" && quantity > 0 ? quantity : totals.remaining, record?.packing?.packsPerShipper ?? null);
   const columns = useMemo(() => column.columns([
     column.accessor((note) => note.number ?? "–", { id: "number", header: "Note" }),

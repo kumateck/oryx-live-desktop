@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { packingLayout, shipperSplit } from "@/shared/packing/packs";
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const num = z.number().nullish().transform((value) => value !== null && value !== undefined && Number.isFinite(value) ? value : null);
@@ -7,7 +8,8 @@ const num = z.number().nullish().transform((value) => value !== null && value !=
 const planBatch = z.object({
   cancelled: z.boolean().nullish(), batchSize: z.number().nullish(),
   product: z.object({ id: z.string().nullish(), name: text, code: text, price: num, priceUoM: text }).nullish(),
-  productPacking: z.object({ id: z.string().nullish(), name: text, expectedYield: num, packPerShipper: num }).nullish(),
+  productPacking: z.object({ id: z.string().nullish(), name: text, expectedYield: num, packPerShipper: num,
+    packingLists: z.array(z.object({ quantity: z.number().nullish(), order: z.number().nullish() })).nullish() }).nullish(),
   marketType: z.object({ id: z.string().nullish(), name: text }).nullish(),
 });
 export const planScheduleSchema = z.object({
@@ -23,9 +25,11 @@ export interface MonthlyPlanRow {
   /** A half batch counts as half. */
   batches: number;
   unitPrice: number | null; priceUoM: string | null;
-  /** Packs expected from the batches, from the packing style's expected yield per batch. */
+  /** Base units (tablets, bottles…) expected from the batches, from the packing style's expected yield per batch. */
   expectedYield: number;
-  /** Null when the packing style does not say how many packs go in a shipper. */
+  /** The expected yield as whole packs. Null when the packing style's units do not say how many base units fill a pack. */
+  packs: number | null;
+  /** Null when packs cannot be worked out or the packing style does not say how many packs go in a shipper. */
   shippers: number | null; loose: number | null;
 }
 
@@ -46,7 +50,7 @@ export function shiftMonth(month: Date, by: number): Date {
  */
 export function buildMonthlyPlan(schedules: readonly PlanSchedule[], month: Date): MonthlyPlanRow[] {
   const { start, end } = monthRange(month);
-  const groups = new Map<string, Omit<MonthlyPlanRow, "shippers" | "loose"> & { perShipper: number | null }>();
+  const groups = new Map<string, Omit<MonthlyPlanRow, "packs" | "shippers" | "loose"> & { perShipper: number | null; perPack: number | null }>();
   for (const schedule of schedules) {
     const from = schedule.scheduledStartTime ? Date.parse(schedule.scheduledStartTime) : Number.NaN;
     const to = schedule.scheduledEndTime ? Date.parse(schedule.scheduledEndTime) : Number.NaN;
@@ -61,16 +65,19 @@ export function buildMonthlyPlan(schedules: readonly PlanSchedule[], month: Date
         key, market, productId, productName: batch.product?.name ?? "Unnamed product", productCode: batch.product?.code ?? null,
         packingStyle: batch.productPacking?.name ?? "No packing style", batches: 0, unitPrice: batch.product?.price ?? null,
         priceUoM: batch.product?.priceUoM ?? null, expectedYield: 0, perShipper: batch.productPacking?.packPerShipper ?? null,
+        perPack: batch.productPacking ? packingLayout(batch.productPacking).baseUnitsPerPack : null,
       };
       row.batches += share;
       row.expectedYield += share * (batch.productPacking?.expectedYield ?? 0);
       groups.set(key, row);
     }
   }
-  return [...groups.values()].map(({ perShipper, ...row }) => {
+  return [...groups.values()].map(({ perShipper, perPack, ...row }) => {
     const expectedYield = Math.round(row.expectedYield);
-    const shippers = perShipper && perShipper > 0 ? Math.floor(expectedYield / perShipper) : null;
-    return { ...row, expectedYield, shippers, loose: shippers === null || !perShipper ? null : expectedYield - shippers * perShipper };
+    // Expected yield counts tablets or bottles; shippers hold packs, so turn it into whole packs first.
+    const packs = perPack ? Math.floor(expectedYield / perPack) : null;
+    const split = packs !== null && perShipper && perShipper > 0 ? shipperSplit(packs, perShipper) : null;
+    return { ...row, expectedYield, packs, shippers: split?.shippers ?? null, loose: split?.loose ?? null };
   }).sort((a, b) => marketOrder(a.market, b.market) || a.productName.localeCompare(b.productName) || a.packingStyle.localeCompare(b.packingStyle));
 }
 
@@ -94,14 +101,16 @@ export function groupByMarket(rows: readonly MonthlyPlanRow[]): MarketGroup[] {
   return groups;
 }
 
-export interface PlanTotals { batches: number; expectedYield: number; shippers: number | null; loose: number | null }
+export interface PlanTotals { batches: number; expectedYield: number; packs: number | null; shippers: number | null; loose: number | null }
 
 /** Totals for the plan. Shippers and loose packs are only added up when every row has them, so a total is never partial. */
 export function planTotals(rows: readonly MonthlyPlanRow[]): PlanTotals {
   const complete = rows.length > 0 && rows.every((row) => row.shippers !== null);
+  const packed = rows.length > 0 && rows.every((row) => row.packs !== null);
   return {
     batches: rows.reduce((sum, row) => sum + row.batches, 0),
     expectedYield: rows.reduce((sum, row) => sum + row.expectedYield, 0),
+    packs: packed ? rows.reduce((sum, row) => sum + (row.packs ?? 0), 0) : null,
     shippers: complete ? rows.reduce((sum, row) => sum + (row.shippers ?? 0), 0) : null,
     loose: complete ? rows.reduce((sum, row) => sum + (row.loose ?? 0), 0) : null,
   };

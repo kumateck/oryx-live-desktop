@@ -9,6 +9,7 @@ import {
   usePostApiV1ProductionScheduleFinalPackingMutation, usePostApiV1ProductionScheduleReturnAfterProductionMutation,
   useGetApiV1ProductionScheduleActivityByProductionActivityIdQuery,
 } from "../api/activity-api";
+import { unitsMismatch } from "../lib/pack-messages";
 import { finalPackingRequest, materialRequests, packingMaterials, packingProblem, packCategory, returnedMaterials, yieldFigures, yieldTerms, type MaterialEntry, type YieldFigures, type YieldInputs } from "../lib/final-packing";
 import { activityAudit } from "../lib/activity-access";
 import { activitySchema, extraMaterialsSchema, type Activity } from "../schemas/activity-schema";
@@ -88,6 +89,7 @@ export function useFinalPacking(batchId: string, activity: Activity) {
     const denied = permission.check();
     if (denied || error) { setMessage(denied ?? error ?? "Packing data could not be verified."); return false; }
     if (!source?.packing?.packsPerShipper) { setMessage("The packing style must have a valid number of packs per shipper."); return false; }
+    if (source.packing.baseUnitsPerPack === null) { setMessage(unitsMismatch(source.packing.packsPerShipper)); return false; }
     const productUnit = source.product.unit ?? activity.batch.unit;
     const category = packCategory(source.packing.unitName, { categoryName: source.product.categoryName, unit: productUnit });
     if (!category) { setMessage("The packing category is missing or unsupported. Correct the packing style before saving."); return false; }
@@ -95,7 +97,7 @@ export function useFinalPacking(batchId: string, activity: Activity) {
     const inputs = category === "syrup" ? { ...input.inputs, received: null, averageFilled: source.product.compositionVolume } : input.inputs;
     const batchSize = category === "syrup" ? fromSmallestUnit(source.product.fullBatchSize ?? 0, "L") : source.packing.expectedYield;
     const figures = yieldFigures(inputs, { category, receivedUnit: yieldTerms(category, productUnit).receivedUnit,
-      packingExpectedYield: source.packing.expectedYield, packsPerShipper: source.packing.packsPerShipper });
+      packingExpectedYield: source.packing.expectedYield, packsPerShipper: source.packing.packsPerShipper, baseUnitsPerPack: source.packing.baseUnitsPerPack });
     const problem = packingProblem({ ...input, inputs, batchSize, category, figures, packsPerShipper: source.packing.packsPerShipper, materials, unitIds });
     if (problem) { setMessage(problem); return false; }
     busy.current = true;
