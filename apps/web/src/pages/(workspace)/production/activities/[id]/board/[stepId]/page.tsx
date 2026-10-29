@@ -7,7 +7,7 @@ import { batchBoardPath } from "@/modules/activities/lib/activity-access";
 import { PageHeader } from "@/shared/navigation/page-header";
 
 function StepPage({ id, stepId }: { id: string; stepId: string }) {
-  // The run already carries every step, so the step page asks for nothing the board has not loaded.
+  // The run carries step identity and status; its selected detail reads action evidence separately.
   const state = useActivity(id);
   const step = state.activity?.steps.find((item) => item.id === stepId) ?? null;
   const batch = state.activity?.batch;

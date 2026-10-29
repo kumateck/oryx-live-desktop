@@ -55663,6 +55663,115 @@
         }
       }
     },
+    "/api/v1/production-schedule/activity/{activityId}/step/{stepId}/records": {
+      "get": {
+        "tags": [
+          "ProductionSchedule"
+        ],
+        "summary": "Read action evidence for a selected step, including completed production.",
+        "operationId": "GetProductionStepRecords",
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Products.Production.ProductionStepRecordsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Products.Production.ProductionStepRecordsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Products.Production.ProductionStepRecordsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/production-schedule": {
       "post": {
         "tags": [
@@ -145864,6 +145973,149 @@
           },
           "workCenter": {
             "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Products.Production.ProductionStepAnalysisDto": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.AnalyticalTestRequests.AnalyticalTestRequestDto"
+          },
+          "chemicalArdId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "microbialArdId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "microbialRequired": {
+            "type": "boolean"
+          },
+          "testedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "testedBy": {
+            "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Products.Production.ProductionStepExtraMaterialDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "material": {
+            "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "issuedBy": {
+            "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Products.Production.ProductionStepRecordsDto": {
+        "type": "object",
+        "properties": {
+          "stepId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productionScheduleProductId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "analyticalTests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Products.Production.ProductionStepAnalysisDto"
+            },
+            "nullable": true
+          },
+          "batchRecords": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Products.Production.BatchManufacturingRecordDto"
+            },
+            "nullable": true
+          },
+          "requisitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.RequisitionDto"
+            },
+            "nullable": true
+          },
+          "extraMaterialRequests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Products.Production.ProductionStepExtraMaterialDto"
+            },
+            "nullable": true
+          },
+          "finalPackings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.ProductionSchedules.Packing.FinalPackingDto"
+            },
+            "nullable": true
+          },
+          "transfers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.FinishedGoodsTransferNoteDto"
+            },
+            "nullable": true
+          },
+          "materialReturns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialReturnNoteDto"
+            },
+            "nullable": true
+          },
+          "batchScopedRecordIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false

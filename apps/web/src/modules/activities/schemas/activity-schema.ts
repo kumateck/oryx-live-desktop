@@ -79,7 +79,8 @@ export type BoardColumn = z.infer<typeof activityBoardSchema>[number];
 export type BoardCard = BoardColumn["cards"][number];
 
 const status = z.object({ status: z.number().nullish(), code: text }).nullish();
-export const requisitionStateSchema = status.transform((value) => value ? { status: value.status ?? 0, code: value.code } : null);
+const requisitionState = z.object({ status: z.number().nullish(), code: text, productionActivityStepId: z.string().nullish() }).nullish();
+export const requisitionStateSchema = requisitionState.transform((value) => value ? { status: value.status ?? 0, code: value.code, stepId: value.productionActivityStepId ?? null } : null);
 export const bmrStateSchema = z.object({ id: z.string().nullish(), status: z.number().nullish(), batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish() }).nullish()
   .transform((value) => value ? { id: value.id ?? null, status: value.status ?? 0, batchNumber: value.batchNumber, manufacturingDate: value.manufacturingDate ?? null, expiryDate: value.expiryDate ?? null } : null);
 export type BatchRecord = NonNullable<z.infer<typeof bmrStateSchema>>;

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { strToU8, zipSync } from "fflate";
 import { afterEach, expect, it, vi } from "vitest";
 import { AttachmentOpener } from "./attachment-opener";
 
@@ -11,7 +12,7 @@ function objectUrls() { vi.stubGlobal("URL", class extends URL { static override
 
 it("previews a selected local file and releases its object URL when closed", async () => {
   objectUrls();
-  render(<AttachmentOpener file={{ id: "local", name: "evidence.png", link: null, blob: new File(["image"], "evidence.png") }} />);
+  render(<AttachmentOpener file={{ id: "local", name: "evidence.png", link: null, blob: new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], "evidence.png") }} />);
   await userEvent.click(screen.getByRole("button", { name: "evidence.png" }));
   expect(await screen.findByRole("img", { name: "evidence.png" })).toBeTruthy();
   expect(screen.getByRole("img", { name: "evidence.png" }).getAttribute("src")).toBe("blob:owned-preview");
@@ -45,11 +46,11 @@ it("shows an authorized-read error and allows another attempt", async () => {
 
 it("opens a protected result without leaking its source URL into record links", async () => {
   objectUrls();
-  const read = vi.fn(async () => new Blob(["archive"]));
+  const read = vi.fn(async () => new Blob([zipSync({ "notes.txt": strToU8("inside") }) as BlobPart]));
   render(<AttachmentOpener file={{ id: "protected", name: "archive.zip", link: null, read }} />);
   await act(async () => { await userEvent.click(screen.getByRole("button", { name: "archive.zip" })); });
   expect(await screen.findByRole("dialog", { name: "archive.zip" })).toBeTruthy();
-  expect(screen.getByRole("alert").textContent).toContain("This file format is not supported by the viewer yet");
+  expect((await screen.findByRole("alert")).textContent).toContain("Compressed archives cannot be opened in the app");
   expect(read).toHaveBeenCalledTimes(1);
 });
 

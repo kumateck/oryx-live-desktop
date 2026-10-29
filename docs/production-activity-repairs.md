@@ -124,6 +124,62 @@ that no ATR or downstream evidence has used it, and prepare a separately reviewe
 audited compensating change. Do not delete the audit or restore an entire old row
 over newer production activity.
 
+## Run on the production server with Docker
+
+The production host does not need Bun or this repository. Export standalone SQL
+on a development workstation, copy the resulting private directory to the server,
+and run it through `psql` inside the existing PostgreSQL container. Export never
+connects to a database and does not copy passwords or application configuration.
+
+```sh
+bun scripts/repairs/production-atr/export.ts /path/to/new-output-directory repair \
+  --host production-docker --port 5432 --database "$PRODUCTION_DATABASE" \
+  ...the reviewed repair identity, operator and stage options...
+```
+
+Use `inspect` instead of `repair` to export only read-only inspection before
+selecting a repair. Repair export creates `inspect.sql`, `preview.sql` and
+`apply.sql`. Do not supply `--apply` during export: the two repair files already
+have separate explicit modes. The exporter refuses an existing output directory.
+The host/port settings inside exported SQL are descriptive; Docker/psql chooses
+the actual connection. The SQL validates the database name and record identities.
+
+Confirm the production database name, operator and product identities independently.
+The earlier run against `164.90.142.68:5433/entrancedb` only establishes what was
+changed on that configured endpoint; it does not prove the identity of another
+production deployment. The user has identified production API container
+`oryx-erp-api-demo`, database `entrancedb`, database user `root`. The API container
+is not the PostgreSQL container.
+
+Copy the generated directory using your normal SSH route, for example:
+
+```sh
+scp -r /path/to/new-output-directory adorablegigi@chipsoftgh:~/oryx-atr-repair
+```
+
+On the server, identify the **PostgreSQL** container, then inspect and preview:
+
+```sh
+sudo docker ps --format 'table {{.Names}}\t{{.Image}}'
+DB_CONTAINER='actual-postgresql-container-name'
+cd ~/oryx-atr-repair
+sudo docker exec -i "$DB_CONTAINER" psql -X -w -U root -d entrancedb -v ON_ERROR_STOP=1 < inspect.sql
+sudo docker exec -i "$DB_CONTAINER" psql -X -w -U root -d entrancedb -v ON_ERROR_STOP=1 < preview.sql
+```
+
+After the preview succeeds and the selected rows are reviewed, apply and inspect:
+
+```sh
+sudo docker exec -i "$DB_CONTAINER" psql -X -w -U root -d entrancedb -v ON_ERROR_STOP=1 < apply.sql
+sudo docker exec -i "$DB_CONTAINER" psql -X -w -U root -d entrancedb -v ON_ERROR_STOP=1 < inspect.sql
+```
+
+Use `-i` without `-t` so input redirection works. These commands use the database
+container's local socket and authentication policy. If password authentication is
+required, provide the existing credentials through the container's normal libpq
+configuration or securely supplied environment; do not weaken `pg_hba.conf` or
+print the API connection string. Do not run apply after a failed preview.
+
 ## Local verification
 
 ```sh

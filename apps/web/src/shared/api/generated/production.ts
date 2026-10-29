@@ -380,6 +380,19 @@ const injectedRtkApi = api.injectEndpoints({
           },
         }),
       }),
+    getProductionStepRecords: build.query<
+      GetProductionStepRecordsApiResponse,
+      GetProductionStepRecordsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/activity", id: queryArg.activityId }],
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/step/${queryArg.stepId}/records`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     postApiV1ProductionSchedule: build.mutation<
       PostApiV1ProductionScheduleApiResponse,
       PostApiV1ProductionScheduleApiArg
@@ -1885,6 +1898,16 @@ export type PostApiV1ProductionOrdersWaybillByAllocateProductionOrderIdCustomerA
     /** The sub module this request falls under */
     subModule?: string;
   };
+export type GetProductionStepRecordsApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionStepRecordsDtoRead;
+export type GetProductionStepRecordsApiArg = {
+  activityId: string;
+  stepId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type PostApiV1ProductionScheduleApiResponse =
   /** status 201 Created */ string;
 export type PostApiV1ProductionScheduleApiArg = {
@@ -3458,56 +3481,47 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
-export type DomainEntitiesProductionSchedulesCreateProductionScheduleProduct = {
-  productId?: string;
-  marketTypeId?: string | null;
-  quantity?: number;
-  batchSize?: DomainEntitiesProductionSchedulesBatchSize;
-  productPackingId?: string | null;
-};
-export type DomainEntitiesProductionSchedulesCreateProductionScheduleRequest = {
-  code?: string | null;
-  scheduledStartTime?: string;
-  scheduledEndTime?: string;
-  products?:
-    DomainEntitiesProductionSchedulesCreateProductionScheduleProduct[] | null;
-  remarks?: string | null;
-};
-export type DomainEntitiesProductionSchedulesProductionScheduleDto = {
+export type DomainEntitiesAnalyticalTestRequestsAnalyticalTestStatus =
+  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
   createdAt?: string;
-  code?: string | null;
-  scheduledStartTime?: string;
-  scheduledEndTime?: string;
-  status?: DomainEntitiesBaseProductionStatus;
-  remarks?: string | null;
-  products?:
-    DomainEntitiesProductionSchedulesProductionScheduleProductDto[] | null;
+  batchManufacturingRecord?: DomainEntitiesProductsProductionBatchManufacturingRecordDto;
+  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
+  productionActivityStep?: DomainEntitiesProductsProductionProductionActivityStepDto;
+  manufacturingDate?: string;
+  expiryDate?: string;
+  filled?: string | null;
+  releasedAt?: string | null;
+  sampledQuantity?: string | null;
+  stage?: DomainEntitiesAnalyticalTestRequestsTestStage;
+  state?: SharedCollectionItemDto;
+  status?: DomainEntitiesAnalyticalTestRequestsAnalyticalTestStatus;
+  numberOfContainers?: number;
+  sampledBy?: DomainEntitiesUsersUserDto;
+  releasedBy?: DomainEntitiesUsersUserDto;
+  sampledAt?: string | null;
+  acknowledgedBy?: DomainEntitiesUsersUserDto;
+  acknowledgedAt?: string | null;
+  assignedAt?: string | null;
+  arNumber?: string | null;
+  assignees?: DomainEntitiesUsersUserDto[] | null;
+  issueNumber?: string | null;
+  issuedAt?: string | null;
+  issuedBy?: DomainEntitiesUsersUserDto;
+  isRetest?: boolean;
 };
-export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesProductionSchedulesProductionScheduleDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
-  {
-    data?: DomainEntitiesProductionSchedulesProductionScheduleDto[] | null;
-    pageIndex?: number;
-    pageCount?: number;
-    totalRecordCount?: number;
-    numberOfPagesToShow?: number;
-    startPageIndex?: number;
-    stopPageIndex?: number;
-  };
-export type DomainEntitiesProductionSchedulesUpdateProductionScheduleRequest = {
-  scheduledStartTime?: string;
-  scheduledEndTime?: string;
-  remarks?: string | null;
+export type DomainEntitiesProductsProductionProductionStepAnalysisDto = {
+  request?: DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto;
+  chemicalArdId?: string | null;
+  microbialArdId?: string | null;
+  microbialRequired?: boolean;
+  testedAt?: string | null;
+  testedBy?: SharedCollectionItemDto;
 };
-export type DomainEntitiesProductionSchedulesAddProductsToScheduleRequest = {
-  products?:
-    DomainEntitiesProductionSchedulesCreateProductionScheduleProduct[] | null;
-};
-export type SharedRequestsTypeResponse = {
-  value?: number;
-  name?: string | null;
-};
+export type DomainEntitiesRequisitionsRequisitionType = 0 | 1 | 2;
+export type DomainEntitiesRequisitionsRequestStatus = 0 | 1 | 2 | 3 | 4;
 export type DomainEntitiesMaterialsMaterialKind = 0 | 1;
 export type DomainEntitiesMaterialsMaterialCategoryDto = {
   id?: string;
@@ -3573,6 +3587,574 @@ export type DomainEntitiesMaterialsMaterialDto = {
   suppliers?: DomainEntitiesProcurementSuppliersSupplierListDto[] | null;
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
+};
+export type DomainEntitiesBasePackageStyleDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  name?: string | null;
+  description?: string | null;
+};
+export type DomainEntitiesMaterialsBatchBatchStatus =
+  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+export type DomainEntitiesProcurementManufacturersQuantityType = 0 | 1 | 2;
+export type DomainEntitiesProcurementManufacturersQuantityPerPackOption = {
+  type?: DomainEntitiesProcurementManufacturersQuantityType;
+  min?: number | null;
+  max?: number | null;
+  values?: number[] | null;
+};
+export type DomainEntitiesProcurementManufacturersManufacturerMaterialDto = {
+  material?: DomainEntitiesMaterialsMaterialDto;
+  quantityType?: DomainEntitiesProcurementManufacturersQuantityType;
+  quantityPerPackOption?: DomainEntitiesProcurementManufacturersQuantityPerPackOption;
+};
+export type DomainEntitiesProcurementManufacturersManufacturerDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  name?: string | null;
+  address?: string | null;
+  email?: string | null;
+  approvedAt?: string | null;
+  validityDate?: string | null;
+  country?: DomainEntitiesCountriesCountryDto;
+  materials?:
+    DomainEntitiesProcurementManufacturersManufacturerMaterialDto[] | null;
+};
+export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
+  manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
+  material?: DomainEntitiesMaterialsMaterialDto;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  purchaseUnit?: string | null;
+  pendingPurchaseUnit?: string | null;
+  default?: boolean;
+};
+export type DomainEntitiesProcurementSuppliersSupplierDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  name?: string | null;
+  email?: string | null;
+  address?: string | null;
+  contactPerson?: string | null;
+  contactNumber?: string | null;
+  country?: DomainEntitiesCountriesCountryDto;
+  currency?: DomainEntitiesCurrenciesCurrencyDto;
+  type?: DomainEntitiesProcurementSuppliersSupplierType;
+  status?: DomainEntitiesProcurementSuppliersSupplierStatus;
+  approvedAt?: string | null;
+  requalificationDueDate?: string | null;
+  associatedManufacturers?:
+    DomainEntitiesProcurementSuppliersSupplierManufacturerDto[] | null;
+};
+export type DomainEntitiesShipmentsShipmentInvoiceItemDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  material?: DomainEntitiesMaterialsMaterialDto;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  manufacturer?: SharedCollectionItemDto;
+  purchaseOrder?: SharedCollectionItemDto;
+  expectedQuantity?: number;
+  receivedQuantity?: number;
+  price?: number;
+  priceUoM?: string | null;
+  totalCost?: number;
+  currency?: DomainEntitiesCurrenciesCurrencyDto;
+  reason?: string | null;
+  fulfillsDiscrepancyItemId?: string | null;
+};
+export type DomainEntitiesShipmentsShipmentInvoiceKind = 0 | 1;
+export type DomainEntitiesShipmentsShipmentInvoiceDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  code?: string | null;
+  supplier?: DomainEntitiesProcurementSuppliersSupplierDto;
+  items?: DomainEntitiesShipmentsShipmentInvoiceItemDto[] | null;
+  totalCost?: number;
+  currency?: DomainEntitiesCurrenciesCurrencyDto;
+  paidAt?: string | null;
+  dueDate?: string | null;
+  amountPaid?: number;
+  outstandingBalance?: number;
+  isUsed?: boolean;
+  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
+};
+export type DomainEntitiesChecklistsIntactness = 0 | 1;
+export type DomainEntitiesChecklistsConsignmentCarrier = 0 | 1 | 2 | 3 | 4 | 5;
+export type DomainEntitiesChecklistsMaterialBatchChecklistDto = {
+  checkedAt?: string | null;
+  shipmentInvoice?: DomainEntitiesShipmentsShipmentInvoiceDto;
+  supplier?: DomainEntitiesProcurementSuppliersSupplierDto;
+  manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
+  certificateOfAnalysisDelivered?: boolean;
+  visibleLabelling?: boolean;
+  intactnessStatus?: DomainEntitiesChecklistsIntactness;
+  consignmentCarrierStatus?: DomainEntitiesChecklistsConsignmentCarrier;
+};
+export type DomainEntitiesMaterialsBatchMaterialBatchListDto = {
+  id?: string;
+  material?: SharedCollectionItemDto;
+  batchNumber?: string | null;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  numberOfContainers?: number;
+  containerPackageStyle?: DomainEntitiesBasePackageStyleDto;
+  quantityPerContainer?: number;
+  status?: DomainEntitiesMaterialsBatchBatchStatus;
+  dateReceived?: string;
+  dateApproved?: string | null;
+  quantityAssigned?: number;
+  quantityUnassigned?: number;
+  totalQuantity?: number;
+  consumedQuantity?: number;
+  remainingQuantity?: number;
+  sampledQuantity?: number;
+  quantityDistributed?: number;
+  expiryDate?: string | null;
+  manufacturingDate?: string | null;
+  retestDate?: string | null;
+  checklist?: DomainEntitiesChecklistsMaterialBatchChecklistDto;
+  returnDate?: string | null;
+  issueNumber?: string | null;
+  supplierName?: string | null;
+  manufacturerName?: string | null;
+  arNumber?: string | null;
+  sampledBy?: string | null;
+  sampledOn?: string | null;
+  sampleQuantity?: number;
+  analysedBy?: string | null;
+  analysedDate?: string | null;
+  issuedBy?: SharedCollectionItemDto;
+  issuedAt?: string | null;
+};
+export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
+  id?: string;
+  material?: SharedCollectionItemDto;
+  batchNumber?: string | null;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  numberOfContainers?: number;
+  containerPackageStyle?: DomainEntitiesBasePackageStyleDto;
+  quantityPerContainer?: number;
+  status?: DomainEntitiesMaterialsBatchBatchStatus;
+  dateReceived?: string;
+  dateApproved?: string | null;
+  quantityAssigned?: number;
+  quantityUnassigned?: number;
+  totalQuantity?: number;
+  consumedQuantity?: number;
+  remainingQuantity?: number;
+  sampledQuantity?: number;
+  quantityDistributed?: number;
+  expiryDate?: string | null;
+  manufacturingDate?: string | null;
+  retestDate?: string | null;
+  checklist?: DomainEntitiesChecklistsMaterialBatchChecklistDto;
+  aboutToExpire?: boolean;
+  expired?: boolean;
+  returnDate?: string | null;
+  isReturn?: boolean;
+  issueNumber?: string | null;
+  supplierName?: string | null;
+  manufacturerName?: string | null;
+  arNumber?: string | null;
+  sampledBy?: string | null;
+  sampledOn?: string | null;
+  sampleQuantity?: number;
+  analysedBy?: string | null;
+  analysedDate?: string | null;
+  issuedBy?: SharedCollectionItemDto;
+  issuedAt?: string | null;
+};
+export type DomainEntitiesMaterialsBatchBatchToSupply = {
+  batch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
+  quantityToTake?: number;
+  warehouseLocationShelfId?: string | null;
+};
+export type DomainEntitiesMaterialsBatchBatchToSupplyRead = {
+  batch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
+  quantityToTake?: number;
+  warehouseLocationShelfId?: string | null;
+};
+export type DomainEntitiesRequisitionsRequisitionItemDto = {
+  id?: string;
+  material?: DomainEntitiesMaterialsMaterialDto;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  quantity?: number;
+  quantityReceived?: number;
+  status?: DomainEntitiesRequisitionsRequestStatus;
+  batches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
+};
+export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
+  id?: string;
+  material?: DomainEntitiesMaterialsMaterialDto;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  quantity?: number;
+  quantityReceived?: number;
+  status?: DomainEntitiesRequisitionsRequestStatus;
+  batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
+};
+export type DomainEntitiesRequisitionsRequisitionDto = {
+  id?: string;
+  code?: string | null;
+  requisitionType?: DomainEntitiesRequisitionsRequisitionType;
+  status?: DomainEntitiesRequisitionsRequestStatus;
+  requestedBy?: SharedCollectionItemDto;
+  department?: SharedCollectionItemDto;
+  items?: DomainEntitiesRequisitionsRequisitionItemDto[] | null;
+  approved?: boolean;
+  expectedDelivery?: string | null;
+  createdAt?: string;
+  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
+  comments?: string | null;
+};
+export type DomainEntitiesRequisitionsRequisitionDtoRead = {
+  id?: string;
+  code?: string | null;
+  requisitionType?: DomainEntitiesRequisitionsRequisitionType;
+  status?: DomainEntitiesRequisitionsRequestStatus;
+  requestedBy?: SharedCollectionItemDto;
+  department?: SharedCollectionItemDto;
+  items?: DomainEntitiesRequisitionsRequisitionItemDtoRead[] | null;
+  approved?: boolean;
+  expectedDelivery?: string | null;
+  createdAt?: string;
+  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
+  comments?: string | null;
+};
+export type DomainEntitiesProductsProductionProductionStepExtraMaterialDto = {
+  id?: string;
+  material?: SharedCollectionItemDto;
+  unit?: SharedCollectionItemDto;
+  quantity?: number;
+  status?: number;
+  approved?: boolean;
+  createdAt?: string;
+  createdBy?: SharedCollectionItemDto;
+  issuedAt?: string | null;
+  issuedBy?: SharedCollectionItemDto;
+};
+export type DomainEntitiesProductionSchedulesPackingFinalPackingMaterialDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  material?: DomainEntitiesMaterialsMaterialDto;
+  receivedQuantity?: number;
+  subsequentDeliveredQuantity?: number;
+  totalReceivedQuantity?: number;
+  packedQuantity?: number;
+  returnedQuantity?: number;
+  rejectedQuantity?: number;
+  sampledQuantity?: number;
+  totalAccountedForQuantity?: number;
+  percentageLoss?: number;
+  percentageVarianceDescription?: string | null;
+};
+export type DomainEntitiesProductionSchedulesPackingFinalPackingDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
+  materials?:
+    DomainEntitiesProductionSchedulesPackingFinalPackingMaterialDto[] | null;
+  numberOfBottlesPerShipper?: number;
+  nUmberOfFullShipperPacked?: number;
+  leftOver?: number;
+  batchSize?: number;
+  averageVolumeFilledPerBottle?: number;
+  productPacking?: DomainEntitiesProductsProductPackingDto;
+  expectedYield?: number;
+  totalQuantityPacked?: number;
+  qualityControlAnalyticalSample?: number;
+  retainedSamples?: number;
+  stabilitySamples?: number;
+  totalNumberOfBottles?: number;
+  yieldTotalQuantityPacked?: number;
+  totalGainOrLoss?: number;
+  totalWeightReceived?: number;
+  comment?: string | null;
+  percentageVarianceDescription?: string | null;
+};
+export type DomainEntitiesMaterialsMaterialReturnStatus = 0 | 1;
+export type DomainEntitiesWarehousesWareHouseLocationDto = {
+  id?: string;
+  name?: string | null;
+  floorName?: string | null;
+  description?: string | null;
+  warehouse?: SharedCollectionItemDto;
+};
+export type DomainEntitiesWarehousesWareHouseLocationRackDto = {
+  id?: string;
+  warehouseLocation?: DomainEntitiesWarehousesWareHouseLocationDto;
+  name?: string | null;
+  description?: string | null;
+};
+export type DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto = {
+  id?: string;
+  warehouseLocationRack?: DomainEntitiesWarehousesWareHouseLocationRackDto;
+  code?: string | null;
+  name?: string | null;
+  description?: string | null;
+};
+export type DomainEntitiesMaterialsBatchMaterialBatchReducedDto = {
+  id?: string;
+  material?: DomainEntitiesMaterialsMaterialDto;
+  batchNumber?: string | null;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  numberOfContainers?: number;
+  containerPackageStyle?: DomainEntitiesBasePackageStyleDto;
+  quantityPerContainer?: number;
+  status?: DomainEntitiesMaterialsBatchBatchStatus;
+  dateReceived?: string;
+  dateApproved?: string | null;
+  quantityAssigned?: number;
+  quantityUnassigned?: number;
+  totalQuantity?: number;
+  consumedQuantity?: number;
+  remainingQuantity?: number;
+  sampledQuantity?: number;
+  quantityDistributed?: number;
+  expiryDate?: string | null;
+  manufacturingDate?: string | null;
+  retestDate?: string | null;
+  issueNumber?: string | null;
+  issuedBy?: SharedCollectionItemDto;
+  issuedAt?: string | null;
+  supplierName?: string | null;
+  manufacturerName?: string | null;
+  arNumber?: string | null;
+  sampledBy?: string | null;
+  sampledOn?: string | null;
+  sampleQuantity?: number;
+  analysedBy?: string | null;
+  analysedDate?: string | null;
+};
+export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
+  id?: string;
+  material?: DomainEntitiesMaterialsMaterialDto;
+  batchNumber?: string | null;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  numberOfContainers?: number;
+  containerPackageStyle?: DomainEntitiesBasePackageStyleDto;
+  quantityPerContainer?: number;
+  status?: DomainEntitiesMaterialsBatchBatchStatus;
+  dateReceived?: string;
+  dateApproved?: string | null;
+  quantityAssigned?: number;
+  quantityUnassigned?: number;
+  totalQuantity?: number;
+  consumedQuantity?: number;
+  remainingQuantity?: number;
+  sampledQuantity?: number;
+  quantityDistributed?: number;
+  expiryDate?: string | null;
+  manufacturingDate?: string | null;
+  retestDate?: string | null;
+  aboutToExpire?: boolean;
+  expired?: boolean;
+  issueNumber?: string | null;
+  issuedBy?: SharedCollectionItemDto;
+  issuedAt?: string | null;
+  supplierName?: string | null;
+  manufacturerName?: string | null;
+  arNumber?: string | null;
+  sampledBy?: string | null;
+  sampledOn?: string | null;
+  sampleQuantity?: number;
+  analysedBy?: string | null;
+  analysedDate?: string | null;
+};
+export type DomainEntitiesWarehousesShelfMaterialBatchDto = {
+  id?: string;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
+  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchReducedDto;
+  quantity?: number;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  note?: string | null;
+};
+export type DomainEntitiesWarehousesShelfMaterialBatchDtoRead = {
+  id?: string;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
+  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead;
+  quantity?: number;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  note?: string | null;
+};
+export type DomainEntitiesWarehousesWarehouseLocationShelfDto = {
+  id?: string;
+  warehouseLocationRack?: DomainEntitiesWarehousesWareHouseLocationRackDto;
+  code?: string | null;
+  name?: string | null;
+  description?: string | null;
+  materialBatches?: DomainEntitiesWarehousesShelfMaterialBatchDto[] | null;
+};
+export type DomainEntitiesWarehousesWarehouseLocationShelfDtoRead = {
+  id?: string;
+  warehouseLocationRack?: DomainEntitiesWarehousesWareHouseLocationRackDto;
+  code?: string | null;
+  name?: string | null;
+  description?: string | null;
+  materialBatches?: DomainEntitiesWarehousesShelfMaterialBatchDtoRead[] | null;
+};
+export type DomainEntitiesMaterialsBatchMaterialBatchReservedQuantityDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
+  warehouse?: SharedCollectionItemDto;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  warehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDto;
+  quantity?: number;
+};
+export type DomainEntitiesMaterialsBatchMaterialBatchReservedQuantityDtoRead = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
+  warehouse?: SharedCollectionItemDto;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  warehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDtoRead;
+  quantity?: number;
+};
+export type DomainEntitiesMaterialsMaterialReturnNoteFullReturnDto = {
+  materialBatchReservedQuantity?: DomainEntitiesMaterialsBatchMaterialBatchReservedQuantityDto;
+  destinationWarehouse?: SharedCollectionItemDto;
+  sourceWarehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDto;
+  returned?: boolean;
+};
+export type DomainEntitiesMaterialsMaterialReturnNoteFullReturnDtoRead = {
+  materialBatchReservedQuantity?: DomainEntitiesMaterialsBatchMaterialBatchReservedQuantityDtoRead;
+  destinationWarehouse?: SharedCollectionItemDto;
+  sourceWarehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDtoRead;
+  returned?: boolean;
+};
+export type DomainEntitiesMaterialsMaterialReturnNotePartialReturnDto = {
+  material?: DomainEntitiesMaterialsMaterialDto;
+  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
+  quantity?: number;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  destinationWarehouse?: SharedCollectionItemDto;
+  sourceWarehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDto;
+  returned?: boolean;
+};
+export type DomainEntitiesMaterialsMaterialReturnNotePartialReturnDtoRead = {
+  material?: DomainEntitiesMaterialsMaterialDto;
+  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
+  quantity?: number;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  destinationWarehouse?: SharedCollectionItemDto;
+  sourceWarehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDtoRead;
+  returned?: boolean;
+};
+export type DomainEntitiesMaterialsMaterialReturnNoteDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  returnDate?: string;
+  batchNumber?: string | null;
+  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
+  status?: DomainEntitiesMaterialsMaterialReturnStatus;
+  fullReturns?: DomainEntitiesMaterialsMaterialReturnNoteFullReturnDto[] | null;
+  partialReturns?:
+    DomainEntitiesMaterialsMaterialReturnNotePartialReturnDto[] | null;
+  isFullReturn?: boolean;
+};
+export type DomainEntitiesMaterialsMaterialReturnNoteDtoRead = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  returnDate?: string;
+  batchNumber?: string | null;
+  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
+  status?: DomainEntitiesMaterialsMaterialReturnStatus;
+  fullReturns?:
+    DomainEntitiesMaterialsMaterialReturnNoteFullReturnDtoRead[] | null;
+  partialReturns?:
+    DomainEntitiesMaterialsMaterialReturnNotePartialReturnDtoRead[] | null;
+  isFullReturn?: boolean;
+};
+export type DomainEntitiesProductsProductionProductionStepRecordsDto = {
+  stepId?: string;
+  productionScheduleProductId?: string;
+  analyticalTests?:
+    DomainEntitiesProductsProductionProductionStepAnalysisDto[] | null;
+  batchRecords?:
+    DomainEntitiesProductsProductionBatchManufacturingRecordDto[] | null;
+  requisitions?: DomainEntitiesRequisitionsRequisitionDto[] | null;
+  extraMaterialRequests?:
+    DomainEntitiesProductsProductionProductionStepExtraMaterialDto[] | null;
+  finalPackings?:
+    DomainEntitiesProductionSchedulesPackingFinalPackingDto[] | null;
+  transfers?: DomainEntitiesMaterialsBatchFinishedGoodsTransferNoteDto[] | null;
+  materialReturns?: DomainEntitiesMaterialsMaterialReturnNoteDto[] | null;
+  batchScopedRecordIds?: string[] | null;
+};
+export type DomainEntitiesProductsProductionProductionStepRecordsDtoRead = {
+  stepId?: string;
+  productionScheduleProductId?: string;
+  analyticalTests?:
+    DomainEntitiesProductsProductionProductionStepAnalysisDto[] | null;
+  batchRecords?:
+    DomainEntitiesProductsProductionBatchManufacturingRecordDto[] | null;
+  requisitions?: DomainEntitiesRequisitionsRequisitionDtoRead[] | null;
+  extraMaterialRequests?:
+    DomainEntitiesProductsProductionProductionStepExtraMaterialDto[] | null;
+  finalPackings?:
+    DomainEntitiesProductionSchedulesPackingFinalPackingDto[] | null;
+  transfers?: DomainEntitiesMaterialsBatchFinishedGoodsTransferNoteDto[] | null;
+  materialReturns?: DomainEntitiesMaterialsMaterialReturnNoteDtoRead[] | null;
+  batchScopedRecordIds?: string[] | null;
+};
+export type DomainEntitiesProductionSchedulesCreateProductionScheduleProduct = {
+  productId?: string;
+  marketTypeId?: string | null;
+  quantity?: number;
+  batchSize?: DomainEntitiesProductionSchedulesBatchSize;
+  productPackingId?: string | null;
+};
+export type DomainEntitiesProductionSchedulesCreateProductionScheduleRequest = {
+  code?: string | null;
+  scheduledStartTime?: string;
+  scheduledEndTime?: string;
+  products?:
+    DomainEntitiesProductionSchedulesCreateProductionScheduleProduct[] | null;
+  remarks?: string | null;
+};
+export type DomainEntitiesProductionSchedulesProductionScheduleDto = {
+  id?: string;
+  createdBy?: DomainEntitiesUsersUserDto;
+  createdAt?: string;
+  code?: string | null;
+  scheduledStartTime?: string;
+  scheduledEndTime?: string;
+  status?: DomainEntitiesBaseProductionStatus;
+  remarks?: string | null;
+  products?:
+    DomainEntitiesProductionSchedulesProductionScheduleProductDto[] | null;
+};
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesProductionSchedulesProductionScheduleDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+  {
+    data?: DomainEntitiesProductionSchedulesProductionScheduleDto[] | null;
+    pageIndex?: number;
+    pageCount?: number;
+    totalRecordCount?: number;
+    numberOfPagesToShow?: number;
+    startPageIndex?: number;
+    stopPageIndex?: number;
+  };
+export type DomainEntitiesProductionSchedulesUpdateProductionScheduleRequest = {
+  scheduledStartTime?: string;
+  scheduledEndTime?: string;
+  remarks?: string | null;
+};
+export type DomainEntitiesProductionSchedulesAddProductsToScheduleRequest = {
+  products?:
+    DomainEntitiesProductionSchedulesCreateProductionScheduleProduct[] | null;
+};
+export type SharedRequestsTypeResponse = {
+  value?: number;
+  name?: string | null;
 };
 export type DomainEntitiesProductionSchedulesMaterialRequisitionStatus =
   0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -3861,195 +4443,6 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
-export type DomainEntitiesBasePackageStyleDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  name?: string | null;
-  description?: string | null;
-};
-export type DomainEntitiesMaterialsBatchBatchStatus =
-  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
-export type DomainEntitiesProcurementManufacturersQuantityType = 0 | 1 | 2;
-export type DomainEntitiesProcurementManufacturersQuantityPerPackOption = {
-  type?: DomainEntitiesProcurementManufacturersQuantityType;
-  min?: number | null;
-  max?: number | null;
-  values?: number[] | null;
-};
-export type DomainEntitiesProcurementManufacturersManufacturerMaterialDto = {
-  material?: DomainEntitiesMaterialsMaterialDto;
-  quantityType?: DomainEntitiesProcurementManufacturersQuantityType;
-  quantityPerPackOption?: DomainEntitiesProcurementManufacturersQuantityPerPackOption;
-};
-export type DomainEntitiesProcurementManufacturersManufacturerDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  name?: string | null;
-  address?: string | null;
-  email?: string | null;
-  approvedAt?: string | null;
-  validityDate?: string | null;
-  country?: DomainEntitiesCountriesCountryDto;
-  materials?:
-    DomainEntitiesProcurementManufacturersManufacturerMaterialDto[] | null;
-};
-export type DomainEntitiesProcurementSuppliersSupplierManufacturerDto = {
-  manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
-  material?: DomainEntitiesMaterialsMaterialDto;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  purchaseUnit?: string | null;
-  pendingPurchaseUnit?: string | null;
-  default?: boolean;
-};
-export type DomainEntitiesProcurementSuppliersSupplierDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  name?: string | null;
-  email?: string | null;
-  address?: string | null;
-  contactPerson?: string | null;
-  contactNumber?: string | null;
-  country?: DomainEntitiesCountriesCountryDto;
-  currency?: DomainEntitiesCurrenciesCurrencyDto;
-  type?: DomainEntitiesProcurementSuppliersSupplierType;
-  status?: DomainEntitiesProcurementSuppliersSupplierStatus;
-  approvedAt?: string | null;
-  requalificationDueDate?: string | null;
-  associatedManufacturers?:
-    DomainEntitiesProcurementSuppliersSupplierManufacturerDto[] | null;
-};
-export type DomainEntitiesShipmentsShipmentInvoiceItemDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  material?: DomainEntitiesMaterialsMaterialDto;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  manufacturer?: SharedCollectionItemDto;
-  purchaseOrder?: SharedCollectionItemDto;
-  expectedQuantity?: number;
-  receivedQuantity?: number;
-  price?: number;
-  priceUoM?: string | null;
-  totalCost?: number;
-  currency?: DomainEntitiesCurrenciesCurrencyDto;
-  reason?: string | null;
-  fulfillsDiscrepancyItemId?: string | null;
-};
-export type DomainEntitiesShipmentsShipmentInvoiceKind = 0 | 1;
-export type DomainEntitiesShipmentsShipmentInvoiceDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  code?: string | null;
-  supplier?: DomainEntitiesProcurementSuppliersSupplierDto;
-  items?: DomainEntitiesShipmentsShipmentInvoiceItemDto[] | null;
-  totalCost?: number;
-  currency?: DomainEntitiesCurrenciesCurrencyDto;
-  paidAt?: string | null;
-  dueDate?: string | null;
-  amountPaid?: number;
-  outstandingBalance?: number;
-  isUsed?: boolean;
-  kind?: DomainEntitiesShipmentsShipmentInvoiceKind;
-};
-export type DomainEntitiesChecklistsIntactness = 0 | 1;
-export type DomainEntitiesChecklistsConsignmentCarrier = 0 | 1 | 2 | 3 | 4 | 5;
-export type DomainEntitiesChecklistsMaterialBatchChecklistDto = {
-  checkedAt?: string | null;
-  shipmentInvoice?: DomainEntitiesShipmentsShipmentInvoiceDto;
-  supplier?: DomainEntitiesProcurementSuppliersSupplierDto;
-  manufacturer?: DomainEntitiesProcurementManufacturersManufacturerDto;
-  certificateOfAnalysisDelivered?: boolean;
-  visibleLabelling?: boolean;
-  intactnessStatus?: DomainEntitiesChecklistsIntactness;
-  consignmentCarrierStatus?: DomainEntitiesChecklistsConsignmentCarrier;
-};
-export type DomainEntitiesMaterialsBatchMaterialBatchListDto = {
-  id?: string;
-  material?: SharedCollectionItemDto;
-  batchNumber?: string | null;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  numberOfContainers?: number;
-  containerPackageStyle?: DomainEntitiesBasePackageStyleDto;
-  quantityPerContainer?: number;
-  status?: DomainEntitiesMaterialsBatchBatchStatus;
-  dateReceived?: string;
-  dateApproved?: string | null;
-  quantityAssigned?: number;
-  quantityUnassigned?: number;
-  totalQuantity?: number;
-  consumedQuantity?: number;
-  remainingQuantity?: number;
-  sampledQuantity?: number;
-  quantityDistributed?: number;
-  expiryDate?: string | null;
-  manufacturingDate?: string | null;
-  retestDate?: string | null;
-  checklist?: DomainEntitiesChecklistsMaterialBatchChecklistDto;
-  returnDate?: string | null;
-  issueNumber?: string | null;
-  supplierName?: string | null;
-  manufacturerName?: string | null;
-  arNumber?: string | null;
-  sampledBy?: string | null;
-  sampledOn?: string | null;
-  sampleQuantity?: number;
-  analysedBy?: string | null;
-  analysedDate?: string | null;
-  issuedBy?: SharedCollectionItemDto;
-  issuedAt?: string | null;
-};
-export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
-  id?: string;
-  material?: SharedCollectionItemDto;
-  batchNumber?: string | null;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  numberOfContainers?: number;
-  containerPackageStyle?: DomainEntitiesBasePackageStyleDto;
-  quantityPerContainer?: number;
-  status?: DomainEntitiesMaterialsBatchBatchStatus;
-  dateReceived?: string;
-  dateApproved?: string | null;
-  quantityAssigned?: number;
-  quantityUnassigned?: number;
-  totalQuantity?: number;
-  consumedQuantity?: number;
-  remainingQuantity?: number;
-  sampledQuantity?: number;
-  quantityDistributed?: number;
-  expiryDate?: string | null;
-  manufacturingDate?: string | null;
-  retestDate?: string | null;
-  checklist?: DomainEntitiesChecklistsMaterialBatchChecklistDto;
-  aboutToExpire?: boolean;
-  expired?: boolean;
-  returnDate?: string | null;
-  isReturn?: boolean;
-  issueNumber?: string | null;
-  supplierName?: string | null;
-  manufacturerName?: string | null;
-  arNumber?: string | null;
-  sampledBy?: string | null;
-  sampledOn?: string | null;
-  sampleQuantity?: number;
-  analysedBy?: string | null;
-  analysedDate?: string | null;
-  issuedBy?: SharedCollectionItemDto;
-  issuedAt?: string | null;
-};
-export type DomainEntitiesMaterialsBatchBatchToSupply = {
-  batch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
-  quantityToTake?: number;
-  warehouseLocationShelfId?: string | null;
-};
-export type DomainEntitiesMaterialsBatchBatchToSupplyRead = {
-  batch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
-  quantityToTake?: number;
-  warehouseLocationShelfId?: string | null;
-};
 export type DomainEntitiesProductionSchedulesStockTransfersRequestBatchTransferRequest =
   {
     batchId?: string;
@@ -4090,47 +4483,6 @@ export type DomainEntitiesProductionSchedulesPackingCreateFinalPacking = {
   totalWeightReceived?: number;
   percentageVarianceDescription?: string | null;
 };
-export type DomainEntitiesProductionSchedulesPackingFinalPackingMaterialDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  material?: DomainEntitiesMaterialsMaterialDto;
-  receivedQuantity?: number;
-  subsequentDeliveredQuantity?: number;
-  totalReceivedQuantity?: number;
-  packedQuantity?: number;
-  returnedQuantity?: number;
-  rejectedQuantity?: number;
-  sampledQuantity?: number;
-  totalAccountedForQuantity?: number;
-  percentageLoss?: number;
-  percentageVarianceDescription?: string | null;
-};
-export type DomainEntitiesProductionSchedulesPackingFinalPackingDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
-  materials?:
-    DomainEntitiesProductionSchedulesPackingFinalPackingMaterialDto[] | null;
-  numberOfBottlesPerShipper?: number;
-  nUmberOfFullShipperPacked?: number;
-  leftOver?: number;
-  batchSize?: number;
-  averageVolumeFilledPerBottle?: number;
-  productPacking?: DomainEntitiesProductsProductPackingDto;
-  expectedYield?: number;
-  totalQuantityPacked?: number;
-  qualityControlAnalyticalSample?: number;
-  retainedSamples?: number;
-  stabilitySamples?: number;
-  totalNumberOfBottles?: number;
-  yieldTotalQuantityPacked?: number;
-  totalGainOrLoss?: number;
-  totalWeightReceived?: number;
-  comment?: string | null;
-  percentageVarianceDescription?: string | null;
-};
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesProductionSchedulesPackingFinalPackingDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
     data?: DomainEntitiesProductionSchedulesPackingFinalPackingDto[] | null;
@@ -4141,258 +4493,12 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
-export type DomainEntitiesRequisitionsRequisitionType = 0 | 1 | 2;
-export type DomainEntitiesRequisitionsRequestStatus = 0 | 1 | 2 | 3 | 4;
-export type DomainEntitiesRequisitionsRequisitionItemDto = {
-  id?: string;
-  material?: DomainEntitiesMaterialsMaterialDto;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  quantity?: number;
-  quantityReceived?: number;
-  status?: DomainEntitiesRequisitionsRequestStatus;
-  batches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
-};
-export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
-  id?: string;
-  material?: DomainEntitiesMaterialsMaterialDto;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  quantity?: number;
-  quantityReceived?: number;
-  status?: DomainEntitiesRequisitionsRequestStatus;
-  batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
-};
-export type DomainEntitiesRequisitionsRequisitionDto = {
-  id?: string;
-  code?: string | null;
-  requisitionType?: DomainEntitiesRequisitionsRequisitionType;
-  status?: DomainEntitiesRequisitionsRequestStatus;
-  requestedBy?: SharedCollectionItemDto;
-  department?: SharedCollectionItemDto;
-  items?: DomainEntitiesRequisitionsRequisitionItemDto[] | null;
-  approved?: boolean;
-  expectedDelivery?: string | null;
-  createdAt?: string;
-  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
-  comments?: string | null;
-};
-export type DomainEntitiesRequisitionsRequisitionDtoRead = {
-  id?: string;
-  code?: string | null;
-  requisitionType?: DomainEntitiesRequisitionsRequisitionType;
-  status?: DomainEntitiesRequisitionsRequestStatus;
-  requestedBy?: SharedCollectionItemDto;
-  department?: SharedCollectionItemDto;
-  items?: DomainEntitiesRequisitionsRequisitionItemDtoRead[] | null;
-  approved?: boolean;
-  expectedDelivery?: string | null;
-  createdAt?: string;
-  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
-  comments?: string | null;
-};
 export type DomainEntitiesMaterialsPartialMaterialToReturn = {
   materialId?: string;
   uoMId?: string | null;
   quantity?: number;
   sourceWarehouseLocationShelfId?: string | null;
   returned?: boolean;
-};
-export type DomainEntitiesMaterialsMaterialReturnStatus = 0 | 1;
-export type DomainEntitiesWarehousesWareHouseLocationDto = {
-  id?: string;
-  name?: string | null;
-  floorName?: string | null;
-  description?: string | null;
-  warehouse?: SharedCollectionItemDto;
-};
-export type DomainEntitiesWarehousesWareHouseLocationRackDto = {
-  id?: string;
-  warehouseLocation?: DomainEntitiesWarehousesWareHouseLocationDto;
-  name?: string | null;
-  description?: string | null;
-};
-export type DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto = {
-  id?: string;
-  warehouseLocationRack?: DomainEntitiesWarehousesWareHouseLocationRackDto;
-  code?: string | null;
-  name?: string | null;
-  description?: string | null;
-};
-export type DomainEntitiesMaterialsBatchMaterialBatchReducedDto = {
-  id?: string;
-  material?: DomainEntitiesMaterialsMaterialDto;
-  batchNumber?: string | null;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  numberOfContainers?: number;
-  containerPackageStyle?: DomainEntitiesBasePackageStyleDto;
-  quantityPerContainer?: number;
-  status?: DomainEntitiesMaterialsBatchBatchStatus;
-  dateReceived?: string;
-  dateApproved?: string | null;
-  quantityAssigned?: number;
-  quantityUnassigned?: number;
-  totalQuantity?: number;
-  consumedQuantity?: number;
-  remainingQuantity?: number;
-  sampledQuantity?: number;
-  quantityDistributed?: number;
-  expiryDate?: string | null;
-  manufacturingDate?: string | null;
-  retestDate?: string | null;
-  issueNumber?: string | null;
-  issuedBy?: SharedCollectionItemDto;
-  issuedAt?: string | null;
-  supplierName?: string | null;
-  manufacturerName?: string | null;
-  arNumber?: string | null;
-  sampledBy?: string | null;
-  sampledOn?: string | null;
-  sampleQuantity?: number;
-  analysedBy?: string | null;
-  analysedDate?: string | null;
-};
-export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
-  id?: string;
-  material?: DomainEntitiesMaterialsMaterialDto;
-  batchNumber?: string | null;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  numberOfContainers?: number;
-  containerPackageStyle?: DomainEntitiesBasePackageStyleDto;
-  quantityPerContainer?: number;
-  status?: DomainEntitiesMaterialsBatchBatchStatus;
-  dateReceived?: string;
-  dateApproved?: string | null;
-  quantityAssigned?: number;
-  quantityUnassigned?: number;
-  totalQuantity?: number;
-  consumedQuantity?: number;
-  remainingQuantity?: number;
-  sampledQuantity?: number;
-  quantityDistributed?: number;
-  expiryDate?: string | null;
-  manufacturingDate?: string | null;
-  retestDate?: string | null;
-  aboutToExpire?: boolean;
-  expired?: boolean;
-  issueNumber?: string | null;
-  issuedBy?: SharedCollectionItemDto;
-  issuedAt?: string | null;
-  supplierName?: string | null;
-  manufacturerName?: string | null;
-  arNumber?: string | null;
-  sampledBy?: string | null;
-  sampledOn?: string | null;
-  sampleQuantity?: number;
-  analysedBy?: string | null;
-  analysedDate?: string | null;
-};
-export type DomainEntitiesWarehousesShelfMaterialBatchDto = {
-  id?: string;
-  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
-  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchReducedDto;
-  quantity?: number;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  note?: string | null;
-};
-export type DomainEntitiesWarehousesShelfMaterialBatchDtoRead = {
-  id?: string;
-  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
-  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead;
-  quantity?: number;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  note?: string | null;
-};
-export type DomainEntitiesWarehousesWarehouseLocationShelfDto = {
-  id?: string;
-  warehouseLocationRack?: DomainEntitiesWarehousesWareHouseLocationRackDto;
-  code?: string | null;
-  name?: string | null;
-  description?: string | null;
-  materialBatches?: DomainEntitiesWarehousesShelfMaterialBatchDto[] | null;
-};
-export type DomainEntitiesWarehousesWarehouseLocationShelfDtoRead = {
-  id?: string;
-  warehouseLocationRack?: DomainEntitiesWarehousesWareHouseLocationRackDto;
-  code?: string | null;
-  name?: string | null;
-  description?: string | null;
-  materialBatches?: DomainEntitiesWarehousesShelfMaterialBatchDtoRead[] | null;
-};
-export type DomainEntitiesMaterialsBatchMaterialBatchReservedQuantityDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
-  warehouse?: SharedCollectionItemDto;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  warehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDto;
-  quantity?: number;
-};
-export type DomainEntitiesMaterialsBatchMaterialBatchReservedQuantityDtoRead = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
-  warehouse?: SharedCollectionItemDto;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  warehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDtoRead;
-  quantity?: number;
-};
-export type DomainEntitiesMaterialsMaterialReturnNoteFullReturnDto = {
-  materialBatchReservedQuantity?: DomainEntitiesMaterialsBatchMaterialBatchReservedQuantityDto;
-  destinationWarehouse?: SharedCollectionItemDto;
-  sourceWarehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDto;
-  returned?: boolean;
-};
-export type DomainEntitiesMaterialsMaterialReturnNoteFullReturnDtoRead = {
-  materialBatchReservedQuantity?: DomainEntitiesMaterialsBatchMaterialBatchReservedQuantityDtoRead;
-  destinationWarehouse?: SharedCollectionItemDto;
-  sourceWarehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDtoRead;
-  returned?: boolean;
-};
-export type DomainEntitiesMaterialsMaterialReturnNotePartialReturnDto = {
-  material?: DomainEntitiesMaterialsMaterialDto;
-  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
-  quantity?: number;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  destinationWarehouse?: SharedCollectionItemDto;
-  sourceWarehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDto;
-  returned?: boolean;
-};
-export type DomainEntitiesMaterialsMaterialReturnNotePartialReturnDtoRead = {
-  material?: DomainEntitiesMaterialsMaterialDto;
-  materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
-  quantity?: number;
-  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
-  destinationWarehouse?: SharedCollectionItemDto;
-  sourceWarehouseLocationShelf?: DomainEntitiesWarehousesWarehouseLocationShelfDtoRead;
-  returned?: boolean;
-};
-export type DomainEntitiesMaterialsMaterialReturnNoteDto = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  returnDate?: string;
-  batchNumber?: string | null;
-  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
-  status?: DomainEntitiesMaterialsMaterialReturnStatus;
-  fullReturns?: DomainEntitiesMaterialsMaterialReturnNoteFullReturnDto[] | null;
-  partialReturns?:
-    DomainEntitiesMaterialsMaterialReturnNotePartialReturnDto[] | null;
-  isFullReturn?: boolean;
-};
-export type DomainEntitiesMaterialsMaterialReturnNoteDtoRead = {
-  id?: string;
-  createdBy?: DomainEntitiesUsersUserDto;
-  createdAt?: string;
-  returnDate?: string;
-  batchNumber?: string | null;
-  productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
-  status?: DomainEntitiesMaterialsMaterialReturnStatus;
-  fullReturns?:
-    DomainEntitiesMaterialsMaterialReturnNoteFullReturnDtoRead[] | null;
-  partialReturns?:
-    DomainEntitiesMaterialsMaterialReturnNotePartialReturnDtoRead[] | null;
-  isFullReturn?: boolean;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsMaterialReturnNoteDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -4644,6 +4750,8 @@ export const {
   useGetApiV1ProductionOrdersWaybillByProductionOrderWaybillIdQuery,
   useLazyGetApiV1ProductionOrdersWaybillByProductionOrderWaybillIdQuery,
   usePostApiV1ProductionOrdersWaybillByAllocateProductionOrderIdCustomerMutation,
+  useGetProductionStepRecordsQuery,
+  useLazyGetProductionStepRecordsQuery,
   usePostApiV1ProductionScheduleMutation,
   useGetApiV1ProductionScheduleQuery,
   useLazyGetApiV1ProductionScheduleQuery,

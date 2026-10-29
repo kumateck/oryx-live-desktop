@@ -9,6 +9,8 @@ const records = (batchId: string | undefined) => [{ type: "BatchRecords" as cons
 
 export const activityApi = productionApi.enhanceEndpoints({
   endpoints: {
+    getProductionStepRecords: (definition) => { definition.providesTags = addTags(definition.providesTags,
+      (result, _error, arg) => [{ type: "Activity", id: arg.activityId }, ...records(result?.productionScheduleProductId)]); },
     getApiV1ProductionScheduleActivityOperationGrouped: (definition) => { definition.providesTags = addTags(definition.providesTags, [board]); },
     getApiV1ProductionScheduleActivityByProductionActivityId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "Activity", id: arg.productionActivityId }]); },
     // A status change moves the run on and can touch the batch's other records, so everything about runs is read again.
@@ -28,6 +30,7 @@ export const activityApi = productionApi.enhanceEndpoints({
 });
 
 export const {
+  useGetProductionStepRecordsQuery,
   useGetApiV1ProductionScheduleActivityOperationGroupedQuery, useGetApiV1ProductionScheduleActivityByProductionActivityIdQuery,
   usePutApiV1ProductionScheduleActivityStepByProductionStepIdStatusMutation, usePostApiV1ProductionScheduleReturnBeforeProductionMutation,
   usePostApiV1ProductionScheduleExtraPackingByProductionScheduleProductIdMutation,
