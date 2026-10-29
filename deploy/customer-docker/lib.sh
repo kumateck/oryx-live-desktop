@@ -5,16 +5,21 @@ valid_sha() { [[ "$1" =~ ^[a-f0-9]{40}$ ]]; }
 read_value() { [[ ! -f "$STATE/$1" ]] || cat "$STATE/$1"; }
 write_value() { printf '%s\n' "$2" > "$STATE/$1.tmp"; mv "$STATE/$1.tmp" "$STATE/$1"; sync -f "$STATE/$1"; }
 history() { printf '%s\t%s\t%s\t%s\n' "$(date -u +%FT%TZ)" "$1" "${2:-}" "${STAGE:-manual}" >> "$STATE/history.tsv"; write_value last-result "$1 ${2:-}"; }
+# Discord alerts match the customer backend's: "<emoji> ORYX Frontend <event> | <server> | <branch> <short sha> | <details>".
+# Posting is best effort and never changes a deployment's outcome.
 notify() {
-  local text=$1 escaped
-  escaped=${text//\\/\\\\}; escaped=${escaped//\"/\\\"}; escaped=${escaped//$'\n'/\\n}
+  local payload
+  payload=$(python3 -c 'import json,sys; print(json.dumps({"content": sys.argv[1]}))' "$1") || return 0
   # Webhook credentials stay out of argv and logs; only the config descriptor is passed.
   if ! curl --fail --silent --show-error --connect-timeout 5 --max-time 15 --retry 1 \
     --config <(printf 'url = "%s"\n' "$DISCORD_WEBHOOK_URL") -H 'Content-Type: application/json' \
-    --data-binary "{\"content\":\"$escaped\"}" >/dev/null 2>"$STATE/logs/discord-last-error.log"; then
+    --data-binary "$payload" >/dev/null 2>"$STATE/logs/discord-last-error.log"; then
     echo 'Discord notification failed; inspect the protected notification error log.' >&2
   fi
+  return 0
 }
+notify_host() { printf '%s' "${ORYX_SERVER_NAME:-$(hostname -s 2>/dev/null || hostname)}"; }
+notify_release() { if [[ -n "${1:-}" ]]; then printf 'entrance-server %s' "${1:0:8}"; else printf 'entrance-server'; fi; }
 block_release() { valid_sha "$1" || return 1; mkdir -p "$STATE/quarantine"; touch "$STATE/quarantine/$1"; write_value blocked "$1"; }
 image() { printf 'oryx-live-customer-web:%s' "$1"; }
 probe_metadata_permissions() {
@@ -89,11 +94,19 @@ failure() {
   set +e
   echo "Customer deployment failed during $STAGE. The current/previous recovery artifacts are retained." >&2
   [[ -z ${TARGET:-} ]] || block_release "$TARGET"
+  local web_state='previous frontend still running'
   if [[ -f "$STATE/pending" ]]; then
-    if recover_pending; then echo 'Previous working frontend restored.' >&2; else echo 'Automatic recovery failed; inspect logs and run rollback.' >&2; fi
+    if recover_pending; then echo 'Previous working frontend restored.' >&2; web_state='previous frontend restored'
+    else echo 'Automatic recovery failed; inspect logs and run rollback.' >&2; web_state='frontend recovery FAILED, run: bash deploy/customer-docker/deploy.sh rollback'; fi
   fi
   history failed "${TARGET:-}"
-  notify "ORYX Live deployment FAILED | entrance-server | ${TARGET:-preflight} | stage: $STAGE"
+  if [[ "$STAGE" = rollback ]]; then
+    notify "🔴 ORYX Frontend rollback FAILED | $(notify_host) | $(notify_release "${TARGET:-}") | $web_state"
+  elif [[ -n ${TARGET:-} ]]; then
+    notify "🔴 ORYX Frontend deployment FAILED | $(notify_host) | $(notify_release "$TARGET") | stage: $STAGE | $web_state | run: bash deploy/customer-docker/deploy.sh deploy --retry after checking the logs"
+  else
+    notify "🔴 ORYX Frontend deployment FAILED | $(notify_host) | $(notify_release) | stage: $STAGE | $web_state"
+  fi
   exit "$code"
 }
 # Basic connectivity is mandatory. Only candidates inspect optional local contract metadata.
@@ -229,6 +242,10 @@ deploy() {
   TARGET=$sha
   preflight
   history started "$sha"
+  local start_note=building
+  [[ "$retry" != --retry ]] || start_note='building (retry)'
+  if [[ -n "$current" ]]; then start_note="$start_note | replacing ${current:0:8}"; else start_note="$start_note | first install"; fi
+  notify "🟡 ORYX Frontend deployment STARTED | $(notify_host) | $(notify_release "$sha") | $start_note"
   build_release "$sha"
   stage_candidate "$sha"
   write_value pending "$sha"
@@ -239,7 +256,7 @@ deploy() {
   rm -f "$STATE/pending" "$STATE/quarantine/$sha"
   [[ $(read_value blocked) != "$sha" ]] || rm -f "$STATE/blocked"
   history succeeded "$sha"
-  notify "ORYX Live deployment SUCCESS | entrance-server | $sha | port 3001"
+  notify "🟢 ORYX Frontend deployment SUCCESS | $(notify_host) | $(notify_release "$sha") | frontend healthy, API reachable | port 3001"
   echo "Healthy customer release: $sha"
 }
 rollback() {
@@ -253,7 +270,7 @@ rollback() {
   [[ -z "$current" ]] || { write_value previous "$current"; block_release "$current"; }
   rm -f "$STATE/pending"; touch "$STATE/paused"
   history rolled-back "$previous"
-  notify "ORYX Live rollback SUCCESS | $previous | polling paused; rolled-away release blocked"
+  notify "🔵 ORYX Frontend rollback SUCCESS | $(notify_host) | $(notify_release "$previous") | ${current:0:8} blocked | automatic deployments paused, run resume when fixed"
 }
 status() {
   local current health=not-deployed
