@@ -10,7 +10,7 @@ import { useStepRecords } from "../../hooks/use-step-records";
 import { extraMaterialPath, finalPackingPath } from "../../lib/activity-access";
 import { configuredTestStage } from "../../lib/atr";
 import { stepPolicy } from "../../lib/step-policy";
-import { stepActionLabel, stepStatus } from "../../lib/step-status";
+import { stepAction, stepActionLabel, stepStatus } from "../../lib/step-status";
 import type { Activity, ActivityStep } from "../../schemas/activity-schema";
 import { AtrDialog } from "./atr-dialog";
 import { FinishedGoodsDialog } from "./finished-goods-dialog";
@@ -18,7 +18,9 @@ import { ReasonDialog } from "./reason-dialog";
 import { StepRecordsView } from "./step-records-view";
 import { StockRequisitionDialog } from "./stock-requisition-dialog";
 
-type Open = "complete" | "return" | "stock" | "atr" | "goods" | null;
+const requisitionStatus = { completed: 3 } as const;
+
+type Open = "complete" | "return" | "stock" | "packaging" | "atr" | "goods" | null;
 
 /**
  * Everything that can be done on a step: start it, finish it, and the records its instructions
@@ -37,8 +39,17 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
   const autoStartAttempted = useRef<string | null>(null);
   const busy = commands.busy !== null;
   const running = step.status === stepStatus.inProgress;
+  // The step right before final packing, and a step packaging was requested from, are completed by hand once that packaging is issued.
+  const next = activity.steps.find((other) => other.order > step.order);
+  const beforeFinalPacking = Boolean(next && (next.team.some((member) => member.action === stepAction.finalPacking) || next.name.startsWith("Final Packing")));
+  const packaging = records.packagingRequisition;
+  const packagingIssued = packaging?.status === requisitionStatus.completed;
+  const requestedHere = Boolean(packaging && packaging.stepId === step.id && !packagingIssued);
+  const packagingWait = requestedHere ? "The packaging material requested from this step has not been issued yet. Complete the step once it is issued."
+    : beforeFinalPacking && !packaging ? "Final packing comes next. Request the batch's packaging material, and complete this step once it is issued."
+    : beforeFinalPacking && !packagingIssued ? "Final packing comes next. Complete this step once the batch's packaging material is issued." : null;
+  const packagingMissing = packagingWait !== null;
   const batchLabel = `${activity.batch.productName}${activity.batch.batchNumber ? `, batch ${activity.batch.batchNumber}` : ""}`;
-  const hasRequisition = Boolean(records.rawRequisition || records.packagingRequisition);
 
   useEffect(() => {
     if (!policy.shouldAutoStart || !records.ready || busy || autoStartAttempted.current === step.id) return;
@@ -53,6 +64,7 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
     {running && policy.waitsFor !== null ? <p className="text-sm text-muted-foreground">This step finishes by itself when its {stepActionLabel(policy.waitsFor).toLowerCase()} is done.</p> : null}
 
     <StepRecordsView policy={policy} records={records} />
+    {policy.canManuallyComplete && packagingWait && !records.loading ? <p className="rounded-md border bg-muted/50 px-3 py-2 text-sm">{packagingWait}</p> : null}
     {records.error ? <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">
       <span>This step's records could not be verified. Start and completion remain unavailable.</span>
       <Button type="button" size="sm" variant="outline" onClick={records.retry}>Retry step check</Button>
@@ -60,8 +72,9 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
 
     <div className="flex flex-wrap gap-2">
       {policy.canStart ? <Button type="button" size="sm" disabled={busy || !records.ready} onClick={() => void commands.start()}>{commands.busy === "start" ? <><Spinner />Starting…</> : <><Play />Start step</>}</Button> : null}
-      {policy.canManuallyComplete ? <Button type="button" size="sm" disabled={busy || !records.ready || !policy.canComplete} onClick={() => setOpen("complete")}>{commands.busy === "complete" ? <><Spinner />Completing…</> : <><Check />Complete step</>}</Button> : null}
-      {policy.canRequestStock && !records.loading && !hasRequisition && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("stock")}><Send />Request stock</Button> : null}
+      {policy.canManuallyComplete ? <Button type="button" size="sm" disabled={busy || !records.ready || !policy.canComplete || packagingMissing} onClick={() => setOpen("complete")}>{commands.busy === "complete" ? <><Spinner />Completing…</> : <><Check />Complete step</>}</Button> : null}
+      {policy.canRequestStock && !records.loading && !records.rawRequisition && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("stock")}><Send />Request stock</Button> : null}
+      {policy.allowed && !policy.completed && records.packagingRequestable && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("packaging")}><Send />Request packaging material</Button> : null}
       {policy.canRequestAtr && !records.loading && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("atr")}><FlaskConical />Request analysis</Button> : null}
       {policy.canRequestExtraMaterial ? <Button asChild size="sm" variant="outline"><Link to={extraMaterialPath(activity.id)}><PackagePlus />Request extra material</Link></Button> : null}
       {policy.canFinalPack ? <Button asChild size="sm"><Link to={finalPackingPath(activity.id)}><PackageCheck />Record final packing</Link></Button> : null}
@@ -72,13 +85,14 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
 
     {open === "complete" ? <ConfirmActionDialog require={{ kind: "all", permissions: ["CanViewPlannedProducts"], departmentType: 0 }} title={`Complete "${step.name}"?`} description={`The batch moves on to its next step. A completed step cannot be reopened. ${batchLabel}.`}
       confirmLabel="Complete step" busyLabel="Completing…" destructive={false} onClose={() => setOpen(null)}
-      onConfirm={async () => !records.ready || !policy.canComplete ? "This step cannot be completed until its records are verified and all extra material is issued." : (await commands.complete()) ? null : "The step was not completed. The reason is shown on the page."} /> : null}
+      onConfirm={async () => packagingWait ? packagingWait : !records.ready || !policy.canComplete ? "This step cannot be completed until its records are verified and all extra material is issued." : (await commands.complete()) ? null : "The step was not completed. The reason is shown on the page."} /> : null}
     {open === "return" ? <ReasonDialog title="Return all materials?" description={`Every material issued to ${batchLabel} goes back to the warehouse and the batch's production is cancelled. This cannot be undone.`}
       confirmLabel="Return and cancel" busyLabel="Returning…" onClose={() => setOpen(null)} onConfirm={async (reason) => policy.canFullReturn ? commands.fullReturn(reason) : "Materials can no longer be returned from this step."} /> : null}
     {open === "atr" && batchId ? <AtrDialog stage={configuredTestStage(step)} record={records.bmr} batchId={batchId} stepId={step.id} productName={activity.batch.productName}
       // Raising the request is what begins the step, so the same action records the start.
       onRaised={async () => { if (step.status === stepStatus.new) await commands.start(); }} onClose={() => setOpen(null)} /> : null}
     {open === "goods" && batchId ? <FinishedGoodsDialog batchId={batchId} stepId={step.id} productName={activity.batch.productName} onClose={() => setOpen(null)} /> : null}
-    {open === "stock" && batchId ? <StockRequisitionDialog batchId={batchId} stepId={step.id} batchLabel={batchLabel} onClose={() => setOpen(null)} /> : null}
+    {open === "stock" && batchId ? <StockRequisitionDialog kind="stock" batchId={batchId} stepId={step.id} batchLabel={batchLabel} onClose={() => setOpen(null)} /> : null}
+    {open === "packaging" && batchId ? <StockRequisitionDialog kind="packaging" batchId={batchId} stepId={step.id} batchLabel={batchLabel} onClose={() => setOpen(null)} /> : null}
   </div>;
 }

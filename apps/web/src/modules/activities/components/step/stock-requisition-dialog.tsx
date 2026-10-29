@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   useGetApiV1ProductionScheduleMaterialStockByProductionScheduleProductIdQuery, useGetApiV1ProductionSchedulePackageMaterialStockByProductionScheduleProductIdQuery,
 } from "@/modules/schedules/api/schedule-api";
-import { freeStock } from "@/modules/schedules/lib/batch-materials";
+import { freeStock, materialCovered } from "@/modules/schedules/lib/batch-materials";
 import { batchMaterialsSchema, type BatchMaterial } from "@/modules/schedules/schemas/batch-schema";
 import { useGeneratedCode } from "@/shared/codes/use-generated-code";
 import { ListDataTable, dataTableColumns } from "@/shared/datatable";
@@ -24,10 +24,17 @@ const column = dataTableColumns<BatchMaterial>();
 const quantity = (value: number, unit: string | null) => toLargestUnit(value, unit, "calculated")?.text ?? String(value);
 const audit = { module: "Production", subModule: "Stock Requisition" } as const;
 
-/** Asks the warehouse to issue everything the batch needs, on one voucher. */
-export function StockRequisitionDialog({ batchId, stepId, batchLabel, onClose }: { batchId: string; stepId: string; batchLabel: string; onClose: () => void }) {
+/** "stock" is the stock requisition step's voucher; "packaging" is packaging requested later, when it was short at that step. */
+export type RequisitionKind = "stock" | "packaging";
+
+/**
+ * Asks the warehouse to issue what the batch needs, on one voucher. At the stock requisition step that is every raw
+ * material, plus every packaging material when all of it is available; when packaging is short it is left off and
+ * requested later from the board, before final packing.
+ */
+export function StockRequisitionDialog({ kind, batchId, stepId, batchLabel, onClose }: { kind: RequisitionKind; batchId: string; stepId: string; batchLabel: string; onClose: () => void }) {
   const arg = { ...audit, productionScheduleProductId: batchId };
-  const raw = useGetApiV1ProductionScheduleMaterialStockByProductionScheduleProductIdQuery(arg);
+  const raw = useGetApiV1ProductionScheduleMaterialStockByProductionScheduleProductIdQuery(arg, { skip: kind !== "stock" });
   const packaging = useGetApiV1ProductionSchedulePackageMaterialStockByProductionScheduleProductIdQuery(arg);
   const [create, mutation] = usePostApiV1RequisitionMutation();
   const code = useGeneratedCode("Requisition");
@@ -41,12 +48,20 @@ export function StockRequisitionDialog({ batchId, stepId, batchLabel, onClose }:
     void suggest().then((next) => { if (next && !form.getFieldState("code").isDirty) form.setValue("code", next, { shouldValidate: true }); });
   }, [code.ready, suggest, form]);
 
-  const materials = useMemo(() => {
+  const { materials, packagingDeferred } = useMemo(() => {
     const read = (data: object | undefined) => { const parsed = batchMaterialsSchema.safeParse(data ?? null); return parsed.success ? parsed.data : []; };
-    return [...read(raw.data), ...read(packaging.data)];
-  }, [raw.data, packaging.data]);
-  const loading = raw.isLoading || packaging.isLoading;
-  const failure = raw.error ?? packaging.error;
+    const packagingRows = read(packaging.data);
+    if (kind === "packaging") return { materials: packagingRows, packagingDeferred: false };
+    const available = packagingRows.every(materialCovered);
+    return { materials: available ? [...read(raw.data), ...packagingRows] : read(raw.data), packagingDeferred: !available };
+  }, [kind, raw.data, packaging.data]);
+  const loading = (kind === "stock" && raw.isLoading) || packaging.isLoading;
+  const failure = (kind === "stock" ? raw.error : undefined) ?? packaging.error;
+  const wording = kind === "packaging"
+    ? { title: "Request packaging material", description: "One voucher asks the warehouse for every packaging material the batch needs. After this, more packaging is an extra material request.", sent: "Packaging requisition sent to the warehouse" }
+    : packagingDeferred
+      ? { title: "Request stock", description: "Packaging material is short, so this voucher asks only for the raw materials. Request the packaging on the production board once it is available, before final packing.", sent: "Raw material requisition sent to the warehouse" }
+      : { title: "Request stock", description: "One voucher asks the warehouse for every material the batch needs.", sent: "Stock requisition sent to the warehouse" };
   const problems = useMemo(() => materials.flatMap((material) => { const problem = requisitionProblem(material); return problem ? [`${material.name}: ${problem}`] : []; }), [materials]);
 
   const fields = useMemo(() => [
@@ -65,20 +80,20 @@ export function StockRequisitionDialog({ batchId, stepId, batchLabel, onClose }:
     setMessage("");
     const result = await create({ ...audit, domainEntitiesRequisitionsRequestCreateRequisitionRequest: stockRequisitionRequest(values, materials, batchId, stepId) });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    toast.success("Stock requisition sent to the warehouse");
+    toast.success(wording.sent);
     onClose();
   });
   const blocked = loading || Boolean(failure) || materials.length === 0 || problems.length > 0;
 
   return <Dialog open onOpenChange={(open) => { if (!open && !mutation.isLoading) onClose(); }}>
     <DialogContent className="sm:max-w-3xl">
-      <DialogHeader><DialogTitle>Request stock for {batchLabel}</DialogTitle>
-        <DialogDescription>One voucher asks the warehouse for every material the batch needs.</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>{wording.title} for {batchLabel}</DialogTitle>
+        <DialogDescription>{wording.description}</DialogDescription></DialogHeader>
       <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         <DialogBody className="space-y-4">
           <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
           <ListDataTable label="Materials to request" columns={columns} rows={materials} getRowId={(item) => item.id} loading={loading}
-            error={failure ? apiErrorMessage(failure) : null} onRetry={() => { void raw.refetch(); void packaging.refetch(); }} emptyTitle="This batch needs no materials" />
+            error={failure ? apiErrorMessage(failure) : null} onRetry={() => { if (kind === "stock") void raw.refetch(); void packaging.refetch(); }} emptyTitle={kind === "packaging" ? "This batch needs no packaging materials" : "This batch needs no materials"} />
           {problems.length ? <div role="alert" className="space-y-1 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
             <p className="font-medium text-destructive">The voucher cannot be sent until these are fixed:</p>
             <ul className="space-y-0.5">{problems.map((problem) => <li key={problem} className="break-words">{problem}</li>)}</ul></div> : null}

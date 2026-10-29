@@ -13,11 +13,15 @@ import { EditableNumberCell, EditableSelectCell, ListDataTable, dataTableColumns
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { UnsavedChangesGuard } from "@/shared/navigation/unsaved-changes";
 import { relatedUnits, toLargestUnit } from "@/shared/units/quantity";
-import { usePostApiV1ProductionScheduleExtraPackingByProductionScheduleProductIdMutation } from "../../api/activity-api";
+import {
+  useGetApiV1ProductionScheduleStockRequisitionPackageByProductionScheduleProductIdQuery, useGetApiV1ProductionScheduleStockRequisitionRawByProductionScheduleProductIdQuery,
+  usePostApiV1ProductionScheduleExtraPackingByProductionScheduleProductIdMutation,
+} from "../../api/activity-api";
 import { batchBoardPath } from "../../lib/activity-access";
 import { extraMaterialLines, extraMaterialProblem, extraMaterialRequest, type ExtraMaterialLine } from "../../lib/extra-material";
 
 const column = dataTableColumns<ExtraMaterialLine>();
+const notRaised = (error: object | undefined) => Boolean(error && "status" in error && error.status === 404);
 const audit = { module: "Production", subModule: "Extra Stock" } as const;
 type Kind = "all" | "raw" | "packaging";
 const kinds: readonly { id: Kind; label: string }[] = [{ id: "all", label: "All" }, { id: "raw", label: "Raw" }, { id: "packaging", label: "Packaging" }];
@@ -28,26 +32,37 @@ export function ExtraMaterialForm({ activityId, batchId }: { activityId: string;
   const arg = { ...audit, productionScheduleProductId: batchId };
   const raw = useGetApiV1ProductionScheduleMaterialStockByProductionScheduleProductIdQuery(arg);
   const packaging = useGetApiV1ProductionSchedulePackageMaterialStockByProductionScheduleProductIdQuery(arg);
+  // Extra material of a kind needs the batch's main stock requisition of that kind; "not found" means it has not been raised.
+  const rawRequisition = useGetApiV1ProductionScheduleStockRequisitionRawByProductionScheduleProductIdQuery(arg);
+  const packagingRequisition = useGetApiV1ProductionScheduleStockRequisitionPackageByProductionScheduleProductIdQuery(arg);
+  const raised = (query: { isSuccess: boolean }) => query.isSuccess;
+  const settled = (query: { isSuccess: boolean; error?: object | undefined }) => query.isSuccess || notRaised(query.error);
   const [save, mutation] = usePostApiV1ProductionScheduleExtraPackingByProductionScheduleProductIdMutation();
   const [lines, setLines] = useState<ExtraMaterialLine[] | null>(null);
   const [kind, setKind] = useState<Kind>("all");
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
 
-  const loaded = raw.isSuccess && packaging.isSuccess;
+  const loaded = raw.isSuccess && packaging.isSuccess && settled(rawRequisition) && settled(packagingRequisition);
+  const rawOpen = raised(rawRequisition);
+  const packagingOpen = raised(packagingRequisition);
   // The lines are built once from the batch's materials; what the user types is then kept through any refresh.
   useEffect(() => {
     if (!loaded || lines !== null) return;
     const read = (data: object | undefined) => { const parsed = batchMaterialsSchema.safeParse(data ?? null); return parsed.success ? parsed.data : []; };
-    setLines(extraMaterialLines(read(raw.data), read(packaging.data)));
-  }, [loaded, lines, raw.data, packaging.data]);
+    setLines(extraMaterialLines(rawOpen ? read(raw.data) : [], packagingOpen ? read(packaging.data) : []));
+  }, [loaded, lines, raw.data, packaging.data, rawOpen, packagingOpen]);
 
   const all = useMemo(() => lines ?? [], [lines]);
   const shown = useMemo(() => kind === "all" ? all : all.filter((line) => line.kind === kind), [all, kind]);
   const change = (id: string, patch: Partial<Pick<ExtraMaterialLine, "quantity" | "unit">>) => { setMessage(""); setLines((current) => (current ?? []).map((line) => line.material.id === id ? { ...line, ...patch } : line)); };
   const asked = all.filter((line) => line.quantity !== null);
   const problems = asked.filter((line) => extraMaterialProblem(line));
-  const failure = raw.error ?? packaging.error;
+  const failure = raw.error ?? packaging.error ?? (notRaised(rawRequisition.error) ? undefined : rawRequisition.error)
+    ?? (notRaised(packagingRequisition.error) ? undefined : packagingRequisition.error);
+  const unavailable = !loaded ? null : !rawOpen && !packagingOpen ? "Raise the batch's raw material stock requisition before requesting extra material."
+    : !packagingOpen ? "Packaging is not listed: raise the batch's packaging stock requisition first. Extra packaging can be requested after it."
+    : !rawOpen ? "Raw material is not listed: raise the batch's raw material stock requisition first." : null;
 
   const columns = useMemo(() => column.columns([
     column.accessor((line) => line.material.name, { id: "material", header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.material.name}</div>
@@ -83,11 +98,12 @@ export function ExtraMaterialForm({ activityId, batchId }: { activityId: string;
       <p className="text-sm text-muted-foreground">{asked.length ? `${asked.length} ${asked.length === 1 ? "material" : "materials"} to request` : "Enter a quantity beside each material that needs more."}</p>
     </div>
     <ListDataTable label="Batch materials" columns={columns} rows={shown} getRowId={(line) => line.material.id} loading={!loaded && !failure}
-      error={failure ? apiErrorMessage(failure) : null} onRetry={() => { void raw.refetch(); void packaging.refetch(); }} emptyTitle="This batch has no materials of this kind" />
+      error={failure ? apiErrorMessage(failure) : null} onRetry={() => { void raw.refetch(); void packaging.refetch(); void rawRequisition.refetch(); void packagingRequisition.refetch(); }} emptyTitle="This batch has no materials of this kind" />
+    {unavailable ? <p className="rounded-md border bg-muted/50 p-3 text-sm">{unavailable}</p> : null}
     {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
     <div className="flex justify-end gap-2">
       <Button type="button" variant="outline" disabled={mutation.isLoading} onClick={() => void navigate(batchBoardPath(activityId))}>Cancel</Button>
-      <Button type="button" disabled={mutation.isLoading || !loaded} onClick={() => void submit()}>{mutation.isLoading ? <><Spinner />Sending…</> : "Request extra material"}</Button>
+      <Button type="button" disabled={mutation.isLoading || !loaded || (!rawOpen && !packagingOpen)} onClick={() => void submit()}>{mutation.isLoading ? <><Spinner />Sending…</> : "Request extra material"}</Button>
     </div>
   </div>;
 }

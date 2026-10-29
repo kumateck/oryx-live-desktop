@@ -17,8 +17,8 @@ const other = { id: "someone-else", firstName: "Kofi", lastName: "Boateng" };
 const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
 
 interface Options {
-  current?: { order: number; status: number; critical: boolean; mine: boolean; actions?: number[] };
-  cancelled?: boolean; requisition?: boolean; extraStatuses?: number[]; extraReadStatus?: number; malformedExtra?: boolean;
+  current?: { order: number; status: number; critical: boolean; mine: boolean; actions?: number[] }; nextIsFinalPacking?: boolean;
+  cancelled?: boolean; packagingAvailable?: boolean; requisition?: boolean | "raw"; packagingIssued?: boolean; packagingFrom?: string; finalPacked?: boolean; extraStatuses?: number[]; extraReadStatus?: number; malformedExtra?: boolean;
 }
 function run(options: Options) {
   const current = options.current ?? { order: 3, status: 0, critical: true, mine: true };
@@ -30,7 +30,7 @@ function run(options: Options) {
       { id: "done-1", order: 1, status: 2, isCritical: false, startedAt: ago(200), completedAt: ago(170), operation: { name: "BMR requisition" }, responsibleUsers: [] },
       { id: "current", order: current.order, status: current.status, isCritical: current.critical, startedAt: current.status ? ago(45) : null, operation: { name: "Dispensing", description: "Weigh out the raw materials" },
         workCenters: [{ workCenter: { name: "Dispensary" } }], responsibleUsers: people },
-      { id: "later", order: 9, status: 0, isCritical: true, operation: { name: "Filling" }, responsibleUsers: [] },
+      { id: "later", order: 9, status: 0, isCritical: true, operation: { name: options.nextIsFinalPacking ? "Final Packing" : "Filling" }, responsibleUsers: [] },
     ] };
 }
 
@@ -38,10 +38,12 @@ function open(address: string, options: Options = {}) {
   const backend = stubBackend({ permissions: ["CanViewPlannedProducts"] });
   rememberSession();
   const calls: { method: string; path: string; search: string; body: string }[] = [];
+  const reads: string[] = [];
   const session = backend.fetcher.getMockImplementation();
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const url = new URL(input.url); const path = url.pathname;
+    if (input.method === "GET") reads.push(path);
     if (input.method !== "GET") calls.push({ method: input.method, path, search: url.search, body: await input.clone().text() });
     if (path === "/api/v1/production-schedule/activity/operation-grouped") return Response.json([{ operation: { id: "o1", name: "Dispensing" }, activities: [
       { id: "a1", batchNumber: "WM-001", quantity: 1_500_000, productionScheduleProduct: batch, currentStep: { status: 1, isCritical: true, startedAt: ago(45), productionActivity: { id: "a1" }, responsibleUsers: [{ user: me }] } }] },
@@ -56,9 +58,15 @@ function open(address: string, options: Options = {}) {
       if (options.extraReadStatus) return new Response(null, { status: options.extraReadStatus });
       return Response.json(options.malformedExtra ? { unexpected: true } : (options.extraStatuses ?? []).map((status) => ({ status })));
     }
-    if (path.startsWith("/api/v1/production-schedule/stock-requisition/")) return options.requisition ? Response.json({ id: "r1", code: "SR-0004", status: 1 }) : new Response(null, { status: 404 });
+    if (path.startsWith("/api/v1/production-schedule/stock-requisition/")) {
+      const raised = options.requisition === true || (options.requisition === "raw" && path.includes("/raw/"));
+      const packagingRow = path.includes("/package/");
+      return raised ? Response.json({ id: "r1", code: "SR-0004", status: packagingRow && options.packagingIssued ? 3 : 1,
+        productionActivityStepId: packagingRow ? options.packagingFrom ?? "done-1" : "done-1" }) : new Response(null, { status: 404 });
+    }
+    if (path === "/api/v1/production-schedule/final-packing/product/b1" && options.finalPacked) return Response.json({ id: "fp1" });
     if (path === "/api/v1/production-schedule/material-stock/b1") return Response.json([{ material: { id: "m1", name: "Sugar", code: "RM-1" }, materialDepartment: { uoM: { id: "u-g", symbol: "g" } }, quantityNeeded: 500, quantityOnHand: 900 }]);
-    if (path === "/api/v1/production-schedule/package-material-stock/b1") return Response.json([]);
+    if (path === "/api/v1/production-schedule/package-material-stock/b1") return Response.json([{ material: { id: "m2", name: "Bottle", code: "PM-1" }, materialDepartment: { uoM: { id: "u-pc", symbol: "pc" } }, quantityNeeded: 300, quantityOnHand: options.packagingAvailable ? 400 : 50 }]);
     if (path === "/api/v1/configuration/by-model-type/Requisition") return Response.json({ prefix: "SR-", namingType: 0, minimumNameLength: 4, maximumNameLength: 6 });
     if (path === "/api/v1/configuration/Requisition/count") return Response.json(4);
     if (path === "/api/v1/requisition" && input.method === "POST") return Response.json("r-new", { status: 201 });
@@ -70,7 +78,7 @@ function open(address: string, options: Options = {}) {
     { path: "/production/activities/:id/board/:stepId", element: <ActivityStepPage /> },
   ], { initialEntries: [address] });
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
-  return { calls, router };
+  return { calls, reads, router };
 }
 
 it("shows running batches by operation, each opening its own board", async () => {
@@ -130,11 +138,27 @@ it("automatically starts a non-critical current step and leaves completion to th
   expect(screen.getAllByText("Automated").length).toBeGreaterThan(0);
 });
 
+it("asks for raw and packaging together on the stock step when all packaging is available", async () => {
+  const { calls } = open("/production/activities/a1/board", { current: { order: 2, status: 0, critical: true, mine: true, actions: [1] }, packagingAvailable: true });
+  fireEvent.click(await screen.findByRole("button", { name: "Request stock" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(await within(dialog).findByText("Bottle")).toBeTruthy();
+  expect(within(dialog).getByText("Sugar")).toBeTruthy();
+  const code = await within(dialog).findByLabelText(/Requisition code/, { selector: "input" });
+  await waitFor(() => expect((code as HTMLInputElement).value).toBe("SR-0005"));
+  fireEvent.click(within(dialog).getByRole("button", { name: "Send requisition" }));
+  await waitFor(() => expect(calls.length).toBe(1));
+  expect(JSON.parse(calls[0]?.body ?? "{}").items).toEqual([{ materialId: "m1", quantity: 500, uomId: "u-g" }, { materialId: "m2", quantity: 300, uomId: "u-pc" }]);
+});
+
 it("raises one stock requisition for the batch, or shows the ones already raised", async () => {
   const { calls } = open("/production/activities/a1/board", { current: { order: 2, status: 0, critical: true, mine: true, actions: [1] } });
   fireEvent.click(await screen.findByRole("button", { name: "Request stock" }));
   const dialog = await screen.findByRole("dialog");
   expect(await within(dialog).findByText("Sugar")).toBeTruthy();
+  // Packaging is short, so it is left for later.
+  expect(within(dialog).getByText(/Packaging material is short, so this voucher asks only for the raw materials/)).toBeTruthy();
+  expect(within(dialog).queryByText("Bottle")).toBeNull();
   const code = await within(dialog).findByLabelText(/Requisition code/, { selector: "input" });
   await waitFor(() => expect((code as HTMLInputElement).value).toBe("SR-0005"));
   fireEvent.click(within(dialog).getByRole("button", { name: "Send requisition" }));
@@ -145,6 +169,64 @@ it("raises one stock requisition for the batch, or shows the ones already raised
   open("/production/activities/a1/board", { current: { order: 2, status: 0, critical: true, mine: true, actions: [1] }, requisition: true });
   expect((await screen.findAllByText("Pending")).length).toBe(2);
   expect(screen.queryByRole("button", { name: "Request stock" })).toBeNull();
+});
+
+it("requests packaging once from any step after raw material, until final packing", async () => {
+  // No packaging before the raw material requisition.
+  open("/production/activities/a1/board", { current: { order: 4, status: 1, critical: true, mine: true } });
+  expect(await screen.findByRole("button", { name: "Complete step" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Request packaging material" })).toBeNull();
+  cleanup(); forgetSession();
+
+  const { calls } = open("/production/activities/a1/board", { current: { order: 4, status: 1, critical: true, mine: true }, requisition: "raw" });
+  fireEvent.click(await screen.findByRole("button", { name: "Request packaging material" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(await within(dialog).findByText("Bottle")).toBeTruthy();
+  expect(within(dialog).queryByText("Sugar")).toBeNull();
+  const code = await within(dialog).findByLabelText(/Requisition code/, { selector: "input" });
+  await waitFor(() => expect((code as HTMLInputElement).value).toBe("SR-0005"));
+  fireEvent.click(within(dialog).getByRole("button", { name: "Send requisition" }));
+  await waitFor(() => expect(calls.some((call) => call.path === "/api/v1/requisition")).toBe(true));
+  expect(JSON.parse(calls.find((call) => call.path === "/api/v1/requisition")?.body ?? "{}")).toMatchObject({ productionActivityStepId: "current",
+    items: [{ materialId: "m2", quantity: 300, uomId: "u-pc" }] });
+  cleanup(); forgetSession();
+
+  const packed = open("/production/activities/a1/board", { current: { order: 4, status: 1, critical: true, mine: true }, requisition: "raw", finalPacked: true });
+  expect(await screen.findByRole("button", { name: "Complete step" })).toBeTruthy();
+  await waitFor(() => expect(packed.reads).toContain("/api/v1/production-schedule/final-packing/product/b1"));
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  expect(screen.queryByRole("button", { name: "Request packaging material" })).toBeNull();
+});
+
+it("keeps the step before final packing open until packaging is requested and issued", async () => {
+  const board = { current: { order: 4, status: 1, critical: true, mine: true }, nextIsFinalPacking: true } as const;
+  open("/production/activities/a1/board", { ...board, requisition: "raw" });
+  expect(await screen.findByText(/Request the batch's packaging material, and complete this step once it is issued/)).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Complete step" }).hasAttribute("disabled")).toBe(true);
+  expect(screen.getByRole("button", { name: "Request packaging material" })).toBeTruthy();
+  cleanup(); forgetSession();
+
+  open("/production/activities/a1/board", { ...board, requisition: true });
+  expect(await screen.findByText(/Complete this step once the batch's packaging material is issued/)).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Complete step" }).hasAttribute("disabled")).toBe(true);
+  cleanup(); forgetSession();
+
+  open("/production/activities/a1/board", { ...board, requisition: true, packagingIssued: true });
+  const complete = await screen.findByRole("button", { name: "Complete step" });
+  await waitFor(() => expect(complete.hasAttribute("disabled")).toBe(false));
+  expect(screen.queryByText(/Final packing comes next/)).toBeNull();
+});
+
+it("completes a step packaging was requested from by hand, once that packaging is issued", async () => {
+  const board = { current: { order: 4, status: 1, critical: true, mine: true }, requisition: true, packagingFrom: "current" } as const;
+  open("/production/activities/a1/board", board);
+  expect(await screen.findByText(/requested from this step has not been issued yet/)).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Complete step" }).hasAttribute("disabled")).toBe(true);
+  cleanup(); forgetSession();
+
+  open("/production/activities/a1/board", { ...board, packagingIssued: true });
+  const complete = await screen.findByRole("button", { name: "Complete step" });
+  await waitFor(() => expect(complete.hasAttribute("disabled")).toBe(false));
 });
 
 it("closes every action on a cancelled batch and says why", async () => {

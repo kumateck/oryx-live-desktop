@@ -23,7 +23,7 @@ const schedule = (endOffset: number) => ({ id, code: "PS-0007", scheduledStartTi
 ] });
 const material = (name: string, needed: number, onHand: number) => ({ material: { id: name, name, code: `C-${name}` }, materialDepartment: { uoM: { symbol: "g" } }, quantityNeeded: needed, quantityOnHand: onHand, status: 2 });
 
-function open(address: string, options: { end?: number; rawFor?: Record<string, object[]>; refuse?: string[]; extraPermissions?: string[] } = {}) {
+function open(address: string, options: { end?: number; rawFor?: Record<string, object[]>; packagingFor?: Record<string, object[]>; refuse?: string[]; extraPermissions?: string[] } = {}) {
   const backend = stubBackend({ permissions: ["CanViewProductSchedules", "CanEditProductSchedule", "CanAddProductsToProductSchedule", "CanRemoveProductsFromProductSchedule", ...(options.extraPermissions ?? [])] });
   rememberSession();
   const calls: { method: string; path: string; body: string }[] = [];
@@ -34,7 +34,7 @@ function open(address: string, options: { end?: number; rawFor?: Record<string, 
     if (input.method !== "GET") calls.push({ method: input.method, path, body: await input.clone().text() });
     if (path === `/api/v1/production-schedule/${id}`) return Response.json(schedule(options.end ?? 5));
     const stock = /^\/api\/v1\/production-schedule\/(package-)?material-stock\/(.+)$/.exec(path);
-    if (stock) return Response.json(stock[1] ? [] : options.rawFor?.[stock[2] ?? ""] ?? []);
+    if (stock) return Response.json((stock[1] ? options.packagingFor : options.rawFor)?.[stock[2] ?? ""] ?? []);
     if (path === "/api/v1/production-schedule/activity/product/b1") return Response.json({ id: "act-1", currentStep: { order: 3, status: 1, operation: { name: "Dispensing" } } });
     if (path.startsWith("/api/v1/production-schedule/activity/product/")) return new Response(null, { status: 404 });
     if (path.startsWith("/api/v1/production-schedule/activity/start/")) return Response.json("act-2", { status: 201 });
@@ -79,11 +79,21 @@ it("starts a batch only when every material is covered, after confirming", async
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Start production" }));
   await waitFor(() => expect(calls.map((call) => call.path)).toEqual(["/api/v1/production-schedule/activity/start/b2"]));
   fireEvent.click(within(screen.getByRole("navigation", { name: "Batches" })).getByRole("button", { name: /Batch 3/ }));
-  expect(await screen.findByText(/1 material is short, so production cannot start/)).toBeTruthy();
+  expect(await screen.findByText(/1 raw material is short, so production cannot start/)).toBeTruthy();
   expect(router.state.location.search).toBe("?batch=b3");
   expect(screen.getByText("short by 400 g")).toBeTruthy();
   expect(screen.getByText("Purchase requisition")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Start production" }).hasAttribute("disabled")).toBe(true);
+});
+
+it("starts a batch while packaging is short, saying it is requested later", async () => {
+  const { calls } = open(`/production/schedules/${id}/details?batch=b2`, { rawFor: { b2: [material("Sugar", 500, 900)] }, packagingFor: { b2: [material("Bottle", 500, 100)] } });
+  expect(await screen.findByText(/1 packaging material is short\. Production can start without it/)).toBeTruthy();
+  const start = screen.getByRole("button", { name: "Start production" });
+  await waitFor(() => expect(start.hasAttribute("disabled")).toBe(false));
+  fireEvent.click(start);
+  fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Start production" }));
+  await waitFor(() => expect(calls.map((call) => call.path)).toEqual(["/api/v1/production-schedule/activity/start/b2"]));
 });
 
 it("removes the chosen batches and keeps the ones the server refused, with its reason", async () => {
@@ -138,7 +148,7 @@ it("raises a purchase requisition for a batch's shortages that are not already b
 
 it("does not offer to raise a requisition to someone who may not create one", async () => {
   open(`/production/schedules/${id}/details?batch=b3`, { rawFor: { b3: [{ material: { id: "m-salt", name: "Salt" }, materialDepartment: { uoM: { id: "u-g", symbol: "g" } }, quantityNeeded: 500, quantityOnHand: 100, status: 0 }] } });
-  expect(await screen.findByText(/1 material is short/)).toBeTruthy();
+  expect(await screen.findByText(/1 raw material is short/)).toBeTruthy();
   expect(screen.queryByRole("button", { name: /Raise purchase requisition/ })).toBeNull();
 });
 
