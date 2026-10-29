@@ -11,7 +11,7 @@ export function previewRuntime(channel: string, parentOrigin: string, initialize
     const data = event.data;
     if (!data || typeof data !== "object" || data.channel !== channel || data.kind !== "initialize"
       || typeof data.name !== "string" || data.name.length > 512 || !(data.bytes instanceof ArrayBuffer)
-      || data.bytes.byteLength > 16 * 1024 * 1024 || !(data.wasm instanceof ArrayBuffer) || data.wasm.byteLength > 64 * 1024 * 1024) return;
+      || data.bytes.byteLength > 20 * 1024 * 1024 || !(data.wasm instanceof ArrayBuffer) || data.wasm.byteLength > 64 * 1024 * 1024) return;
     initialized = true;
     const bridge = {
       read: async () => ({ name: data.name, bytes: new Uint8Array(data.bytes) }),

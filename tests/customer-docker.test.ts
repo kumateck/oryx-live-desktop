@@ -172,3 +172,40 @@ test("CI approval requires the exact successful production push and holds activa
     assert.equal(f.run('test ! -f "$FIXTURE/commands"').status,0);
   } finally { f.cleanup(); }
 });
+
+test("Discord alerts announce start, success, failure and rollback like the customer backend", linux, () => {
+  const alerts=(f:ReturnType<typeof fixture>)=>readFileSync(join(f.directory,"curl-commands"),"utf8").split("\n")
+    .filter((line)=>line.includes("--data-binary")).map((line)=>JSON.parse(line.slice(line.indexOf("--data-binary ")+14)).content as string);
+  const stubs=`ORYX_SERVER_NAME=test-server; git(){ if [[ "$*" = *rev-parse* ]]; then echo ${next}; fi; }; approved(){ return 0; }; preflight(){ return 0; }; stage_candidate(){ return 0; };`;
+  let f=fixture();
+  try {
+    writeFileSync(join(f.state,"current"),old);
+    const result=f.run(`${stubs} build_release(){ return 0; }; trap failure ERR; deploy ''`); assert.equal(result.status,0,result.stderr);
+    assert.deepEqual(alerts(f),[
+      `🟡 ORYX Frontend deployment STARTED | test-server | entrance-server ${next.slice(0,8)} | building | replacing ${old.slice(0,8)}`,
+      `🟢 ORYX Frontend deployment SUCCESS | test-server | entrance-server ${next.slice(0,8)} | frontend healthy, API reachable | port 3001`]);
+    assert.doesNotMatch(readFileSync(join(f.directory,"curl-commands"),"utf8"),/fixture-secret/);
+    const unchanged=f.run(`${stubs} deploy ''`); assert.equal(unchanged.status,0,unchanged.stderr);
+    assert.equal(alerts(f).length,2);
+  } finally { f.cleanup(); }
+  f=fixture();
+  try {
+    writeFileSync(join(f.state,"current"),old);
+    const result=f.run(`${stubs} build_release(){ STAGE=building; return 17; }; trap failure ERR; deploy --retry`); assert.notEqual(result.status,0);
+    assert.deepEqual(alerts(f),[
+      `🟡 ORYX Frontend deployment STARTED | test-server | entrance-server ${next.slice(0,8)} | building (retry) | replacing ${old.slice(0,8)}`,
+      `🔴 ORYX Frontend deployment FAILED | test-server | entrance-server ${next.slice(0,8)} | stage: building | previous frontend still running | run: bash deploy/customer-docker/deploy.sh deploy --retry after checking the logs`]);
+  } finally { f.cleanup(); }
+  f=fixture();
+  try {
+    writeFileSync(join(f.state,"current"),old); writeFileSync(join(f.directory,"fail-activation"),next);
+    const result=f.run(`${stubs} build_release(){ return 0; }; trap failure ERR; deploy ''`); assert.notEqual(result.status,0);
+    assert.match(alerts(f).at(-1)??"",/^🔴 ORYX Frontend deployment FAILED \| test-server \| entrance-server bbbbbbbb \| stage: activating \| previous frontend restored \|/);
+  } finally { f.cleanup(); }
+  f=fixture();
+  try {
+    writeFileSync(join(f.state,"current"),next); writeFileSync(join(f.state,"previous"),old);
+    const result=f.run(`ORYX_SERVER_NAME=test-server; trap failure ERR; rollback`); assert.equal(result.status,0,result.stderr);
+    assert.deepEqual(alerts(f),[`🔵 ORYX Frontend rollback SUCCESS | test-server | entrance-server ${old.slice(0,8)} | ${next.slice(0,8)} blocked | automatic deployments paused, run resume when fixed`]);
+  } finally { f.cleanup(); }
+});

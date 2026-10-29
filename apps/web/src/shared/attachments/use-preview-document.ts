@@ -7,9 +7,10 @@ import { validateInWorker } from "./validation-client";
 export type PreviewDocument = { state: "loading" } | { state: "error"; message: string }
   | { state: "ready"; format: DocumentFormat; bytes: ArrayBuffer; wasm: ArrayBuffer; glue: string; channel: string };
 
-export function usePreviewDocument(file: AttachedFile, attempt: number): PreviewDocument {
+/** `detected` is the format read from the file's own bytes; it wins over the file name. */
+export function usePreviewDocument(file: AttachedFile, attempt: number, detected?: DocumentFormat): PreviewDocument {
   const [result, setResult] = useState<PreviewDocument>({ state: "loading" });
-  const format = documentFormat(file);
+  const format = detected ?? documentFormat(file);
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 90_000);
@@ -23,7 +24,7 @@ export function usePreviewDocument(file: AttachedFile, attempt: number): Preview
       const engine = engines[format].name;
       const read = async (url: string, limit: number) => readBounded(await fetch(url, options), limit);
       const fileBytes = file.blob
-        ? file.blob.size > attachmentLimit ? Promise.reject(new Error("The preview supports files up to 16 MiB.")) : file.blob.arrayBuffer()
+        ? file.blob.size > attachmentLimit ? Promise.reject(new Error("The preview supports files up to 20 MB.")) : file.blob.arrayBuffer()
         : link ? read(attachmentAddress(link), attachmentLimit) : Promise.reject(new Error("No file to open."));
       const [bytes, glueBytes, wasm] = await Promise.all([
         fileBytes.then((bytes) => validateInWorker(bytes, format, controller.signal)),
