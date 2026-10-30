@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { packsFrom, shipperSplit } from "@/shared/packing/packs";
 import { api } from "@/shared/api/base-api";
 import { productionApi } from "@/shared/api/generated/production";
 import { addTags } from "@/shared/api/add-tags";
@@ -33,11 +34,10 @@ export type TransferNote = z.infer<typeof noteRowsSchema>[number];
 
 /** Packs as full shippers and loose packs. With no shipper size everything is loose. */
 export function shippersOf(packs: number, perShipper: number): { shippers: number; loose: number } {
-  const total = Math.max(0, Math.trunc(Number.isFinite(packs) ? packs : 0));
-  return perShipper > 0 ? { shippers: Math.floor(total / perShipper), loose: total % perShipper } : { shippers: 0, loose: total };
+  return shipperSplit(Math.trunc(Number.isFinite(packs) ? packs : 0), perShipper);
 }
 /** What the store counted in, in packs, from the shippers and loose packs it entered. */
-export const receivedPacks = (shippers: number, loose: number, perShipper: number) => (Number.isFinite(shippers) ? shippers : 0) * Math.max(0, perShipper) + (Number.isFinite(loose) ? loose : 0);
+export const receivedPacks = (shippers: number, loose: number, perShipper: number) => packsFrom(shippers, loose, perShipper);
 
 // An empty number field reports "not a number"; it counts as none.
 const count = (message: string) => z.number().or(z.nan()).refine((value) => Number.isNaN(value) || (Number.isInteger(value) && value >= 0), message);

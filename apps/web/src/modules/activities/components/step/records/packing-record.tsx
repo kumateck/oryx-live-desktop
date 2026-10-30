@@ -24,7 +24,7 @@ export function PackingRecord({ record, batchScoped }: { record: Packing; batchS
       ["Packed incl. samples", count(record.yieldTotalQuantityPacked), yieldShare ? `${yieldShare} of expected` : null],
       ["Available to transfer", count(record.totalQuantityPacked)], ["Gain / loss", signed(record.totalGainOrLoss)]]} />
     <RecordFacts facts={[["QC analytical samples", recordQuantity(record.qualityControlAnalyticalSample)], ["Retained samples", recordQuantity(record.retainedSamples)],
-      ["Stability samples", recordQuantity(record.stabilitySamples)], ["Full shippers", shippers], ["Leftover units", count(record.leftOver)],
+      ["Stability samples", recordQuantity(record.stabilitySamples)], ["Full shippers", shippers], ["Loose packs", count(record.leftOver)],
       ["Total bottles / units", count(record.totalNumberOfBottles)], ["Batch size", recordQuantity(record.batchSize)],
       ["Average fill volume / weight", recordQuantity(record.averageVolumeFilledPerBottle)], ["Weight received", recordQuantity(record.totalWeightReceived)]]} />
     <RecordNote label="Yield variance reason" value={record.percentageVarianceDescription} />

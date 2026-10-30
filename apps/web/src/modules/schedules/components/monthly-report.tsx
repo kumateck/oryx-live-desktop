@@ -23,24 +23,24 @@ function PlanTable({ rows, printed = false }: { rows: readonly MonthlyPlanRow[];
   return <table className={printed ? "print-table" : "w-full border-collapse text-left text-sm"}>
     <thead className={printed ? undefined : "bg-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground"}><tr>
       <th scope="col" className={cell}>Product</th><th scope="col" className={right}>Expected batches</th><th scope="col" className={right}>Unit price</th>
-      <th scope="col" className={right}>Expected yield</th><th scope="col" className={right}>Shippers</th><th scope="col" className={right}>Loose</th>
+      <th scope="col" className={right}>Expected yield</th><th scope="col" className={right}>Packs</th><th scope="col" className={right}>Shippers</th><th scope="col" className={right}>Loose</th>
     </tr></thead>
     <tbody>
       {groupByMarket(rows).map((group) => <Fragment key={group.market}>
-        <tr className={printed ? undefined : "border-t bg-muted/50"}><th scope="colgroup" colSpan={6} className={`${cell} text-left font-semibold`}>{group.market}</th></tr>
+        <tr className={printed ? undefined : "border-t bg-muted/50"}><th scope="colgroup" colSpan={7} className={`${cell} text-left font-semibold`}>{group.market}</th></tr>
         {group.rows.map((row) => <tr key={row.key} className={printed ? undefined : "border-t"}>
           <td className={cell}><span className="font-medium">{row.productName}</span>
             {printed ? <small>{[row.productCode, row.packingStyle].filter(Boolean).join(" · ")}</small>
               : <span className="block text-xs text-muted-foreground">{[row.productCode, row.packingStyle].filter(Boolean).join(" · ")}</span>}</td>
           <td className={right}>{show(row.batches)}</td>
           <td className={right}>{row.unitPrice === null ? "–" : `${number.format(row.unitPrice)}${row.priceUoM ? ` ${row.priceUoM}` : ""}`}</td>
-          <td className={right}>{show(row.expectedYield)}</td><td className={right}>{show(row.shippers)}</td><td className={right}>{show(row.loose)}</td>
+          <td className={right}>{show(row.expectedYield)}</td><td className={right}>{show(row.packs)}</td><td className={right}>{show(row.shippers)}</td><td className={right}>{show(row.loose)}</td>
         </tr>)}
       </Fragment>)}
     </tbody>
     <tfoot className={printed ? undefined : "border-t-2 font-semibold"}><tr>
       <td className={cell}>Grand total</td><td className={right}>{show(totals.batches)}</td><td className={cell} />
-      <td className={right}>{show(totals.expectedYield)}</td><td className={right}>{show(totals.shippers)}</td><td className={right}>{show(totals.loose)}</td>
+      <td className={right}>{show(totals.expectedYield)}</td><td className={right}>{show(totals.packs)}</td><td className={right}>{show(totals.shippers)}</td><td className={right}>{show(totals.loose)}</td>
     </tr></tfoot>
   </table>;
 }

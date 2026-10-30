@@ -1,6 +1,10 @@
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
+import { formatCount } from "@/shared/packing/packs";
 import { ListDataTable, dataTableColumns } from "@/shared/datatable";
 import { packageTotal } from "../../lib/product-detail";
+import { unitLabel } from "../../lib/product-form";
+import { PackingUnitsCell, PacksPerShipperCell } from "../packing-style/packing-units-cell";
 import type { ProductDetail, ProductPackage, ProductPacking } from "../../schemas/product-detail-schema";
 
 const dash = "–";
@@ -22,22 +26,27 @@ export function PackagingTab({ product }: { product: ProductDetail }) {
 }
 
 const packingColumn = dataTableColumns<ProductPacking>();
-const packingColumns = packingColumn.columns([
+const unitText = (unit: { name: string | null; symbol: string | null } | null) => unit ? unitLabel(unit) : "";
+const unitRows = (item: ProductPacking) => [...item.packingLists].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  .map((unit) => ({ uom: { label: unitText(unit.uom) }, quantity: unit.quantity ?? Number.NaN }));
+const packingColumnsFor = (baseUnit: string | null) => packingColumn.columns([
   packingColumn.accessor((item) => item.name ?? dash, { id: "name", header: "Packing style", cell: ({ row }) =>
     <span className="flex flex-wrap items-center gap-2">{row.original.name ?? dash}{row.original.isDefault ? <Badge variant="secondary">Default</Badge> : null}</span> }),
-  packingColumn.accessor((item) => item.basePackingUoM ? `${item.basePackingUoM.name ?? ""}${item.basePackingUoM.symbol ? ` (${item.basePackingUoM.symbol})` : ""}`.trim() || dash : dash,
-    { id: "uom", header: "Base packing unit" }),
-  packingColumn.accessor((item) => item.basePackingQuantity ?? dash, { id: "base", header: "Base packing qty", size: 120 }),
-  packingColumn.accessor((item) => item.expectedYield ?? dash, { id: "yield", header: "Expected yield", size: 120 }),
-  packingColumn.accessor((item) => item.packPerShipper ?? dash, { id: "shipper", header: "Packs per shipper", size: 120 }),
+  packingColumn.accessor((item) => unitText(item.basePackingUoM) || dash, { id: "uom", header: "Base packing unit" }),
+  packingColumn.accessor((item) => item.basePackingQuantity ?? null, { id: "base", header: "Base packing qty", size: 120, cell: ({ row }) =>
+    row.original.basePackingQuantity === null ? dash : `${formatCount(row.original.basePackingQuantity)}${baseUnit ? ` ${baseUnit}` : ""}` }),
+  packingColumn.accessor((item) => item.expectedYield ?? null, { id: "yield", header: "Expected yield", size: 140, cell: ({ row }) =>
+    row.original.expectedYield === null ? dash : formatCount(row.original.expectedYield) }),
+  packingColumn.accessor((item) => item.packPerShipper ?? null, { id: "shipper", header: "Packs per shipper", size: 170, cell: ({ row }) =>
+    <PacksPerShipperCell units={unitRows(row.original)} baseLabel={unitText(row.original.basePackingUoM)} packPerShipper={row.original.packPerShipper} /> }),
   // Shown in full: Oryx Next hid these behind a hover card, which keyboard and touch users could not open.
-  packingColumn.display({ id: "units", header: "Units", cell: ({ row }) => row.original.packingLists.length
-    ? <ul className="space-y-0.5">{[...row.original.packingLists].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((unit, index) =>
-      <li key={index}>{unit.quantity ?? dash} {unit.uom ?? ""}</li>)}</ul> : dash }),
+  packingColumn.display({ id: "units", header: "Units", size: 260, cell: ({ row }) =>
+    <PackingUnitsCell units={unitRows(row.original)} baseLabel={unitText(row.original.basePackingUoM)} packPerShipper={row.original.packPerShipper} /> }),
   packingColumn.accessor((item) => item.description ?? dash, { id: "description", header: "Description" }),
 ]);
 
 export function PackingStylesTab({ product }: { product: ProductDetail }) {
-  return <ListDataTable label="Packing styles" columns={packingColumns} rows={product.packings}
+  const columns = useMemo(() => packingColumnsFor(product.baseUoM?.symbol ?? null), [product.baseUoM?.symbol]);
+  return <ListDataTable label="Packing styles" columns={columns} rows={product.packings}
     getRowId={(item) => item.id ?? item.name ?? ""} emptyTitle="No packing styles" />;
 }

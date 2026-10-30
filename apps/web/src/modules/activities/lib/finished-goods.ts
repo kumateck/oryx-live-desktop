@@ -1,3 +1,4 @@
+import { shipperSplit } from "@/shared/packing/packs";
 import type { DomainEntitiesMaterialsBatchCreateFinishedGoodsTransferNoteRequest as TransferRequest } from "@/shared/api/generated/production";
 import type { TransferBatchRecord, TransferNote } from "../schemas/finished-goods-schema";
 
@@ -10,7 +11,7 @@ export function transferTotals(packed: number, notes: readonly Pick<TransferNote
 /** A quantity of packs as full shippers and the loose packs left over. Null when the packing style does not say how many packs fill a shipper. */
 export function shipperBreakdown(quantity: number, packsPerShipper: number | null): { shippers: number; loose: number } | null {
   if (!packsPerShipper || !(quantity >= 0)) return null;
-  return { shippers: Math.floor(quantity / packsPerShipper), loose: quantity % packsPerShipper };
+  return shipperSplit(quantity, packsPerShipper);
 }
 
 /** Why a transfer cannot be raised, or null when it can. */

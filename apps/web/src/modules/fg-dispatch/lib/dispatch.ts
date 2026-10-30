@@ -1,3 +1,4 @@
+import { shipperSplit } from "@/shared/packing/packs";
 export const allocationsPath = "/crm/allocations";
 export const allocationPath = (id: string) => `${allocationsPath}/${id}`;
 export const proformaPath = "/crm/proforma-invoice";
@@ -30,7 +31,7 @@ interface SourceLike { quantity: number; batch: string | null; made: string | nu
 /** Every batch on a packing list as its own row, ordered by product then batch, with its packs split into shippers and loose packs. */
 export function packingRows(products: readonly { name: string; sources: readonly SourceLike[] }[]): PackingRow[] {
   return products.flatMap((product, index) => product.sources.map((source, position) => ({ key: `${index}-${position}`, product: product.name, batch: source.batch, made: source.made, expires: source.expires, packing: source.packing, perShipper: source.perShipper,
-    shippers: source.perShipper > 0 ? Math.floor(source.quantity / source.perShipper) : 0, loose: source.perShipper > 0 ? source.quantity % source.perShipper : source.quantity, packs: source.quantity })))
+    ...shipperSplit(source.quantity, source.perShipper), packs: source.quantity })))
     .sort((a, b) => a.product.localeCompare(b.product, undefined, { sensitivity: "base" }) || (a.batch ?? "").localeCompare(b.batch ?? "", undefined, { numeric: true, sensitivity: "base" }));
 }
 /** The rows grouped by product. A product packed from more than one batch gets a subtotal. */

@@ -9,6 +9,7 @@ import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { isDuplicateName, suggestedYield, type PackingStyle } from "../../lib/packing-styles";
 import { packingStyleFormSchema, type PackingStyleFormValues } from "../../schemas/packing-style-schema";
 import { PackingUnitsEditor } from "./packing-units-editor";
+import { ShipperPackPreview } from "./shipper-pack-preview";
 
 const blank: Partial<PackingStyleFormValues> = { name: "", description: "", isDefault: false, units: [{ uom: { value: "", label: "" }, quantity: Number.NaN }] };
 
@@ -58,6 +59,7 @@ export function PackingStyleDialog({ editing, styles, packingUnits, allUnits, fu
             <Button type="button" size="xs" variant="outline" onClick={() => form.setValue("expectedYield", suggestion, { shouldDirty: true, shouldValidate: true })}>Use as expected yield</Button>
           </p> : null}
           <PackingUnitsEditor control={form.control} errors={form.formState.errors} units={allUnits} />
+          <ShipperPackPreview form={form} baseUnit={baseUnit} />
         </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>

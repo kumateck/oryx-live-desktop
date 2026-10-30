@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { packingLayout } from "@/shared/packing/packs";
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const amount = z.number().nullish().transform((value) => typeof value === "number" && Number.isFinite(value) ? value : 0);
@@ -9,11 +10,14 @@ export const transferBatchRecordSchema = z.object({
   productionScheduleProduct: z.object({ productPacking: z.object({
     id: z.string().nullish(), name: text, packPerShipper: z.number().nullish(),
     basePackingUoM: z.object({ id: z.string().nullish(), name: text, symbol: text }).nullish(),
+    packingLists: z.array(z.object({ uom: z.object({ name: z.string().nullish(), symbol: z.string().nullish() }).nullish(), quantity: z.number().nullish(), order: z.number().nullish() })).nullish(),
   }).nullish() }).nullish(),
 }).transform((record) => { const packing = record.productionScheduleProduct?.productPacking; return {
   id: record.id, batchNumber: record.batchNumber, manufacturingDate: record.manufacturingDate ?? null, expiryDate: record.expiryDate ?? null,
   packing: packing?.id ? { id: packing.id, name: packing.name ?? "Unnamed style", packsPerShipper: packing.packPerShipper && packing.packPerShipper > 0 ? packing.packPerShipper : null,
-    unit: packing.basePackingUoM?.id ? { id: packing.basePackingUoM.id, name: packing.basePackingUoM.name ?? packing.basePackingUoM.symbol ?? "unit" } : null } : null,
+    unit: packing.basePackingUoM?.id ? { id: packing.basePackingUoM.id, name: packing.basePackingUoM.name ?? packing.basePackingUoM.symbol ?? "unit" } : null,
+    /** What final packing counted into the store: the pack unit, e.g. "Outer Carton". */
+    packName: packingLayout(packing).packName } : null,
 }; });
 export type TransferBatchRecord = z.infer<typeof transferBatchRecordSchema>;
 
