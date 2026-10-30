@@ -34,7 +34,11 @@ export function PackingUnitsEditor({ control, errors, units }: {
     </p>
     {rows.fields.map((row, index) => {
       const rowErrors = errors.units?.[index];
-      return <div key={row.id} className="grid grid-cols-[minmax(0,1fr)_8rem_auto] items-start gap-2">
+      return <div key={row.id} className="space-y-1">
+        <p id={`${row.id}-hint`} data-testid={`unit-hint-${index + 1}`} className="text-sm leading-normal text-muted-foreground">
+          {unitHint(watched ?? [], index, baseLabel)}
+        </p>
+        <div className="grid grid-cols-[minmax(0,1fr)_8rem_auto] items-start gap-2">
         <Controller control={control} name={`units.${index}.uom`} render={({ field }) => <div className="min-w-0 space-y-1">
           <Select value={field.value?.value ?? ""} onValueChange={(value) => field.onChange(units.find((unit) => unit.value === value) ?? { value, label: "" })}>
             <SelectTrigger aria-label={`Unit ${index + 1}`} aria-invalid={Boolean(rowErrors?.uom)} className="w-full"><SelectValue placeholder="Select unit" /></SelectTrigger>
@@ -50,9 +54,7 @@ export function PackingUnitsEditor({ control, errors, units }: {
         </div>} />
         <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove unit ${index + 1}`} disabled={rows.fields.length === 1}
           onClick={() => rows.remove(index)}><Trash2 /></Button>
-        <p id={`${row.id}-hint`} data-testid={`unit-hint-${index + 1}`} className="col-span-2 -mt-1 text-sm leading-normal text-muted-foreground">
-          {unitHint(watched ?? [], index, baseLabel)}
-        </p>
+        </div>
       </div>;
     })}
     {summary ? <p data-testid="packing-units-summary" className="text-sm leading-normal font-medium text-muted-foreground">In total, {summary}</p> : null}
