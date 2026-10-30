@@ -24,7 +24,10 @@ function read(entry: z.infer<typeof note>) {
   if (!entry.id) return null;
   const product = entry.batchManufacturingRecord?.productionScheduleProduct?.product;
   // Every quantity on a note is yield (base units produced). The packing style turns it into shippers and loose packs.
-  const layout = fgLayout(entry.productPacking);
+  // The units in one pack saved on the note win over the packing style, as on the server, so a later edit to the
+  // style cannot change what this stock means. Older notes without one fall back to the style.
+  const styled = fgLayout(entry.productPacking);
+  const layout = { ...styled, baseUnitsPerPack: entry.quantityPerPack > 0 ? entry.quantityPerPack : styled.baseUnitsPerPack };
   return { id: entry.id, number: entry.transferNoteNumber, createdAt: entry.createdAt ?? null, createdBy: [entry.createdBy?.firstName, entry.createdBy?.lastName].filter(Boolean).join(" ") || null, from: entry.fromWarehouse?.name ?? null, to: entry.toWarehouse?.name ?? null,
     productId: product?.id ?? null, productName: product?.name ?? "Unnamed product", productCode: product?.code ?? null, genericName: product?.genericName ?? null, category: product?.category?.name ?? null,
     batchNumber: entry.batchManufacturingRecord?.batchNumber ?? null, made: entry.batchManufacturingRecord?.manufacturingDate ?? null, expires: entry.batchManufacturingRecord?.expiryDate ?? null,

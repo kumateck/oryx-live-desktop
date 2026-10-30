@@ -40,7 +40,7 @@ it("adds up a product's stock per transfer, each with its own packing style", ()
     packings: ["80 X 20 X 10 (80 per shipper)", "10 x 10 (100 per shipper)"] });
 });
 
-const note = { id: "n1", isApproved: false, totalQuantity: 250, quantityPerPack: 10, remainingQuantity: 0, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 },
+const note = { id: "n1", isApproved: false, totalQuantity: 250, quantityPerPack: 1, remainingQuantity: 0, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 },
   batchManufacturingRecord: { batchNumber: "B-1", manufacturingDate: "2026-01-15T00:00:00Z", expiryDate: "2028-01-31T00:00:00Z", productionScheduleProduct: { product: { id: "p1", name: "Dicnac 100", code: "FP-1" } } } };
 interface Call { method: string; path: string; search: string; body?: unknown }
 function open(address: string, permissions: string[]) {
