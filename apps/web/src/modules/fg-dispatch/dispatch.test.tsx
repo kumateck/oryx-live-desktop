@@ -86,7 +86,7 @@ it("raises a proforma invoice only when Generate is pressed, at the customer's a
   const user = userEvent.setup();
   const { calls, router } = open("/crm/allocations/a-1", ["CanViewInvoice", "CanGenerateProformaInvoice", "CanViewProformaInvoice"]);
   expect(await screen.findByText("Subtotal · Dicnac 100")).toBeTruthy();
-  expect(screen.getByText("3 / 70")).toBeTruthy();
+  expect(screen.getByText("3 shippers · 70 loose")).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Generate proforma invoice" }));
   const dialog = await screen.findByRole("dialog");
   expect(await within(dialog).findByText("Agreed price")).toBeTruthy();

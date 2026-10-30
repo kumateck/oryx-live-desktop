@@ -1092,7 +1092,10 @@ export const routes: RouteObject[] = [
         { path: "approved-products", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/approved-products/page")).default }) },
           { path: ":id", Component: Outlet, children: [
-            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/approved-products/[id]/page")).default }) }
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/approved-products/[id]/page")).default }) },
+            { path: "packing-style", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/approved-products/[id]/packing-style/page")).default }) }
+            ] }
           ] }
         ] },
         { path: "distributed-area", Component: Outlet, children: [

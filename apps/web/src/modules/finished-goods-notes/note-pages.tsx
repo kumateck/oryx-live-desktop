@@ -21,8 +21,9 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
-import { canCount, countText, emptyCount, fgCount, fgText, yieldOf } from "@/shared/packing/fg-quantity";
-import { approveSchema, audit, notePath, notePermissions, noteRowsSchema, noteSchema, notesPath, useApproveTransferNoteMutation, useGetApiV1ProductionScheduleFinishedGoodsTransferNoteByIdQuery,
+import { PackQuantity } from "@/shared/packing/pack-quantity";
+import { formatShippers } from "@/shared/packing/packs";
+import { approveSchema, audit, notePath, notePermissions, noteRowsSchema, noteSchema, notesPath, receivedPacks, shippersOf, useApproveTransferNoteMutation, useGetApiV1ProductionScheduleFinishedGoodsTransferNoteByIdQuery,
   useGetApiV1ProductionScheduleFinishedGoodsTransferNoteQuery, type ApproveValues, type TransferNote } from "./notes";
 
 const fields: WizardField<ApproveValues>[] = [
@@ -91,8 +92,7 @@ export function NoteListPage() {
     column.accessor((row) => row.made ?? "", { id: "made", header: "Manufactured", size: 140, cell: ({ row }) => formatMonthYear(row.original.made) ?? "–" }),
     column.accessor((row) => row.expires ?? "", { id: "expires", header: "Expires", size: 130, cell: ({ row }) => formatMonthYear(row.original.expires) ?? "–" }),
     column.accessor((row) => row.packing ?? "", { id: "packing", header: "Packing", size: 190, cell: ({ row }) => <div><div>{row.original.packing ?? "–"}</div><div className="text-xs text-muted-foreground">{row.original.perShipper ? `${row.original.perShipper} per shipper` : "No shipper size"}</div></div> }),
-    column.accessor("total", { header: "Transferred", size: 210, cell: ({ row }) => <span className="font-medium">{fgText(row.original.total, row.original.layout)}</span> }),
-    column.accessor("received", { header: "Received", size: 210, cell: ({ row }) => row.original.approved ? fgText(row.original.received, row.original.layout) : <span className="text-muted-foreground">Not yet</span> }),
+    column.accessor("total", { header: "Transferred", size: 190, cell: ({ row }) => <PackQuantity packs={row.original.total} perShipper={row.original.perShipper} /> }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => <TableMenu label={`Actions for batch ${row.original.batchNumber ?? row.original.id}`} items={[
       { id: "view", label: "View", icon: Eye, to: notePath(row.original.id) },
       !row.original.approved && { id: "approve", label: "Approve", icon: Check, require: notePermissions.approve, onSelect: () => setApproving(row.original) },
@@ -112,20 +112,21 @@ export function NoteListPage() {
   </section>;
 }
 
+/** A transfer note counts packs; the store reads them as shippers and loose packs, with the total packs under them. */
+const inShippers = (packs: number, perShipper: number) => ({ value: formatShippers(shippersOf(packs, perShipper)), note: `${packs.toLocaleString()} packs` });
 function Detail({ note }: { note: TransferNote }) {
   const { has } = useAccess();
   const [approving, setApproving] = useState(false);
-  const show = (value: number) => fgText(value, note.layout);
   return <article className="min-w-0 space-y-4">
     <PageHeader title={note.productName} crumbs={[{ label: "Finished goods transfer notes", to: notesPath }, { label: note.number ?? note.batchNumber ?? "Transfer note" }]}
       actions={!note.approved && has(notePermissions.approve) ? <Button type="button" size="sm" onClick={() => setApproving(true)}><Check />Approve</Button> : null} />
     <div className="flex flex-wrap items-center gap-2"><Badge variant={note.approved ? "default" : "outline"}>{note.approved ? "Approved" : "Pending approval"}</Badge>
       <span className="text-sm text-muted-foreground">{[note.number, `Created ${formatDate(note.createdAt) ?? "on an unrecorded date"}`, note.createdBy ? `by ${note.createdBy}` : null, note.qar ? `QAR ${note.qar}` : null].filter(Boolean).join(" · ")}</span></div>
     <KeyFacts>
-      <KeyFact label="Received" value={show(note.received)} />
-      <KeyFact label="Allocated" value={show(note.allocated)} />
-      <KeyFact label="Pending allocation" value={show(note.pending)} state={note.pending > 0 ? "soon" : "none"} />
-      <KeyFact label="Remaining" value={show(note.remaining)} />
+      <KeyFact label="Received" {...inShippers(note.received, note.perShipper)} />
+      <KeyFact label="Allocated" {...inShippers(note.allocated, note.perShipper)} />
+      <KeyFact label="Pending allocation" {...inShippers(note.pending, note.perShipper)} state={note.pending > 0 ? "soon" : "none"} />
+      <KeyFact label="Remaining" {...inShippers(note.remaining, note.perShipper)} />
     </KeyFacts>
     <section aria-label="Transfer route" className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4 text-sm">
       <div><p className="text-xs text-muted-foreground">From</p><p className="font-medium">{note.from ?? "–"}</p></div><ArrowRight aria-hidden="true" className="size-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">To</p><p className="font-medium">{note.to ?? "–"}</p></div></section>
@@ -135,9 +136,8 @@ function Detail({ note }: { note: TransferNote }) {
         <DetailItem label="Batch number" value={note.batchNumber} /><DetailItem label="Manufactured" value={formatMonthYear(note.made)} /><DetailItem label="Expires" value={formatMonthYear(note.expires)} /><DetailItem label="QAR number" value={note.qar} />
       </DetailGroup>
       <DetailGroup title="Transfer quantities">
-        <DetailItem label="Transferred" value={show(note.total)} /><DetailItem label="Packing" value={note.packing} />
-        <DetailItem label="Packs per shipper" value={note.perShipper ? note.perShipper.toLocaleString() : null} />
-        <DetailItem label={`${note.layout.baseName ? note.layout.baseName : "Units"} per pack`} value={note.layout.baseUnitsPerPack ? note.layout.baseUnitsPerPack.toLocaleString() : null} />
+        <DetailItem label="Transferred" value={<PackQuantity packs={note.total} perShipper={note.perShipper} />} /><DetailItem label="Packing style" value={note.packing} />
+        <DetailItem label="Packs per shipper" value={note.perShipper || null} />
       </DetailGroup>
     </div>
     {note.notes ? <section className="space-y-1 rounded-lg border bg-card p-4"><h2 className="text-sm font-semibold">Notes</h2><RichTextView html={note.notes} className="text-sm" /></section> : null}

@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { PackQuantity } from "@/shared/packing/pack-quantity";
 import { formatMoney } from "@/shared/procurement/price";
 import { totalsByCurrency, type PricedLine } from "../lib/dispatch";
 
@@ -16,7 +17,7 @@ export function InvoiceLines({ lines, loading, unavailable, print = false }: { l
       <tbody>{lines.length === 0 ? <tr><td colSpan={5} className={print ? "print-empty" : "py-4 text-center text-muted-foreground"}>No products.</td></tr> : lines.map((line) => <tr key={line.key} className={print ? undefined : "border-b last:border-0"}>
         <td className={print ? undefined : "py-1.5"}><span className="font-medium">{line.productName}</span>{line.genericName ? <span className="block text-xs text-muted-foreground">{line.genericName}</span> : null}
           {print ? null : <Badge className="mt-1" variant={unavailable ? "destructive" : line.source === "agreement" ? "default" : "outline"}>{unavailable ? "Pricing unavailable" : line.source === "agreement" ? "Agreed price" : "List price"}</Badge>}</td>
-        <td className={print ? undefined : "py-1.5"}>{line.code ?? "–"}</td><td style={{ textAlign: "right" }} className={print ? undefined : "py-1.5"}>{line.quantity.toLocaleString()}</td>
+        <td className={print ? undefined : "py-1.5"}>{line.code ?? "–"}</td><td style={{ textAlign: "right" }} className={print ? undefined : "py-1.5"}><PackQuantity packs={line.quantity} perShipper={line.perShipper} /></td>
         <td style={{ textAlign: "right" }} className={print ? undefined : "py-1.5"}>{money(line.unitPrice, line.currency)}</td><td style={{ textAlign: "right" }} className={print ? undefined : "py-1.5 font-medium"}>{money(line.quantity * line.unitPrice, line.currency)}</td></tr>)}</tbody>
       {!loading && !unavailable && totals.length > 0 ? <tfoot>{totals.map((total) => <tr key={total.currency ?? "none"}><td colSpan={4} style={{ textAlign: "right" }} className={print ? undefined : "py-1.5 font-medium"}>Total{total.currency ? ` (${total.currency})` : ""}</td>
         <td style={{ textAlign: "right" }} className={print ? undefined : "py-1.5 font-semibold"}>{formatMoney(total.amount, total.currency)}</td></tr>)}</tfoot> : null}

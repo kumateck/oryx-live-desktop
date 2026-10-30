@@ -167,3 +167,13 @@ export function shipperSplit(packs: number, perShipper: number | null | undefine
 export function packsFrom(shippers: number, loose: number, perShipper: number | null | undefined): number {
   return (Number.isFinite(shippers) && shippers > 0 ? shippers : 0) * (validQuantity(perShipper) ? perShipper : 0) + (Number.isFinite(loose) && loose > 0 ? loose : 0);
 }
+
+/** Finished goods are counted in shippers and loose packs: "12 shippers · 5 loose". Individual tablets do not matter there. */
+export function formatShippers(split: { shippers: number; loose: number }): string {
+  return `${formatCount(split.shippers)} ${split.shippers === 1 ? "shipper" : "shippers"} · ${formatCount(split.loose)} loose`;
+}
+
+/** Adds shipper splits made with different shipper sizes (several batches or packing styles of one product). */
+export function addSplits(splits: readonly { shippers: number; loose: number }[]): { shippers: number; loose: number } {
+  return splits.reduce((sum, split) => ({ shippers: sum.shippers + split.shippers, loose: sum.loose + split.loose }), { shippers: 0, loose: 0 });
+}
