@@ -1304,6 +1304,14 @@ export const navigationCatalog = [
         ]
       },
       {
+        "id": "fg-warehouse.products",
+        "label": "Products",
+        "path": "/warehouse/fg-products",
+        "permissions": [
+          "CanViewApprovedProducts"
+        ]
+      },
+      {
         "id": "fg-warehouse.approved-products",
         "label": "Approved Products",
         "path": "/warehouse/approved-products",
