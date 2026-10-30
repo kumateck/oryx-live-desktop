@@ -35,17 +35,22 @@ const fields: WizardField<ApproveValues>[] = [
 export function ApproveNoteDialog({ note, onClose }: { note: TransferNote; onClose: () => void }) {
   const [approve, mutation] = useApproveTransferNoteMutation();
   const [message, setMessage] = useState("");
-  const sent = shippersOf(note.total, note.perShipper);
+  // The note holds yield; the store sees and enters shippers and loose packs.
+  const sent = fgCount(note.total, note.layout) ?? emptyCount();
+  const countable = canCount(note.layout);
   const form = useForm<ApproveValues>({ resolver: zodResolver(approveSchema(note)), defaultValues: { shippers: sent.shippers, loose: sent.loose, notes: "" } });
   void form.formState.errors;
   const [shippers, loose] = useWatch({ control: form.control, name: ["shippers", "loose"] });
-  const packs = receivedPacks(shippers, loose, note.perShipper);
+  const received = yieldOf(shippers, loose, note.layout) ?? 0;
+  const short = received > 0 && received < note.total ? fgCount(note.total - received, note.layout) : null;
   const busy = mutation.isLoading;
   const submit = form.handleSubmit(async (values) => {
     setMessage("");
-    const result = await approve({ id: note.id, quantityReceived: receivedPacks(values.shippers, values.loose, note.perShipper), notes: values.notes.trim() || null });
+    const quantityReceived = yieldOf(values.shippers, values.loose, note.layout);
+    if (quantityReceived === null) return;
+    const result = await approve({ id: note.id, quantityReceived, notes: values.notes.trim() || null });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    toast.success(`Transfer of ${note.productName} approved`, { description: `${packs.toLocaleString()} packs received into the finished goods store.` });
+    toast.success(`Transfer of ${note.productName} approved`, { description: `${fgText(quantityReceived, note.layout)} received into the finished goods store.` });
     onClose();
   });
   return <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
@@ -53,12 +58,15 @@ export function ApproveNoteDialog({ note, onClose }: { note: TransferNote; onClo
       <DialogHeader><DialogTitle>Approve transfer · {note.productName}</DialogTitle><DialogDescription>Batch {note.batchNumber ?? "–"}. Enter what the store counted in; it cannot be more than was sent. This cannot be undone.</DialogDescription></DialogHeader>
       <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         <DialogBody className="space-y-3">
-          <KeyFacts><KeyFact label="Sent" value={`${note.total.toLocaleString()} packs`} note={note.packing ?? undefined} /><KeyFact label="Shippers sent" value={sent.shippers} note={note.perShipper ? `${note.perShipper} packs each` : "No shipper size"} /><KeyFact label="Loose sent" value={sent.loose} /></KeyFacts>
-          <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
-          <p role="status" className="text-sm">Received <span className="font-semibold">{packs.toLocaleString()} packs</span>{packs > 0 && packs < note.total ? <span className="text-amber-700 dark:text-amber-400"> · {(note.total - packs).toLocaleString()} fewer than sent</span> : null}</p>
+          <KeyFacts><KeyFact label="Shippers sent" value={sent.shippers.toLocaleString()} note={note.perShipper ? `${note.perShipper.toLocaleString()} packs each` : "No shipper size"} /><KeyFact label="Loose sent" value={sent.loose.toLocaleString()} note={note.packing ?? undefined} />
+            {sent.units > 0 ? <KeyFact label="Units over" value={sent.units.toLocaleString()} note="Do not fill a pack" /> : null}</KeyFacts>
+          {countable ? <>
+            <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
+            <p role="status" className="text-sm">Received <span className="font-semibold">{countText(fgCount(received, note.layout) ?? emptyCount(), note.layout.baseName)}</span>{short ? <span className="text-amber-700 dark:text-amber-400"> · {countText(short, note.layout.baseName)} fewer than sent</span> : null}</p>
+          </> : <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">The packing style {note.packing ? `“${note.packing}” ` : ""}does not say how many units fill a pack, so this transfer cannot be counted in shippers and loose. Complete the packing style on the product first.</p>}
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>
-        <DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? <><Spinner />Approving…</> : "Approve transfer"}</Button></DialogFooter>
+        <DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy || !countable}>{busy ? <><Spinner />Approving…</> : "Approve transfer"}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>;

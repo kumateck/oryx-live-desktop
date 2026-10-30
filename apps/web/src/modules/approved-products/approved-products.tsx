@@ -3,7 +3,7 @@ import { z } from "zod";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { Eye, PackageOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { noteRowsSchema, shippersOf, useGetApiV1ProductionScheduleApprovedProductsByProductIdQuery, useGetApiV1ProductionScheduleApprovedProductsQuery, type TransferNote } from "@/modules/finished-goods-notes/notes";
+import { noteRowsSchema, useGetApiV1ProductionScheduleApprovedProductsByProductIdQuery, useGetApiV1ProductionScheduleApprovedProductsQuery, type TransferNote } from "@/modules/finished-goods-notes/notes";
 import { productsApi } from "@/shared/api/generated/products";
 import { warehouseApi } from "@/shared/api/generated/warehouse";
 import { ClientDataTable, ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
@@ -46,7 +46,7 @@ export function receivedSummary(notes: readonly (Pick<TransferNote, "received" |
 /** The packing columns of one product, read from its approved transfers. Each row reads its own, and the answers are cached. */
 function PackingCell({ productId, part }: { productId: string; part: "packing" | "transferred" | "received" | "remaining" }) {
   const query = useGetApiV1ProductionScheduleApprovedProductsByProductIdQuery({ ...audit, productId });
-  const summary = useMemo(() => { const parsed = noteRowsSchema.safeParse(query.data ?? []); return parsed.success ? receivedSummary(parsed.data) : null; }, [query.data]);
+  const summary = useMemo(() => { const parsed = noteRowsSchema.safeParse(query.data ?? []); return parsed.success ? stockSummary(parsed.data) : null; }, [query.data]);
   if (query.isLoading) return <span className="inline-block h-4 w-16 animate-pulse rounded bg-muted" />;
   if (!summary) return <span className="text-muted-foreground">–</span>;
   if (part === "packing") return <span className="break-words">{summary.packings.join(", ") || "–"}</span>;

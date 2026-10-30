@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { fgLayout } from "@/shared/packing/fg-quantity";
 import type { OrderStatus } from "../lib/orders";
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
@@ -30,13 +31,22 @@ export type ProductionOrder = z.infer<typeof orderRowsSchema>[number];
 export type OrderLine = ProductionOrder["lines"][number];
 
 const date = z.string().nullish().transform((value) => value && new Date(value).getFullYear() >= 1900 ? value : null);
-/** The approved batches of a product that still have packs to give. */
-export const batchesSchema = z.object({ finishedGoodsTransferNotes: z.array(z.object({ id: z.string().nullish(), isApproved: z.boolean().nullish(), totalQuantity: amount, remainingQuantity: amount, pendingAllocatedQuantity: amount,
-  productPacking: z.object({ id: z.string().nullish(), name: text, packPerShipper: amount }).nullish(),
+/**
+ * The approved batches of a product and the whole packs each still has free. Stock is held as yield (base units),
+ * so it is turned into packs with the units per pack saved on the transfer note (or its packing style for older
+ * notes), the same rule the server uses. Free stock already excludes packing lists waiting for approval: the
+ * server takes stock when a packing list is created.
+ */
+export const batchesSchema = z.object({ finishedGoodsTransferNotes: z.array(z.object({ id: z.string().nullish(), isApproved: z.boolean().nullish(), totalQuantity: amount, remainingQuantity: amount, quantityPerPack: amount,
+  productPacking: z.object({ id: z.string().nullish(), name: text, packPerShipper: z.number().nullish(), basePackingUoM: z.object({ name: z.string().nullish(), symbol: z.string().nullish() }).nullish(),
+    packingLists: z.array(z.object({ uom: z.object({ name: z.string().nullish(), symbol: z.string().nullish() }).nullish(), quantity: z.number().nullish(), order: z.number().nullish() })).nullish() }).nullish(),
   batchManufacturingRecord: z.object({ id: z.string().nullish(), batchNumber: text, manufacturingDate: date, expiryDate: date }).nullish() })).nullish() }).nullish()
-  .transform((value) => (value?.finishedGoodsTransferNotes ?? []).flatMap((note) => note.id && note.isApproved === true ? [{ noteId: note.id, batchNumber: note.batchManufacturingRecord?.batchNumber ?? null,
-    made: note.batchManufacturingRecord?.manufacturingDate ?? null, expires: note.batchManufacturingRecord?.expiryDate ?? null, packingId: note.productPacking?.id ?? null, packing: note.productPacking?.name ?? null,
-    perShipper: note.productPacking?.packPerShipper ?? 0, total: note.totalQuantity,
-    // Packs already promised to a packing list that is not loaded yet are not free.
-    free: Math.max(0, note.remainingQuantity - note.pendingAllocatedQuantity) }] : []));
+  .transform((value) => (value?.finishedGoodsTransferNotes ?? []).flatMap((note) => { if (!note.id || note.isApproved !== true) return [];
+    const layout = fgLayout(note.productPacking);
+    const perPack = note.quantityPerPack > 0 ? note.quantityPerPack : layout.baseUnitsPerPack;
+    return [{ noteId: note.id, batchNumber: note.batchManufacturingRecord?.batchNumber ?? null,
+      made: note.batchManufacturingRecord?.manufacturingDate ?? null, expires: note.batchManufacturingRecord?.expiryDate ?? null, packingId: note.productPacking?.id ?? null, packing: note.productPacking?.name ?? null,
+      perShipper: layout.perShipper ?? 0, perPack,
+      // Whole packs only: units short of a pack cannot go on a packing list.
+      free: perPack ? Math.floor(Math.max(0, note.remainingQuantity) / perPack + 1e-9) : 0 }]; }));
 export type ApprovedBatch = z.infer<typeof batchesSchema>[number];
