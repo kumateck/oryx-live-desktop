@@ -58,7 +58,7 @@ function Line({ form, index, customerId, currency, choices, onRemove }: { form: 
       ...(hasShippers ? { description: `${perShipper.toLocaleString()} packs each.` } : packing ? { description: "This packing style has no shipper size." } : {}) },
     { type: InputTypes.NUMBER, name: `items.${index}.loose`, label: "Loose packs", min: 0, step: 1, disabled: !packing,
       ...(hasShippers ? { description: `Fewer than ${perShipper.toLocaleString()}.` } : {}) },
-    { type: InputTypes.NUMBER, name: `items.${index}.unitPrice`, label: `Unit price${currency ? ` (${currency})` : ""}`, min: 0, description: "Leave empty to use the price on record." },
+    { type: InputTypes.NUMBER, name: `items.${index}.unitPrice`, label: `Price per pack${currency ? ` (${currency})` : ""}`, min: 0, description: "The price of one pack. Leave empty to use the price on record." },
     { type: InputTypes.NUMBER, name: `items.${index}.discount`, label: "Discount %", min: 0, max: 100 },
   ];
   return <li className="space-y-2 rounded-md border p-3">
@@ -132,7 +132,7 @@ function Detail({ quotation }: { quotation: CustomerQuotation }) {
   const columns = useMemo(() => column.columns([
     column.accessor("product", { header: "Product", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.product}</div><div className="text-xs text-muted-foreground">{row.original.packing ?? "No packing style"}</div></div> }),
     column.accessor("quantity", { header: "Quantity", size: 190, cell: ({ row }) => <div><div className="font-medium">{row.original.quantity.toLocaleString()}</div><div className="text-xs text-muted-foreground">{row.original.shippers} shippers · {row.original.loose} loose</div></div> }),
-    column.accessor("unitPrice", { header: "Unit price", size: 150, cell: ({ row }) => formatMoney(row.original.unitPrice, currency) }),
+    column.accessor("unitPrice", { header: "Price per pack", size: 150, cell: ({ row }) => formatMoney(row.original.unitPrice, currency) }),
     column.accessor("discount", { header: "Discount", size: 110, cell: ({ row }) => `${row.original.discount}%` }),
     column.accessor("total", { header: "Total", size: 160, cell: ({ row }) => <span className="font-medium">{formatMoney(row.original.total, currency)}</span> }),
   ]), [currency]);

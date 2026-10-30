@@ -69,7 +69,7 @@ export const invoicedProductsSheet = (name: string, rows: readonly DomainEntitie
   { label: "Product code", read: (row) => row.productCode },
   { label: "Product name", read: (row) => row.productName },
   { label: "Unit", read: (row) => row.uom },
-  { label: "Unit price", read: (row) => row.unitPrice },
+  { label: "Price per pack", read: (row) => row.unitPrice },
   { label: "Price unit", read: (row) => row.priceUoM },
   { label: "Item amount", read: (row) => row.itemAmount },
 ]);

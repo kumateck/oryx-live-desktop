@@ -9,7 +9,7 @@ function ScheduleRow({ row, paper = false }: { row: ProductionReadinessRow; pape
     <TableHead scope="row" className="readiness-product"><span className="font-medium">{row.productName}</span>
       <span className="readiness-secondary">{row.productCode || "No code"} · {row.packingStyle}</span></TableHead>
     <TableCell className="readiness-number"><span className="readiness-small-label">Expected batches</span>{reportNumber(row.batches)}</TableCell>
-    <TableCell className="readiness-number"><span className="readiness-small-label">Unit price</span>{reportNumber(row.unitPrice, "entered")}
+    <TableCell className="readiness-number"><span className="readiness-small-label">Price per pack</span>{reportNumber(row.unitPrice, "entered")}
       {row.priceUnit ? <span className="readiness-secondary">{row.priceUnit}</span> : null}</TableCell>
     <TableCell className="readiness-number"><span className="readiness-small-label">Expected yield</span>{reportNumber(row.expectedYield)}</TableCell>
     <TableCell className="readiness-number"><span className="readiness-small-label">Shippers</span>{reportNumber(row.shippers)}
@@ -46,7 +46,7 @@ export function ProductionScheduleTable({ report, paper = false, markets = repor
     <TableHeader><TableRow>
       <TableHead scope="col" className="readiness-product">Product</TableHead>
       <TableHead scope="col" className="readiness-number">Expected batches</TableHead>
-      <TableHead scope="col" className="readiness-number">Unit price</TableHead>
+      <TableHead scope="col" className="readiness-number">Price per pack</TableHead>
       <TableHead scope="col" className="readiness-number">Expected yield</TableHead>
       <TableHead scope="col" className="readiness-number">Shippers</TableHead>
       {!paper ? readinessChecks.map(({ key, label }) => <TableHead key={key} scope="col" className="readiness-desktop-check">{label}</TableHead>) : null}
