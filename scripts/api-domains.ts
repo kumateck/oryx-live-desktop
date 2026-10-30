@@ -19,7 +19,7 @@ export const apiDomains: readonly ApiDomain[] = [
     "AttendanceRecord", "Designation", "Employee", "Onboarding", "LeaveEntitlement", "LeaveRequest", "LeaveType", "OvertimeRequest",
     "Payroll", "Performance", "ShiftCategory", "ShiftSchedule", "ShiftType", "StaffRequisition",
   ] },
-  { id: "materials", exportName: "materialsApi", tags: ["Material", "BillOfMaterial"] },
+  { id: "materials", exportName: "materialsApi", tags: ["Material", "BillOfMaterial", "StockMigration"] },
   { id: "products", exportName: "productsApi", tags: ["Product"] },
   { id: "production", exportName: "productionApi", tags: ["ProductionSchedule", "ProductionOrder", "WorkOrder"] },
   { id: "warehouse", exportName: "warehouseApi", tags: ["Warehouse", "Requisition", "StockAdjustment", "StockDiscrepancy", "DamagedStocks"] },

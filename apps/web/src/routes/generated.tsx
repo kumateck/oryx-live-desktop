@@ -1054,7 +1054,12 @@ export const routes: RouteObject[] = [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/uom/page")).default }) }
         ] },
         { path: "upload-center", Component: Outlet, children: [
-          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/upload-center/page")).default }) }
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/upload-center/page")).default }) },
+          { path: "stock-migrations", Component: Outlet, children: [
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/upload-center/stock-migrations/[id]/page")).default }) }
+            ] }
+          ] }
         ] },
         { path: "warehouses", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/warehouses/page")).default }) }
@@ -1109,6 +1114,12 @@ export const routes: RouteObject[] = [
         ] },
         { path: "extra-material", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/extra-material/page")).default }) }
+        ] },
+        { path: "fg-products", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/fg-products/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/fg-products/[id]/page")).default }) }
+          ] }
         ] },
         { path: "finished-goods-transfer-notes", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/finished-goods-transfer-notes/page")).default }) },

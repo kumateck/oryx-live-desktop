@@ -289,6 +289,7 @@ export const generatedTagTypes = [
   "staff-requisition",
   "stock-adjustment",
   "stock-discrepancy",
+  "stock-migration",
   "stp-document",
   "stp-document/document",
   "template-area",

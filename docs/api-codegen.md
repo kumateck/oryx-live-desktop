@@ -53,6 +53,8 @@ Two rules keep this precise:
 
 Changes made elsewhere (another user, another window, Oryx Next) cannot be seen by tags. A page reads its data again when it opens on data older than 30 seconds, when the window regains focus, and after a reconnect (`shared/api/base-api.ts`). Live updates of other people's changes are proposed in `docs/proposals/entity-changed-events.md`.
 
+The opening-stock migration operations (`/api/v1/stock-migrations`, tag `StockMigration`, materials domain) were added on 2026-10-30 from the companion backend offline export. Only those paths and their `StockMigration*` schemas were merged into the contract; the export's other differences were left for their own review. The upload is multipart and is declared by hand in the Upload Center module.
+
 Purchase-unit additions are staged in the versioned contract from the companion
 backend controller/DTO declarations; generated clients pass through the normal
 generator. Re-export from the upgraded backend during release verification. See
