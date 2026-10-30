@@ -75,7 +75,7 @@ it("lists orders by status and offers creating one only with the convert permiss
 it("shows what is packed and builds a packing list only for products still to pack", async () => {
   const user = userEvent.setup();
   open("/crm/production-order/o-1", ["CanViewOrder"]);
-  expect(await screen.findByText("150 still to pack")).toBeTruthy();
+  expect(await screen.findByText("1 shipper · 50 loose still to pack")).toBeTruthy();
   expect(screen.getByText("Part fulfilled")).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Generate packing list" })).toBeNull();
   cleanup();

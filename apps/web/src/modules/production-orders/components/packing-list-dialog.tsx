@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { formatShippers, shipperSplit } from "@/shared/packing/packs";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,7 @@ export function PackingListDialog({ order, onClose }: { order: ProductionOrder; 
               <SelectContent>{open.map((item) => <SelectItem key={item.key} value={item.key}>{item.productName}{item.packing ? ` (${item.packing})` : ""}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5"><Label htmlFor="packing-batch">Approved batch</Label>
             <Select value="" onValueChange={addBatch} disabled={busy || !line || loading.isFetching || offered.length === 0}><SelectTrigger id="packing-batch" className="w-full"><SelectValue placeholder={!line ? "Choose the product first" : loading.isFetching ? "Loading batches…" : offered.length ? "Add a batch" : "No approved batch has packs free"} /></SelectTrigger>
-              <SelectContent>{offered.map((batch) => <SelectItem key={batch.noteId} value={batch.noteId}>{batch.batchNumber ?? "No batch number"} · {batch.free.toLocaleString()} free · expires {formatMonthYear(batch.expires) ?? "–"}</SelectItem>)}</SelectContent></Select></div>
+              <SelectContent>{offered.map((batch) => <SelectItem key={batch.noteId} value={batch.noteId}>{batch.batchNumber ?? "No batch number"} · {formatShippers(shipperSplit(batch.free, batch.perShipper))} ({batch.free.toLocaleString()} packs) free · expires {formatMonthYear(batch.expires) ?? "–"}</SelectItem>)}</SelectContent></Select></div>
         </div>
         <div className="overflow-x-auto"><table className="w-full min-w-[820px] text-sm"><caption className="sr-only">Packing list</caption>
           <thead><tr className="border-b text-left text-xs text-muted-foreground"><th scope="col" className="py-1.5 font-medium">#</th><th scope="col" className="py-1.5 font-medium">Product</th><th scope="col" className="py-1.5 font-medium">Batch</th><th scope="col" className="py-1.5 font-medium">Made</th><th scope="col" className="py-1.5 font-medium">Expires</th>

@@ -233,6 +233,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1ProductByProductIdPackingApprovedProduct: build.mutation<
+      PostApiV1ProductByProductIdPackingApprovedProductApiResponse,
+      PostApiV1ProductByProductIdPackingApprovedProductApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product", id: "LIST" }, { type: "product", id: queryArg.productId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/product/${queryArg.productId}/packing/approved-product`,
+        method: "POST",
+        body: queryArg.body,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     getApiV1ProductPackagesByProductPackageId: build.query<
       GetApiV1ProductPackagesByProductPackageIdApiResponse,
       GetApiV1ProductPackagesByProductPackageIdApiArg
@@ -579,6 +594,16 @@ export type GetApiV1ProductByProductIdPackingApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+};
+export type PostApiV1ProductByProductIdPackingApprovedProductApiResponse =
+  /** status 200 OK */ string;
+export type PostApiV1ProductByProductIdPackingApprovedProductApiArg = {
+  productId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  body: DomainEntitiesProductsCreateProductPacking[];
 };
 export type GetApiV1ProductPackagesByProductPackageIdApiResponse =
   /** status 200 OK */ DomainEntitiesProductsProductPackageDto;
@@ -8028,6 +8053,7 @@ export const {
   usePostApiV1ProductByProductIdPackingMutation,
   useGetApiV1ProductByProductIdPackingQuery,
   useLazyGetApiV1ProductByProductIdPackingQuery,
+  usePostApiV1ProductByProductIdPackingApprovedProductMutation,
   useGetApiV1ProductPackagesByProductPackageIdQuery,
   useLazyGetApiV1ProductPackagesByProductPackageIdQuery,
   usePutApiV1ProductPackagesByProductPackageIdMutation,
