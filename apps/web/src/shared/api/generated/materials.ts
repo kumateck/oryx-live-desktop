@@ -850,6 +850,175 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1StockMigrations: build.mutation<
+      PostApiV1StockMigrationsApiResponse,
+      PostApiV1StockMigrationsApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "stock-migration", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations`,
+        method: "POST",
+        body: queryArg.body,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          departmentId: queryArg.departmentId,
+          massUnit: queryArg.massUnit,
+          volumeUnit: queryArg.volumeUnit,
+        },
+      }),
+    }),
+    getApiV1StockMigrations: build.query<
+      GetApiV1StockMigrationsApiResponse,
+      GetApiV1StockMigrationsApiArg
+    >({
+      providesTags: [{ type: "stock-migration", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          departmentId: queryArg.departmentId,
+        },
+      }),
+    }),
+    getApiV1StockMigrationsById: build.query<
+      GetApiV1StockMigrationsByIdApiResponse,
+      GetApiV1StockMigrationsByIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stock-migration", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    deleteApiV1StockMigrationsById: build.mutation<
+      DeleteApiV1StockMigrationsByIdApiResponse,
+      DeleteApiV1StockMigrationsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stock-migration", id: "LIST" }, { type: "stock-migration", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}`,
+        method: "DELETE",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1StockMigrationsByIdLines: build.query<
+      GetApiV1StockMigrationsByIdLinesApiResponse,
+      GetApiV1StockMigrationsByIdLinesApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stock-migration", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}/lines`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          search: queryArg.search,
+          sheet: queryArg.sheet,
+          status: queryArg.status,
+        },
+      }),
+    }),
+    putApiV1StockMigrationsByIdLines: build.mutation<
+      PutApiV1StockMigrationsByIdLinesApiResponse,
+      PutApiV1StockMigrationsByIdLinesApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stock-migration", id: "LIST" }, { type: "stock-migration", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}/lines`,
+        method: "PUT",
+        body: queryArg.domainEntitiesMaterialsStockMigrationsBulkUpdateStockMigrationLinesRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1StockMigrationsByIdLinesAndLineId: build.mutation<
+      PutApiV1StockMigrationsByIdLinesAndLineIdApiResponse,
+      PutApiV1StockMigrationsByIdLinesAndLineIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stock-migration", id: "LIST" }, { type: "stock-migration", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}/lines/${queryArg.lineId}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesMaterialsStockMigrationsUpdateStockMigrationLineRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1StockMigrationsByIdUnits: build.mutation<
+      PutApiV1StockMigrationsByIdUnitsApiResponse,
+      PutApiV1StockMigrationsByIdUnitsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stock-migration", id: "LIST" }, { type: "stock-migration", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}/units`,
+        method: "PUT",
+        body: queryArg.domainEntitiesMaterialsStockMigrationsUpdateStockMigrationUnitsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1StockMigrationsByIdRecheck: build.mutation<
+      PostApiV1StockMigrationsByIdRecheckApiResponse,
+      PostApiV1StockMigrationsByIdRecheckApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stock-migration", id: "LIST" }, { type: "stock-migration", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}/recheck`,
+        method: "POST",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1StockMigrationsByIdComparison: build.query<
+      GetApiV1StockMigrationsByIdComparisonApiResponse,
+      GetApiV1StockMigrationsByIdComparisonApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stock-migration", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}/comparison`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1StockMigrationsByIdApprove: build.mutation<
+      PostApiV1StockMigrationsByIdApproveApiResponse,
+      PostApiV1StockMigrationsByIdApproveApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stock-migration", id: "LIST" }, { type: "stock-migration", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}/approve`,
+        method: "POST",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -1473,6 +1642,115 @@ export type GetApiV1MaterialByMaterialIdPurchaseUnitsApiResponse =
   /** status 200 OK */ DomainEntitiesBaseUnitOfMeasureDto[];
 export type GetApiV1MaterialByMaterialIdPurchaseUnitsApiArg = {
   materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1StockMigrationsApiResponse = /** status 200 OK */ string;
+export type PostApiV1StockMigrationsApiArg = {
+  /** The department whose stores the stock belongs to. */
+  departmentId?: string;
+  /** The unit the sheet's weights are written in: kg, g or mg. */
+  massUnit?: string;
+  /** The unit the sheet's liquids are written in: L or ml. */
+  volumeUnit?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  body: {
+    file?: Blob;
+  };
+};
+export type GetApiV1StockMigrationsApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsStockMigrationsStockMigrationDto[];
+export type GetApiV1StockMigrationsApiArg = {
+  departmentId?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1StockMigrationsByIdApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsStockMigrationsStockMigrationDto;
+export type GetApiV1StockMigrationsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type DeleteApiV1StockMigrationsByIdApiResponse = void;
+export type DeleteApiV1StockMigrationsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1StockMigrationsByIdLinesApiResponse =
+  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsStockMigrationsStockMigrationLineDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
+export type GetApiV1StockMigrationsByIdLinesApiArg = {
+  id: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  sheet?: string;
+  status?: DomainEntitiesMaterialsStockMigrationsStockMigrationLineStatus;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PutApiV1StockMigrationsByIdLinesApiResponse = void;
+export type PutApiV1StockMigrationsByIdLinesApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsStockMigrationsBulkUpdateStockMigrationLinesRequest: DomainEntitiesMaterialsStockMigrationsBulkUpdateStockMigrationLinesRequest;
+};
+export type PutApiV1StockMigrationsByIdLinesAndLineIdApiResponse = void;
+export type PutApiV1StockMigrationsByIdLinesAndLineIdApiArg = {
+  id: string;
+  lineId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsStockMigrationsUpdateStockMigrationLineRequest: DomainEntitiesMaterialsStockMigrationsUpdateStockMigrationLineRequest;
+};
+export type PutApiV1StockMigrationsByIdUnitsApiResponse = void;
+export type PutApiV1StockMigrationsByIdUnitsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsStockMigrationsUpdateStockMigrationUnitsRequest: DomainEntitiesMaterialsStockMigrationsUpdateStockMigrationUnitsRequest;
+};
+export type PostApiV1StockMigrationsByIdRecheckApiResponse = void;
+export type PostApiV1StockMigrationsByIdRecheckApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1StockMigrationsByIdComparisonApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsStockMigrationsStockMigrationComparisonDto[];
+export type GetApiV1StockMigrationsByIdComparisonApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1StockMigrationsByIdApproveApiResponse = void;
+export type PostApiV1StockMigrationsByIdApproveApiArg = {
+  id: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -2582,6 +2860,142 @@ export type SharedBatchInconsistencyReportRead = {
   isOverAssigned?: boolean;
   hasStatusMismatch?: boolean;
 };
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationStatus =
+  0 | 1 | 2;
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationShelfDto = {
+  id?: string;
+  name?: string | null;
+  code?: string | null;
+};
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationWarehouseDto = {
+  id?: string;
+  name?: string | null;
+  type?: DomainEntitiesWarehousesWarehouseType;
+  willBeWiped?: boolean;
+  shelves?:
+    DomainEntitiesMaterialsStockMigrationsStockMigrationShelfDto[] | null;
+};
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationDto = {
+  id?: string;
+  departmentId?: string;
+  departmentName?: string | null;
+  fileName?: string | null;
+  status?: DomainEntitiesMaterialsStockMigrationsStockMigrationStatus;
+  massUnit?: string | null;
+  volumeUnit?: string | null;
+  createdAt?: string;
+  createdBy?: string | null;
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  total?: number;
+  ok?: number;
+  warning?: number;
+  blocked?: number;
+  skipped?: number;
+  excluded?: number;
+  writtenOff?: number;
+  sheets?: string[] | null;
+  warehouses?:
+    DomainEntitiesMaterialsStockMigrationsStockMigrationWarehouseDto[] | null;
+};
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationLineStatus =
+  0 | 1 | 2 | 3 | 4;
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationMaterialChoiceDto =
+  {
+    id?: string;
+    code?: string | null;
+    name?: string | null;
+  };
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationLineDto = {
+  id?: string;
+  sheet?: string | null;
+  rowNumber?: number;
+  sheetWarehouse?: string | null;
+  sheetShelf?: string | null;
+  sheetMaterialCode?: string | null;
+  sheetMaterialName?: string | null;
+  sheetBatchNumber?: string | null;
+  sheetUnit?: string | null;
+  sheetQuantity?: string | null;
+  sheetManufacturingDate?: string | null;
+  sheetExpiryDate?: string | null;
+  grn?: string | null;
+  arNumber?: string | null;
+  materialCode?: string | null;
+  materialId?: string | null;
+  warehouseName?: string | null;
+  shelfName?: string | null;
+  shelfId?: string | null;
+  batchNumber?: string | null;
+  unitSymbol?: string | null;
+  quantityInSheet?: number | null;
+  manufacturingDate?: string | null;
+  expiryDate?: string | null;
+  excluded?: boolean;
+  resolvedMaterialId?: string | null;
+  resolvedMaterialCode?: string | null;
+  resolvedMaterialName?: string | null;
+  kind?: DomainEntitiesMaterialsMaterialKind;
+  resolvedShelfId?: string | null;
+  resolvedShelf?: string | null;
+  resolvedWarehouse?: string | null;
+  quantity?: number | null;
+  unit?: string | null;
+  status?: DomainEntitiesMaterialsStockMigrationsStockMigrationLineStatus;
+  blockers?: string[] | null;
+  warnings?: string[] | null;
+  corrections?: string[] | null;
+  materialChoices?:
+    | DomainEntitiesMaterialsStockMigrationsStockMigrationMaterialChoiceDto[]
+    | null;
+};
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsStockMigrationsStockMigrationLineDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+  {
+    data?: DomainEntitiesMaterialsStockMigrationsStockMigrationLineDto[] | null;
+    pageIndex?: number;
+    pageCount?: number;
+    totalRecordCount?: number;
+    numberOfPagesToShow?: number;
+    startPageIndex?: number;
+    stopPageIndex?: number;
+  };
+export type DomainEntitiesMaterialsStockMigrationsBulkUpdateStockMigrationLinesRequest =
+  {
+    lineIds: string[];
+    shelfId?: string | null;
+    excluded?: boolean | null;
+  };
+export type DomainEntitiesMaterialsStockMigrationsUpdateStockMigrationLineRequest =
+  {
+    materialCode?: string | null;
+    materialId?: string | null;
+    warehouseName?: string | null;
+    shelfName?: string | null;
+    shelfId?: string | null;
+    batchNumber?: string | null;
+    unitSymbol?: string | null;
+    quantityInSheet?: number | null;
+    manufacturingDate?: string | null;
+    expiryDate?: string | null;
+    excluded?: boolean;
+  };
+export type DomainEntitiesMaterialsStockMigrationsUpdateStockMigrationUnitsRequest =
+  {
+    massUnit: string;
+    volumeUnit: string;
+  };
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationComparisonDto =
+  {
+    materialId?: string;
+    code?: string | null;
+    name?: string | null;
+    kind?: DomainEntitiesMaterialsMaterialKind;
+    unit?: string | null;
+    current?: number;
+    new?: number;
+    currentBatches?: number;
+    newBatches?: number;
+  };
 export const {
   usePostApiV1BomMutation,
   usePutApiV1BomByBillOfMaterialIdMutation,
@@ -2672,4 +3086,19 @@ export const {
   useLazyGetApiV1MaterialDiagnosticsInconsistenciesQuery,
   useGetApiV1MaterialByMaterialIdPurchaseUnitsQuery,
   useLazyGetApiV1MaterialByMaterialIdPurchaseUnitsQuery,
+  usePostApiV1StockMigrationsMutation,
+  useGetApiV1StockMigrationsQuery,
+  useLazyGetApiV1StockMigrationsQuery,
+  useGetApiV1StockMigrationsByIdQuery,
+  useLazyGetApiV1StockMigrationsByIdQuery,
+  useDeleteApiV1StockMigrationsByIdMutation,
+  useGetApiV1StockMigrationsByIdLinesQuery,
+  useLazyGetApiV1StockMigrationsByIdLinesQuery,
+  usePutApiV1StockMigrationsByIdLinesMutation,
+  usePutApiV1StockMigrationsByIdLinesAndLineIdMutation,
+  usePutApiV1StockMigrationsByIdUnitsMutation,
+  usePostApiV1StockMigrationsByIdRecheckMutation,
+  useGetApiV1StockMigrationsByIdComparisonQuery,
+  useLazyGetApiV1StockMigrationsByIdComparisonQuery,
+  usePostApiV1StockMigrationsByIdApproveMutation,
 } = injectedRtkApi;

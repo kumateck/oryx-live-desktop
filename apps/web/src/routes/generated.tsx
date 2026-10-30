@@ -1054,7 +1054,12 @@ export const routes: RouteObject[] = [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/uom/page")).default }) }
         ] },
         { path: "upload-center", Component: Outlet, children: [
-          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/upload-center/page")).default }) }
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/upload-center/page")).default }) },
+          { path: "stock-migrations", Component: Outlet, children: [
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/upload-center/stock-migrations/[id]/page")).default }) }
+            ] }
+          ] }
         ] },
         { path: "warehouses", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/warehouses/page")).default }) }

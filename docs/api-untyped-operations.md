@@ -5,7 +5,7 @@ their OpenAPI contract would produce `any` or `unknown`. Declare the response or
 controller (for example `[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), run
 `bun run api:export` and `bun run api:generate`, and the hook appears.
 
-Typed operations: 1120. Skipped: 244.
+Typed operations: 1131. Skipped: 244.
 
 ## identity
 
