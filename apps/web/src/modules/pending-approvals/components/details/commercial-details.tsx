@@ -37,7 +37,7 @@ export function CustomerQuotationDetails({ id }: { id: string }) {
       <div className="text-xs text-muted-foreground">{row.original.productPackingName ?? "Packing not recorded"}</div></div> }),
     quotationColumn.accessor((row) => row.quantity ?? 0, { id: "quantity", header: "Quantity", size: 150, cell: ({ row }) => <div><div>{number(row.original.quantity)}</div>
       <div className="text-xs text-muted-foreground">{number(row.original.shippers)} shippers, {number(row.original.loose)} loose</div></div> }),
-    quotationColumn.accessor((row) => row.unitPrice ?? 0, { id: "price", header: "Unit price", size: 150, cell: ({ row }) => formatMoney(row.original.unitPrice, symbol) }),
+    quotationColumn.accessor((row) => row.unitPrice ?? 0, { id: "price", header: "Price per pack", size: 150, cell: ({ row }) => formatMoney(row.original.unitPrice, symbol) }),
     quotationColumn.accessor((row) => row.discountPercent ?? 0, { id: "discount", header: "Discount", size: 110, cell: ({ row }) => row.original.discountPercent ? `${number(row.original.discountPercent)}%` : "–" }),
     quotationColumn.accessor((row) => row.totalValue ?? 0, { id: "total", header: "Total", size: 160, cell: ({ row }) => <span className="font-medium">{formatMoney(row.original.totalValue, symbol)}</span> }),
   ]), [symbol]);
