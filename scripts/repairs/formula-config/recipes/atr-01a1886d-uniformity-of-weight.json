@@ -1,0 +1,9 @@
+{
+  "name": "ATR 01a1886d: Uniformity of Weight tablet settings",
+  "note": "Stored in an old nested layout ({type, expression: \"<settings JSON>\"}) that the test page and completeness check cannot read, so they show Tubes, N 0 and no decimals and Submit stays disabled. Rewrite in the flat layout the question editor saves, with the values the user chose (Tablets, N 10, decimals 2, nominal wt 20).",
+  "questionId": "019b506d-b42c-7cd1-8e86-1db37fe39e7d",
+  "expectedDefinitionSha256": "574d5c43a31966aa6fbd749b8f82201ec1e603711447e6eeed169da035363569",
+  "definition": [
+    { "op": "replace", "value": { "type": 2, "mode": "tablet", "percent": false, "decimalPlaces": 2, "sampleCount": 10, "nominal": 20 } }
+  ]
+}
