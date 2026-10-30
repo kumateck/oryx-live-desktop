@@ -15,7 +15,8 @@ export const fulfilmentLabels: Record<Fulfilment, string> = { pending: "Pending"
 /** How far an order line has been packed. */
 export const fulfilment = (ordered: number, fulfilled: number): Fulfilment => fulfilled <= 0 ? "pending" : fulfilled >= ordered ? "fulfilled" : "part";
 
-export interface BatchPick { key: string; lineKey: string; noteId: string; packs: number }
+/** A batch on a packing list: the shippers and loose packs taken from it, and the packs they make. */
+export interface BatchPick { key: string; lineKey: string; noteId: string; shippers: number; loose: number; packs: number }
 export interface OrderLineLike { key: string; productName: string; remaining: number }
 export interface BatchLike { noteId: string; batchNumber: string | null; free: number }
 
@@ -33,14 +34,18 @@ export function startingPacks(line: OrderLineLike, batch: BatchLike, picks: read
 export function packingProblems(picks: readonly BatchPick[], lines: readonly OrderLineLike[], batches: ReadonlyMap<string, BatchLike>): string[] {
   if (picks.length === 0) return ["Add at least one batch to the packing list."];
   const problems: string[] = [];
-  for (const pick of picks) if (!Number.isInteger(pick.packs) || pick.packs <= 0) problems.push(`Enter a whole number of packs above zero for batch ${batches.get(pick.noteId)?.batchNumber ?? "–"}.`);
+  for (const pick of picks) {
+    const batch = batches.get(pick.noteId)?.batchNumber ?? "–";
+    if (![pick.shippers, pick.loose].every((value) => Number.isNaN(value) || (Number.isInteger(value) && value >= 0))) problems.push(`Enter whole numbers of shippers and loose packs for batch ${batch}.`);
+    else if (!(pick.packs > 0)) problems.push(`Enter the shippers or loose packs taken from batch ${batch}.`);
+  }
   for (const [noteId, batch] of batches) {
     const total = picks.filter((pick) => pick.noteId === noteId).reduce((sum, pick) => sum + pick.packs, 0);
-    if (total > batch.free) problems.push(`Batch ${batch.batchNumber ?? "–"} has ${batch.free} packs free; ${total} are on the list.`);
+    if (total > batch.free) problems.push(`Batch ${batch.batchNumber ?? "–"} has ${batch.free.toLocaleString()} packs free; ${total.toLocaleString()} are on the list.`);
   }
   for (const line of lines) {
     const total = picks.filter((pick) => pick.lineKey === line.key).reduce((sum, pick) => sum + pick.packs, 0);
-    if (total > line.remaining) problems.push(`${line.productName} needs ${line.remaining} more packs; ${total} are on the list.`);
+    if (total > line.remaining) problems.push(`${line.productName} needs ${line.remaining.toLocaleString()} more packs; ${total.toLocaleString()} are on the list.`);
   }
   return problems;
 }

@@ -141,7 +141,7 @@ function Detail({ invoice }: { invoice: ProformaInvoice }) {
     </KeyFacts>
     <div className="grid gap-3 lg:grid-cols-2">
       <DetailGroup title="Customer"><DetailItem label="Company" value={customer?.name} /><DetailItem label="Email" value={customer?.email} /><DetailItem label="Phone" value={customer?.phone} /><DetailItem label="Address" value={customer?.address} /></DetailGroup>
-      <DetailGroup title="Production details"><DetailItem label="Department" value={first?.department} /><DetailItem label="Equipment" value={first?.equipment} /><DetailItem label="Batch size" value={first?.batchSize?.toLocaleString()} /><DetailItem label="Storage" value={first?.storage} /></DetailGroup>
+      <DetailGroup title="Production details"><DetailItem label="Department" value={first?.department} /><DetailItem label="Equipment" value={first?.equipment} /><DetailItem label="Storage" value={first?.storage} /></DetailGroup>
     </div>
     <section className="space-y-2"><h2 className="text-sm font-semibold">Products</h2><InvoiceLines lines={priced.lines} loading={loading} unavailable={unavailable} /></section>
     {allocation ? <section className="space-y-2"><h2 className="text-sm font-semibold">Packing list</h2><PackingListTable allocation={allocation} /></section> : null}

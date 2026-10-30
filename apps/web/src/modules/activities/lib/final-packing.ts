@@ -64,6 +64,8 @@ export function yieldFigures(inputs: YieldInputs, source: YieldSource) {
   const split = shipperSplit(whole?.packs ?? 0, perShipper);
   return { expected, samples, afterSamples, gainOrLoss, percent, perPack,
     fullShippers: whole ? split.shippers : 0, leftOver: whole ? split.loose : 0, totalPacked: whole?.packs ?? 0, leftoverUnits: whole?.leftover ?? 0,
+    // The backend holds finished goods as yield: the base units in the whole packs that can go to the store.
+    transferableYield: whole ? whole.packs * perPack : 0,
     needsReason: percent !== null && Math.abs(percent) >= varianceLimitPercent };
 }
 export type YieldFigures = ReturnType<typeof yieldFigures>;
@@ -164,7 +166,7 @@ export function finalPackingRequest(input: { category: PackCategory; batchId: st
     batchSize: input.batchSize, totalWeightReceived: input.category === "syrup" ? 0 : amount(inputs.received), averageVolumeFilledPerBottle: amount(inputs.averageFilled),
     yieldTotalQuantityPacked: amount(inputs.actualPacked), qualityControlAnalyticalSample: amount(inputs.qcSample), retainedSamples: amount(inputs.retained), stabilitySamples: amount(inputs.stability),
     totalNumberOfBottles: figures.afterSamples, totalGainOrLoss: figures.gainOrLoss,
-    numberOfBottlesPerShipper: input.packsPerShipper, nUmberOfFullShipperPacked: figures.fullShippers, leftOver: figures.leftOver, totalQuantityPacked: figures.totalPacked,
+    numberOfBottlesPerShipper: input.packsPerShipper, nUmberOfFullShipperPacked: figures.fullShippers, leftOver: figures.leftOver, totalQuantityPacked: figures.transferableYield,
     percentageVarianceDescription: figures.needsReason ? input.reason.trim() : "",
   };
 }
