@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { company } from "@/shared/print/company";
 import { useTheme } from "@/shared/theme/theme-provider";
 import sideImageUrl from "../../../../../../assets/login-side.jpg";
 import wordmarkUrl from "../../../../../../assets/oryx-wordmark.svg";
@@ -25,10 +26,15 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
             </div>
           </div>
           {children}
+          <p className="text-center text-xs text-muted-foreground md:hidden">{company.name}</p>
         </div>
       </div>
       <div className="relative hidden min-h-[520px] md:order-first md:block">
         <img src={sideImageUrl} alt="" decoding="async" className="absolute inset-0 size-full object-cover object-left" />
+        {/* The client's card sits on the empty blue side of the photo; white in both themes so the logo reads. */}
+        <figure className="absolute bottom-6 right-6 w-[min(58%,260px)] rounded-lg bg-white p-3 shadow-sm">
+          <img src={company.logoUrl} alt={company.name} decoding="async" className="h-auto w-full" />
+        </figure>
       </div>
     </section>
   </main>;
