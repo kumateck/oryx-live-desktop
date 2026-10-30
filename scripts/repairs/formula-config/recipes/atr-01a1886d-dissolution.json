@@ -1,0 +1,12 @@
+{
+  "name": "ATR 01a1886d: Dissolution concentration variables",
+  "note": "The expression uses :stdconc and :splconc, declared as manual variables the worksheet never shows, so they stay empty. Per the user they are the data table averages: point them at :standardAvg and :sampleAvg and drop the two manual labels. Confirm with QC before applying.",
+  "questionId": "019b5052-0048-7c51-a365-42e93645fdc8",
+  "expectedDefinitionSha256": "f6857962804ae0a944d6e8a335b2e78280f9ce22c661a91b7f4c7c2b9a056682",
+  "definition": [
+    { "op": "remove", "path": ["manualVarLabels", "stdconc"] },
+    { "op": "remove", "path": ["manualVarLabels", "splconc"] },
+    { "op": "renameVariable", "from": "stdconc", "to": "standardAvg" },
+    { "op": "renameVariable", "from": "splconc", "to": "sampleAvg" }
+  ]
+}
