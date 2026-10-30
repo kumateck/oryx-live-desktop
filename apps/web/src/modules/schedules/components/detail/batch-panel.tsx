@@ -39,8 +39,11 @@ export function BatchPanel({ batch, batchId, label, state }: { batch: ScheduleBa
       This batch was cancelled. {batch.cancellationReason ? `Reason: ${batch.cancellationReason}` : "No reason was recorded."}</p> : null}
     {state === "missed" ? <p className="rounded-md border bg-muted/50 p-3 text-sm">This batch was not started before the schedule ended. It can no longer be started.</p> : null}
     {state === "waiting" && data.short ? <p className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
-      {data.short} {data.short === 1 ? "material is" : "materials are"} short, so production cannot start. They are listed first below.
+      {data.short} raw {data.short === 1 ? "material is" : "materials are"} short, so production cannot start. They are listed first below.
       A purchase requisition can be raised for those not already being bought.</p> : null}
+    {state === "waiting" && data.packagingShort ? <p className="rounded-md border bg-muted/50 p-3 text-sm">
+      {data.packagingShort} packaging {data.packagingShort === 1 ? "material is" : "materials are"} short. Production can start without {data.packagingShort === 1 ? "it" : "them"};
+      packaging is requested on the production board before final packing.</p> : null}
 
     {data.message ? <p role="alert" className="text-sm text-destructive">{data.message}</p> : null}
 

@@ -1,3 +1,4 @@
+import { shipperSplit } from "@/shared/packing/packs";
 export const allocationsPath = "/crm/allocations";
 export const allocationPath = (id: string) => `${allocationsPath}/${id}`;
 export const proformaPath = "/crm/proforma-invoice";
@@ -30,7 +31,7 @@ interface SourceLike { quantity: number; batch: string | null; made: string | nu
 /** Every batch on a packing list as its own row, ordered by product then batch, with its packs split into shippers and loose packs. */
 export function packingRows(products: readonly { name: string; sources: readonly SourceLike[] }[]): PackingRow[] {
   return products.flatMap((product, index) => product.sources.map((source, position) => ({ key: `${index}-${position}`, product: product.name, batch: source.batch, made: source.made, expires: source.expires, packing: source.packing, perShipper: source.perShipper,
-    shippers: source.perShipper > 0 ? Math.floor(source.quantity / source.perShipper) : 0, loose: source.perShipper > 0 ? source.quantity % source.perShipper : source.quantity, packs: source.quantity })))
+    ...shipperSplit(source.quantity, source.perShipper), packs: source.quantity })))
     .sort((a, b) => a.product.localeCompare(b.product, undefined, { sensitivity: "base" }) || (a.batch ?? "").localeCompare(b.batch ?? "", undefined, { numeric: true, sensitivity: "base" }));
 }
 /** The rows grouped by product. A product packed from more than one batch gets a subtotal. */
@@ -41,7 +42,7 @@ export function packingGroups(rows: readonly PackingRow[]): { product: string; r
 export const packingTotals = (rows: readonly PackingRow[]) => rows.reduce((sum, row) => ({ packs: sum.packs + row.packs, shippers: sum.shippers + row.shippers, loose: sum.loose + row.loose }), { packs: 0, shippers: 0, loose: 0 });
 
 export interface Agreement { id: string; productId: string; productPackingId: string; agreedPrice: number; currency: { id: string | null; name: string | null; symbol: string | null } | null; effectiveFrom: string; effectiveTo?: string | null | undefined }
-export interface PricedLine { key: string; productName: string; genericName: string | null; code: string | null; quantity: number; unitPrice: number; currency: string | null; currencyKey: string; source: "agreement" | "default" }
+export interface PricedLine { key: string; productName: string; genericName: string | null; code: string | null; quantity: number; perShipper: number; unitPrice: number; currency: string | null; currencyKey: string; source: "agreement" | "default" }
 const time = (value: string | null | undefined) => { const date = value ? new Date(value) : null; return date && !Number.isNaN(date.getTime()) ? date.getTime() : null; };
 /** The customer's agreed price for a product and packing style on a date: the newest agreement in effect that day. */
 export function agreementFor(agreements: readonly Agreement[], productId: string | null, packingId: string | null, asOf: string | null): Agreement | null {
@@ -49,12 +50,12 @@ export function agreementFor(agreements: readonly Agreement[], productId: string
   return agreements.filter((item) => { const from = time(item.effectiveFrom); const to = time(item.effectiveTo); return item.productId === productId && item.productPackingId === packingId && from !== null && from <= on && (to === null || to >= on); })
     .sort((a, b) => (time(b.effectiveFrom) ?? 0) - (time(a.effectiveFrom) ?? 0))[0] ?? null;
 }
-interface LineInput { key: string; productId: string | null; productName: string; genericName: string | null; code: string | null; packingId: string | null; quantity: number; listPrice: number | null }
+interface LineInput { key: string; productId: string | null; productName: string; genericName: string | null; code: string | null; packingId: string | null; quantity: number; perShipper?: number; listPrice: number | null }
 /** Prices each line at the agreement in effect, or at the product's list price in the customer's currency when there is none. */
 export function priceLines(lines: readonly LineInput[], agreements: readonly Agreement[], asOf: string | null, defaultCurrency: string | null): PricedLine[] {
   return lines.map((line) => { const agreement = agreementFor(agreements, line.productId, line.packingId, asOf);
     const currency = agreement ? agreement.currency?.symbol ?? agreement.currency?.name ?? null : defaultCurrency;
-    return { key: line.key, productName: line.productName, genericName: line.genericName, code: line.code, quantity: line.quantity, unitPrice: agreement && Number.isFinite(agreement.agreedPrice) ? agreement.agreedPrice : line.listPrice ?? 0,
+    return { key: line.key, productName: line.productName, genericName: line.genericName, code: line.code, quantity: line.quantity, perShipper: line.perShipper ?? 0, unitPrice: agreement && Number.isFinite(agreement.agreedPrice) ? agreement.agreedPrice : line.listPrice ?? 0,
       currency, currencyKey: agreement?.currency?.id ?? currency ?? "", source: agreement ? "agreement" : "default" }; });
 }
 /** What the lines come to, one total per currency: amounts in different currencies are never added. */

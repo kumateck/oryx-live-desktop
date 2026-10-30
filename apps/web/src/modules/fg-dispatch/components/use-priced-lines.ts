@@ -16,7 +16,8 @@ export function usePricedLines(allocation: Allocation | null, invoice: Pick<Prof
     const products = allocation?.products ?? [];
     const source = invoice?.products.length ? invoice.products.map((item) => ({ ...item, packingId: products.find((product) => product.productId === item.productId)?.packingId ?? null }))
       : products.map((product) => ({ key: product.key, productId: product.productId, name: product.name, code: product.code, genericName: product.genericName, listPrice: product.listPrice, quantity: product.quantity, packingId: product.packingId }));
-    return priceLines(source.map((item) => ({ key: item.key, productId: item.productId, productName: item.name, genericName: item.genericName, code: item.code, packingId: item.packingId, quantity: item.quantity, listPrice: item.listPrice })), agreements, asOf, allocation?.customer.currency ?? null);
+    return priceLines(source.map((item) => ({ key: item.key, productId: item.productId, productName: item.name, genericName: item.genericName, code: item.code, packingId: item.packingId, quantity: item.quantity, listPrice: item.listPrice,
+      perShipper: products.find((product) => product.productId === item.productId)?.sources[0]?.perShipper ?? 0 })), agreements, asOf, allocation?.customer.currency ?? null);
   }, [allocation, invoice, agreements, asOf]);
   return { lines, loading: pricing.isLoading, unavailable: Boolean(pricing.error) };
 }

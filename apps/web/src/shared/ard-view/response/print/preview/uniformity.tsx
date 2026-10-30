@@ -109,6 +109,13 @@ const safeParseResponse = (
 
 // ——— Sub-components ———
 
+/** A deviation result at the configured decimals (kept as text so 2 decimals shows -94.00), or trimmed when none are set. */
+const fmtResult = (n: number | null, decimalPlaces: Decimals): string | null => {
+  if (n === null || !Number.isFinite(n)) return null;
+  if (decimalPlaces === "" || decimalPlaces === undefined) return fmtExprNum(n, decimalPlaces);
+  return n.toFixed(Math.max(0, Math.min(10, decimalPlaces)));
+};
+
 const Section: React.FC<{
   title: string;
   children: React.ReactNode;
@@ -444,14 +451,14 @@ export const UniformityPreview: React.FC<Props> = ({ settings, response }) => {
                 title="+ Dev"
                 subtitle="(Max content wt − Nominal content wt) / Nominal content wt"
                 expression={plusExpr}
-                result={results.plusDev}
+                result={fmtResult(results.plusDev, decimalPlaces)}
                 showPercentage={percent}
               />
               <FormulaCard
                 title="- Dev"
                 subtitle="(Min content wt − Nominal content wt) / Nominal content wt"
                 expression={minusExpr}
-                result={results.minusDev}
+                result={fmtResult(results.minusDev, decimalPlaces)}
                 showPercentage={percent}
               />
             </div>
@@ -531,14 +538,14 @@ export const UniformityPreview: React.FC<Props> = ({ settings, response }) => {
                 title="+ Dev"
                 subtitle="(Max wt − Nominal wt) / Nominal wt"
                 expression={plusExpr}
-                result={results.plusDev}
+                result={fmtResult(results.plusDev, decimalPlaces)}
                 showPercentage
               />
               <FormulaCard
                 title="- Dev"
                 subtitle="(Min wt − Nominal wt) / Nominal wt"
                 expression={minusExpr}
-                result={results.minusDev}
+                result={fmtResult(results.minusDev, decimalPlaces)}
                 showPercentage
               />
             </div>

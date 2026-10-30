@@ -9,11 +9,13 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { FormPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useTemplateEditor, type TemplateFormValues } from "../hooks/use-template-editor";
 import { templatePermissions, templatesPath, templateTypes } from "../lib/templates";
+
+/** Templates are made for analytical raw data; an older specification template keeps its type. */
+const usedFor = (value: string | undefined) => (templateTypes.find((entry) => entry.value === value) ?? templateTypes[0]).label;
 import { SectionsEditor } from "./sections-editor";
 
 const fields: WizardField<TemplateFormValues>[] = [
   { type: InputTypes.TEXT, name: "name", label: "Template name", required: true, placeholder: "e.g. Paracetamol tablets ARD" },
-  { type: InputTypes.SELECT, mode: "single", source: "sync", name: "type", label: "Used for", required: true, options: templateTypes, description: "Analytical raw data sheets are filled in when a batch is tested; specification templates hold the limits." },
 ];
 
 function TemplateEditor({ templateId, copyFrom }: { templateId: string | null; copyFrom: string | null }) {
@@ -30,7 +32,9 @@ function TemplateEditor({ templateId, copyFrom }: { templateId: string | null; c
       <Button type="button" variant="outline" onClick={editor.cancel}>Cancel</Button>
       <Button type="submit" form="template-editor" disabled={editor.saving}>{editor.saving ? <><Spinner />Saving…</> : templateId ? "Save template" : "Create template"}</Button></PermissionGuard>} />
     <form id="template-editor" noValidate onSubmit={(event) => void editor.submit(event)} className="space-y-4">
-      <div className="rounded-lg border bg-card p-4"><FormWizard form={editor.form} fields={fields} className="md:grid-cols-2" /></div>
+      <div className="grid gap-4 rounded-lg border bg-card p-4 md:grid-cols-2"><FormWizard form={editor.form} fields={fields} />
+        <div className="min-w-0 space-y-1.5"><p className="text-sm font-medium">Used for</p><p className="flex h-9 items-center rounded-md border bg-muted/40 px-3 text-sm">{usedFor(type?.value)}</p>
+          <p className="text-xs text-muted-foreground">Analytical raw data sheets are filled in when a batch is tested.</p></div></div>
       {editor.message ? <p role="alert" className="text-sm text-destructive">{editor.message}</p> : null}
       <SectionsEditor sections={editor.sections} setSections={editor.setSections} formType={type?.value === "1" ? 1 : 0} />
     </form>

@@ -15,7 +15,7 @@ const invalid = () => new Error("This file is damaged, encrypted, or does not ma
 const unsupported = () => new Error("This document contains features the preview cannot safely open. These features are not supported.");
 
 export async function validateDocument(bytes: Uint8Array, format: DocumentFormat): Promise<void> {
-  if (!bytes.length || bytes.length > attachmentLimit) throw new Error("The preview supports files up to 16 MiB.");
+  if (!bytes.length || bytes.length > attachmentLimit) throw new Error("The preview supports files up to 20 MB.");
   if (format === "pdf") {
     if (!new TextDecoder().decode(bytes.subarray(0, 1024)).includes("%PDF-")) throw invalid();
     try {

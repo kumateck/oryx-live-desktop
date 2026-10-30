@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { PackQuantity } from "@/shared/packing/pack-quantity";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { z } from "zod";
 import { rndApi } from "@/shared/api/generated/rnd";
@@ -35,9 +36,8 @@ export function CustomerQuotationDetails({ id }: { id: string }) {
   const columns = useMemo(() => quotationColumn.columns([
     quotationColumn.accessor((row) => row.productName ?? "", { id: "product", header: "Product", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.productName ?? "Unnamed product"}</div>
       <div className="text-xs text-muted-foreground">{row.original.productPackingName ?? "Packing not recorded"}</div></div> }),
-    quotationColumn.accessor((row) => row.quantity ?? 0, { id: "quantity", header: "Quantity", size: 150, cell: ({ row }) => <div><div>{number(row.original.quantity)}</div>
-      <div className="text-xs text-muted-foreground">{number(row.original.shippers)} shippers, {number(row.original.loose)} loose</div></div> }),
-    quotationColumn.accessor((row) => row.unitPrice ?? 0, { id: "price", header: "Unit price", size: 150, cell: ({ row }) => formatMoney(row.original.unitPrice, symbol) }),
+    quotationColumn.accessor((row) => row.quantity ?? 0, { id: "quantity", header: "Quantity", size: 190, cell: ({ row }) => <PackQuantity packs={row.original.quantity ?? 0} split={{ shippers: row.original.shippers ?? 0, loose: row.original.loose ?? 0 }} /> }),
+    quotationColumn.accessor((row) => row.unitPrice ?? 0, { id: "price", header: "Price per pack", size: 150, cell: ({ row }) => formatMoney(row.original.unitPrice, symbol) }),
     quotationColumn.accessor((row) => row.discountPercent ?? 0, { id: "discount", header: "Discount", size: 110, cell: ({ row }) => row.original.discountPercent ? `${number(row.original.discountPercent)}%` : "–" }),
     quotationColumn.accessor((row) => row.totalValue ?? 0, { id: "total", header: "Total", size: 160, cell: ({ row }) => <span className="font-medium">{formatMoney(row.original.totalValue, symbol)}</span> }),
   ]), [symbol]);

@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 import {
-  useGetApiV1ProductionScheduleExtraPackingByProductByProductionScheduleProductIdQuery, useGetApiV1ProductionScheduleManufacturingProductByProductionScheduleProductIdQuery,
+  useGetApiV1ProductionScheduleExtraPackingByProductByProductionScheduleProductIdQuery, useGetApiV1ProductionScheduleFinalPackingProductByProductionScheduleProductIdQuery,
+  useGetApiV1ProductionScheduleManufacturingProductByProductionScheduleProductIdQuery,
   useGetApiV1ProductionScheduleStockRequisitionPackageByProductionScheduleProductIdQuery, useGetApiV1ProductionScheduleStockRequisitionRawByProductionScheduleProductIdQuery,
   useGetApiV1QaAnalyticalTestsActivityStepByActivityStepIdQuery,
 } from "../api/activity-api";
 import { activityAudit, boardRefreshMs } from "../lib/activity-access";
+import { absentFinalPacking } from "../lib/packing-record-absence";
 import { extraMaterialStatus } from "../lib/step-status";
 import { atrStateSchema, bmrStateSchema, extraMaterialsSchema, requisitionStateSchema } from "../schemas/activity-schema";
 
@@ -25,8 +27,10 @@ export function useStepRecords({ batchId, stepId, enabled, needs }: {
     skip: off, pollingInterval: boardRefreshMs, skipPollingIfUnfocused: true, refetchOnFocus: true, refetchOnReconnect: true,
   });
   const bmr = useGetApiV1ProductionScheduleManufacturingProductByProductionScheduleProductIdQuery(arg, { skip: off || !(needs.bmr || needs.atr) });
-  const raw = useGetApiV1ProductionScheduleStockRequisitionRawByProductionScheduleProductIdQuery(arg, { skip: off || !needs.stockRequisition });
-  const packaging = useGetApiV1ProductionScheduleStockRequisitionPackageByProductionScheduleProductIdQuery(arg, { skip: off || !needs.stockRequisition });
+  // The batch's two requisitions are read on every current step: packaging can be requested from any of them until final packing.
+  const raw = useGetApiV1ProductionScheduleStockRequisitionRawByProductionScheduleProductIdQuery(arg, { skip: off });
+  const packaging = useGetApiV1ProductionScheduleStockRequisitionPackageByProductionScheduleProductIdQuery(arg, { skip: off });
+  const finalPacking = useGetApiV1ProductionScheduleFinalPackingProductByProductionScheduleProductIdQuery(arg, { skip: off });
   const atr = useGetApiV1QaAnalyticalTestsActivityStepByActivityStepIdQuery({ ...activityAudit, activityStepId: stepId }, { skip: !enabled || !needs.atr });
 
   return useMemo(() => {
@@ -36,6 +40,9 @@ export function useStepRecords({ batchId, stepId, enabled, needs }: {
     const failed = (query: { error?: object | undefined }) => Boolean(query.error && !missing(query.error));
     const extras = extraMaterialsSchema.safeParse(missing(extra.error) ? null : extra.data ?? null);
     const statuses = extras.success ? extras.data : [];
+    const rawRequisition = read(raw, (value) => { const result = requisitionStateSchema.safeParse(value); return result.success ? result.data : null; });
+    const packagingRequisition = read(packaging, (value) => { const result = requisitionStateSchema.safeParse(value); return result.success ? result.data : null; });
+    const packed = !finalPacking.isLoading && !finalPacking.error ? true : absentFinalPacking(finalPacking.error) ? false : null;
     return {
       extraMaterialPending: statuses.includes(extraMaterialStatus.pending),
       extraMaterialOpen: statuses.some((status) => status !== extraMaterialStatus.issued),
@@ -49,11 +56,12 @@ export function useStepRecords({ batchId, stepId, enabled, needs }: {
         if (needs.atr && failed(atr)) void atr.refetch();
       },
       bmr: read(bmr, (value) => { const result = bmrStateSchema.safeParse(value); return result.success ? result.data : null; }),
-      rawRequisition: read(raw, (value) => { const result = requisitionStateSchema.safeParse(value); return result.success ? result.data : null; }),
-      packagingRequisition: read(packaging, (value) => { const result = requisitionStateSchema.safeParse(value); return result.success ? result.data : null; }),
+      rawRequisition, packagingRequisition,
+      /** Packaging is requested once, after raw material and before final packing; false while any of that is unknown. */
+      packagingRequestable: settled(raw) && settled(packaging) && packed === false && Boolean(rawRequisition) && !packagingRequisition,
       atr: read(atr, (value) => { const result = atrStateSchema.safeParse(value); return result.success ? result.data : null; }),
       loading: extra.isLoading || bmr.isLoading || raw.isLoading || packaging.isLoading || atr.isLoading,
     };
-  }, [extra.data, extra.error, extra.isLoading, extra.isFetching, extra.refetch, bmr, raw, packaging, atr, needs.bmr, needs.atr, needs.stockRequisition, off]);
+  }, [extra.data, extra.error, extra.isLoading, extra.isFetching, extra.refetch, bmr, raw, packaging, finalPacking, atr, needs.bmr, needs.atr, needs.stockRequisition, off]);
 }
 export type StepRecords = ReturnType<typeof useStepRecords>;

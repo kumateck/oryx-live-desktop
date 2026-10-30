@@ -12,6 +12,8 @@ import { useTabParam } from "@/shared/detail/tabs";
 import { formatQuantityNumber, fromSmallestUnit, isVolumeUnit, relatedUnits } from "@/shared/units/quantity";
 import type { FinalPackingState } from "../../hooks/use-final-packing";
 import { batchBoardPath } from "../../lib/activity-access";
+import { pluralUnit } from "@/shared/packing/packs";
+import { unitsMismatch } from "../../lib/pack-messages";
 import { emptyEntry, materialFigures, packCategory, varianceLimitPercent, yieldFigures, yieldTerms, type MaterialEntry } from "../../lib/final-packing";
 import type { Activity } from "../../schemas/activity-schema";
 import { packingFormSchema, type FinalPackingFormValues } from "../../schemas/final-packing-schema";
@@ -37,7 +39,7 @@ export function FinalPackingForm({ activity, stepId, state }: { activity: Activi
     actualPacked: number(actualPacked), qcSample: number(qcSample), retained: number(retained), stability: number(stability) }),
     [category, received, averageFilled, product?.compositionVolume, actualPacked, qcSample, retained, stability]);
   const figures = useMemo(() => yieldFigures(inputs, { category, receivedUnit: terms.receivedUnit, packingExpectedYield: packing?.expectedYield ?? 0,
-    packsPerShipper: packing?.packsPerShipper ?? null }), [inputs, category, terms.receivedUnit, packing]);
+    packsPerShipper: packing?.packsPerShipper ?? null, baseUnitsPerPack: packing?.baseUnitsPerPack ?? null }), [inputs, category, terms.receivedUnit, packing]);
   const [entries, setEntries] = useState<Record<string, MaterialEntry>>({});
   const [attempted, setAttempted] = useState(false);
   const [tab, setTab] = useTabParam(packingTabs, "reconciliation");
@@ -51,6 +53,7 @@ export function FinalPackingForm({ activity, stepId, state }: { activity: Activi
   const materialProblems = state.materials.filter((material) => materialFigures(material, entries[material.materialId] ?? emptyEntry).problem).length;
   const blocked = !packing ? "The batch has no packing style." : !category ? "The product's packing category could not be identified. Correct its product or packing-style category before recording yield."
     : !packing.packsPerShipper ? "The batch's packing style does not say how many packs go in a shipper. Set it on the product's packing style."
+      : packing.baseUnitsPerPack === null ? unitsMismatch(packing.packsPerShipper)
       : category === "syrup" && (!isVolumeUnit(productUnit) || !Number.isFinite(batchSize) || batchSize <= 0 || !(inputs.averageFilled && inputs.averageFilled > 0) || !(figures.expected > 0))
         ? "Configure the syrup product's full batch size, composition volume, and packing-style expected yield before recording packing." : null;
   const touched = form.formState.isDirty || Object.keys(entries).length > 0;
@@ -88,9 +91,9 @@ export function FinalPackingForm({ activity, stepId, state }: { activity: Activi
     <section aria-label="Final packing summary" className="min-w-0 rounded-lg border bg-card p-4">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div><h2 className="text-base font-semibold">Final packing summary</h2>
-          <p className="text-sm text-muted-foreground">Theoretical batch: {batchSize ? `${formatQuantityNumber(batchSize, "calculated")} ${category === "syrup" ? batchUnit : terms.countUnit}` : "not set"} · Pack size: {packing?.name} ({packing?.packsPerShipper} per shipper)</p></div>
+          <p className="text-sm text-muted-foreground">Theoretical batch: {batchSize ? `${formatQuantityNumber(batchSize, "calculated")} ${category === "syrup" ? batchUnit : terms.countUnit}` : "not set"} · Pack size: {packing?.name} ({packing?.packsPerShipper} {packing?.packName ? pluralUnit(packing.packName) : "packs"} per shipper{packing?.baseUnitsPerPack && packing.baseUnitsPerPack > 1 ? `, ${formatQuantityNumber(packing.baseUnitsPerPack, "calculated")} ${terms.countUnit} per pack` : ""})</p></div>
       </div>
-      <YieldFiguresView figures={figures} countUnit={terms.countUnit} packsPerShipper={packing?.packsPerShipper ?? null} entered={inputs.actualPacked !== null && inputs.actualPacked > 0} />
+      <YieldFiguresView figures={figures} countUnit={terms.countUnit} packsPerShipper={packing?.packsPerShipper ?? null} packName={packing?.packName ?? null} entered={inputs.actualPacked !== null && inputs.actualPacked > 0} />
     </section>
     <Tabs value={tab} onValueChange={(value) => { const next = packingTabs.find((item) => item.id === value); if (next) void setTab(next.id); }} className="min-w-0">
       <TabsList aria-label="Final packing sections" className="grid h-auto w-full grid-cols-1 rounded-none border-b bg-transparent p-0 sm:grid-cols-3">
@@ -115,7 +118,7 @@ export function FinalPackingForm({ activity, stepId, state }: { activity: Activi
       <TabsContent value="packed" className="pt-3">
         <section className="min-w-0 space-y-3 rounded-lg border bg-card p-4">
           <div><h2 className="text-sm font-semibold">Quantity packed</h2><p className="text-xs text-muted-foreground">Review total production, samples, and the quantity available for warehouse transfer.</p></div>
-          <YieldFiguresView figures={figures} countUnit={terms.countUnit} packsPerShipper={packing?.packsPerShipper ?? null} entered={inputs.actualPacked !== null && inputs.actualPacked > 0} />
+          <YieldFiguresView figures={figures} countUnit={terms.countUnit} packsPerShipper={packing?.packsPerShipper ?? null} packName={packing?.packName ?? null} entered={inputs.actualPacked !== null && inputs.actualPacked > 0} />
         </section>
       </TabsContent>
     </Tabs>

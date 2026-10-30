@@ -31,6 +31,10 @@ export const productApi = productsApi.enhanceEndpoints({
     postApiV1ProductByProductIdPacking: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [
       { type: "ProductPacking", id: arg.productId }, { type: "Product", id: arg.productId },
     ]); },
+    // The finished goods warehouse saves the same packing styles through its own endpoint and permission.
+    postApiV1ProductByProductIdPackingApprovedProduct: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [
+      { type: "ProductPacking", id: arg.productId }, { type: "Product", id: arg.productId },
+    ]); },
   },
 });
 
@@ -46,7 +50,7 @@ export const verificationApi = authApi.enhanceEndpoints({
 export const {
   useGetApiV1ProductQuery, useGetApiV1ProductByProductIdQuery, useGetApiV1ProductByProductIdRoutesQuery,
   usePostApiV1ProductMutation, usePutApiV1ProductByProductIdMutation, useGetApiV1ProductEquipmentAllQuery,
-  useGetApiV1ProductByProductIdPackingQuery, usePostApiV1ProductByProductIdPackingMutation,
+  useGetApiV1ProductByProductIdPackingQuery, usePostApiV1ProductByProductIdPackingMutation, usePostApiV1ProductByProductIdPackingApprovedProductMutation,
   useGetApiV1ProductByProductIdPackagesQuery, usePostApiV1ProductByProductIdPackagesMutation,
   usePutApiV1ProductPackageDescriptionByProductIdMutation, usePostApiV1ProductByProductIdRoutesMutation, useLazyGetApiV1ProductQuery,
   useLazyGetApiV1ProductByProductIdRoutesQuery,

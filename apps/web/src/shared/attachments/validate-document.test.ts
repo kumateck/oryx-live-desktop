@@ -39,7 +39,7 @@ it("rejects format confusion, malformed XML, executable content, external data a
 });
 
 it("enforces package and streaming limits even if the server omits or lies about content length", async () => {
-  await expect(validateDocument(new Uint8Array(16 * 1024 * 1024 + 1), "pdf")).rejects.toThrow(/16 MiB/);
+  await expect(validateDocument(new Uint8Array(20 * 1024 * 1024 + 1), "pdf")).rejects.toThrow(/20 MB/);
   await expect(validateDocument(zipSync({ "large": new Uint8Array(65 * 1024 * 1024) }), "docx")).rejects.toThrow();
   const stream = new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(new Uint8Array(3)); controller.enqueue(new Uint8Array(3)); controller.close(); } });
   await expect(readBounded(new Response(stream, { headers: { "Content-Length": "1" } }), 5)).rejects.toThrow(/size limit/);

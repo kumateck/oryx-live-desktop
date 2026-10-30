@@ -34,7 +34,7 @@ it.each([ReportKey.DailySchedule, ReportKey.MonthlySchedule, ReportKey.ProductRe
   expect(output.generatedAt).toBe(snapshot.generatedAt);
   expect(output.readiness?.mode).toBe(key === ReportKey.ProductReadiness ? "products" : "schedule");
   expect(output.readiness?.report.markets[0]?.rows[0]?.batches).toBe(0.5);
-  expect(output.sheets.find((sheet) => sheet.name === "Production totals")?.rows.at(-1)?.cells).toEqual(["Grand total", null, 2, 1000000, 624, 1600]);
+  expect(output.sheets.find((sheet) => sheet.name === "Production totals")?.rows.at(-1)?.cells).toEqual(["Grand total", null, 2, 1000000, 1000000, 624, 1600]);
   redux.dispatch(api.util.resetApiState());
 });
 
@@ -44,12 +44,12 @@ it("preserves authoritative unavailable totals rather than recomputing partial q
   if (!group || !row) throw new Error("Fixture row missing");
   row.expectedYield = null; row.shippers = null; row.loosePacks = null;
   group.totals.expectedYield = null; group.totals.shippers = null; group.totals.loosePacks = null;
-  report.totals.expectedYield = null; report.totals.shippers = null; report.totals.loosePacks = null;
+  report.totals.expectedYield = null; report.totals.packs = null; report.totals.shippers = null; report.totals.loosePacks = null;
   vi.stubGlobal("fetch", vi.fn<typeof fetch>(async () => Response.json(report)));
   const redux = store();
   const output = await loadQualityReport(redux.dispatch, ReportKey.DailySchedule, filters(), new AbortController().signal);
   expect(output.readiness?.report.totals.expectedYield).toBeNull();
-  expect(output.sheets.find((sheet) => sheet.name === "Production totals")?.rows.at(-1)?.cells).toEqual(["Grand total", null, 2, null, null, null]);
+  expect(output.sheets.find((sheet) => sheet.name === "Production totals")?.rows.at(-1)?.cells).toEqual(["Grand total", null, 2, null, null, null, null]);
   redux.dispatch(api.util.resetApiState());
 });
 

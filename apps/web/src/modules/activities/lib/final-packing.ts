@@ -2,6 +2,7 @@ import type {
   DomainEntitiesProductionSchedulesPackingCreateFinalPacking as FinalPackingRequest,
   DomainEntitiesProductionSchedulesPackingCreateFinalPackingMaterial as MaterialRequest,
 } from "@/shared/api/generated/production";
+import { shipperSplit, toPacks } from "@/shared/packing/packs";
 import { fromSmallestUnit, isVolumeUnit, relatedUnits, toLargestUnit, toSmallestUnit } from "@/shared/units/quantity";
 
 /** Above this share of loss or gain, the person recording it must say why. */
@@ -33,13 +34,19 @@ export function yieldTerms(category: PackCategory | null, productUnit: string | 
 }
 
 export interface YieldInputs { received: number | null; averageFilled: number | null; actualPacked: number | null; qcSample: number | null; retained: number | null; stability: number | null }
-export interface YieldSource { category: PackCategory | null; receivedUnit: string; packingExpectedYield: number; packsPerShipper: number | null }
+export interface YieldSource {
+  category: PackCategory | null; receivedUnit: string; packingExpectedYield: number; packsPerShipper: number | null;
+  /** Base units (tablets, bottles…) in one pack, from the packing style's units. Missing means one base unit is one pack. */
+  baseUnitsPerPack?: number | null;
+}
 
 const amount = (value: number | null) => value !== null && Number.isFinite(value) ? value : 0;
 
 /**
  * Everything the yield and quantity-packed sections work out from what was entered. Nothing here
  * is typed in: expected packs, what is left after samples, the gain or loss, and how it packs into shippers.
+ * Counting is in base units (tablets, bottles…); what is left after samples becomes whole packs, then full
+ * shippers and loose packs. Base units that do not fill a pack are `leftoverUnits`.
  */
 export function yieldFigures(inputs: YieldInputs, source: YieldSource) {
   // Syrup uses its preloaded packing-style yield. Other categories retain weight-based calculations.
@@ -52,9 +59,13 @@ export function yieldFigures(inputs: YieldInputs, source: YieldSource) {
   const gainOrLoss = amount(inputs.actualPacked) - expected;
   const percent = expected > 0 && amount(inputs.actualPacked) > 0 ? (gainOrLoss / expected) * 100 : null;
   const perShipper = source.packsPerShipper;
-  const fullShippers = perShipper && afterSamples > 0 ? Math.floor(afterSamples / perShipper) : 0;
-  const leftOver = perShipper && afterSamples > 0 ? afterSamples % perShipper : 0;
-  return { expected, samples, afterSamples, gainOrLoss, percent, fullShippers, leftOver, totalPacked: perShipper ? perShipper * fullShippers + leftOver : 0,
+  const perPack = source.baseUnitsPerPack ?? 1;
+  const whole = perShipper && afterSamples > 0 ? toPacks(afterSamples, perPack) : null;
+  const split = shipperSplit(whole?.packs ?? 0, perShipper);
+  return { expected, samples, afterSamples, gainOrLoss, percent, perPack,
+    fullShippers: whole ? split.shippers : 0, leftOver: whole ? split.loose : 0, totalPacked: whole?.packs ?? 0, leftoverUnits: whole?.leftover ?? 0,
+    // The backend holds finished goods as yield: the base units in the whole packs that can go to the store.
+    transferableYield: whole ? whole.packs * perPack : 0,
     needsReason: percent !== null && Math.abs(percent) >= varianceLimitPercent };
 }
 export type YieldFigures = ReturnType<typeof yieldFigures>;
@@ -155,7 +166,7 @@ export function finalPackingRequest(input: { category: PackCategory; batchId: st
     batchSize: input.batchSize, totalWeightReceived: input.category === "syrup" ? 0 : amount(inputs.received), averageVolumeFilledPerBottle: amount(inputs.averageFilled),
     yieldTotalQuantityPacked: amount(inputs.actualPacked), qualityControlAnalyticalSample: amount(inputs.qcSample), retainedSamples: amount(inputs.retained), stabilitySamples: amount(inputs.stability),
     totalNumberOfBottles: figures.afterSamples, totalGainOrLoss: figures.gainOrLoss,
-    numberOfBottlesPerShipper: input.packsPerShipper, nUmberOfFullShipperPacked: figures.fullShippers, leftOver: figures.leftOver, totalQuantityPacked: figures.totalPacked,
+    numberOfBottlesPerShipper: input.packsPerShipper, nUmberOfFullShipperPacked: figures.fullShippers, leftOver: figures.leftOver, totalQuantityPacked: figures.transferableYield,
     percentageVarianceDescription: figures.needsReason ? input.reason.trim() : "",
   };
 }

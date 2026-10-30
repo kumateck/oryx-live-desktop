@@ -27,7 +27,8 @@ export function attachmentAddress(link: string): string {
   const url = new URL(link);
   return /^\/api\/v1\/file\//.test(url.pathname) && !url.search && !url.hash ? url.pathname : url.href;
 }
-export const attachmentLimit = 16 * 1024 * 1024;
+/** Matches the 20 MB upload limit, so anything that can be attached can also be viewed. */
+export const attachmentLimit = 20 * 1024 * 1024;
 
 export const canOpenAttachment = (file: AttachedFile) => Boolean(file.blob || file.read || safeFileLink(file.link));
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { packsFrom } from "@/shared/packing/packs";
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const amount = z.number().nullish().transform((value) => typeof value === "number" && Number.isFinite(value) ? value : 0);
@@ -57,11 +58,20 @@ export const pricingFormSchema = z.object({ product: chosen("Choose the product"
   from: z.date({ message: "Choose when the price starts" }).nullable().refine((value): boolean => Boolean(value), "Choose when the price starts"), to: z.date().nullable(), notes: z.string().trim().max(1000, "Keep the notes under 1000 characters") })
   .refine((value) => !value.from || !value.to || value.to >= value.from, { path: ["to"], message: "The end date cannot be before the start date" });
 export type PricingFormValues = z.infer<typeof pricingFormSchema>;
+const wholeOrEmpty = (label: string) => z.number().or(z.nan()).refine((value) => Number.isNaN(value) || (Number.isInteger(value) && value >= 0), `Enter a whole number of ${label}, 0 or more`);
+/** Orders are entered as full shippers and loose packs; the line's quantity is the total packs they make. */
 const quotationLine = z.object({ product: chosen("Choose the product"), packing: chosen("Choose the packing style"), perShipper: z.number(),
-  quantity: z.number({ message: "Enter the quantity" }).refine((value) => Number.isInteger(value) && value >= 1, "Enter a whole quantity of 1 or more"),
+  shippers: wholeOrEmpty("shippers"), loose: wholeOrEmpty("loose packs"),
   // Left empty, the server uses the price on record.
   unitPrice: z.number().or(z.nan()).refine((value) => Number.isNaN(value) || value >= 0, "The unit price cannot be negative"),
-  discount: z.number({ message: "Enter a discount from 0 to 100" }).refine((value) => value >= 0 && value <= 100, "The discount is from 0 to 100"), fromAgreement: z.boolean().nullable() });
+  discount: z.number({ message: "Enter a discount from 0 to 100" }).refine((value) => value >= 0 && value <= 100, "The discount is from 0 to 100"), fromAgreement: z.boolean().nullable() })
+  .superRefine((line, context) => {
+    if (line.perShipper > 0 && line.loose >= line.perShipper)
+      context.addIssue({ code: "custom", path: ["loose"], message: `Loose packs must be fewer than ${line.perShipper.toLocaleString("en-US")}, a full shipper. Add a shipper instead.` });
+    else if (orderedPacks(line) < 1) context.addIssue({ code: "custom", path: [line.perShipper > 0 ? "shippers" : "loose"], message: "Enter at least one shipper or loose pack" });
+  });
+/** Total packs on a quotation line: full shippers times packs per shipper, plus loose packs. */
+export const orderedPacks = (line: { shippers: number; loose: number; perShipper: number }) => packsFrom(line.shippers, line.loose, line.perShipper);
 export const quotationFormSchema = z.object({ code: z.string().trim().min(1, "Enter the quotation number").max(100, "Keep the number under 100 characters"),
   validUntil: z.date({ message: "Choose how long the quotation is valid" }).nullable().refine((value): boolean => Boolean(value), "Choose how long the quotation is valid"),
   items: z.array(quotationLine).min(1, "Add at least one item").superRefine((lines, context) => { const seen = new Set<string>();

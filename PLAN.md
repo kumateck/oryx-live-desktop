@@ -2,6 +2,20 @@
 
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
+## Step detail action evidence (2026-10-28)
+
+The user requested the detailed records of every performed step action on its own
+page, explicitly including analytical tests, finished-goods transfers and final
+packing. Add a separate read-only selected-step evidence section, including completed
+and cancelled production; preserve the existing current-step mutation guards.
+A typed backend endpoint joins exact step evidence and conditionally adds legacy
+batch-only records with explicit batch scope. It checks the existing production-board
+permission and the authenticated actor's production department before reading and
+rechecks grants before returning. Show the request's recorded stage, audit people,
+events, quantities, packing samples/reconciliation, transfers and returns; never
+infer a historical record's stage from the current procedure. No schema migration,
+workflow writes, live data repair or deployment is part of this feature.
+
 ## Production ATR data repair tooling (2026-10-28)
 
 The user requested scripts to repair existing production activity flow data, starting
@@ -29,6 +43,14 @@ audited to Eunice with repair ID `fb00a099-3529-421f-92f0-8335e7a4320d`. The exi
 released ATR and workflow states were preserved. See
 `docs/coldrilif-4862-stage-review.md`; QA must reconcile the released ATR before
 another Finished test can be requested.
+
+The user clarified that execution belongs on the production server, using Docker
+(API container `oryx-erp-api-demo`, database `entrancedb`, database user `root`).
+The SQL exporter packages standalone read-only inspection/preview and separate
+apply files without connecting or copying credentials. Run through psql in the
+existing PostgreSQL container; no Bun installation or application deployment is
+needed on that host. Confirm its database container and identities before applying;
+the earlier configured endpoint is not assumed to identify another deployment.
 
 ## Combined production readiness endpoint (2026-10-28)
 

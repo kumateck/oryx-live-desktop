@@ -7,7 +7,8 @@ const count = (value: number) => formatQuantityNumber(value, "calculated");
 /** Final packing as it was recorded. It is recorded once; the page shows it and offers no second entry. */
 export function RecordedPackingView({ recorded }: { recorded: RecordedPacking }) {
   const facts = [["Expected yield", recorded.expected > 0 ? count(recorded.expected) : "Not recorded"],
-    ["Available for warehouse transfer", count(recorded.totalPacked)], ["Full shippers", `${count(recorded.fullShippers)} of ${count(recorded.perShipper)}`], ["Left over", count(recorded.leftOver)],
+    ["Available for warehouse transfer", `${count(recorded.fullShippers)} ${recorded.fullShippers === 1 ? "shipper" : "shippers"} · ${count(recorded.leftOver)} loose`],
+    ["Packs per shipper", count(recorded.perShipper)], ["Yield available to transfer", count(recorded.totalPacked)],
     ["Total packed including samples", count(recorded.actualPacked)], ["Gain or loss", `${recorded.gainOrLoss > 0 ? "+" : ""}${count(recorded.gainOrLoss)}`], ["Recorded", formatDateTime(recorded.createdAt) ?? "–"]];
   return <section className="min-w-0 space-y-3 rounded-lg border bg-card p-4">
     <h2 className="text-sm font-semibold">Final packing is recorded</h2>

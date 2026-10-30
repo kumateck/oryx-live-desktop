@@ -62,7 +62,7 @@ it("pages dense reports through the existing table controls without changing tot
     productId: `00000000-0000-4000-8000-${String(index + 100).padStart(12, "0")}`,
     productName: `Product ${index + 1}`,
     scheduleProductIds: [`00000000-0000-4000-8000-${String(index + 200).padStart(12, "0")}`] }));
-  report.markets = [{ ...group, rows, totals: { batches: 17.5, expectedYield: 17500000, shippers: 10920, loosePacks: 28000 } }];
+  report.markets = [{ ...group, rows, totals: { batches: 17.5, expectedYield: 17500000, packs: 17500000, shippers: 10920, loosePacks: 28000 } }];
   report.products = rows.map((item) => ({ ...product, productId: item.productId, productName: item.productName,
     batches: 0.5, markets: [group.market] }));
   report.productCount = 35; report.readyProductCount = 35; report.actionNeededProductCount = 0;

@@ -8,6 +8,8 @@ import { formatDate, formatMonthYear } from "@/shared/format/dates";
 import { formatQuantityNumber } from "@/shared/units/quantity";
 import { audit } from "../../lib/approval-documents";
 import { DetailState, quantity, queryState } from "./detail-state";
+import { countText } from "@/shared/packing/fg-quantity";
+import { shipperSplit } from "@/shared/packing/packs";
 
 const { useGetApiV1ProductionScheduleExtraPackingByProductionExtraPackingIdQuery, useGetApiV1ProductionScheduleFinishedGoodsTransferNoteByIdQuery, useGetApiV1ProductionOrdersByIdQuery,
   useGetApiV1ProductionOrdersProformaInvoiceByProformaInvoiceIdQuery, useGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery } = productionApi;
@@ -68,7 +70,7 @@ const orderColumns = orderColumn.columns([
   orderColumn.accessor((row) => row.product?.name ?? "", { id: "product", header: "Product", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.product?.name ?? "Unnamed product"}</div>
     <div className="text-xs text-muted-foreground">{[row.original.product?.code, row.original.productPacking?.name].filter(Boolean).join(" · ") || "No code"}</div></div> }),
   orderColumn.accessor((row) => row.totalOrderQuantity ?? 0, { id: "quantity", header: "Quantity", size: 130, cell: ({ row }) => number(row.original.totalOrderQuantity) }),
-  orderColumn.accessor((row) => row.unitPrice ?? 0, { id: "price", header: "Unit price", size: 130, cell: ({ row }) => number(row.original.unitPrice) }),
+  orderColumn.accessor((row) => row.unitPrice ?? 0, { id: "price", header: "Price per pack", size: 130, cell: ({ row }) => number(row.original.unitPrice) }),
   orderColumn.accessor((row) => row.discountPercent ?? 0, { id: "discount", header: "Discount", size: 110, cell: ({ row }) => row.original.discountPercent ? `${number(row.original.discountPercent)}%` : "–" }),
   orderColumn.accessor((row) => row.totalValue ?? 0, { id: "value", header: "Value", size: 150, cell: ({ row }) => <span className="font-medium">{number(row.original.totalValue)}</span> }),
 ]);
@@ -83,17 +85,19 @@ export function ProductionOrderDetails({ id }: { id: string }) {
   </div>}</DetailState>;
 }
 
-const share = z.object({ product: named, productPacking: named, fulfilledQuantities: z.array(z.object({ quantity: amount, finishedGoodsTransferNote: z.object({ transferNoteNumber: text, batchManufacturingRecord: z.object({ batchNumber: text }).nullish() }).nullish() })).nullish() });
+const share = z.object({ product: named, productPacking: z.object({ name: text, packPerShipper: z.number().nullish() }).nullish(), fulfilledQuantities: z.array(z.object({ quantity: amount, finishedGoodsTransferNote: z.object({ transferNoteNumber: text, batchManufacturingRecord: z.object({ batchNumber: text }).nullish() }).nullish() })).nullish() });
 const allocationSchema = z.object({ invoiceCode: text, productionOrder: z.object({ code: text, customer: z.object({ name: text }).nullish(), promisedDeliveryDate: z.string().nullish() }).nullish(), products: z.array(share).nullish() });
-type AllocationRow = { key: string; product: string; packing: string | null; note: string | null; batch: string | null; quantity: number | null };
+type AllocationRow = { key: string; product: string; packing: string | null; perShipper: number; note: string | null; batch: string | null; quantity: number | null };
 const allocationColumn = dataTableColumns<AllocationRow>();
 const allocationColumns = allocationColumn.columns([
   allocationColumn.accessor("product", { header: "Product", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.product}</div><div className="text-xs text-muted-foreground">{row.original.packing ?? "Packing not recorded"}</div></div> }),
   allocationColumn.accessor((row) => row.note ?? "", { id: "note", header: "From transfer note", cell: ({ row }) => row.original.note ?? "–" }),
   allocationColumn.accessor((row) => row.batch ?? "", { id: "batch", header: "Batch", size: 160, cell: ({ row }) => row.original.batch ?? "–" }),
-  allocationColumn.accessor((row) => row.quantity ?? 0, { id: "quantity", header: "Allocated", size: 140, cell: ({ row }) => <span className="font-medium">{number(row.original.quantity)}</span> }),
+  // Packing lists count packs; the store reads them as shippers and loose packs.
+  allocationColumn.accessor((row) => row.quantity ?? 0, { id: "quantity", header: "Allocated", size: 200, cell: ({ row }) => row.original.quantity === null ? "–"
+    : <div><div className="font-medium">{countText({ ...shipperSplit(row.original.quantity, row.original.perShipper), units: 0 })}</div><div className="text-xs text-muted-foreground">{number(row.original.quantity)} packs</div></div> }),
 ]);
-const allocationRows = (products: z.infer<typeof share>[] | null | undefined): AllocationRow[] => (products ?? []).flatMap((item, index) => { const base = { product: item.product?.name ?? "Unnamed product", packing: item.productPacking?.name ?? null };
+const allocationRows = (products: z.infer<typeof share>[] | null | undefined): AllocationRow[] => (products ?? []).flatMap((item, index) => { const base = { product: item.product?.name ?? "Unnamed product", packing: item.productPacking?.name ?? null, perShipper: item.productPacking?.packPerShipper ?? 0 };
   const taken = item.fulfilledQuantities ?? [];
   return taken.length === 0 ? [{ ...base, key: `a-${index}`, note: null, batch: null, quantity: null }]
     : taken.map((part, position) => ({ ...base, key: `a-${index}-${position}`, note: part.finishedGoodsTransferNote?.transferNoteNumber ?? null, batch: part.finishedGoodsTransferNote?.batchManufacturingRecord?.batchNumber ?? null, quantity: part.quantity })); });

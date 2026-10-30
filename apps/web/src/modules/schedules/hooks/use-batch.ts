@@ -29,7 +29,9 @@ export function useBatch(batchId: string) {
   const activity = useMemo(() => { const parsed = batchActivitySchema.safeParse(notFound(activityQuery.error) ? null : activityQuery.data ?? null); return parsed.success ? parsed.data : null; },
     [activityQuery.data, activityQuery.error]);
   const loaded = raw.isSuccess && packaging.isSuccess && rawRows !== null && packagingRows !== null;
-  const short = loaded ? [...rawRows, ...packagingRows].filter((item) => !materialCovered(item)).length : null;
+  // Only raw material has to be in stock to start; packaging is requested during production, up to final packing.
+  const short = loaded ? rawRows.filter((item) => !materialCovered(item)).length : null;
+  const packagingShort = loaded ? packagingRows.filter((item) => !materialCovered(item)).length : null;
 
   const start = async (): Promise<boolean> => {
     const denied = permission.check();
@@ -47,8 +49,10 @@ export function useBatch(batchId: string) {
     packaging: { rows: packagingRows ?? [], loading: packaging.isLoading, error: packaging.error ? apiErrorMessage(packaging.error) : packaging.isSuccess && !packagingRows ? unreadable : null,
       retry: () => { void packaging.refetch(); } },
     activity, activityLoading: activityQuery.isLoading,
-    /** How many materials are short, or null until both lists have loaded; production must not start on a guess. */
+    /** How many raw materials are short, or null until both lists have loaded; production must not start on a guess. */
     short,
+    /** Packaging that is short does not hold up the start, but production cannot be packed without it. */
+    packagingShort,
     start, starting: starting.isLoading, message,
   };
 }

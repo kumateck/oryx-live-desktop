@@ -27,7 +27,47 @@ function stored(): string | null {
 function bridge(): SessionBridge | null {
   return typeof window !== "undefined" && window.oryxSession ? window.oryxSession : null;
 }
+// In a browser each tab keeps its own sessionStorage, so a new tab asks the open Oryx tabs for their sign-in.
+// BroadcastChannel only reaches pages of this origin. Closing every tab still ends the browser session.
+type PeerMessage = { kind: "ask"; id: string } | { kind: "give"; id: string; token: string };
+const peerChannelName = "oryx-session-token";
+const peerWaitMs = 500;
+let peers: BroadcastChannel | null = null;
+
+function isPeerMessage(value: unknown): value is PeerMessage {
+  if (typeof value !== "object" || value === null) return false;
+  const message = value as Record<string, unknown>;
+  return typeof message.id === "string" && (message.kind === "ask" || (message.kind === "give" && typeof message.token === "string" && message.token !== ""));
+}
+function peerChannel(): BroadcastChannel | null {
+  if (peers || typeof BroadcastChannel === "undefined" || bridge()) return peers;
+  peers = new BroadcastChannel(peerChannelName);
+  peers.addEventListener("message", (event: MessageEvent) => {
+    const message: unknown = event.data;
+    if (!isPeerMessage(message) || message.kind !== "ask") return;
+    const token = refreshToken ?? stored();
+    if (token) peers?.postMessage({ kind: "give", id: message.id, token } satisfies PeerMessage);
+  });
+  return peers;
+}
+function askPeers(): Promise<string | null> {
+  const channel = peerChannel();
+  if (!channel) return Promise.resolve(null);
+  const id = crypto.randomUUID();
+  return new Promise((resolve) => {
+    const finish = (token: string | null) => { clearTimeout(timer); channel.removeEventListener("message", listen); resolve(token); };
+    const listen = (event: MessageEvent) => {
+      const message: unknown = event.data;
+      if (isPeerMessage(message) && message.kind === "give" && message.id === id) finish(message.token);
+    };
+    const timer = setTimeout(() => finish(null), peerWaitMs);
+    channel.addEventListener("message", listen);
+    channel.postMessage({ kind: "ask", id } satisfies PeerMessage);
+  });
+}
+
 function remember(token: string | null): void {
+  if (token) peerChannel();
   try {
     if (token) sessionStorage.setItem(refreshKey, token);
     else sessionStorage.removeItem(refreshKey);
@@ -68,6 +108,18 @@ export const tokenStore = {
       restoring = null;
     });
     return restoring;
+  },
+  /** With no sign-in of its own, a browser tab takes the one an open Oryx tab holds, if any answers in time. */
+  async borrow(): Promise<string | null> {
+    const own = refreshToken ?? stored();
+    if (own) return own;
+    const version = revision;
+    const token = await askPeers();
+    if (!token || version !== revision) return refreshToken ?? stored();
+    refreshToken = token;
+    restored = true;
+    remember(token);
+    return token;
   },
   set(tokens: { accessToken: string; refreshToken: string | null }): void {
     ++revision;

@@ -12,7 +12,8 @@ export async function renewSession(accept: (response: Response, version: number)
   const version = tokenStore.version();
   await tokenStore.restore();
   if (version !== tokenStore.version()) return Boolean(tokenStore.accessToken());
-  const refreshToken = tokenStore.refreshToken();
+  const refreshToken = tokenStore.refreshToken() ?? (await tokenStore.borrow());
+  if (version !== tokenStore.version()) return Boolean(tokenStore.accessToken());
   if (!refreshToken) return false;
   const response = await send("/api/v1/auth/login-with-refresh-token", {
     method: "POST",

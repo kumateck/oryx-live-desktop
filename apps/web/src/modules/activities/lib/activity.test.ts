@@ -4,7 +4,8 @@ import { activityProgress, duration, stepDuration, stepPosition } from "./activi
 import { atrProblem, atrRequest, configuredTestStage } from "./atr";
 import { extraMaterialLines, extraMaterialProblem, extraMaterialRequest } from "./extra-material";
 import { materialFigures, materialRequests, packCategory, packingMaterials, returnedMaterials, yieldFigures, yieldTerms } from "./final-packing";
-import { shipperBreakdown, transferNoteNumber, transferProblem, transferRequest, transferTotals } from "./finished-goods";
+import { fgLayout } from "@/shared/packing/fg-quantity";
+import { transferNoteNumber, transferProblem, transferRequest, transferTotals, transferYield } from "./finished-goods";
 import { stepPolicy } from "./step-policy";
 import { relatedUnits, toSmallestUnit } from "@/shared/units/quantity";
 import { requisitionProblem, stockRequisitionRequest } from "./stock-requisition";
@@ -130,26 +131,38 @@ it("asks for extra material in the unit typed, stored in the smallest unit, and 
   expect(extraMaterialProblem({ ...lines[1]!, quantity: 101 })).toBe("More than the warehouse has free");
 });
 
-it("counts what is left to transfer and marks anything but one full transfer as partial", () => {
-  const record = { id: "bmr-1", batchNumber: "WM-001", manufacturingDate: null, expiryDate: null, packing: { id: "s1", name: "150 X 20ml", packsPerShipper: 150, unit: { id: "u-b", name: "Bottle" } } };
+it("sends finished goods as yield, entered as shippers and loose packs", () => {
+  // 150 bottles per shipper, one bottle per pack: yield and packs are the same number here.
+  const bottles = fgLayout({ packPerShipper: 150, basePackingUoM: { name: "Bottle" } });
+  const record = { id: "bmr-1", batchNumber: "WM-001", manufacturingDate: null, expiryDate: null, packing: { id: "s1", name: "150 X 20ml", packsPerShipper: 150, unit: { id: "u-b", name: "Bottle" }, layout: bottles } };
   const first = transferTotals(75_300, []);
   expect(first).toEqual({ packed: 75_300, transferred: 0, remaining: 75_300 });
-  expect(shipperBreakdown(75_300, 150)).toEqual({ shippers: 502, loose: 0 });
-  expect(shipperBreakdown(1000, 150)).toEqual({ shippers: 6, loose: 100 });
-  expect(shipperBreakdown(1000, null)).toBeNull();
+  expect(transferYield(502, 0, first.remaining, bottles)).toBe(75_300);
+  expect(transferYield(6, 100, first.remaining, bottles)).toBe(1000);
   const now = new Date(Date.UTC(2026, 9, 1, 8, 5, 9, 123));
   expect(transferNoteNumber(now)).toBe("FGTN-20261001080509123");
-  expect(transferRequest({ quantity: 75_300, record, stepId: "s9", totals: first, yieldPacked: 75_000, now })).toEqual({ transferNoteNumber: "FGTN-20261001080509123",
-    batchManufacturingRecordId: "bmr-1", productPackingId: "s1", productionActivityStepId: "s9", quantityPerPack: 75_000, totalQuantity: 75_300, uoMId: "u-b", isPartial: false });
-  expect(transferRequest({ quantity: 300, record, stepId: "s9", totals: first, yieldPacked: 75_000 })?.isPartial).toBe(true);
+  expect(transferRequest({ quantity: 75_300, record, stepId: "s9", totals: first, now })).toEqual({ transferNoteNumber: "FGTN-20261001080509123",
+    batchManufacturingRecordId: "bmr-1", productPackingId: "s1", productionActivityStepId: "s9", quantityPerPack: 1, totalQuantity: 75_300, uoMId: "u-b", isPartial: false });
+  expect(transferRequest({ quantity: 300, record, stepId: "s9", totals: first })?.isPartial).toBe(true);
   const later = transferTotals(75_300, [{ quantity: 75_000 }]);
   expect(later.remaining).toBe(300);
   // The rest of an earlier partial transfer is still a partial one for the server.
-  expect(transferRequest({ quantity: 300, record, stepId: "s9", totals: later, yieldPacked: 75_000 })?.isPartial).toBe(true);
+  expect(transferRequest({ quantity: 300, record, stepId: "s9", totals: later })?.isPartial).toBe(true);
   expect(transferProblem({ record, packed: null, remaining: 0 })).toContain("Final packing has not been recorded");
   expect(transferProblem({ record, packed: 10, remaining: 0 })).toBe("Everything packed has already been transferred.");
   expect(transferProblem({ record: { ...record, packing: { ...record.packing, unit: null } }, packed: 10, remaining: 10 })).toContain("no unit of measure");
   expect(transferProblem({ record, packed: 10, remaining: 10 })).toBeNull();
+});
+
+it("sends tablets as yield and sends the whole remainder when everything left is entered", () => {
+  const tablets = fgLayout({ packPerShipper: 80, basePackingUoM: { name: "Tablet" }, packingLists: [{ uom: { name: "Shipper" }, quantity: 80, order: 1 }, { uom: { name: "Box" }, quantity: 20, order: 2 }, { uom: { name: "Strip" }, quantity: 10, order: 3 }] });
+  const record = { id: "bmr-2", batchNumber: "DC-1", manufacturingDate: null, expiryDate: null, packing: { id: "s2", name: "80 X 20 X 10", packsPerShipper: 80, unit: { id: "u-t", name: "Tablet" }, layout: tablets } };
+  // 2 shippers, 3 boxes and 7 tablets short of a box.
+  const remaining = 2 * 16_000 + 3 * 200 + 7;
+  expect(transferYield(1, 5, remaining, tablets)).toBe(17_000);
+  expect(transferYield(2, 3, remaining, tablets)).toBe(remaining);
+  expect(transferRequest({ quantity: 17_000, record, stepId: "s9", totals: transferTotals(remaining, []) })).toMatchObject({ quantityPerPack: 200, totalQuantity: 17_000, isPartial: true });
+  expect(transferProblem({ record: { ...record, packing: { ...record.packing, layout: fgLayout({ packPerShipper: 80, packingLists: [{ uom: { name: "Shipper" }, quantity: 7, order: 1 }] }) } }, packed: 10, remaining: 10 })).toContain("does not say how many units fill a pack");
 });
 
 it("works out the yield, the shippers, and when a reason is owed", () => {
