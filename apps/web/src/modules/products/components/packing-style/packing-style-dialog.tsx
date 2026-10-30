@@ -34,7 +34,6 @@ export function PackingStyleDialog({ editing, styles, packingUnits, allUnits, fu
     { type: InputTypes.NUMBER, name: "basePackingQuantity", label: baseUnit ? `Base packing quantity (${baseUnit})` : "Base packing quantity", required: true, min: 0,
       description: "How much product one base pack holds." },
     { type: InputTypes.NUMBER, name: "expectedYield", label: "Expected yield", min: 0, description: "Base packs expected from one full batch." },
-    { type: InputTypes.NUMBER, name: "packPerShipper", label: "Packs per shipper", required: true, min: 0 },
     { type: InputTypes.SWITCH, name: "isDefault", label: "Default packing style" },
     { type: InputTypes.TEXT, name: "description", label: "Description", placeholder: "Optional", className: "md:col-span-2" },
   ] as const satisfies readonly WizardField<PackingStyleFormValues>[], [packingUnits, baseUnit]);
