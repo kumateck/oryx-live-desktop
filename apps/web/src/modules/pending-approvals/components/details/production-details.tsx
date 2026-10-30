@@ -68,7 +68,7 @@ const orderColumns = orderColumn.columns([
   orderColumn.accessor((row) => row.product?.name ?? "", { id: "product", header: "Product", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.product?.name ?? "Unnamed product"}</div>
     <div className="text-xs text-muted-foreground">{[row.original.product?.code, row.original.productPacking?.name].filter(Boolean).join(" · ") || "No code"}</div></div> }),
   orderColumn.accessor((row) => row.totalOrderQuantity ?? 0, { id: "quantity", header: "Quantity", size: 130, cell: ({ row }) => number(row.original.totalOrderQuantity) }),
-  orderColumn.accessor((row) => row.unitPrice ?? 0, { id: "price", header: "Unit price", size: 130, cell: ({ row }) => number(row.original.unitPrice) }),
+  orderColumn.accessor((row) => row.unitPrice ?? 0, { id: "price", header: "Price per pack", size: 130, cell: ({ row }) => number(row.original.unitPrice) }),
   orderColumn.accessor((row) => row.discountPercent ?? 0, { id: "discount", header: "Discount", size: 110, cell: ({ row }) => row.original.discountPercent ? `${number(row.original.discountPercent)}%` : "–" }),
   orderColumn.accessor((row) => row.totalValue ?? 0, { id: "value", header: "Value", size: 150, cell: ({ row }) => <span className="font-medium">{number(row.original.totalValue)}</span> }),
 ]);

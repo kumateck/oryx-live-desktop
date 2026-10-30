@@ -41,7 +41,7 @@ function PricingDialog({ customerId, agreement, currencies, onClose }: { custome
     { type: InputTypes.SELECT, name: "product", label: "Product", mode: "single", source: "async", loadOptions: choices.products, required: true, placeholder: "Search for a product" },
     { type: InputTypes.SELECT, name: "packing", label: "Packing style", mode: "single", source: "sync", options: choices.packingsOf(product?.value), required: true, disabled: !product, placeholder: product ? "Select a packing style" : "Choose the product first" },
     { type: InputTypes.SELECT, name: "currency", label: "Currency", mode: "single", source: "sync", options: currencies, required: true, placeholder: "Select a currency" },
-    { type: InputTypes.NUMBER, name: "price", label: "Agreed price", min: 0, required: true },
+    { type: InputTypes.NUMBER, name: "price", label: "Agreed price per pack", description: "The price of one pack of this packing style.", min: 0, required: true },
     { type: InputTypes.DATE, name: "from", label: "Effective from", required: true },
     { type: InputTypes.DATE, name: "to", label: "Effective to", description: "Leave empty for an open-ended price." },
     { type: InputTypes.TEXTAREA, name: "notes", label: "Notes", rows: 2, className: "md:col-span-2" },
@@ -71,13 +71,13 @@ export function PricingPanel({ customerId }: { customerId: string }) {
   const [remove] = useDeleteCustomerPricingMutation();
   const [open, setOpen] = useState<Open>(null);
   return <section className="space-y-3 rounded-lg border bg-card p-4">
-    <div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-sm font-semibold">Negotiated pricing</h2><p className="text-xs text-muted-foreground">Dated price agreements by product and packing style, used by quotations.</p></div>
+    <div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="text-sm font-semibold">Negotiated pricing</h2><p className="text-xs text-muted-foreground">Dated price agreements by product and packing style, priced per pack and used by quotations.</p></div>
       <Button type="button" size="sm" onClick={() => setOpen({ kind: "create" })}><Plus />Add agreement</Button></div>
     {query.isLoading ? <div role="status" aria-label="Loading pricing" className="h-20 animate-pulse rounded-md bg-muted" />
       : query.error ? <p role="alert" className="text-sm text-destructive">{apiErrorMessage(query.error)}</p>
       : agreements.length === 0 ? <p className="text-sm text-muted-foreground">No pricing agreements. Quotations use each product's list price.</p>
       : <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm"><caption className="sr-only">Pricing agreements</caption>
-        <thead><tr className="border-b text-left text-xs text-muted-foreground"><th scope="col" className="py-1.5 font-medium">Product</th><th scope="col" className="py-1.5 font-medium">Packing style</th><th scope="col" className="py-1.5 text-right font-medium">Price</th><th scope="col" className="py-1.5 font-medium pl-4">In effect</th><th scope="col" className="py-1.5"><span className="sr-only">Actions</span></th></tr></thead>
+        <thead><tr className="border-b text-left text-xs text-muted-foreground"><th scope="col" className="py-1.5 font-medium">Product</th><th scope="col" className="py-1.5 font-medium">Packing style</th><th scope="col" className="py-1.5 text-right font-medium">Price per pack</th><th scope="col" className="py-1.5 font-medium pl-4">In effect</th><th scope="col" className="py-1.5"><span className="sr-only">Actions</span></th></tr></thead>
         <tbody>{agreements.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="py-1.5 break-words">{item.productName ?? "–"}</td><td className="py-1.5">{item.productPackingName ?? "–"}</td>
           <td className="py-1.5 text-right font-medium">{formatMoney(item.agreedPrice, item.currency?.symbol)}</td><td className="py-1.5 pl-4">{formatDate(item.effectiveFrom) ?? "–"} to {item.effectiveTo ? formatDate(item.effectiveTo) : "open"}</td>
           <td className="py-1.5 text-right"><Button type="button" size="icon-sm" variant="ghost" aria-label={`Edit the price of ${item.productName ?? "product"}`} onClick={() => setOpen({ kind: "edit", agreement: item })}><Pencil /></Button>
