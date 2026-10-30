@@ -9,8 +9,9 @@ import { ApiProvider } from "../../shared/api/api-provider";
 import { SessionProvider } from "../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
 import { openMenu } from "../../test/menu";
-import { receivedSummary } from "../approved-products/approved-products";
-import { approveSchema, receivedPacks, shippersOf } from "./notes";
+import { stockSummary } from "../approved-products/approved-products";
+import { fgLayout } from "../../shared/packing/fg-quantity";
+import { approveSchema } from "./notes";
 
 HTMLElement.prototype.hasPointerCapture = () => false;
 HTMLElement.prototype.setPointerCapture = () => {};
@@ -18,14 +19,25 @@ HTMLElement.prototype.releasePointerCapture = () => {};
 HTMLElement.prototype.scrollIntoView = () => {};
 afterEach(() => { cleanup(); forgetSession(); });
 
-it("counts shippers and loose packs, and never lets the store receive more than was sent", () => {
-  expect([shippersOf(250, 100), shippersOf(250, 0)]).toEqual([{ shippers: 2, loose: 50 }, { shippers: 0, loose: 250 }]);
-  expect([receivedPacks(2, 50, 100), receivedPacks(Number.NaN, 30, 100)]).toEqual([250, 30]);
-  const schema = approveSchema({ total: 250, perShipper: 100 });
-  expect(schema.safeParse({ shippers: 2, loose: 50, notes: "" }).success).toBe(true);
-  expect(schema.safeParse({ shippers: 3, loose: 0, notes: "" }).error?.issues[0]?.message).toBe("That is 300 packs; only 250 were sent");
+// Dicnac: 80 boxes per shipper, a box holds 20 strips of 10 tablets, so one shipper is 16,000 tablets.
+const dicnac = fgLayout({ packPerShipper: 80, basePackingUoM: { name: "Tablet" }, packingLists: [{ uom: { name: "Shipper" }, quantity: 80, order: 1 }, { uom: { name: "Box" }, quantity: 20, order: 2 }, { uom: { name: "Strip" }, quantity: 10, order: 3 }] });
+
+it("checks what the store received as yield, entered as shippers and loose packs", () => {
+  const schema = approveSchema({ total: 1_600_200, layout: dicnac });
+  expect(schema.safeParse({ shippers: 100, loose: 1, notes: "" }).success).toBe(true);
+  expect(schema.safeParse({ shippers: 100, loose: 2, notes: "" }).error?.issues[0]?.message).toBe("That is more than was sent (100 shippers · 1 loose)");
   expect(schema.safeParse({ shippers: Number.NaN, loose: Number.NaN, notes: "" }).error?.issues[0]?.message).toBe("Enter what was received");
-  expect(receivedSummary([{ received: 250, perShipper: 100, packing: "10 x 10", unit: null }, { received: 60, perShipper: 50, packing: "5 x 10", unit: null }])).toMatchObject({ received: 310, shippers: 3, loose: 60, packings: ["10 x 10 (100 per shipper)", "5 x 10 (50 per shipper)"] });
+  const incomplete = fgLayout({ packPerShipper: 80, packingLists: [{ uom: { name: "Shipper" }, quantity: 7, order: 1 }] });
+  expect(approveSchema({ total: 100, layout: incomplete }).safeParse({ shippers: 1, loose: 0, notes: "" }).error?.issues[0]?.message).toContain("does not say how many units fill a pack");
+});
+
+it("adds up a product's stock per transfer, each with its own packing style", () => {
+  const byPack = fgLayout({ packPerShipper: 100 });
+  expect(stockSummary([
+    { total: 32_000, received: 32_000, remaining: 16_200, perShipper: 80, packing: "80 X 20 X 10", layout: dicnac },
+    { total: 250, received: 240, remaining: 150, perShipper: 100, packing: "10 x 10", layout: byPack },
+  ])).toEqual({ transferred: { shippers: 4, loose: 50, units: 0 }, received: { shippers: 4, loose: 40, units: 0 }, remaining: { shippers: 2, loose: 51, units: 0 }, baseName: "Tablet",
+    packings: ["80 X 20 X 10 (80 per shipper)", "10 x 10 (100 per shipper)"] });
 });
 
 const note = { id: "n1", isApproved: false, totalQuantity: 250, quantityPerPack: 10, remainingQuantity: 0, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 },
@@ -67,15 +79,18 @@ it("approves a transfer with what was counted in, only with the approve permissi
   const loose = await within(dialog).findByRole("spinbutton", { name: /Loose packs received/ });
   await user.clear(loose);
   await user.type(loose, "40");
-  expect(await within(dialog).findByText(/10 fewer than sent/)).toBeTruthy();
+  expect(await within(dialog).findByText(/0 shippers · 10 loose fewer than sent/)).toBeTruthy();
   expect(calls.filter((call) => call.method !== "GET")).toEqual([]);
   await user.click(within(dialog).getByRole("button", { name: "Approve transfer" }));
   await waitFor(() => expect(calls.find((call) => call.method === "PUT")?.body).toEqual({ quantityReceived: 240, notes: null }));
 }, 20_000);
 
-it("lists approved products with their packing read from the transfers", async () => {
+it("lists approved products with transferred, received and remaining in shippers and loose packs", async () => {
   open("/warehouse/approved-products", ["CanViewApprovedProducts"]);
   expect(await screen.findByText("Dicnac 100")).toBeTruthy();
   expect(await screen.findByText("10 x 10 (100 per shipper)")).toBeTruthy();
+  expect(screen.getByText("2 shippers · 50 loose")).toBeTruthy();
   expect(screen.getByText("2 shippers · 40 loose")).toBeTruthy();
+  expect(screen.getByText("0 shippers · 0 loose")).toBeTruthy();
+  expect(screen.queryByRole("columnheader", { name: /Shippers and loose/ })).toBeNull();
 });
