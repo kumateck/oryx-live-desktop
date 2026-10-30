@@ -49,6 +49,13 @@ export function StockMigrationPage() {
   const query = stockMigrationApi.useMigrationQuery({ ...migrationAudit, id }, { skip: !id });
   const comparison = stockMigrationApi.useComparisonQuery({ ...migrationAudit, id }, { skip: !id });
   const [recheck, recheckState] = stockMigrationApi.useRecheckMutation();
+  const permission = usePermissionAction(migrationPermission);
+  const checkAgain = async () => {
+    const denied = permission.check();
+    if (denied) { toast.error(denied); return; }
+    const result = await recheck({ ...migrationAudit, id });
+    if ("error" in result) toast.error(apiErrorMessage(result.error));
+  };
   const [approve] = stockMigrationApi.useApproveMutation();
   const [discard] = stockMigrationApi.useDiscardMutation();
   const [confirm, setConfirm] = useState<Confirm>(null);
@@ -72,7 +79,7 @@ export function StockMigrationPage() {
         <p className="text-sm text-muted-foreground">Uploaded {formatDateTime(migration.createdAt)} by {migration.createdBy}
           {migration.approvedAt ? ` · approved ${formatDateTime(migration.approvedAt)} by ${migration.approvedBy ?? ""}` : ""}</p></div>
       {draft ? <PermissionGuard require={migrationPermission}><div className="flex flex-wrap gap-2">
-        <Button type="button" size="sm" variant="outline" disabled={recheckState.isLoading} onClick={() => void recheck({ ...migrationAudit, id })}>
+        <Button type="button" size="sm" variant="outline" disabled={recheckState.isLoading} onClick={() => void checkAgain()}>
           {recheckState.isLoading ? <Spinner /> : <RefreshCw />}Check again</Button>
         <Button type="button" size="sm" variant="outline" onClick={() => setConfirm("discard")}><Trash2 />Discard</Button>
         <Button type="button" size="sm" disabled={blocker !== null} title={blocker ?? undefined} onClick={() => setConfirm("approve")}><CheckCircle2 />Approve and replace stock</Button>

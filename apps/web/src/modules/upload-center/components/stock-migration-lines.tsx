@@ -32,7 +32,9 @@ function Messages({ line }: { line: LineDto }) {
 export function StockMigrationLines({ migration, shelves }: { migration: MigrationDto; shelves: readonly SelectOption[] }) {
   const id = migration.id ?? "";
   const editable = isDraft(migration);
-  const [status, setStatus] = useState<LineStatus | null>((migration.blocked ?? 0) > 0 ? lineStatus.blocked : null);
+  const [chosenStatus, setStatus] = useState<LineStatus | null>((migration.blocked ?? 0) > 0 ? lineStatus.blocked : null);
+  // Once the last row needing a fix is fixed, show every row rather than an empty "Needs fixing" list.
+  const status = chosenStatus === lineStatus.blocked && (migration.blocked ?? 0) === 0 ? null : chosenStatus;
   const [sheet, setSheet] = useState(allSheets);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
