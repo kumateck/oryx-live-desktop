@@ -291,6 +291,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    putApiV1ProductionOrdersAllocateByAllocateProductionOrderId: build.mutation<
+      PutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiResponse,
+      PutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order/allocate", id: "LIST" }, { type: "production-order", id: "LIST" }, { type: "production-order/allocate", id: queryArg.allocateProductionOrderId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-orders/allocate/${queryArg.allocateProductionOrderId}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesProductionOrdersAllocateProductionOrderRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     putApiV1ProductionOrdersDeliverByAllocateProductionOrderId: build.mutation<
       PutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdApiResponse,
       PutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdApiArg
@@ -1840,6 +1855,16 @@ export type GetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiArg =
     module?: string;
     /** The sub module this request falls under */
     subModule?: string;
+  };
+export type PutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiResponse = void;
+export type PutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiArg =
+  {
+    allocateProductionOrderId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+    domainEntitiesProductionOrdersAllocateProductionOrderRequest: DomainEntitiesProductionOrdersAllocateProductionOrderRequest;
   };
 export type PutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdApiResponse = void;
 export type PutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdApiArg = {
@@ -4742,6 +4767,7 @@ export const {
   useLazyGetApiV1ProductionOrdersAllocateQuery,
   useGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery,
   useLazyGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery,
+  usePutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdMutation,
   usePutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdMutation,
   usePutApiV1ProductionOrdersLoadByAllocateProductionOrderIdMutation,
   usePostApiV1ProductionOrdersByAllocateProductionOrderIdWaybillMutation,

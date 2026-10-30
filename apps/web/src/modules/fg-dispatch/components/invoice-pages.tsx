@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, Paperclip, Send } from "lucide-react";
+import { Eye, PackageCheck, Paperclip, Send } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useAttachPurchaseOrderMutation, useGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery, useGetApiV1ProductionOrdersProformaInvoiceByProformaInvoiceIdQuery, useGetApiV1ProductionOrdersProformaInvoiceQuery, useSendProformaInvoiceMutation } from "../api/dispatch-api";
 import { dispatchPermissions, invoiceAudit, invoiceStatus, invoiceStatusLabels, invoicesPath, proformaInvoicePath, proformaPath, totalsByCurrency } from "../lib/dispatch";
 import { allocationSchema, attachLimit, attachSchema, attachTypes, invoiceRowsSchema, invoiceSchema, type AttachValues, type ProformaInvoice } from "../schemas/dispatch-schema";
+import { StepDialog } from "./allocation-pages";
 import { InvoiceLines } from "./invoice-lines";
 import { PackingListTable } from "./packing-list-view";
 import { usePricedLines } from "./use-priced-lines";
@@ -108,7 +109,7 @@ export function InvoiceListPage({ invoicesOnly }: { invoicesOnly: boolean }) {
 
 function Detail({ invoice }: { invoice: ProformaInvoice }) {
   const { has } = useAccess();
-  const [open, setOpen] = useState<"send" | "attach" | null>(null);
+  const [open, setOpen] = useState<"send" | "attach" | "load" | null>(null);
   const [send] = useSendProformaInvoiceMutation();
   // The list carries a shortened allocation; the full one has the batches each line was packed from.
   const allocationQuery = useGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery({ ...invoiceAudit, allocateProductionOrderId: invoice.allocation?.id ?? "" }, { skip: !invoice.allocation?.id });
@@ -130,6 +131,8 @@ function Detail({ invoice }: { invoice: ProformaInvoice }) {
         <InvoiceLines lines={priced.lines} loading={loading} unavailable={unavailable} print />
         <PrintSignatures roles={["Prepared by", "Approved by"]} />
       </PrintPreviewDialog>} />
+      {/* Loading does not wait for the customer's purchase order: it can be marked before or after it is attached. */}
+      {allocation?.approved && !allocation.loadedAt && has(dispatchPermissions.allocations) ? <Button type="button" size="sm" variant="outline" onClick={() => setOpen("load")}><PackageCheck />Mark as loaded</Button> : null}
       {invoice.status === invoiceStatus.sent && has(dispatchPermissions.sendProforma) ? <Button type="button" size="sm" variant="outline" onClick={() => setOpen("attach")}><Paperclip />Attach purchase order</Button> : null}
       {invoice.status === invoiceStatus.pending && has(dispatchPermissions.sendProforma) ? <Button type="button" size="sm" disabled={loading || unavailable} title={unavailable ? "Prices could not be checked." : undefined} onClick={() => setOpen("send")}><Send />Send to customer</Button> : null}
     </>} />
@@ -138,6 +141,7 @@ function Detail({ invoice }: { invoice: ProformaInvoice }) {
       <KeyFact label="Invoice date" value={formatDateTime(invoice.createdAt) ?? "–"} />
       <KeyFact label="Production order" value={allocation?.orderId ? <Link className="text-primary underline-offset-2 hover:underline" to={`/crm/production-order/${allocation.orderId}`}>{allocation.orderCode ?? "Open"}</Link> : allocation?.orderCode ?? "–"} />
       <KeyFact label="Created by" value={invoice.createdBy ?? "–"} />
+      <KeyFact label="Loaded" value={formatDate(allocation?.loadedAt) ?? "Not yet"} />
     </KeyFacts>
     <div className="grid gap-3 lg:grid-cols-2">
       <DetailGroup title="Customer"><DetailItem label="Company" value={customer?.name} /><DetailItem label="Email" value={customer?.email} /><DetailItem label="Phone" value={customer?.phone} /><DetailItem label="Address" value={customer?.address} /></DetailGroup>
@@ -146,6 +150,7 @@ function Detail({ invoice }: { invoice: ProformaInvoice }) {
     <section className="space-y-2"><h2 className="text-sm font-semibold">Products</h2><InvoiceLines lines={priced.lines} loading={loading} unavailable={unavailable} /></section>
     {allocation ? <section className="space-y-2"><h2 className="text-sm font-semibold">Packing list</h2><PackingListTable allocation={allocation} /></section> : null}
     <AttachmentList title="Customer purchase order" files={invoice.attachments} empty="No purchase order attached yet." />
+    {open === "load" && allocation ? <StepDialog step="load" allocation={allocation} onClose={() => setOpen(null)} /> : null}
     {open === "attach" ? <AttachDialog invoice={invoice} onClose={() => setOpen(null)} /> : null}
     {open === "send" ? <ConfirmActionDialog require={dispatchPermissions.sendProforma} destructive={false} title={`Send ${invoice.code} to ${customer?.name ?? "the customer"}?`} description={`The proforma invoice is emailed to ${customer?.email ?? "the customer's address on record"} at the prices shown. This cannot be recalled.`}
       confirmLabel="Send to customer" busyLabel="Sending…" onClose={() => setOpen(null)} onConfirm={async () => { const result = await send({ ...invoiceAudit, id: invoice.id }); if ("error" in result) return apiErrorMessage(result.error); toast.success(`${invoice.code} sent to the customer`); return null; }} /> : null}

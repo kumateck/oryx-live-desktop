@@ -8,10 +8,10 @@ const customer = z.object({ id: z.string().nullish(), name: text, email: text, p
   termsOfPayment: z.object({ dueDays: z.number().nullish() }).nullish() }).nullish();
 const productRef = z.object({ id: z.string().nullish(), name: text, code: text, genericName: text, price: z.number().nullish(), fullBatchSize: z.number().nullish(), department: z.object({ name: text }).nullish(),
   equipment: z.object({ name: text, location: text }).nullish() }).nullish();
-const allocation = z.object({ id: z.string().nullish(), invoiceCode: text, approved: z.boolean().nullish(), loadedAt: date, deliveredAt: date, createdAt: z.string().nullish(), hasInvoice: z.boolean().nullish(), hasWayBill: z.boolean().nullish(),
+const allocation = z.object({ id: z.string().nullish(), invoiceCode: text, approved: z.boolean().nullish(), loadedAt: date, deliveredAt: date, createdAt: z.string().nullish(), hasInvoice: z.boolean().nullish(), hasWayBill: z.boolean().nullish(), status: z.number().nullish(),
   productionOrder: z.object({ id: z.string().nullish(), code: text, customer }).nullish(),
   products: z.array(z.object({ product: productRef, productPacking: z.object({ id: z.string().nullish(), name: text, packPerShipper: amount }).nullish(),
-    fulfilledQuantities: z.array(z.object({ quantity: amount, batchPackagingRecord: z.object({ batchNumber: text, manufacturingDate: date, expiryDate: date, productPacking: z.object({ name: text, packPerShipper: amount }).nullish() }).nullish() })).nullish() })).nullish() });
+    fulfilledQuantities: z.array(z.object({ quantity: amount, finishedGoodsTransferNote: z.object({ id: z.string().nullish() }).nullish(), batchPackagingRecord: z.object({ batchNumber: text, manufacturingDate: date, expiryDate: date, productPacking: z.object({ name: text, packPerShipper: amount }).nullish() }).nullish() })).nullish() })).nullish() });
 
 function readCustomer(entry: z.infer<typeof customer>) {
   return { id: entry?.id ?? null, name: entry?.name ?? "Unnamed customer", email: entry?.email ?? null, phone: entry?.phone ?? null, address: entry?.address ?? null, currency: entry?.currency?.symbol ?? entry?.currency?.name ?? null,
@@ -19,12 +19,14 @@ function readCustomer(entry: z.infer<typeof customer>) {
 }
 function readAllocation(entry: z.infer<typeof allocation>) {
   if (!entry.id) return null;
-  const products = (entry.products ?? []).map((item, index) => { const sources = (item.fulfilledQuantities ?? []).map((source) => ({ quantity: source.quantity, batch: source.batchPackagingRecord?.batchNumber ?? null, made: source.batchPackagingRecord?.manufacturingDate ?? null,
+  const products = (entry.products ?? []).map((item, index) => { const sources = (item.fulfilledQuantities ?? []).map((source) => ({ quantity: source.quantity, noteId: source.finishedGoodsTransferNote?.id ?? null, batch: source.batchPackagingRecord?.batchNumber ?? null, made: source.batchPackagingRecord?.manufacturingDate ?? null,
       expires: source.batchPackagingRecord?.expiryDate ?? null, packing: source.batchPackagingRecord?.productPacking?.name ?? item.productPacking?.name ?? null, perShipper: source.batchPackagingRecord?.productPacking?.packPerShipper || item.productPacking?.packPerShipper || 0 }));
     return { key: `${item.product?.id ?? "product"}-${index}`, productId: item.product?.id ?? null, name: item.product?.name ?? "Unnamed product", code: item.product?.code ?? null, genericName: item.product?.genericName ?? null,
       listPrice: typeof item.product?.price === "number" ? item.product.price : null, packingId: item.productPacking?.id ?? null, department: item.product?.department?.name ?? null, equipment: item.product?.equipment?.name ?? null,
       storage: item.product?.equipment?.location ?? null, batchSize: item.product?.fullBatchSize ?? null, sources, quantity: sources.reduce((sum, source) => sum + source.quantity, 0) }; });
   return { id: entry.id, invoiceCode: entry.invoiceCode, approved: entry.approved === true, loadedAt: entry.loadedAt, deliveredAt: entry.deliveredAt, createdAt: entry.createdAt ?? null, hasInvoice: entry.hasInvoice === true, hasWaybill: entry.hasWayBill === true,
+    // 0 pending, 1 loaded, 2 waybill sent, 3 delivered.
+    status: entry.status ?? 0,
     orderId: entry.productionOrder?.id ?? null, orderCode: entry.productionOrder?.code ?? null, customer: readCustomer(entry.productionOrder?.customer), products };
 }
 /** Packs set aside from approved batches for a customer's order: a packing list until it is approved, an allocation after. */
