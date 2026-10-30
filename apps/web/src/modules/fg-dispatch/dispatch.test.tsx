@@ -41,6 +41,14 @@ const allocation = (extra: object = {}) => ({ id: "a-1", approved: true, loadedA
   productionOrder: { id: "o-1", code: "PO-9", customer: { id: "c-1", name: "Acme Pharmacy", email: "buy@acme.test", address: "Accra", currency: { symbol: "GHS" } } },
   products: [{ product: { id: "p1", name: "Dicnac 100", code: "FP-1", price: 9 }, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 },
     fulfilledQuantities: [{ quantity: 250, batchPackagingRecord: { batchNumber: "B-10", expiryDate: "2028-01-31T00:00:00Z" } }, { quantity: 120, batchPackagingRecord: { batchNumber: "B-2" } }] }], ...extra });
+// The order this packing list fills: 400 packs ordered, the 370 on the list already counted as packed.
+const productionOrder = { id: "o-1", code: "PO-9", status: 1, approved: true, customer: { id: "c-1", name: "Acme Pharmacy" },
+  products: [{ product: { id: "p1", code: "FP-1", name: "Dicnac 100" }, totalOrderQuantity: 400, fulfilledQuantities: [{ quantity: 370 }], fulfilled: false, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 } }] };
+// Stock after this list took its packs: B-10 has none left, B-2 has 30 more.
+const batch = (id: string, number: string, remaining: number) => ({ id, isApproved: true, totalQuantity: 1000, remainingQuantity: remaining, quantityPerPack: 1, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 }, batchManufacturingRecord: { batchNumber: number } });
+const batches = { finishedGoodsTransferNotes: [batch("n1", "B-10", 0), batch("n2", "B-2", 30)] };
+const awaitingApproval = () => allocation({ approved: false, status: 0, products: [{ product: { id: "p1", name: "Dicnac 100", code: "FP-1", price: 9 }, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 },
+  fulfilledQuantities: [{ quantity: 250, finishedGoodsTransferNote: { id: "n1" }, batchPackagingRecord: { batchNumber: "B-10" } }, { quantity: 120, finishedGoodsTransferNote: { id: "n2" }, batchPackagingRecord: { batchNumber: "B-2" } }] }] });
 interface Call { method: string; path: string; search: string; body?: unknown }
 function open(address: string, permissions: string[], record: object = allocation()) {
   const backend = stubBackend({ permissions });
@@ -52,8 +60,11 @@ function open(address: string, permissions: string[], record: object = allocatio
     const url = new URL(input.url);
     calls.push({ method: input.method, path: url.pathname, search: url.search, ...(input.method !== "GET" ? { body: await input.clone().json().catch(() => null) } : {}) });
     if (url.pathname === "/api/v1/production-orders/allocate" && input.method === "GET") return Response.json({ data: [record], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
-    if (url.pathname === "/api/v1/production-orders/allocate/a-1") return Response.json(record);
+    if (url.pathname === "/api/v1/production-orders/allocate/a-1" && input.method === "GET") return Response.json(record);
     if (url.pathname === "/api/v1/production-orders/load/a-1") return new Response(null, { status: 204 });
+    if (url.pathname === "/api/v1/production-orders/allocate/a-1" && input.method === "PUT") return new Response(null, { status: 204 });
+    if (url.pathname === "/api/v1/production-orders/o-1") return Response.json(productionOrder);
+    if (url.pathname === "/api/v1/production-schedule/approved-products/product/p1") return Response.json(batches);
     if (url.pathname === "/api/v1/customers/c-1/pricing-agreements") return Response.json([{ id: "ag", productId: "p1", productName: "Dicnac 100", productPackingId: "k1", productPackingName: "10 x 10", agreedPrice: 3, currency: { id: "cur", name: "Ghana cedi", symbol: "GHS" }, effectiveFrom: "2026-01-01T00:00:00Z" }]);
     if (url.pathname === "/api/v1/configuration/ProformaInvoice/count") return Response.json(7);
     if (url.pathname === "/api/v1/production-orders/proforma-invoice" && input.method === "POST") return Response.json("pi-1");
@@ -108,3 +119,38 @@ it("will not invoice an allocation that is still waiting for approval", async ()
   expect(await within(dialog).findByText(/waiting for its own approval/)).toBeTruthy();
   expect((within(dialog).getByRole("button", { name: "Generate proforma invoice" }) as HTMLButtonElement).disabled).toBe(true);
 });
+
+it("edits a packing list waiting for approval, counting its own packs as free again", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/crm/allocations/a-1", ["CanViewPackingList", "CanGeneratePackingList"], awaitingApproval());
+  await user.click(await screen.findByRole("button", { name: "Edit packing list" }));
+  // B-10 opens at 2 shippers and 50 loose; its 250 packs count as free in the batch again.
+  const loose = await screen.findByRole("spinbutton", { name: "Loose packs from batch B-10 for Dicnac 100" }, { timeout: 5_000 });
+  const dialog = screen.getByRole("dialog", { name: /Edit packing list/ });
+  expect((loose as HTMLInputElement).value).toBe("50");
+  // Ordered 400; with this list's 370 given back, nothing is packed and all 400 are still to pack.
+  expect(within(dialog).getAllByText("4 shippers · 0 loose")).toHaveLength(2);
+  expect(within(dialog).getByText("0 shippers · 0 loose")).toBeTruthy();
+  await user.clear(loose);
+  await user.type(loose, "0");
+  expect(writes(calls)).toEqual([]);
+  await user.click(within(dialog).getByRole("button", { name: "Save changes" }));
+  await waitFor(() => expect(writes(calls)).toEqual(["PUT /api/v1/production-orders/allocate/a-1"]));
+  expect(calls.find((call) => call.method === "PUT")?.body).toMatchObject({ productionOrderId: "o-1",
+    products: [{ productId: "p1", productPackingId: "k1", fulfilledQuantities: [{ finishedGoodsTransferNoteId: "n1", quantity: 200 }, { finishedGoodsTransferNoteId: "n2", quantity: 120 }] }] });
+}, 20_000);
+
+it("does not offer editing once a packing list is approved", async () => {
+  open("/crm/allocations/a-1", ["CanViewInvoice", "CanGeneratePackingList"]);
+  expect(await screen.findByText("Subtotal · Dicnac 100")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Edit packing list" })).toBeNull();
+});
+
+it("marks the goods as loaded from the proforma invoice, before the purchase order is attached", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/crm/proforma-invoice/pi-1", ["CanViewProformaInvoice", "CanViewInvoice"]);
+  await user.click(await screen.findByRole("button", { name: "Mark as loaded" }));
+  expect(writes(calls)).toEqual([]);
+  await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Mark as loaded" }));
+  await waitFor(() => expect(writes(calls)).toEqual(["PUT /api/v1/production-orders/load/a-1"]));
+}, 20_000);
