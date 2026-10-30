@@ -72,7 +72,7 @@ test("historical reporting adds optional read parameters without changing existi
       assert.deepEqual(operation, original, `${verb.toUpperCase()} ${path}`);
     }
   }
-  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))), ["/api/v1/production-schedule/activity/{activityId}/step/{stepId}/records", "/api/v1/report/production-readiness", "/api/v1/report/history/capabilities", "/api/v1/report/history/vendors"]);
+  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))), ["/api/v1/product/{productId}/packing/approved-product", "/api/v1/production-schedule/activity/{activityId}/step/{stepId}/records", "/api/v1/report/production-readiness", "/api/v1/report/history/capabilities", "/api/v1/report/history/vendors"]);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   delete schemas["DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"];
   for (const name of ["ProductionStepAnalysisDto", "ProductionStepExtraMaterialDto", "ProductionStepRecordsDto"])

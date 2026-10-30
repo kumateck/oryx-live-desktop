@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { formatShippers } from "@/shared/packing/packs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, FileText, PackageCheck, Truck } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -137,8 +138,7 @@ function Detail({ allocation }: { allocation: Allocation }) {
       <Badge variant={allocation.hasInvoice ? "secondary" : "outline"}>Invoice {allocation.hasInvoice ? allocation.invoiceCode ?? "raised" : "missing"}</Badge><Badge variant={allocation.hasWaybill ? "secondary" : "outline"}>Waybill {allocation.hasWaybill ? "raised" : "missing"}</Badge></div>
     {!allocation.approved ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">This packing list is waiting for approval. It can be invoiced, loaded and shipped once it is approved.</p> : null}
     <KeyFacts>
-      <KeyFact label="Total packs" value={totals.packs.toLocaleString()} />
-      <KeyFact label="Shippers and loose" value={`${totals.shippers} / ${totals.loose}`} />
+      <KeyFact label="Shippers and loose" value={formatShippers(totals)} note={`${totals.packs.toLocaleString()} packs`} />
       <KeyFact label="Products" value={allocation.products.length} />
       <KeyFact label="Created" value={formatDateTime(allocation.createdAt) ?? "–"} />
       <KeyFact label="Loaded" value={formatDate(allocation.loadedAt) ?? "Not yet"} note={`Delivered ${formatDate(allocation.deliveredAt) ?? "not yet"}`} />

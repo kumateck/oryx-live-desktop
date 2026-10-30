@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { PackQuantity } from "@/shared/packing/pack-quantity";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 import { useFieldArray, useForm, useWatch, type UseFormReturn } from "react-hook-form";
@@ -131,7 +132,7 @@ function Detail({ quotation }: { quotation: CustomerQuotation }) {
   const currency = quotation.currency;
   const columns = useMemo(() => column.columns([
     column.accessor("product", { header: "Product", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.product}</div><div className="text-xs text-muted-foreground">{row.original.packing ?? "No packing style"}</div></div> }),
-    column.accessor("quantity", { header: "Quantity", size: 190, cell: ({ row }) => <div><div className="font-medium">{row.original.quantity.toLocaleString()}</div><div className="text-xs text-muted-foreground">{row.original.shippers} shippers · {row.original.loose} loose</div></div> }),
+    column.accessor("quantity", { header: "Quantity", size: 190, cell: ({ row }) => <PackQuantity packs={row.original.quantity} split={{ shippers: row.original.shippers, loose: row.original.loose }} /> }),
     column.accessor("unitPrice", { header: "Price per pack", size: 150, cell: ({ row }) => formatMoney(row.original.unitPrice, currency) }),
     column.accessor("discount", { header: "Discount", size: 110, cell: ({ row }) => `${row.original.discount}%` }),
     column.accessor("total", { header: "Total", size: 160, cell: ({ row }) => <span className="font-medium">{formatMoney(row.original.total, currency)}</span> }),

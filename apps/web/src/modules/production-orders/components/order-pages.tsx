@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { PackQuantity } from "@/shared/packing/pack-quantity";
+import { addSplits, formatShippers, shipperSplit } from "@/shared/packing/packs";
 import { PackagePlus, Plus } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
@@ -73,7 +75,7 @@ function CreateOrderDialog({ onClose }: { onClose: () => void }) {
         {quotation ? <div className="overflow-x-auto rounded-md border"><table className="w-full min-w-[640px] text-sm"><caption className="border-b px-3 py-2 text-left font-semibold">Quotation {quotation.code} · {formatMoney(quotation.total, quotation.currency)}</caption>
           <thead><tr className="border-b text-left text-xs text-muted-foreground"><th scope="col" className="px-3 py-1.5 font-medium">Product</th><th scope="col" className="px-3 py-1.5 font-medium">Packing</th><th scope="col" className="px-3 py-1.5 text-right font-medium">Quantity</th><th scope="col" className="px-3 py-1.5 text-right font-medium">Price per pack</th><th scope="col" className="px-3 py-1.5 text-right font-medium">Discount</th><th scope="col" className="px-3 py-1.5 text-right font-medium">Total</th></tr></thead>
           <tbody>{quotation.items.map((line) => <tr key={line.id} className="border-b last:border-0"><td className="px-3 py-1.5 break-words">{line.product}</td><td className="px-3 py-1.5">{line.packing ?? "–"}</td>
-            <td className="px-3 py-1.5 text-right">{line.quantity.toLocaleString()}<span className="block text-xs text-muted-foreground">{line.shippers} shippers · {line.loose} loose</span></td><td className="px-3 py-1.5 text-right">{formatMoney(line.unitPrice, quotation.currency)}</td>
+            <td className="px-3 py-1.5 text-right"><PackQuantity packs={line.quantity} split={{ shippers: line.shippers, loose: line.loose }} /></td><td className="px-3 py-1.5 text-right">{formatMoney(line.unitPrice, quotation.currency)}</td>
             <td className="px-3 py-1.5 text-right">{line.discount}%</td><td className="px-3 py-1.5 text-right font-medium">{formatMoney(line.total, quotation.currency)}</td></tr>)}</tbody></table></div> : null}
         {query.error ? <p role="alert" className="text-sm text-destructive">{apiErrorMessage(query.error)}</p> : null}
         {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}</DialogBody>
@@ -128,8 +130,8 @@ const lineColumn = dataTableColumns<OrderLine>();
 const lineColumns = lineColumn.columns([
   lineColumn.accessor("productName", { header: "Product", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.productName}</div><div className="text-xs text-muted-foreground">{[row.original.productCode ?? "No code", row.original.packing].filter(Boolean).join(" · ")}</div></div> }),
   lineColumn.accessor("perShipper", { header: "Packs per shipper", size: 150 }),
-  lineColumn.accessor("ordered", { header: "Ordered packs", size: 170, cell: ({ row }) => <div><div className="font-medium">{row.original.ordered.toLocaleString()}</div><div className="text-xs text-muted-foreground">{row.original.shippers} shippers · {row.original.loose} loose</div></div> }),
-  lineColumn.accessor("fulfilled", { header: "Packed", size: 150, cell: ({ row }) => <div><div>{row.original.fulfilled.toLocaleString()}</div><div className="text-xs text-muted-foreground">{row.original.remaining.toLocaleString()} still to pack</div></div> }),
+  lineColumn.accessor("ordered", { header: "Ordered", size: 190, cell: ({ row }) => <PackQuantity packs={row.original.ordered} split={{ shippers: row.original.shippers, loose: row.original.loose }} /> }),
+  lineColumn.accessor("fulfilled", { header: "Packed", size: 190, cell: ({ row }) => <div><PackQuantity packs={row.original.fulfilled} perShipper={row.original.perShipper} /><div className="text-xs text-muted-foreground">{formatShippers(shipperSplit(row.original.remaining, row.original.perShipper))} still to pack</div></div> }),
   lineColumn.display({ id: "status", header: "Status", size: 150, cell: ({ row }) => { const state = row.original.complete ? "fulfilled" : fulfilment(row.original.ordered, row.original.fulfilled);
     return <Badge variant={state === "fulfilled" ? "default" : state === "part" ? "secondary" : "outline"}>{fulfilmentLabels[state]}</Badge>; } }),
 ]);
@@ -147,7 +149,7 @@ function Detail({ order }: { order: ProductionOrder }) {
       <span className="text-sm text-muted-foreground">Created {formatDate(order.createdAt) ?? "on an unrecorded date"}{order.createdBy ? ` by ${order.createdBy}` : ""}</span></div>
     <KeyFacts>
       <KeyFact label="Products" value={order.lines.length} />
-      <KeyFact label="Ordered packs" value={ordered.toLocaleString()} note={`${packed.toLocaleString()} packed`} />
+      <KeyFact label="Ordered" value={formatShippers(addSplits(order.lines.map((line) => ({ shippers: line.shippers, loose: line.loose }))))} note={`${ordered.toLocaleString()} packs · ${packed.toLocaleString()} packed`} />
       <KeyFact label="Total value" value={formatMoney(order.total, null)} />
       <KeyFact label="Promised delivery" value={formatDate(order.promised) ?? "Not set"} />
       <KeyFact label="Delivered" value={formatDate(order.delivered) ?? "Not yet"} />

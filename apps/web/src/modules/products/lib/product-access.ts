@@ -12,6 +12,9 @@ export const productPermissions = {
   verify: "CanVerifyProduct",
 } as const;
 
+/** Finished goods staff edit packing styles of approved products behind their own permission. */
+export const approvedProductPackingPermission = "CanEditApprovedProductPackingStyle";
+
 /** Analytical raw data has its own permissions: editing a product does not grant them. */
 export const productArdPermissions = { create: "CanCreateProductArd", edit: "CanEditProductArd" } as const;
 

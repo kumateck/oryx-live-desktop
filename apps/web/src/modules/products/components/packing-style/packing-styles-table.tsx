@@ -4,19 +4,22 @@ import { Badge } from "@/components/ui/badge";
 import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { ListDataTable, dataTableColumns } from "@/shared/datatable";
 import { formatCount } from "@/shared/packing/packs";
+import type { PermissionRequirement } from "@/shared/auth/access";
 import type { PackingStyle } from "../../lib/packing-styles";
 import { PackingUnitsCell, PacksPerShipperCell } from "./packing-units-cell";
 
 const column = dataTableColumns<PackingStyle>();
 const dash = "–";
 
-export function PackingStylesTable({ styles, baseUnit = null, loading, error, onRetry, onEdit, onRemove }: {
+export function PackingStylesTable({ styles, baseUnit = null, loading, error, onRetry, require, onEdit, onRemove }: {
   styles: readonly PackingStyle[];
   /** The product's base unit, which base packing quantity is measured in (mg, ml…). */
   baseUnit?: string | null;
   loading: boolean;
   error: string | null;
   onRetry: () => void;
+  /** The permission that edits and removes styles; the row menu is hidden without it. */
+  require?: PermissionRequirement;
   onEdit: (style: PackingStyle) => void;
   onRemove: (style: PackingStyle) => void;
 }) {
@@ -35,10 +38,10 @@ export function PackingStylesTable({ styles, baseUnit = null, loading, error, on
       <PackingUnitsCell units={row.original.units} baseLabel={row.original.basePackingUom.label} packPerShipper={row.original.packPerShipper} /> }),
     column.accessor((style) => style.description || dash, { id: "description", header: "Description" }),
     column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.name}`} items={[
-      { id: "edit", label: "Edit", icon: Pencil, onSelect: () => onEdit(row.original) },
-      { id: "remove", label: "Remove", icon: Trash2, destructive: true, onSelect: () => onRemove(row.original) },
+      { id: "edit", label: "Edit", icon: Pencil, ...(require ? { require } : {}), onSelect: () => onEdit(row.original) },
+      { id: "remove", label: "Remove", icon: Trash2, destructive: true, ...(require ? { require } : {}), onSelect: () => onRemove(row.original) },
     ]} /> }),
-  ]), [onEdit, onRemove, baseUnit]);
+  ]), [onEdit, onRemove, baseUnit, require]);
   return <ListDataTable label="Packing styles" columns={columns} rows={styles} getRowId={(style) => style.key} loading={loading} error={error}
     onRetry={onRetry} emptyTitle="No packing styles yet" emptyDescription="Add the ways this product is packed, then save." />;
 }
