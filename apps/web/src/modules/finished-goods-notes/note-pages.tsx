@@ -21,7 +21,8 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
-import { toLargestUnit } from "@/shared/units/quantity";
+import { PackQuantity } from "@/shared/packing/pack-quantity";
+import { formatShippers } from "@/shared/packing/packs";
 import { approveSchema, audit, notePath, notePermissions, noteRowsSchema, noteSchema, notesPath, receivedPacks, shippersOf, useApproveTransferNoteMutation, useGetApiV1ProductionScheduleFinishedGoodsTransferNoteByIdQuery,
   useGetApiV1ProductionScheduleFinishedGoodsTransferNoteQuery, type ApproveValues, type TransferNote } from "./notes";
 
@@ -34,17 +35,22 @@ const fields: WizardField<ApproveValues>[] = [
 export function ApproveNoteDialog({ note, onClose }: { note: TransferNote; onClose: () => void }) {
   const [approve, mutation] = useApproveTransferNoteMutation();
   const [message, setMessage] = useState("");
-  const sent = shippersOf(note.total, note.perShipper);
+  // The note holds yield; the store sees and enters shippers and loose packs.
+  const sent = fgCount(note.total, note.layout) ?? emptyCount();
+  const countable = canCount(note.layout);
   const form = useForm<ApproveValues>({ resolver: zodResolver(approveSchema(note)), defaultValues: { shippers: sent.shippers, loose: sent.loose, notes: "" } });
   void form.formState.errors;
   const [shippers, loose] = useWatch({ control: form.control, name: ["shippers", "loose"] });
-  const packs = receivedPacks(shippers, loose, note.perShipper);
+  const received = yieldOf(shippers, loose, note.layout) ?? 0;
+  const short = received > 0 && received < note.total ? fgCount(note.total - received, note.layout) : null;
   const busy = mutation.isLoading;
   const submit = form.handleSubmit(async (values) => {
     setMessage("");
-    const result = await approve({ id: note.id, quantityReceived: receivedPacks(values.shippers, values.loose, note.perShipper), notes: values.notes.trim() || null });
+    const quantityReceived = yieldOf(values.shippers, values.loose, note.layout);
+    if (quantityReceived === null) return;
+    const result = await approve({ id: note.id, quantityReceived, notes: values.notes.trim() || null });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    toast.success(`Transfer of ${note.productName} approved`, { description: `${packs.toLocaleString()} packs received into the finished goods store.` });
+    toast.success(`Transfer of ${note.productName} approved`, { description: `${fgText(quantityReceived, note.layout)} received into the finished goods store.` });
     onClose();
   });
   return <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
@@ -52,12 +58,15 @@ export function ApproveNoteDialog({ note, onClose }: { note: TransferNote; onClo
       <DialogHeader><DialogTitle>Approve transfer · {note.productName}</DialogTitle><DialogDescription>Batch {note.batchNumber ?? "–"}. Enter what the store counted in; it cannot be more than was sent. This cannot be undone.</DialogDescription></DialogHeader>
       <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         <DialogBody className="space-y-3">
-          <KeyFacts><KeyFact label="Sent" value={`${note.total.toLocaleString()} packs`} note={note.packing ?? undefined} /><KeyFact label="Shippers sent" value={sent.shippers} note={note.perShipper ? `${note.perShipper} packs each` : "No shipper size"} /><KeyFact label="Loose sent" value={sent.loose} /></KeyFacts>
-          <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
-          <p role="status" className="text-sm">Received <span className="font-semibold">{packs.toLocaleString()} packs</span>{packs > 0 && packs < note.total ? <span className="text-amber-700 dark:text-amber-400"> · {(note.total - packs).toLocaleString()} fewer than sent</span> : null}</p>
+          <KeyFacts><KeyFact label="Shippers sent" value={sent.shippers.toLocaleString()} note={note.perShipper ? `${note.perShipper.toLocaleString()} packs each` : "No shipper size"} /><KeyFact label="Loose sent" value={sent.loose.toLocaleString()} note={note.packing ?? undefined} />
+            {sent.units > 0 ? <KeyFact label="Units over" value={sent.units.toLocaleString()} note="Do not fill a pack" /> : null}</KeyFacts>
+          {countable ? <>
+            <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
+            <p role="status" className="text-sm">Received <span className="font-semibold">{countText(fgCount(received, note.layout) ?? emptyCount(), note.layout.baseName)}</span>{short ? <span className="text-amber-700 dark:text-amber-400"> · {countText(short, note.layout.baseName)} fewer than sent</span> : null}</p>
+          </> : <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">The packing style {note.packing ? `“${note.packing}” ` : ""}does not say how many units fill a pack, so this transfer cannot be counted in shippers and loose. Complete the packing style on the product first.</p>}
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>
-        <DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? <><Spinner />Approving…</> : "Approve transfer"}</Button></DialogFooter>
+        <DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy || !countable}>{busy ? <><Spinner />Approving…</> : "Approve transfer"}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>;
@@ -83,9 +92,7 @@ export function NoteListPage() {
     column.accessor((row) => row.made ?? "", { id: "made", header: "Manufactured", size: 140, cell: ({ row }) => formatMonthYear(row.original.made) ?? "–" }),
     column.accessor((row) => row.expires ?? "", { id: "expires", header: "Expires", size: 130, cell: ({ row }) => formatMonthYear(row.original.expires) ?? "–" }),
     column.accessor((row) => row.packing ?? "", { id: "packing", header: "Packing", size: 190, cell: ({ row }) => <div><div>{row.original.packing ?? "–"}</div><div className="text-xs text-muted-foreground">{row.original.perShipper ? `${row.original.perShipper} per shipper` : "No shipper size"}</div></div> }),
-    column.accessor("perPack", { header: "Packed", size: 120, cell: ({ row }) => row.original.perPack.toLocaleString() }),
-    column.accessor("total", { header: "Transferred", size: 190, cell: ({ row }) => { const split = shippersOf(row.original.total, row.original.perShipper);
-      return <div><div className="font-medium">{row.original.total.toLocaleString()}</div><div className="text-xs text-muted-foreground">{split.shippers} shippers · {split.loose} loose</div></div>; } }),
+    column.accessor("total", { header: "Transferred", size: 190, cell: ({ row }) => <PackQuantity packs={row.original.total} perShipper={row.original.perShipper} /> }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => <TableMenu label={`Actions for batch ${row.original.batchNumber ?? row.original.id}`} items={[
       { id: "view", label: "View", icon: Eye, to: notePath(row.original.id) },
       !row.original.approved && { id: "approve", label: "Approve", icon: Check, require: notePermissions.approve, onSelect: () => setApproving(row.original) },
@@ -105,21 +112,21 @@ export function NoteListPage() {
   </section>;
 }
 
-const show = (value: number, unit: string | null) => toLargestUnit(value, unit, "calculated")?.text ?? value.toLocaleString();
+/** A transfer note counts packs; the store reads them as shippers and loose packs, with the total packs under them. */
+const inShippers = (packs: number, perShipper: number) => ({ value: formatShippers(shippersOf(packs, perShipper)), note: `${packs.toLocaleString()} packs` });
 function Detail({ note }: { note: TransferNote }) {
   const { has } = useAccess();
   const [approving, setApproving] = useState(false);
-  const units = note.perPack * note.total + note.loose;
   return <article className="min-w-0 space-y-4">
     <PageHeader title={note.productName} crumbs={[{ label: "Finished goods transfer notes", to: notesPath }, { label: note.number ?? note.batchNumber ?? "Transfer note" }]}
       actions={!note.approved && has(notePermissions.approve) ? <Button type="button" size="sm" onClick={() => setApproving(true)}><Check />Approve</Button> : null} />
     <div className="flex flex-wrap items-center gap-2"><Badge variant={note.approved ? "default" : "outline"}>{note.approved ? "Approved" : "Pending approval"}</Badge>
       <span className="text-sm text-muted-foreground">{[note.number, `Created ${formatDate(note.createdAt) ?? "on an unrecorded date"}`, note.createdBy ? `by ${note.createdBy}` : null, note.qar ? `QAR ${note.qar}` : null].filter(Boolean).join(" · ")}</span></div>
     <KeyFacts>
-      <KeyFact label="Received" value={show(note.received, note.unit)} />
-      <KeyFact label="Allocated" value={show(note.allocated, note.unit)} />
-      <KeyFact label="Pending allocation" value={show(note.pending, note.unit)} state={note.pending > 0 ? "soon" : "none"} />
-      <KeyFact label="Remaining" value={show(note.remaining, note.unit)} />
+      <KeyFact label="Received" {...inShippers(note.received, note.perShipper)} />
+      <KeyFact label="Allocated" {...inShippers(note.allocated, note.perShipper)} />
+      <KeyFact label="Pending allocation" {...inShippers(note.pending, note.perShipper)} state={note.pending > 0 ? "soon" : "none"} />
+      <KeyFact label="Remaining" {...inShippers(note.remaining, note.perShipper)} />
     </KeyFacts>
     <section aria-label="Transfer route" className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4 text-sm">
       <div><p className="text-xs text-muted-foreground">From</p><p className="font-medium">{note.from ?? "–"}</p></div><ArrowRight aria-hidden="true" className="size-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">To</p><p className="font-medium">{note.to ?? "–"}</p></div></section>
@@ -129,8 +136,7 @@ function Detail({ note }: { note: TransferNote }) {
         <DetailItem label="Batch number" value={note.batchNumber} /><DetailItem label="Manufactured" value={formatMonthYear(note.made)} /><DetailItem label="Expires" value={formatMonthYear(note.expires)} /><DetailItem label="QAR number" value={note.qar} />
       </DetailGroup>
       <DetailGroup title="Transfer quantities">
-        <DetailItem label="Total transferred" value={`${note.total.toLocaleString()}${note.packing ? ` ${note.packing}` : ""}`} /><DetailItem label="Quantity per pack" value={note.perPack.toLocaleString()} />
-        <DetailItem label="Loose units" value={note.loose.toLocaleString()} /><DetailItem label="Total units" value={units ? units.toLocaleString() : null} />
+        <DetailItem label="Transferred" value={<PackQuantity packs={note.total} perShipper={note.perShipper} />} /><DetailItem label="Packing style" value={note.packing} />
         <DetailItem label="Packs per shipper" value={note.perShipper || null} />
       </DetailGroup>
     </div>

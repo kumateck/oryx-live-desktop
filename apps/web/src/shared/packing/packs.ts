@@ -117,12 +117,30 @@ export function savedUnits(style: SavedStyle): UnitRow[] {
     .map((row) => ({ uom: { label: row.uom?.name?.trim() || row.uom?.symbol?.trim() || "" }, quantity: row.quantity ?? Number.NaN }));
 }
 
+// Mass and volume symbols: a row in one of these describes what a unit contains (200 mg, 100 ml), not a count.
+const measureSymbols = new Set(["mg", "g", "kg", "mcg", "µg", "ug", "ml", "l", "cl", "dl"]);
+const same = (left: string | null | undefined, right: string | null | undefined) => Boolean(left?.trim()) && left?.trim().toLowerCase() === right?.trim().toLowerCase();
+
 /**
- * The shipper is the first unit and the pack is the level whose count per shipper matches packs per shipper
- * (or `packLevel` when one is chosen). Base units per pack multiplies the rows below the pack.
+ * The unit rows that count something, shipper first. Saved styles carry fill rows ("Tube = 25" on a Tube style,
+ * meaning 25 g) and rows in mg or ml; neither is a count, so both are left out. Rows carry no reliable order, so
+ * the shipper row is put first and the rest keep their stored order. The backend applies the same rule
+ * (oryx-backend APP/Utils/PackConversion.cs), so a quantity reads the same on both sides.
+ */
+export function countedUnits(style: SavedStyle): UnitRow[] {
+  const base = style.basePackingUoM;
+  const rows = [...(style.packingLists ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .filter((row) => !(same(row.uom?.name, base?.name) || same(row.uom?.symbol, base?.symbol)) && !measureSymbols.has(row.uom?.symbol?.trim().toLowerCase() ?? ""));
+  const shipperFirst = [...rows.filter((row) => /^\s*shipper/i.test(row.uom?.name ?? "")), ...rows.filter((row) => !/^\s*shipper/i.test(row.uom?.name ?? ""))];
+  return shipperFirst.map((row) => ({ uom: { label: row.uom?.name?.trim() || row.uom?.symbol?.trim() || "" }, quantity: row.quantity ?? Number.NaN }));
+}
+
+/**
+ * How a saved style converts between base units and packs. The pack is the counted level whose count per shipper
+ * matches packs per shipper (or `packLevel` when one is chosen); base units per pack multiplies the counted rows below it.
  */
 export function packingLayout(style: SavedStyle, packLevel?: number | null): PackingLayout {
-  const units = savedUnits(style);
+  const units = countedUnits(style);
   const perShipper = validQuantity(style.packPerShipper) ? style.packPerShipper : null;
   const baseName = unitName(style.basePackingUoM?.name) ?? unitName(style.basePackingUoM?.symbol);
   // A style with no unit breakdown packs base units directly: one base unit is one pack.
@@ -148,4 +166,14 @@ export function shipperSplit(packs: number, perShipper: number | null | undefine
 /** Total packs from shippers and loose packs, as orders are entered. */
 export function packsFrom(shippers: number, loose: number, perShipper: number | null | undefined): number {
   return (Number.isFinite(shippers) && shippers > 0 ? shippers : 0) * (validQuantity(perShipper) ? perShipper : 0) + (Number.isFinite(loose) && loose > 0 ? loose : 0);
+}
+
+/** Finished goods are counted in shippers and loose packs: "12 shippers · 5 loose". Individual tablets do not matter there. */
+export function formatShippers(split: { shippers: number; loose: number }): string {
+  return `${formatCount(split.shippers)} ${split.shippers === 1 ? "shipper" : "shippers"} · ${formatCount(split.loose)} loose`;
+}
+
+/** Adds shipper splits made with different shipper sizes (several batches or packing styles of one product). */
+export function addSplits(splits: readonly { shippers: number; loose: number }[]): { shippers: number; loose: number } {
+  return splits.reduce((sum, split) => ({ shippers: sum.shippers + split.shippers, loose: sum.loose + split.loose }), { shippers: 0, loose: 0 });
 }
