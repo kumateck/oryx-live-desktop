@@ -3,15 +3,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { AvatarForm } from "./avatar-form";
-import { DepartmentSwitchDialog } from "./department-switch-dialog";
-import { maySwitchDepartment } from "./session-api";
 import { useSession } from "./session-provider";
 import { UserAvatar } from "./user-avatar";
 
 export function AccountSummary() {
   const { state, refresh, logout } = useSession();
   const [busy, setBusy] = useState<"refresh" | "logout" | null>(null);
-  const [switching, setSwitching] = useState(false);
   if (state.status !== "authenticated") return null;
   const { user, permissions } = state.session;
 
@@ -36,15 +33,13 @@ export function AccountSummary() {
         <p className="break-words text-sm text-muted-foreground">{user.email ?? "No email address"}</p></div>
     </div>
     <dl className="grid gap-x-6 gap-y-3 rounded-lg border bg-card p-4 text-sm sm:grid-cols-[10rem_minmax(0,1fr)]">
-      <dt className="text-muted-foreground">Department</dt><dd className="flex flex-wrap items-center gap-2">{user.department ?? "No department"}
-        {maySwitchDepartment(user) ? <Button type="button" size="xs" variant="outline" onClick={() => setSwitching(true)}>Switch department</Button> : null}</dd>
+      <dt className="text-muted-foreground">Department</dt><dd>{user.department ?? "No department"}</dd>
       <dt className="text-muted-foreground">Access</dt>
       <dd>{permissions.length === 1 ? "1 permission" : `${permissions.length} permissions`} from your assigned roles</dd>
       <dt className="text-muted-foreground">Session</dt>
       <dd>Kept securely on this desktop across restarts, until you sign out or your customer server ends the session. Signing out also signs out other open Oryx windows.</dd>
     </dl>
     <AvatarForm userId={user.id} onSaved={refresh} />
-    {switching ? <DepartmentSwitchDialog user={user} onClose={() => setSwitching(false)} /> : null}
     <div className="flex flex-wrap items-center gap-2">
       <Button type="button" size="sm" variant="outline" disabled={busy !== null} onClick={() => void run("refresh")}>
         {busy === "refresh" ? <><Spinner />Checking…</> : "Refresh my access"}</Button>
