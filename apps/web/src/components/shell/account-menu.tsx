@@ -5,12 +5,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DepartmentSwitchDialog } from "@/shared/auth/department-switch-dialog";
-import { maySwitchDepartment, type SessionUser } from "@/shared/auth/session-api";
+import { switchDepartmentPermission, type SessionUser } from "@/shared/auth/session-api";
+import { useAccess } from "@/shared/auth/use-access";
 import { UserAvatar } from "@/shared/auth/user-avatar";
 
 export function AccountMenu({ user, onLogout }: { user: SessionUser | null; onLogout: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const { has } = useAccess();
   const logout = async () => {
     setBusy(true);
     try { await onLogout(); }
@@ -29,7 +31,7 @@ export function AccountMenu({ user, onLogout }: { user: SessionUser | null; onLo
     <DropdownMenuSeparator />
     <DropdownMenuItem asChild><Link to="/settings/account"><UserRound className="size-4" />Account</Link></DropdownMenuItem>
     <DropdownMenuItem asChild><Link to="/settings/appearance"><Palette className="size-4" />Appearance</Link></DropdownMenuItem>
-    {maySwitchDepartment(user) ? <DropdownMenuItem onSelect={() => setSwitching(true)}><Building2 className="size-4" />Switch department</DropdownMenuItem> : null}
+    {has(switchDepartmentPermission) ? <DropdownMenuItem onSelect={() => setSwitching(true)}><Building2 className="size-4" />Switch department</DropdownMenuItem> : null}
     <DropdownMenuSeparator />
     <DropdownMenuItem disabled={busy} onSelect={(event) => { event.preventDefault(); void logout(); }}>
       <LogOut className="size-4" />{busy ? "Signing out…" : "Sign out"}
