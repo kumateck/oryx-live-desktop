@@ -1061,6 +1061,9 @@ export const routes: RouteObject[] = [
             ] }
           ] }
         ] },
+        { path: "user-passwords", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/user-passwords/page")).default }) }
+        ] },
         { path: "warehouses", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/warehouses/page")).default }) }
         ] },

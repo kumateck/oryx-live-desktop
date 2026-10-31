@@ -2272,6 +2272,14 @@ export const navigationCatalog = [
         ]
       },
       {
+        "id": "system-settings.change-user-password",
+        "label": "Change User Password",
+        "path": "/settings/user-passwords",
+        "accounts": [
+          "dkadusei@kumateck.com"
+        ]
+      },
+      {
         "id": "system-settings.code-settings",
         "label": "Code Settings",
         "path": "/settings/code-settings",

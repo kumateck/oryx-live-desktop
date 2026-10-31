@@ -15,6 +15,7 @@ export const generatedTagTypes = [
   "attendance-record/daily-summary",
   "attendance-record/general-summary",
   "auth",
+  "auth/admin",
   "auth/change-password",
   "auth/forgot-password",
   "auth/login",

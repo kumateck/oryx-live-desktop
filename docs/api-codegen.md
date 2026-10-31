@@ -55,6 +55,8 @@ Changes made elsewhere (another user, another window, Oryx Next) cannot be seen 
 
 The opening-stock migration operations (`/api/v1/stock-migrations`, tag `StockMigration`, materials domain) were added on 2026-10-30 from the companion backend offline export. Only those paths and their `StockMigration*` schemas were merged into the contract; the export's other differences were left for their own review. The upload is multipart and is declared by hand in the Upload Center module.
 
+The admin user password operation (`POST /api/v1/auth/admin/user-password`, tag `Auth`) was added on 2026-10-31 from the companion backend offline export, with its `AdminResetUserPasswordRequest` schema only. See [Change user password](user-passwords.md).
+
 Purchase-unit additions are staged in the versioned contract from the companion
 backend controller/DTO declarations; generated clients pass through the normal
 generator. Re-export from the upgraded backend during release verification. See

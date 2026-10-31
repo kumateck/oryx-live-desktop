@@ -23,7 +23,7 @@ The desktop retains the exact Oryx Next permission keys and active-module / `Acc
 
 ### One permission model
 
-`shared/auth/access.ts` defines `PermissionRequirement`: a single key or an `AccessRule`. Rules require authentication, all named keys, or at least one named key. Empty key lists deny access. A rule may also require the backend department type. `SessionProvider` indexes permissions centrally; guards reuse the shared context rather than rebuilding an index per component.
+`shared/auth/access.ts` defines `PermissionRequirement`: a single key or an `AccessRule`. Rules require authentication, all named keys, at least one named key, or (kind `account`) one of the named accounts, matched on the signed-in user's stored email ignoring case. Empty key lists deny access. Use `account` only where the business limits a page to a person rather than a permission, and enforce the same list on the backend; today only [Change user password](user-passwords.md) does. A rule may also require the backend department type. `SessionProvider` indexes permissions centrally; guards reuse the shared context rather than rebuilding an index per component.
 
 `useAccess()` provides:
 
@@ -93,7 +93,7 @@ Tests cover route precedence and ownership, department restrictions, undeclared 
 
 ## Navigation
 
-The icon rail lists the Oryx Next sidebar groups the user may see; the sidebar shows the selected group's entries, with headings that collapse. `bun run nav:import` regenerates `apps/web/src/modules/navigation/catalog.generated.ts` from the Oryx Next sidebar, so titles, addresses, and permission keys stay identical while both applications exist. An entry is shown when the user holds any of its permission keys; a heading with nothing visible under it, and a group with nothing visible, are hidden. Group icons are chosen in `group-icons.ts`; a new group fails the type check until it has one. Addresses are the same as in Oryx Next (Roles is `/access-management/roles`). A destination whose screen has not been moved yet opens a page saying so. The header search covers the same visible entries.
+The icon rail lists the Oryx Next sidebar groups the user may see; the sidebar shows the selected group's entries, with headings that collapse. `bun run nav:import` regenerates `apps/web/src/modules/navigation/catalog.generated.ts` from the Oryx Next sidebar, so titles, addresses, and permission keys stay identical while both applications exist. An entry is shown when the user holds any of its permission keys (and, for an entry with `accounts`, only to those accounts); a heading with nothing visible under it, and a group with nothing visible, are hidden. Group icons are chosen in `group-icons.ts`; a new group fails the type check until it has one. Addresses are the same as in Oryx Next (Roles is `/access-management/roles`). A destination whose screen has not been moved yet opens a page saying so. The header search covers the same visible entries.
 
 ## Page headings and breadcrumbs
 

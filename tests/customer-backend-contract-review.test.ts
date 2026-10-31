@@ -72,7 +72,10 @@ test("historical reporting adds optional read parameters without changing existi
       assert.deepEqual(operation, original, `${verb.toUpperCase()} ${path}`);
     }
   }
-  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))), ["/api/v1/product/{productId}/packing/approved-product", "/api/v1/production-schedule/activity/{activityId}/step/{stepId}/records", "/api/v1/report/production-readiness", "/api/v1/report/history/capabilities", "/api/v1/report/history/vendors",
+  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))), [
+    // Admin user password reset (2026-10-31): one account sets another user's password; additive only.
+    "/api/v1/auth/admin/user-password",
+    "/api/v1/product/{productId}/packing/approved-product", "/api/v1/production-schedule/activity/{activityId}/step/{stepId}/records", "/api/v1/report/production-readiness", "/api/v1/report/history/capabilities", "/api/v1/report/history/vendors",
     // Opening-stock migration (2026-10-30): staged upload, row checks and approval; additive only.
     "/api/v1/stock-migrations", "/api/v1/stock-migrations/{id}", "/api/v1/stock-migrations/{id}/lines", "/api/v1/stock-migrations/{id}/lines/{lineId}",
     "/api/v1/stock-migrations/{id}/units", "/api/v1/stock-migrations/{id}/recheck", "/api/v1/stock-migrations/{id}/comparison", "/api/v1/stock-migrations/{id}/approve"]);
@@ -84,6 +87,7 @@ test("historical reporting adds optional read parameters without changing existi
     "ProductionReadinessGroupDto", "ProductionReadinessReportDto", "ProductionReadinessRowDto", "ProductionReadinessTotalsDto", "ReadinessMarketDto"])
     delete schemas[`DOMAIN.Entities.Reports.${name}`];
   for (const name of Object.keys(schemas)) if (name.includes("DOMAIN.Entities.Materials.StockMigrations.")) delete schemas[name];
+  delete schemas["DOMAIN.Entities.Auth.AdminResetUserPasswordRequest"];
   assert.deepEqual(current.components, before.components);
   assert.deepEqual(current.security, before.security);
 });
