@@ -65,7 +65,7 @@ function open(address: string, permissions: string[], record: object = quotation
     return new Response(null, { status: 404 });
   });
   const router = createMemoryRouter([{ path: "/crm/customers", element: <CustomersRoute /> }, { path: "/crm/customers/:id", element: <CustomerRoute /> }, { path: "/crm/quotations/:id", element: <QuotationRoute /> },
-    { path: "/crm/production-order/:id", element: <p>Production order</p> }], { initialEntries: [address] });
+    { path: "/crm/production-order/:id", element: <p>Production order</p> }, { path: "/finance/costing/agreements", element: <p>Costing agreements</p> }], { initialEntries: [address] });
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   return { calls, router };
 }
@@ -96,6 +96,18 @@ it("shows only the workspace tabs the user may use", async () => {
   open("/crm/customers/c-1", ["CanViewCustomers", "ViewCustomerCreditStatus"]);
   expect(await screen.findByText("Limit exceeded")).toBeTruthy();
   expect(screen.getByText("75.0%")).toBeTruthy();
+});
+
+it("sends pricing to Finance → Costing, including saved links to the old pricing tab", async () => {
+  const user = userEvent.setup();
+  const { router } = open("/crm/customers/c-1", ["CanViewCustomers", "ManageCustomerContracts", "ManageCosting"]);
+  expect(await screen.findByRole("tab", { name: "Contacts" })).toBeTruthy();
+  expect(screen.queryByRole("tab", { name: "Pricing" })).toBeNull();
+  await user.click(screen.getByRole("link", { name: "Pricing agreements" }));
+  await waitFor(() => expect(`${router.state.location.pathname}${router.state.location.search}`).toBe("/finance/costing/agreements?customer=c-1"));
+  cleanup();
+  const moved = open("/crm/customers/c-1?tab=pricing", ["CanViewCustomers", "ManageCustomerContracts", "ManageCosting"]);
+  await waitFor(() => expect(`${moved.router.state.location.pathname}${moved.router.state.location.search}`).toBe("/finance/costing/agreements?customer=c-1"));
 });
 
 it("converts an approved quotation only after confirming, and offers nothing while approval is pending", async () => {

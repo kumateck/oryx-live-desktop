@@ -4809,6 +4809,7 @@ export type DomainEntitiesReportsFinishedGoodsTransferNotesInvoicedProductsSumma
     uom?: string | null;
     unitPrice?: number;
     priceUoM?: string | null;
+    currency?: DomainEntitiesCurrenciesCurrencyDto;
   };
 export type DomainEntitiesReportsFinishedGoodsTransferNotesInvoicedProductsSummaryReportDtoRead =
   {
@@ -4827,6 +4828,7 @@ export type DomainEntitiesReportsFinishedGoodsTransferNotesInvoicedProductsSumma
     uom?: string | null;
     unitPrice?: number;
     priceUoM?: string | null;
+    currency?: DomainEntitiesCurrenciesCurrencyDto;
     itemAmount?: number;
   };
 export type DomainEntitiesProductionOrdersAllocateProductionOrderStatus =
@@ -4847,6 +4849,7 @@ export type DomainEntitiesReportsFinishedGoodsTransferNotesInvoicedProductsDetai
     uom?: string | null;
     unitPrice?: number;
     priceUoM?: string | null;
+    currency?: DomainEntitiesCurrenciesCurrencyDto;
     allocationStatus?: DomainEntitiesProductionOrdersAllocateProductionOrderStatus;
   };
 export type DomainEntitiesReportsFinishedGoodsTransferNotesInvoicedProductsDetailedReportDtoRead =
@@ -4866,6 +4869,7 @@ export type DomainEntitiesReportsFinishedGoodsTransferNotesInvoicedProductsDetai
     uom?: string | null;
     unitPrice?: number;
     priceUoM?: string | null;
+    currency?: DomainEntitiesCurrenciesCurrencyDto;
     itemAmount?: number;
     allocationStatus?: DomainEntitiesProductionOrdersAllocateProductionOrderStatus;
   };

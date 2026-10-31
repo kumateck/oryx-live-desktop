@@ -22,9 +22,6 @@ export const contactsSchema = z.array(z.object({ id: z.string(), name: text, rol
   .transform((value) => (value ?? []).map((entry) => ({ ...entry, name: entry.name ?? "Unnamed contact", isPrimary: entry.isPrimary === true })));
 export type CustomerContact = z.infer<typeof contactsSchema>[number];
 
-export const pricingSchema = z.array(z.object({ id: z.string(), productId: z.string(), productName: text, productPackingId: z.string(), productPackingName: text, agreedPrice: amount, currency, effectiveFrom: z.string(), effectiveTo: z.string().nullish(), notes: text })).nullish()
-  .transform((value) => value ?? []);
-export type PricingAgreement = z.infer<typeof pricingSchema>[number];
 
 const quotation = z.object({ id: z.string(), customerId: z.string().nullish(), customerName: text, currency, code: text, status: z.number().nullish(), validUntil: z.string().nullish(), approved: z.boolean().nullish(), totalValue: amount,
   items: z.array(z.object({ id: z.string().nullish(), productName: text, quantity: amount, shippers: amount, loose: amount, productPackingName: text, unitPrice: amount, discountPercent: amount, totalValue: amount })).nullish(),
@@ -53,11 +50,6 @@ export const profileFormSchema = customerFormSchema.extend({ type: option.nullab
 export type ProfileFormValues = z.infer<typeof profileFormSchema>;
 export const contactFormSchema = z.object({ name: z.string().trim().min(1, "Enter the contact's name"), role: z.string().trim(), email: z.string().trim().refine((value) => value === "" || z.string().email().safeParse(value).success, "Enter a valid email address"), phone: z.string().trim(), isPrimary: z.boolean() });
 export type ContactFormValues = z.infer<typeof contactFormSchema>;
-export const pricingFormSchema = z.object({ product: chosen("Choose the product"), packing: chosen("Choose the packing style"), currency: chosen("Choose the currency"),
-  price: z.number({ message: "Enter the agreed price" }).refine((value) => value > 0, "The agreed price must be above zero"),
-  from: z.date({ message: "Choose when the price starts" }).nullable().refine((value): boolean => Boolean(value), "Choose when the price starts"), to: z.date().nullable(), notes: z.string().trim().max(1000, "Keep the notes under 1000 characters") })
-  .refine((value) => !value.from || !value.to || value.to >= value.from, { path: ["to"], message: "The end date cannot be before the start date" });
-export type PricingFormValues = z.infer<typeof pricingFormSchema>;
 const wholeOrEmpty = (label: string) => z.number().or(z.nan()).refine((value) => Number.isNaN(value) || (Number.isInteger(value) && value >= 0), `Enter a whole number of ${label}, 0 or more`);
 /** Orders are entered as full shippers and loose packs; the line's quantity is the total packs they make. */
 const quotationLine = z.object({ product: chosen("Choose the product"), packing: chosen("Choose the packing style"), perShipper: z.number(),

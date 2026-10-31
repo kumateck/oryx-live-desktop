@@ -70,6 +70,8 @@ export const invoicedProductsSheet = (name: string, rows: readonly DomainEntitie
   { label: "Product name", read: (row) => row.productName },
   { label: "Unit", read: (row) => row.uom },
   { label: "Price per pack", read: (row) => row.unitPrice },
+  // Each line is priced in its own currency (the agreement's or the list price's); amounts are never converted.
+  { label: "Currency", read: (row) => row.currency?.symbol ?? row.currency?.name },
   { label: "Price unit", read: (row) => row.priceUoM },
   { label: "Item amount", read: (row) => row.itemAmount },
 ]);

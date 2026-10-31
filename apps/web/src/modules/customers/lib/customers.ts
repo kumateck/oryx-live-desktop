@@ -3,10 +3,12 @@ export const customersPath = "/crm/customers";
 export const customerPath = (id: string) => `${customersPath}/${id}`;
 export const createQuotationPath = (customerId: string) => `${customersPath}/${customerId}/quotations/create`;
 export const quotationPath = (id: string) => `/crm/quotations/${id}`;
+/** Pricing agreements live in Finance → Costing; this opens them filtered to one customer. */
+export const customerPricingPath = (customerId: string) => `/finance/costing/agreements?customer=${encodeURIComponent(customerId)}`;
 export const audit = { module: "Customer relationship management", subModule: "Customers" } as const;
 export const auditFor = (subModule: string) => ({ module: audit.module, subModule });
 export const customerPermissions = { view: "CanViewCustomers", create: "CanCreateCustomer", edit: "CanEditCustomer", remove: "CanDeleteCustomer",
-  credit: "ViewCustomerCreditStatus", contracts: "ManageCustomerContracts", quotations: "ViewCustomerQuotations", createQuotation: "CreateCustomerQuotation", convertQuotation: "ConvertCustomerQuotation" } as const;
+  credit: "ViewCustomerCreditStatus", contracts: "ManageCustomerContracts", pricing: "ManageCosting", quotations: "ViewCustomerQuotations", createQuotation: "CreateCustomerQuotation", convertQuotation: "ConvertCustomerQuotation" } as const;
 
 /** The numbers are the server's. */
 export const customerTypeLabels: Record<number, string> = { 0: "Distributor", 1: "Pharmacy", 2: "Hospital", 3: "Retail", 4: "Other" };

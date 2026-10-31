@@ -231,6 +231,14 @@ export const navigationCatalog = [
           "CanViewCashflowReports",
           "CanViewPayments"
         ]
+      },
+      {
+        "id": "finance-and-cashflow.costing",
+        "label": "Costing",
+        "path": "/finance/costing",
+        "permissions": [
+          "ManageCosting"
+        ]
       }
     ]
   },
