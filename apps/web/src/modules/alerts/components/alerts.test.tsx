@@ -32,13 +32,29 @@ it("loads directories only when editing, preserving recipients and the exact del
   expect(save?.subModule).toBe("Alerts");
   expect(JSON.parse(save?.body ?? "null")).toEqual({ title: "Updated stock alert", notificationType: 4, timeFrame: "2.03:04:05.1234567", alertTypes: [0, 1], roleIds: ["role-one"], userIds: ["user-one"] });
 }, 10000);
-it("disables configuration and deletion of system alerts while allowing the authorized toggle", async () => {
+it("disables full editing and deletion of system alerts while allowing recipients and the toggle", async () => {
   open({ system: true }); await screen.findByText(alert.title);
   await openMenu(`Actions for ${alert.title}`);
   expect(screen.getByRole("menuitem", { name: /^Edit/ }).getAttribute("aria-disabled")).toBe("true");
   expect(screen.getByRole("menuitem", { name: /^Remove/ }).getAttribute("aria-disabled")).toBe("true");
   expect(screen.getByRole("menuitem", { name: "Disable" }).getAttribute("aria-disabled")).not.toBe("true");
+  expect(screen.getByRole("menuitem", { name: "Manage recipients" }).getAttribute("aria-disabled")).not.toBe("true");
 });
+it.each([{ system: true }, { system: false }])("saves only recipients through the recipients endpoint (system: $system)", async ({ system }) => {
+  const calls = open({ system }); await screen.findByText(alert.title);
+  await chooseAction(`Actions for ${alert.title}`, "Manage recipients");
+  await screen.findByRole("heading", { name: "Manage recipients" });
+  const dialog = within(screen.getByRole("dialog"));
+  expect(dialog.getByRole("textbox", { name: /^Title/ }).hasAttribute("disabled")).toBe(true);
+  expect(dialog.queryByText("Delivery delay")).toBeNull();
+  await waitFor(() => expect(calls.filter((call) => call.path.includes("/collection/"))).toHaveLength(2));
+  fireEvent.click(dialog.getByRole("button", { name: "Save changes" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  const saves = calls.filter((call) => call.method !== "GET");
+  expect(saves.map((call) => [call.method, call.path])).toEqual([["PUT", "/api/v1/alert/alert-one/recipients"]]);
+  expect(saves[0]?.subModule).toBe("Alerts");
+  expect(JSON.parse(saves[0]?.body ?? "null")).toEqual({ roleIds: ["role-one"], userIds: ["user-one"] });
+}, 10000);
 it("retains the editor and dirty draft when a save fails", async () => {
   open({ fail: true }); await screen.findByText(alert.title);
   await chooseAction(`Actions for ${alert.title}`, "Edit");
