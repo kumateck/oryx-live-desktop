@@ -27,7 +27,7 @@ export const apiDomains: readonly ApiDomain[] = [
   { id: "inventory", exportName: "inventoryApi", tags: [
     "Item", "ItemGrn", "ItemInventoryTransaction", "ItemStockRequisition", "InventoryProcurement", "Vendor", "RecoverableItemsReport",
   ] },
-  { id: "sales", exportName: "salesApi", tags: ["Customer", "Payment"] },
+  { id: "sales", exportName: "salesApi", tags: ["Customer", "Payment", "Costing"] },
   { id: "qc", exportName: "qcApi", tags: [
     "CommercialCertificate", "Instrument", "MicrobialRequirement", "QcAiExtractionSettings", "QcCoa", "QcEquipment",
     "QcMonitoringProgram", "QcOosCase", "QcSamplingPointGroup", "QcSpecification", "QcSpecificationProposal",

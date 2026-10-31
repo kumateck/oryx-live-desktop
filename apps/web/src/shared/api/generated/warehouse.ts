@@ -2600,6 +2600,7 @@ export type DomainEntitiesProductsProductListDto = {
   createdAt?: string;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   labelClaim?: string | null;
   isVerified?: boolean;

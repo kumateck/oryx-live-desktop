@@ -5,7 +5,7 @@ their OpenAPI contract would produce `any` or `unknown`. Declare the response or
 controller (for example `[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), run
 `bun run api:export` and `bun run api:generate`, and the hook appears.
 
-Typed operations: 1132. Skipped: 244.
+Typed operations: 1142. Skipped: 239.
 
 ## identity
 
@@ -168,11 +168,6 @@ Typed operations: 1132. Skipped: 244.
 | Customer | `GET /api/v1/customers/{id}/credit-status` | 200 response has no declared body type |
 | Customer | `GET /api/v1/customers/{id}/order-history` | 200 response has no declared body type |
 | Customer | `GET /api/v1/customers/{id}/summary` | 200 response has no declared body type |
-| Customer | `GET /api/v1/customers/{id}/pricing-agreements` | 200 response has no declared body type |
-| Customer | `POST /api/v1/customers/{id}/pricing-agreements` | 200 response has no declared body type |
-| Customer | `GET /api/v1/customers/{id}/pricing-agreements/active` | 200 response has no declared body type |
-| Customer | `PUT /api/v1/customers/{id}/pricing-agreements/{agreementId}` | 200 response has no declared body type |
-| Customer | `DELETE /api/v1/customers/{id}/pricing-agreements/{agreementId}` | 200 response has no declared body type |
 | Customer | `GET /api/v1/customers/{id}/quotations` | 200 response has no declared body type |
 | Customer | `POST /api/v1/customers/{id}/quotations` | 200 response has no declared body type |
 | Customer | `GET /api/v1/customers/{id}/quotations/convertible` | 200 response has no declared body type |

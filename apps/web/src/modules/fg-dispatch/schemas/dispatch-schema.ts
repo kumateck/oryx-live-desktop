@@ -6,7 +6,7 @@ const date = z.string().nullish().transform((value) => value && new Date(value).
 const currency = z.object({ id: z.string().nullish(), name: text, symbol: text }).nullish();
 const customer = z.object({ id: z.string().nullish(), name: text, email: text, phone: z.union([z.string(), z.number()]).nullish().transform((value) => value === null || value === undefined ? null : String(value)), address: text, currency,
   termsOfPayment: z.object({ dueDays: z.number().nullish() }).nullish() }).nullish();
-const productRef = z.object({ id: z.string().nullish(), name: text, code: text, genericName: text, price: z.number().nullish(), fullBatchSize: z.number().nullish(), department: z.object({ name: text }).nullish(),
+const productRef = z.object({ id: z.string().nullish(), name: text, code: text, genericName: text, price: z.number().nullish(), priceCurrencyId: z.string().nullish(), fullBatchSize: z.number().nullish(), department: z.object({ name: text }).nullish(),
   equipment: z.object({ name: text, location: text }).nullish() }).nullish();
 const allocation = z.object({ id: z.string().nullish(), invoiceCode: text, approved: z.boolean().nullish(), loadedAt: date, deliveredAt: date, createdAt: z.string().nullish(), hasInvoice: z.boolean().nullish(), hasWayBill: z.boolean().nullish(), status: z.number().nullish(),
   productionOrder: z.object({ id: z.string().nullish(), code: text, customer }).nullish(),
@@ -22,7 +22,7 @@ function readAllocation(entry: z.infer<typeof allocation>) {
   const products = (entry.products ?? []).map((item, index) => { const sources = (item.fulfilledQuantities ?? []).map((source) => ({ quantity: source.quantity, noteId: source.finishedGoodsTransferNote?.id ?? null, batch: source.batchPackagingRecord?.batchNumber ?? null, made: source.batchPackagingRecord?.manufacturingDate ?? null,
       expires: source.batchPackagingRecord?.expiryDate ?? null, packing: source.batchPackagingRecord?.productPacking?.name ?? item.productPacking?.name ?? null, perShipper: source.batchPackagingRecord?.productPacking?.packPerShipper || item.productPacking?.packPerShipper || 0 }));
     return { key: `${item.product?.id ?? "product"}-${index}`, productId: item.product?.id ?? null, name: item.product?.name ?? "Unnamed product", code: item.product?.code ?? null, genericName: item.product?.genericName ?? null,
-      listPrice: typeof item.product?.price === "number" ? item.product.price : null, packingId: item.productPacking?.id ?? null, department: item.product?.department?.name ?? null, equipment: item.product?.equipment?.name ?? null,
+      listPrice: typeof item.product?.price === "number" ? item.product.price : null, listCurrencyId: item.product?.priceCurrencyId ?? null, packingId: item.productPacking?.id ?? null, department: item.product?.department?.name ?? null, equipment: item.product?.equipment?.name ?? null,
       storage: item.product?.equipment?.location ?? null, batchSize: item.product?.fullBatchSize ?? null, sources, quantity: sources.reduce((sum, source) => sum + source.quantity, 0) }; });
   return { id: entry.id, invoiceCode: entry.invoiceCode, approved: entry.approved === true, loadedAt: entry.loadedAt, deliveredAt: entry.deliveredAt, createdAt: entry.createdAt ?? null, hasInvoice: entry.hasInvoice === true, hasWaybill: entry.hasWayBill === true,
     // 0 pending, 1 loaded, 2 waybill sent, 3 delivered.
@@ -41,7 +41,7 @@ function readInvoice(entry: z.infer<typeof invoice>) {
   return { id: entry.id, code: entry.code ?? "No number", status: entry.status ?? 0, createdAt: entry.createdAt ?? null, createdBy: [entry.createdBy?.firstName, entry.createdBy?.lastName].filter(Boolean).join(" ") || null,
     allocation: entry.allocateProductionOrder ? readAllocation(entry.allocateProductionOrder) : null,
     products: (entry.products ?? []).map((item, index) => ({ key: item.id ?? `line-${index}`, productId: item.product?.id ?? null, name: item.product?.name ?? "Unnamed product", code: item.product?.code ?? null, genericName: item.product?.genericName ?? null,
-      listPrice: typeof item.product?.price === "number" ? item.product.price : null, quantity: item.quantity })),
+      listPrice: typeof item.product?.price === "number" ? item.product.price : null, listCurrencyId: item.product?.priceCurrencyId ?? null, quantity: item.quantity })),
     attachments: (entry.attachments ?? []).map((file, index) => ({ id: file.id ?? `file-${index}`, name: file.name ?? "Unnamed file", link: file.link })) };
 }
 /** A proforma invoice for an allocation; it becomes the invoice once the customer's purchase order is attached. */

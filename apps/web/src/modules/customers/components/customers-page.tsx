@@ -16,7 +16,7 @@ import { usePageSearch } from "@/shared/search/page-search";
 import { useDeleteApiV1CustomersByIdMutation, useGetApiV1CustomersQuery, usePostApiV1CustomersMutation, usePutApiV1CustomersByIdMutation } from "../api/customer-api";
 import { audit, customerPath, customerPermissions } from "../lib/customers";
 import { customerFormSchema, customerRowsSchema, type CustomerFormValues, type CustomerRow } from "../schemas/customer-schema";
-import { FormDialog } from "./form-dialog";
+import { FormDialog } from "@/shared/forms/form-dialog";
 
 const fields: WizardField<CustomerFormValues>[] = [
   { type: InputTypes.TEXT, name: "name", label: "Customer name", required: true },

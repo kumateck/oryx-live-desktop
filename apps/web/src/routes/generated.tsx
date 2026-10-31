@@ -248,6 +248,15 @@ export const routes: RouteObject[] = [
         { path: "cashflow", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/cashflow/page")).default }) }
         ] },
+        { path: "costing", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/page")).default }) },
+          { path: "agreements", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/agreements/page")).default }) },
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/agreements/[id]/page")).default }) }
+            ] }
+          ] }
+        ] },
         { path: "payment-approvals", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/payment-approvals/page")).default }) },
           { path: ":id", Component: Outlet, children: [

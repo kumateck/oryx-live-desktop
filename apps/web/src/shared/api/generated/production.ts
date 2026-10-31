@@ -2960,6 +2960,7 @@ export type DomainEntitiesProductsProductListDto = {
   createdAt?: string;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   labelClaim?: string | null;
   isVerified?: boolean;
@@ -4622,6 +4623,7 @@ export type DomainEntitiesProductionSchedulesProductionScheduleReportDto = {
   product?: DomainEntitiesProductsProductListDto;
   unitPrice?: number;
   priceUoM?: string | null;
+  currency?: DomainEntitiesCurrenciesCurrencyDto;
   batchSize?: number;
   batches?: number;
   actualQuantity?: number;
@@ -4631,6 +4633,7 @@ export type DomainEntitiesProductionSchedulesProductionScheduleReportDtoRead = {
   product?: DomainEntitiesProductsProductListDto;
   unitPrice?: number;
   priceUoM?: string | null;
+  currency?: DomainEntitiesCurrenciesCurrencyDto;
   batchSize?: number;
   batches?: number;
   expectedQuantity?: number;
@@ -4643,6 +4646,7 @@ export type DomainEntitiesProductionSchedulesProductionScheduleDetailedReportDto
   {
     unitPrice?: number;
     priceUoM?: string | null;
+    currency?: DomainEntitiesCurrenciesCurrencyDto;
     batchNumber?: string | null;
     packageStyle?: string | null;
     expectedQuantity?: number;
@@ -4652,6 +4656,7 @@ export type DomainEntitiesProductionSchedulesProductionScheduleDetailedReportDto
   {
     unitPrice?: number;
     priceUoM?: string | null;
+    currency?: DomainEntitiesCurrenciesCurrencyDto;
     batchNumber?: string | null;
     packageStyle?: string | null;
     expectedQuantity?: number;
