@@ -11,6 +11,7 @@ import type { WizardField } from "@/shared/forms/form-wizard";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatQuantityNumber } from "@/shared/units/quantity";
 import { shortageSchema, shipmentDiscrepancySchema, shipmentDiscrepancyAudit as audit, type ShipmentDiscrepancy, type ShortageBalance } from "../schemas/discrepancy";
+import { randomId } from "@/shared/ids/random-id";
 const schema = z.object({ code: z.string().trim().min(1).max(100), quantity: z.number().finite().positive() });
 type Values = z.infer<typeof schema>;
 const fields: WizardField<Values>[] = [
@@ -19,7 +20,7 @@ const fields: WizardField<Values>[] = [
 ];
 export function MakeUpDialog({ record, balance, onClose }: { record: ShipmentDiscrepancy; balance: ShortageBalance; onClose: () => void }) {
   const navigate = useNavigate();
-  const [requestKey] = useState(() => crypto.randomUUID());
+  const [requestKey] = useState(() => randomId());
   const command = useVerifiedMutation<{ record: ShipmentDiscrepancy; balance: ShortageBalance }>("CanCreateShortageMakeUpInvoice", { record, balance });
   const [read] = procurementApi.useLazyGetApiV1ProcurementShipmentDiscrepancyByShipmentDiscrepancyIdQuery();
   const [readBalance] = procurementApi.useLazyGetApiV1ProcurementShipmentDiscrepancyLineByDiscrepancyItemIdBalanceQuery();
