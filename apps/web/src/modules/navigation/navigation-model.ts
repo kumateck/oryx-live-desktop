@@ -7,6 +7,8 @@ export interface NavigationItem {
   readonly path?: string;
   /** Shown when the user holds any of these. Absent means no permission is required. */
   readonly permissions?: readonly string[];
+  /** Shown only to these accounts (by email, ignoring case), in addition to any permissions. */
+  readonly accounts?: readonly string[];
   readonly children?: readonly NavigationItem[];
 }
 
@@ -17,6 +19,7 @@ export interface NavigationGroup {
 }
 
 function allowed(item: NavigationItem, context: AccessContext): boolean {
+  if (item.accounts && !canAccess({ kind: "account", emails: item.accounts }, context)) return false;
   return item.permissions
     ? canAccess({ kind: "some", permissions: item.permissions }, context)
     : canAccess({ kind: "authenticated" }, context);

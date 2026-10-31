@@ -50,13 +50,19 @@ export function agreementFor(agreements: readonly Agreement[], productId: string
   return agreements.filter((item) => { const from = time(item.effectiveFrom); const to = time(item.effectiveTo); return item.productId === productId && item.productPackingId === packingId && from !== null && from <= on && (to === null || to >= on); })
     .sort((a, b) => (time(b.effectiveFrom) ?? 0) - (time(a.effectiveFrom) ?? 0))[0] ?? null;
 }
-interface LineInput { key: string; productId: string | null; productName: string; genericName: string | null; code: string | null; packingId: string | null; quantity: number; perShipper?: number; listPrice: number | null }
-/** Prices each line at the agreement in effect, or at the product's list price in the customer's currency when there is none. */
-export function priceLines(lines: readonly LineInput[], agreements: readonly Agreement[], asOf: string | null, defaultCurrency: string | null): PricedLine[] {
+interface LineInput { key: string; productId: string | null; productName: string; genericName: string | null; code: string | null; packingId: string | null; quantity: number; perShipper?: number; listPrice: number | null; listCurrencyId: string | null }
+/** Currency labels by id, for the currency a list price was set in. */
+export type CurrencyLabels = ReadonlyMap<string, string>;
+/**
+ * Prices each line at the agreement in effect, in the agreement's currency, or else at the product's list price in the
+ * currency that price was set in (Finance → Costing). A price is never converted or relabelled in another currency.
+ */
+export function priceLines(lines: readonly LineInput[], agreements: readonly Agreement[], asOf: string | null, currencies: CurrencyLabels): PricedLine[] {
   return lines.map((line) => { const agreement = agreementFor(agreements, line.productId, line.packingId, asOf);
-    const currency = agreement ? agreement.currency?.symbol ?? agreement.currency?.name ?? null : defaultCurrency;
+    const currency = agreement ? agreement.currency?.symbol ?? agreement.currency?.name ?? null : line.listCurrencyId ? currencies.get(line.listCurrencyId) ?? null : null;
+    const currencyKey = agreement ? agreement.currency?.id ?? currency ?? "" : line.listCurrencyId ?? "";
     return { key: line.key, productName: line.productName, genericName: line.genericName, code: line.code, quantity: line.quantity, perShipper: line.perShipper ?? 0, unitPrice: agreement && Number.isFinite(agreement.agreedPrice) ? agreement.agreedPrice : line.listPrice ?? 0,
-      currency, currencyKey: agreement?.currency?.id ?? currency ?? "", source: agreement ? "agreement" : "default" }; });
+      currency, currencyKey, source: agreement ? "agreement" : "default" }; });
 }
 /** What the lines come to, one total per currency: amounts in different currencies are never added. */
 export function totalsByCurrency(lines: readonly PricedLine[]): { currency: string | null; amount: number }[] {

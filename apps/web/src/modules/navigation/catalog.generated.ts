@@ -231,6 +231,14 @@ export const navigationCatalog = [
           "CanViewCashflowReports",
           "CanViewPayments"
         ]
+      },
+      {
+        "id": "finance-and-cashflow.costing",
+        "label": "Costing",
+        "path": "/finance/costing",
+        "permissions": [
+          "ManageCosting"
+        ]
       }
     ]
   },
@@ -2269,6 +2277,14 @@ export const navigationCatalog = [
         "path": "/settings/change-password",
         "permissions": [
           "CanViewChangePassword"
+        ]
+      },
+      {
+        "id": "system-settings.change-user-password",
+        "label": "Change User Password",
+        "path": "/settings/user-passwords",
+        "accounts": [
+          "dkadusei@kumateck.com"
         ]
       },
       {

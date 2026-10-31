@@ -19,7 +19,7 @@ export function availableNavigation(groups: readonly NavigationGroup[], pages: r
     const children = item.children?.flatMap(visit);
     const path = item.path && hasConcretePage(item.path, pages) ? item.path : undefined;
     if (!path && !children?.length) return [];
-    return [{ id: item.id, label: item.label, ...(path ? { path } : {}), ...(item.permissions ? { permissions: item.permissions } : {}), ...(children?.length ? { children } : {}) }];
+    return [{ id: item.id, label: item.label, ...(path ? { path } : {}), ...(item.permissions ? { permissions: item.permissions } : {}), ...(item.accounts ? { accounts: item.accounts } : {}), ...(children?.length ? { children } : {}) }];
   };
   return groups.flatMap((group) => {
     const items = group.items.flatMap(visit);

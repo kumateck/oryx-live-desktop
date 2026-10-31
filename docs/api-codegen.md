@@ -18,7 +18,7 @@ The desktop uses the same backend as Oryx Next. Additive features such as purcha
 
 Generation is strict per operation, not per domain. `scripts/api-contract.ts` reads the contract and skips any operation that would produce `any` or `unknown`: a 2xx response other than 204 with no declared body type, or a request, parameter, or response schema that reaches an untyped property. Skipped operations are listed with their reason in the generated `docs/api-untyped-operations.md`, which is the backend typing backlog. A 204 response becomes `void` automatically. ASP.NET ProblemDetails extensions are arbitrary JSON, represented by a recursive `JsonValue` type. Any `any` or `unknown` that still reaches the output fails generation. `api:check` regenerates everything, compares it with the committed files and the backlog, and leaves the working tree unchanged.
 
-The current contract has 1,361 operations: 1,117 have hooks across 20 domains and 244 are skipped. To get a missing hook, declare the type on the controller (`[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), then run `api:export` and `api:generate`.
+The current contract has 1,381 operations: 1,142 have hooks across 20 domains and 239 are skipped. To get a missing hook, declare the type on the controller (`[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), then run `api:export` and `api:generate`.
 
 For an offline export from the companion backend source, run `dotnet API.dll --export-openapi /absolute/path/backend.json` from its build directory, then `ORYX_OPENAPI_FILE=/absolute/path/backend.json bun run api:export`. The metadata-only export exits before database seeding, listeners and hosted services start. Review the source contract and update the customer-server compatibility fingerprint alongside a coordinated backend/UI release; generation alone is not compatibility approval.
 
@@ -53,7 +53,11 @@ Two rules keep this precise:
 
 Changes made elsewhere (another user, another window, Oryx Next) cannot be seen by tags. A page reads its data again when it opens on data older than 30 seconds, when the window regains focus, and after a reconnect (`shared/api/base-api.ts`). Live updates of other people's changes are proposed in `docs/proposals/entity-changed-events.md`.
 
+The finance costing operations (`/api/v1/costing/...`, tag `Costing`, sales domain) and the typed customer pricing-agreement operations were added on 2026-10-31 from the companion backend offline export, with the product and report schemas that gained a currency property. Only those paths and schemas were merged; the export's other differences were left for their own review. The contract review test lists each allowance, and the customer-server release fingerprint must be approved against the deployed backend's export at release. See [costing](costing.md).
+
 The opening-stock migration operations (`/api/v1/stock-migrations`, tag `StockMigration`, materials domain) were added on 2026-10-30 from the companion backend offline export. Only those paths and their `StockMigration*` schemas were merged into the contract; the export's other differences were left for their own review. The upload is multipart and is declared by hand in the Upload Center module.
+
+The admin user password operation (`POST /api/v1/auth/admin/user-password`, tag `Auth`) was added on 2026-10-31 from the companion backend offline export, with its `AdminResetUserPasswordRequest` schema only. See [Change user password](user-passwords.md).
 
 Purchase-unit additions are staged in the versioned contract from the companion
 backend controller/DTO declarations; generated clients pass through the normal

@@ -248,6 +248,15 @@ export const routes: RouteObject[] = [
         { path: "cashflow", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/cashflow/page")).default }) }
         ] },
+        { path: "costing", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/page")).default }) },
+          { path: "agreements", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/agreements/page")).default }) },
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/agreements/[id]/page")).default }) }
+            ] }
+          ] }
+        ] },
         { path: "payment-approvals", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/payment-approvals/page")).default }) },
           { path: ":id", Component: Outlet, children: [
@@ -1060,6 +1069,9 @@ export const routes: RouteObject[] = [
               { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/upload-center/stock-migrations/[id]/page")).default }) }
             ] }
           ] }
+        ] },
+        { path: "user-passwords", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/user-passwords/page")).default }) }
         ] },
         { path: "warehouses", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/warehouses/page")).default }) }

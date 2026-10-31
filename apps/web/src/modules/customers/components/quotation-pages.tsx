@@ -29,6 +29,8 @@ const emptyLine = (): QuotationLineValues => ({ product: null, packing: null, pe
 
 function Line({ form, index, customerId, currency, choices, onRemove }: { form: UseFormReturn<QuotationFormValues>; index: number; customerId: string; currency: string | null; choices: ReturnType<typeof useProductChoices>; onRemove: (() => void) | null }) {
   const [resolve, resolving] = useLazyResolveQuotationPriceQuery();
+  // Why the price on record cannot be used, such as a list price in another currency. Prices are never converted.
+  const [refusal, setRefusal] = useState("");
   const [product, packing, shippers, loose, unitPrice, discount, perShipper, fromAgreement] = useWatch({ control: form.control, name: [`items.${index}.product`, `items.${index}.packing`, `items.${index}.shippers`, `items.${index}.loose`, `items.${index}.unitPrice`, `items.${index}.discount`, `items.${index}.perShipper`, `items.${index}.fromAgreement`] });
   const quantity = orderedPacks({ shippers, loose, perShipper });
   const { ensurePacking, packingsOf } = choices;
@@ -43,7 +45,9 @@ function Line({ form, index, customerId, currency, choices, onRemove }: { form: 
     if (!product || !packing) return;
     form.setValue(`items.${index}.perShipper`, packingsOf(product.value).find((item) => item.value === packing.value)?.perShipper ?? 0);
     let current = true;
+    setRefusal("");
     void resolve({ customerId, productId: product.value, productPackingId: packing.value }).then((result) => {
+      if (current && result.error) setRefusal(apiErrorMessage(result.error));
       if (!current || !result.data || typeof result.data.unitPrice !== "number") return;
       form.setValue(`items.${index}.unitPrice`, result.data.unitPrice, { shouldValidate: true });
       form.setValue(`items.${index}.fromAgreement`, result.data.fromAgreement === true);
@@ -66,7 +70,7 @@ function Line({ form, index, customerId, currency, choices, onRemove }: { form: 
     <div className="flex items-start gap-2"><FormWizard form={form} fields={fields} className="min-w-0 flex-1 md:grid-cols-3 xl:grid-cols-6" />
       <Button type="button" size="icon-sm" variant="ghost" className="mt-6" aria-label={`Remove item ${index + 1}`} disabled={!onRemove} onClick={() => onRemove?.()}><Trash2 /></Button></div>
     <p role="status" className="text-sm text-muted-foreground">{quantity > 0 ? <>Total packs <span className="font-medium text-foreground">{quantity.toLocaleString()}</span>{hasShippers ? ` (${(Number.isFinite(shippers) ? shippers : 0).toLocaleString()} × ${perShipper.toLocaleString()} + ${(Number.isFinite(loose) ? loose : 0).toLocaleString()} loose)` : ""} · </> : null}
-      {!packing ? "Choose the packing style to see the price." : resolving.isFetching ? "Looking up the price…" : fromAgreement === true ? "The customer's agreed price is filled in." : fromAgreement === false ? "The product's list price is filled in." : "No price on record."}
+      {!packing ? "Choose the packing style to see the price." : resolving.isFetching ? "Looking up the price…" : refusal ? `${refusal} Enter the price to use.` : fromAgreement === true ? "The customer's agreed price is filled in." : fromAgreement === false ? "The product's list price is filled in." : "No price on record."}
       {total !== null ? <> · line total <span className="font-medium text-foreground">{formatMoney(total, currency)}</span></> : null}</p>
   </li>;
 }
@@ -110,6 +114,7 @@ export function CreateQuotationPage() {
     <section className="rounded-lg border bg-card p-4"><FormWizard form={form} fields={header} className="md:grid-cols-2" /></section>
     <section className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-sm font-semibold">Items</h2>
+        {profile && !currency ? <p className="w-full text-xs text-muted-foreground">This customer has no preferred currency, so the quotation is raised in the currency its prices are in. Prices in different currencies are refused, not converted.</p> : null}
         <span role="status" className="text-sm">Quotation value <span className="font-semibold">{total === null ? "not complete" : formatMoney(total, currency)}</span></span></div>
       <ul className="space-y-2">{lines.fields.map((field, index) => <Line key={field.id} form={form} index={index} customerId={customerId} currency={currency} choices={choices} onRemove={lines.fields.length > 1 ? () => lines.remove(index) : null} />)}</ul>
       {errors.items?.message ?? errors.items?.root?.message ? <p role="alert" className="text-sm text-destructive">{errors.items?.message ?? errors.items?.root?.message}</p> : null}
