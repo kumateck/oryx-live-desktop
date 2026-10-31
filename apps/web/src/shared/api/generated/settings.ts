@@ -82,6 +82,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    putApiV1AlertByAlertIdRecipients: build.mutation<
+      PutApiV1AlertByAlertIdRecipientsApiResponse,
+      PutApiV1AlertByAlertIdRecipientsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "alert", id: "LIST" }, { type: "alert", id: queryArg.alertId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/alert/${queryArg.alertId}/recipients`,
+        method: "PUT",
+        body: queryArg.domainEntitiesAlertsUpdateAlertRecipientsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     putApiV1AlertByIdToggleDisable: build.mutation<
       PutApiV1AlertByIdToggleDisableApiResponse,
       PutApiV1AlertByIdToggleDisableApiArg
@@ -766,6 +781,15 @@ export type PutApiV1AlertByAlertIdApiArg = {
   subModule?: string;
   domainEntitiesAlertsCreateAlertRequest: DomainEntitiesAlertsCreateAlertRequest;
 };
+export type PutApiV1AlertByAlertIdRecipientsApiResponse = void;
+export type PutApiV1AlertByAlertIdRecipientsApiArg = {
+  alertId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesAlertsUpdateAlertRecipientsRequest: DomainEntitiesAlertsUpdateAlertRecipientsRequest;
+};
 export type PutApiV1AlertByIdToggleDisableApiResponse = void;
 export type PutApiV1AlertByIdToggleDisableApiArg = {
   id: string;
@@ -1329,6 +1353,10 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
+export type DomainEntitiesAlertsUpdateAlertRecipientsRequest = {
+  roleIds?: string[] | null;
+  userIds?: string[] | null;
+};
 export type DomainEntitiesNotificationsNotificationDto = {
   id?: string;
   message?: string | null;
@@ -1521,6 +1549,7 @@ export const {
   useGetApiV1AlertByAlertIdQuery,
   useLazyGetApiV1AlertByAlertIdQuery,
   usePutApiV1AlertByAlertIdMutation,
+  usePutApiV1AlertByAlertIdRecipientsMutation,
   usePutApiV1AlertByIdToggleDisableMutation,
   useDeleteApiV1AlertByIdMutation,
   usePutApiV1AlertByIdMarkAsReadMutation,
