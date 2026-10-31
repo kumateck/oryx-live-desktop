@@ -81,6 +81,8 @@ test("historical reporting adds optional read parameters without changing existi
     }
   }
   assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))), [
+    // System alert recipients (2026-10-31): replaces an alert's roles and users only; additive only.
+    "/api/v1/alert/{alertId}/recipients",
     // Admin user password reset (2026-10-31): one account sets another user's password; additive only.
     "/api/v1/auth/admin/user-password",
     "/api/v1/product/{productId}/packing/approved-product", "/api/v1/production-schedule/activity/{activityId}/step/{stepId}/records", "/api/v1/report/production-readiness", "/api/v1/report/history/capabilities", "/api/v1/report/history/vendors",
@@ -88,7 +90,9 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/stock-migrations", "/api/v1/stock-migrations/{id}", "/api/v1/stock-migrations/{id}/lines", "/api/v1/stock-migrations/{id}/lines/{lineId}",
     "/api/v1/stock-migrations/{id}/units", "/api/v1/stock-migrations/{id}/recheck", "/api/v1/stock-migrations/{id}/comparison", "/api/v1/stock-migrations/{id}/approve",
     // Finance costing (2026-10-31): list prices with their currency and agreements across customers; additive only.
-    "/api/v1/costing/list-prices", "/api/v1/costing/list-prices/{productId}/history", "/api/v1/costing/list-prices/{productId}", "/api/v1/costing/pricing-agreements", "/api/v1/costing/pricing-agreements/{id}"]);
+    "/api/v1/costing/list-prices", "/api/v1/costing/list-prices/{productId}/history", "/api/v1/costing/list-prices/{productId}", "/api/v1/costing/pricing-agreements", "/api/v1/costing/pricing-agreements/{id}",
+    // An explicit nullable assignment supplements the unchanged legacy URL.
+    "/api/v1/user/switch-department"]);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   delete schemas["DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"];
   for (const name of ["ProductionStepAnalysisDto", "ProductionStepExtraMaterialDto", "ProductionStepRecordsDto"])
@@ -98,6 +102,8 @@ test("historical reporting adds optional read parameters without changing existi
     delete schemas[`DOMAIN.Entities.Reports.${name}`];
   for (const name of Object.keys(schemas)) if (name.includes("DOMAIN.Entities.Materials.StockMigrations.")) delete schemas[name];
   delete schemas["DOMAIN.Entities.Auth.AdminResetUserPasswordRequest"];
+  delete schemas["DOMAIN.Entities.Users.Request.SwitchDepartmentRequest"];
+  delete schemas["DOMAIN.Entities.Alerts.UpdateAlertRecipientsRequest"];
   // Finance costing (2026-10-31): new costing schemas, and one optional currency property on each list-price and report schema.
   for (const name of Object.keys(schemas)) if (name.includes("DOMAIN.Entities.Costing.") || name.includes("DOMAIN.Entities.Customers.CustomerPricingAgreementDto")) delete schemas[name];
   const added: Readonly<Record<string, string>> = { "Products.CreateProductRequest": "priceCurrencyId", "Products.UpdateProductRequest": "priceCurrencyId", "Products.Product": "priceCurrencyId",
@@ -112,6 +118,27 @@ test("historical reporting adds optional read parameters without changing existi
   }
   assert.deepEqual(current.components, before.components);
   assert.deepEqual(current.security, before.security);
+});
+
+test("department switching requires an explicit nullable assignment and keeps the legacy URL", () => {
+  const contract = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const paths = object(contract.paths ?? null);
+  const operation = object(object(paths["/api/v1/user/switch-department"] ?? null).post ?? null);
+  assert.ok(object(operation.responses ?? null)["204"]);
+  const schema = object(object(object(contract.components ?? null).schemas ?? null)["DOMAIN.Entities.Users.Request.SwitchDepartmentRequest"] ?? null);
+  assert.deepEqual(schema.required, ["departmentId"]);
+  const department = object(object(schema.properties ?? null).departmentId ?? null);
+  assert.equal(department.nullable, true);
+  assert.equal(department.format, "uuid");
+  assert.ok(paths["/api/v1/user/switch-department/{departmentId}"]);
+});
+
+test("alert recipients have their own endpoint that takes only roles and users", () => {
+  const contract = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const operation = object(object(object(contract.paths ?? null)["/api/v1/alert/{alertId}/recipients"] ?? null).put ?? null);
+  assert.ok(object(operation.responses ?? null)["204"]);
+  const schema = object(object(object(contract.components ?? null).schemas ?? null)["DOMAIN.Entities.Alerts.UpdateAlertRecipientsRequest"] ?? null);
+  assert.deepEqual(Object.keys(object(schema.properties ?? null)).sort(), ["roleIds", "userIds"]);
 });
 
 test("production readiness adds one typed, authenticated, parameterized operation", () => {
