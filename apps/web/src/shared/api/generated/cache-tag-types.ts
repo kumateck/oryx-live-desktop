@@ -307,6 +307,7 @@ export const generatedTagTypes = [
   "user/by-permission",
   "user/role",
   "user/signature",
+  "user/switch-department",
   "user/toggle-disable",
   "v1",
   "v1/recoverable-items-report",

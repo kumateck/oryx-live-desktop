@@ -408,6 +408,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1UserSwitchDepartment: build.mutation<
+      PostApiV1UserSwitchDepartmentApiResponse,
+      PostApiV1UserSwitchDepartmentApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "user/switch-department", id: "LIST" }, { type: "user", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/user/switch-department`,
+        method: "POST",
+        body: queryArg.domainEntitiesUsersRequestSwitchDepartmentRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -680,6 +695,14 @@ export type PutApiV1UserToggleDisableByIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type PostApiV1UserSwitchDepartmentApiResponse = void;
+export type PostApiV1UserSwitchDepartmentApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesUsersRequestSwitchDepartmentRequest: DomainEntitiesUsersRequestSwitchDepartmentRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -899,6 +922,9 @@ export type DomainEntitiesRolesUpdateUserRoleRequest = {
 export type SharedRequestsUploadFileRequest = {
   file?: string | null;
 };
+export type DomainEntitiesUsersRequestSwitchDepartmentRequest = {
+  departmentId: string | null;
+};
 export const {
   usePostApiV1DepartmentMutation,
   useGetApiV1DepartmentQuery,
@@ -943,4 +969,5 @@ export const {
   usePostApiV1UserAvatarByIdMutation,
   usePostApiV1UserSignatureByIdMutation,
   usePutApiV1UserToggleDisableByIdMutation,
+  usePostApiV1UserSwitchDepartmentMutation,
 } = injectedRtkApi;
