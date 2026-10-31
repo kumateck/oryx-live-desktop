@@ -9,6 +9,7 @@ import { usePackingStyles } from "../../hooks/use-packing-styles";
 import type { PackagingLine } from "../../lib/packaging";
 import { PackagingItemDialog } from "./packaging-item-dialog";
 import { PackagingLinesTable } from "./packaging-table";
+import { randomId } from "@/shared/ids/random-id";
 
 type Open = { mode: "add" } | { mode: "edit"; line: PackagingLine } | { mode: "remove"; line: PackagingLine } | null;
 
@@ -43,7 +44,7 @@ export function PackagingSection({ productId }: { productId: string }) {
         const previous = open.mode === "edit" ? open.line : null;
         const sameMaterial = previous?.material.value === values.material.value;
         const line: PackagingLine = {
-          key: previous?.key ?? `new-${crypto.randomUUID()}`, material: values.material, packing: values.packing ?? null,
+          key: previous?.key ?? `new-${randomId()}`, material: values.material, packing: values.packing ?? null,
           prescribedQuantity: values.prescribedQuantity, packingExcessMargin: values.packingExcessMargin ?? 0,
           code: facts?.code ?? (sameMaterial ? previous?.code ?? "" : ""),
           specification: facts ? facts.specification : sameMaterial ? previous?.specification ?? null : null,

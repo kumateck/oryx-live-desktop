@@ -9,6 +9,7 @@ import { AttachmentOpener } from "@/shared/attachments/attachment-opener";
 import { Button } from "@/components/ui/button";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
+import { randomId } from "@/shared/ids/random-id";
 const uploadApi = api.injectEndpoints({ endpoints: (build) => ({
   uploadRetestEvidence: build.mutation<void, { instanceId: string; reference: string; file: File }>({
     query: ({ instanceId, reference, file }) => {
@@ -37,7 +38,7 @@ export function WorksheetFileField({ id, instanceId, fieldKey, value, disabled, 
   const save = form.handleSubmit(async ({ file }) => {
     if (!file) return;
     const denied = gate.check(); if (denied) { setError(denied); return; }
-    const reference = `${fieldKey.replace(/[^A-Za-z0-9_-]/g, "-").slice(0, 45)}-${crypto.randomUUID()}__${file.name.replace(/[^A-Za-z0-9._-]/g, "-").slice(-100)}`;
+    const reference = `${fieldKey.replace(/[^A-Za-z0-9_-]/g, "-").slice(0, 45)}-${randomId()}__${file.name.replace(/[^A-Za-z0-9._-]/g, "-").slice(-100)}`;
     const result = await upload({ instanceId, reference, file });
     if ("error" in result) { setError(apiErrorMessage(result.error)); return; }
     onChange(reference); form.reset({ file: null }); setError("");
