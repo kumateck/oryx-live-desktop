@@ -20,12 +20,19 @@ export function useCompanionSettings() {
     window.addEventListener("focus", focus);
     return () => { active = false; window.removeEventListener("focus", focus); };
   }, [reload]);
-  const command = async (action: CompanionCommand) => {
-    if (saving || !window.oryxCompanion?.command) return;
+  /** Applies one choice, which may need several native commands (movement maps onto quiet and roaming). */
+  const command = async (...actions: CompanionCommand[]) => {
+    const run = window.oryxCompanion?.command;
+    if (saving || !run || !actions.length) return;
     setSaving(true); setError(null);
-    try { setState({ kind: "ready", preferences: await window.oryxCompanion.command(action) }); }
-    catch { setError("The companion change could not be saved. Try again."); }
-    finally { setSaving(false); }
+    try {
+      let preferences: CompanionPreferences | null = null;
+      for (const action of actions) preferences = await run(action);
+      if (preferences) setState({ kind: "ready", preferences });
+    } catch {
+      setError("The companion change could not be saved. Try again.");
+      void reload();
+    } finally { setSaving(false); }
   };
   return { state, saving, error, command, reload };
 }
