@@ -1274,6 +1274,19 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1RequisitionIssueByIssueId: build.query<
+      GetApiV1RequisitionIssueByIssueIdApiResponse,
+      GetApiV1RequisitionIssueByIssueIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "requisition/issue", id: queryArg.issueId }],
+      query: (queryArg) => ({
+        url: `/api/v1/requisition/issue/${queryArg.issueId}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2147,6 +2160,16 @@ export type PutApiV1WarehouseSwapByIdApproveApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetApiV1RequisitionIssueByIssueIdApiResponse =
+  /** status 200 OK */ DomainEntitiesRequisitionsRequisitionDtoRead;
+export type GetApiV1RequisitionIssueByIssueIdApiArg = {
+  /** The ID of the stock requisition issue. */
+  issueId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -2664,6 +2687,20 @@ export type DomainEntitiesProductionSchedulesProductionScheduleProductDto = {
   hasStarted?: boolean;
   productionActivityId?: string | null;
 };
+export type DomainEntitiesRequisitionsVoucherSignatoryDto = {
+  userId?: string | null;
+  name?: string | null;
+  signature?: string | null;
+  signedAt?: string | null;
+};
+export type DomainEntitiesRequisitionsStockIssueSignatoriesDto = {
+  issuedBy?: DomainEntitiesRequisitionsVoucherSignatoryDto;
+  checkedBy?: DomainEntitiesRequisitionsVoucherSignatoryDto;
+  receivedBy?: DomainEntitiesRequisitionsVoucherSignatoryDto;
+  /** Checked, Rejected, Pending (waiting for an approver) or NotAssigned (no issue-check workflow
+    was configured when it was issued); null while the requisition has not been issued. */
+  checkStatus?: string | null;
+};
 export type DomainEntitiesRequisitionsRequisitionDto = {
   id?: string;
   code?: string | null;
@@ -2677,6 +2714,7 @@ export type DomainEntitiesRequisitionsRequisitionDto = {
   createdAt?: string;
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
+  signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
 };
 export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   id?: string;
@@ -2691,6 +2729,7 @@ export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   createdAt?: string;
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
+  signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesRequisitionsRequisitionDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -4325,4 +4364,6 @@ export const {
   useGetApiV1WarehouseSwapByIdQuery,
   useLazyGetApiV1WarehouseSwapByIdQuery,
   usePutApiV1WarehouseSwapByIdApproveMutation,
+  useGetApiV1RequisitionIssueByIssueIdQuery,
+  useLazyGetApiV1RequisitionIssueByIssueIdQuery,
 } = injectedRtkApi;

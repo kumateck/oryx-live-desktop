@@ -77,6 +77,10 @@
 .print-blank { display: block; height: 16px; border-bottom: 1px solid #111; }
 .print-signatures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--document-space-32px); margin-top: var(--document-space-44px); font-size: var(--document-font-11px); }
 .print-signatures span { display: block; margin-bottom: var(--document-space-4px); border-bottom: 1px solid #111; height: 28px; }
+.print-signatures .print-signature-line.signed { height: 0; }
+.print-signature-image { display: block; height: 40px; max-width: 100%; object-fit: contain; object-position: left bottom; }
+.print-signer-name { display: block; margin-top: 2px; font-weight: 600; }
+.print-signer-note { color: #666; font-size: var(--document-font-10px); }
 .print-footer { margin-top: var(--document-space-20px); padding-top: var(--document-space-6px); border-top: 1px solid #bbb; color: #666; font-size: var(--document-font-10px); }
 @media print {
   @page { margin: 14mm; }

@@ -10,7 +10,9 @@ const protectedOptions: readonly SelectOption[] = [
 const humanize = (value: string) => value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^Rnd /, "R&D ").replace(/^Qc /, "QC ");
 export const approvalDocuments: readonly SelectOption[] = [
   ...standard.map((value) => ({ value, label: humanize(value) })),
-  { value: "ProductionExtraPacking", label: "Production extra material" }, ...protectedOptions,
+  { value: "ProductionExtraPacking", label: "Production extra material" },
+  // Its approver signs the stock requisition voucher as "Checked by".
+  { value: "StockRequisitionIssue", label: "Stock requisition issue check" }, ...protectedOptions,
 ];
 export const protectedApprovalDocument = (value: string) => protectedOptions.some((option) => option.value === value);
 export const approvalDocumentLabel = (value: string) => approvalDocuments.find((option) => option.value === value)?.label ?? humanize(value);
