@@ -1670,6 +1670,20 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedure:
+      build.mutation<
+        PostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureApiResponse,
+        PostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/production-schedule/activity/${queryArg.productionActivityId}/repair-procedure`,
+          method: "POST",
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
   }),
   overrideExisting: false,
 });
@@ -2819,6 +2833,17 @@ export type DeleteApiV1WorkOrderByWorkOrderIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type PostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionProcedureRepairResult;
+export type PostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureApiArg =
+  {
+    /** The production activity (the batch's run) to repair. */
+    productionActivityId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+  };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -4744,6 +4769,13 @@ export type DomainEntitiesWorkOrdersUpdateWorkOrderRequest = {
   batchNumber?: string | null;
   steps?: DomainEntitiesWorkOrdersCreateProductionStepRequest[] | null;
 };
+export type DomainEntitiesProductsProductionProductionProcedureRepairResult = {
+  stepsUpdated?: number;
+  stepsAdded?: number;
+  stepsRemoved?: number;
+  /** Steps already started that the procedure no longer has: they are kept as they are. */
+  stepsKept?: string[] | null;
+};
 export const {
   usePostApiV1ProductionOrdersMutation,
   useGetApiV1ProductionOrdersQuery,
@@ -4918,4 +4950,5 @@ export const {
   useLazyGetApiV1WorkOrderByWorkOrderIdQuery,
   usePutApiV1WorkOrderByWorkOrderIdMutation,
   useDeleteApiV1WorkOrderByWorkOrderIdMutation,
+  usePostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureMutation,
 } = injectedRtkApi;
