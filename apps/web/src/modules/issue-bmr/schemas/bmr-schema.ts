@@ -23,7 +23,7 @@ export const bmrSchema = z.object({
 export const bmrRowsSchema = z.array(bmrSchema);
 export type Bmr = z.infer<typeof bmrSchema>;
 
-/** Batch size as the person will edit it: the largest unit that keeps the number at one or more. */
+/** Batch size for display: the largest unit that keeps the number at one or more. */
 export const bmrSize = (bmr: Bmr) => { const shown = toLargestUnit(bmr.quantity, bmr.unit); return { value: shown?.value ?? bmr.quantity, unit: shown?.unit ?? bmr.unit ?? "" }; };
 
 /** One material the batch needs, and what the warehouse and the rest of the company hold of it. */
