@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Plus } from "lucide-react";
-import { Link, useParams } from "react-router";
+import { Link, Navigate, useParams, useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAccess } from "@/shared/auth/use-access";
@@ -11,14 +11,13 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { formatMoney } from "@/shared/procurement/price";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetCustomerOrdersQuery, useGetCustomerProfileQuery, useGetCustomerQuotationsQuery } from "../api/customer-api";
-import { createQuotationPath, customerPermissions, customersPath, customerTypeLabels, orderStatusLabels, quotationPath, quotationStatusLabels } from "../lib/customers";
+import { createQuotationPath, customerPermissions, customerPricingPath, customersPath, customerTypeLabels, orderStatusLabels, quotationPath, quotationStatusLabels } from "../lib/customers";
 import { ordersSchema, profileSchema, quotationRowsSchema } from "../schemas/customer-schema";
 import { ContactsPanel } from "./contacts-panel";
 import { OverviewPanel } from "./overview-panel";
-import { PricingPanel } from "./pricing-panel";
 import { ProfilePanel } from "./profile-panel";
 
-type TabId = "overview" | "profile" | "contacts" | "pricing" | "quotations" | "orders";
+type TabId = "overview" | "profile" | "contacts" | "quotations" | "orders";
 
 function QuotationsPanel({ customerId }: { customerId: string }) {
   const { has } = useAccess();
@@ -54,30 +53,35 @@ function OrdersPanel({ customerId }: { customerId: string }) {
   </section>;
 }
 
-/** Everything about one customer: credit, commercial terms, contacts, negotiated prices, quotations and orders. */
+/** Everything about one customer: credit, commercial terms, contacts, quotations and orders. Negotiated prices are in Finance → Costing. */
 export function CustomerWorkspace() {
   const { id = "" } = useParams();
   const { has } = useAccess();
-  const query = useGetCustomerProfileQuery(id, { skip: !id });
+  const [params] = useSearchParams();
+  // The pricing tab moved to Finance → Costing; saved links to it open the customer's agreements there.
+  const movedToCosting = params.get("tab") === "pricing" && Boolean(id);
+  const query = useGetCustomerProfileQuery(id, { skip: !id || movedToCosting });
   const profile = useMemo(() => { const parsed = profileSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data : null; }, [query.data]);
   // Each tab is shown only to someone who may use it; order history is open to anyone who can open the customer.
   const tabs = useMemo((): TabItem<TabId>[] => [
     ...(has(customerPermissions.credit) ? [{ id: "overview" as const, label: "Credit overview" }] : []),
-    ...(has(customerPermissions.contracts) ? [{ id: "profile" as const, label: "Profile" }, { id: "contacts" as const, label: "Contacts" }, { id: "pricing" as const, label: "Pricing" }] : []),
+    ...(has(customerPermissions.contracts) ? [{ id: "profile" as const, label: "Profile" }, { id: "contacts" as const, label: "Contacts" }] : []),
     ...(has(customerPermissions.quotations) ? [{ id: "quotations" as const, label: "Quotations" }] : []),
     { id: "orders" as const, label: "Order history" },
   ], [has]);
   const [active, select] = useTabParam(tabs, tabs[0]?.id ?? "orders");
+  if (movedToCosting) return <Navigate replace to={customerPricingPath(id)} />;
   if (query.isLoading) return <DetailPageSkeleton label="Loading customer" groups={3} />;
   if (!profile) return <div role="alert" className="mx-auto max-w-md space-y-3 py-12 text-center">
     <h1 className="text-lg font-semibold">Customer unavailable</h1><p className="text-sm text-muted-foreground">{query.error ? apiErrorMessage(query.error) : "The server returned a customer the app could not read."}</p>
     <div className="flex justify-center gap-2"><Button size="sm" variant="outline" onClick={() => void query.refetch()}>Retry</Button><Button asChild size="sm"><Link to={customersPath}>Customers</Link></Button></div></div>;
   return <article className="min-w-0 space-y-4">
-    <PageHeader title={profile.name ?? "Customer"} crumbs={[{ label: "Customers", to: customersPath }, { label: profile.name ?? "Customer" }]} />
+    <PageHeader title={profile.name ?? "Customer"} crumbs={[{ label: "Customers", to: customersPath }, { label: profile.name ?? "Customer" }]}
+      actions={has(customerPermissions.pricing) ? <Button asChild size="sm" variant="outline"><Link to={customerPricingPath(id)}>Pricing agreements</Link></Button> : null} />
     <p className="text-sm text-muted-foreground">{[typeof profile.type === "number" ? customerTypeLabels[profile.type] : null, profile.email, profile.phone].filter(Boolean).join(" · ") || "No contact details"}</p>
     <Tabs label="Customer records" tabs={tabs} active={active} onSelect={select}>
       {active === "overview" ? <OverviewPanel customerId={id} /> : active === "profile" ? <ProfilePanel key={profile.id} profile={profile} /> : active === "contacts" ? <ContactsPanel customerId={id} />
-        : active === "pricing" ? <PricingPanel customerId={id} /> : active === "quotations" ? <QuotationsPanel customerId={id} /> : <OrdersPanel customerId={id} />}
+        : active === "quotations" ? <QuotationsPanel customerId={id} /> : <OrdersPanel customerId={id} />}
     </Tabs>
   </article>;
 }

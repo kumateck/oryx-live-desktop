@@ -1,3 +1,4 @@
+import { materialCovered } from "@/modules/schedules/lib/batch-materials";
 import type { BatchMaterial } from "@/modules/schedules/schemas/batch-schema";
 import type { DomainEntitiesRequisitionsRequestCreateRequisitionRequest as RequisitionRequest } from "@/shared/api/generated/warehouse";
 import type { StockRequisitionFormValues } from "../schemas/stock-requisition-schema";
@@ -10,6 +11,19 @@ export function requisitionProblem(material: BatchMaterial): string | null {
   if (!material.unitId) return "it has no unit of measure in this department";
   if (!(material.needed > 0)) return "the quantity needed is zero";
   return null;
+}
+
+/** Materials the warehouse cannot issue in full right now. Packaging is requested once, so it waits until all of it is in stock. */
+export function shortMaterials(materials: readonly BatchMaterial[]): BatchMaterial[] {
+  return materials.filter((material) => !materialCovered(material));
+}
+
+/** Why packaging cannot be requested yet, or null when every packaging material is in stock. */
+export function packagingShortMessage(materials: readonly BatchMaterial[]): string | null {
+  const short = shortMaterials(materials);
+  if (!short.length) return null;
+  const names = short.map((material) => material.name).join(", ");
+  return `Packaging cannot be requested yet: the warehouse does not have enough stock of ${short.length === 1 ? "1 material" : `${short.length} materials`} (${names}). Request it once they are in stock.`;
 }
 
 /** A stock requisition voucher for everything a batch needs, raised from the step that asks for it. */

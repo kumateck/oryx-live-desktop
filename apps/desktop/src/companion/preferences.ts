@@ -1,5 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { CompanionCommand, type CompanionPreferences } from "./contract";
+import { isCompanionSize } from "./placement";
 export function parsePreferences(value: object, fallback: CompanionPreferences): CompanionPreferences {
   if (!value || typeof value !== "object") return fallback;
   return {
@@ -7,6 +8,7 @@ export function parsePreferences(value: object, fallback: CompanionPreferences):
     visible: "visible" in value && typeof value.visible === "boolean" ? value.visible : fallback.visible,
     quiet: "quiet" in value && typeof value.quiet === "boolean" ? value.quiet : fallback.quiet,
     roaming: "roaming" in value && typeof value.roaming === "boolean" ? value.roaming : fallback.roaming,
+    size: "size" in value && isCompanionSize(value.size) ? value.size : fallback.size ?? "medium",
   };
 }
 export function nextPreferences(current: CompanionPreferences, command: CompanionCommand): CompanionPreferences {
@@ -20,11 +22,14 @@ export function nextPreferences(current: CompanionPreferences, command: Companio
     case CompanionCommand.ResetPosition: return current;
     case CompanionCommand.IndicatorsOn: return { ...current, showIndicators: true };
     case CompanionCommand.IndicatorsOff: return { ...current, showIndicators: false };
+    case CompanionCommand.SizeSmall: return { ...current, size: "small" };
+    case CompanionCommand.SizeMedium: return { ...current, size: "medium" };
+    case CompanionCommand.SizeLarge: return { ...current, size: "large" };
     default: throw new Error("Invalid companion command.");
   }
 }
 export class CompanionPreferenceStore {
-  private value: CompanionPreferences = { visible: true, quiet: false, roaming: true, showIndicators: true };
+  private value: CompanionPreferences = { visible: true, quiet: false, roaming: true, showIndicators: true, size: "medium" };
   private pending: Promise<void> = Promise.resolve();
   constructor(private file: string) {}
   current(): CompanionPreferences { return { ...this.value }; }

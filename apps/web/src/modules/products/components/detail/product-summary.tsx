@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { DetailGroup, DetailItem } from "@/shared/detail/detail-list";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
@@ -36,7 +37,7 @@ export function ProductSummary({ product }: { product: ProductDetail }) {
       <DetailItem label="Composition size" value={toLargestUnit(product.baseQuantity, unit)?.text} />
       <DetailItem label="Full batch size" value={toLargestUnit(product.fullBatchSize, unit)?.text} />
       <DetailItem label="Base unit" value={product.baseUoM ? [product.baseUoM.name, product.baseUoM.symbol ? `(${product.baseUoM.symbol})` : null].filter(Boolean).join(" ") : null} />
-      <DetailItem label="Price" value={price(product)} />
+      <DetailItem label="List price" value={<>{price(product) ?? "Not priced"} <Link className="text-xs text-primary underline-offset-2 hover:underline" to="/finance/costing">Set in Finance → Costing</Link></>} />
     </DetailGroup>
     <DetailGroup title="Production">
       <DetailItem label="Equipment" value={equipment?.name} />

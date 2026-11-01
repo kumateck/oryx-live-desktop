@@ -9,5 +9,6 @@ export const orderApi = productionApi.enhanceEndpoints({ endpoints: {
   getApiV1ProductionScheduleApprovedProductsProductByProductId: (definition) => { definition.providesTags = addTags(definition.providesTags, [goods]); },
   // A packing list takes packs from approved batches and moves the order on.
   postApiV1ProductionOrdersAllocate: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list, goods]); },
+  putApiV1ProductionOrdersAllocateByAllocateProductionOrderId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list, goods]); },
 } });
-export const { useGetApiV1ProductionOrdersQuery, useGetApiV1ProductionOrdersByIdQuery, useLazyGetApiV1ProductionScheduleApprovedProductsProductByProductIdQuery, usePostApiV1ProductionOrdersAllocateMutation } = orderApi;
+export const { useGetApiV1ProductionOrdersQuery, useGetApiV1ProductionOrdersByIdQuery, useLazyGetApiV1ProductionScheduleApprovedProductsProductByProductIdQuery, usePostApiV1ProductionOrdersAllocateMutation, usePutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdMutation } = orderApi;

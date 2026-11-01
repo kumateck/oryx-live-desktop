@@ -248,6 +248,15 @@ export const routes: RouteObject[] = [
         { path: "cashflow", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/cashflow/page")).default }) }
         ] },
+        { path: "costing", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/page")).default }) },
+          { path: "agreements", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/agreements/page")).default }) },
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/agreements/[id]/page")).default }) }
+            ] }
+          ] }
+        ] },
         { path: "payment-approvals", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/payment-approvals/page")).default }) },
           { path: ":id", Component: Outlet, children: [
@@ -1054,7 +1063,15 @@ export const routes: RouteObject[] = [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/uom/page")).default }) }
         ] },
         { path: "upload-center", Component: Outlet, children: [
-          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/upload-center/page")).default }) }
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/upload-center/page")).default }) },
+          { path: "stock-migrations", Component: Outlet, children: [
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/upload-center/stock-migrations/[id]/page")).default }) }
+            ] }
+          ] }
+        ] },
+        { path: "user-passwords", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/user-passwords/page")).default }) }
         ] },
         { path: "warehouses", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/warehouses/page")).default }) }
@@ -1109,6 +1126,12 @@ export const routes: RouteObject[] = [
         ] },
         { path: "extra-material", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/extra-material/page")).default }) }
+        ] },
+        { path: "fg-products", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/fg-products/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/fg-products/[id]/page")).default }) }
+          ] }
         ] },
         { path: "finished-goods-transfer-notes", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/finished-goods-transfer-notes/page")).default }) },

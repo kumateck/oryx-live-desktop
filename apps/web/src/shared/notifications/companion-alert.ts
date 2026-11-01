@@ -7,5 +7,6 @@ export function companionAlerts(items: readonly Unread[]): CompanionAlert[] {
   return items.map((item) => ({
     id: item.id, label: notificationLabel(item.type), message: item.message.slice(0, 4000), type: item.type,
     priority: priorityFromName(item.priority), ...(item.shipmentDocumentId ? { shipmentDocumentId: item.shipmentDocumentId } : {}),
+    ...(item.sentAt && item.sentAt.length <= 40 && Number.isFinite(Date.parse(item.sentAt)) ? { at: item.sentAt } : {}),
   }));
 }

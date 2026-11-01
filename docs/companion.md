@@ -1,5 +1,55 @@
 # ORYX Companion — Operations Watch
 
+## Sizes, movement and the alerts panel (2026-10-31)
+
+Modelled on the Dodo Workspace companion (`packages/companion-core/src/settings.ts`, `panel.ts` and the
+`module-companion` panel/settings).
+
+- **Size**: Small, Medium or Large. The character is 88, 112 or 136 DIP tall in a square window of 138,
+  176 or 214 DIP (Dodo's proportions). The canvas keeps its 176 DIP drawing space and is scaled, drawn at
+  2x. Changing size grows or shrinks around the companion's feet. Stored as `size` in
+  `companion-preferences.json`; commands `SizeSmall`, `SizeMedium`, `SizeLarge` are appended to the enum.
+- **Movement**: Still, Subtle or Playful. These map onto the existing quiet and roaming switches
+  (Still = quiet; Subtle = not quiet, no roaming; Playful = not quiet, roaming), so older shells support
+  it too. Settings hides Size on shells that do not report it. Still holds one pose. Subtle blinks,
+  looks around and stretches every few seconds and lies down after two idle minutes. Playful also walks
+  a few steps out and back every 30 seconds. Unread alerts, a focused Oryx window and a dropped live
+  connection no longer freeze the character (they used to); only hovering over it, dragging it and
+  reduced motion do. The disconnected pose is still its resting pose while live updates are down.
+- **Alerts panel**: the card under the character is gone. Clicking ORYX opens a separate panel window
+  beside it (above when ORYX sits in the lower half of the screen, aligned to its outer side), 360 × 504
+  DIP. It lists unread alerts grouped into Today and Earlier with an area icon, event label, two-line
+  message, relative time, and a chip only for an explicitly supplied High or Critical priority. Choosing an
+  alert shows its details: area, exact time, priority, the full message and **Open in Oryx**, which opens
+  the record (or the notification list) in the main window. The header shows the unread count and live
+  connection state; empty, signed-out and reconnecting states are explained. Esc goes back or closes,
+  arrow keys move between alerts, and the panel follows the system light/dark theme and reduced motion.
+- **New alert cards**: when alerts arrive, a 340 × 100 DIP card beside ORYX shows the most important new
+  one for eight seconds (held while the pointer is over it), with Show all and Dismiss. The first summary
+  after sign-in only sets the baseline. The existing **Show alert details** preference now controls these
+  cards ("New alert cards").
+- Clicking ORYX (including its count badge) toggles the list; main decides from the panel's real state.
+  On macOS the panel is a non-activating panel window, so it takes keyboard focus without bringing the
+  main Oryx window forward, and a focus change in the first 600 ms after opening does not close it. A
+  brief signed-out summary (for example during a reload) shows the signed-out state instead of closing it.
+- The companion window is click-through except where ORYX is drawn. macOS forwards mouse movement to
+  such a window only while Oryx is the active app, so after the panel closed (or while another app was
+  active) the pointer over the count badge went unnoticed and clicks fell through. Main now checks the
+  cursor every 50 ms while the companion is shown and tells it when the pointer is over it, so ORYX
+  and its badge stay clickable whatever app is active.
+- Double-click ORYX to open Oryx. The right-click menu adds Show alerts, Size and Movement.
+
+The panel loads the same local, sandboxed companion page (`index.html#panel`) and preload; main accepts
+each `panel:*` channel only from the panel's own top frame and validates alert IDs. Like the companion,
+it receives only the summary and has no session, API or record access. Alerts now carry their optional
+send time (`at`, ISO 8601), validated by the shell.
+
+Verification: desktop typecheck, 10 desktop tests (sizes, persistence, grouping, chips), 5 placement
+tests (panel position, send-time validation) and the web notification tests (settings: size, movement
+mapping, older shells, failed saves, alert cards). The panel's list, details, card and empty states were
+checked in light and dark, and the character at each size, through a temporary browser harness. Native
+window behaviour (panel focus/blur, multiple displays, Windows scaling) still needs a packaged-app check.
+
 ## Collapsible alert card (2026-10-25)
 
 The alert card below the avatar starts collapsed as a 32 DIP header showing

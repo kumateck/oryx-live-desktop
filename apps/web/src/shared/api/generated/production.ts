@@ -291,6 +291,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    putApiV1ProductionOrdersAllocateByAllocateProductionOrderId: build.mutation<
+      PutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiResponse,
+      PutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-order/allocate", id: "LIST" }, { type: "production-order", id: "LIST" }, { type: "production-order/allocate", id: queryArg.allocateProductionOrderId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-orders/allocate/${queryArg.allocateProductionOrderId}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesProductionOrdersAllocateProductionOrderRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     putApiV1ProductionOrdersDeliverByAllocateProductionOrderId: build.mutation<
       PutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdApiResponse,
       PutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdApiArg
@@ -1655,6 +1670,20 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedure:
+      build.mutation<
+        PostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureApiResponse,
+        PostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/production-schedule/activity/${queryArg.productionActivityId}/repair-procedure`,
+          method: "POST",
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
   }),
   overrideExisting: false,
 });
@@ -1840,6 +1869,16 @@ export type GetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiArg =
     module?: string;
     /** The sub module this request falls under */
     subModule?: string;
+  };
+export type PutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiResponse = void;
+export type PutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdApiArg =
+  {
+    allocateProductionOrderId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+    domainEntitiesProductionOrdersAllocateProductionOrderRequest: DomainEntitiesProductionOrdersAllocateProductionOrderRequest;
   };
 export type PutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdApiResponse = void;
 export type PutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdApiArg = {
@@ -2794,6 +2833,17 @@ export type DeleteApiV1WorkOrderByWorkOrderIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type PostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionProcedureRepairResult;
+export type PostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureApiArg =
+  {
+    /** The production activity (the batch's run) to repair. */
+    productionActivityId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+  };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -2935,6 +2985,7 @@ export type DomainEntitiesProductsProductListDto = {
   createdAt?: string;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   labelClaim?: string | null;
   isVerified?: boolean;
@@ -3795,6 +3846,20 @@ export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
 };
+export type DomainEntitiesRequisitionsVoucherSignatoryDto = {
+  userId?: string | null;
+  name?: string | null;
+  signature?: string | null;
+  signedAt?: string | null;
+};
+export type DomainEntitiesRequisitionsStockIssueSignatoriesDto = {
+  issuedBy?: DomainEntitiesRequisitionsVoucherSignatoryDto;
+  checkedBy?: DomainEntitiesRequisitionsVoucherSignatoryDto;
+  receivedBy?: DomainEntitiesRequisitionsVoucherSignatoryDto;
+  /** Checked, Rejected, Pending (waiting for an approver) or NotAssigned (no issue-check workflow
+    was configured when it was issued); null while the requisition has not been issued. */
+  checkStatus?: string | null;
+};
 export type DomainEntitiesRequisitionsRequisitionDto = {
   id?: string;
   code?: string | null;
@@ -3808,6 +3873,7 @@ export type DomainEntitiesRequisitionsRequisitionDto = {
   createdAt?: string;
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
+  signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
 };
 export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   id?: string;
@@ -3822,6 +3888,7 @@ export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   createdAt?: string;
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
+  signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
 };
 export type DomainEntitiesProductsProductionProductionStepExtraMaterialDto = {
   id?: string;
@@ -4597,6 +4664,7 @@ export type DomainEntitiesProductionSchedulesProductionScheduleReportDto = {
   product?: DomainEntitiesProductsProductListDto;
   unitPrice?: number;
   priceUoM?: string | null;
+  currency?: DomainEntitiesCurrenciesCurrencyDto;
   batchSize?: number;
   batches?: number;
   actualQuantity?: number;
@@ -4606,6 +4674,7 @@ export type DomainEntitiesProductionSchedulesProductionScheduleReportDtoRead = {
   product?: DomainEntitiesProductsProductListDto;
   unitPrice?: number;
   priceUoM?: string | null;
+  currency?: DomainEntitiesCurrenciesCurrencyDto;
   batchSize?: number;
   batches?: number;
   expectedQuantity?: number;
@@ -4618,6 +4687,7 @@ export type DomainEntitiesProductionSchedulesProductionScheduleDetailedReportDto
   {
     unitPrice?: number;
     priceUoM?: string | null;
+    currency?: DomainEntitiesCurrenciesCurrencyDto;
     batchNumber?: string | null;
     packageStyle?: string | null;
     expectedQuantity?: number;
@@ -4627,6 +4697,7 @@ export type DomainEntitiesProductionSchedulesProductionScheduleDetailedReportDto
   {
     unitPrice?: number;
     priceUoM?: string | null;
+    currency?: DomainEntitiesCurrenciesCurrencyDto;
     batchNumber?: string | null;
     packageStyle?: string | null;
     expectedQuantity?: number;
@@ -4714,6 +4785,13 @@ export type DomainEntitiesWorkOrdersUpdateWorkOrderRequest = {
   batchNumber?: string | null;
   steps?: DomainEntitiesWorkOrdersCreateProductionStepRequest[] | null;
 };
+export type DomainEntitiesProductsProductionProductionProcedureRepairResult = {
+  stepsUpdated?: number;
+  stepsAdded?: number;
+  stepsRemoved?: number;
+  /** Steps already started that the procedure no longer has: they are kept as they are. */
+  stepsKept?: string[] | null;
+};
 export const {
   usePostApiV1ProductionOrdersMutation,
   useGetApiV1ProductionOrdersQuery,
@@ -4742,6 +4820,7 @@ export const {
   useLazyGetApiV1ProductionOrdersAllocateQuery,
   useGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery,
   useLazyGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery,
+  usePutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdMutation,
   usePutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdMutation,
   usePutApiV1ProductionOrdersLoadByAllocateProductionOrderIdMutation,
   usePostApiV1ProductionOrdersByAllocateProductionOrderIdWaybillMutation,
@@ -4887,4 +4966,5 @@ export const {
   useLazyGetApiV1WorkOrderByWorkOrderIdQuery,
   usePutApiV1WorkOrderByWorkOrderIdMutation,
   useDeleteApiV1WorkOrderByWorkOrderIdMutation,
+  usePostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureMutation,
 } = injectedRtkApi;

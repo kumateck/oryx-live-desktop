@@ -165,3 +165,31 @@ it("offers no swaps once the stock has been issued", async () => {
   expect(screen.queryByRole("region", { name: "Earlier batches in other stores" })).toBeNull();
   expect(calls.some((call) => call.path.endsWith("/alternative-batches"))).toBe(false);
 });
+
+it("prints the voucher with each signer's full name and stored signature", async () => {
+  const signed = (name: string, at: string | null) => ({ name, signature: `http://legacy-host/api/v1/file/signature/${name.split(" ")[0]?.toLowerCase()}.png`, signedAt: at });
+  open("/warehouse/stock-requisition/sr-1", ["CanViewRawMaterialRequisitions"], requisition("sr-1", { status: 3,
+    signatories: { issuedBy: signed("Edmund Manu", "2026-11-01T05:20:00Z"), checkedBy: null, receivedBy: signed("Ama Owusu", null), checkStatus: "Pending" } }));
+  await userEvent.click(await screen.findByRole("button", { name: "Print" }));
+  const preview = await screen.findByRole("dialog");
+  const lines = preview.querySelector(".print-signatures") as HTMLElement;
+  const [issued, checked, received] = [...lines.children].map((line) => line.textContent ?? "");
+  expect(issued).toMatch(/^Issued byEdmund Manu.*2026/);
+  expect(checked).toBe("Checked byAwaiting the warehouse check");
+  expect(received).toBe("Received byAma Owusu");
+  // The stored signature is read from this server, never from the legacy host in the URL.
+  expect(within(preview).getByRole("img", { name: "Signature of Edmund Manu" }).getAttribute("src")).toBe("/api/v1/file/signature/edmund.png");
+  // The check has not been approved yet, so its line stays blank and says why.
+  expect(within(preview).queryByRole("img", { name: /Signature of Checked by/ })).toBeNull();
+  expect(within(preview).getByText("Awaiting the warehouse check")).toBeTruthy();
+});
+
+it("names the checker once the issue check is approved", async () => {
+  open("/warehouse/stock-requisition/sr-1", ["CanViewRawMaterialRequisitions"], requisition("sr-1", { status: 3,
+    signatories: { issuedBy: { name: "Edmund Manu" }, checkedBy: { name: "Kofi Mensah", signature: "/api/v1/file/signature/kofi.png", signedAt: "2026-11-01T06:00:00Z" }, receivedBy: { name: "Ama Owusu" }, checkStatus: "Checked" } }));
+  expect(await screen.findByText("Kofi Mensah")).toBeTruthy();
+  await userEvent.click(screen.getByRole("button", { name: "Print" }));
+  const preview = await screen.findByRole("dialog");
+  expect(within(preview).getByRole("img", { name: "Signature of Kofi Mensah" })).toBeTruthy();
+  expect(within(preview).queryByText("Awaiting the warehouse check")).toBeNull();
+});

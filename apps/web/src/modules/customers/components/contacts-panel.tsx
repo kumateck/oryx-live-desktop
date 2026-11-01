@@ -13,7 +13,7 @@ import type { WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
 import { useCreateCustomerContactMutation, useDeleteCustomerContactMutation, useGetCustomerContactsQuery, useUpdateCustomerContactMutation } from "../api/customer-api";
 import { contactFormSchema, contactsSchema, type ContactFormValues, type CustomerContact } from "../schemas/customer-schema";
-import { FormDialog } from "./form-dialog";
+import { FormDialog } from "@/shared/forms/form-dialog";
 
 const fields: WizardField<ContactFormValues>[] = [
   { type: InputTypes.TEXT, name: "name", label: "Name", required: true },

@@ -19,6 +19,7 @@ export function AlertEditor({ record, recipientsOnly = false, onClose }: { recor
   const directory = useSettingsDirectories();
   const [create, creating] = alertApi.usePostApiV1AlertMutation();
   const [update, updating] = alertApi.usePutApiV1AlertByAlertIdMutation();
+  const [setRecipients, settingRecipients] = alertApi.usePutApiV1AlertByAlertIdRecipientsMutation();
   const [error, setError] = useState("");
   const fields: WizardField<AlertValues>[] = [
     { type: InputTypes.TEXT, name: "title", label: "Title", required: true, disabled: recipientsOnly },
@@ -33,13 +34,18 @@ export function AlertEditor({ record, recipientsOnly = false, onClose }: { recor
     if (denied) { setError(denied); return; }
     if (directory.error || directory.loading) { setError(directory.error ?? "Wait for the recipient directory."); return; }
     setError("");
-    const arg = { ...alertAudit, domainEntitiesAlertsCreateAlertRequest: alertPayload(values) };
-    const result = record ? await update({ ...arg, alertId: record.id }) : await create(arg);
+    const payload = alertPayload(values);
+    // Recipients have their own endpoint, which also accepts system alerts; their event and delivery stay fixed.
+    const result = record && recipientsOnly
+      ? await setRecipients({ ...alertAudit, alertId: record.id, domainEntitiesAlertsUpdateAlertRecipientsRequest: { roleIds: payload.roleIds ?? [], userIds: payload.userIds ?? [] } })
+      : record ? await update({ ...alertAudit, alertId: record.id, domainEntitiesAlertsCreateAlertRequest: payload })
+      : await create({ ...alertAudit, domainEntitiesAlertsCreateAlertRequest: payload });
     if ("error" in result) { setError(apiErrorMessage(result.error)); return; }
-    toast.success(record ? "Alert updated" : "Alert created"); onClose();
+    toast.success(recipientsOnly ? "Recipients updated" : record ? "Alert updated" : "Alert created"); onClose();
   });
   return <SettingsEditorDialog allowed={permission.allowed} title={record ? recipientsOnly ? "Manage recipients" : "Edit alert" : "Create alert"}
-    description="Configure delivery and recipients for an operational event." busy={creating.isLoading || updating.isLoading} dirty={form.formState.isDirty} error={error} onClose={onClose} onSave={save}>
+    description={recipientsOnly ? record?.isConfigurable === false ? "Choose who receives this system alert. Its event and delivery are managed by the system." : "Choose who receives this alert."
+      : "Configure delivery and recipients for an operational event."} busy={creating.isLoading || updating.isLoading || settingRecipients.isLoading} dirty={form.formState.isDirty} error={error} onClose={onClose} onSave={save}>
     {directory.error ? <div role="alert"><p>{directory.error}</p><Button type="button" variant="outline" onClick={directory.retry}>Retry recipients</Button></div> : null}
     <FormWizard form={form} fields={fields} />
     {!recipientsOnly ? <div><h3 className="mb-2 font-medium">Delivery delay</h3><FormWizard form={form} fields={delayFields} className="grid-cols-2" /></div> : null}

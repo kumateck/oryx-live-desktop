@@ -18,7 +18,7 @@ export function AlertsTable({ onAction, ...props }: Omit<ServerDataTableProps<Al
     column.display({ id: "status", header: "Status", cell: ({ row }) => <Badge variant="secondary">{row.original.isDisabled ? "Disabled" : "Enabled"}</Badge> }),
     column.display({ id: "actions", header: TableMenuHeader, size: 48, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.title || "alert"}`} items={[
       { id: "edit", label: "Edit", icon: Pencil, require: "CanEditAlerts", disabled: !row.original.isConfigurable, ...(!row.original.isConfigurable ? { disabledReason: "System alerts cannot be edited." } : {}), onSelect: () => onAction("edit", row.original) },
-      { id: "recipients", label: "Manage recipients", icon: Users, require: "CanEditAlerts", disabled: !row.original.isConfigurable, ...(!row.original.isConfigurable ? { disabledReason: "System alerts cannot be edited." } : {}), onSelect: () => onAction("recipients", row.original) },
+      { id: "recipients", label: "Manage recipients", icon: Users, require: "CanEditAlerts", onSelect: () => onAction("recipients", row.original) },
       { id: "toggle", label: row.original.isDisabled ? "Enable" : "Disable", icon: Power, require: "CanEnableDisableAlerts", onSelect: () => onAction("toggle", row.original) },
       { id: "delete", label: "Remove", icon: Trash2, require: "CanDeleteAlerts", destructive: true, disabled: !row.original.isConfigurable, ...(!row.original.isConfigurable ? { disabledReason: "System alerts cannot be removed." } : {}), onSelect: () => onAction("remove", row.original) },
     ]} /> }),

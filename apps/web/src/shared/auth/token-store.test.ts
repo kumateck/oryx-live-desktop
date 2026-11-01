@@ -50,6 +50,24 @@ it("in a browser, a new tab signs in with the sign-in an open tab holds", async 
   signedIn.tokenStore.clear();
 });
 
+it("on a plain HTTP customer site, an expired or new tab goes to sign-in instead of failing", async () => {
+  // Browsers leave out crypto.randomUUID outside HTTPS and localhost.
+  const real = globalThis.crypto;
+  vi.stubGlobal("crypto", { getRandomValues: (bytes: Uint8Array<ArrayBuffer>) => real.getRandomValues(bytes) });
+  const fetcher = vi.fn<typeof fetch>(async () => new Response(null, { status: 401 }));
+  vi.stubGlobal("fetch", fetcher);
+  const { currentSession } = await import("./session-api");
+  expect(await currentSession()).toBeNull();
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
+it("asking open tabs never blocks sign-in, even when the browser refuses it", async () => {
+  vi.stubGlobal("crypto", { getRandomValues: () => { throw new Error("refused"); } });
+  vi.stubGlobal("fetch", vi.fn<typeof fetch>(async () => new Response(null, { status: 401 })));
+  const { currentSession } = await import("./session-api");
+  expect(await currentSession()).toBeNull();
+});
+
 it("in a browser, a new tab stays signed out when no open tab is signed in", async () => {
   const fetcher = vi.fn<typeof fetch>(async () => new Response(null, { status: 401 }));
   vi.stubGlobal("fetch", fetcher);

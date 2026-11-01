@@ -18,7 +18,7 @@ const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOSt
 
 interface Options {
   current?: { order: number; status: number; critical: boolean; mine: boolean; actions?: number[] }; nextIsFinalPacking?: boolean;
-  cancelled?: boolean; packagingAvailable?: boolean; requisition?: boolean | "raw"; packagingIssued?: boolean; packagingFrom?: string; finalPacked?: boolean; extraStatuses?: number[]; extraReadStatus?: number; malformedExtra?: boolean;
+  cancelled?: boolean; permissions?: string[]; boardLags?: boolean; packagingAvailable?: boolean; requisition?: boolean | "raw"; packagingIssued?: boolean; packagingFrom?: string; finalPacked?: boolean; extraStatuses?: number[]; extraReadStatus?: number; malformedExtra?: boolean;
 }
 function run(options: Options) {
   const current = options.current ?? { order: 3, status: 0, critical: true, mine: true };
@@ -35,7 +35,7 @@ function run(options: Options) {
 }
 
 function open(address: string, options: Options = {}) {
-  const backend = stubBackend({ permissions: ["CanViewPlannedProducts"] });
+  const backend = stubBackend({ permissions: options.permissions ?? ["CanViewPlannedProducts"] });
   rememberSession();
   const calls: { method: string; path: string; search: string; body: string }[] = [];
   const reads: string[] = [];
@@ -49,9 +49,11 @@ function open(address: string, options: Options = {}) {
       { id: "a1", batchNumber: "WM-001", quantity: 1_500_000, productionScheduleProduct: batch, currentStep: { status: 1, isCritical: true, startedAt: ago(45), productionActivity: { id: "a1" }, responsibleUsers: [{ user: me }] } }] },
       { operation: { id: "o2", name: "Filling" }, activities: [] }]);
     if (path === "/api/v1/production-schedule/activity/a1") return Response.json(run(options));
+    if (path === "/api/v1/production-schedule/activity/a1/repair-procedure") return Response.json({ stepsUpdated: 2, stepsAdded: 1, stepsRemoved: 0, stepsKept: [] });
     if (path.startsWith("/api/v1/production-schedule/activity-step/") && input.method === "PUT") {
       const status = Number(url.searchParams.get("status"));
-      if (options.current) options.current.status = status;
+      // A board that lags keeps showing the step as it was, as the server's read model can for a moment.
+      if (options.current && !options.boardLags) options.current.status = status;
       return new Response(null, { status: 204 });
     }
     if (path === "/api/v1/production-schedule/extra-packing/by-product/b1") {
@@ -123,6 +125,21 @@ it("asks before completing a step, on the step's own page", async () => {
   await waitFor(() => expect(calls.map((call) => call.search)).toEqual(["?status=2"]));
 });
 
+it("keeps Complete step disabled after completing until the board shows the next step", async () => {
+  const { calls } = open("/production/activities/a1/board/current", { current: { order: 3, status: 1, critical: true, mine: true, actions: [2] }, boardLags: true });
+  const complete = await screen.findByRole("button", { name: "Complete step" });
+  await waitFor(() => expect(complete.hasAttribute("disabled")).toBe(false));
+  fireEvent.click(complete);
+  fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Complete step" }));
+  await waitFor(() => expect(calls.map((call) => call.search)).toEqual(["?status=2"]));
+  // The board still shows the step in progress, so the button is held rather than offered again.
+  const waiting = await screen.findByRole("button", { name: /Moving to the next step/ }, { timeout: 5000 });
+  expect(waiting.hasAttribute("disabled")).toBe(true);
+  fireEvent.click(waiting);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(calls).toHaveLength(1);
+}, 15_000);
+
 it("does not offer a critical step to someone who is not responsible for it", async () => {
   const { calls } = open("/production/activities/a1/board", { current: { order: 3, status: 0, critical: true, mine: false } });
   expect(await screen.findByText("This is a critical step. Only the people responsible for it can carry it out.")).toBeTruthy();
@@ -178,8 +195,16 @@ it("requests packaging once from any step after raw material, until final packin
   expect(screen.queryByRole("button", { name: "Request packaging material" })).toBeNull();
   cleanup(); forgetSession();
 
-  const { calls } = open("/production/activities/a1/board", { current: { order: 4, status: 1, critical: true, mine: true }, requisition: "raw" });
-  fireEvent.click(await screen.findByRole("button", { name: "Request packaging material" }));
+  // Packaging the warehouse cannot cover cannot be requested.
+  open("/production/activities/a1/board", { current: { order: 4, status: 1, critical: true, mine: true }, requisition: "raw" });
+  expect(await screen.findByText(/Packaging cannot be requested yet: the warehouse does not have enough stock of 1 material \(Bottle\)/)).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Request packaging material" }).hasAttribute("disabled")).toBe(true);
+  cleanup(); forgetSession();
+
+  const { calls } = open("/production/activities/a1/board", { current: { order: 4, status: 1, critical: true, mine: true }, requisition: "raw", packagingAvailable: true });
+  const request = await screen.findByRole("button", { name: "Request packaging material" });
+  await waitFor(() => expect(request.hasAttribute("disabled")).toBe(false));
+  fireEvent.click(request);
   const dialog = await screen.findByRole("dialog");
   expect(await within(dialog).findByText("Bottle")).toBeTruthy();
   expect(within(dialog).queryByText("Sugar")).toBeNull();
@@ -274,4 +299,24 @@ it.each([{ extraReadStatus: 503 }, { malformedExtra: true }])("keeps completion 
   await screen.findByRole("button", { name: "Retry step check" });
   expect(screen.getByRole("button", { name: "Complete step" }).hasAttribute("disabled")).toBe(true);
   expect(calls).toEqual([]);
+});
+
+it("repairs one batch's procedure from the product's current procedure, after saying what changes", async () => {
+  const { calls } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanRepairProcedure"] });
+  fireEvent.click(await screen.findByRole("button", { name: "Repair procedure" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(dialog.textContent).toContain("Completed steps are not changed");
+  expect(calls).toEqual([]);
+  fireEvent.click(within(dialog).getByRole("button", { name: "Repair procedure" }));
+  await waitFor(() => expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual(["POST /api/v1/production-schedule/activity/a1/repair-procedure"]));
+  cleanup(); forgetSession();
+
+  // Only someone who may repair procedures is offered the repair, even if they may edit procedures, and never on a cancelled batch.
+  open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanEditProductionPlan"] });
+  expect(await screen.findByText(/steps completed/)).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Repair procedure" })).toBeNull();
+  cleanup(); forgetSession();
+  open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanRepairProcedure"], cancelled: true });
+  expect(await screen.findByText(/steps completed/)).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Repair procedure" })).toBeNull();
 });

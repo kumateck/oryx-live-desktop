@@ -34,7 +34,7 @@ function sameSession(a: SessionView, b: SessionView): boolean {
 }
 
 function sessionAccess(session: SessionView | null): AccessContext {
-  return session ? { state: "authenticated", permissions: new Set(session.permissions), departmentType: session.user.departmentType }
+  return session ? { state: "authenticated", permissions: new Set(session.permissions), departmentType: session.user.departmentType, email: session.user.email }
     : { state: "anonymous" };
 }
 

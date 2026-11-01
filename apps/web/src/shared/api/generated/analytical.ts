@@ -2427,6 +2427,7 @@ export type DomainEntitiesProductsProductListDto = {
   createdAt?: string;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   labelClaim?: string | null;
   isVerified?: boolean;
@@ -3526,6 +3527,7 @@ export type DomainEntitiesProductsProductDto = {
   createdAt?: string;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   labelClaim?: string | null;
   isVerified?: boolean;
@@ -3565,6 +3567,7 @@ export type DomainEntitiesProductsProductDtoRead = {
   createdAt?: string;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   labelClaim?: string | null;
   isVerified?: boolean;

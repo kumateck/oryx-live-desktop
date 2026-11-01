@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import type { PackingStyle } from "../../lib/packing-styles";
 import { PackingStyleDialog } from "./packing-style-dialog";
@@ -55,43 +54,56 @@ it("shows the same guidance when adding a style", () => {
   expect(hint(1)).toBe("1 unit = how many base packing units?");
 });
 
-it("picks the pack automatically from the entered packs per shipper", async () => {
-  open();
-  const perShipperField = await screen.findByLabelText(/^Packs per shipper/);
+it("works out packs per shipper from the unit the person ticks as the pack", async () => {
+  const onSubmit = vi.fn();
+  render(<PackingStyleDialog editing={style} styles={[style]} packingUnits={[tablet]} allUnits={all} fullBatchSize={null} baseUnit="mg" onSubmit={onSubmit} onClose={vi.fn()} />);
   const result = () => screen.getByTestId("shipper-pack-result").textContent;
-  // 80 packs per shipper is one shipper row down: the pack is the Outer Carton.
-  expect(screen.getByRole("combobox", { name: "Pack is" }).textContent).toBe("Automatic: Outer Carton");
-  expect(result()).toContain("1 shipper (Shipper) = 80 packs (Outer Cartons)");
+  // A saved 80 per shipper is one row down: the Outer Carton is ticked. Neither figure can be typed.
+  expect(screen.queryByLabelText(/^Packs per shipper/)).toBeNull();
+  expect(screen.queryByRole("combobox", { name: "Pack is" })).toBeNull();
+  expect((screen.getByRole("radio", { name: /Outer Carton/ }) as HTMLButtonElement).getAttribute("aria-checked")).toBe("true");
+  expect(screen.getByTestId("pack-is").textContent).toBe("Outer Carton");
+  expect(screen.getByTestId("packs-per-shipper").textContent).toBe("80");
   expect(result()).toContain("1 pack (Outer Carton) = 200 Tablets = 65,800 mg of product");
-  // Two rows down: 80 × 20 inner cartons.
-  fireEvent.change(perShipperField, { target: { value: "1600" } });
-  expect(screen.getByRole("combobox", { name: "Pack is" }).textContent).toBe("Automatic: Inner Carton");
-  expect(result()).toContain("1 shipper (Shipper) = 80 × 20 = 1,600 packs (Inner Cartons)");
+  // Ticking the inner carton multiplies down to it.
+  fireEvent.click(screen.getByRole("radio", { name: /Inner Carton/ }));
+  expect(screen.getByTestId("pack-is").textContent).toBe("Inner Carton");
+  expect(screen.getByTestId("packs-per-shipper").textContent).toBe("80 × 20 = 1,600");
   expect(result()).toContain("1 pack (Inner Carton) = 10 Tablets");
-  // No level matches: say so and list what the units give.
-  fireEvent.change(perShipperField, { target: { value: "75" } });
-  expect(screen.getByText(/No unit gives 75 packs per shipper\./)).toBeTruthy();
-  expect(screen.getByTestId("pack-options").textContent).toBe("These units give: 80 Outer Cartons, 1,600 Inner Cartons, 16,000 Tablets.");
-  expect(screen.queryByTestId("shipper-pack-result")).toBeNull();
+  // Changing a quantity changes the figure with it.
+  fireEvent.change(screen.getByLabelText("Quantity of unit 2"), { target: { value: "12" } });
+  expect(screen.getByTestId("packs-per-shipper").textContent).toBe("80 × 12 = 960");
+  fireEvent.click(screen.getByRole("button", { name: "Update style" }));
+  await vi.waitFor(() => expect(onSubmit).toHaveBeenCalled());
+  expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ packPerShipper: 960 });
 });
 
-it("lets a chosen pack override the automatic one and apply its packs per shipper", async () => {
-  const user = userEvent.setup();
-  open();
-  fireEvent.keyDown(screen.getByRole("combobox", { name: "Pack is" }), { key: "Enter" });
-  await user.click(await screen.findByRole("option", { name: "Tablet (base unit) · 16,000 per shipper" }));
-  expect(screen.getByTestId("shipper-pack-result").textContent).toContain("80 × 20 × 10 = 16,000 packs (Tablets)");
-  expect(screen.getByText(/Packs per shipper is 80, but Tablets as the pack give 16,000\./)).toBeTruthy();
-  await user.click(screen.getByRole("button", { name: "Use 16,000" }));
-  expect(screen.queryByText(/as the pack give/)).toBeNull();
-  expect((await screen.findByLabelText(/^Packs per shipper/) as HTMLInputElement).value).toBe("16000");
+it("asks for the pack to be ticked when a saved figure matches no unit", async () => {
+  const onSubmit = vi.fn();
+  const odd = { ...style, packPerShipper: 75 };
+  render(<PackingStyleDialog editing={odd} styles={[odd]} packingUnits={[tablet]} allUnits={all} fullBatchSize={null} baseUnit="mg" onSubmit={onSubmit} onClose={vi.fn()} />);
+  expect(screen.getByText(/saved with 75 packs per shipper, which no unit gives/)).toBeTruthy();
+  expect(screen.getByTestId("pack-is").textContent).toBe("Not ticked");
+  fireEvent.click(screen.getByRole("radio", { name: /Tablet/ }));
+  expect(screen.getByTestId("packs-per-shipper").textContent).toBe("80 × 20 × 10 = 16,000");
 });
 
-it("splits a typed quantity of packs into shippers and loose", () => {
+it("asks for the tick before a new style is added", async () => {
+  const onSubmit = vi.fn();
+  render(<PackingStyleDialog editing={null} styles={[]} packingUnits={[tablet]} allUnits={all} fullBatchSize={null} baseUnit="mg" onSubmit={onSubmit} onClose={vi.fn()} />);
+  fireEvent.click(screen.getByRole("button", { name: "Add style" }));
+  expect(await screen.findByText("Tick the unit that is the pack.")).toBeTruthy();
+  expect(onSubmit).not.toHaveBeenCalled();
+});
+
+it("shows each unit's hint above its row", () => {
   open();
-  const field = screen.getByLabelText("Try a quantity of packs");
-  fireEvent.change(field, { target: { value: "250" } });
-  expect(screen.getByTestId("trial-split").textContent).toBe("250 packs = 3 shippers + 10 loose (3 × 80 + 10; 50,000 Tablets in all)");
-  fireEvent.change(field, { target: { value: "abc" } });
-  expect(screen.getByText("Enter a number of Outer Cartons of 0 or more.")).toBeTruthy();
+  const hintRow = screen.getByTestId("unit-hint-2");
+  const quantity = screen.getByLabelText("Quantity of unit 2");
+  expect(hintRow.compareDocumentPosition(quantity) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
+it("offers no trial quantity input", () => {
+  open();
+  expect(screen.queryByLabelText("Try a quantity of packs")).toBeNull();
 });

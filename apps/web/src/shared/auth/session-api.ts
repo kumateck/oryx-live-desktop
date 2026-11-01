@@ -222,8 +222,5 @@ export async function setPasswordWithKey(key: string, password: string, confirmP
   return new SessionRequestError("server", response.status).message;
 }
 
-// The server lets only these roles move themselves to another department; the names are its own.
-const departmentSwitchRoles = new Set(["Warehouse Manager", "admin", "super"]);
-export function maySwitchDepartment(user: Pick<SessionUser, "roles"> | null): boolean {
-  return Boolean(user?.roles.some((role) => departmentSwitchRoles.has(role)));
-}
+/** Lets a user move their own account to another department (IT Support › Manage User Directory). The server requires it too. */
+export const switchDepartmentPermission = "CanSwitchDepartment";

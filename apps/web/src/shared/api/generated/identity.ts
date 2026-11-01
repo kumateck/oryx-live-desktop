@@ -269,6 +269,8 @@ const injectedRtkApi = api.injectEndpoints({
           page: queryArg.page,
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
+          roleId: queryArg.roleId,
+          departmentId: queryArg.departmentId,
         },
       }),
     }),
@@ -402,6 +404,21 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/v1/user/toggle-disable/${queryArg.id}`,
         method: "PUT",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1UserSwitchDepartment: build.mutation<
+      PostApiV1UserSwitchDepartmentApiResponse,
+      PostApiV1UserSwitchDepartmentApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "user/switch-department", id: "LIST" }, { type: "user", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/user/switch-department`,
+        method: "POST",
+        body: queryArg.domainEntitiesUsersRequestSwitchDepartmentRequest,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -593,6 +610,8 @@ export type GetApiV1UserApiArg = {
   page?: number;
   pageSize?: number;
   searchQuery?: string;
+  roleId?: string;
+  departmentId?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -679,6 +698,14 @@ export type PutApiV1UserToggleDisableByIdApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+};
+export type PostApiV1UserSwitchDepartmentApiResponse = void;
+export type PostApiV1UserSwitchDepartmentApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesUsersRequestSwitchDepartmentRequest: DomainEntitiesUsersRequestSwitchDepartmentRequest;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -899,6 +926,9 @@ export type DomainEntitiesRolesUpdateUserRoleRequest = {
 export type SharedRequestsUploadFileRequest = {
   file?: string | null;
 };
+export type DomainEntitiesUsersRequestSwitchDepartmentRequest = {
+  departmentId: string | null;
+};
 export const {
   usePostApiV1DepartmentMutation,
   useGetApiV1DepartmentQuery,
@@ -943,4 +973,5 @@ export const {
   usePostApiV1UserAvatarByIdMutation,
   usePostApiV1UserSignatureByIdMutation,
   usePutApiV1UserToggleDisableByIdMutation,
+  usePostApiV1UserSwitchDepartmentMutation,
 } = injectedRtkApi;

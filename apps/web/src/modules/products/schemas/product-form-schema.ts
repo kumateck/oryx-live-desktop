@@ -15,7 +15,6 @@ export const productFormSchema = z.object({
   baseUom: option("Choose the base unit"),
   baseQuantity: amount("composition quantity"),
   fullBatchSize: amount("full batch size"),
-  price: amount("price"),
   filledWeight: optionalText,
   storageCondition: optionalText,
   shelfLife: optionalText,
@@ -39,7 +38,7 @@ const ref = z.object({ id: z.string().nullish(), name: z.string().nullish() }).n
 export const productFormSourceSchema = z.object({
   id: z.uuid(), name: text, code: text, genericName: text, description: text, filledWeight: text, storageCondition: text,
   shelfLife: text, actionUse: text, fdaRegistrationNumber: text, masterFormulaNumber: text, documentNumber: text,
-  revisionNumber: z.number().nullish(), baseQuantity: z.number().nullish(), fullBatchSize: z.number().nullish(), price: z.number().nullish(),
+  revisionNumber: z.number().nullish(), baseQuantity: z.number().nullish(), fullBatchSize: z.number().nullish(),
   division: z.number().nullish(), category: ref, department: ref, equipment: ref,
   baseUoM: z.object({ id: z.string().nullish(), name: z.string().nullish(), symbol: z.string().nullish() }).nullish(),
 });

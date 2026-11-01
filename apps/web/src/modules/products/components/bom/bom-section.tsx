@@ -8,6 +8,7 @@ import { useBom } from "../../hooks/use-bom";
 import type { BomLine } from "../../lib/bom";
 import { BomItemDialog } from "./bom-item-dialog";
 import { BomLinesTable } from "./bom-table";
+import { randomId } from "@/shared/ids/random-id";
 
 type Open = { mode: "add" } | { mode: "edit"; line: BomLine } | { mode: "remove"; line: BomLine } | { mode: "archive" } | null;
 
@@ -39,7 +40,7 @@ export function BomSection({ productId, compositionSize, batchSize }: { productI
     {open?.mode === "add" || open?.mode === "edit" ? <BomItemDialog key={open.mode === "edit" ? open.line.key : "new"} editing={open.mode === "edit" ? open.line : null}
       lines={bom.lines} compositionSize={compositionSize} batchSize={batchSize} onClose={() => setOpen(null)}
       onSubmit={(values, facts) => {
-        const line: BomLine = { key: open.mode === "edit" ? open.line.key : `new-${crypto.randomUUID()}`, material: values.material, baseQuantity: values.baseQuantity,
+        const line: BomLine = { key: open.mode === "edit" ? open.line.key : `new-${randomId()}`, material: values.material, baseQuantity: values.baseQuantity,
           grade: values.grade ?? "", substitutes: values.substitutes ?? [], ...facts };
         bom.setLines(open.mode === "edit" ? bom.lines.map((item) => item.key === line.key ? line : item) : [...bom.lines, line]);
         setOpen(null);
