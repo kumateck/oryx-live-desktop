@@ -18,7 +18,7 @@ const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOSt
 
 interface Options {
   current?: { order: number; status: number; critical: boolean; mine: boolean; actions?: number[] }; nextIsFinalPacking?: boolean;
-  cancelled?: boolean; permissions?: string[]; packagingAvailable?: boolean; requisition?: boolean | "raw"; packagingIssued?: boolean; packagingFrom?: string; finalPacked?: boolean; extraStatuses?: number[]; extraReadStatus?: number; malformedExtra?: boolean;
+  cancelled?: boolean; permissions?: string[]; boardLags?: boolean; packagingAvailable?: boolean; requisition?: boolean | "raw"; packagingIssued?: boolean; packagingFrom?: string; finalPacked?: boolean; extraStatuses?: number[]; extraReadStatus?: number; malformedExtra?: boolean;
 }
 function run(options: Options) {
   const current = options.current ?? { order: 3, status: 0, critical: true, mine: true };
@@ -52,7 +52,8 @@ function open(address: string, options: Options = {}) {
     if (path === "/api/v1/production-schedule/activity/a1/repair-procedure") return Response.json({ stepsUpdated: 2, stepsAdded: 1, stepsRemoved: 0, stepsKept: [] });
     if (path.startsWith("/api/v1/production-schedule/activity-step/") && input.method === "PUT") {
       const status = Number(url.searchParams.get("status"));
-      if (options.current) options.current.status = status;
+      // A board that lags keeps showing the step as it was, as the server's read model can for a moment.
+      if (options.current && !options.boardLags) options.current.status = status;
       return new Response(null, { status: 204 });
     }
     if (path === "/api/v1/production-schedule/extra-packing/by-product/b1") {
@@ -122,13 +123,22 @@ it("asks before completing a step, on the step's own page", async () => {
   expect(calls).toEqual([]);
   fireEvent.click(within(dialog).getByRole("button", { name: "Complete step" }));
   await waitFor(() => expect(calls.map((call) => call.search)).toEqual(["?status=2"]));
-  // Until the board shows the next step, the step cannot be completed again. The dialog closes once the
-  // server has answered; slow machines take longer than the default wait for both.
-  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull(), { timeout: 5000 });
+});
+
+it("keeps Complete step disabled after completing until the board shows the next step", async () => {
+  const { calls } = open("/production/activities/a1/board/current", { current: { order: 3, status: 1, critical: true, mine: true, actions: [2] }, boardLags: true });
+  const complete = await screen.findByRole("button", { name: "Complete step" });
+  await waitFor(() => expect(complete.hasAttribute("disabled")).toBe(false));
+  fireEvent.click(complete);
+  fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Complete step" }));
+  await waitFor(() => expect(calls.map((call) => call.search)).toEqual(["?status=2"]));
+  // The board still shows the step in progress, so the button is held rather than offered again.
   const waiting = await screen.findByRole("button", { name: /Moving to the next step/ }, { timeout: 5000 });
   expect(waiting.hasAttribute("disabled")).toBe(true);
+  fireEvent.click(waiting);
+  expect(screen.queryByRole("dialog")).toBeNull();
   expect(calls).toHaveLength(1);
-});
+}, 15_000);
 
 it("does not offer a critical step to someone who is not responsible for it", async () => {
   const { calls } = open("/production/activities/a1/board", { current: { order: 3, status: 0, critical: true, mine: false } });
