@@ -2,6 +2,16 @@
 
 Web releases and native shell releases are independent. A frontend change does not require a new installer. The main **OryxLiveDesktop-Setup.exe** is one offline NSIS installer containing both Windows x86 (32-bit) and x64 (64-bit) applications; it selects the appropriate payload for the operating system. Icons, per-user installation, desktop/Start-menu shortcuts, the companion and server connection screen are retained.
 
+## Native release 0.2.1 (2026-10-31)
+
+The companion size, movement and alerts-panel changes ship as shell version
+**0.2.1**. Testing run `41191704523` built and smoke-tested those native changes
+as `0.2.0`, but publication correctly refused to replace the existing immutable
+`0.2.0` installer with different bytes. Rebuild from a testing commit containing
+the version bump to publish `desktop/windows/0.2.1/` and its signed feed. Retain
+the published `0.2.0` payload; rerunning the old run still builds its old version.
+Web/API compatibility floors remain independent of this release number.
+
 ## What users see
 
 - The desktop checks its connected server at launch and every 30 minutes. A newer verified desktop release opens an update dialog with **Download update** and **Remind me later**. Closing the dialog also defers it. Deferral lasts for that app session; launching Oryx again prompts again, including when the companion kept the original process alive.

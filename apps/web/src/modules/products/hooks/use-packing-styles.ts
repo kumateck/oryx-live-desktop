@@ -8,6 +8,7 @@ import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useGetApiV1ProductByProductIdPackingQuery, usePostApiV1ProductByProductIdPackingApprovedProductMutation, usePostApiV1ProductByProductIdPackingMutation } from "../api/product-api";
 import { addStyle, fromSaved, removeStyle, toPackingRequest, updateStyle, type PackingStyle } from "../lib/packing-styles";
 import { packingStyleListSchema, type PackingStyleFormValues } from "../schemas/packing-style-schema";
+import { randomId } from "@/shared/ids/random-id";
 
 /**
  * Where packing styles are saved from. The product edit page saves as production planning; the finished goods
@@ -59,7 +60,7 @@ export function usePackingStyles(productId: string, target: PackingSaveTarget = 
     retry: () => { void query.refetch(); },
     saving: target === "approved-product" ? approvedMutation.isLoading : productMutation.isLoading,
     saveError: message,
-    add: (values: PackingStyleFormValues) => setDraft(addStyle(styles, values, `new-${crypto.randomUUID()}`)),
+    add: (values: PackingStyleFormValues) => setDraft(addStyle(styles, values, `new-${randomId()}`)),
     update: (key: string, values: PackingStyleFormValues) => setDraft(updateStyle(styles, key, values)),
     remove: (key: string) => setDraft(removeStyle(styles, key)),
     discard: () => { setDraft(null); setMessage(""); },

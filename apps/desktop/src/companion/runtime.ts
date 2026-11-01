@@ -2,10 +2,11 @@ import { app, BrowserWindow, ipcMain, Menu, screen, Tray, nativeImage, type IpcM
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { clampPlacement, companionSize, visiblePanelHeight, validSummary, type Point } from "./placement";
+import { clampPlacement, windowSize, validSummary, type Point } from "./placement";
+import { CompanionPanelWindow } from "./panel-window";
 import { SystemAlerts, validSystemAlert } from "./system-alerts";
 import { CompanionPreferenceStore } from "./preferences";
-import { CompanionCommand, type CompanionPreferences, type CompanionView } from "./contract";
+import { AlertPriority, CompanionCommand, type CompanionAlert, type CompanionPreferences, type CompanionView } from "./contract";
 
 declare const COMPANION_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const COMPANION_WINDOW_VITE_NAME: string;
@@ -20,13 +21,39 @@ export class CompanionRuntime {
   private roaming = true;
   private quiet = false;
   private state: CompanionView = { unread: 0, connected: false, signedIn: false, focused: false, quiet: false, roaming: true };
-  private panelExpanded = false;
+  private panel: CompanionPanelWindow;
+  /** Alert IDs already seen this sign-in; null until the first summary sets the baseline. */
+  private known: Set<string> | null = null;
   private drag: { pointer: Point; origin: Point } | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
+  /**
+   * Watches the pointer over the companion. macOS forwards mouse movement to a click-through
+   * window only while Oryx is the active app, so after the alerts panel closes (or while you work
+   * in another app) the companion would never learn the pointer is over it and clicks would fall
+   * through. Checking the cursor here works whatever app is active.
+   */
+  private pointerTimer: ReturnType<typeof setInterval> | null = null;
+  private pointerInside = false;
+  private trackPointer(): void {
+    if (this.pointerTimer) return;
+    this.pointerTimer = setInterval(() => {
+      const pet = this.pet;
+      if (!pet || pet.isDestroyed() || this.drag) return;
+      const cursor = screen.getCursorScreenPoint(), bounds = pet.getBounds();
+      const inside = cursor.x >= bounds.x && cursor.x < bounds.x + bounds.width && cursor.y >= bounds.y && cursor.y < bounds.y + bounds.height;
+      if (inside) pet.webContents.send("pet:pointer", { x: cursor.x - bounds.x, y: cursor.y - bounds.y });
+      else if (this.pointerInside) pet.webContents.send("pet:pointer", { x: -1, y: -1 });
+      this.pointerInside = inside;
+    }, 50);
+  }
   private localUrl = "";
   private saved = "";
   private position: Point | null = null;
-  constructor(private owner: BrowserWindow, private directory: string, private siteOrigin: () => string) { this.systemAlerts = new SystemAlerts(owner); }
+  constructor(private owner: BrowserWindow, private directory: string, private siteOrigin: () => string) {
+    this.systemAlerts = new SystemAlerts(owner);
+    this.panel = new CompanionPanelWindow(directory, () => this.localUrl);
+    this.panel.onVisible = (open) => this.update({ panelOpen: open });
+  }
   async start(): Promise<void> {
     this.saved = path.join(app.getPath("userData"), "companion-hidden.txt");
     try { this.enabled = (await readFile(this.saved, "utf8")) !== "hidden"; } catch { /* default visible */ }
@@ -60,7 +87,7 @@ export class CompanionRuntime {
     if (this.enabled) await this.show();
   }
   canRunInBackground(): boolean { return this.tray !== null; }
-  reset(): void { this.systemAlerts.clear(); this.update({ unread: 0, signedIn: false, connected: false, alerts: [] }); }
+  reset(): void { this.systemAlerts.clear(); this.known = null; this.update({ unread: 0, signedIn: false, connected: false, alerts: [] }); }
   toggle = (): void => { void this.change(this.enabled ? CompanionCommand.Hide : CompanionCommand.Show).catch(console.error); };
   private async change(command: CompanionCommand): Promise<CompanionPreferences> {
     const next = await this.preferences.change(command);
@@ -75,14 +102,38 @@ export class CompanionRuntime {
     return next;
   }
   private update(change: Partial<CompanionView>): void {
-    this.state = { ...this.state, ...change, quiet: this.quiet, roaming: this.roaming, showIndicators: this.preferences.current().showIndicators, panelExpanded: this.panelExpanded };
+    const preferences = this.preferences.current();
+    this.state = { ...this.state, ...change, quiet: this.quiet, roaming: this.roaming, showIndicators: preferences.showIndicators, size: preferences.size ?? "medium" };
     if (this.pet) {
-      const height = this.state.showIndicators ? companionSize + visiblePanelHeight(this.state.alerts?.length ?? 0, this.panelExpanded) : companionSize;
-      this.pet.setSize(companionSize, height);
-      const bounds = this.pet.getBounds(); const area = screen.getDisplayNearestPoint(bounds).workArea;
-      this.pet.setPosition(...this.coordinates(clampPlacement(bounds, area, height)));
+      const size = this.side();
+      const bounds = this.pet.getBounds();
+      if (bounds.width !== size || bounds.height !== size) {
+        // Grow or shrink around the companion's feet so it does not jump on screen.
+        const point = { x: bounds.x + Math.round((bounds.width - size) / 2), y: bounds.y + bounds.height - size };
+        this.pet.setBounds({ ...clampPlacement(point, screen.getDisplayNearestPoint(bounds).workArea, size), width: size, height: size });
+      }
     }
     this.pet?.webContents.send("pet:view", this.state);
+    this.panel.update(this.state);
+  }
+  private side(): number { return windowSize(this.preferences.current().size ?? "medium"); }
+  private anchor() { return this.pet?.getBounds() ?? null; }
+  private openList(): void {
+    const anchor = this.anchor();
+    if (anchor) this.panel.show({ mode: "list", view: this.state }, anchor);
+  }
+  /** One card per batch of arrivals: the most important new alert, so a burst never stacks cards. */
+  private announce(fresh: CompanionAlert[]): void {
+    const anchor = this.anchor();
+    if (!anchor || !fresh.length || !this.preferences.current().showIndicators || this.panel.mode() === "list") return;
+    const first = fresh.reduce((best, alert) => alert.priority > best.priority ? alert : best, fresh[0] ?? { priority: AlertPriority.Unspecified } as CompanionAlert);
+    if (first.id) this.panel.show({ mode: "card", view: this.state, alertId: first.id }, anchor);
+  }
+  private openAlert(id?: string): void {
+    this.panel.hide();
+    this.owner.show(); this.owner.focus();
+    const alert = this.state.alerts?.find((item) => item.id === id);
+    this.owner.webContents.send("companion:open", { id: alert?.id, direct: Boolean(alert), shipmentDocumentId: alert?.shipmentDocumentId, type: alert?.type });
   }
   private trusted(event: IpcMainEvent): boolean {
     return Boolean(this.pet && event.sender === this.pet.webContents && event.senderFrame === this.pet.webContents.mainFrame && event.senderFrame.url === this.localUrl);
@@ -95,7 +146,7 @@ export class CompanionRuntime {
     ipcMain.handle("companion:settings", (event) => { this.assertOwner(event); return this.preferences.current(); });
     ipcMain.handle("companion:command", (event, command: CompanionCommand) => {
       this.assertOwner(event);
-      if (!Number.isInteger(command) || command < CompanionCommand.Show || command > CompanionCommand.IndicatorsOff) throw new Error("Invalid companion command.");
+      if (!Number.isInteger(command) || command < CompanionCommand.Show || command > CompanionCommand.SizeLarge) throw new Error("Invalid companion command.");
       return this.change(command);
     });
     ipcMain.handle("companion:notify", (event: IpcMainInvokeEvent, value: object): boolean => {
@@ -108,24 +159,40 @@ export class CompanionRuntime {
       const frame = event.senderFrame;
       if (event.sender !== this.owner.webContents || frame !== this.owner.webContents.mainFrame || !frame || !this.siteOrigin() || frame.origin !== this.siteOrigin()) throw new Error("Untrusted companion summary.");
       if (!value || typeof value !== "object" || !validSummary(value)) throw new Error("Invalid companion summary.");
-      if (!value.signedIn) this.systemAlerts.clear();
-      this.update(value.signedIn ? { unread: value.unread, connected: value.connected, signedIn: true, alerts: value.alerts ?? [] } : { unread: 0, connected: false, signedIn: false, alerts: [] });
+      // An open list stays and shows the signed-out state, so a brief sign-out during a reload does not close it.
+      if (!value.signedIn) { this.systemAlerts.clear(); this.known = null; }
+      const alerts = value.signedIn ? value.alerts ?? [] : [];
+      const fresh = this.known ? alerts.filter((alert) => !this.known?.has(alert.id)) : [];
+      if (value.signedIn) this.known = new Set(alerts.map((alert) => alert.id));
+      this.update(value.signedIn ? { unread: value.unread, connected: value.connected, signedIn: true, alerts } : { unread: 0, connected: false, signedIn: false, alerts: [] });
+      this.announce(fresh);
     });
     ipcMain.on("pet:ready", (event) => { if (this.trusted(event)) this.update({}); });
     ipcMain.on("pet:interactive", (event, value: boolean) => {
       if (this.trusted(event) && typeof value === "boolean" && !this.drag) this.pet?.setIgnoreMouseEvents(!value, { forward: true });
     });
-    ipcMain.on("pet:panel", (event, expanded: boolean) => {
-      if (!this.trusted(event) || typeof expanded !== "boolean") return;
-      this.panelExpanded = expanded;
-      this.update({});
+    // A click on the companion toggles the list; main decides from the panel's real state, so the
+    // companion's copy of it can never be out of step. false always closes.
+    ipcMain.on("pet:panel", (event, open: boolean) => {
+      if (!this.trusted(event) || typeof open !== "boolean") return;
+      if (!open || this.panel.mode() === "list") this.panel.hide();
+      else if (Date.now() - this.panel.hiddenAt > 300) this.openList();
     });
+    ipcMain.on("panel:ready", (event) => { if (this.panel.trusted(event)) this.panel.resend(); });
+    ipcMain.on("panel:open", (event, id?: string) => {
+      if (!this.panel.trusted(event) || (id !== undefined && (typeof id !== "string" || id.length > 100))) return;
+      this.openAlert(id);
+    });
+    ipcMain.on("panel:expand", (event) => { if (this.panel.trusted(event)) this.openList(); });
+    ipcMain.on("panel:hover", (event, value: boolean) => { if (this.panel.trusted(event) && typeof value === "boolean") this.panel.hover(value); });
+    ipcMain.on("panel:close", (event) => { if (this.panel.trusted(event)) this.panel.hide(); });
     ipcMain.on("pet:drag", (event, action: string) => {
       if (!this.trusted(event)) return;
       if (action === "start" && this.pet) {
         const bounds = this.pet.getBounds();
         this.dragStarted = Date.now();
         this.drag = { pointer: screen.getCursorScreenPoint(), origin: { x: bounds.x, y: bounds.y } };
+        this.panel.hide();
         this.pet.setIgnoreMouseEvents(false);
         if (this.timer) clearInterval(this.timer);
         this.timer = setInterval(() => this.move(), 16);
@@ -133,17 +200,30 @@ export class CompanionRuntime {
     });
     ipcMain.on("pet:open", (event, request: { id?: string; direct?: boolean } = {}) => {
       if (!this.trusted(event)) return;
-      this.owner.show(); this.owner.focus();
-      const alert = this.state.alerts?.find((item) => item.id === request.id);
-      this.owner.webContents.send("companion:open", { id: alert?.id, direct: request.direct === true && Boolean(alert), shipmentDocumentId: alert?.shipmentDocumentId, type: alert?.type });
+      this.openAlert(request?.direct === true && typeof request.id === "string" ? request.id : undefined);
     });
     ipcMain.on("pet:menu", (event) => {
       if (!this.trusted(event)) return;
+      const run = (...commands: CompanionCommand[]) => () => { void commands.reduce((done, command) => done.then(() => this.change(command)), Promise.resolve(this.preferences.current())).catch(console.error); };
+      const size = this.preferences.current().size ?? "medium";
+      const movement = this.quiet ? "still" : this.roaming ? "playful" : "subtle";
       Menu.buildFromTemplate([
+        { label: "Show alerts", click: () => this.openList() },
         { label: "Open Oryx", click: () => { this.owner.show(); this.owner.focus(); } },
-        { label: "Quiet mode", type: "checkbox", checked: this.quiet, click: () => { void this.change(this.quiet ? CompanionCommand.QuietOff : CompanionCommand.QuietOn).catch(console.error); } },
-        { label: "Limited roaming", type: "checkbox", checked: this.roaming, click: () => { void this.change(this.roaming ? CompanionCommand.RoamingOff : CompanionCommand.RoamingOn).catch(console.error); } },
-        { label: "Reset position", click: () => { void this.change(CompanionCommand.ResetPosition).catch(console.error); } },
+        { type: "separator" },
+        { label: "Size", submenu: [
+          { label: "Small", type: "radio", checked: size === "small", click: run(CompanionCommand.SizeSmall) },
+          { label: "Medium", type: "radio", checked: size === "medium", click: run(CompanionCommand.SizeMedium) },
+          { label: "Large", type: "radio", checked: size === "large", click: run(CompanionCommand.SizeLarge) },
+        ] },
+        { label: "Movement", submenu: [
+          { label: "Still", type: "radio", checked: movement === "still", click: run(CompanionCommand.QuietOn) },
+          { label: "Subtle", type: "radio", checked: movement === "subtle", click: run(CompanionCommand.QuietOff, CompanionCommand.RoamingOff) },
+          { label: "Playful", type: "radio", checked: movement === "playful", click: run(CompanionCommand.QuietOff, CompanionCommand.RoamingOn) },
+        ] },
+        { label: "New alert cards", type: "checkbox", checked: this.preferences.current().showIndicators, click: run(this.preferences.current().showIndicators ? CompanionCommand.IndicatorsOff : CompanionCommand.IndicatorsOn) },
+        { label: "Reset position", click: run(CompanionCommand.ResetPosition) },
+        { type: "separator" },
         { label: "Hide companion", click: this.toggle },
       ]).popup({ window: this.pet ?? this.owner });
     });
@@ -171,13 +251,13 @@ export class CompanionRuntime {
   }
   private place = (): void => {
     const area = this.position ? screen.getDisplayNearestPoint(this.position).workArea : screen.getPrimaryDisplay().workArea;
-    const height = this.preferences.current().showIndicators ? companionSize + visiblePanelHeight(this.state.alerts?.length ?? 0, this.panelExpanded) : companionSize;
-    const point = this.position ?? { x: area.x + area.width - companionSize - 20, y: area.y + area.height - height };
-    this.pet?.setPosition(...this.coordinates(clampPlacement(point, area, height)));
+    const size = this.side();
+    const point = this.position ?? { x: area.x + area.width - size - 20, y: area.y + area.height - size };
+    this.pet?.setPosition(...this.coordinates(clampPlacement(point, area, size)));
   };
   private async show(): Promise<void> {
     if (this.pet) { this.pet.showInactive(); return; }
-    const pet = new BrowserWindow({ width: companionSize, height: this.preferences.current().showIndicators ? companionSize + visiblePanelHeight(this.state.alerts?.length ?? 0, this.panelExpanded) : companionSize, show: false, frame: false, transparent: true,
+    const pet = new BrowserWindow({ width: this.side(), height: this.side(), show: false, frame: false, transparent: true,
       backgroundColor: "#00000000", hasShadow: false, resizable: false, minimizable: false, maximizable: false,
       fullscreenable: false, focusable: false, skipTaskbar: true, title: "ORYX Companion",
       webPreferences: { preload: path.join(this.directory, "companion-preload.cjs"), partition: "oryx-companion", nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true, webviewTag: false },
@@ -191,12 +271,19 @@ export class CompanionRuntime {
     pet.webContents.on("will-attach-webview", (event) => event.preventDefault());
     this.localUrl = COMPANION_WINDOW_VITE_DEV_SERVER_URL || pathToFileURL(path.join(this.directory, `../renderer/${COMPANION_WINDOW_VITE_NAME}/index.html`)).href;
     pet.on("closed", () => { if (this.pet === pet) this.pet = null; });
+    this.trackPointer();
     try { await pet.loadURL(this.localUrl); this.place(); pet.showInactive(); this.update({}); }
     catch (error) { console.error("Companion could not load", error); this.hide(); }
   }
-  private hide(): void { this.endDrag(); this.pet?.destroy(); this.pet = null; }
+  private hide(): void {
+    this.endDrag(); this.panel.hide();
+    if (this.pointerTimer) clearInterval(this.pointerTimer);
+    this.pointerTimer = null; this.pointerInside = false;
+    this.pet?.destroy(); this.pet = null;
+  }
   private dispose(): void {
     this.hide();
+    this.panel.destroy();
     this.systemAlerts.clear();
     this.tray?.destroy(); this.tray = null;
     screen.removeListener("display-removed", this.place);
@@ -205,6 +292,6 @@ export class CompanionRuntime {
     ipcMain.removeHandler("companion:command");
     ipcMain.removeHandler("companion:summary");
     ipcMain.removeHandler("companion:notify");
-    for (const channel of ["pet:ready", "pet:interactive", "pet:panel", "pet:drag", "pet:open", "pet:menu"]) ipcMain.removeAllListeners(channel);
+    for (const channel of ["pet:ready", "pet:interactive", "pet:panel", "pet:drag", "pet:open", "pet:menu", "panel:ready", "panel:open", "panel:expand", "panel:hover", "panel:close"]) ipcMain.removeAllListeners(channel);
   }
 }

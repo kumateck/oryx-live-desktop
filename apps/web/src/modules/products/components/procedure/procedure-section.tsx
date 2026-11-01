@@ -12,6 +12,7 @@ import { productPermissions } from "../../lib/product-access";
 import { CopyProcedureDialog, type CopyProcedureAction } from "./copy-procedure-dialog";
 import { ProcedureTable } from "./procedure-table";
 import { StepDialog } from "./step-dialog";
+import { randomId } from "@/shared/ids/random-id";
 
 type Open = { mode: "add" } | { mode: "edit"; step: ProcedureStep } | { mode: "remove"; step: ProcedureStep } | { mode: "copy"; action: CopyProcedureAction } | null;
 
@@ -50,7 +51,7 @@ export function ProcedureSection({ productId, departmentId }: { productId: strin
     {open?.mode === "add" || open?.mode === "edit" ? <StepDialog key={open.mode === "edit" ? open.step.key : "new"} editing={open.mode === "edit" ? open.step : null}
       steps={procedure.steps} options={options} onClose={() => setOpen(null)}
       onSubmit={(values) => {
-        const step = stepFromForm(values, open.mode === "edit" ? open.step.key : `new-${crypto.randomUUID()}`);
+        const step = stepFromForm(values, open.mode === "edit" ? open.step.key : `new-${randomId()}`);
         procedure.setSteps(open.mode === "edit" ? procedure.steps.map((item) => item.key === step.key ? step : item) : [...procedure.steps, step]);
         setOpen(null);
       }} /> : null}

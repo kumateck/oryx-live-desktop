@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { signaturePath } from "@/shared/images/signature-path";
 import { company } from "./company";
 
 /** The top of a printed document: the company on the left, the document's name and reference on the right. */
@@ -34,7 +35,24 @@ export function PrintTable<TRow>({ caption, columns, rows, rowKey, empty, footer
   </table>;
 }
 
-/** Lines to sign on, for documents that are checked or received by hand. */
-export function PrintSignatures({ roles }: { roles: readonly string[] }) {
-  return <div className="print-signatures">{roles.map((role) => <div key={role}><span />{role}</div>)}</div>;
+/** A signature line: who signs it and, once they have, their name, stored signature and when. */
+export interface PrintSigner { role: string; name?: string | null; signature?: string | null; signedOn?: string | null; note?: string | null }
+
+/**
+ * Lines to sign on. A line given only its role stays blank for a signature by hand; a line given a
+ * person shows their stored signature above the line and their full name below it.
+ */
+export function PrintSignatures({ roles, signers }: { roles?: readonly string[]; signers?: readonly PrintSigner[] }) {
+  const lines: readonly PrintSigner[] = signers ?? (roles ?? []).map((role) => ({ role }));
+  return <div className="print-signatures">{lines.map((line) => {
+    const image = signaturePath(line.signature);
+    return <div key={line.role}>
+      {image ? <img className="print-signature-image" src={image} alt={`Signature of ${line.name ?? line.role}`} /> : null}
+      <span className={image ? "print-signature-line signed" : "print-signature-line"} />
+      <div>{line.role}</div>
+      {line.name ? <strong className="print-signer-name">{line.name}</strong> : null}
+      {line.signedOn ? <div className="print-signer-note">{line.signedOn}</div> : null}
+      {line.note ? <div className="print-signer-note">{line.note}</div> : null}
+    </div>;
+  })}</div>;
 }

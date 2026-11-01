@@ -73,7 +73,10 @@ it("edits a product's information from its saved values and saves only when aske
   await waitFor(() => expect(calls.some((call) => call.method === "PUT")).toBe(true));
   const body = JSON.parse(calls.find((call) => call.method === "PUT")?.body ?? "{}");
   expect(body).toMatchObject({ name: "Wormee 4 Suspension", code: "NL-047", categoryId: "c1", departmentId: "d1", baseUomId: "u1",
-    division: 1, baseQuantity: 5, fullBatchSize: 1_500_000, price: 12, equipmentId: null });
+    division: 1, baseQuantity: 5, fullBatchSize: 1_500_000, equipmentId: null });
+  // The list price is set in Finance → Costing, not here.
+  expect(body).not.toHaveProperty("price");
+  expect(screen.queryByRole("spinbutton", { name: /^Price/ })).toBeNull();
 });
 
 it("asks before leaving a form with unsaved changes", async () => {

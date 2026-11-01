@@ -768,6 +768,7 @@ export type DomainEntitiesProductsCreateProductRequest = {
   departmentId?: string | null;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   expectedYield?: number;
   documentNumber?: string | null;
@@ -857,6 +858,7 @@ export type DomainEntitiesProductsProductListDto = {
   createdAt?: string;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   labelClaim?: string | null;
   isVerified?: boolean;
@@ -1222,6 +1224,7 @@ export type DomainEntitiesProductsProductDto = {
   createdAt?: string;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   labelClaim?: string | null;
   isVerified?: boolean;
@@ -1261,6 +1264,7 @@ export type DomainEntitiesProductsProductDtoRead = {
   createdAt?: string;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   labelClaim?: string | null;
   isVerified?: boolean;
@@ -1302,6 +1306,7 @@ export type DomainEntitiesProductsUpdateProductRequest = {
   departmentId?: string | null;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   expectedYield?: number;
   documentNumber?: string | null;
@@ -4696,6 +4701,7 @@ export type DomainEntitiesProductsProductPrices = {
   price?: number;
   priceUoM?: string | null;
   date?: string;
+  currencyId?: string | null;
 };
 export type DomainEntitiesProductsProduct = {
   id?: string;
@@ -4788,6 +4794,7 @@ export type DomainEntitiesProductsProductRead = {
   routes?: DomainEntitiesRoutesRouteRead[] | null;
   price?: number;
   priceUoM?: string | null;
+  priceCurrencyId?: string | null;
   division?: DomainEntitiesProductsDivision;
   prices?: DomainEntitiesProductsProductPrices[] | null;
   packings?: DomainEntitiesProductsProductPackingRead[] | null;

@@ -1,29 +1,69 @@
 import { CompanionTestNotification } from "./companion-test-notification";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/shared/skeleton/skeleton";
-import { CompanionCommand } from "../../../../../shared/companion";
+import { SettingRow } from "../theme/appearance-controls";
+import { CompanionCommand, type CompanionPreferences, type CompanionSize } from "../../../../../shared/companion";
 import { useCompanionSettings } from "./use-companion-settings";
+
+type Movement = "still" | "subtle" | "playful";
+const sizes: readonly (readonly [CompanionSize, string, CompanionCommand])[] = [
+  ["small", "Small", CompanionCommand.SizeSmall], ["medium", "Medium", CompanionCommand.SizeMedium], ["large", "Large", CompanionCommand.SizeLarge],
+];
+/** Movement is stored as the shell's quiet and roaming switches, so older shells support it too. */
+const movements: readonly (readonly [Movement, string, CompanionCommand[]])[] = [
+  ["still", "Still", [CompanionCommand.QuietOn]],
+  ["subtle", "Subtle", [CompanionCommand.QuietOff, CompanionCommand.RoamingOff]],
+  ["playful", "Playful", [CompanionCommand.QuietOff, CompanionCommand.RoamingOn]],
+];
+const movementHints: Record<Movement, string> = {
+  still: "ORYX holds still. Alerts and the unread badge still appear.",
+  subtle: "Blinks and looks around, but stays in place.",
+  playful: "Also takes a few steps when you are away from Oryx.",
+};
+const movementOf = (preferences: CompanionPreferences): Movement => preferences.quiet ? "still" : preferences.roaming ? "playful" : "subtle";
 
 export function CompanionSettings() {
   const { state, saving, error, command, reload } = useCompanionSettings();
   return <section aria-labelledby="companion-settings-title">
     <h2 id="companion-settings-title" className="appearance-section-title">ORYX Companion</h2>
-    <p className="appearance-description">Operations Watch keeps unread alerts visible while you work. These controls apply to this device.</p>
-    {state.kind === "loading" ? <Skeleton className="h-28 w-full" /> : state.kind === "unavailable" ?
+    <p className="appearance-description">A small ORYX that stays on your desktop and shows your unread alerts. Click it to see them, drag it anywhere, right-click for options. These settings apply to this device.</p>
+    {state.kind === "loading" ? <Skeleton className="h-48 w-full" /> : state.kind === "unavailable" ?
       <p className="text-sm text-muted-foreground">Companion controls are available in an updated Oryx desktop app. Your notification list works here.</p> : state.kind === "error" ?
       <p role="alert" className="text-sm text-destructive">{state.message} <Button variant="link" size="sm" onClick={() => void reload()}>Retry</Button></p> :
-      <div className="divide-y rounded-lg border" aria-busy={saving}>
-        <Preference label="Show companion" description="Keep ORYX above your other windows." pressed={state.preferences.visible} disabled={saving} onClick={() => void command(state.preferences.visible ? CompanionCommand.Hide : CompanionCommand.Show)} />
-        <Preference label="Show alert details" description="Show the alert label, configured priority when provided, and unread count below ORYX." pressed={state.preferences.showIndicators} disabled={saving} onClick={() => void command(state.preferences.showIndicators ? CompanionCommand.IndicatorsOff : CompanionCommand.IndicatorsOn)} />
-        <Preference label="Quiet movement" description="Keep the character still. System notifications and unread alerts continue." pressed={state.preferences.quiet} disabled={saving} onClick={() => void command(state.preferences.quiet ? CompanionCommand.QuietOff : CompanionCommand.QuietOn)} />
-        <Preference label="Limited roaming" description="Small steps inside the companion’s own space when you are away from Oryx." pressed={state.preferences.roaming} disabled={saving} onClick={() => void command(state.preferences.roaming ? CompanionCommand.RoamingOff : CompanionCommand.RoamingOn)} />
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3"><p className="text-sm text-muted-foreground">Move ORYX back to the bottom-right of your main display.</p><Button variant="outline" size="sm" disabled={saving || !state.preferences.visible} onClick={() => void command(CompanionCommand.ResetPosition)}>Reset position</Button></div>
-        <CompanionTestNotification />
-      </div>}
+      <Preferences preferences={state.preferences} saving={saving} command={command} />}
     {error ? <p role="alert" className="mt-2 text-sm text-destructive">{error}</p> : null}
-    <p className="mt-3 text-xs text-muted-foreground">Drag ORYX to reposition it. Right-click for quick controls. Closing Oryx to the tray keeps alerts running; use Quit Oryx to exit.</p>
+    <p className="mt-3 text-xs text-muted-foreground">Closing Oryx to the tray keeps alerts running; use Quit Oryx to exit.</p>
   </section>;
 }
-function Preference({ label, description, pressed, disabled, onClick }: { label: string; description: string; pressed: boolean; disabled: boolean; onClick: () => void }) {
-  return <div className="flex items-center justify-between gap-4 p-3"><div className="min-w-0"><p className="text-sm font-medium">{label}</p><p className="mt-1 text-xs text-muted-foreground">{description}</p></div><Button size="sm" variant={pressed ? "secondary" : "outline"} aria-label={label} aria-pressed={pressed} disabled={disabled} onClick={onClick}>{pressed ? "On" : "Off"}</Button></div>;
+
+function Preferences({ preferences, saving, command }: { preferences: CompanionPreferences; saving: boolean; command: (...actions: CompanionCommand[]) => Promise<void> }) {
+  const movement = movementOf(preferences);
+  const off = !preferences.visible;
+  return <>
+    <div className="appearance-card" aria-busy={saving}>
+      <SettingRow label="Show ORYX on the desktop" hint="Keeps ORYX above your other windows.">
+        <Switch aria-label="Show ORYX on the desktop" checked={preferences.visible} disabled={saving} onCheckedChange={(on) => void command(on ? CompanionCommand.Show : CompanionCommand.Hide)} />
+      </SettingRow>
+      {preferences.size ? <SettingRow label="Size">
+        <Choices label="Size" disabled={saving || off} value={preferences.size} options={sizes.map(([value, text, action]) => ({ value, text, pick: () => void command(action) }))} />
+      </SettingRow> : null}
+      <SettingRow label="Movement" hint={movementHints[movement]}>
+        <Choices label="Movement" disabled={saving || off} value={movement} options={movements.map(([value, text, actions]) => ({ value, text, pick: () => void command(...actions) }))} />
+      </SettingRow>
+      <SettingRow label="New alert cards" hint="Show a short card beside ORYX when an alert arrives.">
+        <Switch aria-label="New alert cards" checked={preferences.showIndicators} disabled={saving || off} onCheckedChange={(on) => void command(on ? CompanionCommand.IndicatorsOn : CompanionCommand.IndicatorsOff)} />
+      </SettingRow>
+      <SettingRow label="Position" hint="Move ORYX back to the bottom-right of your main display.">
+        <Button variant="outline" size="sm" disabled={saving || off} onClick={() => void command(CompanionCommand.ResetPosition)}>Reset position</Button>
+      </SettingRow>
+    </div>
+    <div className="appearance-card"><CompanionTestNotification /></div>
+  </>;
+}
+
+function Choices<T extends string>({ label, value, options, disabled }: { label: string; value: T; disabled: boolean; options: { value: T; text: string; pick: () => void }[] }) {
+  return <div className="mode-options" role="group" aria-label={label}>
+    {options.map((option) => <Button key={option.value} size="sm" variant={value === option.value ? "secondary" : "ghost"} aria-pressed={value === option.value} disabled={disabled} onClick={() => { if (value !== option.value) option.pick(); }}>{option.text}</Button>)}
+  </div>;
 }

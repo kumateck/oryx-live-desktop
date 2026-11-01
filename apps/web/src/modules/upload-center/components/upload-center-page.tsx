@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { hrApi } from "@/shared/api/generated/hr";
@@ -7,7 +7,7 @@ import { useCurrentUser } from "@/shared/auth/session-provider";
 import { useAccess } from "@/shared/auth/use-access";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
-import type { SelectLoader, SelectOption } from "@/shared/forms/form-wizard-types";
+import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { SettingsHeader } from "@/modules/settings-support/ui";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,26 +15,12 @@ import { uploadApi } from "../api/upload-api";
 import { attendance, materialStock, productStock, shiftSchedule, toSmallestUnits } from "../lib/sheets";
 import { uploadPermissions } from "../lib/upload-center";
 import { saveUrl } from "../lib/workbook";
+import { useDepartments } from "../hooks/use-departments";
+import { StockMigrationTab } from "./stock-migration-tab";
 import { UploadSheet } from "./upload-sheet";
 
 const audit = { module: "Settings", subModule: "Configurations" } as const;
-const Production = 0;
 const divisions = [{ value: "0", label: "Beta-lactam" }, { value: "1", label: "Non-beta-lactam" }] as const;
-
-/** Production departments to choose from; someone in a department may upload only for their own. */
-function useDepartments() {
-  const user = useCurrentUser();
-  const own = user?.departmentId ? { value: user.departmentId, label: user.department ?? "Your department" } : null;
-  const [load] = identityApi.useLazyGetApiV1DepartmentQuery();
-  const loadOptions = useMemo<SelectLoader>(() => async (search, page, signal) => {
-    const request = load({ ...audit, type: Production, searchQuery: search, page, pageSize: 20 });
-    signal.addEventListener("abort", () => request.abort(), { once: true });
-    const result = await request.unwrap();
-    const current = result.pageIndex ?? page;
-    return { options: (result.data ?? []).flatMap((item) => item.id ? [{ value: item.id, label: item.name ?? "Department" }] : []), hasNext: current < (result.pageCount ?? current), hasPrevious: current > 1 };
-  }, [load]);
-  return { own, loadOptions };
-}
 
 function Choice({ label, children }: { label: string; children: React.ReactNode }) { return <div className="space-y-1 text-sm"><span>{label}</span>{children}</div>; }
 function Fixed({ value }: { value: string }) { return <p className="rounded-md border bg-muted/40 px-3 py-2 text-sm">{value}</p>; }
@@ -106,6 +92,7 @@ function ScheduleTab() {
 
 const tabs = [
   { id: "material", label: "Material stock", require: uploadPermissions.material, Panel: MaterialTab },
+  { id: "migration", label: "Stock migration", require: uploadPermissions.material, Panel: StockMigrationTab },
   { id: "product", label: "Product stock", require: uploadPermissions.product, Panel: ProductTab },
   { id: "attendance", label: "Attendance", require: uploadPermissions.attendance, Panel: AttendanceTab },
   { id: "schedule", label: "Shift schedule", require: uploadPermissions.schedule, Panel: ScheduleTab },

@@ -13,4 +13,5 @@ export const requisitionApi = warehouseApi.enhanceEndpoints({
       { type: "Requisition", id: arg.domainEntitiesRequisitionsRequestCreateSourceRequisitionRequest.requisitionId ?? "" }]); },
   },
 });
+export const { useGetApiV1RequisitionIssueByIssueIdQuery } = warehouseApi;
 export const { useGetApiV1RequisitionQuery, useGetApiV1RequisitionByRequisitionIdQuery, usePostApiV1RequisitionMutation, usePostApiV1RequisitionSourceMutation } = requisitionApi;

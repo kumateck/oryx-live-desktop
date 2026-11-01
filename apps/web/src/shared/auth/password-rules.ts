@@ -11,6 +11,14 @@ export const newPasswordRule = z.string().min(8, "Use at least 8 characters")
   .refine((value) => /[A-Z]/.test(value), "Include a capital letter")
   .refine((value) => /[^A-Za-z0-9]/.test(value), "Include a symbol, such as ! or #");
 
+/** The same rules as `newPasswordRule`, one per line, for a live checklist beside a password field. */
+export const passwordRuleHints: readonly { readonly label: string; readonly met: (value: string) => boolean }[] = [
+  { label: "At least 8 characters", met: (value) => value.length >= 8 },
+  { label: "A digit (0-9)", met: (value) => /\d/.test(value) },
+  { label: "A capital letter (A-Z)", met: (value) => /[A-Z]/.test(value) },
+  { label: "A symbol, such as ! or #", met: (value) => /[^A-Za-z0-9]/.test(value) },
+];
+
 const passwordResponseSchema = z.object({ success: z.boolean(), errors: z.array(z.string()).nullish() });
 /** The server answers 200 even when it refuses a password; only `success: true` means it changed. */
 export function passwordFailure(result: DomainEntitiesAuthPasswordChangeResponse | undefined): string | null {

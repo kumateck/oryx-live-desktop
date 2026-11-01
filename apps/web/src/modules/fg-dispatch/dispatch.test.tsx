@@ -29,9 +29,12 @@ it("orders the steps to the customer, groups a packing list and prices lines at 
   const agreement = (id: string, price: number, from: string, to: string | null, symbol = "GHS") => ({ id, productId: "p1", productPackingId: "k1", agreedPrice: price, currency: { id: symbol, name: symbol, symbol }, effectiveFrom: from, effectiveTo: to });
   const agreements = [agreement("old", 2, "2026-01-01T00:00:00Z", "2026-06-30T23:59:59Z"), agreement("new", 3, "2026-07-01T00:00:00Z", null, "USD")];
   expect([agreementFor(agreements, "p1", "k1", "2026-03-01T00:00:00Z")?.id, agreementFor(agreements, "p1", "k1", "2026-09-01T00:00:00Z")?.id, agreementFor(agreements, "p1", "k9", "2026-09-01T00:00:00Z")]).toEqual(["old", "new", null]);
-  const line = (key: string, productId: string, quantity: number, listPrice: number | null) => ({ key, productId, productName: key, genericName: null, code: null, packingId: "k1", quantity, listPrice });
-  const priced = priceLines([line("a", "p1", 10, 9), line("b", "p2", 5, 4)], agreements, "2026-09-01T00:00:00Z", "GHS");
+  const line = (key: string, productId: string, quantity: number, listPrice: number | null, listCurrencyId: string | null = "ghs") => ({ key, productId, productName: key, genericName: null, code: null, packingId: "k1", quantity, listPrice, listCurrencyId });
+  const priced = priceLines([line("a", "p1", 10, 9), line("b", "p2", 5, 4)], agreements, "2026-09-01T00:00:00Z", new Map([["ghs", "GHS"]]));
   expect(priced.map((item) => [item.unitPrice, item.currency, item.source])).toEqual([[3, "USD", "agreement"], [4, "GHS", "default"]]);
+  // A list price is shown in the currency it was set in, never the customer's; one without a currency says so rather than borrowing one.
+  expect(priceLines([line("c", "p2", 1, 4, "usd")], [], null, new Map([["usd", "$"]]))[0]?.currency).toBe("$");
+  expect(priceLines([line("d", "p2", 1, 4, null)], [], null, new Map())[0]).toMatchObject({ currency: null, currencyKey: "" });
   // One total per currency, never added together.
   expect(totalsByCurrency(priced)).toEqual([{ currency: "USD", amount: 30 }, { currency: "GHS", amount: 20 }]);
   expect(proformaNumber(7, 2026)).toBe("PFIN/FGP/26/008");
@@ -41,6 +44,14 @@ const allocation = (extra: object = {}) => ({ id: "a-1", approved: true, loadedA
   productionOrder: { id: "o-1", code: "PO-9", customer: { id: "c-1", name: "Acme Pharmacy", email: "buy@acme.test", address: "Accra", currency: { symbol: "GHS" } } },
   products: [{ product: { id: "p1", name: "Dicnac 100", code: "FP-1", price: 9 }, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 },
     fulfilledQuantities: [{ quantity: 250, batchPackagingRecord: { batchNumber: "B-10", expiryDate: "2028-01-31T00:00:00Z" } }, { quantity: 120, batchPackagingRecord: { batchNumber: "B-2" } }] }], ...extra });
+// The order this packing list fills: 400 packs ordered, the 370 on the list already counted as packed.
+const productionOrder = { id: "o-1", code: "PO-9", status: 1, approved: true, customer: { id: "c-1", name: "Acme Pharmacy" },
+  products: [{ product: { id: "p1", code: "FP-1", name: "Dicnac 100" }, totalOrderQuantity: 400, fulfilledQuantities: [{ quantity: 370 }], fulfilled: false, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 } }] };
+// Stock after this list took its packs: B-10 has none left, B-2 has 30 more.
+const batch = (id: string, number: string, remaining: number) => ({ id, isApproved: true, totalQuantity: 1000, remainingQuantity: remaining, quantityPerPack: 1, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 }, batchManufacturingRecord: { batchNumber: number } });
+const batches = { finishedGoodsTransferNotes: [batch("n1", "B-10", 0), batch("n2", "B-2", 30)] };
+const awaitingApproval = () => allocation({ approved: false, status: 0, products: [{ product: { id: "p1", name: "Dicnac 100", code: "FP-1", price: 9 }, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 },
+  fulfilledQuantities: [{ quantity: 250, finishedGoodsTransferNote: { id: "n1" }, batchPackagingRecord: { batchNumber: "B-10" } }, { quantity: 120, finishedGoodsTransferNote: { id: "n2" }, batchPackagingRecord: { batchNumber: "B-2" } }] }] });
 interface Call { method: string; path: string; search: string; body?: unknown }
 function open(address: string, permissions: string[], record: object = allocation()) {
   const backend = stubBackend({ permissions });
@@ -52,9 +63,13 @@ function open(address: string, permissions: string[], record: object = allocatio
     const url = new URL(input.url);
     calls.push({ method: input.method, path: url.pathname, search: url.search, ...(input.method !== "GET" ? { body: await input.clone().json().catch(() => null) } : {}) });
     if (url.pathname === "/api/v1/production-orders/allocate" && input.method === "GET") return Response.json({ data: [record], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
-    if (url.pathname === "/api/v1/production-orders/allocate/a-1") return Response.json(record);
+    if (url.pathname === "/api/v1/production-orders/allocate/a-1" && input.method === "GET") return Response.json(record);
     if (url.pathname === "/api/v1/production-orders/load/a-1") return new Response(null, { status: 204 });
+    if (url.pathname === "/api/v1/production-orders/allocate/a-1" && input.method === "PUT") return new Response(null, { status: 204 });
+    if (url.pathname === "/api/v1/production-orders/o-1") return Response.json(productionOrder);
+    if (url.pathname === "/api/v1/production-schedule/approved-products/product/p1") return Response.json(batches);
     if (url.pathname === "/api/v1/customers/c-1/pricing-agreements") return Response.json([{ id: "ag", productId: "p1", productName: "Dicnac 100", productPackingId: "k1", productPackingName: "10 x 10", agreedPrice: 3, currency: { id: "cur", name: "Ghana cedi", symbol: "GHS" }, effectiveFrom: "2026-01-01T00:00:00Z" }]);
+    if (url.pathname === "/api/v1/collection") return Response.json({ Currency: [{ id: "cur", name: "Ghana cedi", symbol: "GHS" }] });
     if (url.pathname === "/api/v1/configuration/ProformaInvoice/count") return Response.json(7);
     if (url.pathname === "/api/v1/production-orders/proforma-invoice" && input.method === "POST") return Response.json("pi-1");
     if (url.pathname === "/api/v1/production-orders/proforma-invoice/pi-1") return Response.json({ id: "pi-1", code: "PFIN/FGP/26/008", status: 0, createdAt: "2026-10-01T10:00:00Z", allocateProductionOrder: record, products: [{ id: "l1", product: { id: "p1", name: "Dicnac 100", code: "FP-1", price: 9 }, quantity: 370 }] });
@@ -64,7 +79,8 @@ function open(address: string, permissions: string[], record: object = allocatio
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   return { calls, router };
 }
-const writes = (calls: readonly Call[]) => calls.filter((call) => call.method !== "GET").map((call) => `${call.method} ${call.path}`);
+// The currency lookup is a read the server takes as a POST; it changes nothing.
+const writes = (calls: readonly Call[]) => calls.filter((call) => call.method !== "GET" && call.path !== "/api/v1/collection").map((call) => `${call.method} ${call.path}`);
 
 it("lists packing lists and allocations behind their own permissions and loads an allocation only after confirming", async () => {
   const user = userEvent.setup();
@@ -95,7 +111,7 @@ it("raises a proforma invoice only when Generate is pressed, at the customer's a
   expect(writes(calls)).toEqual([]);
   await user.click(within(dialog).getByRole("button", { name: "Generate proforma invoice" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/crm/proforma-invoice/pi-1"));
-  expect(calls.find((call) => call.method === "POST")?.body).toMatchObject({ allocateProductionOrderId: "a-1", products: [{ productId: "p1", quantity: 370 }] });
+  expect(calls.find((call) => call.method === "POST" && call.path === "/api/v1/production-orders/proforma-invoice")?.body).toMatchObject({ allocateProductionOrderId: "a-1", products: [{ productId: "p1", quantity: 370 }] });
   expect(await screen.findByRole("button", { name: "Send to customer" }).catch(() => null)).toBeNull();
 }, 20_000);
 
@@ -108,3 +124,38 @@ it("will not invoice an allocation that is still waiting for approval", async ()
   expect(await within(dialog).findByText(/waiting for its own approval/)).toBeTruthy();
   expect((within(dialog).getByRole("button", { name: "Generate proforma invoice" }) as HTMLButtonElement).disabled).toBe(true);
 });
+
+it("edits a packing list waiting for approval, counting its own packs as free again", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/crm/allocations/a-1", ["CanViewPackingList", "CanGeneratePackingList"], awaitingApproval());
+  await user.click(await screen.findByRole("button", { name: "Edit packing list" }));
+  // B-10 opens at 2 shippers and 50 loose; its 250 packs count as free in the batch again.
+  const loose = await screen.findByRole("spinbutton", { name: "Loose packs from batch B-10 for Dicnac 100" }, { timeout: 5_000 });
+  const dialog = screen.getByRole("dialog", { name: /Edit packing list/ });
+  expect((loose as HTMLInputElement).value).toBe("50");
+  // Ordered 400; with this list's 370 given back, nothing is packed and all 400 are still to pack.
+  expect(within(dialog).getAllByText("4 shippers · 0 loose")).toHaveLength(2);
+  expect(within(dialog).getByText("0 shippers · 0 loose")).toBeTruthy();
+  await user.clear(loose);
+  await user.type(loose, "0");
+  expect(writes(calls)).toEqual([]);
+  await user.click(within(dialog).getByRole("button", { name: "Save changes" }));
+  await waitFor(() => expect(writes(calls)).toEqual(["PUT /api/v1/production-orders/allocate/a-1"]));
+  expect(calls.find((call) => call.method === "PUT")?.body).toMatchObject({ productionOrderId: "o-1",
+    products: [{ productId: "p1", productPackingId: "k1", fulfilledQuantities: [{ finishedGoodsTransferNoteId: "n1", quantity: 200 }, { finishedGoodsTransferNoteId: "n2", quantity: 120 }] }] });
+}, 20_000);
+
+it("does not offer editing once a packing list is approved", async () => {
+  open("/crm/allocations/a-1", ["CanViewInvoice", "CanGeneratePackingList"]);
+  expect(await screen.findByText("Subtotal · Dicnac 100")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Edit packing list" })).toBeNull();
+});
+
+it("marks the goods as loaded from the proforma invoice, before the purchase order is attached", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/crm/proforma-invoice/pi-1", ["CanViewProformaInvoice", "CanViewInvoice"]);
+  await user.click(await screen.findByRole("button", { name: "Mark as loaded" }));
+  expect(writes(calls)).toEqual([]);
+  await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Mark as loaded" }));
+  await waitFor(() => expect(writes(calls)).toEqual(["PUT /api/v1/production-orders/load/a-1"]));
+}, 20_000);

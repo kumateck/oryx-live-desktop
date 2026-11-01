@@ -119,14 +119,6 @@ export function ProductFormFields({
   const specifications = useMemo<Fields>(
     () => [
       {
-        type: InputTypes.NUMBER,
-        name: "price",
-        label: "Price",
-        required: true,
-        min: 0,
-        placeholder: "Enter price",
-      },
-      {
         type: InputTypes.TEXT,
         name: "filledWeight",
         label: "Filled volume or weight",

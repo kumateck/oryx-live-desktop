@@ -19,9 +19,10 @@ interface UsersTableProps {
   error: string | null;
   onRetry: () => void;
   inactive: boolean;
+  filtered?: boolean;
 }
 
-export function UsersTable({ rows, access, onAction, search, paging, loading, refreshing, error, onRetry, inactive }: UsersTableProps) {
+export function UsersTable({ rows, access, onAction, search, paging, loading, refreshing, error, onRetry, inactive, filtered = false }: UsersTableProps) {
   const columns = useMemo(() => column.columns([
     column.accessor("name", { header: "Name", cell: ({ row }) => <span className="flex min-w-0 items-center gap-2">
       <UserAvatar user={row.original} size="sm" /><span className="min-w-0 break-words">{row.original.name}</span></span> }),
@@ -34,6 +35,6 @@ export function UsersTable({ rows, access, onAction, search, paging, loading, re
 
   return <ServerDataTable label="Users" columns={columns} rows={rows} getRowId={userId} {...paging} loading={loading}
     refreshing={refreshing} error={error} onRetry={onRetry} onRowOpen={(user) => onAction("details", user)}
-    emptyTitle={search.trim() ? "No users match this search" : inactive ? "No blocked users" : "No users yet"}
-    emptyDescription={search.trim() ? "Check the spelling or search by email." : undefined} />;
+    emptyTitle={search.trim() || filtered ? "No users match these filters" : inactive ? "No blocked users" : "No users yet"}
+    emptyDescription={search.trim() ? "Check the spelling or search by email." : filtered ? "Try another role or department, or clear the filters." : undefined} />;
 }

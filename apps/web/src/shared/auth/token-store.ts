@@ -1,4 +1,5 @@
 import { SessionRequestError } from "./session-errors";
+import { randomId } from "@/shared/ids/random-id";
 // Bearer access stays in memory. Reloads use sessionStorage; desktop restarts use the OS encrypted vault.
 const refreshKey = "oryx-session-refresh";
 interface SessionBridge {
@@ -50,10 +51,10 @@ function peerChannel(): BroadcastChannel | null {
   });
   return peers;
 }
-function askPeers(): Promise<string | null> {
+async function askPeers(): Promise<string | null> {
   const channel = peerChannel();
   if (!channel) return Promise.resolve(null);
-  const id = crypto.randomUUID();
+  const id = randomId();
   return new Promise((resolve) => {
     const finish = (token: string | null) => { clearTimeout(timer); channel.removeEventListener("message", listen); resolve(token); };
     const listen = (event: MessageEvent) => {
@@ -114,7 +115,8 @@ export const tokenStore = {
     const own = refreshToken ?? stored();
     if (own) return own;
     const version = revision;
-    const token = await askPeers();
+    // Asking other tabs only saves a sign-in; if it fails, the user simply signs in again.
+    const token = await askPeers().catch(() => null);
     if (!token || version !== revision) return refreshToken ?? stored();
     refreshToken = token;
     restored = true;

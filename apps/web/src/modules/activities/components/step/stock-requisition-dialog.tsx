@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   useGetApiV1ProductionScheduleMaterialStockByProductionScheduleProductIdQuery, useGetApiV1ProductionSchedulePackageMaterialStockByProductionScheduleProductIdQuery,
 } from "@/modules/schedules/api/schedule-api";
-import { freeStock, materialCovered } from "@/modules/schedules/lib/batch-materials";
+import { freeStock, materialCovered, materialShortfall } from "@/modules/schedules/lib/batch-materials";
 import { batchMaterialsSchema, type BatchMaterial } from "@/modules/schedules/schemas/batch-schema";
 import { useGeneratedCode } from "@/shared/codes/use-generated-code";
 import { ListDataTable, dataTableColumns } from "@/shared/datatable";
@@ -17,7 +17,7 @@ import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
 import { toLargestUnit } from "@/shared/units/quantity";
 import { usePostApiV1RequisitionMutation } from "../../api/activity-api";
-import { requisitionProblem, stockRequisitionRequest } from "../../lib/stock-requisition";
+import { requisitionProblem, shortMaterials, stockRequisitionRequest } from "../../lib/stock-requisition";
 import { stockRequisitionFormSchema, type StockRequisitionFormValues } from "../../schemas/stock-requisition-schema";
 
 const column = dataTableColumns<BatchMaterial>();
@@ -64,6 +64,10 @@ export function StockRequisitionDialog({ kind, batchId, stepId, batchLabel, onCl
       : { title: "Request stock", description: "One voucher asks the warehouse for every material the batch needs.", sent: "Stock requisition sent to the warehouse" };
   const problems = useMemo(() => materials.flatMap((material) => { const problem = requisitionProblem(material); return problem ? [`${material.name}: ${problem}`] : []; }), [materials]);
 
+  // Packaging goes on one voucher, so it is only sent when the warehouse can issue all of it.
+  const short = useMemo(() => kind === "packaging" ? shortMaterials(materials) : [], [kind, materials]);
+  const shortIds = useMemo(() => new Set(short.map((material) => material.id)), [short]);
+
   const fields = useMemo(() => [
     { type: InputTypes.TEXT, name: "code", label: "Requisition code", required: true },
     { type: InputTypes.DATE, name: "expectedDelivery", label: "Needed by", required: true, minDate: today },
@@ -73,8 +77,11 @@ export function StockRequisitionDialog({ kind, batchId, stepId, batchLabel, onCl
     column.accessor("name", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.name}</div>
       <div className="text-xs text-muted-foreground">{row.original.code || "No code"}</div></div> }),
     column.accessor((item) => quantity(item.needed, item.unit), { id: "needed", header: "To request", size: 140 }),
-    column.accessor((item) => quantity(freeStock(item) + item.reserved, item.unit), { id: "stock", header: "Available to issue", size: 170 }),
-  ]), []);
+    column.accessor((item) => quantity(freeStock(item) + item.reserved, item.unit), { id: "stock", header: "Available to issue", size: 170,
+      cell: ({ row, getValue }) => shortIds.has(row.original.id)
+        ? <div className="text-destructive"><div>{getValue()}</div><div className="text-xs">Short by {quantity(materialShortfall(row.original), row.original.unit)}</div></div>
+        : getValue() }),
+  ]), [shortIds]);
 
   const submit = form.handleSubmit(async (values) => {
     setMessage("");
@@ -83,7 +90,7 @@ export function StockRequisitionDialog({ kind, batchId, stepId, batchLabel, onCl
     toast.success(wording.sent);
     onClose();
   });
-  const blocked = loading || Boolean(failure) || materials.length === 0 || problems.length > 0;
+  const blocked = loading || Boolean(failure) || materials.length === 0 || problems.length > 0 || short.length > 0;
 
   return <Dialog open onOpenChange={(open) => { if (!open && !mutation.isLoading) onClose(); }}>
     <DialogContent className="sm:max-w-3xl">
@@ -97,11 +104,15 @@ export function StockRequisitionDialog({ kind, batchId, stepId, batchLabel, onCl
           {problems.length ? <div role="alert" className="space-y-1 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
             <p className="font-medium text-destructive">The voucher cannot be sent until these are fixed:</p>
             <ul className="space-y-0.5">{problems.map((problem) => <li key={problem} className="break-words">{problem}</li>)}</ul></div> : null}
+          {short.length ? <div role="alert" className="space-y-1 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+            <p className="font-medium text-destructive">Not enough stock to send this requisition</p>
+            <p>The warehouse cannot issue {short.length === 1 ? "1 packaging material" : `${short.length} packaging materials`} in full: {short.map((material) => material.name).join(", ")}.
+              Packaging is requested on one voucher, so it can be sent once all of it is in stock.</p></div> : null}
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" disabled={mutation.isLoading} onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={blocked || mutation.isLoading}>{mutation.isLoading ? <><Spinner />Sending…</> : "Send requisition"}</Button>
+          <Button type="submit" disabled={blocked || mutation.isLoading}>{mutation.isLoading ? <><Spinner />Sending…</> : short.length ? "Waiting for stock" : "Send requisition"}</Button>
         </DialogFooter>
       </form>
     </DialogContent>

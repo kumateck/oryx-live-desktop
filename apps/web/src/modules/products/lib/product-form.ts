@@ -34,7 +34,7 @@ export function toProductRequest(values: ProductFormValues): DomainEntitiesProdu
     division: values.division.value === "0" ? 0 : 1,
     baseQuantity: values.baseQuantity,
     fullBatchSize: values.fullBatchSize,
-    price: values.price,
+    // No price: list prices are set in Finance → Costing, and the server keeps the current one.
   };
 }
 
@@ -51,10 +51,8 @@ export function toFormValues(product: ProductFormSource): Partial<ProductFormVal
   };
   const baseQuantity = positive(product.baseQuantity);
   const fullBatchSize = positive(product.fullBatchSize);
-  const price = positive(product.price);
   if (baseQuantity !== undefined) values.baseQuantity = baseQuantity;
   if (fullBatchSize !== undefined) values.fullBatchSize = fullBatchSize;
-  if (price !== undefined) values.price = price;
   if (product.category) values.category = product.category;
   if (product.department) values.department = product.department;
   if (division) values.division = { ...division };

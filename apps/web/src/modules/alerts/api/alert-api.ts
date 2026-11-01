@@ -7,6 +7,7 @@ export const alertApi = settingsApi.enhanceEndpoints({ addTagTypes: ["SettingsAl
   getApiV1AlertByAlertId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_data, _error, arg) => [{ type: "SettingsAlert", id: arg.alertId }]); },
   postApiV1Alert: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_data, error) => error ? [] : [list]); },
   putApiV1AlertByAlertId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_data, error, arg) => error ? [] : [list, { type: "SettingsAlert", id: arg.alertId }]); },
+  putApiV1AlertByAlertIdRecipients: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_data, error, arg) => error ? [] : [list, { type: "SettingsAlert", id: arg.alertId }]); },
   deleteApiV1AlertById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_data, error, arg) => error ? [] : [list, { type: "SettingsAlert", id: arg.id }]); },
   putApiV1AlertByIdToggleDisable: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_data, error, arg) => error ? [] : [list, { type: "SettingsAlert", id: arg.id }]); },
 } });

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatShippers } from "@/shared/packing/packs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, FileText, PackageCheck, Truck } from "lucide-react";
+import { Eye, FileText, PackageCheck, Pencil, Truck } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
@@ -30,6 +30,8 @@ import { allocationKinds, allocationPath, allocationsPath, audit, dispatchPermis
 import { allocationRowsSchema, allocationSchema, waybillSchema, type Allocation, type WaybillValues } from "../schemas/dispatch-schema";
 import { PackingListPrint, PackingListTable } from "./packing-list-view";
 import { ProformaDialog } from "./proforma-dialog";
+import { EditPackingListDialog } from "@/modules/production-orders/components/edit-packing-list";
+import { orderPermissions } from "@/modules/production-orders/lib/orders";
 
 const waybillFields: WizardField<WaybillValues>[] = [
   { type: InputTypes.TEXT, name: "code", label: "Waybill number", required: true },
@@ -63,7 +65,7 @@ function WaybillDialog({ allocation, onClose }: { allocation: Allocation; onClos
 }
 
 /** One step of getting an allocation to the customer: loading and delivery are confirmed, a waybill is filled in. */
-function StepDialog({ step, allocation, onClose }: { step: DispatchStep; allocation: Allocation; onClose: () => void }) {
+export function StepDialog({ step, allocation, onClose }: { step: DispatchStep; allocation: Allocation; onClose: () => void }) {
   const [load] = usePutApiV1ProductionOrdersLoadByAllocateProductionOrderIdMutation();
   const [deliver] = usePutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdMutation();
   if (step === "waybill") return <WaybillDialog allocation={allocation} onClose={onClose} />;
@@ -120,17 +122,30 @@ export function AllocationListPage() {
   </section>;
 }
 
+/**
+ * A packing list can be changed only while it waits for approval: not loaded, no proforma invoice, no waybill.
+ * The server enforces the same rule. Returns what the edit dialog needs, or null.
+ */
+function editablePackingList(allocation: Allocation) {
+  if (allocation.approved || allocation.status !== 0 || allocation.hasInvoice || allocation.hasWaybill || !allocation.orderId) return null;
+  const lines = allocation.products.flatMap((product) => product.sources.flatMap((source) => product.productId && source.noteId ? [{ productId: product.productId, packingId: product.packingId, noteId: source.noteId, packs: source.quantity }] : []));
+  return lines.length > 0 ? { orderId: allocation.orderId, list: { id: allocation.id, lines } } : null;
+}
+
 function Detail({ allocation }: { allocation: Allocation }) {
   const { has } = useAccess();
   const [invoicing, setInvoicing] = useState(false);
   const [acting, setActing] = useState<DispatchStep | null>(null);
+  const [editing, setEditing] = useState(false);
   const kind: AllocationKind = allocation.approved ? 1 : 0;
+  const editable = useMemo(() => editablePackingList(allocation), [allocation]);
   const step = nextStep(allocation);
   const totals = packingTotals(packingRows(allocation.products.map((product) => ({ name: product.name, sources: product.sources }))));
   const back = `${allocationsPath}?type=${kind}`;
   return <article className="min-w-0 space-y-4">
     <PageHeader title={`Packing list · ${allocation.orderCode ?? "order"}`} crumbs={[{ label: allocationKinds[kind].title, to: back }, { label: allocation.orderCode ?? "Packing list" }]} actions={<>
       <PrintButton preview={(close) => <PackingListPrint allocation={allocation} onClose={close} />} />
+      {editable && has(orderPermissions.generatePackingList) ? <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil />Edit packing list</Button> : null}
       {!allocation.hasInvoice && has(dispatchPermissions.generateProforma) ? <Button type="button" size="sm" variant="outline" onClick={() => setInvoicing(true)}><FileText />Generate proforma invoice</Button> : null}
       {step && has(stepPermission(step, kind)) ? <Button type="button" size="sm" onClick={() => setActing(step)}>{stepLabels[step]}</Button> : null}
     </>} />
@@ -148,6 +163,7 @@ function Detail({ allocation }: { allocation: Allocation }) {
     <PackingListTable allocation={allocation} />
     {invoicing ? <ProformaDialog allocation={allocation} onClose={() => setInvoicing(false)} /> : null}
     {acting ? <StepDialog key={acting} step={acting} allocation={allocation} onClose={() => setActing(null)} /> : null}
+    {editing && editable ? <EditPackingListDialog orderId={editable.orderId} list={editable.list} onClose={() => setEditing(false)} /> : null}
   </article>;
 }
 

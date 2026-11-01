@@ -91,6 +91,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1AuthAdminUserPassword: build.mutation<
+      PostApiV1AuthAdminUserPasswordApiResponse,
+      PostApiV1AuthAdminUserPasswordApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "auth/admin", id: "LIST" }, { type: "auth", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/auth/admin/user-password`,
+        method: "POST",
+        body: queryArg.domainEntitiesAuthAdminResetUserPasswordRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     postApiV1Verification: build.mutation<
       PostApiV1VerificationApiResponse,
       PostApiV1VerificationApiArg
@@ -163,6 +178,14 @@ export type PostApiV1AuthUserResetPasswordApiArg = {
   subModule?: string;
   domainEntitiesAuthUserPasswordChangeRequest: DomainEntitiesAuthUserPasswordChangeRequest;
 };
+export type PostApiV1AuthAdminUserPasswordApiResponse = void;
+export type PostApiV1AuthAdminUserPasswordApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesAuthAdminResetUserPasswordRequest: DomainEntitiesAuthAdminResetUserPasswordRequest;
+};
 export type PostApiV1VerificationApiResponse = void;
 export type PostApiV1VerificationApiArg = {
   /** The module this request falls under */
@@ -218,6 +241,10 @@ export type MicrosoftAspNetCoreMvcProblemDetails = {
   instance?: string | null;
   [key: string]: JsonValue | undefined;
 };
+export type DomainEntitiesAuthAdminResetUserPasswordRequest = {
+  userId: string;
+  newPassword: string;
+};
 export type SharedRequestsVerifiableEntity = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type SharedRequestsVerifyRequest = {
   modelType?: SharedRequestsVerifiableEntity;
@@ -230,5 +257,6 @@ export const {
   usePostApiV1AuthChangePasswordMutation,
   usePostApiV1AuthForgotPasswordMutation,
   usePostApiV1AuthUserResetPasswordMutation,
+  usePostApiV1AuthAdminUserPasswordMutation,
   usePostApiV1VerificationMutation,
 } = injectedRtkApi;
