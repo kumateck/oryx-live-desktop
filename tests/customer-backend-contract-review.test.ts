@@ -65,7 +65,9 @@ test("historical reporting adds optional read parameters without changing existi
       const parameters = operation.parameters;
       if (Array.isArray(parameters)) operation.parameters = parameters.filter((entry) => {
         const parameter = object(entry);
-        return !(parameter.in === "query" && (parameter.name === "asOfDate" || (path === "/api/v1/attendance-records/general-summary" && parameter.name === "departmentId") || (path === "/api/v1/report/warehouse/materials-stock-batch-detail" && parameter.name === "materialId")));
+        return !(parameter.in === "query" && (parameter.name === "asOfDate" || (path === "/api/v1/attendance-records/general-summary" && parameter.name === "departmentId") || (path === "/api/v1/report/warehouse/materials-stock-batch-detail" && parameter.name === "materialId")
+          // User directory filters (2026-11-01): optional role and department filters on the user list; additive only.
+          || (path === "/api/v1/user" && (parameter.name === "roleId" || parameter.name === "departmentId"))));
       });
       const responses = object(operation.responses ?? null);
       if (!("409" in object(original.responses ?? null))) delete responses["409"];
@@ -92,7 +94,11 @@ test("historical reporting adds optional read parameters without changing existi
     // Finance costing (2026-10-31): list prices with their currency and agreements across customers; additive only.
     "/api/v1/costing/list-prices", "/api/v1/costing/list-prices/{productId}/history", "/api/v1/costing/list-prices/{productId}", "/api/v1/costing/pricing-agreements", "/api/v1/costing/pricing-agreements/{id}",
     // An explicit nullable assignment supplements the unchanged legacy URL.
-    "/api/v1/user/switch-department"]);
+    "/api/v1/user/switch-department",
+    // Procedure repair (2026-11-01): re-applies a product's current procedure to one running batch's upcoming steps; additive only.
+    "/api/v1/production-schedule/activity/{productionActivityId}/repair-procedure",
+    // Stock requisition voucher (2026-11-01): reads the requisition of an issue for its warehouse check; additive only.
+    "/api/v1/requisition/issue/{issueId}"]);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   delete schemas["DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"];
   for (const name of ["ProductionStepAnalysisDto", "ProductionStepExtraMaterialDto", "ProductionStepRecordsDto"])
@@ -104,11 +110,17 @@ test("historical reporting adds optional read parameters without changing existi
   delete schemas["DOMAIN.Entities.Auth.AdminResetUserPasswordRequest"];
   delete schemas["DOMAIN.Entities.Users.Request.SwitchDepartmentRequest"];
   delete schemas["DOMAIN.Entities.Alerts.UpdateAlertRecipientsRequest"];
+  // Procedure repair and voucher signatures (2026-11-01): new response schemas; the requisition gains one optional property below.
+  delete schemas["DOMAIN.Entities.Products.Production.ProductionProcedureRepairResult"];
+  delete schemas["DOMAIN.Entities.Requisitions.VoucherSignatoryDto"];
+  delete schemas["DOMAIN.Entities.Requisitions.StockIssueSignatoriesDto"];
   // Finance costing (2026-10-31): new costing schemas, and one optional currency property on each list-price and report schema.
   for (const name of Object.keys(schemas)) if (name.includes("DOMAIN.Entities.Costing.") || name.includes("DOMAIN.Entities.Customers.CustomerPricingAgreementDto")) delete schemas[name];
   const added: Readonly<Record<string, string>> = { "Products.CreateProductRequest": "priceCurrencyId", "Products.UpdateProductRequest": "priceCurrencyId", "Products.Product": "priceCurrencyId",
     "Products.ProductDto": "priceCurrencyId", "Products.ProductListDto": "priceCurrencyId", "Products.ProductPrices": "currencyId", "ProductionSchedules.ProductionScheduleReportDto": "currency",
-    "ProductionSchedules.ProductionScheduleDetailedReportDto": "currency", "Reports.FinishedGoodsTransferNotes.InvoicedProductsSummaryReportDto": "currency", "Reports.FinishedGoodsTransferNotes.InvoicedProductsDetailedReportDto": "currency" };
+    "ProductionSchedules.ProductionScheduleDetailedReportDto": "currency", "Reports.FinishedGoodsTransferNotes.InvoicedProductsSummaryReportDto": "currency", "Reports.FinishedGoodsTransferNotes.InvoicedProductsDetailedReportDto": "currency",
+    // Stock requisition voucher (2026-11-01): who signs the voucher, optional on the requisition.
+    "Requisitions.RequisitionDto": "signatories" };
   for (const [name, property] of Object.entries(added)) delete object(object(schemas[`DOMAIN.Entities.${name}`] ?? null).properties ?? null)[property];
   // Costing (2026-10-31): a product's price became optional on create and update (list prices are set in Costing), so its minimum is now 0.
   for (const name of ["CreateProductRequest", "UpdateProductRequest"]) {
