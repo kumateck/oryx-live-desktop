@@ -28,6 +28,7 @@ function openUsers(permissions: string[], address = "/access-management/users") 
     calls.push({ method: input.method, path: url.pathname, search: url.search, body: input.method === "GET" ? null : await input.clone().text() });
     if (url.pathname === "/api/v1/user") return Response.json({ data: [ada], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
     if (url.pathname === "/api/v1/role") return Response.json(roles);
+    if (url.pathname === "/api/v1/department") return Response.json({ data: [{ id: "33333333-3333-4333-8333-333333333333", name: "Quality" }], pageIndex: 1, pageCount: 1 });
     if (input.method === "PUT") return new Response(null, { status: 204 });
     return new Response(null, { status: 404 });
   });
@@ -65,3 +66,19 @@ it("offers every action to a full administrator and blocks a user after confirma
   // The list is reloaded after the change.
   await waitFor(() => expect(calls.filter((call) => call.path === "/api/v1/user").length).toBeGreaterThan(1));
 });
+
+it("filters the directory by role and department on the server", async () => {
+  const calls = openUsers(["CanViewActiveUser"]);
+  const lastList = () => calls.filter((call) => call.path === "/api/v1/user").at(-1)?.search ?? "";
+  expect(await screen.findByText("ada@example.com")).toBeTruthy();
+  fireEvent.click(screen.getByRole("combobox", { name: "Filter by role" }));
+  fireEvent.click(await screen.findByRole("option", { name: "Analyst" }, { timeout: 2000 }));
+  await waitFor(() => expect(lastList()).toContain(`roleId=${roles[1]?.id}`));
+  fireEvent.click(screen.getByRole("combobox", { name: "Filter by department" }));
+  fireEvent.click(await screen.findByRole("option", { name: "Quality" }, { timeout: 2000 }));
+  await waitFor(() => { expect(lastList()).toContain("departmentId=33333333-3333-4333-8333-333333333333"); expect(lastList()).toContain(`roleId=${roles[1]?.id}`); });
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  expect(screen.getByRole("combobox", { name: "Filter by role" }).textContent).toBe("All roles");
+  expect(screen.getByRole("combobox", { name: "Filter by department" }).textContent).toBe("All departments");
+  expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+}, 10_000);

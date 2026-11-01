@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { pageMeta, useServerTable } from "@/shared/datatable";
+import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { usePageSearch } from "@/shared/search/page-search";
 import { useGetApiV1UserQuery } from "../api/user-api";
+import { allDepartments, allRoles } from "../components/user-filters";
 import { allowedStatuses, audit, disabledFilter, resolveStatus, statusFromParam, statusToParam, type UserStatus } from "../lib/user-access";
 import { userListSchema, type UserRow } from "../schemas/user-schema";
 import { useUserAccess } from "./use-user-access";
@@ -18,10 +20,13 @@ export function useUsersList() {
   const status = resolveStatus(statusFromParam(params.get("status")), statuses);
   const [busy, setBusy] = useState(false);
   const search = usePageSearch("users", busy);
-  const table = useServerTable({ pageSize: 30, resetKey: `${status ?? ""}|${search}` });
+  const [role, setRole] = useState<SelectOption>(allRoles);
+  const [department, setDepartment] = useState<SelectOption>(allDepartments);
+  const table = useServerTable({ pageSize: 30, resetKey: `${status ?? ""}|${search}|${role.value}|${department.value}` });
 
   const query = useGetApiV1UserQuery(
-    { ...audit, page: table.page, pageSize: table.pageSize, searchQuery: search, isActive: status ? disabledFilter(status) : false },
+    { ...audit, page: table.page, pageSize: table.pageSize, searchQuery: search, isActive: status ? disabledFilter(status) : false,
+      ...(role.value ? { roleId: role.value } : {}), ...(department.value ? { departmentId: department.value } : {}) },
     { skip: !status },
   );
   const parsed = useMemo(() => query.data ? userListSchema.safeParse(query.data.data ?? []) : null, [query.data]);
@@ -42,6 +47,7 @@ export function useUsersList() {
     refreshing: query.isFetching && !query.isLoading,
     retry: () => { void query.refetch(); },
     search,
+    role, setRole, department, setDepartment, filtered: Boolean(role.value || department.value),
     // The requested page, so paging controls respond at once while the previous rows stay on screen.
     paging: { page: table.page, pageSize: table.pageSize, totalRows: meta.totalRows, onPageChange: table.onPageChange, onPageSizeChange: table.onPageSizeChange },
   };

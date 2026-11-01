@@ -269,6 +269,8 @@ const injectedRtkApi = api.injectEndpoints({
           page: queryArg.page,
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
+          roleId: queryArg.roleId,
+          departmentId: queryArg.departmentId,
         },
       }),
     }),
@@ -608,6 +610,8 @@ export type GetApiV1UserApiArg = {
   page?: number;
   pageSize?: number;
   searchQuery?: string;
+  roleId?: string;
+  departmentId?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
