@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
+import { UserFilters } from "../../../../modules/users/components/user-filters";
 import { UserDialogs, type OpenUserAction } from "../../../../modules/users/components/user-dialogs";
 import type { UserAction } from "../../../../modules/users/components/user-row-actions";
 import { UserStatusTabs } from "../../../../modules/users/components/user-status-tabs";
@@ -23,9 +24,10 @@ export default function UsersPage() {
         <PermissionGuard require={userPermissions.create}><Button asChild size="sm"><Link to={`${usersPath}/create`}>Create user</Link></Button></PermissionGuard>
       </div>
     </div>
+    <UserFilters role={list.role} department={list.department} onRoleChange={list.setRole} onDepartmentChange={list.setDepartment} />
     <UsersTable rows={list.rows} access={list.access} onAction={onAction} search={list.search}
       paging={list.paging} loading={list.loading} refreshing={list.refreshing} error={list.error} onRetry={list.retry}
-      inactive={list.status === "inactive"} />
+      inactive={list.status === "inactive"} filtered={list.filtered} />
     <UserDialogs open={open} onClose={() => setOpen(null)} />
   </section>;
 }
