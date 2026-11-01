@@ -113184,6 +113184,86 @@
           }
         }
       }
+    },
+    "/api/v1/requisition/issue/{issueId}": {
+      "get": {
+        "tags": [
+          "Requisition"
+        ],
+        "summary": "Retrieves the stock requisition an issue belongs to, by the issue's ID. The issue check is\napproved under its own ID, so this is how its approver reads what was issued.",
+        "parameters": [
+          {
+            "name": "issueId",
+            "in": "path",
+            "description": "The ID of the stock requisition issue.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.RequisitionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.RequisitionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.RequisitionDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -163327,6 +163407,9 @@
           "comments": {
             "type": "string",
             "nullable": true
+          },
+          "signatories": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.StockIssueSignatoriesDto"
           }
         },
         "additionalProperties": false
@@ -173754,6 +173837,51 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Requisitions.VoucherSignatoryDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "signature": {
+            "type": "string",
+            "nullable": true
+          },
+          "signedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "One signature line of a printed voucher: who signed, their stored signature image and when."
+      },
+      "DOMAIN.Entities.Requisitions.StockIssueSignatoriesDto": {
+        "type": "object",
+        "properties": {
+          "issuedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.VoucherSignatoryDto"
+          },
+          "checkedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.VoucherSignatoryDto"
+          },
+          "receivedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.VoucherSignatoryDto"
+          },
+          "checkStatus": {
+            "type": "string",
+            "nullable": true,
+            "description": "Checked, Rejected, Pending (waiting for an approver) or NotAssigned (no issue-check workflow\nwas configured when it was issued); null while the requisition has not been issued."
           }
         },
         "additionalProperties": false

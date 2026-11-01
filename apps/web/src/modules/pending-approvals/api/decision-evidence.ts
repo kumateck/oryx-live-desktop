@@ -9,7 +9,7 @@ export interface DecisionEvidence { entries: { url: string; data: JsonValue }[] 
 const paths: Record<ReadableDocument, string> = {
   StockDiscrepancy: "stock-discrepancy", ShipmentDiscrepancy: "procurement/shipment-discrepancy",
   PurchaseOrder: "procurement/purchase-order", BillingSheet: "procurement/billing-sheet", ShipmentDocument: "procurement/shipment-document",
-  PurchaseRequisition: "requisition", TrialRequisition: "requisition", StockRequisition: "requisition", RawStockRequisition: "requisition", PackageStockRequisition: "requisition",
+  PurchaseRequisition: "requisition", TrialRequisition: "requisition", StockRequisition: "requisition", StockRequisitionIssue: "requisition/issue", RawStockRequisition: "requisition", PackageStockRequisition: "requisition",
   ProductionExtraPacking: "production-schedule/extra-packing", FinishedGoodsTransferNote: "production-schedule/finished-goods-transfer-note",
   LeaveRequest: "leave-request", OvertimeRequest: "overtime-requests", StaffRequisition: "staff-requisitions", JobRequest: "job-requests",
   ProductionOrder: "production-orders", ProformaInvoice: "production-orders/proforma-invoice", AllocateProductionOrder: "production-orders/allocate",

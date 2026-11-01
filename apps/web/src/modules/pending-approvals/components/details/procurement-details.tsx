@@ -9,7 +9,7 @@ import { purchaseOrderSchema } from "@/modules/proforma-requests/schemas/purchas
 import { useGetApiV1ProcurementPurchaseOrderByPurchaseOrderIdQuery } from "@/modules/purchase-orders/api/order-api";
 import { OrderTerms, OrderTotals } from "@/modules/purchase-orders/components/order-terms";
 import { audit as orderAudit } from "@/modules/purchase-orders/lib/purchase-order-access";
-import { useGetApiV1RequisitionByRequisitionIdQuery } from "@/modules/requisitions/api/requisition-api";
+import { useGetApiV1RequisitionByRequisitionIdQuery, useGetApiV1RequisitionIssueByIssueIdQuery } from "@/modules/requisitions/api/requisition-api";
 import { RequisitionFacts } from "@/modules/requisitions/components/requisition-facts";
 import { listAudit } from "@/modules/requisitions/lib/requisition-access";
 import { requisitionSchema, type RequisitionLine } from "@/modules/requisitions/schemas/requisition-schema";
@@ -43,6 +43,16 @@ const requisitionColumns = requisitionColumn.columns([
 /** A stock or purchase requisition: who asked, for which product, and for how much of what. */
 export function RequisitionDetails({ id }: { id: string }) {
   const query = useGetApiV1RequisitionByRequisitionIdQuery({ ...listAudit, requisitionId: id });
+  return <RequisitionBody query={query} />;
+}
+
+/** An issued stock requisition whose issue is being checked: the requisition, read by the issue's id. */
+export function StockRequisitionIssueDetails({ id }: { id: string }) {
+  const query = useGetApiV1RequisitionIssueByIssueIdQuery({ ...listAudit, issueId: id });
+  return <RequisitionBody query={query} />;
+}
+
+function RequisitionBody({ query }: { query: Parameters<typeof queryState>[0] & { data?: unknown } }) {
   const requisition = useMemo(() => { const parsed = requisitionSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data : null; }, [query.data]);
   return <DetailState {...queryState(query)} value={requisition} label="requisition">{(value) => <div className="space-y-4">
     <RequisitionFacts requisition={value} />

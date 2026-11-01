@@ -12,7 +12,7 @@ export const decisionPermission = (type: string, decision: Decision): string =>
 export const audit = { module: "Quality Assurance", subModule: "Pending Approvals" } as const;
 
 /** Documents whose content this app can show, so they can be read before they are decided. The names are the server's. */
-const readable = ["PurchaseOrder", "BillingSheet", "ShipmentDocument", "PurchaseRequisition", "TrialRequisition", "StockRequisition", "RawStockRequisition", "PackageStockRequisition", "ProductionExtraPacking",
+const readable = ["PurchaseOrder", "BillingSheet", "ShipmentDocument", "PurchaseRequisition", "TrialRequisition", "StockRequisition", "StockRequisitionIssue", "RawStockRequisition", "PackageStockRequisition", "ProductionExtraPacking",
   "FinishedGoodsTransferNote", "LeaveRequest", "OvertimeRequest", "StaffRequisition", "JobRequest", "ProductionOrder", "ProformaInvoice", "AllocateProductionOrder", "StockAdjustment", "CustomerQuotation", "SupplierPricingAgreement", "PayrollRun", "PerformanceReview",
   "RndProject", "RndFormulation", "RndTechnologyTransfer", "Response", "StockDiscrepancy", "ShipmentDiscrepancy"] as const;
 export type ReadableDocument = (typeof readable)[number];
@@ -29,7 +29,7 @@ export function decidedElsewhere(type: string): string | null {
   return null;
 }
 
-const names: Record<string, string> = { ProductionExtraPacking: "Production extra material", RawStockRequisition: "Raw material stock requisition", PackageStockRequisition: "Packaging material stock requisition",
+const names: Record<string, string> = { ProductionExtraPacking: "Production extra material", RawStockRequisition: "Raw material stock requisition", PackageStockRequisition: "Packaging material stock requisition", StockRequisitionIssue: "Stock requisition issue check",
   AllocateProductionOrder: "Production order allocation", Response: "Certificate of analysis", RndProject: "R&D project", RndFormulation: "R&D formulation", RndTechnologyTransfer: "R&D technology transfer" };
 /** A document type as people say it: "PurchaseOrder" is "Purchase order", "QcCoa" is "QC COA". */
 export function documentLabel(type: string | null | undefined): string {

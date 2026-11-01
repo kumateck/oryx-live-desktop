@@ -51,3 +51,13 @@ export function issueBlock(requisition: { approved: boolean; status: number; ite
   if (requisition.items.some((line) => line.batches.length === 0)) return "No stock is set aside for one or more materials on this requisition.";
   return null;
 }
+
+/** What the voucher says about the warehouse check of an issue, or null when there is nothing to say. */
+export function checkNote(status: "Pending" | "Checked" | "Rejected" | "NotAssigned" | null): string | null {
+  switch (status) {
+    case "Pending": return "Awaiting the warehouse check";
+    case "Rejected": return "The warehouse check was rejected";
+    case "NotAssigned": return "No issue check is set up. Add a \"Stock requisition issue\" approval workflow.";
+    default: return null;
+  }
+}

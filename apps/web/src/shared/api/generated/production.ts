@@ -3821,6 +3821,20 @@ export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
 };
+export type DomainEntitiesRequisitionsVoucherSignatoryDto = {
+  userId?: string | null;
+  name?: string | null;
+  signature?: string | null;
+  signedAt?: string | null;
+};
+export type DomainEntitiesRequisitionsStockIssueSignatoriesDto = {
+  issuedBy?: DomainEntitiesRequisitionsVoucherSignatoryDto;
+  checkedBy?: DomainEntitiesRequisitionsVoucherSignatoryDto;
+  receivedBy?: DomainEntitiesRequisitionsVoucherSignatoryDto;
+  /** Checked, Rejected, Pending (waiting for an approver) or NotAssigned (no issue-check workflow
+    was configured when it was issued); null while the requisition has not been issued. */
+  checkStatus?: string | null;
+};
 export type DomainEntitiesRequisitionsRequisitionDto = {
   id?: string;
   code?: string | null;
@@ -3834,6 +3848,7 @@ export type DomainEntitiesRequisitionsRequisitionDto = {
   createdAt?: string;
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
+  signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
 };
 export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   id?: string;
@@ -3848,6 +3863,7 @@ export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   createdAt?: string;
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
+  signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
 };
 export type DomainEntitiesProductsProductionProductionStepExtraMaterialDto = {
   id?: string;

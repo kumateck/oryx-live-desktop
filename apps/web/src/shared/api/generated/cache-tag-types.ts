@@ -261,6 +261,7 @@ export const generatedTagTypes = [
   "report/warehouse-kpi",
   "requisition",
   "requisition/department",
+  "requisition/issue",
   "requisition/issue-trial-requisition",
   "requisition/pending",
   "requisition/source",

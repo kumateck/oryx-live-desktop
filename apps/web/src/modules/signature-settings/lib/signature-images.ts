@@ -1,15 +1,6 @@
 import { fileDataUrl, imageDataBytes } from "@/shared/images/stored-image";
+export { signaturePath } from "@/shared/images/signature-path";
 import { signatureLimit, type SignatureValues } from "../schemas/signature-schema";
-
-/** Only server signature paths are requested. A legacy HTTP host is never followed. */
-export function signaturePath(value: string | null): string | null {
-  if (!value) return null;
-  try {
-    const url = new URL(value, "https://oryx.invalid");
-    if (!/^\/api\/v1\/file\/signature\/[a-z0-9_-]+\.(?:png|jpe?g|webp)$/i.test(url.pathname)) return null;
-    return url.pathname;
-  } catch { return null; }
-}
 
 export function signatureBytes(value: string): Uint8Array<ArrayBuffer> {
   return imageDataBytes(value, signatureLimit, "signature");

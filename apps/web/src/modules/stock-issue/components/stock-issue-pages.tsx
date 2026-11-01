@@ -15,14 +15,14 @@ import { formatDateTime, formatMonthYear } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { PrintButton } from "@/shared/print/print-button";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
-import { PrintFacts, PrintHeader, PrintSignatures, PrintTable, type PrintColumn } from "@/shared/print/print-sheet";
+import { PrintFacts, PrintHeader, PrintSignatures, PrintTable, type PrintColumn, type PrintSigner } from "@/shared/print/print-sheet";
 import { KindSwitch } from "@/shared/reference-data/kind-switch";
 import { useKindTabs } from "@/shared/reference-data/kind-tabs";
 import { RichTextView, richTextToPlain } from "@/shared/rich-text/rich-text-view";
 import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation } from "../api/stock-issue-api";
-import { audit, batchNumber, issueBlock, issuePermissions, issueRequisitionPath, shortfall, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
+import { audit, batchNumber, checkNote, issueBlock, issuePermissions, issueRequisitionPath, shortfall, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
 import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockLine, type StockRequisition } from "../schemas/stock-issue-schema";
 import { AlternativeBatches } from "./alternative-batches";
 import { BatchBreakdown, amount } from "./batch-breakdown";
@@ -83,6 +83,14 @@ const printColumns: PrintColumn<StockLine>[] = [
   { id: "batches", header: "Batch · quantity · expiry", cell: (row) => row.batches.length ? row.batches.map((batch) => <div key={batch.key}>{batchNumber(batch.number)} · {amount(batch.quantity, row.unit)} · {formatMonthYear(batch.expires) ?? "no expiry"}</div>) : "None set aside" },
 ];
 
+/** The voucher's signature lines: the store user who issued it, the approver who checked the issue, and the requester who receives it. */
+function voucherSigners(requisition: StockRequisition): PrintSigner[] {
+  const { issuedBy, checkedBy, receivedBy, checkStatus } = requisition.signatories;
+  const signer = (role: string, person: typeof issuedBy, note?: string | null): PrintSigner =>
+    ({ role, name: person?.name ?? null, signature: person?.signature ?? null, signedOn: formatDateTime(person?.signedAt ?? null) ?? null, note: person ? null : note ?? null });
+  return [signer("Issued by", issuedBy), signer("Checked by", checkedBy, checkNote(checkStatus)), signer("Received by", receivedBy)];
+}
+
 function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 | 1 }) {
   const { has } = useAccess();
   const navigate = useNavigate();
@@ -99,7 +107,7 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
           { label: "Requested by", value: requisition.requestedBy }, { label: "Department", value: requisition.department }, { label: "Requested on", value: formatDateTime(requisition.createdAt) }]} />
         {remarks ? <p className="print-note"><strong>Justification:</strong> {remarks}</p> : null}
         <PrintTable columns={printColumns} rows={requisition.items} rowKey={(row) => row.id} empty="No materials on this requisition" />
-        <PrintSignatures roles={["Issued by", "Checked by", "Received by"]} />
+        <PrintSignatures signers={voucherSigners(requisition)} />
       </PrintPreviewDialog>} />
       {has(issuePermissions[kind]) && requisition.status !== 3 ? <Button type="button" disabled={block !== null} onClick={() => setConfirming(true)}><PackageCheck />Issue stock</Button> : null}
     </>} />
@@ -110,6 +118,9 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
       <KeyFact label="Schedule" value={requisition.schedule ?? "–"} note={requisition.batch ? `Batch ${requisition.batch}` : undefined} />
       <KeyFact label="Requested by" value={requisition.requestedBy ?? "Not recorded"} note={requisition.department ?? undefined} />
       <KeyFact label="Requested on" value={formatDateTime(requisition.createdAt) ?? "–"} />
+      {requisition.signatories.issuedBy ? <KeyFact label="Issued by" value={requisition.signatories.issuedBy.name} note={formatDateTime(requisition.signatories.issuedBy.signedAt) ?? undefined} /> : null}
+      {requisition.signatories.issuedBy ? <KeyFact label="Checked by" value={requisition.signatories.checkedBy?.name ?? "Not checked yet"}
+        note={requisition.signatories.checkedBy ? formatDateTime(requisition.signatories.checkedBy.signedAt) ?? undefined : checkNote(requisition.signatories.checkStatus) ?? undefined} /> : null}
     </KeyFacts>
     {requisition.comments ? <section className="space-y-1 rounded-lg border bg-card p-4"><h2 className="text-sm font-semibold">Justification</h2><RichTextView html={requisition.comments} className="text-sm" /></section> : null}
     {/* Batches can only be swapped while the stock has not left the store. */}
