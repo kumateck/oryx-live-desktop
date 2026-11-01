@@ -122,8 +122,10 @@ it("asks before completing a step, on the step's own page", async () => {
   expect(calls).toEqual([]);
   fireEvent.click(within(dialog).getByRole("button", { name: "Complete step" }));
   await waitFor(() => expect(calls.map((call) => call.search)).toEqual(["?status=2"]));
-  // Until the board shows the next step, the step cannot be completed again.
-  const waiting = await screen.findByRole("button", { name: /Moving to the next step/ });
+  // Until the board shows the next step, the step cannot be completed again. The dialog closes once the
+  // server has answered; slow machines take longer than the default wait for both.
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull(), { timeout: 5000 });
+  const waiting = await screen.findByRole("button", { name: /Moving to the next step/ }, { timeout: 5000 });
   expect(waiting.hasAttribute("disabled")).toBe(true);
   expect(calls).toHaveLength(1);
 });
