@@ -113184,6 +113184,106 @@
           }
         }
       }
+    },
+    "/api/v1/production-schedule/activity/{productionActivityId}/repair-procedure": {
+      "post": {
+        "tags": [
+          "ProductionSchedule"
+        ],
+        "summary": "Repairs one running batch from its product's current procedure. The active step and the steps\nstill to do take the procedure's operation, work centres, resources, critical flag and responsible\npeople with their instruction and analytical raw data. Completed steps are never changed.",
+        "parameters": [
+          {
+            "name": "productionActivityId",
+            "in": "path",
+            "description": "The production activity (the batch's run) to repair.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Products.Production.ProductionProcedureRepairResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Products.Production.ProductionProcedureRepairResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Products.Production.ProductionProcedureRepairResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -173757,6 +173857,33 @@
           }
         },
         "additionalProperties": false
+      },
+      "DOMAIN.Entities.Products.Production.ProductionProcedureRepairResult": {
+        "type": "object",
+        "properties": {
+          "stepsUpdated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stepsAdded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stepsRemoved": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stepsKept": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "description": "Steps already started that the procedure no longer has: they are kept as they are."
+          }
+        },
+        "additionalProperties": false,
+        "description": "What repairing a batch's procedure changed."
       }
     },
     "securitySchemes": {

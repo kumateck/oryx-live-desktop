@@ -17,6 +17,8 @@ export const activityApi = productionApi.enhanceEndpoints({
     putApiV1ProductionScheduleActivityStepByProductionStepIdStatus: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["Activity", board, "BatchRecords", "ScheduleBatch"]); },
     postApiV1ProductionScheduleReturnBeforeProduction: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["Activity", board, "BatchRecords", "ScheduleBatch", "Schedule", { type: "ScheduleList", id: "all" }]); },
     postApiV1ProductionScheduleExtraPackingByProductionScheduleProductId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [...records(arg.productionScheduleProductId), "Activity"]); },
+    // Repairing a run's procedure rewrites its upcoming steps, so the run and the board are read again.
+    postApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedure: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["Activity", board, "BatchRecords"]); },
     postApiV1ProductionScheduleFinalPacking: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["Activity", board, "BatchRecords", "ScheduleBatch"]); },
     postApiV1ProductionScheduleReturnAfterProduction: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["BatchRecords", "ScheduleBatch"]); },
     postApiV1ProductionScheduleFinishedGoodsTransferNote: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["Activity", board, "BatchRecords"]); },
@@ -30,6 +32,7 @@ export const activityApi = productionApi.enhanceEndpoints({
 });
 
 export const {
+  usePostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureMutation,
   useGetProductionStepRecordsQuery,
   useGetApiV1ProductionScheduleActivityOperationGroupedQuery, useGetApiV1ProductionScheduleActivityByProductionActivityIdQuery,
   usePutApiV1ProductionScheduleActivityStepByProductionStepIdStatusMutation, usePostApiV1ProductionScheduleReturnBeforeProductionMutation,
