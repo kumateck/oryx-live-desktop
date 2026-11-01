@@ -15,6 +15,9 @@ export function useStepCommands(stepId: string, batchId: string | null) {
   const [returnAll] = usePostApiV1ProductionScheduleReturnBeforeProductionMutation();
   const [busy, setBusy] = useState<"start" | "complete" | "return" | null>(null);
   const [message, setMessage] = useState("");
+  // Once completed, the step stays finished on this screen until the board shows the next step,
+  // so the button cannot be pressed again while the board catches up.
+  const [completedStep, setCompletedStep] = useState<string | null>(null);
   // A second click while the first request is on its way must not send it again: starting a step issues materials.
   const lock = useRef(false);
 
@@ -41,6 +44,7 @@ export function useStepCommands(stepId: string, batchId: string | null) {
       if (deniedAfterCheck) { setMessage(deniedAfterCheck); return false; }
       const result = await update({ ...stepAudit, productionStepId: stepId, status: kind === "start" ? stepStatus.inProgress : stepStatus.completed });
       if ("error" in result) { setMessage(apiErrorMessage(result.error)); return false; }
+      if (kind === "complete") setCompletedStep(stepId);
       toast.success(kind === "start" ? "Step started" : "Step completed");
       return true;
     } finally { lock.current = false; setBusy(null); }
@@ -59,6 +63,6 @@ export function useStepCommands(stepId: string, batchId: string | null) {
     } finally { setBusy(null); }
   };
 
-  return { start: () => change("start"), complete: () => change("complete"), fullReturn, busy, message };
+  return { start: () => change("start"), complete: () => change("complete"), fullReturn, busy, message, awaitingNextStep: completedStep === stepId };
 }
 export type StepCommands = ReturnType<typeof useStepCommands>;

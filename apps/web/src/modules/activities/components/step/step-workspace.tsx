@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, FlaskConical, PackageCheck, PackagePlus, Play, RotateCcw, Send, Truck } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,9 @@ import { FinishedGoodsDialog } from "./finished-goods-dialog";
 import { ReasonDialog } from "./reason-dialog";
 import { StepRecordsView } from "./step-records-view";
 import { StockRequisitionDialog } from "./stock-requisition-dialog";
+import { useGetApiV1ProductionSchedulePackageMaterialStockByProductionScheduleProductIdQuery } from "@/modules/schedules/api/schedule-api";
+import { batchMaterialsSchema } from "@/modules/schedules/schemas/batch-schema";
+import { packagingShortMessage } from "../../lib/stock-requisition";
 
 const requisitionStatus = { completed: 3 } as const;
 
@@ -49,6 +52,14 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
     : beforeFinalPacking && !packaging ? "Final packing comes next. Request the batch's packaging material, and complete this step once it is issued."
     : beforeFinalPacking && !packagingIssued ? "Final packing comes next. Complete this step once the batch's packaging material is issued." : null;
   const packagingMissing = packagingWait !== null;
+  // Packaging is requested once, for all of it, so the button waits until the warehouse can issue every packaging material.
+  const canRequestPackaging = policy.allowed && !policy.completed && records.packagingRequestable && Boolean(batchId);
+  const packagingStock = useGetApiV1ProductionSchedulePackageMaterialStockByProductionScheduleProductIdQuery(
+    { module: "Production", subModule: "Stock Requisition", productionScheduleProductId: batchId ?? "" }, { skip: !canRequestPackaging, refetchOnFocus: true });
+  const packagingShort = useMemo(() => {
+    const parsed = batchMaterialsSchema.safeParse(packagingStock.data ?? null);
+    return parsed.success ? packagingShortMessage(parsed.data) : null;
+  }, [packagingStock.data]);
   const batchLabel = `${activity.batch.productName}${activity.batch.batchNumber ? `, batch ${activity.batch.batchNumber}` : ""}`;
 
   useEffect(() => {
@@ -70,11 +81,12 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
       <Button type="button" size="sm" variant="outline" onClick={records.retry}>Retry step check</Button>
     </div> : null}
 
+    {canRequestPackaging && packagingShort ? <p className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">{packagingShort}</p> : null}
     <div className="flex flex-wrap gap-2">
       {policy.canStart ? <Button type="button" size="sm" disabled={busy || !records.ready} onClick={() => void commands.start()}>{commands.busy === "start" ? <><Spinner />Starting…</> : <><Play />Start step</>}</Button> : null}
-      {policy.canManuallyComplete ? <Button type="button" size="sm" disabled={busy || !records.ready || !policy.canComplete || packagingMissing} onClick={() => setOpen("complete")}>{commands.busy === "complete" ? <><Spinner />Completing…</> : <><Check />Complete step</>}</Button> : null}
+      {policy.canManuallyComplete ? <Button type="button" size="sm" disabled={busy || commands.awaitingNextStep || !records.ready || !policy.canComplete || packagingMissing} onClick={() => setOpen("complete")}>{commands.busy === "complete" ? <><Spinner />Completing…</> : commands.awaitingNextStep ? <><Spinner />Moving to the next step…</> : <><Check />Complete step</>}</Button> : null}
       {policy.canRequestStock && !records.loading && !records.rawRequisition && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("stock")}><Send />Request stock</Button> : null}
-      {policy.allowed && !policy.completed && records.packagingRequestable && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("packaging")}><Send />Request packaging material</Button> : null}
+      {canRequestPackaging ? <Button type="button" size="sm" variant="outline" disabled={busy || packagingStock.isLoading || Boolean(packagingShort)} title={packagingShort ?? undefined} onClick={() => setOpen("packaging")}><Send />Request packaging material</Button> : null}
       {policy.canRequestAtr && !records.loading && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("atr")}><FlaskConical />Request analysis</Button> : null}
       {policy.canRequestExtraMaterial ? <Button asChild size="sm" variant="outline"><Link to={extraMaterialPath(activity.id)}><PackagePlus />Request extra material</Link></Button> : null}
       {policy.canFinalPack ? <Button asChild size="sm"><Link to={finalPackingPath(activity.id)}><PackageCheck />Record final packing</Link></Button> : null}
