@@ -15,7 +15,7 @@ import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { migrationAudit, stockMigrationApi, type MigrationDto } from "../api/stock-migration-api";
 import { useDepartments } from "../hooks/use-departments";
-import { massUnits, migrationPath, migrationPermission, migrationStatusLabels, volumeUnits } from "../lib/stock-migration";
+import { massUnits, migrationPath, openingBalancePermissions, migrationStatusLabels, volumeUnits } from "../lib/stock-migration";
 
 const column = dataTableColumns<MigrationDto>();
 
@@ -37,12 +37,12 @@ export function StockMigrationTab() {
   const departments = useDepartments();
   const [chosen, setChosen] = useState<SelectOption | null>(null);
   const department = departments.own ?? chosen;
-  const [massUnit, setMassUnit] = useState<string>("kg");
-  const [volumeUnit, setVolumeUnit] = useState<string>("L");
+  const [massUnit, setMassUnit] = useState<string>("mg");
+  const [volumeUnit, setVolumeUnit] = useState<string>("ml");
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [upload, { isLoading }] = stockMigrationApi.useUploadMutation();
-  const permission = usePermissionAction(migrationPermission);
+  const permission = usePermissionAction(openingBalancePermissions.upload);
   const list = stockMigrationApi.useListQuery(department ? { ...migrationAudit, departmentId: department.value } : skipToken);
 
   const submit = async () => {
@@ -67,8 +67,9 @@ export function StockMigrationTab() {
 
   return <div className="space-y-4">
     <div className="rounded-md border p-4">
-      <p className="mb-3 text-sm text-muted-foreground">Upload the counted stock. Nothing changes until the rows are checked and the migration is approved;
-        approving writes off the department&apos;s current raw and packaging stock and loads the count in its place.</p>
+      <h2 className="mb-1 font-semibold">Opening balance drafts</h2>
+      <p className="mb-3 text-sm text-muted-foreground">Upload material stock as a draft, correct and verify its rows, then approve it as opening balances.
+        Drafts do not change available stock. Uploading, correcting and approving use separate permissions.</p>
       <div className="grid gap-3 md:grid-cols-4">
         <Field label="Production department">{departments.own ? <p className="rounded-md border bg-muted/40 px-3 py-2 text-sm">{departments.own.label}</p>
           : <AsyncOptionPicker label="Production department" value={chosen} onChange={setChosen} loadOptions={departments.loadOptions} placeholder="Choose a department" />}</Field>
@@ -77,13 +78,13 @@ export function StockMigrationTab() {
         <Field label="Stock sheet"><Input type="file" accept=".xlsx" aria-label="Stock sheet" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></Field>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <Button type="button" disabled={isLoading || !permission.allowed} onClick={() => void submit()}>{isLoading ? <><Spinner />Reading the sheet…</> : <><Upload />Upload and check</>}</Button>
-        <span className="text-xs text-muted-foreground">Choose what the numbers really are: a sheet headed &quot;mg&quot; that holds kilograms is read as kg.</span>
+        <Button type="button" disabled={isLoading || !permission.allowed} onClick={() => void submit()}>{isLoading ? <><Spinner />Saving draft…</> : <><Upload />Upload and save draft</>}</Button>
+        <span className="text-xs text-muted-foreground">Prepared files contain mg and ml. Select kg or L only when the file&apos;s quantities have not been converted.</span>
       </div>
       {error ? <p role="alert" className="mt-2 break-words text-sm text-destructive">{error}</p> : null}
     </div>
-    {department ? <ClientDataTable label="Stock migrations" columns={columns} rows={list.data} getRowId={(row) => row.id ?? ""} loading={list.isLoading} refreshing={list.isFetching}
+    {department ? <ClientDataTable label="Opening balance drafts" columns={columns} rows={list.data} getRowId={(row) => row.id ?? ""} loading={list.isLoading} refreshing={list.isFetching}
       error={list.error ? apiErrorMessage(list.error) : null} onRetry={() => void list.refetch()} onRowOpen={(row) => row.id && void navigate(migrationPath(row.id))} fill={false}
-      emptyTitle="No stock migrations yet" emptyDescription="Upload a stock sheet to check it." /> : null}
+      emptyTitle="No opening balance drafts yet" emptyDescription="Upload a stock sheet to save and verify a draft." /> : null}
   </div>;
 }
