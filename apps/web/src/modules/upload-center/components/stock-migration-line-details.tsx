@@ -9,6 +9,10 @@ export function StockMigrationLineDetails({ line, onClose }: { line: LineDto; on
       <DialogHeader><DialogTitle>Row {line.rowNumber}: preparation notes</DialogTitle>
         <DialogDescription>{line.sheetMaterialName ?? line.resolvedMaterialName} · {line.batchNumber}</DialogDescription></DialogHeader>
       <DialogBody className="space-y-3 text-sm">
+        <dl className="grid gap-3 sm:grid-cols-2">
+          <div className="min-w-0"><dt className="text-xs text-muted-foreground">AR number</dt><dd className="break-all">{line.arNumber || "–"}</dd></div>
+          <div className="min-w-0"><dt className="text-xs text-muted-foreground">GRN</dt><dd className="break-all">{line.grn || "–"}</dd></div>
+        </dl>
         {(line.blockers ?? []).map((note) => <p key={`blocker-${note}`} className="break-words text-destructive">{note}</p>)}
         {(line.warnings ?? []).map((note) => <p key={`warning-${note}`} className="break-words">{note}</p>)}
         <ul className="list-disc space-y-2 pl-5">{(line.corrections ?? []).map((note) => <li key={note} className="break-words">{note}</li>)}</ul>
