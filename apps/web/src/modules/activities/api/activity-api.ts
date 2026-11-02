@@ -19,6 +19,10 @@ export const activityApi = productionApi.enhanceEndpoints({
     postApiV1ProductionScheduleExtraPackingByProductionScheduleProductId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [...records(arg.productionScheduleProductId), "Activity"]); },
     // Repairing a run's procedure rewrites its upcoming steps, so the run and the board are read again.
     postApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedure: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["Activity", board, "BatchRecords"]); },
+    applyProductionBomRepair: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [
+      { type: "Activity", id: arg.activityId }, board, "BatchRecords", "ScheduleBatch", "Requisition", "RequisitionList", "StockIssue", "PendingApprovals", "StockOnShelves", "MaterialList"]); },
+    applyProductionPackagingRepair: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [
+      { type: "Activity", id: arg.activityId }, board, "BatchRecords", "ScheduleBatch", "Requisition", "RequisitionList", "StockIssue", "PendingApprovals", "StockOnShelves", "MaterialList"]); },
     postApiV1ProductionScheduleFinalPacking: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["Activity", board, "BatchRecords", "ScheduleBatch"]); },
     postApiV1ProductionScheduleReturnAfterProduction: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["BatchRecords", "ScheduleBatch"]); },
     postApiV1ProductionScheduleFinishedGoodsTransferNote: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["Activity", board, "BatchRecords"]); },
