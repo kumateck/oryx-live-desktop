@@ -64,6 +64,8 @@ export function StockMigrationLineDialog({ migrationId, line, quantityUnit, shel
             <SheetValue label="Store and shelf" value={[line.sheetWarehouse, line.sheetShelf].filter(Boolean).join(" · ")} />
             <SheetValue label="Batch" value={line.sheetBatchNumber} />
             <SheetValue label="Quantity" value={[line.sheetQuantity, line.sheetUnit].filter(Boolean).join(" ")} />
+            <SheetValue label="AR number" value={line.arNumber} />
+            <SheetValue label="GRN" value={line.grn} />
           </dl>
           {(line.blockers ?? []).map((text) => <p key={text} className="break-words text-sm text-destructive">{text}</p>)}
           <FormWizard form={form} fields={fields} className="md:grid-cols-3" />
