@@ -1,10 +1,16 @@
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import type { ComparisonDto, LineDto, LineStatus, LineUpdate, MigrationDto, WarehouseDto } from "../api/stock-migration-api";
 import type { LineFormValues } from "../schemas/stock-migration-schema";
-import { uploadCenterPath, uploadPermissions } from "./upload-center";
+import { relatedUnits } from "@/shared/units/quantity";
+import { uploadCenterPath } from "./upload-center";
 
-/** Stock migration replaces a department's stock, so it is gated on the key that changes stock, as the stock upload is. */
-export const migrationPermission = uploadPermissions.material;
+export const openingBalancePermissions = {
+  view: "CanViewOpeningBalances",
+  upload: "CanUploadOpeningBalances",
+  correct: "CanCorrectOpeningBalances",
+  approve: "CanApproveOpeningBalances",
+} as const;
+export const migrationPermission = openingBalancePermissions.view;
 export const migrationPath = (id: string) => `${uploadCenterPath}/stock-migrations/${id}`;
 
 export const massUnits = ["kg", "g", "mg"] as const;
@@ -13,6 +19,13 @@ export const volumeUnits = ["L", "ml"] as const;
 export const lineStatus = { ok: 0, warning: 1, blocked: 2, skipped: 3, excluded: 4 } as const satisfies Record<string, LineStatus>;
 export const lineStatusLabels: Record<LineStatus, string> = { 0: "Ready", 1: "Check", 2: "Needs fixing", 3: "No quantity", 4: "Left out" };
 export const migrationStatusLabels = { 0: "Draft", 1: "Approved", 2: "Discarded" } as const;
+
+export function correctionQuantityUnit(migration: MigrationDto, line: LineDto): string {
+  const family = relatedUnits(line.unit ?? line.unitSymbol);
+  if (family.includes("mg")) return migration.massUnit ?? "mg";
+  if (family.includes("ml")) return migration.volumeUnit ?? "ml";
+  return line.unit ?? line.unitSymbol ?? "";
+}
 
 /** The status filter chips, with how many rows each holds. */
 export function statusCounts(migration: MigrationDto): { status: LineStatus; label: string; count: number }[] {
@@ -93,7 +106,8 @@ export function lineRequest(line: LineDto, values: LineFormValues): LineUpdate {
   const quantity = values.quantityInSheet;
   return {
     materialCode: values.materialCode || null,
-    materialId: values.material?.value ?? null,
+    materialId: values.materialCode.trim().toUpperCase() === (line.materialCode ?? "").trim().toUpperCase()
+      ? values.material?.value ?? null : null,
     warehouseName: line.warehouseName ?? null,
     shelfName: line.shelfName ?? null,
     shelfId: values.shelf?.value ?? null,

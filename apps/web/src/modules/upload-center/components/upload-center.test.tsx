@@ -49,3 +49,11 @@ it("shows only the uploads the user may make, and sends a sheet only once its ro
   await waitFor(() => expect(calls).toHaveLength(1));
   expect(calls[0]?.path).toMatch(/^\/api\/v1\/attendance-records\/upload\//);
 }, 30_000);
+
+it("offers draft upload only with upload permission and never exposes the legacy direct stock action", async () => {
+  open(["CanViewOpeningBalances"]);
+  const upload = await screen.findByRole("button", { name: "Upload and save draft" });
+  expect(upload).toHaveProperty("disabled", true);
+  expect(screen.queryByRole("button", { name: "Submit upload" })).toBeNull();
+  expect(screen.getByText(/Drafts do not change available stock/)).toBeTruthy();
+}, 30_000);

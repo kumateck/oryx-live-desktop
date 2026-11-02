@@ -12,26 +12,29 @@ import { formatMonthYear } from "@/shared/format/dates";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { formatQuantityNumber, toLargestUnit } from "@/shared/units/quantity";
 import { migrationAudit, stockMigrationApi, type LineDto, type LineStatus, type MigrationDto } from "../api/stock-migration-api";
-import { isDraft, lineStatus, lineStatusLabels, materialLabel, migrationPermission, statusCounts } from "../lib/stock-migration";
+import { correctionQuantityUnit, isDraft, lineStatus, lineStatusLabels, materialLabel, openingBalancePermissions, statusCounts } from "../lib/stock-migration";
 import { StockMigrationLineDialog } from "./stock-migration-line-dialog";
+import { StockMigrationLineDetails } from "./stock-migration-line-details";
 
 const column = dataTableColumns<LineDto>();
 const dash = <span className="text-muted-foreground">–</span>;
 const badgeVariant: Record<LineStatus, "default" | "secondary" | "destructive" | "outline"> = { 0: "default", 1: "secondary", 2: "destructive", 3: "outline", 4: "outline" };
 const allSheets = "all";
 
-function Messages({ line }: { line: LineDto }) {
+function Messages({ line, onDetails }: { line: LineDto; onDetails: () => void }) {
   return <ul className="space-y-0.5 text-xs">
     {(line.blockers ?? []).map((text) => <li key={`b${text}`} className="break-words text-destructive">{text}</li>)}
     {(line.warnings ?? []).map((text) => <li key={`w${text}`} className="break-words text-amber-700 dark:text-amber-400">{text}</li>)}
-    {(line.corrections ?? []).map((text) => <li key={`c${text}`} className="break-words text-muted-foreground">{text}</li>)}
+    {(line.corrections ?? []).length > 0 ? <li><button type="button" className="text-muted-foreground underline underline-offset-2 hover:text-foreground focus-visible:outline focus-visible:outline-2"
+      onClick={onDetails}>{line.corrections?.length} preparation notes</button></li> : null}
   </ul>;
 }
 
 /** The sheet's rows, filtered by status and tab, with corrections one row or many at a time. */
 export function StockMigrationLines({ migration, shelves }: { migration: MigrationDto; shelves: readonly SelectOption[] }) {
   const id = migration.id ?? "";
-  const editable = isDraft(migration);
+  const permission = usePermissionAction(openingBalancePermissions.correct);
+  const editable = isDraft(migration) && permission.allowed;
   const [chosenStatus, setStatus] = useState<LineStatus | null>((migration.blocked ?? 0) > 0 ? lineStatus.blocked : null);
   // Once the last row needing a fix is fixed, show every row rather than an empty "Needs fixing" list.
   const status = chosenStatus === lineStatus.blocked && (migration.blocked ?? 0) === 0 ? null : chosenStatus;
@@ -39,8 +42,8 @@ export function StockMigrationLines({ migration, shelves }: { migration: Migrati
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editing, setEditing] = useState<LineDto | null>(null);
+  const [viewing, setViewing] = useState<LineDto | null>(null);
   const [message, setMessage] = useState("");
-  const permission = usePermissionAction(migrationPermission);
   const lines = stockMigrationApi.useLinesQuery({ ...migrationAudit, id, pageSize: 1000, ...(status === null ? {} : { status }),
     ...(sheet === allSheets ? {} : { sheet }), ...(search.trim() ? { search: search.trim() } : {}) });
   const [bulk, bulkState] = stockMigrationApi.useBulkUpdateMutation();
@@ -61,6 +64,9 @@ export function StockMigrationLines({ migration, shelves }: { migration: Migrati
       const sheetName = row.original.sheetMaterialName;
       return <div className="min-w-0"><div className="font-medium">{material.code || dash}</div><div className="break-words text-xs">{material.name}</div>
         {row.original.resolvedMaterialName && sheetName && sheetName !== material.name ? <div className="break-words text-xs text-muted-foreground">Sheet: {sheetName}</div> : null}</div>; } }),
+    column.accessor((row) => row.status ?? 0, { id: "status", header: "Status", size: 240, cell: ({ row }) => {
+      const value = row.original.status ?? 0;
+      return <div className="min-w-0 space-y-1"><Badge variant={badgeVariant[value]}>{lineStatusLabels[value]}</Badge><Messages line={row.original} onDetails={() => setViewing(row.original)} /></div>; } }),
     column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", size: 170, cell: ({ row }) => <span className="break-all">{row.original.batchNumber || dash}</span> }),
     column.accessor((row) => row.resolvedShelf ?? row.shelfName ?? "", { id: "shelf", header: "Shelf", size: 170, cell: ({ row }) => row.original.resolvedShelf
       ? <div><div>{row.original.resolvedShelf}</div><div className="text-xs text-muted-foreground">{row.original.resolvedWarehouse}</div></div>
@@ -71,15 +77,12 @@ export function StockMigrationLines({ migration, shelves }: { migration: Migrati
       return <div><div>{loaded?.text ?? dash}</div>{sheetValue !== null && sheetValue !== undefined
         ? <div className="text-xs text-muted-foreground">Sheet: {formatQuantityNumber(sheetValue, "entered")} {row.original.sheetUnit ?? ""}</div> : null}</div>; } }),
     column.accessor((row) => row.expiryDate ?? "", { id: "expiry", header: "Expiry", size: 110, cell: ({ row }) => formatMonthYear(row.original.expiryDate) ?? dash }),
-    column.accessor((row) => row.status ?? 0, { id: "status", header: "Status", cell: ({ row }) => {
-      const value = row.original.status ?? 0;
-      return <div className="min-w-0 space-y-1"><Badge variant={badgeVariant[value]}>{lineStatusLabels[value]}</Badge><Messages line={row.original} /></div>; } }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => <TableMenu label={`Actions for row ${row.original.rowNumber} of ${row.original.sheet}`}
       items={editable ? [
-        { id: "edit", label: "Correct row", icon: Pencil, require: migrationPermission, onSelect: () => setEditing(row.original) },
+        { id: "edit", label: "Correct row", icon: Pencil, require: openingBalancePermissions.correct, onSelect: () => setEditing(row.original) },
         row.original.excluded
-          ? { id: "include", label: "Include row", icon: Undo2, require: migrationPermission, onSelect: () => void apply({ excluded: false }, [row.original.id ?? ""]) }
-          : { id: "exclude", label: "Leave row out", icon: Ban, require: migrationPermission, onSelect: () => void apply({ excluded: true }, [row.original.id ?? ""]) },
+          ? { id: "include", label: "Include row", icon: Undo2, require: openingBalancePermissions.correct, onSelect: () => void apply({ excluded: false }, [row.original.id ?? ""]) }
+          : { id: "exclude", label: "Leave row out", icon: Ban, require: openingBalancePermissions.correct, onSelect: () => void apply({ excluded: true }, [row.original.id ?? ""]) },
       ] : []} /> }),
   ]), [apply, editable]);
 
@@ -105,6 +108,7 @@ export function StockMigrationLines({ migration, shelves }: { migration: Migrati
       error={lines.error ? apiErrorMessage(lines.error) : null} onRetry={() => void lines.refetch()} fill={false}
       selection={editable ? { selected, onChange: setSelected } : undefined} onRowOpen={editable ? setEditing : undefined}
       emptyTitle="No rows" emptyDescription="No row matches these filters." />
-    {editing ? <StockMigrationLineDialog migrationId={id} line={editing} shelves={shelves} onClose={() => setEditing(null)} /> : null}
+    {editing ? <StockMigrationLineDialog migrationId={id} line={editing} quantityUnit={correctionQuantityUnit(migration, editing)} shelves={shelves} onClose={() => setEditing(null)} /> : null}
+    {viewing ? <StockMigrationLineDetails line={viewing} onClose={() => setViewing(null)} /> : null}
   </div>;
 }
