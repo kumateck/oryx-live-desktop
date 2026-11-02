@@ -67,7 +67,9 @@ export function StockMigrationLines({ migration, shelves }: { migration: Migrati
     column.accessor((row) => row.status ?? 0, { id: "status", header: "Status", size: 240, cell: ({ row }) => {
       const value = row.original.status ?? 0;
       return <div className="min-w-0 space-y-1"><Badge variant={badgeVariant[value]}>{lineStatusLabels[value]}</Badge><Messages line={row.original} onDetails={() => setViewing(row.original)} /></div>; } }),
-    column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", size: 170, cell: ({ row }) => <span className="break-all">{row.original.batchNumber || dash}</span> }),
+    column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch / AR number", size: 170, cell: ({ row }) =>
+      <div className="min-w-0 space-y-1"><div className="break-all">{row.original.batchNumber || dash}</div>
+        <div className="break-all text-xs text-muted-foreground">AR: {row.original.arNumber || dash}</div></div> }),
     column.accessor((row) => row.resolvedShelf ?? row.shelfName ?? "", { id: "shelf", header: "Shelf", size: 170, cell: ({ row }) => row.original.resolvedShelf
       ? <div><div>{row.original.resolvedShelf}</div><div className="text-xs text-muted-foreground">{row.original.resolvedWarehouse}</div></div>
       : <span className="text-muted-foreground">{row.original.shelfName ? `${row.original.shelfName} (not found)` : "None"}</span> }),
@@ -94,7 +96,7 @@ export function StockMigrationLines({ migration, shelves }: { migration: Migrati
         onClick={() => { setStatus(item.status); setSelected(new Set()); }}>{item.label} ({item.count})</Button>)}
       <Select value={sheet} onValueChange={setSheet}><SelectTrigger aria-label="Tab" className="w-48"><SelectValue /></SelectTrigger>
         <SelectContent><SelectItem value={allSheets}>All tabs</SelectItem>{(migration.sheets ?? []).map((name) => <SelectItem key={name} value={name}>{name}</SelectItem>)}</SelectContent></Select>
-      <Input aria-label="Search rows" placeholder="Search code, name, batch or GRN" className="w-64" value={search} onChange={(event) => setSearch(event.target.value)} />
+      <Input aria-label="Search rows" placeholder="Search rows, batches or AR" className="w-64" value={search} onChange={(event) => setSearch(event.target.value)} />
     </div>
     {editable && ids.length > 0 ? <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 p-2 text-sm">
       <span>{ids.length} row(s) selected</span>

@@ -21,12 +21,12 @@ const migration = {
   warehouses: [{ id: "w1", name: "SYRUP Raw Warehouse", type: 0, willBeWiped: true, shelves: [{ id: "s1", name: "G/09/B", code: "S/RM/G/09/B" }] }],
 };
 const blocked = {
-  id: "l2", sheet: "Raw Material", rowNumber: 65, materialCode: "RMG039", sheetMaterialName: "Green Tea Extract 50%", batchNumber: "DCS2502013", quantityInSheet: 28.9,
+  id: "l2", sheet: "Raw Material", rowNumber: 65, materialCode: "RMG039", sheetMaterialName: "Green Tea Extract 50%", batchNumber: "DCS2502013", arNumber: "QCD/RM/26/314", quantityInSheet: 28.9,
   sheetUnit: "mg", status: 2, blockers: ["The code RMG039 is used by \"Green Tea Extract 50%\" and \"Glucose\". Pick the right material."], warnings: [], corrections: ["Missing shelf assigned to the first rack and shelf."],
   materialChoices: [{ id: "g1", code: "RMG039", name: "Green Tea Extract 50%" }, { id: "g2", code: "RMG039", name: "Glucose" }], shelfName: "G/09/B", resolvedShelfId: "s1",
 };
 
-function open(permissions: string[]) {
+function open(permissions: string[], arNumber: string | null = blocked.arNumber) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: { method: string; path: string; body: string }[] = [];
@@ -37,7 +37,7 @@ function open(permissions: string[]) {
     if (input.method !== "GET") { calls.push({ method: input.method, path: url.pathname, body: await input.text() }); return new Response(null, { status: 204 }); }
     const json = (value: object) => new Response(JSON.stringify(value), { headers: { "Content-Type": "application/json" } });
     if (url.pathname === "/api/v1/stock-migrations/m1") return json(migration);
-    if (url.pathname === "/api/v1/stock-migrations/m1/lines") return json({ data: url.searchParams.get("status") === "2" ? [blocked] : [blocked], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
+    if (url.pathname === "/api/v1/stock-migrations/m1/lines") return json({ data: [{ ...blocked, arNumber }], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
     if (url.pathname === "/api/v1/stock-migrations/m1/comparison") return json([{ materialId: "x", code: "RMA010", name: "Ascorbic Acid", kind: 0, unit: "mg", current: 14_000_000, new: 0, currentBatches: 1, newBatches: 0 }]);
     return new Response(null, { status: 404 });
   });
@@ -55,6 +55,8 @@ it("holds approval while a row is blocked and saves the material picked for a sh
 
   await chooseAction("Actions for row 65 of Raw Material", "Correct row");
   const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByText("AR number")).toBeTruthy();
+  expect(within(dialog).getByText("QCD/RM/26/314")).toBeTruthy();
   await user.click(await within(dialog).findByRole("combobox", { name: /Material/ }));
   await user.click(await screen.findByRole("option", { name: "RMG039 · Glucose" }));
   await user.click(within(dialog).getByRole("button", { name: "Save and check" }));
@@ -70,6 +72,23 @@ it("shows materials that approval would set to zero", async () => {
   await user.click(await screen.findByRole("tab", { name: "Stock before and after" }));
   expect(await screen.findByText(/1 material\(s\) have stock now but are not in the sheet/)).toBeTruthy();
   expect(screen.getByText("Goes to zero")).toBeTruthy();
+}, 30_000);
+
+it("shows the imported AR alongside the batch for a reviewer without correction access", async () => {
+  open(["CanViewOpeningBalances"]);
+  const ar = await screen.findByText("AR: QCD/RM/26/314");
+  const row = ar.closest("tr");
+  expect(row).toBeTruthy();
+  if (!row) throw new Error("Expected an AR number in a stock row");
+  expect(within(row).getByText("DCS2502013")).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: /Batch \/ AR number/ })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Actions for row 65 of Raw Material" })).toBeNull();
+}, 30_000);
+
+it("shows a missing AR as unavailable while retaining the batch", async () => {
+  open(["CanViewOpeningBalances"], null);
+  expect((await screen.findByText(/^AR:/)).textContent).toBe("AR: –");
+  expect(screen.getByText("DCS2502013")).toBeTruthy();
 }, 30_000);
 
 it("allows a corrector to edit a draft without exposing approval", async () => {
