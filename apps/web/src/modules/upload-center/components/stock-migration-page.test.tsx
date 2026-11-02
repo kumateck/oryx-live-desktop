@@ -22,7 +22,7 @@ const migration = {
 };
 const blocked = {
   id: "l2", sheet: "Raw Material", rowNumber: 65, materialCode: "RMG039", sheetMaterialName: "Green Tea Extract 50%", batchNumber: "DCS2502013", quantityInSheet: 28.9,
-  sheetUnit: "mg", status: 2, blockers: ["The code RMG039 is used by \"Green Tea Extract 50%\" and \"Glucose\". Pick the right material."], warnings: [], corrections: [],
+  sheetUnit: "mg", status: 2, blockers: ["The code RMG039 is used by \"Green Tea Extract 50%\" and \"Glucose\". Pick the right material."], warnings: [], corrections: ["Missing shelf assigned to the first rack and shelf."],
   materialChoices: [{ id: "g1", code: "RMG039", name: "Green Tea Extract 50%" }, { id: "g2", code: "RMG039", name: "Glucose" }], shelfName: "G/09/B", resolvedShelfId: "s1",
 };
 
@@ -48,9 +48,9 @@ function open(permissions: string[]) {
 
 it("holds approval while a row is blocked and saves the material picked for a shared code", async () => {
   const user = userEvent.setup();
-  const calls = open(["CanCreateMaterialStockAdjustment"]);
-  expect(await screen.findByText(/Approving writes off all current stock in/)).toBeTruthy();
-  expect((screen.getByRole("button", { name: /Approve and replace stock/ }) as HTMLButtonElement).disabled).toBe(true);
+  const calls = open(["CanViewOpeningBalances", "CanCorrectOpeningBalances", "CanApproveOpeningBalances"]);
+  expect(await screen.findByText(/This draft does not affect available stock/)).toBeTruthy();
+  expect((screen.getByRole("button", { name: /Approve opening balances/ }) as HTMLButtonElement).disabled).toBe(true);
   expect(await screen.findByText(/is used by "Green Tea Extract 50%" and "Glucose"/)).toBeTruthy();
 
   await chooseAction("Actions for row 65 of Raw Material", "Correct row");
@@ -66,8 +66,27 @@ it("holds approval while a row is blocked and saves the material picked for a sh
 
 it("shows materials that approval would set to zero", async () => {
   const user = userEvent.setup();
-  open(["CanCreateMaterialStockAdjustment"]);
+  open(["CanViewOpeningBalances"]);
   await user.click(await screen.findByRole("tab", { name: "Stock before and after" }));
   expect(await screen.findByText(/1 material\(s\) have stock now but are not in the sheet/)).toBeTruthy();
   expect(screen.getByText("Goes to zero")).toBeTruthy();
+}, 30_000);
+
+it("allows a corrector to edit a draft without exposing approval", async () => {
+  open(["CanViewOpeningBalances", "CanCorrectOpeningBalances"]);
+  expect(await screen.findByRole("button", { name: "Check again" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Approve opening balances" })).toBeNull();
+  await chooseAction("Actions for row 65 of Raw Material", "Correct row");
+  expect(await screen.findByRole("dialog")).toBeTruthy();
+}, 30_000);
+
+it("lets an approver review without showing correction or discard controls", async () => {
+  const user = userEvent.setup();
+  open(["CanViewOpeningBalances", "CanApproveOpeningBalances"]);
+  expect(await screen.findByRole("button", { name: "Approve opening balances" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Check again" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Discard" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Actions for row 65 of Raw Material" })).toBeNull();
+  await user.click(await screen.findByRole("button", { name: "1 preparation notes" }));
+  expect(await screen.findByText("Missing shelf assigned to the first rack and shelf.")).toBeTruthy();
 }, 30_000);
