@@ -2,6 +2,89 @@
 
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
+## Shared team testing database (2026-11-01)
+
+The user requested a remote copy for the demo backend and then clarified that
+they will import it manually through Adminer. Source is the cleaned
+`localhost:5432/oryx_client_20261030`; target is `oryx_team_test_20261101` on the
+server configured by DATABASE_URL. A new empty remote database was created before
+that clarification. The in-progress single-transaction restore was cancelled so
+the user can import the file. No demo connection change was made; SSH root access
+was refused. Existing databases, services, account grants and the local source
+are preserved. Provide INSERT-based plain SQL without psql-only commands, guarded
+against the wrong database or a nonempty public schema, with atomic import and
+local restore verification. No credentials belong in output or committed code.
+After manual import, the demo's runtime and future CI migration/startup target
+must both be changed to the new database by its server operator. Current demo CI
+still targets entrancedb; this task does not deploy or change that workflow.
+The cancelled remote restore rolled back: the new target has zero public tables
+and no active sessions. The delivered SQL and gzip were verified by restoring the
+exact SQL into a disposable local database: all 440 public tables and 82,556 rows
+match source counts/content hashes, and decompressing gzip reproduces the SQL
+exactly. The import guard requires the named empty target; core master counts and
+empty stock/drafts are asserted before commit. Files and the operator guide are
+under the conversation outputs directory `team-test-20261101`.
+
+## Fresh operational data migration (2026-11-01)
+
+The user authorized backup, deletion of dummy transactions with master data
+preserved, master corrections, and an opening-balance draft/correction/approval
+workflow for local database `oryx_client_20261030`. Backup and full restore into
+an isolated rehearsal database succeeded before the main database cleanup.
+
+Confirmed preservation scope: materials and department links; products; users,
+employees, roles and permissions; questions and templates; material and product
+STP/specification/ARD setup; alert and approval configuration; code-generation
+settings; and all configuration collections. Preserve dependent BOMs, product
+packaging, routes, procedures, forms, formulas, document/template revisions,
+master-data verification evidence, and attachments/files needed by retained data.
+Distinguish approval definitions and master-document approvals from dummy
+transaction approval history. Shared/polymorphic tables require row-level rules.
+
+Excel is authoritative for each material-department UOM. Convert source kg to mg
+and L to ml for Upload Center Material stock; piece counts remain unchanged.
+Missing materials must be created and linked to their departments. Preserve all
+distinct Folidyn batches and expired opening-stock rows. Expiry corrections must
+not extend a batch using dates from a different material or batch.
+
+The user assigns `RMG001` to Griseofulvin and, in their latest clarification,
+`RMG039` to Green Tea Extract 50%, superseding the earlier Glucose decision. Existing
+Griseofulvin is `RMG002`, while Glibenclamide currently uses `RMG001`; preserve
+material IDs and their BOM/quality links when resolving the code reassignment.
+Green Tea Extract and Glucose currently share `RMG039`; retain the Green Tea
+opening-stock identity and resolve Glucose to a separate unique code while
+preserving its material ID and master-data relationships.
+
+The user confirms earliest manufacturing and latest expiry for conflicting
+records of the same material and batch. Never pool dates across distinct batches;
+quantities stay separated by department and shelf. Supplier, manufacturer, vendor
+and customer masters, plus HR/payroll master settings including employee
+compensation, pay grades and tax bands, are confirmed for preservation.
+
+All 440 public tables have explicit policies: 215 retained, 12 retaining selected
+master support, and 213 cleared. The transactional reset removed 28,649 dummy
+rows, asserted retained row counts/hashes, retained foreign-key enforcement, and
+restored application trigger states. Master setup created eight materials and
+19 department links, corrected 95 existing department UOM links, and resolved
+three code collisions while preserving material IDs. Main stock remains empty.
+
+Upload Center Material stock now saves drafts for review. Separate backend
+permissions control viewing, upload, corrections and approval. The user will
+assign grants manually; no roles were granted access automatically. Draft writes
+and approval serialize on the draft ID, with atomic posting and repeat-approval
+protection. The direct stock upload endpoint refuses writes, and the new-batch
+first-row double count is fixed. No database schema change is required.
+
+Four prepared files contain 819 rows. Tablet row 292 is omitted as instructed.
+All three Secnidazole and all three Sildenafil Citrate batches use kg converted
+to mg, including the two source ml typos. Four tablet date errors remain visible
+and block approval until corrected. Rehearsal saved all rows with zero stock,
+then approved 815 rows after excluding those four only on the rehearsal copy.
+All 13 Folidyn batches and expired stock were retained. Main has no uploaded
+drafts or approved balances. Code changes remain local and require the backend
+and web application to be rebuilt/restarted before the user uploads. See
+`docs/fresh-opening-balances.md` for evidence and the operator workflow.
+
 ## Step detail action evidence (2026-10-28)
 
 The user requested the detailed records of every performed step action on its own

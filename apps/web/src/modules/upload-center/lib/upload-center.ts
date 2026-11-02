@@ -4,7 +4,7 @@ export const uploadCenterPath = "/settings/upload-center";
  * change stock. Attendance and shift uploads have their own keys.
  */
 export const uploadPermissions = {
-  material: "CanCreateMaterialStockAdjustment",
+  material: "CanViewOpeningBalances",
   product: "CanApproveFgtn",
   attendance: "CanSubmitAttendanceReportUpload",
   schedule: "CanSubmitShiftScheduleReportUpload",
