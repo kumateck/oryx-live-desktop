@@ -42,6 +42,12 @@ strings to survive Upload Center's file rebuild without losing date formatting.
 Source amounts, rows, filenames, resolved database identities and preparation
 notes remain alongside upload fields. Original source files are unchanged.
 
+The prepared stock files include `AR No.` in column H. The verification table
+shows the imported AR beneath its batch; row correction and preparation-note
+dialogs also show the AR and GRN. Search accepts AR numbers. A missing AR is
+displayed as a dash and remains null in the stored data. Source AR values must
+not be invented, replaced with the batch, or filled from another row.
+
 ## Outstanding source checks
 
 Four rows in `tablet-raw-material-stock.xlsx` need confirmed date corrections
