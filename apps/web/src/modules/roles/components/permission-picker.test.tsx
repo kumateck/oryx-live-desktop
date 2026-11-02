@@ -78,3 +78,32 @@ it("names modules in full, and finds a permission in any module with the place i
   fireEvent.click(screen.getByRole("button", { name: "Clear search" }));
   expect(await screen.findByRole("switch", { name: "View suppliers" })).toBeTruthy();
 });
+
+it("leaves search when clicking the already selected module and preserves edits", async () => {
+  render(<Picker />);
+  const user = userEvent.setup();
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "invoices" } });
+  await user.click(await screen.findByRole("switch", { name: "Pay invoices" }));
+  await user.click(screen.getByRole("tab", { name: "Procurement" }));
+  expect(screen.getByRole("textbox").getAttribute("value")).toBe("");
+  expect(await screen.findByRole("switch", { name: "View suppliers" })).toBeTruthy();
+  expect(screen.getByRole("status").textContent).toBe("2 shown");
+  await user.click(screen.getByRole("tab", { name: "Finance" }));
+  expect(screen.getByRole("switch", { name: "Pay invoices" }).getAttribute("aria-checked")).toBe("false");
+});
+
+it("opens another module after an empty search and allows keyboard return to the selected module", async () => {
+  render(<Picker disabled />);
+  const user = userEvent.setup();
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "no matching permission" } });
+  expect(await screen.findByText("No permission matches this search.")).toBeTruthy();
+  await user.click(screen.getByRole("tab", { name: "Finance" }));
+  expect(await screen.findByRole("switch", { name: "Pay invoices" })).toBeTruthy();
+  expect(screen.getByRole("textbox").getAttribute("value")).toBe("");
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "suppliers" } });
+  expect(await screen.findByRole("switch", { name: "View suppliers" })).toBeTruthy();
+  screen.getByRole("tab", { name: "Finance" }).focus();
+  await user.keyboard("{Enter}");
+  expect(await screen.findByRole("switch", { name: "Pay invoices" })).toHaveProperty("disabled", true);
+  expect(screen.getByRole("textbox").getAttribute("value")).toBe("");
+});

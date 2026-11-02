@@ -26,7 +26,7 @@ export function PermissionPicker({ modules, onChange, disabled = false, fill = f
 
   return <section aria-label="Role permissions" className={`@container flex min-h-0 min-w-0 flex-col rounded-lg border bg-card p-4 ${fill ? "flex-1" : ""}`}>
     <Tabs value={selected?.module ?? ""} onValueChange={chooseModule} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-      <PermissionModuleTabs modules={modules} />
+      <PermissionModuleTabs modules={modules} onChoose={chooseModule} />
       {selected ? <TabsContent value={selected.module} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
           <div><h2 className="text-base font-semibold">{selected.module}</h2><p className="text-xs text-muted-foreground">{accessCount(selected.children)} of {selected.children.length} enabled · {total} selected overall</p></div>
