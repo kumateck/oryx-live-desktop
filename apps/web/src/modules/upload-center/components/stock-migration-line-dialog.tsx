@@ -10,7 +10,7 @@ import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
 import { migrationAudit, stockMigrationApi, type LineDto } from "../api/stock-migration-api";
-import { lineFormValues, lineRequest, migrationPermission } from "../lib/stock-migration";
+import { lineFormValues, lineRequest, openingBalancePermissions } from "../lib/stock-migration";
 import { lineFormSchema, type LineFormValues } from "../schemas/stock-migration-schema";
 
 function SheetValue({ label, value }: { label: string; value: string | null | undefined }) {
@@ -18,30 +18,31 @@ function SheetValue({ label, value }: { label: string; value: string | null | un
 }
 
 /** Corrects one sheet row. Every row is checked again when it is saved. */
-export function StockMigrationLineDialog({ migrationId, line, shelves, onClose }: {
-  migrationId: string; line: LineDto; shelves: readonly SelectOption[]; onClose: () => void;
+export function StockMigrationLineDialog({ migrationId, line, quantityUnit, shelves, onClose }: {
+  migrationId: string; line: LineDto; quantityUnit: string; shelves: readonly SelectOption[]; onClose: () => void;
 }) {
   const [save, { isLoading }] = stockMigrationApi.useUpdateLineMutation();
-  const permission = usePermissionAction(migrationPermission);
+  const permission = usePermissionAction(openingBalancePermissions.correct);
   const [message, setMessage] = useState("");
   const form = useForm<LineFormValues>({ resolver: zodResolver(lineFormSchema), defaultValues: lineFormValues(line, shelves) });
   const choices = useMemo(() => (line.materialChoices ?? []).flatMap((item) => item.id ? [{ value: item.id, label: `${item.code ?? ""} · ${item.name ?? ""}` }] : []), [line.materialChoices]);
-  const picksMaterial = choices.length > 0 || Boolean(line.materialId);
+  const picksMaterial = choices.length > 1 || Boolean(line.materialId);
 
   const fields = useMemo((): WizardField<LineFormValues>[] => [
-    picksMaterial
-      ? { type: InputTypes.SELECT, name: "material", label: "Material", mode: "single", source: "sync", required: true, className: "md:col-span-2",
-        options: choices.length ? choices : [{ value: line.materialId ?? "", label: `${line.resolvedMaterialCode ?? ""} · ${line.resolvedMaterialName ?? ""}` }], placeholder: "Choose the material" }
-      : { type: InputTypes.TEXT, name: "materialCode", label: "Material code", required: true },
+    { type: InputTypes.TEXT, name: "materialCode", label: "Material code", required: true, description: "Changing the code clears the previous material choice when saved." },
+    ...(picksMaterial
+      ? [{ type: InputTypes.SELECT, name: "material", label: "Material", mode: "single", source: "sync", className: "md:col-span-2",
+        options: choices.length ? choices : [{ value: line.materialId ?? "", label: `${line.resolvedMaterialCode ?? ""} · ${line.resolvedMaterialName ?? ""}` }], placeholder: "Choose the material" } satisfies WizardField<LineFormValues>]
+      : []),
     { type: InputTypes.SELECT, name: "shelf", label: "Shelf", mode: "single", source: "sync", options: shelves, placeholder: line.shelfName ? `Sheet says ${line.shelfName}` : "Choose a shelf",
       searchPlaceholder: "Search shelves", className: picksMaterial ? "md:col-span-2" : "md:col-span-2" },
     { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number", required: true },
-    { type: InputTypes.TEXT, name: "unitSymbol", label: "Unit in the sheet" },
-    { type: InputTypes.NUMBER, name: "quantityInSheet", label: "Quantity in the sheet", min: 0, description: "In the sheet's unit; leave empty for no stock." },
+    { type: InputTypes.TEXT, name: "unitSymbol", label: "Base UOM in the sheet", description: "Quantity conversion follows the file's weight and liquid settings." },
+    { type: InputTypes.NUMBER, name: "quantityInSheet", label: `Quantity (${quantityUnit})`, min: 0, description: `Enter the amount in ${quantityUnit}; leave empty for no stock.` },
     { type: InputTypes.MONTH, name: "manufactured", label: "Manufactured" },
     { type: InputTypes.MONTH, name: "expiry", label: "Expiry" },
     { type: InputTypes.CHECKBOX, name: "excluded", label: "Leave this row out", className: "md:col-span-3" },
-  ], [choices, line, picksMaterial, shelves]);
+  ], [choices, line, picksMaterial, quantityUnit, shelves]);
 
   const submit = form.handleSubmit(async (values) => {
     const denied = permission.check();

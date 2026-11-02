@@ -1,5 +1,6 @@
 import { api } from "@/shared/api/base-api";
 import { materialsApi } from "@/shared/api/generated/materials";
+import { addTags } from "@/shared/api/add-tags";
 import type {
   DomainEntitiesMaterialsStockMigrationsStockMigrationComparisonDto as ComparisonDto,
   DomainEntitiesMaterialsStockMigrationsStockMigrationDto as MigrationDto,
@@ -10,6 +11,12 @@ import type {
 } from "@/shared/api/generated/materials";
 
 export type { ComparisonDto, LineDto, LineStatus, LineUpdate, MigrationDto, WarehouseDto };
+
+const reviewedApi = materialsApi.enhanceEndpoints({ endpoints: {
+  postApiV1StockMigrationsByIdApprove: (definition) => {
+    definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [{ type: "StockOnShelves", id: "all" }]);
+  },
+} });
 
 /** Audit headers for every stock migration request, as for the other Upload Center uploads. */
 export const migrationAudit = { module: "Settings", subModule: "Configurations" } as const;
@@ -37,6 +44,6 @@ export const stockMigrationApi = {
   useBulkUpdateMutation: materialsApi.usePutApiV1StockMigrationsByIdLinesMutation,
   useUpdateUnitsMutation: materialsApi.usePutApiV1StockMigrationsByIdUnitsMutation,
   useRecheckMutation: materialsApi.usePostApiV1StockMigrationsByIdRecheckMutation,
-  useApproveMutation: materialsApi.usePostApiV1StockMigrationsByIdApproveMutation,
+  useApproveMutation: reviewedApi.usePostApiV1StockMigrationsByIdApproveMutation,
   useDiscardMutation: materialsApi.useDeleteApiV1StockMigrationsByIdMutation,
 };

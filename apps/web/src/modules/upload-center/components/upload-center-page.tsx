@@ -12,7 +12,7 @@ import { SettingsHeader } from "@/modules/settings-support/ui";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { uploadApi } from "../api/upload-api";
-import { attendance, materialStock, productStock, shiftSchedule, toSmallestUnits } from "../lib/sheets";
+import { attendance, productStock, shiftSchedule } from "../lib/sheets";
 import { uploadPermissions } from "../lib/upload-center";
 import { saveUrl } from "../lib/workbook";
 import { useDepartments } from "../hooks/use-departments";
@@ -29,23 +29,6 @@ async function template(request: Promise<{ data: string } | { error: Parameters<
   if ("error" in result) return apiErrorMessage(result.error);
   saveUrl(result.data, name);
   return null;
-}
-
-function MaterialTab() {
-  const departments = useDepartments();
-  const [chosen, setChosen] = useState<SelectOption | null>(null);
-  const [kind, setKind] = useState<"0" | "1">("0");
-  const department = departments.own ?? chosen;
-  const [upload] = uploadApi.useUploadMaterialStockMutation();
-  const [download] = uploadApi.useMaterialTemplateMutation();
-  return <UploadSheet profile={materialStock} require={uploadPermissions.material} unitSwitch prepare={toSmallestUnits} ready={department ? null : "Choose the production department."}
-    options={<>
-      <Choice label="Material kind"><Select value={kind} onValueChange={(value) => setKind(value === "1" ? "1" : "0")}><SelectTrigger aria-label="Material kind" className="w-full"><SelectValue /></SelectTrigger>
-        <SelectContent><SelectItem value="0">Raw material</SelectItem><SelectItem value="1">Packaging material</SelectItem></SelectContent></Select></Choice>
-      <Choice label="Production department">{departments.own ? <Fixed value={departments.own.label} /> : <AsyncOptionPicker label="Production department" value={chosen} onChange={setChosen} loadOptions={departments.loadOptions} placeholder="Choose a department" />}</Choice>
-    </>}
-    template={{ label: "Download template", download: () => template(download({ kind: kind === "1" ? 1 : 0, ...(department ? { departmentId: department.value } : {}) }), "material-stock-template.xlsx") }}
-    submit={async (file) => { if (!department) return "Choose the production department."; const result = await upload({ file, departmentId: department.value }); return "error" in result ? apiErrorMessage(result.error) : null; }} />;
 }
 
 function ProductTab() {
@@ -91,8 +74,7 @@ function ScheduleTab() {
 }
 
 const tabs = [
-  { id: "material", label: "Material stock", require: uploadPermissions.material, Panel: MaterialTab },
-  { id: "migration", label: "Stock migration", require: uploadPermissions.material, Panel: StockMigrationTab },
+  { id: "material", label: "Material stock", require: uploadPermissions.material, Panel: StockMigrationTab },
   { id: "product", label: "Product stock", require: uploadPermissions.product, Panel: ProductTab },
   { id: "attendance", label: "Attendance", require: uploadPermissions.attendance, Panel: AttendanceTab },
   { id: "schedule", label: "Shift schedule", require: uploadPermissions.schedule, Panel: ScheduleTab },

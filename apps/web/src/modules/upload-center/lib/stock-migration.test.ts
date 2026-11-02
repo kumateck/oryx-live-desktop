@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LineDto, MigrationDto } from "../api/stock-migration-api";
-import { approvalBlocker, comparisonChange, lineFormValues, lineRequest, monthValue, shelfOptions } from "./stock-migration";
+import { approvalBlocker, comparisonChange, correctionQuantityUnit, lineFormValues, lineRequest, monthValue, shelfOptions } from "./stock-migration";
 
 const draft: MigrationDto = { id: "m1", status: 0, ok: 3, warning: 1, blocked: 0, skipped: 2, excluded: 0, total: 6 };
 const line: LineDto = {
@@ -31,5 +31,18 @@ describe("stock migration", () => {
     expect(comparisonChange({ current: 0, new: 5 })).toBe("added");
     expect(comparisonChange({ current: 5, new: 4 })).toBe("changed");
     expect(comparisonChange({ current: 5, new: 5 })).toBe("same");
+  });
+
+  it("clears a previous explicit material choice when its code is corrected", () => {
+    const previous = { ...line, materialId: "old-material", resolvedMaterialId: "old-material" };
+    const values = { ...lineFormValues(previous, shelves), materialCode: "RMG001", material: { value: "old-material", label: "Old material" } };
+    expect(lineRequest(previous, values).materialId).toBeNull();
+    expect(lineRequest(previous, { ...values, materialCode: line.materialCode ?? "" }).materialId).toBe("old-material");
+  });
+
+  it("labels correction quantities using the file convention rather than the department storage symbol", () => {
+    expect(correctionQuantityUnit({ massUnit: "kg", volumeUnit: "L" }, { unit: "mg" })).toBe("kg");
+    expect(correctionQuantityUnit({ massUnit: "mg", volumeUnit: "ml" }, { unit: "ml" })).toBe("ml");
+    expect(correctionQuantityUnit({}, { unit: "piece" })).toBe("piece");
   });
 });
