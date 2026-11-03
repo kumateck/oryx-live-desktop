@@ -1,4 +1,4 @@
-import { productPermissions } from "../lib/product-access";
+import { useProductWorkspace } from "./use-product-workspace";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -18,7 +18,8 @@ export function useProcedure(productId: string) {
   const saved = useMemo(() => parsed?.success ? fromSavedRoutes(parsed.data) : none, [parsed]);
   const [draft, setDraft] = useState<ProcedureStep[] | null>(null);
   const [message, setMessage] = useState("");
-  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.edit], departmentType: 0 });
+  const { editRequirement } = useProductWorkspace();
+  const permission = usePermissionAction(editRequirement);
   const steps = draft ?? saved;
 
   const saveAll = async () => {

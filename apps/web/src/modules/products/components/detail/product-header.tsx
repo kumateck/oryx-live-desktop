@@ -1,3 +1,4 @@
+import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { Pencil } from "lucide-react";
 import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
@@ -6,12 +7,13 @@ import { PrintButton } from "@/shared/print/print-button";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { PageBreadcrumbs } from "@/shared/navigation/page-breadcrumbs";
 import { formatDateTime } from "@/shared/format/dates";
-import { divisionLabel, productEditPath, productPermissions } from "../../lib/product-access";
+import { divisionLabel, productPermissions } from "../../lib/product-access";
 import type { ProductDetail } from "../../schemas/product-detail-schema";
 import { QualityBadge, VerifyProductButton } from "../verify-product-button";
 import { ProductPrint } from "./product-print";
 
 export function ProductHeader({ product }: { product: ProductDetail }) {
+  const { editPath: productEditPath } = useProductWorkspace();
   const created = formatDateTime(product.createdAt);
   const division = divisionLabel(product.division);
   return <header className="min-w-0 space-y-3">

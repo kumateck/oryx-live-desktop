@@ -7,10 +7,10 @@ import { productFormSourceSchema } from "../schemas/product-form-schema";
 /** The saved product, in the shape the edit form starts from. */
 export function useProductFormSource(productId: string | undefined) {
   const query = useGetApiV1ProductByProductIdQuery({ ...audit, productId: productId ?? "" }, { skip: !productId });
-  const parsed = useMemo(() => query.data ? productFormSourceSchema.safeParse(query.data) : null, [query.data]);
+  const parsed = useMemo(() => query.currentData ? productFormSourceSchema.safeParse(query.currentData) : null, [query.currentData]);
   return {
     product: parsed?.success ? parsed.data : null,
-    loading: query.isLoading,
+    loading: query.isFetching && !query.currentData,
     notFound: Boolean(query.error && "status" in query.error && query.error.status === 404),
     error: query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned a product record the app could not read." : null,
     retry: () => { void query.refetch(); },

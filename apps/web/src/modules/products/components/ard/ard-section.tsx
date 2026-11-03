@@ -1,15 +1,17 @@
+import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { useCallback, useState } from "react";
 import { Plus } from "lucide-react";
 import { Link } from "react-router";
 import { DropdownButton } from "@/shared/actions";
 import { useAccess } from "@/shared/auth/use-access";
 import { useProductArds } from "../../hooks/use-product-ards";
-import { productArdPermissions, productEditPath } from "../../lib/product-access";
+import { productArdPermissions } from "../../lib/product-access";
 import type { SavedArd } from "../../schemas/ard-schema";
 import { ArdDialog, type ArdTarget } from "./ard-dialog";
 import { ArdTable } from "./ard-table";
 
 export function ArdSection({ productId }: { productId: string }) {
+  const { editPath: productEditPath } = useProductWorkspace();
   const state = useProductArds(productId);
   const access = useAccess();
   const mayCreate = access.has(productArdPermissions.create);

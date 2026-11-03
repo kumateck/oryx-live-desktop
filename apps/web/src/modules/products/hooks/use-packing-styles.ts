@@ -1,3 +1,4 @@
+import { useProductWorkspace } from "./use-product-workspace";
 import { approvedProductPackingPermission, productPermissions } from "../lib/product-access";
 import type { PermissionRequirement } from "@/shared/auth/access";
 import { useAccess } from "@/shared/auth/use-access";
@@ -27,7 +28,9 @@ const none: PackingStyle[] = [];
  * here as a draft until the user saves; `dirty` is true while the draft differs from what is saved.
  */
 export function usePackingStyles(productId: string, target: PackingSaveTarget = "product") {
-  const { audit, require } = targets[target];
+  const { editRequirement } = useProductWorkspace();
+  const { audit } = targets[target];
+  const require = target === "product" ? editRequirement : targets[target].require;
   const query = useGetApiV1ProductByProductIdPackingQuery({ ...audit, productId });
   const [saveProduct, productMutation] = usePostApiV1ProductByProductIdPackingMutation();
   const [saveApproved, approvedMutation] = usePostApiV1ProductByProductIdPackingApprovedProductMutation();
