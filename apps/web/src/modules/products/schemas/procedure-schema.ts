@@ -11,13 +11,14 @@ const party = z.object({
   ard: option.nullish(),
 });
 
-export const procedureStepFormSchema = z.object({
-  operation: z.object({ value: z.string().min(1, "Choose an operation"), label: z.string() }, { message: "Choose an operation" }),
-  workCenters: z.array(option, { message: "Choose at least one work center" }).min(1, "Choose at least one work center"),
-  estimatedTime: z.string().nullish(),
+// Validate responsibility independently so its errors also show when the operation is missing.
+const responsibilities = z.object({
   isCritical: z.boolean().optional(),
-  parties: z.array(party).min(1, "Add at least one responsible user or role"),
+  parties: z.array(party),
 }).superRefine((step, context) => {
+  if (step.isCritical && step.parties.length === 0) {
+    context.addIssue({ code: "custom", path: ["parties"], message: "Add at least one responsible user or role" });
+  }
   const seen = new Set<string>();
   step.parties.forEach((item, index) => {
     if (!item.who || !item.action) return;
@@ -31,6 +32,12 @@ export const procedureStepFormSchema = z.object({
       message: "An automated step cannot carry a main instruction (requisition, final packing, transfer, dispatch, ATR), because it could never be completed. Mark the step critical or choose another instruction." });
   }
 });
+
+export const procedureStepFormSchema = z.object({
+  operation: z.object({ value: z.string().min(1, "Choose an operation"), label: z.string() }, { message: "Choose an operation" }),
+  workCenters: z.array(option, { message: "Choose at least one work center" }).min(1, "Choose at least one work center"),
+  estimatedTime: z.string().nullish(),
+}).and(responsibilities);
 export type ProcedureStepFormValues = z.infer<typeof procedureStepFormSchema>;
 
 const text = z.string().nullish().transform((value) => value?.trim() ?? "");

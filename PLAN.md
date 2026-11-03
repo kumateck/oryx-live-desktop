@@ -2,6 +2,111 @@
 
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
+## Permission search and navigation consistency (2026-11-03)
+
+Fix the reported mismatch between the visible search field, selected submodule
+and permission rows. Derive search mode/results from the current query in the
+same render; show global results separately from module browsing. Match every
+search word within one permission's module, group, name, key or description.
+Selecting even the active module tab exits search; clearing returns to the prior
+group. Reset result scrolling when the query or group changes. Preserve drafts,
+permission keys, mutation checks and backend authorization. Hide the module-wide
+grant switch while global search is displayed so it cannot act on unrelated,
+hidden permissions. See `docs/roles-migration.md`.
+
+## Procurement and store FormWizard migration (2026-11-03)
+
+The user authorized migrating the nine identified form files: service quotations,
+service memos and proformas, open-market quotations, vendor prices, store purchase
+and stock requisitions, returns, and damage/missing corrections. Use the existing
+FormWizard with module-owned React Hook Form state and Zod schemas. Repeatable
+charges, materials and vendor quotes use typed field paths; requisition item
+tables remain lazy custom renderers with their existing stock/unit rules.
+Preserve backend requests, audit metadata, permissions, record-state preflights
+and failure/retry behavior. Recheck permissions after asynchronous preflight work.
+Keep entered decimal text intact until the API adapter and serialize calendar
+dates at the existing UTC boundary. No API, inventory-posting or approval changes
+are part of this migration. See `docs/forms.md` for the resulting form contract.
+
+## Desktop web release freshness (2026-11-02)
+
+The user requests the web release prompt in installed desktops that keep an older
+web build. Reuse the shared update provider for browser and Electron sessions;
+announce every changed compatible release rather than automatically refreshing
+read-only screens. Keep minute/focus/reconnection checks, per-release deferral,
+minimum-shell compatibility and unsaved-work guards. Older builds without an
+embedded commit compare loaded entry assets with fresh HTML before adopting a
+server release ID. Refresh checks uncached metadata and valid Oryx HTML first,
+rechecks unsaved work, and replaces the current route with a unique release query
+key so cached HTML cannot satisfy the old URL. Preserve filters, fragments,
+encrypted sessions and stored drafts. HTML and deployment metadata are no-store;
+hashed assets remain immutable and retained. This is a web change with no native
+bridge or installer change. Existing stale sessions need one manual refresh or
+reconnect after deployment to receive this detector; no deployment is performed
+as part of this implementation. See `docs/desktop-updates.md` for rollout.
+
+## Application reporting and KPI study (2026-11-02)
+
+The user requests application understanding and report/KPI planning module by
+module before further report implementation. Record the business question, row
+grain, available/proposed columns, event date or snapshot basis, filters,
+numerator/denominator, unit/currency rules, permissions, sources, legacy gaps and
+acceptance examples. This study does not authorize implementing every candidate.
+
+The first source-based inventory covers 16 navigation groups, 151 feature
+manifests, 362 workspace pages and 34 current desktop report choices. The study
+groups workflows into 16 business review areas with 61 report and 52 KPI
+candidates, distinguishing existing workbench choices, supporting source, local
+work and proposals/gaps. Start detailed review with QA, then QC, production and
+warehouse; later waves cover purchasing/logistics, FG/finance, stores/services,
+HR/payroll, R&D, audits, IT/access and master data.
+
+The deeper QA trace found definition gaps to resolve before KPI acceptance:
+document issuance differs from quality release; product-stock imports also stamp
+BMR issue dates without an issuer; and current QA dashboard total/pending/rejected
+approval expressions repeat purchase-order approvals. Record these without
+changing behavior during this planning phase. No customer data was queried or
+changed. Preserve the separately implemented, uncommitted BMR report and other
+ongoing workspace work. The study entry is `docs/reporting/README.md`.
+
+## Optional automated-step responsibility (2026-11-02)
+
+Automated procedure steps (`isCritical=false`) may have no responsible users or
+roles and no assigned instructions. Critical steps still require a responsible
+user or role, and every added assignment must be complete. Keep the existing
+automatic start and manual completion rules, including completion for critical
+steps when allowed. Do not introduce a Complete step instruction or change
+permissions, record-driven completion, material gates, or backend contracts.
+
+## Packaging quantity units (2026-11-02)
+
+Show units beside prescribed, allowance, and total packaging quantities. Material
+department linkage remains authoritative and read-only. For linked mg, offer
+mg/g/kg entry; for ml, offer ml/L; other symbols remain fixed. Unit changes
+preserve amounts, with form values and saved quantities in the linked unit.
+Use the existing material UOM read endpoint for saved lines and picker facts for
+new selections; never change material links or infer UOM from purchase units.
+Block edits when the unit cannot be verified, preserve unsaved work on save
+failure, and retain whole-list save permissions and carried fields.
+
+## QA BMR issued report (2026-11-02)
+
+Add a read-only QC/QA report using recorded BMR issue dates, with required inclusive
+UTC start/end dates and optional production department filtering. Include completed,
+archived and later-cancelled issued history; do not use the active issue queue or
+QC approval status as issuance evidence. Existing `CanViewQcAndQaReport` applies;
+production actors remain scoped to their assigned department. No issuance changes,
+role grants, migration or deployment are part of the report.
+
+The user chose five print headings: Product (name/code), Batch (number/size),
+Validity (manufacture/expiry), Issued (date/person), and Department. Related values
+stack on two lines; long text wraps. CSV/Excel retain nine independent fields.
+Use the shared report viewer and a typed generated report endpoint. The result is
+one complete snapshot for screen/print/export, with validation before disclosure.
+Missing legacy issuer data remains “Not recorded”; never infer who issued it.
+Names, department assignments and units come from current linked records because
+the source does not store an immutable issue-time master-data snapshot.
+
 ## Shared team testing database (2026-11-01)
 
 The user requested a remote copy for the demo backend and then clarified that

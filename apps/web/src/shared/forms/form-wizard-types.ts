@@ -17,6 +17,7 @@ export interface TextField<TValues extends FieldValues> extends FieldBase<TValue
   type: typeof InputTypes.TEXT | typeof InputTypes.EMAIL | typeof InputTypes.PASSWORD;
   placeholder?: string;
   autoComplete?: string;
+  inputMode?: "text" | "decimal" | "numeric" | "tel";
   readOnly?: boolean;
 }
 

@@ -18,6 +18,7 @@ export default function TextInputField({ field }: {
   const registration = form.register(field.name, field.type === InputTypes.NUMBER ? { valueAsNumber: true } : {});
   return <FieldFrame id={id} label={field.label} required={field.required} description={field.description} error={error} className={field.className}>
     <Input id={id} type={field.type} placeholder={field.placeholder} autoComplete={field.type === InputTypes.NUMBER ? undefined : field.autoComplete}
+      inputMode={field.type === InputTypes.NUMBER ? undefined : field.inputMode}
       readOnly={field.readOnly} disabled={field.disabled} aria-required={field.required} aria-invalid={Boolean(error)}
       aria-describedby={fieldDescription(id, field.description, error)}
       min={field.type === InputTypes.NUMBER ? field.min : undefined} max={field.type === InputTypes.NUMBER ? field.max : undefined}

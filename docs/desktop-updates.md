@@ -18,10 +18,38 @@ Web/API compatibility floors remain independent of this release number.
 - The header update icon opens the same dialog. Download progress appears in the dialog and header. A cancelled or failed download can be retried. Completed downloads are verified before **Install and restart** becomes available and checked again before execution.
 - Installation is explicit. Oryx refuses to install while a form's unload guard reports unsaved work, flushes its encrypted session vault, starts the verified per-user NSIS update and restarts afterwards. Server settings, companion preferences and the saved encrypted session remain in the existing user-data directory.
 - A signed cached release is checked again on launch. Its downloaded installer can still be offered during a server outage. Interrupted partial downloads are discarded; an unverified file is never installed.
-- The web client checks `/deployment.json` every minute and on focus/reconnection. A changed web commit refreshes automatically only on a visible screen without visible forms, editable controls, open dialogs or unsaved-work guards. Hidden controls such as the collapsed header search do not prevent a safe update. Otherwise **A web update is ready** offers a safe refresh and reminder. The existing retained hashed assets keep deferred sessions usable.
+- Both the browser and desktop web client check `/deployment.json` every minute while visible and on focus/reconnection. Every changed web commit opens **A web update is ready**, with **Refresh now** and **Remind me later**. Deferring suppresses repeat prompts for that release during the current session; the header update icon reopens it, and another release prompts again. An already stale versioned client is detected on its first check. Builds without an embedded commit compare their loaded entry assets with fresh HTML before adopting the server's commit.
+- **Refresh now** checks fresh release metadata and valid Oryx HTML before leaving the current page, then rechecks unsaved-work guards. A failed check keeps the page open and offers retry. The button is disabled during the check. Refresh replaces the current URL with a unique `__oryx_release` query value while preserving the route, existing filters and fragment, preventing reuse of HTML cached under the earlier URL. It does not clear cookies, encrypted sign-in, local preferences or drafts. Metadata checks also use unique URLs with `cache: "no-store"`; HTML/deployment metadata are served as `no-store`, while retained hashed assets remain immutable.
 - When `minimumShellVersion` exceeds the installed desktop version, the shell blocks opening the incompatible web release and offers its updater. An already open older web client offers **Update desktop** instead of applying that incompatible release. Reminding later does not bypass the version requirement.
 
 The first updater-enabled shell is **0.2.0**. Clients installed from older installers need one manual bootstrap installation. The web header offers the administrator-published `/downloads/OryxLiveDesktop-Setup.exe` for that transition. Subsequent native updates run inside the application.
+
+## Roll out the web freshness fix
+
+Deploy the web build through the usual release pipeline, with its exact
+`RELEASE_SHA` supplied to both the Vite build and `/deployment.json`. A commit
+present in Git alone is not a deployment. The customer Docker image already
+serves HTML and metadata with `no-store`; host-Nginx installations must regenerate
+and reload the supplied Nginx configuration to adopt that HTML policy. Keep prior
+hashed assets available for deferred sessions.
+
+An app still running JavaScript from before this fix cannot receive the new
+detector until that page reloads. Have those users reconnect or reload once after
+deployment. If an existing cache still serves old HTML, open the connected server
+URL with a unique query such as `?__oryx_release=initial-20261102` once. Thereafter
+new web releases prompt in the desktop without an installer change. The browser
+and desktop must connect to the same frontend origin; compare that origin's
+`/deployment.json` commit with the successful deployment SHA before diagnosing
+remaining differences as caching. No customer deployment or installed-client
+verification is implied by local automated checks.
+
+Local verification on 2026-11-02: 21 focused web/update/stale-build tests and
+12 customer deployment tests passed, as did the web TypeScript/production build.
+The production dialog and simulated server-failure retry were checked in a
+browser at 1280×720 and 1366×768. React Doctor reported no errors; its remaining
+loading-reset warning is a false positive on the abort-aware reset already inside
+`finally`. Installed Windows behavior and Windows display scaling remain customer
+acceptance checks.
 
 ## Supported Windows runtime
 
@@ -98,4 +126,4 @@ Only raise `deploy/customer-docker/requirements.json`'s `minimumShellVersion` wh
 
 ## Verification limits
 
-Unit tests cover signing configuration, signature/target/version verification, corruption, cancellation, progress, reminders, offline cache, unsaved-work refusal, post-preparation integrity and install retries. Web tests cover safe refresh, minimum-shell handling and the header. The Docker smoke checks that the feed and versioned installer are served through the dedicated read-only downloads mount and missing downloads return 404. The Windows workflow contains the real installed upgrade/restart test; it must pass before publishing a release. Its `update-smoke.log` is retained with the other smoke artifacts even on failure. Local development does not access the customer's server or install anything there.
+Unit tests cover signing configuration, signature/target/version verification, corruption, cancellation, progress, reminders, offline cache, unsaved-work refusal, post-preparation integrity and install retries. Web tests cover desktop release prompts, first-check detection, missing build identity, polling/reconnection, deferral, uncached refresh preserving routes, HTML/connection failures, preflight compatibility changes, unsaved-work rechecks, duplicate refresh prevention, minimum-shell handling and the header. The Docker smoke checks that the feed and versioned installer are served through the dedicated read-only downloads mount and missing downloads return 404. The Windows workflow contains the real installed upgrade/restart test; it must pass before publishing a release. Its `update-smoke.log` is retained with the other smoke artifacts even on failure. Local development does not access the customer's server or install anything there.

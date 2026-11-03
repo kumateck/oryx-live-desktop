@@ -52,7 +52,7 @@ server {
   }
   location = /deployment.json { add_header Cache-Control "no-store" always; try_files $uri =404; }
   location ~ /\\. { deny all; }
-  location / { try_files $uri /index.html; add_header Cache-Control "no-cache" always; }
+  location / { try_files $uri /index.html; add_header Cache-Control "no-store" always; }
 }
 `;
 }

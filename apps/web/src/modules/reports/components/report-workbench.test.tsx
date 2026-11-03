@@ -9,10 +9,47 @@ import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
 import { ReportWorkbench } from "./report-workbench";
 import { ReportKey } from "../lib/report-model";
 import { readinessFixture, readinessDepartmentId } from "../test/production-readiness-fixture";
+import { issuedBmrFixture } from "../test/issued-bmr-fixture";
 const exports = vi.hoisted(() => ({ csv: vi.fn<(book: ReportBook) => Promise<void>>() }));
 vi.mock("@/shared/reports/export-csv", () => ({ exportReportCsv: exports.csv }));
 afterEach(() => { cleanup(); forgetSession(); });
 function Ready() { return useCurrentUser() ? <p>Report session ready</p> : null; }
+
+it("prints grouped BMR fields on two lines and exports all nine fields from the same snapshot", async () => {
+  exports.csv.mockReset(); exports.csv.mockResolvedValue(undefined);
+  const backend = stubBackend({ permissions: ["CanViewQcAndQaReport"] });
+  const session = backend.fetcher.getMockImplementation(); rememberSession();
+  let reads = 0;
+  backend.fetcher.mockImplementation(async (input, init) => {
+    if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
+    if (new URL(input.url).pathname.endsWith("report/bmr-issued")) {
+      reads++; return Response.json(issuedBmrFixture());
+    }
+    return new Response(null, { status: 404 });
+  });
+  render(<SessionProvider><ApiProvider><MemoryRouter><Ready /><ReportWorkbench group="quality" initialKey={ReportKey.IssuedBmr}
+    initialFilters={{ startDate: new Date(2026, 10, 1), endDate: new Date(2026, 10, 2) }} />
+  </MemoryRouter></ApiProvider></SessionProvider>);
+  await screen.findByText("Report session ready");
+  fireEvent.click(screen.getByRole("button", { name: "Choose filters" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Generate report" }));
+  await screen.findByText("BMR-2026-002");
+  fireEvent.click(screen.getByRole("button", { name: "Print" }));
+  const preview = await screen.findByRole("dialog", { name: "Print preview · BMR issued report" });
+  const portal = document.querySelector(".print-portal");
+  expect(portal?.querySelectorAll("table")).toHaveLength(1);
+  expect(Array.from(portal?.querySelectorAll("th") ?? [], (cell) => cell.textContent)).toEqual([
+    "Product", "Batch", "Validity", "Issued", "Department",
+  ]);
+  expect(portal?.textContent).toContain("0.00001 mg"); expect(portal?.textContent).toContain("From date: 2026-11-01");
+  fireEvent.keyDown(preview, { key: "Escape" });
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+  await waitFor(() => expect(exports.csv).toHaveBeenCalledOnce());
+  expect(exports.csv.mock.calls[0]?.[0].sheets[0]?.rows).toHaveLength(2);
+  expect(exports.csv.mock.calls[0]?.[0].sheets[0]?.columns).toHaveLength(9);
+  expect(reads).toBe(1);
+});
 
 it("keeps filters in the dialog, generates submitted details, and opens the system print preview", async () => {
   const backend = stubBackend({ permissions: ["CanViewStoreAndInventoryReport"] });

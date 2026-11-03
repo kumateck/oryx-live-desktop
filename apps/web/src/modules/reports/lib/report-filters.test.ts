@@ -14,8 +14,8 @@ const choice = (value: string, label = value) => ({ value, label });
 const load = () => async () => ({ options: [], hasNext: false, hasPrevious: false });
 
 describe("report selection contracts", () => {
-  it("renders every optional All dropdown as a multiselect across all 33 reports", () => {
-    expect(reportCatalog).toHaveLength(33);
+  it("renders every optional All dropdown as a multiselect across all reports", () => {
+    expect(reportCatalog).toHaveLength(34);
     for (const definition of reportCatalog) {
       const fields = reportFilterFields(definition, load);
       expect(fields).toHaveLength(definition.fields.length);
@@ -46,6 +46,7 @@ describe("report selection contracts", () => {
     expect(eligibleReportDepartments(departments, reportDefinition(ReportKey.MaterialList), filters).map((row) => row.id)).toEqual(["raw"]);
     expect(eligibleReportDepartments(departments, reportDefinition(ReportKey.MaterialStockSummary), filters).map((row) => row.id)).toEqual(["production", "rnd"]);
     expect(eligibleReportDepartments(departments, reportDefinition(ReportKey.EmployeeMaster), filters)).toEqual(departments);
+    expect(eligibleReportDepartments(departments, reportDefinition(ReportKey.IssuedBmr), filters).map((row) => row.id)).toEqual(["production"]);
   });
   it("filters procurement mappings by stable supplier/manufacturer/material IDs and material kind", () => {
     const rows = [

@@ -12,10 +12,10 @@ export function moduleCode(name: string): string {
 }
 
 /** The modules as short codes; the full name and how much of the module is granted show on hover and are read out. */
-export function PermissionModuleTabs({ modules }: { modules: readonly PermissionModule[] }) {
+export function PermissionModuleTabs({ modules, onSelect }: { modules: readonly PermissionModule[]; onSelect: (name: string) => void }) {
   return <TabsList aria-label="Permission modules" className="h-auto w-full shrink-0 flex-wrap justify-start gap-1 border">
     {modules.map((module) => <Tooltip key={module.module}>
-      <TooltipTrigger asChild><span className="inline-flex"><TabsTrigger value={module.module} aria-label={module.module}
+      <TooltipTrigger asChild><span className="inline-flex"><TabsTrigger value={module.module} aria-label={module.module} onClick={() => onSelect(module.module)}
         className="h-7 flex-none px-2 text-xs data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">{moduleCode(module.module)}</TabsTrigger></span></TooltipTrigger>
       <TooltipContent>{module.module} · {accessCount(module.children)}/{module.children.length} enabled</TooltipContent>
     </Tooltip>)}

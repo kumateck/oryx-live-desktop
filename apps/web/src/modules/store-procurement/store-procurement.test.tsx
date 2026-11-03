@@ -122,8 +122,8 @@ it("records every price on a quotation", async () => {
   await openMenu(/Actions for Alpha/); await user.click(screen.getByRole("menuitem", { name: "Record prices" }));
   const dialog = await screen.findByRole("dialog");
   await user.click(within(dialog).getByRole("button", { name: "Record prices" }));
-  expect(within(dialog).getByText(/price greater than zero for every item/)).toBeTruthy();
-  await user.type(within(dialog).getByLabelText("Unit price for Paper"), "4.5");
+  expect(await within(dialog).findByText("Enter a unit price greater than zero.")).toBeTruthy();
+  await user.type(await within(dialog).findByRole("textbox", { name: "Unit price for Paper" }), "4.5");
   await user.click(within(dialog).getByRole("button", { name: "Record prices" }));
   await waitFor(() => expect(page.writes()).toHaveLength(1));
   expect(page.writes()[0]).toMatchObject({ path: "/api/v1/procurement/inventory/vendor/quotation/vq1/receive", body: [{ id: "q1", price: 4.5, priceUoM: "bx" }] });

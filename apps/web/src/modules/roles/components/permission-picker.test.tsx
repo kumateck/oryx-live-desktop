@@ -5,7 +5,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it } from "vitest";
 import { PermissionPicker } from "./permission-picker";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { permissionFixture } from "../lib/permission-fixtures";
+import { openingBalancePermissionFixture, permissionFixture } from "../lib/permission-fixtures";
+import type { PermissionModule } from "../schemas/permission-schema";
 
 class ResizeObserverStub implements ResizeObserver {
   observe(): void {}
@@ -19,8 +20,8 @@ HTMLElement.prototype.releasePointerCapture = () => {};
 HTMLElement.prototype.scrollIntoView = () => {};
 afterEach(cleanup);
 
-function Picker({ disabled = false }: { disabled?: boolean }) {
-  const [modules, setModules] = useState(permissionFixture);
+function Picker({ disabled = false, initialModules = permissionFixture }: { disabled?: boolean; initialModules?: PermissionModule[] }) {
+  const [modules, setModules] = useState(initialModules);
   return <TooltipProvider><PermissionPicker modules={modules} onChange={setModules} disabled={disabled} /></TooltipProvider>;
 }
 
@@ -35,6 +36,51 @@ it("shows one submodule at a time, with its count, and keeps edits when moving b
   expect(screen.getByRole("switch", { name: "Create orders" }).getAttribute("aria-checked")).toBe("false");
   await user.click(screen.getByRole("tab", { name: "Suppliers, 2 of 2 enabled" }));
   expect(screen.getByRole("switch", { name: "Edit suppliers" }).getAttribute("aria-checked")).toBe("true");
+});
+
+it("leaves global search when the already selected module is clicked and opens the actual submodule", async () => {
+  const user = userEvent.setup();
+  render(<Picker initialModules={openingBalancePermissionFixture} />);
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "purchase" } });
+  expect(screen.getByRole("heading", { name: "Search results" })).toBeTruthy();
+  expect(screen.getByRole("switch", { name: "Can View Foreign Purchase Order" })).toBeTruthy();
+  expect(screen.queryByRole("switch", { name: "Settings module access" })).toBeNull();
+  await user.click(screen.getByRole("tab", { name: "Settings" }));
+  expect(screen.getByRole("textbox")).toHaveProperty("value", "");
+  await user.click(screen.getByRole("tab", { name: "Opening Balances, 0 of 4 enabled" }));
+  expect(screen.getByRole("switch", { name: "View opening balances" })).toBeTruthy();
+  expect(screen.queryByRole("switch", { name: /Foreign Purchase Order/ })).toBeNull();
+  expect(screen.getByRole("status").textContent).toBe("4 shown");
+  await user.click(screen.getByRole("tab", { name: "Product Category, 0 of 1 enabled" }));
+  expect(screen.getByRole("switch", { name: "View product category" })).toBeTruthy();
+  expect(screen.queryByRole("switch", { name: "View opening balances" })).toBeNull();
+});
+
+it("shows only matching permissions for every search and preserves edited grants after clearing", async () => {
+  const user = userEvent.setup();
+  render(<Picker initialModules={openingBalancePermissionFixture} />);
+  const search = screen.getByRole("textbox");
+  fireEvent.change(search, { target: { value: "open   balance" } });
+  expect(screen.getAllByRole("switch")).toHaveLength(4);
+  expect(screen.queryByRole("switch", { name: /Foreign Purchase Order/ })).toBeNull();
+  await user.click(screen.getByRole("switch", { name: "Upload opening balances" }));
+  fireEvent.change(search, { target: { value: "purchase missing-keyword" } });
+  expect(screen.getByText("No permission matches this search.")).toBeTruthy();
+  expect(screen.queryAllByRole("switch")).toHaveLength(0);
+  expect(screen.getByRole("status").textContent).toBe("0 shown across all modules");
+  fireEvent.change(search, { target: { value: "CanUploadOpening" } });
+  expect(screen.getAllByRole("switch")).toHaveLength(1);
+  expect(screen.getByRole("switch", { name: "Upload opening balances" }).getAttribute("aria-checked")).toBe("true");
+  await user.click(screen.getByRole("button", { name: "Clear search" }));
+  expect(screen.getByRole("switch", { name: "Upload opening balances" }).getAttribute("aria-checked")).toBe("true");
+  expect(screen.getByRole("tab", { name: "Opening Balances, 1 of 4 enabled" })).toBeTruthy();
+});
+
+it("keeps global search read-only for a view-only role editor", () => {
+  render(<Picker disabled />);
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "finance invoices" } });
+  expect(screen.getByRole("switch", { name: "Pay invoices" })).toHaveProperty("disabled", true);
+  expect(screen.queryByRole("switch", { name: "Procurement module access" })).toBeNull();
 });
 
 it("the module switch removes all access, then enables all actions", async () => {
