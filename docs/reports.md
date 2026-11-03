@@ -1,5 +1,45 @@
 # Reports
 
+## QA BMR issued report
+
+Open **Reports → Quality control and assurance → BMR issued report**, or
+`/reports/qc-qa-reports/bmr-issued`. Choose From/To dates (both required), optionally
+select production departments, then generate. Both endpoints of the date range
+are inclusive UTC calendar days, filtering the BMR's recorded `IssuedDate`.
+Pending records are excluded even if QC-approved. Completed, archived and later
+cancelled issued history is retained. The active QA issue queue is not used.
+
+Print uses five columns: **Product** (name above code), **Batch** (number above
+size/unit), **Validity** (manufacture above expiry), **Issued** (date above issuer),
+and **Department**. The nine fields remain separate in Excel/CSV. All outputs use
+the same validated snapshot and applied filters. Missing values remain missing;
+an absent issuer displays “Not recorded”. Batch quantities preserve entered
+precision and use the shared quantity/unit formatter.
+
+The backend checks existing `CanViewQcAndQaReport` and active actor/department.
+Production users can report only on their own production department, including
+when no department filter is supplied; QA report readers can select departments
+or include all. No new grants are assigned automatically. Archived history remains
+part of the count; current linked product labels, units and department assignments
+are used. This is one row per BMR's currently recorded issue date, not a log of
+every possible reissue event. Counts are not sums of mixed-unit batch sizes.
+
+Requires the companion typed `GET /api/v1/report/bmr-issued` endpoint. No database
+migration is needed. API generation does not approve the customer release
+fingerprint or authorize deployment. The backend guide is
+`oryx-backend/docs/qa-bmr-issued-report.md`.
+
+Local verification: 406 report/print/route-access tests and 14 contract/cache tests
+passed. Workspace strict typechecks, API/web builds, reproducible API generation
+and route checks passed. All 11 backend report cases passed, including the query
+against a disposable PostgreSQL database; the combined readiness regression was
+22 passed / one unrelated opt-in readiness database test skipped. React Doctor
+reported no issues (93/100) and the targeted design detector returned no findings.
+The grouped print preview was checked with synthetic long names, tiny quantities
+and missing issuer data at 1280×720, 1366×768 and 854×480 (scaling equivalent).
+No customer data or role assignments were changed. Native Windows and customer
+authenticated end-to-end acceptance remain release checks.
+
 Every report opens its filters through **Choose filters** / **Edit filters**. Generate applies a complete snapshot; changing or cancelling a draft does not change the displayed report. **Filter details** shows the submitted selections. Reset changes only the draft. A failed refresh preserves the last successful report; revoked access clears it.
 
 Optional dropdowns accept multiple choices. Empty means all within the remaining scope. Required department choices remain single selections. Where an API accepts only one department, warehouse, vendor or customer, selected scopes appear as separate named sections with their own authoritative totals. Overlapping sections must not be summed.

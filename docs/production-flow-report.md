@@ -98,6 +98,7 @@ This is the heart of the definition. The procedure is the ordered list of steps 
 | Dispatch | Mark the batch as dispatched |
 
 Rules:
+- Responsible users and roles are optional for automated steps; critical steps require at least one. Automated steps start automatically and retain the existing Complete step button when manual completion is allowed, without a separate instruction.
 - A responsible party must be complete: a user or role, and an instruction.
 - An ATR instruction points to the product's analytical raw data for the stage being tested.
 - An automated step cannot carry a main instruction.

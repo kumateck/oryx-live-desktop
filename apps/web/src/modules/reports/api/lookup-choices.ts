@@ -18,6 +18,7 @@ export function lookupPage(rows: readonly LookupRow[], search: string, page: num
 }
 export function eligibleReportDepartments(rows: readonly DomainEntitiesDepartmentsDepartmentDto[], definition: ReportDefinition, filters: ReportFilters) {
   if (definition.group==="hr") return rows;
+  if (definition.key===ReportKey.IssuedBmr) return rows.filter((department)=>department.type===0);
   const owner=definition.key===ReportKey.MaterialList || definition.key===ReportKey.InventoryValuation;
   const selectedTypes=reportSelection(filters,"warehouseType").length?reportSelection(filters,"warehouseType"):reportSelection(filters,"materialKind");
   return rows.filter((department)=>owner ? (department.warehouses??[]).some((warehouse)=>

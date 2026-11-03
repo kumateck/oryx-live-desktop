@@ -40,11 +40,11 @@ export function PackagingSection({ productId }: { productId: string }) {
 
     {open?.mode === "add" || open?.mode === "edit" ? <PackagingItemDialog key={open.mode === "edit" ? open.line.key : "new"}
       editing={open.mode === "edit" ? open.line : null} lines={packaging.lines} packingStyles={styleOptions} onClose={() => setOpen(null)}
-      onSubmit={(values, facts) => {
+      onSubmit={(values, facts, unit) => {
         const previous = open.mode === "edit" ? open.line : null;
         const sameMaterial = previous?.material.value === values.material.value;
         const line: PackagingLine = {
-          key: previous?.key ?? `new-${randomId()}`, material: values.material, packing: values.packing ?? null,
+          key: previous?.key ?? `new-${randomId()}`, material: values.material, packing: values.packing ?? null, unit,
           prescribedQuantity: values.prescribedQuantity, packingExcessMargin: values.packingExcessMargin ?? 0,
           code: facts?.code ?? (sameMaterial ? previous?.code ?? "" : ""),
           specification: facts ? facts.specification : sameMaterial ? previous?.specification ?? null : null,

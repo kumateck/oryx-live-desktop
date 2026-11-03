@@ -33,5 +33,6 @@ export const reportCatalog = [
   { key: K.ProductReadiness, title: "Product readiness", group: "quality", fields: ["department", "month"], required: ["department", "month"], description: "Per-product BOM, packaging, procedure, specification, ARD and STP readiness." },
   { key: K.QualityProducts, title: "Quality product list", group: "quality", fields: ["asOfDate", "department"], required: ["department"], description: "Complete department product list with print/export." },
   { key: K.QualityMaterials, title: "Quality material list", group: "quality", fields: ["asOfDate", "materialKind", "category"], description: "Complete material list, categories, units and specifications." },
+  { key: K.IssuedBmr, title: "BMR issued report", group: "quality", fields: ["startDate", "endDate", "department"], required: ["startDate", "endDate"], description: "Issued BMRs by inclusive issue-date range (UTC): batch number, manufacture and expiry dates, batch size, product and department. Includes completed, archived and cancelled batch history." },
 ] as const satisfies readonly ReportDefinition[];
 export function reportDefinition(key: K): ReportDefinition { const definition = reportCatalog.find((item) => item.key === key); if (!definition) throw new Error("Report not found"); return definition; }

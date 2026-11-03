@@ -1,24 +1,26 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
 import { departmentApi, departmentAudit } from "@/modules/departments/departments";
 import { inventoryApi } from "@/shared/api/generated/inventory";
 import { useCurrentUser } from "@/shared/auth/session-provider";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useGeneratedCode } from "@/shared/codes/use-generated-code";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
-import type { SelectLoader, SelectOption } from "@/shared/forms/form-wizard-types";
-import { ItemLinesEditor, itemLineProblems, newItemLine, type ItemLine } from "@/shared/inventory/item-lines";
+import type { SelectLoader } from "@/shared/forms/form-wizard-types";
+import { newItemLine } from "@/shared/inventory/item-line-model";
 import { stores, type Store } from "@/shared/inventory/stores";
-import { useItemChoices } from "@/shared/inventory/use-item-choices";
 import { workflowRule } from "@/shared/inventory/workflows";
+import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
+import { InputTypes } from "@/shared/forms/input-types";
+import { requisitionFormSchema, type RequisitionFormValues } from "../schemas/requisition-form";
 import { editable, stockRequisitionAudit, stockRequisitionCodeModel, stockRequisitionSchema, type StockRequisition } from "../lib/stock-requisitions";
+
+const loadLines = () => import("./requisition-lines-field");
 
 /**
  * Raises or edits a stock requisition for one store: its number, the requesting department, why it is needed and the items.
@@ -29,56 +31,57 @@ export function RequisitionEditor({ store, requisition, onClose, onSaved }: {
 }) {
   const user = useCurrentUser();
   const permission = usePermissionAction(workflowRule(store, "stockRequisitions", "create"));
-  const items = useItemChoices(store, stockRequisitionAudit);
   const code = useGeneratedCode(stockRequisitionCodeModel);
   const [loadDepartments] = departmentApi.useLazyGetApiV1DepartmentQuery();
   const [reread] = inventoryApi.useLazyGetApiV1ItemsStockRequisitionsByIdQuery();
   const [create, creating] = inventoryApi.usePostApiV1ItemsStockRequisitionsMutation();
   const [update, updating] = inventoryApi.usePutApiV1ItemsStockRequisitionsByIdMutation();
-  const [number, setNumber] = useState(requisition?.number ?? "");
-  const [justification, setJustification] = useState(requisition?.justification ?? "");
   const userDepartment = user?.departmentId ? { value: user.departmentId, label: user.department ?? "My department" } : null;
-  const [department, setDepartment] = useState<SelectOption | null>(requisition?.department ? { value: requisition.department.id, label: requisition.department.name } : userDepartment);
-  const [lines, setLines] = useState<ItemLine[]>(() => {
+  const [initialLines] = useState(() => {
     if (!requisition) return [newItemLine()];
     return requisition.lines.map((line) => {
       const choice = { id: line.itemId, name: line.name, code: line.code, classification: line.classification, available: line.available, unitId: "", unitName: line.unitName, unitSymbol: line.unit };
-      items.remember(choice);
       return newItemLine(choice, String(line.requested));
     });
   });
-  const [problems, setProblems] = useState<Map<string, string>>(new Map());
+  const form = useForm<RequisitionFormValues>({ resolver: zodResolver(requisitionFormSchema), defaultValues: {
+    store, lines: initialLines,
+    number: requisition?.number ?? "", justification: requisition?.justification ?? "",
+    department: requisition?.department ? { value: requisition.department.id, label: requisition.department.name } : userDepartment,
+  } });
   const [message, setMessage] = useState("");
-  const saving = creating.isLoading || updating.isLoading;
+  const saving = creating.isLoading || updating.isLoading || form.formState.isSubmitting;
 
   // Suggest a number once for a new requisition, without overwriting one the user typed.
   const suggested = useRef(false);
   useEffect(() => {
     if (requisition || !code.ready || suggested.current) return;
     suggested.current = true;
-    void code.suggest().then((next) => { if (next) setNumber((current) => current || next); });
-  }, [code, requisition]);
+    void code.suggest().then((next) => { if (next && !form.getValues("number")) form.setValue("number", next); });
+  }, [code, requisition, form]);
 
-  const departments = useCallback<SelectLoader>(async (searchQuery, page) => {
-    const result = await loadDepartments({ ...departmentAudit, searchQuery, page, pageSize: 30 }, true);
+  const departments = useCallback<SelectLoader>(async (searchQuery, page, signal) => {
+    signal.throwIfAborted();
+    const request = loadDepartments({ ...departmentAudit, searchQuery, page, pageSize: 30 }, true);
+    const abort = () => request.abort();
+    signal.addEventListener("abort", abort, { once: true });
+    const result = await request.finally(() => signal.removeEventListener("abort", abort));
     if (result.error) throw new Error("Departments could not be loaded.");
     const data = result.data;
     return { options: (data?.data ?? []).flatMap((d) => d.id ? [{ value: d.id, label: d.name ?? "Unnamed department" }] : []),
       hasNext: (data?.pageIndex ?? 1) < (data?.pageCount ?? 1), hasPrevious: (data?.pageIndex ?? 1) > 1 };
   }, [loadDepartments]);
 
-  const fieldProblems = useMemo(() => ({
-    number: !number.trim() ? "Enter the requisition number." : null,
-    department: !department ? "Choose the requesting department." : null,
-    justification: !justification.trim() ? "Say why the items are needed." : null,
-  }), [department, justification, number]);
-  const [showFieldProblems, setShowFieldProblems] = useState(false);
-
-  const save = async () => {
-    setMessage(""); setShowFieldProblems(true);
-    const found = itemLineProblems(lines, { capToStock: true });
-    setProblems(found);
-    if (found.size > 0 || Object.values(fieldProblems).some(Boolean) || !department || !user) return;
+  const fields = useMemo<readonly WizardField<RequisitionFormValues>[]>(() => [
+      { type: InputTypes.TEXT, name: "number", label: "Requisition number", required: true, readOnly: Boolean(requisition),
+        description: requisition ? "" : code.unavailable ? "No numbering rule is set up; enter the number yourself." : "Suggested from the next in the series. You can change it." },
+      { type: InputTypes.SELECT, mode: "single", source: "async", name: "department", label: "Requesting department", required: true, loadOptions: departments, placeholder: "Choose a department" },
+      { type: InputTypes.TEXTAREA, name: "justification", label: "Justification", required: true, rows: 3, placeholder: "Why the items are needed", className: "md:col-span-2" },
+    { type: InputTypes.CUSTOM, name: "lines", label: "Items", load: loadLines, className: "md:col-span-2" },
+  ], [requisition, code.unavailable, departments]);
+  const save = form.handleSubmit(async ({ number, department, justification, lines }) => {
+    setMessage("");
+    if (!department || !user) return;
     const denied = permission.check();
     if (denied) { setMessage(denied); return; }
     if (requisition) {
@@ -87,6 +90,8 @@ export function RequisitionEditor({ store, requisition, onClose, onSaved }: {
       const current = stockRequisitionSchema.safeParse(fresh.data);
       if (!current.success || !editable(current.data)) { setMessage("Stock has been issued against this requisition, so it can no longer be changed."); return; }
     }
+    const writeDenied = permission.check();
+    if (writeDenied) { setMessage(writeDenied); return; }
     const body = {
       number: number.trim(), requestedById: requisition?.requestedBy?.id ?? user.id, departmentId: department.value, justification: justification.trim(),
       stockItems: lines.flatMap((line) => line.item ? [{ itemId: line.item.id, quantityRequested: Number(line.quantity) }] : []),
@@ -97,27 +102,15 @@ export function RequisitionEditor({ store, requisition, onClose, onSaved }: {
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success(requisition ? "Stock requisition updated" : "Stock requisition raised");
     onSaved(requisition?.id ?? (typeof result.data === "string" ? result.data : ""));
-  };
+  });
 
   return <Dialog open onOpenChange={(open) => { if (!open && !saving) onClose(); }}>
     <DialogContent className="sm:max-w-4xl">
       <DialogHeader><DialogTitle>{requisition ? `Edit ${requisition.number}` : `Raise a ${(stores[store] ?? "store").toLowerCase()} stock requisition`}</DialogTitle>
         <DialogDescription>Items from the {(stores[store] ?? "store").toLowerCase()} for a department. Every item must come from this store.</DialogDescription></DialogHeader>
-      <form noValidate className="flex min-h-0 min-w-0 flex-1 flex-col gap-4" onSubmit={(event) => { event.preventDefault(); event.stopPropagation(); void save(); }}>
+      <form noValidate className="flex min-h-0 min-w-0 flex-1 flex-col gap-4" onSubmit={(event) => { event.stopPropagation(); void save(event); }}>
         <DialogBody className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-1.5"><Label htmlFor="requisition-number">Requisition number <span className="text-destructive">*</span></Label>
-              <Input id="requisition-number" value={number} disabled={Boolean(requisition)} onChange={(event) => setNumber(event.target.value)} aria-invalid={showFieldProblems && fieldProblems.number ? true : undefined} />
-              {!requisition ? <p className="text-xs text-muted-foreground">{code.unavailable ? "No numbering rule is set up; enter the number yourself." : "Suggested from the next in the series. You can change it."}</p> : null}
-              {showFieldProblems && fieldProblems.number ? <p role="alert" className="text-xs text-destructive">{fieldProblems.number}</p> : null}</div>
-            <div className="space-y-1.5"><Label>Requesting department <span className="text-destructive">*</span></Label>
-              <AsyncOptionPicker label="Requesting department" value={department} onChange={setDepartment} loadOptions={departments} placeholder="Choose a department" />
-              {showFieldProblems && fieldProblems.department ? <p role="alert" className="text-xs text-destructive">{fieldProblems.department}</p> : null}</div>
-            <div className="space-y-1.5 md:col-span-2"><Label htmlFor="requisition-justification">Justification <span className="text-destructive">*</span></Label>
-              <Textarea id="requisition-justification" rows={3} value={justification} onChange={(event) => setJustification(event.target.value)} placeholder="Why the items are needed" />
-              {showFieldProblems && fieldProblems.justification ? <p role="alert" className="text-xs text-destructive">{fieldProblems.justification}</p> : null}</div>
-          </div>
-          <ItemLinesEditor lines={lines} onChange={(next) => { setLines(next); setProblems(new Map()); }} loadItems={items.loadOptions} label={items.label} lookup={(id) => items.lookup(id)} problems={problems} />
+          <fieldset disabled={saving}><FormWizard form={form} fields={fields} className="md:grid-cols-2" /></fieldset>
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>
         <DialogFooter>

@@ -88,6 +88,7 @@ Backend behavior worth knowing (unchanged, shared with Oryx Next): saving a bill
 
 Improved:
 
+- **Quantities show their units.** Read-only units come from the material's department linkage, not its purchase UOM. In add/edit, mg materials allow mg/g/kg entry and ml materials allow ml/L; other units remain fixed. Switching entry units preserves both amounts. Quantities remain in the linked unit in the form and save request; no UOM setting changes. Missing or failed unit lookups block quantity edits and offer retry. Saved-line unit requests share the generated query cache, while newly selected materials use their picker's unit.
 - **Nothing the page does not edit is lost.** The backend deletes every packing material and re-adds what is sent. Oryx Next sent only its own fields, so a line's thickness, other standards, linked material, and substitutes were erased by any save. The desktop sends them back unchanged.
 - **Edits are a draft until saved**, with "Discard changes" and a warning before leaving with unsaved changes.
 - **The table appears at once.** Oryx Next waited for one specification request per line before showing anything. Here each specification cell fills in on its own, and a material just chosen shows the number it came with.
@@ -103,6 +104,7 @@ Improved:
 
 Improved:
 
+- **Responsible users and roles are optional for automated steps.** Critical steps still require at least one. Automated steps retain their existing automatic start and manual completion behavior; no new instruction is needed for Complete step.
 - **A responsible party must be complete.** Oryx Next accepted a row with no user or role chosen and silently dropped it when saving. The desktop asks for the user or role and the instruction, and refuses the same person with the same instruction twice.
 - **Analytical raw data stays with ATR.** It is offered only for the ATR instruction and is cleared when the instruction changes; Oryx Next kept sending a value left over from an earlier choice.
 - **Copying does not leak this product's analytical raw data** onto other products; the review step says so. Oryx Next copied the IDs as they were.

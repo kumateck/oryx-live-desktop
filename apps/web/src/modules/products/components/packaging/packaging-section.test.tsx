@@ -28,6 +28,7 @@ function open(saved: object[] = packages) {
     if (input.method !== "GET") calls.push({ method: input.method, path, body: await input.clone().text() });
     if (path === `/api/v1/product/${id}/packages`) return input.method === "GET" ? Response.json(saved) : Response.json("ok");
     if (path === `/api/v1/product/${id}/packing`) return Response.json([]);
+    if (/^\/api\/v1\/material\/[^/]+\/uom$/.test(path)) return Response.json({ id: "u-pcs", symbol: "pcs" });
     if (path === "/api/v1/material-specifications/material/m-bottle") return Response.json({ specificationNumber: "SPEC-9" });
     return new Response(null, { status: 404 });
   });
@@ -41,8 +42,8 @@ it("lists the saved materials with entered quantities kept and totals calculated
   const row = (await screen.findByText("Bottle")).closest("tr");
   if (!row) throw new Error("row not found");
   expect(within(row).getByText("1x100ml")).toBeTruthy();
-  expect(within(row).getByText("0.005")).toBeTruthy();
-  expect(within(row).getByText("1.005")).toBeTruthy();
+  expect(await within(row).findByText("0.005 pcs")).toBeTruthy();
+  expect(within(row).getByText("1.005 pcs")).toBeTruthy();
   expect(await within(row).findByText("SPEC-9")).toBeTruthy();
   expect(screen.getByText("All styles")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Save packing materials" }).hasAttribute("disabled")).toBe(true);
