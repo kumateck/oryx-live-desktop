@@ -73,3 +73,26 @@ it("refuses to save an empty list, and discards changes on request", async () =>
   fireEvent.click(screen.getByRole("button", { name: "Discard changes" }));
   expect(await screen.findByText("Carton")).toBeTruthy();
 });
+
+it("retains All styles alongside a specific style for the same material on save", async () => {
+  const calls = open([...packages, { ...packages[0], id: "p3", productPacking: null }]);
+  await chooseAction("Actions for Carton", "Remove");
+  fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Save packing materials" }));
+  await waitFor(() => expect(calls).toHaveLength(1));
+  expect(JSON.parse(calls[0]?.body ?? "[]")).toMatchObject([
+    { materialId: "m-bottle", productPackingId: "s1" },
+    { materialId: "m-bottle", productPackingId: null },
+  ]);
+});
+
+it("blocks a whole-list save containing duplicate material/style pairs without losing the draft", async () => {
+  const calls = open([...packages, { ...packages[0], id: "p3" }]);
+  await chooseAction("Actions for Carton", "Remove");
+  fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Save packing materials" }));
+  expect((await screen.findByRole("alert")).textContent).toContain("already listed for this packing style");
+  expect(calls).toEqual([]);
+  expect(screen.getAllByRole("button", { name: "Actions for Bottle" })).toHaveLength(2);
+  expect(screen.getByRole("button", { name: "Discard changes" })).toBeTruthy();
+});
