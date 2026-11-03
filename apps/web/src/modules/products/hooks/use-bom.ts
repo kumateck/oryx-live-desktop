@@ -1,11 +1,12 @@
 import { productPermissions } from "../lib/product-access";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { useGetApiV1ProductByProductIdBomQuery, usePostApiV1BomMutation, usePutApiV1ProductByProductIdBomArchiveMutation } from "../api/product-api";
+import { useGetApiV1ProductByProductIdBomQuery, useLazyGetApiV1MaterialByMaterialIdUomQuery, usePostApiV1BomMutation, usePutApiV1ProductByProductIdBomArchiveMutation } from "../api/product-api";
 import { bomProblems, fromSavedBom, toBomRequest, type BomLine } from "../lib/bom";
 import { savedBomSchema } from "../schemas/bom-schema";
+import { materialUnitSchema } from "../lib/material-unit";
 
 export const bomAudit = { module: "Production", subModule: "Bill of Materials" } as const;
 const none: BomLine[] = [];
@@ -18,6 +19,9 @@ export function useBom(productId: string, compositionSize: number | null, batchS
   const query = useGetApiV1ProductByProductIdBomQuery({ ...bomAudit, productId });
   const [save, saving] = usePostApiV1BomMutation();
   const [archive, archiving] = usePutApiV1ProductByProductIdBomArchiveMutation();
+  const [loadUnit] = useLazyGetApiV1MaterialByMaterialIdUomQuery();
+  const [preparing, setPreparing] = useState(false);
+  const savingNow = useRef(false);
   // A product with no formula answers with an empty body or 404; both mean "none yet".
   const missing = Boolean(query.error && "status" in query.error && query.error.status === 404);
   const parsed = useMemo(() => query.isSuccess ? savedBomSchema.safeParse(query.data ?? null) : null, [query.isSuccess, query.data]);
@@ -26,17 +30,38 @@ export function useBom(productId: string, compositionSize: number | null, batchS
   const [message, setMessage] = useState("");
   const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.edit], departmentType: 0 });
   const lines = draft ?? saved;
-  const problems = bomProblems(lines);
 
   const saveAll = async () => {
+    if (savingNow.current) return;
     const denied = permission.check();
     if (denied) { setMessage(denied); return; }
     setMessage("");
-    if (problems.length) { setMessage(problems.join(" ")); return; }
-    const result = await save({ ...bomAudit, domainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest: toBomRequest(productId, lines, compositionSize, batchSize) });
-    if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    setDraft(null);
-    toast.success("Bill of materials saved");
+    if (!lines.length) { setMessage(bomProblems(lines).join(" ")); return; }
+    savingNow.current = true;
+    setPreparing(true);
+    try {
+      // Recheck all linkage units before writing, including unchanged rows with a stale saved BOM unit.
+      const checked = await Promise.all(lines.map(async (line) => {
+        const result = await loadUnit({ ...bomAudit, materialId: line.material.value });
+        const parsed = materialUnitSchema.safeParse(result.data);
+        return { line, unit: parsed.success ? parsed.data : null };
+      }));
+      const missing = checked.filter((item) => !item.unit).map((item) => item.line.material.label);
+      if (missing.length) { setMessage(`Could not verify the department-linked unit for: ${missing.join(", ")}. Retry before saving.`); return; }
+      const changed = checked.filter(({ line, unit }) => line.linkedUnit && unit
+        && (line.linkedUnit.id !== unit.id || line.linkedUnit.symbol.toLowerCase() !== unit.symbol.toLowerCase()));
+      if (changed.length) { setMessage("A department-linked unit changed while this BOM was being edited. Reload and review the quantities before saving."); return; }
+      const verified = checked.flatMap(({ line, unit }) => unit ? [{ ...line, unit, linkedUnit: unit }] : []);
+      const revoked = permission.check();
+      if (revoked) { setMessage(revoked); return; }
+      const result = await save({ ...bomAudit, domainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest: toBomRequest(productId, verified, compositionSize, batchSize) });
+      if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
+      setDraft(null);
+      toast.success("Bill of materials saved");
+    } finally {
+      savingNow.current = false;
+      setPreparing(false);
+    }
   };
   const archiveActive = async () => {
     const denied = permission.check();
@@ -57,7 +82,7 @@ export function useBom(productId: string, compositionSize: number | null, batchS
     loading: query.isLoading,
     error: missing ? null : query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned a bill of materials the app could not read." : null,
     retry: () => { void query.refetch(); },
-    saving: saving.isLoading,
+    saving: saving.isLoading || preparing,
     archiving: archiving.isLoading,
     message,
     setLines: (next: BomLine[]) => setDraft(next),
