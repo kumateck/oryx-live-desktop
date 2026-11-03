@@ -2,6 +2,18 @@
 
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
+## Combined release-contract review (2026-11-03)
+
+Fix the testing release failure in the legacy customer installation fixture by
+recording the reviewed, exact combined issued-BMR/material-repair contract digest.
+Preserve prior approvals, strict rejection of unreviewed fingerprints, deployment
+protocol and shell requirements. Retain the additive contract comparison and test
+the actual release-check command against the current import, including rejection
+of changed authentication, permissions and responses. Run the isolated Docker
+release validator; do not alter the uncommitted White Placebo implementation or
+customer databases. See `docs/api-codegen.md` for review scope and backend rollout
+prerequisites.
+
 ## Permission search and navigation consistency (2026-11-03)
 
 Fix the reported mismatch between the visible search field, selected submodule

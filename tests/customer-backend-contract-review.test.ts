@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
+import { spawnSync } from "node:child_process";
 import { contractDigest, object, parse, type ObjectValue } from "../deploy/customer-server/data.ts";
 import { compatibility, checkCompatibility } from "../deploy/customer-server/release.ts";
 import { readConfig } from "../deploy/customer-server/config.ts";
@@ -201,6 +202,16 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
   }
 });
 
+test("the combined issued-BMR and material-repair contract passes release validation", () => {
+  const current = parse(readFileSync("contracts/openapi/backend.v1.json", "utf8"));
+  const digest = contractDigest(current);
+  assert.equal(digest, "a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe");
+  checkCompatibility(hostConfig, policy, digest);
+  const check = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
+  assert.equal(check.status, 0, check.stderr);
+  assert.match(check.stdout, new RegExp(`Approved backend contract: ${digest}`));
+});
+
 test("the separate legacy host-Nginx verifier still blocks unreviewed document changes", async () => {
   const changes: ((document: ObjectValue) => void)[] = [
     (document) => { delete object(document.paths ?? null)["/api/v1/auth/login"]; },
@@ -210,8 +221,10 @@ test("the separate legacy host-Nginx verifier still blocks unreviewed document c
     (document) => { object(document.components ?? null).securitySchemes = {}; },
     (document) => { object(object(document.components ?? null).schemas ?? null)["DOMAIN.Entities.Permissions.PermissionDto"] = { type: "object", properties: {} }; },
   ];
-  for (const change of changes) {
-    const changed = object(parse(raw)); change(changed);
-    assert.throws(() => checkCompatibility(hostConfig, policy, contractDigest(changed)), /has not been approved/);
+  for (const source of [raw, readFileSync("contracts/openapi/backend.v1.json", "utf8")]) {
+    for (const change of changes) {
+      const changed = object(parse(source)); change(changed);
+      assert.throws(() => checkCompatibility(hostConfig, policy, contractDigest(changed)), /has not been approved/);
+    }
   }
 });
