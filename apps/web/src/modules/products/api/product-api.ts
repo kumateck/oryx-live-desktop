@@ -77,4 +77,4 @@ export const bomApi = materialsApi.enhanceEndpoints({
     }); },
   },
 });
-export const { usePostApiV1BomMutation, useLazyGetApiV1MaterialDepartmentQuery } = bomApi;
+export const { usePostApiV1BomMutation, useLazyGetApiV1MaterialDepartmentQuery, useGetApiV1MaterialByMaterialIdUomQuery } = bomApi;

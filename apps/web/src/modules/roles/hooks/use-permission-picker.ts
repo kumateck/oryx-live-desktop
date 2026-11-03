@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PermissionModule } from "../schemas/permission-schema";
 import { accessCount, groupPermissions, searchPermissions, setAccessForKeys, type PermissionRow } from "../lib/permission-groups";
 
@@ -10,8 +10,8 @@ export function usePermissionPicker(modules: PermissionModule[], onChange: (next
   const [moduleName, setModuleName] = useState("");
   const [groupName, setGroupName] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  // Typing stays responsive on a large catalogue: the list catches up after the keystroke.
-  const query = useDeferredValue(search.trim());
+  // The field, search mode and rows must commit together, including when navigation clears the query.
+  const query = search.trim();
   const selected = modules.find((module) => module.module === moduleName) ?? modules[0];
   const groups = useMemo(() => groupPermissions(selected?.children ?? []), [selected]);
   const group = groupName && groups.has(groupName) ? groupName : groups.keys().next().value ?? "";

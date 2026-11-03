@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { groupPermissions, matchPermissions, mergePermissionCatalog, setPermissionAccess } from "./permission-groups";
+import { groupPermissions, matchPermissions, mergePermissionCatalog, searchPermissions, setPermissionAccess } from "./permission-groups";
 import { permissionFixture } from "./permission-fixtures";
 
 
@@ -9,6 +9,14 @@ it("merges catalog metadata and denies new or missing assignments by default", (
   expect(merged[0]?.children.map((child) => child.types)).toEqual([["Access"], [], []]);
   expect(mergePermissionCatalog(catalog, [])[0]?.isActive).toBe(false);
   expect(catalog[0]?.children[1]?.types).toEqual(["Access"]);
+});
+
+it("matches every search word within one permission, including its module and displayed group", () => {
+  expect(searchPermissions(permissionFixture, "  FINANCE   invoices ").map((row) => row.item.key)).toEqual(["pay"]);
+  expect(searchPermissions(permissionFixture, "general invoices").map((row) => row.item.key)).toEqual(["pay"]);
+  expect(searchPermissions(permissionFixture, "supplier read").map((row) => row.item.key)).toEqual(["view"]);
+  expect(searchPermissions(permissionFixture, "suppliers create")).toEqual([]);
+  expect(searchPermissions(permissionFixture, "invoice unrelated")).toEqual([]);
 });
 
 it("groups submodules and makes ungrouped permissions discoverable", () => {

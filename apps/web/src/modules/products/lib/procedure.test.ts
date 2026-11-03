@@ -40,6 +40,22 @@ it("requires a responsible party with a person and an instruction, without repea
   expect(messages({ ...base, isCritical: true, parties: [full, full] })).toEqual(["parties.1.who: Already assigned this instruction"]);
 });
 
+it("allows an automated step without responsible parties and preserves it through saving", () => {
+  const values = procedureStepFormSchema.parse({ ...base, isCritical: false, parties: [] });
+  const step = stepFromForm(values, "automated");
+  const request = toRoutesRequest([step]);
+  expect(request).toEqual([{ operationId: "op", order: 1, isCritical: false, estimatedTime: null,
+    workCenters: [{ workCenterId: "w1" }], responsibleUsers: [], responsibleRoles: [] }]);
+  const reloaded = fromSavedRoutes(savedRoutesSchema.parse([{ ...request[0], operation: { id: "op", name: "Op" },
+    workCenters: [{ workCenter: { id: "w1", name: "Lab" } }] }]));
+  expect(reloaded[0]).toMatchObject({ isCritical: false, parties: [] });
+});
+
+it("still requires complete assignments when an automated step has responsible parties", () => {
+  expect(messages({ ...base, isCritical: false, parties: [{ kind: "role", who: null, action: null }] }))
+    .toEqual(["parties.0.who: Choose who is responsible", "parties.0.action: Choose an instruction"]);
+});
+
 it("refuses a main instruction on an automated step", () => {
   const atr = { kind: "user", who, action: { value: "7", label: "ATR" }, ard: { value: "a", label: "A" } };
   expect(messages({ ...base, isCritical: false, parties: [atr] })[0]).toContain("isCritical: An automated step");

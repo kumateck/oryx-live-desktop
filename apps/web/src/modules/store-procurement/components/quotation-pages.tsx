@@ -1,20 +1,17 @@
+import { VendorPricesDialog } from "./vendor-prices-dialog";
 import { useMemo, useState } from "react";
 import { HandCoins, Printer, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
 import { ConfirmActionDialog, TableMenu, TableMenuHeader } from "@/shared/actions";
 import { inventoryApi } from "@/shared/api/generated/inventory";
-import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDate } from "@/shared/format/dates";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { PrintFacts, PrintHeader, PrintTable, type PrintColumn } from "@/shared/print/print-sheet";
-import { keys, procurementAudit, vendorQuotationPageSchema, vendorQuotationSchema, type VendorQuotation } from "../lib/procurement";
+import { keys, procurementAudit, vendorQuotationPageSchema, type VendorQuotation } from "../lib/procurement";
 
 const column = dataTableColumns<VendorQuotation>();
 type Line = VendorQuotation["items"][number];
@@ -80,46 +77,6 @@ export function QuotationRequestsPage() {
   </section>;
 }
 
-function PricesDialog({ quotation, onClose }: { quotation: VendorQuotation; onClose: () => void }) {
-  const permission = usePermissionAction({ kind: "all", permissions: [keys.responsesView, keys.responseSend] });
-  const [reread] = inventoryApi.useLazyGetApiV1ProcurementInventoryVendorQuotationByVendorQuotationIdQuery();
-  const [receive, receiving] = inventoryApi.usePostApiV1ProcurementInventoryVendorQuotationByVendorQuotationIdReceiveMutation();
-  const [prices, setPrices] = useState<Record<string, { price: string; per: string }>>(() =>
-    Object.fromEntries(quotation.items.map((i) => [i.id, { price: i.price === null ? "" : String(i.price), per: i.priceUnit ?? i.unit }])));
-  const [message, setMessage] = useState("");
-  const problems = quotation.items.flatMap((i) => { const n = Number(prices[i.id]?.price ?? ""); return !prices[i.id]?.price.trim() || !Number.isFinite(n) || n <= 0 ? [i.id] : []; });
-  const save = async () => {
-    setMessage("");
-    if (problems.length) { setMessage("Enter a price greater than zero for every item."); return; }
-    const denied = permission.check();
-    if (denied) { setMessage(denied); return; }
-    const fresh = await reread({ ...procurementAudit, vendorQuotationId: quotation.id }, false);
-    const current = fresh.data ? vendorQuotationSchema.safeParse(fresh.data) : null;
-    if (!current?.success || current.data.received || current.data.items.length !== quotation.items.length) { setMessage("This quotation changed after you opened it. Close this and open it again."); return; }
-    const result = await receive({ ...procurementAudit, vendorQuotationId: quotation.id,
-      body: quotation.items.map((i) => ({ id: i.id, price: Number(prices[i.id]?.price), priceUoM: prices[i.id]?.per.trim() || null })) });
-    if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    toast.success("Prices recorded", { description: "They are now in the price comparison." });
-    onClose();
-  };
-  return <Dialog open onOpenChange={(open) => { if (!open && !receiving.isLoading) onClose(); }}>
-    <DialogContent className="sm:max-w-3xl"><DialogHeader><DialogTitle>Prices from {quotation.vendor.name}</DialogTitle>
-      <DialogDescription>Enter the unit price the vendor quoted for each item{quotation.vendor.currency ? `, in ${quotation.vendor.currency}` : ""}.</DialogDescription></DialogHeader>
-      <form noValidate className="flex min-h-0 min-w-0 flex-1 flex-col gap-4" onSubmit={(event) => { event.preventDefault(); event.stopPropagation(); void save(); }}>
-        <DialogBody><div className="max-w-full overflow-x-auto"><table className="w-full min-w-[36rem] text-left text-sm"><thead className="border-b text-xs text-muted-foreground"><tr>
-          {["Item", "Quantity", "Unit price", "Priced per"].map((h) => <th key={h} scope="col" className="p-2">{h}</th>)}</tr></thead>
-          <tbody>{quotation.items.map((i) => <tr key={i.id} className="border-b last:border-0"><td className="p-2"><div className="font-medium">{i.name}</div><div className="font-mono text-xs text-muted-foreground">{i.code}</div></td>
-            <td className="p-2">{`${String(i.quantity)} ${i.unit}`.trim()}</td>
-            <td className="p-2"><Input aria-label={`Unit price for ${i.name}`} inputMode="decimal" className="w-32" value={prices[i.id]?.price ?? ""} aria-invalid={problems.includes(i.id) && message ? true : undefined}
-              onChange={(event) => setPrices((current) => ({ ...current, [i.id]: { price: event.target.value, per: current[i.id]?.per ?? "" } }))} /></td>
-            <td className="p-2"><Input aria-label={`Priced per for ${i.name}`} className="w-28" value={prices[i.id]?.per ?? ""}
-              onChange={(event) => setPrices((current) => ({ ...current, [i.id]: { price: current[i.id]?.price ?? "", per: event.target.value } }))} /></td></tr>)}</tbody></table></div>
-          {message ? <p role="alert" className="mt-3 text-sm text-destructive">{message}</p> : null}</DialogBody>
-        <DialogFooter><Button type="button" variant="outline" disabled={receiving.isLoading} onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={receiving.isLoading}>{receiving.isLoading ? <><Spinner />Saving…</> : "Record prices"}</Button></DialogFooter>
-      </form></DialogContent></Dialog>;
-}
-
 /** Vendors' answers to quotation requests: waiting for prices, and those already priced. */
 export function QuotationResponsesPage() {
   const [received, setReceived] = useState(false);
@@ -143,6 +100,6 @@ export function QuotationResponsesPage() {
     <ServerDataTable label="Quotation responses" columns={columns} rows={list.rows} getRowId={(q) => q.id} page={list.table.page} pageSize={list.table.pageSize} totalRows={list.meta.totalRows}
       onPageChange={list.table.onPageChange} onPageSizeChange={list.table.onPageSizeChange} loading={list.query.isLoading} refreshing={list.query.isFetching && !list.query.isLoading}
       onRetry={() => void list.query.refetch()} error={list.error} emptyTitle={received ? "No priced quotations" : "No quotations waiting for prices"} />
-    {pricing ? <PricesDialog quotation={pricing} onClose={() => setPricing(null)} /> : null}
+    {pricing ? <VendorPricesDialog quotation={pricing} onClose={() => setPricing(null)} /> : null}
   </section>;
 }

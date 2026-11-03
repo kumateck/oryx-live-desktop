@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { type DesktopUpdatesBridge, type DesktopUpdateState, type WebRelease, newerVersion, parseJson, readWebRelease } from "../../../../../shared/desktop-updates";
-import { canApplyWebRelease, hasUnsavedUpdateWork } from "./leave-safety";
+import { type DesktopUpdatesBridge, type DesktopUpdateState, type WebRelease, newerVersion } from "../../../../../shared/desktop-updates";
+import { hasUnsavedUpdateWork } from "./leave-safety";
 import { WebUpdateDialog } from "./web-update-dialog";
+import { fetchWebRelease, matchesRunningWebRelease, prepareWebRefresh, replaceWebPage, runningWebCommit } from "./web-release";
 
-declare const ORYX_WEB_COMMIT: string;
 declare global { interface Window { oryxUpdates?: DesktopUpdatesBridge } }
 interface UpdatesContext {
   desktop: DesktopUpdateState | null;
@@ -17,34 +17,36 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
   const [web, setWeb] = useState<WebRelease | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
-  const current = useRef(typeof ORYX_WEB_COMMIT === "string" && /^[a-f0-9]{40}$/.test(ORYX_WEB_COMMIT) ? ORYX_WEB_COMMIT : "");
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshRequest = useRef<AbortController | null>(null);
   const dismissed = useRef("");
-  const native = useRef<DesktopUpdateState | null>(null);
+  useEffect(() => () => { refreshRequest.current?.abort(); }, []);
   useEffect(() => {
     const bridge = window.oryxUpdates;
     if (!bridge) return;
     let active = true;
-    const receive = (state: DesktopUpdateState) => { if (active) { native.current = state; setDesktop(state); } };
+    const receive = (state: DesktopUpdateState) => { if (active) setDesktop(state); };
     const unsubscribe = bridge.onStatus(receive);
     void bridge.status().then(receive).catch(() => {});
     return () => { active = false; unsubscribe(); };
   }, []);
   useEffect(() => {
+    let current = runningWebCommit();
     const controller = new AbortController(); let loading = false;
     const check = async () => {
       if (loading || document.visibilityState !== "visible") return;
       loading = true;
       try {
-        const response = await fetch("/deployment.json", { cache: "no-store", credentials: "omit", redirect: "error", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]) });
-        if (!response.ok) return;
-        const release = readWebRelease(parseJson(await response.text()));
+        const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]);
+        const release = await fetchWebRelease(signal);
+        if (!current) {
+          const matches = await matchesRunningWebRelease(signal);
+          if (matches === null) return;
+          if (matches) current = release.commit;
+        }
         if (controller.signal.aborted) return;
-        if (!current.current) { current.current = release.commit; return; }
-        if (release.commit === current.current) { setWeb(null); setOpen(false); return; }
-        const version = native.current?.currentVersion ?? (window.oryxSession ? "0.1.0" : null);
-        const needsShell = Boolean(version && newerVersion(release.minimumShellVersion, version));
+        if (release.commit === current) { setWeb(null); setOpen(false); return; }
         setWeb(release);
-        if (!needsShell && (!window.oryxUpdates || native.current) && dismissed.current !== release.commit && canApplyWebRelease()) { window.location.reload(); return; }
         if (dismissed.current !== release.commit) setOpen(true);
       } catch { /* Keep the running version during outages, invalid metadata or an interrupted deployment. */ }
       finally { loading = false; }
@@ -61,12 +63,27 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
     else setOpen(true);
   }, []);
   const value = useMemo(() => ({ desktop, web, open: web ? () => setOpen(true) : show }), [desktop, web, show]);
-  const required = Boolean(web && (desktop || window.oryxSession) && newerVersion(web.minimumShellVersion, desktop?.currentVersion ?? "0.1.0"));
-  return <Context.Provider value={value}>{children}<WebUpdateDialog open={open} release={web} required={required} error={error}
-    close={() => { dismissed.current = web?.commit ?? ""; setOpen(false); setError(""); }}
-    reload={() => {
+  const required = Boolean(web && (desktop || window.oryxSession || window.oryxUpdates) && newerVersion(web.minimumShellVersion, desktop?.currentVersion ?? "0.1.0"));
+  const reload = async () => {
+    if (!web || refreshRequest.current) return;
+    if (hasUnsavedUpdateWork()) { setError("Save or discard your unsaved changes before refreshing Oryx."); return; }
+    if (required) { show(); return; }
+    const controller = new AbortController();
+    refreshRequest.current = controller;
+    setRefreshing(true); setError("");
+    try {
+      const address = await prepareWebRefresh(web, AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]));
+      if (controller.signal.aborted) return;
       if (hasUnsavedUpdateWork()) { setError("Save or discard your unsaved changes before refreshing Oryx."); return; }
-      if (required) { show(); return; }
-      window.location.reload();
-    }} updateDesktop={show} /></Context.Provider>;
+      replaceWebPage(address);
+    } catch {
+      if (!controller.signal.aborted) setError("The latest release could not be loaded. Check your connection and try again. Your current page is still open.");
+    } finally {
+      refreshRequest.current = null;
+      if (!controller.signal.aborted) setRefreshing(false);
+    }
+  };
+  return <Context.Provider value={value}>{children}<WebUpdateDialog open={open} release={web} required={required} error={error} refreshing={refreshing}
+    close={() => { if (refreshRequest.current) return; dismissed.current = web?.commit ?? ""; setOpen(false); setError(""); }}
+    reload={() => { void reload(); }} updateDesktop={show} /></Context.Provider>;
 }

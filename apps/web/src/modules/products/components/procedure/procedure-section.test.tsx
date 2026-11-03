@@ -72,9 +72,25 @@ it("explains what a new step is missing before adding it", async () => {
   expect(await within(dialog).findByText("Choose who is responsible")).toBeTruthy();
   expect(await within(dialog).findByText("Choose an instruction")).toBeTruthy();
   fireEvent.click(within(dialog).getByRole("button", { name: "Remove responsible role 1" }));
+  fireEvent.click(within(dialog).getByRole("switch", { name: "Critical step" }));
   fireEvent.click(within(dialog).getByRole("button", { name: "Add step" }));
   expect((await within(dialog).findByText("Add at least one responsible user or role"))).toBeTruthy();
   expect(calls).toEqual([]);
+});
+
+it("saves an automated step after its last responsible party is removed", async () => {
+  const calls = open(routes.filter((route) => !route.isCritical));
+  await chooseAction("Actions for Packing", "Edit");
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByText(/Optional for automated steps/)).toBeTruthy();
+  fireEvent.click(within(dialog).getByRole("button", { name: "Remove responsible role 1" }));
+  fireEvent.click(within(dialog).getByRole("button", { name: "Update step" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(screen.getByText("Nobody assigned")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Save procedure" }));
+  await waitFor(() => expect(calls).toHaveLength(1));
+  expect(JSON.parse(calls[0]?.body ?? "[]")).toEqual([{ operationId: "op-pack", order: 1, isCritical: false,
+    estimatedTime: null, workCenters: [{ workCenterId: "w2" }], responsibleUsers: [], responsibleRoles: [] }]);
 });
 
 it("refuses to save an empty procedure", async () => {

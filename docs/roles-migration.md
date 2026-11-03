@@ -15,9 +15,20 @@
 
 `/access-management/permissions` uses the same contract as Oryx Next: load the full permission catalog and the chosen role's assignments, merge by module and permission key, and submit the entire catalog to the role permission endpoint. Both requests start together. New catalog actions start without access; catalog defaults are never inherited by an existing role. The catalog is shared through RTK Query and role assignments have role-specific cache tags. Only current-role data may populate the editor while switching roles.
 
-The reusable permission picker is shared with role creation and detail editing. Compact shadcn module tabs sit across the top, with full names and enabled/total counts in hover and keyboard-focus tooltips. The module heading and Access switch follow. Submodules appear in a left column; permission names/descriptions and an Access column appear on the right. Only the selected content mounts, with each list scrolling independently. The submodule starts with the first group, as in Oryx Next, and also offers all submodules. At narrow component widths the submodule list becomes a select control; module tabs wrap to avoid horizontal scrolling.
+The reusable permission picker is shared with role creation and detail editing. Compact shadcn module tabs sit across the top, with full names and enabled/total counts in hover and keyboard-focus tooltips. The module heading and Access switch follow. Submodules appear in a left column; permission names/descriptions and an Access column appear on the right. Only the selected content mounts, with each list scrolling independently. The submodule starts with the first group, as in Oryx Next. At narrow component widths the submodule list becomes a select control; module tabs wrap to avoid horizontal scrolling.
 
-The module access switch follows Oryx Next: turning it off clears every permission in that module, and turning it on enables them all. A partially enabled module remains active and its exact enabled count stays visible. Individual shadcn switches edit one action. Search checks the name, key, description and submodule. **Enable shown / Disable shown** affects visible permission keys; unrelated actions and other modules are preserved. When the catalog repeats one permission key in several workflows of the same module, those representations change together, matching Oryx Next.
+The module access switch follows Oryx Next: turning it off clears every permission in that module, and turning it on enables them all. A partially enabled module remains active and its exact enabled count stays visible. Individual shadcn switches edit one action. When the catalog repeats one permission key in several workflows of the same module, those representations change together, matching Oryx Next.
+
+Search checks the whole catalog by module, displayed submodule, permission name,
+key and description. Every whitespace-separated word must match the same
+permission's metadata, ignoring case. Search text, result count and rows update
+together; no deferred query may leave old results under a newly selected group.
+Global results have their own heading and show each permission's module path.
+The module-wide access switch and submodule sidebar are hidden in this view.
+Choosing any module tab, including the already active one, clears search and
+opens that module's first group. Clearing the query returns to the prior group.
+Each group/search view has its own scroll region. Searches and navigation retain
+the permission draft and never grant or remove access on their own.
 
 The dedicated workspace fills the remaining content height. Its permission list scrolls internally, keeping the filters and Reset/Apply controls visible. Browsing modules or submodules preserves the draft. Switching roles with changes requires choosing to keep editing or discard; route navigation and window unload use the shared unsaved-work guard. Apply requires confirmation, preserves the draft on failure, and refreshes the signed-in session after success. View-only administrators can browse and search but cannot edit or save. Reset discards local edits under the existing `CanResetPermission` gate.
 

@@ -1,5 +1,34 @@
 # API contracts and generated hooks
 
+## Combined report and repair contract review (2026-11-03)
+
+The legacy host-Nginx release policy now records the exact combined import digest
+`a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe`.
+This addresses the testing release's installer-fixture failure after desktop
+PRs #68 and #69 were combined. The contract regression retains its comparison of
+all prior operations, schemas and security, allowing only the documented issued-BMR
+query, four material-repair operations, their response/request schemas and optional
+content revisions in addition to previously reviewed features. It also verifies
+the real release-check command and rejection of altered current authentication,
+permission and response contracts. Earlier approved fingerprints remain valid;
+unreviewed fingerprints remain blocked.
+
+This review covers the checked-in contract without White Placebo. The matching
+backend report and repair APIs are in backend PRs #1681 and #1680. Material repairs
+still require migration `20261102182519_AddProductionMaterialRepairs` before use.
+No customer backend, database, shell baseline or deployment protocol is changed
+by recording this source-contract review.
+
+QA issued-BMR reporting (2026-11-02) adds only
+`GET /api/v1/report/bmr-issued` (`GetIssuedBmrReport`) and the
+`IssuedBmrReportDto` / `IssuedBmrReportRowDto` schemas from the companion backend's
+built, metadata-only OpenAPI export. The generator owns the reports client and
+cache tags. The compatibility regression explicitly allows this additive query
+and its two schemas while preserving prior operations and security. Required
+date-only `startDate`/`endDate` are inclusive UTC issue dates; `departmentId` is
+optional. The matching backend must precede frontend activation; the customer
+release fingerprint remains subject to coordinated compatibility review.
+
 The desktop keeps one RTK Query API in `apps/web/src/shared/api/base-api.ts`. Domain outputs inject endpoints into it. Route chunks import only their domain output, keeping the shell and login path free of the full ERP endpoint graph.
 
 ## Reproduce the contract
@@ -71,3 +100,16 @@ The export's documented `Module`/`SubModule` string-schema adjustment changes th
 Historical report parameters and report-only vendor lookup were reviewed as additive changes on 2026-10-27. The dated customer export review test preserves the original proof independently and checks every pre-existing operation/schema/security declaration against the current import after removing only the documented optional read parameters and 409 responses. See [reports](reports.md).
 
 The combined production-readiness operation was added on 2026-10-28 from the companion backend offline export. It adds one reports-domain query and nine response schemas; the contract regression proves every pre-existing operation/schema/security declaration remains unchanged. The legacy host-Nginx policy retains previous approvals and adds the reviewed raw and typed digests. Frontend activation requires this companion endpoint; see [reports](reports.md).
+
+Production material repair was imported on 2026-11-02 from a built, metadata-only
+companion backend export. Only the BOM/packaging preview/apply paths, their four
+DTO schemas and optional `contentRevision` properties on `ApprovalEntity`,
+`ApprovalRequestBody` and `RequisitionDto` were merged. Stable operation IDs are
+`PreviewProductionBomRepair`, `ApplyProductionBomRepair`,
+`PreviewProductionPackagingRepair` and `ApplyProductionPackagingRepair`.
+The customer contract regression explicitly allows only those additions;
+`bun run api:generate` regenerates the production, approvals and warehouse clients,
+and `bun run api:check` verifies reproducibility. Backend migration
+`20261102182519_AddProductionMaterialRepairs` and the matching API must precede UI
+activation. No deployment fingerprint was approved by this import. See
+[production configuration repairs](production-configuration-repair-study.md).

@@ -1,14 +1,13 @@
-import { useCallback, useMemo, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, useWatch } from "react-hook-form";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/shared/skeleton/skeleton";
 import { stockRequisitionPageSchema, stockRequisitionSchema, type StockRequisition } from "@/modules/stock-requisitions/lib/stock-requisitions";
 import { inventoryApi } from "@/shared/api/generated/inventory";
 import { useAccess } from "@/shared/auth/use-access";
@@ -16,13 +15,15 @@ import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDate } from "@/shared/format/dates";
-import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
-import type { SelectLoader, SelectOption } from "@/shared/forms/form-wizard-types";
+import type { SelectLoader } from "@/shared/forms/form-wizard-types";
 import { Classification } from "@/shared/inventory/contracts";
 import { Store, storeValue, stores } from "@/shared/inventory/stores";
 import { WorkflowStoreLinks } from "@/shared/inventory/workflow-store-links";
 import { workflowRule } from "@/shared/inventory/workflows";
 import { usePageSearch } from "@/shared/search/page-search";
+import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
+import { InputTypes } from "@/shared/forms/input-types";
+import { returnFormSchema, returnQuantitySchema, type ReturnFormValues } from "../schemas/return-form";
 import { returnAudit, returnItemsRoot, returnListSchema, returnedByLine, type ItemReturn } from "../lib/returns";
 
 const column = dataTableColumns<ItemReturn>();
@@ -38,37 +39,66 @@ function ReturnDialog({ store, returns, onClose }: { store: Store; returns: read
   const [loadRequisitions] = inventoryApi.useLazyGetApiV1ItemsStockRequisitionsQuery();
   const [loadRequisition] = inventoryApi.useLazyGetApiV1ItemsStockRequisitionsByIdQuery();
   const [create, creating] = inventoryApi.usePostApiV1RecoverableItemsReportsMutation();
-  const [choice, setChoice] = useState<SelectOption | null>(null);
   const [requisition, setRequisition] = useState<StockRequisition | null>(null);
-  const [lineId, setLineId] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [reason, setReason] = useState("");
-  const [message, setMessage] = useState("");
   const returned = useMemo(() => returnedByLine(returns), [returns]);
+  const form = useForm<ReturnFormValues>({
+    resolver: (values, context, options) => {
+      const selected = requisition && requisition.id === values.choice?.value
+        ? returnable(requisition, returned).find((entry) => entry.line.id === values.line?.value) : null;
+      return zodResolver(returnFormSchema(selected?.left))(values, context, options);
+    },
+    mode: "onChange", defaultValues: { choice: null, line: null, quantity: "", reason: "" },
+  });
+  const choice = useWatch({ control: form.control, name: "choice" });
+  const line = useWatch({ control: form.control, name: "line" });
+  const quantity = useWatch({ control: form.control, name: "quantity" });
+  const [reading, setReading] = useState(false);
+  const busy = creating.isLoading || form.formState.isSubmitting;
+  const [message, setMessage] = useState("");
   // Only requisitions with something issued can have items returned.
-  const requisitions = useCallback<SelectLoader>(async (searchQuery, page) => {
-    const result = await loadRequisitions({ ...returnAudit, store, page, pageSize: 20, ...(searchQuery ? { searchQuery } : {}) }, true);
+  const requisitions = useCallback<SelectLoader>(async (searchQuery, page, signal) => {
+    signal.throwIfAborted();
+    const request = loadRequisitions({ ...returnAudit, store, page, pageSize: 20, ...(searchQuery ? { searchQuery } : {}) }, true);
+    const abort = () => request.abort();
+    signal.addEventListener("abort", abort, { once: true });
+    const result = await request.finally(() => signal.removeEventListener("abort", abort));
     if (result.error) throw new Error("Requisitions could not be loaded.");
     const parsed = stockRequisitionPageSchema.safeParse(result.data);
     const rows = parsed.success ? parsed.data.data : [];
     return { options: rows.filter((r) => r.lines.some((l) => l.issued > 0)).map((r) => ({ value: r.id, label: `${r.number} · ${r.department?.name ?? "No department"}` })),
       hasNext: (parsed.success ? parsed.data.pageIndex ?? 1 : 1) < (parsed.success ? parsed.data.pageCount ?? 1 : 1), hasPrevious: page > 1 };
   }, [loadRequisitions, store]);
-  const pick = async (option: SelectOption) => {
-    setChoice(option); setRequisition(null); setLineId(""); setMessage("");
-    const result = await loadRequisition({ ...returnAudit, id: option.value }, false);
-    const parsed = result.data ? stockRequisitionSchema.safeParse(result.data) : null;
-    if (!parsed?.success) { setMessage(result.error ? apiErrorMessage(result.error) : "The requisition could not be read."); return; }
-    setRequisition(parsed.data);
-  };
-  const lines = requisition ? returnable(requisition, returned) : [];
-  const selected = lines.find((entry) => entry.line.id === lineId) ?? null;
-  const amount = Number(quantity);
-  const problem = !selected ? null : !quantity.trim() || !Number.isInteger(amount) || amount <= 0 ? "Enter a whole number greater than zero."
-    : amount > selected.left ? `Only ${String(selected.left)} issued on this requisition remain to be returned.` : null;
-  const save = async () => {
+  const choiceId = choice?.value;
+  useEffect(() => {
+    let live = true;
+    setRequisition(null); form.setValue("line", null); setMessage("");
+    if (!choiceId) { setReading(false); return; }
+    setReading(true);
+    const request = loadRequisition({ ...returnAudit, id: choiceId }, false);
+    void request.then((result) => {
+      if (!live) return;
+      const parsed = result.data ? stockRequisitionSchema.safeParse(result.data) : null;
+      if (!parsed?.success) setMessage(result.error ? apiErrorMessage(result.error) : "The requisition could not be read.");
+      else setRequisition(parsed.data);
+      setReading(false);
+    });
+    return () => { live = false; request.abort(); };
+  }, [choiceId, form, loadRequisition]);
+  const lines = useMemo(() => requisition && requisition.id === choiceId ? returnable(requisition, returned) : [], [requisition, choiceId, returned]);
+  const selected = lines.find((entry) => entry.line.id === line?.value) ?? null;
+  const quantityResult = returnQuantitySchema(selected?.left).safeParse(quantity);
+  const problem = selected && !quantityResult.success ? quantityResult.error.issues[0]?.message ?? null : null;
+  const fields = useMemo<readonly WizardField<ReturnFormValues>[]>(() => [
+    { type: InputTypes.SELECT, name: "choice", label: "Issued requisition", mode: "single", source: "async", loadOptions: requisitions, placeholder: "Search for a requisition", required: true },
+    ...(requisition ? [{ type: InputTypes.SELECT, name: "line", label: "Item", mode: "single", source: "sync", required: true, options: lines.map(({ line, left }) => ({ value: line.id, label: `${line.name} · ${line.code} — ${String(left)} of ${String(line.issued)} ${line.unit ?? ""} returnable`.trim(), disabled: left === 0 })) } satisfies WizardField<ReturnFormValues>] : []),
+    ...(selected ? [{ type: InputTypes.TEXT, name: "quantity", label: "Quantity returned", inputMode: "numeric", required: true } satisfies WizardField<ReturnFormValues>] : []),
+    { type: InputTypes.TEXTAREA, name: "reason", label: "Remarks", rows: 3, placeholder: "Condition of the items, or why they are returned" },
+  ], [requisitions, requisition, lines, selected]);
+  const save = form.handleSubmit(async ({ line, quantity, reason }) => {
+    const selected = lines.find((entry) => entry.line.id === line?.value);
+    const amount = Number(quantity);
     setMessage("");
-    if (!selected || problem) { setMessage(problem ?? "Choose the item being returned."); return; }
+    if (!selected) { setMessage("Choose the item being returned."); return; }
     const denied = permission.check();
     if (denied) { setMessage(denied); return; }
     const result = await create({ ...returnAudit, domainEntitiesRecoverableItemsReportsCreateRecoverableItemReportRequest: {
@@ -76,29 +106,20 @@ function ReturnDialog({ store, returns, onClose }: { store: Store; returns: read
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success("Return recorded", { description: "The items are back in stock." });
     onClose();
-  };
-  return <Dialog open onOpenChange={(open) => { if (!open && !creating.isLoading) onClose(); }}>
+  });
+  return <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
     <DialogContent className="sm:max-w-2xl">
       <DialogHeader><DialogTitle>Record a return</DialogTitle>
         <DialogDescription>Recoverable items handed back to the {(stores[store] ?? "store").toLowerCase()}, against the requisition they were issued on.</DialogDescription></DialogHeader>
-      <form noValidate className="flex min-h-0 min-w-0 flex-1 flex-col gap-4" onSubmit={(event) => { event.preventDefault(); event.stopPropagation(); void save(); }}>
+      <form noValidate className="flex min-h-0 min-w-0 flex-1 flex-col gap-4" onSubmit={(event) => { event.stopPropagation(); void save(event); }}>
         <DialogBody className="space-y-4">
-          <div className="space-y-1.5"><Label>Issued requisition <span className="text-destructive">*</span></Label>
-            <AsyncOptionPicker label="Issued requisition" value={choice} onChange={(option) => void pick(option)} loadOptions={requisitions} placeholder="Search for a requisition" /></div>
-          {requisition ? lines.length === 0 ? <p className="text-sm text-muted-foreground">No recoverable items on this requisition remain to be returned.</p>
-            : <div className="space-y-1.5"><Label>Item <span className="text-destructive">*</span></Label>
-              <Select value={lineId} onValueChange={setLineId}><SelectTrigger aria-label="Item"><SelectValue placeholder="Choose the item" /></SelectTrigger>
-                <SelectContent position="popper">{lines.map(({ line, left }) => <SelectItem key={line.id} value={line.id} disabled={left === 0}>
-                  {`${line.name} · ${line.code} — ${String(left)} of ${String(line.issued)} ${line.unit ?? ""} returnable`.trim()}</SelectItem>)}</SelectContent></Select></div> : null}
-          {selected ? <div className="space-y-1.5"><Label htmlFor="return-quantity">Quantity returned <span className="text-destructive">*</span></Label>
-            <Input id="return-quantity" inputMode="numeric" className="w-32" value={quantity} onChange={(event) => setQuantity(event.target.value)} aria-invalid={problem ? true : undefined} />
-            {problem ? <p role="alert" className="text-xs text-destructive">{problem}</p> : null}</div> : null}
-          <div className="space-y-1.5"><Label htmlFor="return-reason">Remarks</Label>
-            <Textarea id="return-reason" rows={3} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Condition of the items, or why they are returned" /></div>
+          <fieldset disabled={busy}><FormWizard form={form} fields={fields} /></fieldset>
+          {reading ? <Skeleton className="h-14 w-full" aria-label="Loading requisition" /> : null}
+          {requisition && lines.length === 0 ? <p className="text-sm text-muted-foreground">No recoverable items on this requisition remain to be returned.</p> : null}
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>
-        <DialogFooter><Button type="button" variant="outline" disabled={creating.isLoading} onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={creating.isLoading || !selected || Boolean(problem)}>{creating.isLoading ? <><Spinner />Recording…</> : "Record return"}</Button></DialogFooter>
+        <DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button>
+          <Button type="submit" disabled={busy || reading || !selected || Boolean(problem)}>{creating.isLoading ? <><Spinner />Recording…</> : "Record return"}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>;

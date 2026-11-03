@@ -1,15 +1,14 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, useWatch } from "react-hook-form";
 import { useEffect, useMemo, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
 import { ConfirmActionDialog, TableMenu, TableMenuHeader } from "@/shared/actions";
 import { warehouseApi } from "@/shared/api/generated/warehouse";
 import { useAccess } from "@/shared/auth/use-access";
@@ -21,6 +20,9 @@ import { Store, stockLink, storeValue, stockPermissions, stores } from "@/shared
 import { WorkflowStoreLinks } from "@/shared/inventory/workflow-store-links";
 import { workflowRule } from "@/shared/inventory/workflows";
 import { usePageSearch } from "@/shared/search/page-search";
+import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
+import { InputTypes } from "@/shared/forms/input-types";
+import { correctionFormSchema, type CorrectionFormValues } from "../schemas/correction-form";
 import { DamageStatus, damageAudit, damageLabel, damagePageSchema, damageRoot, damageSchema, sameDamage, type DamageRecord } from "../lib/damage";
 
 const column = dataTableColumns<DamageRecord>();
@@ -41,42 +43,48 @@ function CorrectDialog({ record, store, onClose }: { record: DamageRecord; store
   const permission = usePermissionAction(workflowRule(store, "damageMissing", "edit"));
   const [update, updating] = warehouseApi.usePutApiV1DamagedGoodsByIdMutation();
   const fresh = useFresh();
-  const [quantity, setQuantity] = useState(String(record.quantity));
-  const [status, setStatus] = useState(String(record.status));
-  const [remarks, setRemarks] = useState(record.remarks ?? "");
+  const schema = correctionFormSchema(record.quantity, record.available, record.unit);
+  const form = useForm<CorrectionFormValues>({ resolver: zodResolver(schema), mode: "onChange", defaultValues: {
+    quantity: String(record.quantity), status: record.status === DamageStatus.Missing ? { value: "1", label: "Missing" }
+      : record.status === DamageStatus.Damage ? { value: "0", label: "Damaged" } : null, remarks: record.remarks ?? "",
+  } });
+  const quantity = useWatch({ control: form.control, name: "quantity" });
+  const fields = useMemo<readonly WizardField<CorrectionFormValues>[]>(() => [
+    { type: InputTypes.SELECT, name: "status", label: "Type", mode: "single", source: "sync", required: true, options: [{ value: "0", label: "Damaged" }, { value: "1", label: "Missing" }] },
+    { type: InputTypes.TEXT, name: "quantity", label: "Quantity", inputMode: "numeric", required: true },
+    { type: InputTypes.TEXTAREA, name: "remarks", label: "Remarks", rows: 3 },
+  ], []);
+  const busy = updating.isLoading || form.formState.isSubmitting;
   const [message, setMessage] = useState("");
-  const amount = Number(quantity);
-  // A larger quantity takes more from stock; there must be enough for the difference.
-  const most = record.quantity + record.available;
-  const problem = !quantity.trim() || !Number.isInteger(amount) || amount <= 0 ? "Enter a whole number greater than zero."
-    : amount > most ? `At most ${String(most)} ${record.unit}: only ${String(record.available)} more are in stock.` : null;
-  const save = async () => {
+  const quantityResult = schema.shape.quantity.safeParse(quantity);
+  const problem = quantityResult.success ? null : quantityResult.error.issues[0]?.message ?? null;
+  const save = form.handleSubmit(async ({ status, quantity, remarks }) => {
+    if (!status) return;
+    const amount = Number(quantity);
     setMessage("");
     if (problem) { setMessage(problem); return; }
     const denied = permission.check();
     if (denied) { setMessage(denied); return; }
     const stale = await fresh(record);
     if (stale) { setMessage(stale); return; }
+    const writeDenied = permission.check();
+    if (writeDenied) { setMessage(writeDenied); return; }
     const result = await update({ ...damageAudit, id: record.id, domainEntitiesDamagedStocksCreateDamagedStockRequest: {
-      itemId: record.itemId, damageStatus: Number(status) as 0 | 1, quantityDamaged: amount, remarks: remarks.trim() || null } });
+      itemId: record.itemId, damageStatus: status.value === "1" ? 1 : 0, quantityDamaged: amount, remarks: remarks.trim() || null } });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success("Record corrected", { description: amount === record.quantity ? undefined : "The stock difference was posted to the item ledger." });
     onClose();
-  };
-  return <Dialog open onOpenChange={(open) => { if (!open && !updating.isLoading) onClose(); }}>
+  });
+  return <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
     <DialogContent><DialogHeader><DialogTitle>Correct {record.itemName}</DialogTitle>
       <DialogDescription>The item stays the same. Changing the quantity adds or takes the difference from stock.</DialogDescription></DialogHeader>
-      <form noValidate className="flex min-h-0 min-w-0 flex-1 flex-col gap-4" onSubmit={(event) => { event.preventDefault(); event.stopPropagation(); void save(); }}>
+      <form noValidate className="flex min-h-0 min-w-0 flex-1 flex-col gap-4" onSubmit={(event) => { event.stopPropagation(); void save(event); }}>
         <DialogBody className="space-y-4">
-          <div className="space-y-1.5"><Label>Type</Label><Select value={status} onValueChange={setStatus}><SelectTrigger aria-label="Type"><SelectValue /></SelectTrigger>
-            <SelectContent position="popper"><SelectItem value={String(DamageStatus.Damage)}>Damaged</SelectItem><SelectItem value={String(DamageStatus.Missing)}>Missing</SelectItem></SelectContent></Select></div>
-          <div className="space-y-1.5"><Label htmlFor="damage-quantity">Quantity</Label><Input id="damage-quantity" inputMode="numeric" className="w-32" value={quantity} onChange={(event) => setQuantity(event.target.value)} aria-invalid={problem ? true : undefined} />
-            {problem ? <p role="alert" className="text-xs text-destructive">{problem}</p> : null}</div>
-          <div className="space-y-1.5"><Label htmlFor="damage-remarks">Remarks</Label><Textarea id="damage-remarks" rows={3} value={remarks} onChange={(event) => setRemarks(event.target.value)} /></div>
+          <fieldset disabled={busy}><FormWizard form={form} fields={fields} /></fieldset>
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>
-        <DialogFooter><Button type="button" variant="outline" disabled={updating.isLoading} onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={updating.isLoading || Boolean(problem)}>{updating.isLoading ? <><Spinner />Saving…</> : "Save correction"}</Button></DialogFooter>
+        <DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button>
+          <Button type="submit" disabled={busy || Boolean(problem)}>{updating.isLoading ? <><Spinner />Saving…</> : "Save correction"}</Button></DialogFooter>
       </form></DialogContent></Dialog>;
 }
 
