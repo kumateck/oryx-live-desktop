@@ -3873,6 +3873,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchListDto = {
   analysedDate?: string | null;
   issuedBy?: SharedCollectionItemDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
   id?: string;
@@ -3911,6 +3912,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
   analysedDate?: string | null;
   issuedBy?: SharedCollectionItemDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchBatchToSupply = {
   batch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
@@ -4092,6 +4094,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDto = {
   sampleQuantity?: number;
   analysedBy?: string | null;
   analysedDate?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   id?: string;
@@ -4127,6 +4130,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   sampleQuantity?: number;
   analysedBy?: string | null;
   analysedDate?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesWarehousesShelfMaterialBatchDto = {
   id?: string;

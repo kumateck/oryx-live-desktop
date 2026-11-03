@@ -67,6 +67,7 @@ test("historical reporting adds optional read parameters without changing existi
       if (Array.isArray(parameters)) operation.parameters = parameters.filter((entry) => {
         const parameter = object(entry);
         return !(parameter.in === "query" && (parameter.name === "asOfDate" || (path === "/api/v1/attendance-records/general-summary" && parameter.name === "departmentId") || (path === "/api/v1/report/warehouse/materials-stock-batch-detail" && parameter.name === "materialId")
+          || ((path === "/api/v1/material/batches/expired" || path === "/api/v1/material/batches/about-to-expire") && parameter.name === "searchQuery")
           // User directory filters (2026-11-01): optional role and department filters on the user list; additive only.
           || (path === "/api/v1/user" && (parameter.name === "roleId" || parameter.name === "departmentId"))));
       });
@@ -104,8 +105,19 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/report/bmr-issued",
     // Material repairs (2026-11-02): read-only previews and explicit apply, one material kind at a time.
     "/api/v1/production-schedule/activity/{activityId}/repair-bom/preview", "/api/v1/production-schedule/activity/{activityId}/repair-bom",
-    "/api/v1/production-schedule/activity/{activityId}/repair-packaging/preview", "/api/v1/production-schedule/activity/{activityId}/repair-packaging"]);
+    "/api/v1/production-schedule/activity/{activityId}/repair-packaging/preview", "/api/v1/production-schedule/activity/{activityId}/repair-packaging",
+    // Migration validity correction and additive stock top-up drafts (2026-11-03).
+    "/api/v1/material/batch/{batchId}/migration-retest-date",
+    "/api/v1/stock-migrations/top-ups/upload", "/api/v1/stock-migrations/top-ups"]);
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  delete schemas["DOMAIN.Entities.Materials.Batch.UpdateMigrationRetestDate"];
+  for (const name of ["MaterialBatchDto", "MaterialBatchListDto", "MaterialBatchReducedDto", "DistributedMaterialBatchDto"]) {
+    const properties = object(object(schemas[`DOMAIN.Entities.Materials.Batch.${name}`] ?? null).properties ?? null);
+    delete properties.effectiveExpiryDate;
+    if (name === "MaterialBatchDto") delete properties.isOpeningBalanceBatch;
+  }
+  delete object(object(schemas["DOMAIN.Entities.Reports.Warehouse.ReservedMaterialReportDto"] ?? null).properties ?? null).effectiveExpiryDate;
+
   for (const name of ["IssuedBmrReportDto", "IssuedBmrReportRowDto"])
     delete schemas[`DOMAIN.Entities.Reports.${name}`];
   delete schemas["DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"];
@@ -202,10 +214,11 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
   }
 });
 
-test("the combined issued-BMR and material-repair contract passes release validation", () => {
+test("the reviewed report, repair and migration contract passes release validation", () => {
   const current = parse(readFileSync("contracts/openapi/backend.v1.json", "utf8"));
   const digest = contractDigest(current);
-  assert.equal(digest, "a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe");
+  assert.ok(policy.backendContracts.includes("a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe"));
+  assert.equal(digest, "1b39795d5f488711aad8274fc59896e599860a7ea5a827783d60969a73bddee3");
   checkCompatibility(hostConfig, policy, digest);
   const check = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
   assert.equal(check.status, 0, check.stderr);

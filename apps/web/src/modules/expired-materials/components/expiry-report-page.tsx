@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { usePageSearch } from "@/shared/search/page-search";
 import { batchNumber } from "@/modules/stock-issue/lib/stock-issue";
-import { materialsApi } from "@/shared/api/generated/materials";
+import { expiryApi as materialsApi } from "../api/expiry-api";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { monthRangeDays, type MonthRange } from "@/shared/date-pickers/date-utils";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
@@ -22,12 +24,12 @@ const fields: WizardField<Filter>[] = [{ type: InputTypes.MONTH_RANGE, name: "ra
 const column = dataTableColumns<ExpiryBatch>();
 const columns = column.columns([
   column.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div></div> }),
-  column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", size: 170, cell: ({ row }) => <div><div>{batchNumber(row.original.batchNumber)}</div><div className="text-xs text-muted-foreground">AR {row.original.arNumber ?? "not recorded"}</div></div> }),
-  column.accessor((row) => row.made ?? "", { id: "made", header: "Manufactured", size: 150, cell: ({ row }) => formatMonthYear(row.original.made) ?? "–" }),
-  column.accessor((row) => row.expires ?? "", { id: "expires", header: "Expiry", size: 180, cell: ({ row }) => { const days = daysToExpiry(row.original.expires);
-    return <div><div>{formatMonthYear(row.original.expires) ?? "–"}</div>{days === null ? null : <div className={`text-xs ${days <= 0 ? "font-medium text-destructive" : "text-muted-foreground"}`}>{days < 0 ? `${-days} ${days === -1 ? "day" : "days"} ago` : days === 0 ? "Today" : `In ${days} ${days === 1 ? "day" : "days"}`}</div>}</div>; } }),
+  column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", cell: ({ row }) => <div><div className="break-all">{batchNumber(row.original.batchNumber)}</div><div className="text-xs text-muted-foreground">AR {row.original.arNumber ?? "not recorded"}</div></div> }),
+  column.accessor((row) => row.made ?? "", { id: "made", header: "Manufactured", cell: ({ row }) => formatMonthYear(row.original.made) ?? "–" }),
+  column.accessor((row) => row.expires ?? "", { id: "expires", header: "Valid until", cell: ({ row }) => { const days = daysToExpiry(row.original.expires);
+    return <div><div>{formatMonthYear(row.original.expires) ?? "–"}</div>{row.original.extended ? <div className="text-xs text-muted-foreground">Retest extension · expiry {formatMonthYear(row.original.originalExpiry) ?? "not recorded"}</div> : null}{days === null ? null : <div className={`text-xs ${days <= 0 ? "font-medium text-destructive" : "text-muted-foreground"}`}>{days < 0 ? `${-days} ${days === -1 ? "day" : "days"} ago` : days === 0 ? "Today" : `In ${days} ${days === 1 ? "day" : "days"}`}</div>}</div>; } }),
   column.display({ id: "shelves", header: "Shelves", cell: ({ row }) => row.original.shelves.length ? <span className="break-words">{row.original.shelves.join(", ")}</span> : <span className="text-muted-foreground">Not on a shelf</span> }),
-  column.accessor("remaining", { header: "Remaining", size: 160, cell: ({ row }) => <div><div className="font-medium">{show(row.original.remaining, row.original.unit)}</div><div className="text-xs text-muted-foreground">of {show(row.original.total, row.original.unit)}</div></div> }),
+  column.accessor("remaining", { header: "Remaining", cell: ({ row }) => <div><div className="font-medium">{show(row.original.remaining, row.original.unit)}</div><div className="text-xs text-muted-foreground">of {show(row.original.total, row.original.unit)}</div></div> }),
 ]);
 
 /** Batches whose expiry date falls in a period: already expired, or coming up. Raw and packaging are listed apart. */
@@ -43,23 +45,24 @@ export function ExpiryReportPage({ mode }: { mode: "expired" | "soon" }) {
   const days = monthRangeDays(range);
   const from = days?.from ?? null;
   const to = days?.to ?? null;
-  const table = useServerTable({ pageSize: 50, resetKey: `${kind}|${from?.getTime()}|${to?.getTime()}` });
-  const arg = { ...audit, startDate: from ? apiDay(from) : "", endDate: to ? apiDay(to) : "", materialKind: kind, page: table.page, pageSize: table.pageSize };
-  const expired = useGetApiV1MaterialBatchesExpiredQuery(arg, { skip: mode !== "expired" || !from });
-  const soon = useGetApiV1MaterialBatchesAboutToExpireQuery(arg, { skip: mode !== "soon" || !from });
+  const search = usePageSearch("materials by code or name");
+  const table = useServerTable({ pageSize: 50, resetKey: `${kind}|${from?.getTime()}|${to?.getTime()}|${search}` });
+  const arg = { ...audit, ...(from && to ? { startDate: apiDay(from), endDate: apiDay(to) } : {}), searchQuery: search, materialKind: kind, page: table.page, pageSize: table.pageSize };
+  const expired = useGetApiV1MaterialBatchesExpiredQuery(arg, { skip: mode !== "expired" });
+  const soon = useGetApiV1MaterialBatchesAboutToExpireQuery(arg, { skip: mode !== "soon" });
   const query = mode === "expired" ? expired : soon;
   const parsed = useMemo(() => query.data ? expiryRowsSchema.safeParse(query.data.data ?? []) : null, [query.data]);
   const rows = useMemo(() => parsed?.success ? parsed.data : [], [parsed]);
   const meta = pageMeta(query.data, table, rows.length);
   return <section className="page-fill">
     <div className="flex flex-wrap items-end justify-between gap-3">
-      <div><p className="eyebrow">WAREHOUSE</p><h1 className="text-xl font-semibold">{title}</h1></div>
-      <div className="flex flex-wrap items-end gap-3"><div className="w-72"><FormWizard form={form} fields={fields} /></div><KindSwitch tabs={kinds} kind={kind} onSelect={setKind} /></div>
+      <h1 className="text-xl font-semibold">{title}</h1>
+      <div className="flex flex-wrap items-end gap-3"><div className="w-72 max-w-full"><FormWizard form={form} fields={fields} /></div>{range ? <Button variant="outline" onClick={() => form.setValue("range", null)}>Clear dates</Button> : null}<KindSwitch tabs={kinds} kind={kind} onSelect={setKind} /></div>
     </div>
-    {from ? <ServerDataTable label={title} columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
+    <p className="text-sm text-muted-foreground">Search by material code or name in the header. {from ? "Dates and search are combined." : mode === "expired" ? "Showing expired materials across all dates." : "Showing materials due within three months."}</p>
+    <ServerDataTable label={title} columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
       onRowOpen={(row) => void navigate(`/warehouse/${mode === "expired" ? "expired-materials" : "about-to-expire-materials"}/${encodeURIComponent(row.id)}?kind=${kind}`)}
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned batches the app could not read." : null}
-      emptyTitle="No batches in this period" emptyDescription={mode === "expired" ? "No batch of this kind expired in these months." : "No batch of this kind expires in these months."} />
-      : <p role="status" className="rounded-md border bg-muted/50 p-3 text-sm">Choose the months to look at.</p>}
+      emptyTitle={search ? "No materials match this search" : "No batches match these filters"} emptyDescription="Try another material code or name, or clear the dates." />
   </section>;
 }

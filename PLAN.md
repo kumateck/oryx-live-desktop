@@ -28,6 +28,38 @@ release validator; do not alter the uncommitted White Placebo implementation or
 customer databases. See `docs/api-codegen.md` for review scope and backend rollout
 prerequisites.
 
+## Migration stock top-ups (2026-11-03)
+
+Add an additive migration top-up alongside opening balances for individual
+post-migration cases. A required reason and one department cover a list entered
+manually or uploaded with the existing material-stock workbook format. Saving
+creates a draft only; reuse the existing view/upload/correct/approve opening-
+balance permissions and department guards. Approval posts atomically once, adds
+new stock lots without writing off or merging existing stock, and retains source
+rows, batch/date/UOM/shelf/GRN/AR evidence, creator, approver and immutable
+before/added/after totals. Distinct receipt references must not be pooled. Keep
+the existing opening-balance replacement workflow explicit and unchanged. Match
+the existing migration month-based date contract. No live stock posting, role
+grants, database migration execution or deployment is authorized by this work.
+
+Implemented locally in the Upload Center top-up tab with manual/Excel draft
+entry, additive approval, posted-batch links and cumulative bin-card receipts.
+The prepared migration remains unapplied. Verification and activation requirements
+are recorded in `docs/migration-stock-top-ups.md`.
+
+## Raw-material migration retest extensions (2026-11-03)
+
+Use active expiry first. After expiry elapses, a future raw-material retest date
+extends usability; absent or elapsed extensions leave the batch expired. Apply
+one date rule to usable stock, reservation/supply selection and write guards,
+expiry lists and alerts. Preserve quality/status/approval gates. A separate
+backend permission allows individual retest-date corrections only for approved
+opening-migration batches in the actor's department, with reason, optimistic
+concurrency and transactional before/after audit. It does not create or complete
+a QC retest. No role grants, live data changes or deployment are authorized.
+Expiry lists combine optional month ranges with server-side code/name search;
+clearing months retains search and the list's expired/soon classification.
+
 ## Permission search and navigation consistency (2026-11-03)
 
 Fix the reported mismatch between the visible search field, selected submodule

@@ -88,6 +88,15 @@ it("issues only after a confirmation, and only to someone who may issue that kin
   await waitFor(() => expect(router.state.location.pathname).toBe("/warehouse/stock-requisition"));
 }, 20_000);
 
+it("allows an expired original date when the server confirms an active retest extension", async () => {
+  open("/warehouse/stock-requisition/sr-1", ["CanViewRawMaterialRequisitions", "CanIssueRawMaterialRequisitions"], requisition("sr-1", {
+    items: [{ id: "l1", quantity: 5, material: { name: "Lactose", kind: 0 }, uoM: { symbol: "kg" },
+      batches: [{ quantityToTake: 5, batch: { id: "b1", batchNumber: "EXT-1", expiryDate: "2020-01-01T00:00:00Z", effectiveExpiryDate: "2099-01-01T00:00:00Z" } }] }],
+  }));
+  expect(await screen.findByRole("button", { name: "Issue stock" })).toBeTruthy();
+  expect(screen.queryByText(/has expired or expires today/)).toBeNull();
+});
+
 it("will not issue from an expired batch, or before approval", async () => {
   const expired = requisition("sr-1", { items: [{ id: "l1", quantity: 5, material: { name: "Lactose", kind: 0 }, uoM: { symbol: "kg" }, batches: [{ quantityToTake: 5, batch: { id: "b1", batchNumber: "OLD-1", expiryDate: "2020-01-01T00:00:00Z" } }] }] });
   open("/warehouse/stock-requisition/sr-1", ["CanIssueRawMaterialRequisitions"], expired);
