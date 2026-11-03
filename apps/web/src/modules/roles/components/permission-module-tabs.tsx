@@ -16,6 +16,7 @@ export function PermissionModuleTabs({ modules, onSelect }: { modules: readonly 
   return <TabsList aria-label="Permission modules" className="h-auto w-full shrink-0 flex-wrap justify-start gap-1 border">
     {modules.map((module) => <Tooltip key={module.module}>
       <TooltipTrigger asChild><span className="inline-flex"><TabsTrigger value={module.module} aria-label={module.module} onClick={() => onSelect(module.module)}
+        onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onSelect(module.module); }}
         className="h-7 flex-none px-2 text-xs data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">{moduleCode(module.module)}</TabsTrigger></span></TooltipTrigger>
       <TooltipContent>{module.module} · {accessCount(module.children)}/{module.children.length} enabled</TooltipContent>
     </Tooltip>)}

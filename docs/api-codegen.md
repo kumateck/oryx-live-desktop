@@ -81,3 +81,16 @@ The export's documented `Module`/`SubModule` string-schema adjustment changes th
 Historical report parameters and report-only vendor lookup were reviewed as additive changes on 2026-10-27. The dated customer export review test preserves the original proof independently and checks every pre-existing operation/schema/security declaration against the current import after removing only the documented optional read parameters and 409 responses. See [reports](reports.md).
 
 The combined production-readiness operation was added on 2026-10-28 from the companion backend offline export. It adds one reports-domain query and nine response schemas; the contract regression proves every pre-existing operation/schema/security declaration remains unchanged. The legacy host-Nginx policy retains previous approvals and adds the reviewed raw and typed digests. Frontend activation requires this companion endpoint; see [reports](reports.md).
+
+Production material repair was imported on 2026-11-02 from a built, metadata-only
+companion backend export. Only the BOM/packaging preview/apply paths, their four
+DTO schemas and optional `contentRevision` properties on `ApprovalEntity`,
+`ApprovalRequestBody` and `RequisitionDto` were merged. Stable operation IDs are
+`PreviewProductionBomRepair`, `ApplyProductionBomRepair`,
+`PreviewProductionPackagingRepair` and `ApplyProductionPackagingRepair`.
+The customer contract regression explicitly allows only those additions;
+`bun run api:generate` regenerates the production, approvals and warehouse clients,
+and `bun run api:check` verifies reproducibility. Backend migration
+`20261102182519_AddProductionMaterialRepairs` and the matching API must precede UI
+activation. No deployment fingerprint was approved by this import. See
+[production configuration repairs](production-configuration-repair-study.md).

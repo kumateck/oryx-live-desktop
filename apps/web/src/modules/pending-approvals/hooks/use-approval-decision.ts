@@ -25,6 +25,7 @@ export function useApprovalDecision(approval: PendingApproval, decision: Decisio
       return { approval: current, evidence: currentEvidence };
     }, async () => {
       const arg = { ...audit, modelType: type, modelId: approval.id, domainEntitiesApprovalsApprovalRequestBody: {
+        ...(type === "StockRequisition" ? { contentRevision: approval.contentRevision ?? 0 } : {}),
         comments: comments.trim() || null, ...(type === "Response" && decision === "reject" && outcome !== null ? { responseRejectionOutcome: outcome } : {}),
       } };
       const result = decision === "reject" ? await reject(arg) : await approve(arg);

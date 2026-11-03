@@ -107,6 +107,62 @@ Missing legacy issuer data remains “Not recorded”; never infer who issued it
 Names, department assignments and units come from current linked records because
 the source does not store an immutable issue-time master-data snapshot.
 
+## Running-batch configuration repairs (2026-11-02)
+
+Implementation authorized on 2026-11-02. The operator first corrects and saves
+the product, then previews and applies one batch repair. The user explicitly
+confirms that issued or consumed material cannot be repaired. Implemented an
+applied requirement snapshot per batch/material kind, explicit reservation
+release evidence, requisition content revisions with retained previous approval
+rows, and preview hashes covering saved source plus operational evidence.
+Refuse partial allocation on shortage and ambiguous legacy/substitute evidence.
+Legacy unissued baselines come from requisition/reservation evidence, never a
+fabricated original master. All cooperating production stock writers serialize
+before reading; backend grants and production-department checks remain required.
+Existing Procedure behaviour stays available in the shared descriptive dropdown.
+Database migrations are source changes only; no customer database/deployment is
+authorized by this implementation task.
+
+The user requests a Repair dropdown in the batch board header where Repair
+procedure currently appears, following Copy procedure's descriptive menu pattern.
+Its choices are Procedure, BOM and Packaging, each with an independent backend
+permission. Keep the existing CanRepairProcedure grant; register separate backend
+grants before using the new actions in the frontend, without granting roles
+automatically. The selected repair targets one running batch and must reconcile
+requirements, reservations and stock still awaiting issue together.
+
+Source study found that procedure steps are copied at start, but material
+requirements read current product masters while reservations and requisitions
+persist separately. A master correction can therefore already change displayed
+requirements without fixing operational records. Re-running the start reservation
+helper is unsafe: it appends allocations, can include main and substitute
+candidates, and does not account for other reservations in its supply selection.
+Deleted reservations also serve as consumed history, and changed unissued
+requisitions cannot retain approval of their earlier quantities.
+
+The read-only preview and atomic apply are implemented locally. Changed saved
+source, allocation, stock, approval or production evidence invalidates the preview.
+New runs pin both material kinds at start; legacy runs adopt reviewed unissued
+requirements explicitly. Stock issue uses the allocated shelf and current approval
+revision. Open purchase work and ambiguous physical history block repair; later
+procurement and full-allocation swaps validate against adopted requirements.
+Released holds remain auditable and are excluded from current reservations and
+consumption. No repair posts a stock issue or a consumption event.
+
+Local verification: 70 backend tests passed (including 16 disposable PostgreSQL
+repair tests), with four unrelated opt-in reporting database tests skipped; 37
+desktop feature tests and 23 contract/cache compatibility tests passed. Typechecks,
+API/web builds, API reproducibility, route generation and model drift checks
+passed. The new migration's down/up SQL was rehearsed in the disposable schema.
+React Doctor reported no issues (91/100); the targeted UI detector returned no
+findings. Synthetic visual checks passed at laptop sizes and scaling equivalents.
+No customer database was connected or migrated. Customer-schema forward migration,
+authenticated end-to-end stock/production acceptance, realistic contention and
+native Windows installed-client checks remain release requirements. Broad table
+locks use a 3-second timeout; this is a safeguard, not a measured performance
+budget. See `docs/production-configuration-repair-study.md` and the companion
+backend's `docs/production-material-repairs.md` for current rules and limitations.
+
 ## Shared team testing database (2026-11-01)
 
 The user requested a remote copy for the demo backend and then clarified that

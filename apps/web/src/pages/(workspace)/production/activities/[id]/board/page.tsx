@@ -2,7 +2,7 @@ import { useParams } from "react-router";
 import { ActivityPageState, CancelledNotice } from "@/modules/activities/components/activity-page-state";
 import { ActivityLog } from "@/modules/activities/components/batch/activity-log";
 import { BatchSummary } from "@/modules/activities/components/batch/batch-summary";
-import { RepairProcedure } from "@/modules/activities/components/batch/repair-procedure";
+import { RepairMenu } from "@/modules/activities/components/batch/repair-menu";
 import { RunProgress } from "@/modules/activities/components/batch/run-progress";
 import { StepList } from "@/modules/activities/components/batch/step-list";
 import { useActivity } from "@/modules/activities/hooks/use-activity";
@@ -15,7 +15,7 @@ function BatchBoard({ id }: { id: string }) {
     {/* A run that has finished or was cancelled has nothing left to repair. */}
     <PageHeader title={state.loading ? null : title ?? "Production run"} crumbs={[{ label: state.loading ? null : state.activity?.batch.batchNumber ?? "Batch" }]}
       actions={state.activity && title && !state.activity.batch.cancelled && state.activity.status !== 2 && state.activity.status !== 4
-        ? <RepairProcedure activityId={state.activity.id} batchLabel={title} /> : undefined} />
+        ? <RepairMenu activityId={state.activity.id} batchLabel={title} /> : undefined} />
     <ActivityPageState state={state}>{(activity, progress) => <>
       <CancelledNotice activity={activity} />
       <BatchSummary activity={activity} finished={progress.finished} />

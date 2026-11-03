@@ -1684,6 +1684,62 @@ const injectedRtkApi = api.injectEndpoints({
           },
         }),
       }),
+    previewProductionBomRepair: build.query<
+      PreviewProductionBomRepairApiResponse,
+      PreviewProductionBomRepairApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/activity", id: queryArg.activityId }],
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/repair-bom/preview`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    applyProductionBomRepair: build.mutation<
+      ApplyProductionBomRepairApiResponse,
+      ApplyProductionBomRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/activity", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/activity", id: queryArg.activityId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/repair-bom`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionApplyProductionMaterialRepair,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    previewProductionPackagingRepair: build.query<
+      PreviewProductionPackagingRepairApiResponse,
+      PreviewProductionPackagingRepairApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/activity", id: queryArg.activityId }],
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/repair-packaging/preview`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    applyProductionPackagingRepair: build.mutation<
+      ApplyProductionPackagingRepairApiResponse,
+      ApplyProductionPackagingRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/activity", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/activity", id: queryArg.activityId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/repair-packaging`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionApplyProductionMaterialRepair,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2844,6 +2900,44 @@ export type PostApiV1ProductionScheduleActivityByProductionActivityIdRepairProce
     /** The sub module this request falls under */
     subModule?: string;
   };
+export type PreviewProductionBomRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionMaterialRepairPreview;
+export type PreviewProductionBomRepairApiArg = {
+  activityId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ApplyProductionBomRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionMaterialRepairResult;
+export type ApplyProductionBomRepairApiArg = {
+  activityId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionApplyProductionMaterialRepair: DomainEntitiesProductsProductionApplyProductionMaterialRepair;
+};
+export type PreviewProductionPackagingRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionMaterialRepairPreview;
+export type PreviewProductionPackagingRepairApiArg = {
+  activityId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ApplyProductionPackagingRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionMaterialRepairResult;
+export type ApplyProductionPackagingRepairApiArg = {
+  activityId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionApplyProductionMaterialRepair: DomainEntitiesProductsProductionApplyProductionMaterialRepair;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -3874,6 +3968,7 @@ export type DomainEntitiesRequisitionsRequisitionDto = {
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
   signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
+  contentRevision?: number;
 };
 export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   id?: string;
@@ -3889,6 +3984,7 @@ export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
   signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
+  contentRevision?: number;
 };
 export type DomainEntitiesProductsProductionProductionStepExtraMaterialDto = {
   id?: string;
@@ -4792,6 +4888,40 @@ export type DomainEntitiesProductsProductionProductionProcedureRepairResult = {
   /** Steps already started that the procedure no longer has: they are kept as they are. */
   stepsKept?: string[] | null;
 };
+export type DomainEntitiesProductsProductionProductionMaterialRepairLine = {
+  materialId?: string;
+  name?: string | null;
+  unit?: string | null;
+  before?: number;
+  after?: number;
+  reservedBefore?: number;
+  reservedAfter?: number;
+  shortage?: number;
+};
+export type DomainEntitiesProductsProductionProductionMaterialRepairPreview = {
+  activityId?: string;
+  batchId?: string;
+  kind?: DomainEntitiesMaterialsMaterialKind;
+  previewHash?: string | null;
+  sourceHash?: string | null;
+  baseline?: string | null;
+  hasChanges?: boolean;
+  approvalRequired?: boolean;
+  requisitionId?: string | null;
+  lines?: DomainEntitiesProductsProductionProductionMaterialRepairLine[] | null;
+  blockers?: string[] | null;
+};
+export type DomainEntitiesProductsProductionProductionMaterialRepairResult = {
+  repairId?: string;
+  changed?: boolean;
+  approvalRequired?: boolean;
+  revision?: number;
+};
+export type DomainEntitiesProductsProductionApplyProductionMaterialRepair = {
+  requestId?: string;
+  previewHash: string;
+  reason: string;
+};
 export const {
   usePostApiV1ProductionOrdersMutation,
   useGetApiV1ProductionOrdersQuery,
@@ -4967,4 +5097,10 @@ export const {
   usePutApiV1WorkOrderByWorkOrderIdMutation,
   useDeleteApiV1WorkOrderByWorkOrderIdMutation,
   usePostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureMutation,
+  usePreviewProductionBomRepairQuery,
+  useLazyPreviewProductionBomRepairQuery,
+  useApplyProductionBomRepairMutation,
+  usePreviewProductionPackagingRepairQuery,
+  useLazyPreviewProductionPackagingRepairQuery,
+  useApplyProductionPackagingRepairMutation,
 } = injectedRtkApi;

@@ -100,7 +100,10 @@ test("historical reporting adds optional read parameters without changing existi
     // Stock requisition voucher (2026-11-01): reads the requisition of an issue for its warehouse check; additive only.
     "/api/v1/requisition/issue/{issueId}",
     // QA issued BMR report (2026-11-02): read-only issue-date query; additive only.
-    "/api/v1/report/bmr-issued"]);
+    "/api/v1/report/bmr-issued",
+    // Material repairs (2026-11-02): read-only previews and explicit apply, one material kind at a time.
+    "/api/v1/production-schedule/activity/{activityId}/repair-bom/preview", "/api/v1/production-schedule/activity/{activityId}/repair-bom",
+    "/api/v1/production-schedule/activity/{activityId}/repair-packaging/preview", "/api/v1/production-schedule/activity/{activityId}/repair-packaging"]);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   for (const name of ["IssuedBmrReportDto", "IssuedBmrReportRowDto"])
     delete schemas[`DOMAIN.Entities.Reports.${name}`];
@@ -118,6 +121,11 @@ test("historical reporting adds optional read parameters without changing existi
   delete schemas["DOMAIN.Entities.Products.Production.ProductionProcedureRepairResult"];
   delete schemas["DOMAIN.Entities.Requisitions.VoucherSignatoryDto"];
   delete schemas["DOMAIN.Entities.Requisitions.StockIssueSignatoriesDto"];
+  for (const name of ["ProductionMaterialRepairPreview", "ProductionMaterialRepairLine", "ProductionMaterialRepairResult", "ApplyProductionMaterialRepair"])
+    delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
+  // Repaired stock requisitions bind approvals to a content revision; all three fields are additive and optional on transport.
+  for (const name of ["Approvals.ApprovalEntity", "Approvals.ApprovalRequestBody", "Requisitions.RequisitionDto"])
+    delete object(object(schemas[`DOMAIN.Entities.${name}`] ?? null).properties ?? null).contentRevision;
   // Finance costing (2026-10-31): new costing schemas, and one optional currency property on each list-price and report schema.
   for (const name of Object.keys(schemas)) if (name.includes("DOMAIN.Entities.Costing.") || name.includes("DOMAIN.Entities.Customers.CustomerPricingAgreementDto")) delete schemas[name];
   const added: Readonly<Record<string, string>> = { "Products.CreateProductRequest": "priceCurrencyId", "Products.UpdateProductRequest": "priceCurrencyId", "Products.Product": "priceCurrencyId",
