@@ -1224,6 +1224,14 @@ export const navigationCatalog = [
     "label": "Quality Assurance",
     "items": [
       {
+        "id": "quality-assurance.products",
+        "label": "Products",
+        "path": "/qa/products",
+        "permissions": [
+          "CanViewPlannedProducts"
+        ]
+      },
+      {
         "id": "quality-assurance.issue-bmr-bpr",
         "label": "Issue BMR/BPR",
         "path": "/qa/issue-bmr",

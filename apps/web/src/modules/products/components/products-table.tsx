@@ -1,9 +1,10 @@
+import { useProductWorkspace } from "../hooks/use-product-workspace";
 import { useMemo } from "react";
 import { Link } from "react-router";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { ServerDataTable, dataTableColumns } from "@/shared/datatable";
 import { toLargestUnit } from "@/shared/units/quantity";
-import { divisionLabel, productDetailPath, productPermissions } from "../lib/product-access";
+import { divisionLabel, productPermissions } from "../lib/product-access";
 import type { ProductRow } from "../schemas/product-schema";
 import { QualityBadge, VerifyProductButton } from "./verify-product-button";
 
@@ -28,6 +29,7 @@ export interface ProductsTableProps {
 }
 
 export function ProductsTable({ rows, search, paging, loading, refreshing, error, onRetry, onOpen }: ProductsTableProps) {
+  const { detailPath: productDetailPath } = useProductWorkspace();
   const columns = useMemo(() => column.columns([
     column.accessor((product) => product.name ?? dash, { id: "product", header: "Product", cell: ({ row }) =>
       <div className="min-w-0 space-y-0.5">
@@ -49,7 +51,7 @@ export function ProductsTable({ rows, search, paging, loading, refreshing, error
     column.accessor("isVerified", { header: "Quality", cell: ({ row }) => <QualityBadge verified={row.original.isVerified} /> }),
     column.display({ id: "actions", header: () => <span className="sr-only">Actions</span>, size: 110, enableHiding: false,
       cell: ({ row }) => <PermissionGuard require={productPermissions.verify}><VerifyProductButton product={row.original} /></PermissionGuard> }),
-  ]), []);
+  ]), [productDetailPath]);
 
   return <ServerDataTable label="Planned products" columns={columns} rows={rows} getRowId={productId} {...paging} loading={loading}
     refreshing={refreshing} error={error} onRetry={onRetry} onRowOpen={onOpen}
