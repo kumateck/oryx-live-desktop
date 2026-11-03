@@ -2,6 +2,20 @@
 
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
+## Active packaging and packing-style selection (2026-11-03)
+
+The user reports extra historical rows in product details, print and schedule
+packaging. The rehearsal copy confirms eight active and six deleted definitions.
+Filter deleted definitions on backend reads while retaining audit history. The
+user permits the same material under different styles, including All styles plus
+specific styles; reject duplicate material/style pairs in editor and backend
+replacement/update validation before writes. Use the schedule product's saved
+packing-style ID, prefer its specific definition for each material and fall back
+to All styles for other materials. Reuse that selection for forecasts and newly
+adopted requirements; do not rewrite applied batch snapshots or stock. Preserve
+batch scaling, allowances and failure/permission behavior. Read the rehearsal
+database only; use a separate disposable PostgreSQL fixture for write tests.
+
 ## Combined release-contract review (2026-11-03)
 
 Fix the testing release failure in the legacy customer installation fixture by

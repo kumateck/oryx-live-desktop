@@ -84,7 +84,7 @@ Backend behavior worth knowing (unchanged, shared with Oryx Next): saving a bill
 
 ## Packing materials
 
-`/production/products/:id/edit/packaging`. Kept from Oryx Next: the fields (component material, packing style, prescribed quantity, packing allowance), the rule that a material is listed once for all packing styles or once per style, and saving the whole list in one request.
+`/production/products/:id/edit/packaging`. The fields are component material, packing style, prescribed quantity and packing allowance, saved as one whole-list request. A material can be saved under different packing styles, including an All styles row alongside specific styles. Only an identical material/style pair is a conflict; editing a row does not conflict with itself.
 
 Improved:
 
@@ -92,7 +92,9 @@ Improved:
 - **Nothing the page does not edit is lost.** The backend deletes every packing material and re-adds what is sent. Oryx Next sent only its own fields, so a line's thickness, other standards, linked material, and substitutes were erased by any save. The desktop sends them back unchanged.
 - **Edits are a draft until saved**, with "Discard changes" and a warning before leaving with unsaved changes.
 - **The table appears at once.** Oryx Next waited for one specification request per line before showing anything. Here each specification cell fills in on its own, and a material just chosen shows the number it came with.
-- **Conflicts are explained on the material field** in the dialog (already listed, listed for all styles, listed per style) rather than in a toast.
+- **Conflicts are explained on the material field** in the dialog for duplicate material/style pairs. The whole-list submit also checks these pairs, retains an invalid draft and makes no request. The backend checks both replacement requests and individual updates before writes.
+
+Product detail and print use active packaging rows from the product endpoint; deleted history is excluded without deduplicating different styles. Schedule requirements use the batch's saved packing-style ID: a matching specific row overrides All styles for that material, and All styles supplies other defaults. Other specific styles are excluded. Forecasts and newly adopted batch configurations use the same rule. Existing applied configurations remain authoritative until the explicit repair workflow changes them. Full/half batch scaling and the full allowance remain unchanged.
 - **Quantities follow the units rule:** prescribed quantity and allowance are shown as entered; the total is calculated and capped at four decimals.
 - **The allowance cannot be negative and the prescribed quantity must be above zero**, checked before the line is added.
 - **Only saved packing styles can be chosen**, since a line needs the style's ID. With none saved the field says so.
