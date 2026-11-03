@@ -2,12 +2,15 @@ import type { DomainEntitiesProductsCreateProductPackageRequest } from "@/shared
 import type { SavedPackages } from "../schemas/packaging-schema";
 
 interface Option { value: string; label: string }
+export interface PackagingUnit { id: string; symbol: string }
 
 /** One packing material of a product being edited. `key` identifies the row on the page. */
 export interface PackagingLine {
   key: string;
   material: Option;
   code: string;
+  /** Read-only department-linked unit; null until an existing line's unit is loaded. */
+  unit: PackagingUnit | null;
   /** Known for a material just chosen from the picker; saved lines look theirs up when shown. */
   specification: string | null;
   /** The packing style this material belongs to, or null when it applies to every style. */
@@ -25,7 +28,7 @@ export interface PackagingLine {
 export function fromSavedPackages(saved: SavedPackages): PackagingLine[] {
   return saved.flatMap((item, index) => item.material?.id ? [{
     key: item.id ?? `saved-${index}`,
-    material: { value: item.material.id, label: item.material.name }, code: item.material.code, specification: null,
+    material: { value: item.material.id, label: item.material.name }, code: item.material.code, specification: null, unit: null,
     packing: item.productPacking?.id ? { value: item.productPacking.id, label: item.productPacking.name } : null,
     prescribedQuantity: item.prescribedQuantity ?? 0, packingExcessMargin: item.packingExcessMargin ?? 0,
     carried: {

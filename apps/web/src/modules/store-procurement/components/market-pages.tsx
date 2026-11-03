@@ -1,17 +1,12 @@
+import { MarketQuotesDialog } from "./market-quotes-dialog";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Spinner } from "@/components/ui/spinner";
 import { inventoryApi } from "@/shared/api/generated/inventory";
-import { settingsApi } from "@/shared/api/generated/settings";
 import { useAccess } from "@/shared/auth/use-access";
-import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDate, formatDateTime } from "@/shared/format/dates";
@@ -52,67 +47,6 @@ export function MarketListPage() {
   </section>;
 }
 
-interface Quote { key: string; name: string; address: string; phone: string; price: string; payment: string; terms: string; delivery: string }
-let quoteCounter = 0;
-const newQuote = (): Quote => ({ key: `q-${String(++quoteCounter)}`, name: "", address: "", phone: "", price: "", payment: "", terms: "", delivery: "" });
-
-function QuotesDialog({ market, existing, onClose }: { market: MarketRequisition; existing: readonly string[]; onClose: () => void }) {
-  const permission = usePermissionAction({ kind: "all", permissions: [keys.marketSheetsView, keys.marketSheetCreate] });
-  const collections = settingsApi.usePostApiV1CollectionMutation();
-  const [loadCollections, collectionState] = collections;
-  useEffect(() => { void loadCollections({ ...procurementAudit, body: ["TermsOfPayment"] }); }, [loadCollections]);
-  const terms = (collectionState.data?.TermsOfPayment ?? []).flatMap((t) => t.id ? [{ value: t.id, label: t.name ?? "Unnamed terms" }] : []);
-  const [create, creating] = inventoryApi.usePostApiV1ProcurementInventoryMarketVendorsMutation();
-  const [quotes, setQuotes] = useState<Quote[]>([newQuote()]);
-  const [message, setMessage] = useState("");
-  const update = (key: string, change: Partial<Quote>) => setQuotes((current) => current.map((q) => q.key === key ? { ...q, ...change } : q));
-  const problemOf = (q: Quote, all: readonly Quote[]) => {
-    const name = q.name.trim().toLowerCase();
-    if (!name) return "Enter the vendor's name.";
-    if (existing.includes(name) || all.filter((o) => o.name.trim().toLowerCase() === name).length > 1) return "This vendor already has a quote for the item.";
-    if (!q.phone.trim()) return "Enter the vendor's phone number.";
-    const price = Number(q.price);
-    if (!q.price.trim() || !Number.isFinite(price) || price <= 0) return "Enter a unit price greater than zero.";
-    if (!q.terms) return "Choose the terms of payment.";
-    return null;
-  };
-  const save = async () => {
-    setMessage("");
-    if (quotes.some((q) => problemOf(q, quotes))) { setMessage("Complete every quote first."); return; }
-    const denied = permission.check();
-    if (denied) { setMessage(denied); return; }
-    const result = await create({ ...procurementAudit, domainEntitiesItemsRequisitionsCreateMarketRequisitionVendor: { marketRequisitionId: market.id, vendors: quotes.map((q) => ({
-      vendorName: q.name.trim(), vendorAddress: q.address.trim() || null, vendorPhoneNumber: q.phone.trim(), pricePerUnit: Number(q.price),
-      modeOfPayment: q.payment.trim() || null, termsOfPaymentId: q.terms, deliveryMode: q.delivery.trim() || null, complete: false })) } });
-    if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    toast.success(quotes.length === 1 ? "Quote added" : `${String(quotes.length)} quotes added`);
-    onClose();
-  };
-  return <Dialog open onOpenChange={(open) => { if (!open && !creating.isLoading) onClose(); }}>
-    <DialogContent className="sm:max-w-5xl"><DialogHeader><DialogTitle>Add open-market quotes</DialogTitle>
-      <DialogDescription>{market.name}: {`${String(market.quantity)} ${market.unit}`.trim()}. One row per vendor asked.</DialogDescription></DialogHeader>
-      <form noValidate className="flex min-h-0 min-w-0 flex-1 flex-col gap-4" onSubmit={(event) => { event.preventDefault(); event.stopPropagation(); void save(); }}>
-        <DialogBody className="space-y-3">{quotes.map((q, index) => { const problem = message ? problemOf(q, quotes) : null; const n = String(index + 1);
-          return <fieldset key={q.key} className="grid gap-2 rounded-md border p-3 md:grid-cols-4">
-            <legend className="px-1 text-xs text-muted-foreground">Vendor {n}</legend>
-            <Input aria-label={`Vendor ${n} name`} placeholder="Vendor name" value={q.name} onChange={(e) => update(q.key, { name: e.target.value })} />
-            <Input aria-label={`Vendor ${n} phone`} placeholder="Phone" value={q.phone} onChange={(e) => update(q.key, { phone: e.target.value })} />
-            <Input aria-label={`Vendor ${n} unit price`} placeholder="Unit price" inputMode="decimal" value={q.price} onChange={(e) => update(q.key, { price: e.target.value })} />
-            <Select value={q.terms} onValueChange={(value) => update(q.key, { terms: value })}><SelectTrigger aria-label={`Vendor ${n} terms of payment`}><SelectValue placeholder="Terms of payment" /></SelectTrigger>
-              <SelectContent position="popper">{terms.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select>
-            <Input aria-label={`Vendor ${n} address`} placeholder="Address" className="md:col-span-2" value={q.address} onChange={(e) => update(q.key, { address: e.target.value })} />
-            <Input aria-label={`Vendor ${n} mode of payment`} placeholder="Mode of payment" value={q.payment} onChange={(e) => update(q.key, { payment: e.target.value })} />
-            <div className="flex gap-2"><Input aria-label={`Vendor ${n} delivery mode`} placeholder="Delivery mode" value={q.delivery} onChange={(e) => update(q.key, { delivery: e.target.value })} />
-              <Button type="button" size="icon" variant="ghost" aria-label={`Remove vendor ${n}`} disabled={quotes.length === 1} onClick={() => setQuotes((c) => c.filter((o) => o.key !== q.key))}><Trash2 /></Button></div>
-            {problem ? <p role="alert" className="text-xs text-destructive md:col-span-4">{problem}</p> : null}
-          </fieldset>; })}
-          <Button type="button" size="sm" variant="outline" onClick={() => setQuotes((c) => [...c, newQuote()])}><Plus />Add vendor</Button>
-          {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}</DialogBody>
-        <DialogFooter><Button type="button" variant="outline" disabled={creating.isLoading} onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={creating.isLoading}>{creating.isLoading ? <><Spinner />Saving…</> : "Save quotes"}</Button></DialogFooter>
-      </form></DialogContent></Dialog>;
-}
-
 /** One open-market item and the quotes collected for it. */
 export function MarketDetailPage() {
   const { id = "" } = useParams();
@@ -145,7 +79,7 @@ export function MarketDetailPage() {
             <td className="p-2">{money(q.price)}</td><td className="p-2">{money(q.price * market.quantity)}</td><td className="p-2">{[q.payment, q.terms].filter(Boolean).join(" · ") || "–"}</td>
             <td className="p-2">{q.delivery ?? "–"}</td><td className="p-2">{formatDate(q.createdAt) ?? "–"}</td></tr>)}</tbody></table></div>}
     </section>
-    {adding ? <QuotesDialog market={market} existing={quotes.map((q) => q.name.trim().toLowerCase())} onClose={() => setAdding(false)} /> : null}
+    {adding ? <MarketQuotesDialog market={market} existing={quotes.map((q) => q.name.trim().toLowerCase())} onClose={() => setAdding(false)} /> : null}
   </article>;
 }
 

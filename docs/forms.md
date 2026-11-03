@@ -32,6 +32,28 @@ export function ExampleForm() {
 
 Keep the field array stable outside the render function or memoize it when it depends on props. Field names are checked against the form value type; built-in text, number, and checkbox fields accept paths with matching value types. Zod owns validation. The visual `required` marker is not a replacement for a Zod rule. Use `noValidate` on the enclosing form so native validation does not suppress module error messages.
 
+Text fields accept `inputMode: "text" | "decimal" | "numeric" | "tel"`. Use a string value with `inputMode: "decimal"` when entered quantities or costs must retain their original decimal text. The module schema validates that text and the submit adapter converts it to the numeric API value; the composer does not round it.
+
+## Procurement and store forms
+
+Service quotation create/edit, memo create/edit, proforma request/response/approval,
+open-market quotes, vendor prices, store purchase and stock requisitions, returns,
+and damage/missing corrections use FormWizard. Their modules own the Zod schemas,
+save adapters, permissions, audit metadata, stale-record checks and retry errors.
+Field-level validation preserves entered values after a refusal. Submit state
+covers asynchronous preflights as well as the write, and permissions are checked
+again immediately before writes following a preflight. Calendar values become
+UTC date boundaries only in the API adapter.
+
+Repeatable service charges, materials and vendor quotes use React Hook Form
+field arrays with stable row IDs. Removing a row retains the other rows' values.
+The existing requisition item table is exposed through each module's stable lazy
+`CUSTOM` loader. Item rows belong to the same form state and validation as the
+header, so item-only edits participate in unsaved-work protection. Shared pure
+line validation retains whole-number/stock caps for stock requests and fractional
+quantities/required units for purchase requests. The table UI is loaded only by
+its renderer, separately from the schema and row model.
+
 ## Loading and extension
 
 The core imports no field UI eagerly. Text, textarea, sync single select, async single select, multi-select, and checkbox renderers are separate `React.lazy` modules. A form loads only the renderer types in its `fields` array. Native fields use React Hook Form registration; controlled shadcn fields use `useController`. Each field subscribes to its own error state, so changing one field need not subscribe the whole form to every error.
