@@ -1,10 +1,12 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { Boxes } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { ListDataTable, dataTableColumns } from "@/shared/datatable";
 import { StockAvailabilityDialog, type StockMaterial } from "@/shared/stock/stock-availability-dialog";
 import { toLargestUnit } from "@/shared/units/quantity";
-import { audit } from "../../lib/schedule-access";
+import { audit, schedulePermissions } from "../../lib/schedule-access";
 import { freeStock, materialShortfall, materialSource } from "../../lib/batch-materials";
 import type { BatchMaterial } from "../../schemas/batch-schema";
 
@@ -23,12 +25,21 @@ export function BatchMaterialsTable({ title, rows, loading, error, onRetry, acti
     // Opens where that stock is, store by store, and what is on its way in.
     column.accessor((item) => quantity(item.elsewhere, item.unit), { id: "elsewhere", header: "All other stock", size: 140, cell: ({ row, getValue }) => {
       const item = row.original;
-      return item.materialId ? <Button type="button" variant="link" className="h-auto p-0" aria-label={`Stock of ${item.name} in every store`}
-        onClick={() => setViewing({ id: item.materialId as string, name: item.name, code: item.code || null, unit: item.unit })}>{getValue()}</Button> : getValue();
+      const materialId = item.materialId;
+      return materialId ? <Button type="button" variant="link" className="h-auto p-0" aria-label={`Stock of ${item.name} in every store`}
+        onClick={() => setViewing({ id: materialId, name: item.name, code: item.code || null, unit: item.unit })}>{getValue()}</Button> : getValue();
     } }),
     column.accessor((item) => materialSource(item).label, { id: "source", header: "Source", size: 190, cell: ({ row }) => { const source = materialSource(row.original); const short = materialShortfall(row.original);
       return <div className="space-y-0.5"><Badge variant={source.covered ? "secondary" : "destructive"}>{source.label}</Badge>
         {short > 0 ? <div className="text-xs text-destructive">short by {quantity(short, row.original.unit)}</div> : null}</div>; } }),
+    column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => {
+      const item = row.original;
+      const materialId = item.materialId;
+      return <TableMenu label={`Actions for ${item.name}`} items={materialId ? [
+        { id: "stock", label: "Stock availability", icon: Boxes, require: schedulePermissions.view,
+          onSelect: () => setViewing({ id: materialId, name: item.name, code: item.code || null, unit: item.unit }) },
+      ] : []} />;
+    } }),
   ]), []);
   return <section className="min-w-0 space-y-2">
     <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-semibold">{title} <span className="font-normal text-muted-foreground">({rows.length})</span></h3>{action}</div>
