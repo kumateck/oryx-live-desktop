@@ -24,9 +24,12 @@ export function groupPermissions(children: readonly PermissionItem[]): Map<strin
   return groups;
 }
 
-export function matchPermissions(children: readonly PermissionItem[], search: string): PermissionItem[] {
-  const query = search.trim().toLowerCase();
-  return children.filter((child) => `${child.name ?? ""} ${child.key} ${child.description ?? ""} ${child.subModule ?? ""}`.toLowerCase().includes(query));
+export function matchPermissions(children: readonly PermissionItem[], search: string, moduleName = ""): PermissionItem[] {
+  const terms = search.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  return children.filter((child) => {
+    const text = `${moduleName} ${child.name ?? ""} ${child.key} ${child.description ?? ""} ${child.subModule?.trim() || "General"}`.toLowerCase();
+    return terms.every((term) => text.includes(term));
+  });
 }
 
 /** Filtered bulk actions affect only the specified module and visible keys. */
@@ -58,5 +61,5 @@ export function setAccessForKeys(modules: readonly PermissionModule[], keys: Rea
 export interface PermissionRow { item: PermissionItem; module: string }
 /** Every permission matching a search, in any module, each with the module it belongs to. */
 export function searchPermissions(modules: readonly PermissionModule[], search: string): PermissionRow[] {
-  return modules.flatMap((module) => matchPermissions(module.children, search).map((item) => ({ item, module: module.module })));
+  return modules.flatMap((module) => matchPermissions(module.children, search, module.module).map((item) => ({ item, module: module.module })));
 }

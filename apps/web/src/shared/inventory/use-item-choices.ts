@@ -19,8 +19,12 @@ const label = (choice: ItemChoice) => `${choice.name} · ${choice.code}`;
 export function useItemChoices(store: Store, audit: { module: string; subModule: string }) {
   const [load] = inventoryApi.useLazyGetApiV1ItemsChoicesQuery();
   const known = useRef(new Map<string, ItemChoice>());
-  const loadOptions = useCallback<SelectLoader>(async (searchQuery, page) => {
-    const result = await load({ ...audit, store, searchQuery, page, pageSize: 20 }, true);
+  const loadOptions = useCallback<SelectLoader>(async (searchQuery, page, signal) => {
+    signal.throwIfAborted();
+    const request = load({ ...audit, store, searchQuery, page, pageSize: 20 }, true);
+    const abort = () => request.abort();
+    signal.addEventListener("abort", abort, { once: true });
+    const result = await request.finally(() => signal.removeEventListener("abort", abort));
     if (result.error) throw new Error("Items could not be loaded. Try again.");
     const data = result.data;
     const options: SelectOption[] = [];

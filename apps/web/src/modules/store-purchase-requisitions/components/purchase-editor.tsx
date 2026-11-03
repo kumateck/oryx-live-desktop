@@ -1,20 +1,25 @@
-import { useEffect, useRef, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
 import { inventoryApi } from "@/shared/api/generated/inventory";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useGeneratedCode } from "@/shared/codes/use-generated-code";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { ItemLinesEditor, itemLineProblems, newItemLine, type ItemLine } from "@/shared/inventory/item-lines";
+import { newItemLine } from "@/shared/inventory/item-line-model";
+import { Classification } from "@/shared/inventory/contracts";
 import { stores, type Store } from "@/shared/inventory/stores";
-import { useItemChoices } from "@/shared/inventory/use-item-choices";
 import { workflowRule } from "@/shared/inventory/workflows";
+import { formDate, utcBoundary } from "@/shared/format/date-boundary";
+import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
+import { InputTypes } from "@/shared/forms/input-types";
+import { purchaseFormSchema, type PurchaseFormValues } from "../schemas/purchase-form";
 import { purchaseEditable, purchaseRequisitionAudit, purchaseRequisitionCodeModel, purchaseRequisitionSchema, type PurchaseRequisition } from "../lib/purchase-requisitions";
+
+const loadLines = () => import("./purchase-lines-field");
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -23,38 +28,35 @@ export function PurchaseRequisitionEditor({ store, requisition, onClose, onSaved
   store: Store; requisition: PurchaseRequisition | null; onClose: () => void; onSaved: (id: string) => void;
 }) {
   const permission = usePermissionAction(workflowRule(store, "purchaseRequisitions", requisition ? "edit" : "create"));
-  const items = useItemChoices(store, purchaseRequisitionAudit);
   const code = useGeneratedCode(purchaseRequisitionCodeModel);
   const [reread] = inventoryApi.useLazyGetApiV1ProcurementInventoryByIdQuery();
   const [create, creating] = inventoryApi.usePostApiV1ProcurementInventoryMutation();
   const [update, updating] = inventoryApi.usePutApiV1ProcurementInventoryByIdMutation();
-  const [number, setNumber] = useState(requisition?.code ?? "");
-  const [delivery, setDelivery] = useState(requisition?.expectedDelivery?.slice(0, 10) ?? "");
-  const [remarks, setRemarks] = useState(requisition?.remarks ?? "");
-  const [lines, setLines] = useState<ItemLine[]>(() => requisition ? requisition.lines.map((line) => {
-    const choice = { id: line.itemId, name: line.name, code: line.code, classification: line.classification as 0 | 1, available: line.available, unitId: line.unitId, unitName: line.unitName, unitSymbol: line.unit || null };
-    items.remember(choice);
+  const [initialLines] = useState(() => requisition ? requisition.lines.map((line) => {
+    const choice = { id: line.itemId, name: line.name, code: line.code, classification: line.classification === Classification.NonRecoverable ? Classification.NonRecoverable : Classification.Recoverable, available: line.available, unitId: line.unitId, unitName: line.unitName, unitSymbol: line.unit || null };
     return newItemLine(choice, String(line.quantity));
   }) : [newItemLine()]);
-  const [problems, setProblems] = useState<Map<string, string>>(new Map());
+  const form = useForm<PurchaseFormValues>({ resolver: zodResolver(purchaseFormSchema(Boolean(requisition))), defaultValues: {
+    store, lines: initialLines,
+    number: requisition?.code ?? "", delivery: formDate(requisition?.expectedDelivery), remarks: requisition?.remarks ?? "",
+  } });
   const [message, setMessage] = useState("");
-  const [tried, setTried] = useState(false);
-  const saving = creating.isLoading || updating.isLoading;
+  const saving = creating.isLoading || updating.isLoading || form.formState.isSubmitting;
   const suggested = useRef(false);
   useEffect(() => {
     if (requisition || !code.ready || suggested.current) return;
     suggested.current = true;
-    void code.suggest().then((next) => { if (next) setNumber((current) => current || next); });
-  }, [code, requisition]);
-  const numberProblem = !number.trim() ? "Enter the requisition number." : null;
-  const deliveryProblem = delivery && !requisition && delivery < today() ? "The delivery date cannot be in the past." : null;
-
-  const save = async () => {
-    setMessage(""); setTried(true);
-    const found = itemLineProblems(lines, { fractions: true });
-    for (const line of lines) if (line.item && !line.item.unitId) found.set(line.key, "This item has no unit of measure, so it cannot be ordered.");
-    setProblems(found);
-    if (found.size > 0 || numberProblem || deliveryProblem) return;
+    void code.suggest().then((next) => { if (next && !form.getValues("number")) form.setValue("number", next); });
+  }, [code, requisition, form]);
+  const fields = useMemo<readonly WizardField<PurchaseFormValues>[]>(() => [
+    { type: InputTypes.TEXT, name: "number", label: "Requisition number", required: true, readOnly: Boolean(requisition),
+      description: requisition ? "" : code.unavailable ? "No numbering rule is set up; enter the number yourself." : "Suggested from the next in the series. You can change it." },
+    { type: InputTypes.DATE, name: "delivery", label: "Expected delivery", ...(requisition ? {} : { minDate: formDate(today()) ?? new Date() }) },
+    { type: InputTypes.TEXTAREA, name: "remarks", label: "Remarks", rows: 3, placeholder: "Anything Procurement should know", className: "md:col-span-2" },
+    { type: InputTypes.CUSTOM, name: "lines", label: "Items", load: loadLines, className: "md:col-span-2" },
+  ], [requisition, code.unavailable]);
+  const save = form.handleSubmit(async ({ number, delivery, remarks, lines }) => {
+    setMessage("");
     const denied = permission.check();
     if (denied) { setMessage(denied); return; }
     if (requisition) {
@@ -63,8 +65,10 @@ export function PurchaseRequisitionEditor({ store, requisition, onClose, onSaved
       const current = purchaseRequisitionSchema.safeParse(fresh.data);
       if (!current.success || !purchaseEditable(current.data)) { setMessage("Items on this requisition have been sourced, so it can no longer be changed."); return; }
     }
+    const writeDenied = permission.check();
+    if (writeDenied) { setMessage(writeDenied); return; }
     const body = {
-      code: number.trim(), expectedDeliveryDate: delivery ? new Date(`${delivery}T00:00:00Z`).toISOString() : null, remarks: remarks.trim() || null,
+      code: number.trim(), expectedDeliveryDate: delivery ? utcBoundary(delivery) : null, remarks: remarks.trim() || null,
       items: lines.flatMap((line) => line.item ? [{ itemId: line.item.id, uoMId: line.item.unitId, quantity: Number(line.quantity) }] : []),
     };
     const result = requisition
@@ -73,27 +77,16 @@ export function PurchaseRequisitionEditor({ store, requisition, onClose, onSaved
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success(requisition ? "Purchase requisition updated" : "Purchase requisition raised", { description: requisition ? undefined : "Procurement can now source it." });
     onSaved(requisition?.id ?? (typeof result.data === "string" ? result.data : ""));
-  };
+  });
 
   const storeName = (stores[store] ?? "store").toLowerCase();
   return <Dialog open onOpenChange={(open) => { if (!open && !saving) onClose(); }}>
     <DialogContent className="sm:max-w-4xl">
       <DialogHeader><DialogTitle>{requisition ? `Edit ${requisition.code}` : `Raise a ${storeName} purchase requisition`}</DialogTitle>
         <DialogDescription>Items the {storeName} needs bought. Every item must be from this store.</DialogDescription></DialogHeader>
-      <form noValidate className="flex min-h-0 min-w-0 flex-1 flex-col gap-4" onSubmit={(event) => { event.preventDefault(); event.stopPropagation(); void save(); }}>
+      <form noValidate className="flex min-h-0 min-w-0 flex-1 flex-col gap-4" onSubmit={(event) => { event.stopPropagation(); void save(event); }}>
         <DialogBody className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-1.5"><Label htmlFor="purchase-number">Requisition number <span className="text-destructive">*</span></Label>
-              <Input id="purchase-number" value={number} disabled={Boolean(requisition)} onChange={(event) => setNumber(event.target.value)} aria-invalid={tried && numberProblem ? true : undefined} />
-              {!requisition ? <p className="text-xs text-muted-foreground">{code.unavailable ? "No numbering rule is set up; enter the number yourself." : "Suggested from the next in the series. You can change it."}</p> : null}
-              {tried && numberProblem ? <p role="alert" className="text-xs text-destructive">{numberProblem}</p> : null}</div>
-            <div className="space-y-1.5"><Label htmlFor="purchase-delivery">Expected delivery</Label>
-              <Input id="purchase-delivery" type="date" min={requisition ? undefined : today()} value={delivery} onChange={(event) => setDelivery(event.target.value)} aria-invalid={deliveryProblem ? true : undefined} />
-              {deliveryProblem ? <p role="alert" className="text-xs text-destructive">{deliveryProblem}</p> : null}</div>
-            <div className="space-y-1.5 md:col-span-2"><Label htmlFor="purchase-remarks">Remarks</Label>
-              <Textarea id="purchase-remarks" rows={3} value={remarks} onChange={(event) => setRemarks(event.target.value)} placeholder="Anything Procurement should know" /></div>
-          </div>
-          <ItemLinesEditor lines={lines} onChange={(next) => { setLines(next); setProblems(new Map()); }} loadItems={items.loadOptions} label={items.label} lookup={(id) => items.lookup(id)} problems={problems} />
+          <fieldset disabled={saving}><FormWizard form={form} fields={fields} className="md:grid-cols-2" /></fieldset>
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>
         <DialogFooter><Button type="button" variant="outline" disabled={saving} onClick={onClose}>Cancel</Button>

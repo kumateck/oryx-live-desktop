@@ -99,10 +99,11 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
   const block = issueBlock(requisition);
   const back = stockIssueListPath(kind);
   const remarks = richTextToPlain(requisition.comments);
+  const reference = requisition.contentRevision ? `${requisition.code} · Revision ${requisition.contentRevision}` : requisition.code;
   return <article className="min-w-0 space-y-4">
-    <PageHeader title={`Stock requisition ${requisition.code}`} crumbs={[{ label: "Issue stock requisitions", to: back }, { label: requisition.code }]} actions={<>
+    <PageHeader title={`Stock requisition ${reference}`} crumbs={[{ label: "Issue stock requisitions", to: back }, { label: reference }]} actions={<>
       <PrintButton preview={(close) => <PrintPreviewDialog title={`Stock requisition voucher · ${requisition.code}`} onClose={close}>
-        <PrintHeader title="Stock requisition voucher" reference={requisition.code} />
+        <PrintHeader title="Stock requisition voucher" reference={reference} />
         <PrintFacts facts={[{ label: "Product", value: [requisition.product, requisition.productCode].filter(Boolean).join(" · ") }, { label: "Schedule", value: requisition.schedule }, { label: "Batch", value: requisition.batch },
           { label: "Requested by", value: requisition.requestedBy }, { label: "Department", value: requisition.department }, { label: "Requested on", value: formatDateTime(requisition.createdAt) }]} />
         {remarks ? <p className="print-note"><strong>Justification:</strong> {remarks}</p> : null}

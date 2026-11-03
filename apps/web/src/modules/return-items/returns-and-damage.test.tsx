@@ -59,12 +59,12 @@ it("records a return against the issued line and refuses more than is left", asy
   await screen.findByText("SR-0009");
   await user.click(screen.getByRole("button", { name: "Record a return" }));
   const dialog = await screen.findByRole("dialog");
-  await user.click(within(dialog).getByRole("combobox", { name: "Issued requisition" }));
+  await user.click(await within(dialog).findByRole("combobox", { name: "Issued requisition" }));
   await user.click(await screen.findByRole("option", { name: /SR-0009/ }));
   await user.click(await within(dialog).findByRole("combobox", { name: "Item" }));
   // 3 issued, 1 already returned.
   await user.click(await screen.findByRole("option", { name: /2 of 3 pc returnable/ }));
-  await user.type(within(dialog).getByLabelText(/Quantity returned/), "3");
+  await user.type(await within(dialog).findByRole("textbox", { name: "Quantity returned" }), "3");
   expect(await within(dialog).findByText("Only 2 issued on this requisition remain to be returned.")).toBeTruthy();
   await user.clear(within(dialog).getByLabelText(/Quantity returned/)); await user.type(within(dialog).getByLabelText(/Quantity returned/), "2");
   await user.click(within(dialog).getByRole("button", { name: "Record return" }));
@@ -78,9 +78,9 @@ it("corrects a damage record after a fresh read and refuses a changed one", asyn
   await screen.findByText("Dropped");
   await openMenu(/Actions for Drill/); await user.click(screen.getByRole("menuitem", { name: "Correct" }));
   const dialog = await screen.findByRole("dialog");
-  const quantity = within(dialog).getByLabelText("Quantity");
+  const quantity = await within(dialog).findByRole("textbox", { name: "Quantity" });
   await user.clear(quantity); await user.type(quantity, "7");
-  expect(within(dialog).getByText(/At most 6 pc/)).toBeTruthy();
+  expect((await within(dialog).findAllByText(/At most 6 pc/)).length).toBeGreaterThan(0);
   await user.clear(quantity); await user.type(quantity, "3");
   page.state.damage = damage({ quantityDamaged: 5 });
   await user.click(within(dialog).getByRole("button", { name: "Save correction" }));
@@ -93,4 +93,22 @@ it("hides corrections and deletions without their keys", async () => {
   await screen.findByText("Dropped");
   // With no action allowed the row has no actions menu at all.
   expect(screen.queryByRole("button", { name: /Actions for Drill/ })).toBeNull();
+});
+
+it("requires an explicit type when correcting a record with an unknown damage status", async () => {
+  const user = userEvent.setup();
+  const app = open(<DamageMissingPage />, "/extrals/damage-missing-items?storeType=2", ["CanViewEquipmentStoreDamageMissingItems", "CanEditEquipmentStoreDamageMissingItemRecord"]);
+  app.state.damage = damage({ damageStatus: 7 });
+  await screen.findByText("Dropped");
+  await openMenu(/Actions for Drill/); await user.click(screen.getByRole("menuitem", { name: "Correct" }));
+  const dialog = await screen.findByRole("dialog");
+  await within(dialog).findByRole("textbox", { name: "Quantity" });
+  await user.click(within(dialog).getByRole("button", { name: "Save correction" }));
+  expect(await within(dialog).findByText("Choose whether the item is damaged or missing.")).toBeTruthy();
+  expect(app.writes()).toHaveLength(0);
+  await user.click(within(dialog).getByRole("combobox", { name: "Type" }));
+  await user.click(await screen.findByRole("option", { name: "Missing" }));
+  await user.click(within(dialog).getByRole("button", { name: "Save correction" }));
+  await waitFor(() => expect(app.writes()).toHaveLength(1));
+  expect(app.writes()[0]).toMatchObject({ body: { damageStatus: 1, quantityDamaged: 2 } });
 });

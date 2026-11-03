@@ -890,6 +890,9 @@ export const routes: RouteObject[] = [
         ] },
         { path: "qc-qa-reports", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/qc-qa-reports/page")).default }) },
+          { path: "bmr-issued", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/qc-qa-reports/bmr-issued/page")).default }) }
+          ] },
           { path: "daily-production-schedule", Component: Outlet, children: [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/qc-qa-reports/daily-production-schedule/page")).default }) }
           ] },

@@ -1963,6 +1963,24 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getIssuedBmrReport: build.query<
+      GetIssuedBmrReportApiResponse,
+      GetIssuedBmrReportApiArg
+    >({
+      providesTags: [{ type: "report/bmr-issued", id: "LIST" }, { type: "report", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/report/bmr-issued`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          startDate: queryArg.startDate,
+          endDate: queryArg.endDate,
+          departmentId: queryArg.departmentId,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -3205,6 +3223,17 @@ export type GetApiV1ReportHistoryVendorsApiArg = {
   subModule?: string;
   /** Recorded historical state at this UTC instant. Today is capped at the current instant; pre-coverage dates return 409. */
   asOfDate?: string | null;
+};
+export type GetIssuedBmrReportApiResponse =
+  /** status 200 OK */ DomainEntitiesReportsIssuedBmrReportDto;
+export type GetIssuedBmrReportApiArg = {
+  startDate: string;
+  endDate: string;
+  departmentId?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
 };
 export type DomainEntitiesReportsReadinessMarketDto = {
   id?: string | null;
@@ -5639,6 +5668,36 @@ export type DomainEntitiesReportsReportHistoryCapabilitiesDto = {
   availableFrom?: string | null;
   basis?: string | null;
 };
+export type DomainEntitiesReportsIssuedBmrReportRowDto = {
+  id?: string;
+  scheduleProductId?: string;
+  productId?: string;
+  productCode?: string | null;
+  productName?: string | null;
+  departmentId?: string | null;
+  departmentName?: string | null;
+  scheduleCode?: string | null;
+  batchNumber?: string | null;
+  batchQuantity?: number;
+  batchUnit?: string | null;
+  packingStyle?: string | null;
+  manufacturingDate?: string | null;
+  expiryDate?: string | null;
+  issuedAt?: string;
+  issuedById?: string | null;
+  issuedByName?: string | null;
+  isArchived?: boolean;
+  isCancelled?: boolean;
+};
+export type DomainEntitiesReportsIssuedBmrReportDto = {
+  startDate?: string;
+  endDate?: string;
+  departmentId?: string | null;
+  departmentName?: string | null;
+  generatedAt?: string;
+  totalIssued?: number;
+  rows?: DomainEntitiesReportsIssuedBmrReportRowDto[] | null;
+};
 export const {
   useGetProductionReadinessReportQuery,
   useLazyGetProductionReadinessReportQuery,
@@ -5854,4 +5913,6 @@ export const {
   useLazyGetApiV1ReportHistoryCapabilitiesQuery,
   useGetApiV1ReportHistoryVendorsQuery,
   useLazyGetApiV1ReportHistoryVendorsQuery,
+  useGetIssuedBmrReportQuery,
+  useLazyGetIssuedBmrReportQuery,
 } = injectedRtkApi;
