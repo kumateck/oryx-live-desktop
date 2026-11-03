@@ -66,7 +66,7 @@ test("historical reporting adds optional read parameters without changing existi
       const parameters = operation.parameters;
       if (Array.isArray(parameters)) operation.parameters = parameters.filter((entry) => {
         const parameter = object(entry);
-        return !(parameter.in === "query" && (parameter.name === "asOfDate" || (path === "/api/v1/attendance-records/general-summary" && parameter.name === "departmentId") || (path === "/api/v1/report/warehouse/materials-stock-batch-detail" && parameter.name === "materialId")
+        return !(parameter.in === "query" && (parameter.name === "asOfDate" || ((path === "/api/v1/material/department" || path === "/api/v1/material/{materialId}/uom") && parameter.name === "productId") || (path === "/api/v1/attendance-records/general-summary" && parameter.name === "departmentId") || (path === "/api/v1/report/warehouse/materials-stock-batch-detail" && parameter.name === "materialId")
           || ((path === "/api/v1/material/batches/expired" || path === "/api/v1/material/batches/about-to-expire") && parameter.name === "searchQuery")
           // User directory filters (2026-11-01): optional role and department filters on the user list; additive only.
           || (path === "/api/v1/user" && (parameter.name === "roleId" || parameter.name === "departmentId"))));
@@ -223,7 +223,8 @@ test("the reviewed report, repair and migration contract passes release validati
   const current = parse(readFileSync("contracts/openapi/backend.v1.json", "utf8"));
   const digest = contractDigest(current);
   assert.ok(policy.backendContracts.includes("a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe"));
-  assert.equal(digest, "72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f");
+  assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
+  assert.equal(digest, "d09fee761aad8d543b42a10bc0f661d9b7a31a6606a1d7b3bcd829da3c8fe747");
   checkCompatibility(hostConfig, policy, digest);
   const check = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
   assert.equal(check.status, 0, check.stderr);

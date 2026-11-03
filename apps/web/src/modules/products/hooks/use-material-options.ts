@@ -1,3 +1,4 @@
+import { useProductWorkspace } from "./use-product-workspace";
 import { useCallback, useRef } from "react";
 import type { SelectLoader } from "@/shared/forms/form-wizard-types";
 import { useLazyGetApiV1MaterialDepartmentQuery } from "../api/product-api";
@@ -11,11 +12,12 @@ export const materialKind = { raw: 0, packaging: 1 } as const;
  * material offered so the form can fill in its code, unit, and specification when one is chosen.
  */
 export function useMaterialOptions(kind: 0 | 1, audit: { module: string; subModule: string }) {
+  const { lookupProductId } = useProductWorkspace();
   const [load] = useLazyGetApiV1MaterialDepartmentQuery();
   const seen = useRef(new Map<string, MaterialFacts>());
 
   const loader = useCallback((exclude: readonly string[]): SelectLoader => async (search, page, signal) => {
-    const request = load({ ...audit, searchQuery: search, page, pageSize: 20, kind });
+    const request = load({ ...audit, searchQuery: search, page, pageSize: 20, kind, ...(lookupProductId ? { productId: lookupProductId } : {}) });
     signal.addEventListener("abort", () => request.abort(), { once: true });
     const result = await request.unwrap();
     const materials = (result.data ?? []).flatMap((item) => {
@@ -31,7 +33,7 @@ export function useMaterialOptions(kind: 0 | 1, audit: { module: string; subModu
       hasNext: current < (result.pageCount ?? current),
       hasPrevious: current > 1,
     };
-  }, [load, kind, audit]);
+  }, [load, kind, audit, lookupProductId]);
 
   return { loader, facts: (id: string | undefined) => id ? seen.current.get(id) ?? null : null };
 }

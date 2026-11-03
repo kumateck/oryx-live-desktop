@@ -702,6 +702,43 @@ export const routes: RouteObject[] = [
               { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/pending-approvals/[type]/[id]/page")).default }) }
             ] }
           ] }
+        ] },
+        { path: "products", lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/layout")).default }), children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/page")).default }) },
+          { path: ":id", lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/layout")).default }), children: [
+            { path: "details", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/details/page")).default }) }
+            ] },
+            { path: "edit", lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/edit/layout")).default }), children: [
+              { path: "ard", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/edit/ard/page")).default }) }
+              ] },
+              { path: "bom", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/edit/bom/page")).default }) }
+              ] },
+              { path: "info", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/edit/info/page")).default }) }
+              ] },
+              { path: "packaging", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/edit/packaging/page")).default }) }
+              ] },
+              { path: "packing-order", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/edit/packing-order/page")).default }) }
+              ] },
+              { path: "packing-style", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/edit/packing-style/page")).default }) }
+              ] },
+              { path: "procedure", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/edit/procedure/page")).default }) }
+              ] },
+              { path: "spec", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/edit/spec/page")).default }) }
+              ] },
+              { path: "stp", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/edit/stp/page")).default }) }
+              ] }
+            ] }
+          ] }
         ] }
       ] },
       { path: "qa-qc-dashboard", Component: Outlet, children: [

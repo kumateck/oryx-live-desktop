@@ -1,4 +1,4 @@
-import { productPermissions } from "../lib/product-access";
+import { useProductWorkspace } from "./use-product-workspace";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -28,7 +28,8 @@ export function useBom(productId: string, compositionSize: number | null, batchS
   const saved = useMemo(() => parsed?.success ? fromSavedBom(parsed.data) : none, [parsed]);
   const [draft, setDraft] = useState<BomLine[] | null>(null);
   const [message, setMessage] = useState("");
-  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.edit], departmentType: 0 });
+  const { editRequirement, lookupProductId } = useProductWorkspace();
+  const permission = usePermissionAction(editRequirement);
   const lines = draft ?? saved;
 
   const saveAll = async () => {
@@ -42,7 +43,7 @@ export function useBom(productId: string, compositionSize: number | null, batchS
     try {
       // Recheck all linkage units before writing, including unchanged rows with a stale saved BOM unit.
       const checked = await Promise.all(lines.map(async (line) => {
-        const result = await loadUnit({ ...bomAudit, materialId: line.material.value });
+        const result = await loadUnit({ ...bomAudit, materialId: line.material.value, ...(lookupProductId ? { productId: lookupProductId } : {}) });
         const parsed = materialUnitSchema.safeParse(result.data);
         return { line, unit: parsed.success ? parsed.data : null };
       }));

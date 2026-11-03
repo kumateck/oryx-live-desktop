@@ -1,9 +1,9 @@
+import { useProductWorkspace } from "./use-product-workspace";
 import { useCallback, useState } from "react";
 import type { SelectLoader, SelectOption } from "@/shared/forms/form-wizard-types";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useLazyGetApiV1ProductQuery, usePostApiV1ProductByProductIdRoutesMutation } from "../api/product-api";
-import { productPermissions } from "../lib/product-access";
 import { toRoutesRequest, type ProcedureStep } from "../lib/procedure";
 import { procedureAudit } from "./use-procedure";
 
@@ -13,7 +13,8 @@ export interface CopyOutcome { product: string; error: string | null }
 export function useCopyProcedure(sourceProductId: string) {
   const [load] = useLazyGetApiV1ProductQuery();
   const [save] = usePostApiV1ProductByProductIdRoutesMutation();
-  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.edit], departmentType: 0 });
+  const { editRequirement } = useProductWorkspace();
+  const permission = usePermissionAction(editRequirement);
   const [copying, setCopying] = useState(false);
   const [outcomes, setOutcomes] = useState<CopyOutcome[] | null>(null);
 
