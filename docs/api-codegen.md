@@ -1,5 +1,13 @@
 # API contracts and generated hooks
 
+Issued-BMR records (2026-11-03) add five typed operations under
+`/api/v1/issued-bmrs`: list, history, batch-number correction, date-revision request
+and revision review, tagged ProductionSchedule. Nine owned schemas are imported
+from the metadata-only backend export. Existing operations, security and schemas
+remain unchanged. The reviewed additive fingerprint is
+`72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f`;
+prior reviewed fingerprints are retained. See [issued BMR records](issued-bmr-records.md).
+
 ## Combined report and repair contract review (2026-11-03)
 
 The legacy host-Nginx release policy now records the exact combined import digest
@@ -57,7 +65,7 @@ The desktop uses the same backend as Oryx Next. Additive features such as purcha
 
 Generation is strict per operation, not per domain. `scripts/api-contract.ts` reads the contract and skips any operation that would produce `any` or `unknown`: a 2xx response other than 204 with no declared body type, or a request, parameter, or response schema that reaches an untyped property. Skipped operations are listed with their reason in the generated `docs/api-untyped-operations.md`, which is the backend typing backlog. A 204 response becomes `void` automatically. ASP.NET ProblemDetails extensions are arbitrary JSON, represented by a recursive `JsonValue` type. Any `any` or `unknown` that still reaches the output fails generation. `api:check` regenerates everything, compares it with the committed files and the backlog, and leaves the working tree unchanged.
 
-The current contract has 1,393 operations: 1,154 have hooks across 20 domains and 239 are skipped. To get a missing hook, declare the type on the controller (`[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), then run `api:export` and `api:generate`.
+The current contract has 1,398 operations: 1,159 have hooks across 20 domains and 239 are skipped. To get a missing hook, declare the type on the controller (`[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), then run `api:export` and `api:generate`.
 
 For an offline export from the companion backend source, run `dotnet API.dll --export-openapi /absolute/path/backend.json` from its build directory, then `ORYX_OPENAPI_FILE=/absolute/path/backend.json bun run api:export`. The metadata-only export exits before database seeding, listeners and hosted services start. Review the source contract and update the customer-server compatibility fingerprint alongside a coordinated backend/UI release; generation alone is not compatibility approval.
 

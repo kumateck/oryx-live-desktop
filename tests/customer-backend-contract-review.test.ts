@@ -108,8 +108,13 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/production-schedule/activity/{activityId}/repair-packaging/preview", "/api/v1/production-schedule/activity/{activityId}/repair-packaging",
     // Migration validity correction and additive stock top-up drafts (2026-11-03).
     "/api/v1/material/batch/{batchId}/migration-retest-date",
-    "/api/v1/stock-migrations/top-ups/upload", "/api/v1/stock-migrations/top-ups"]);
+    "/api/v1/stock-migrations/top-ups/upload", "/api/v1/stock-migrations/top-ups",
+    "/api/v1/issued-bmrs", "/api/v1/issued-bmrs/{id}/history", "/api/v1/issued-bmrs/{id}/batch-number",
+    "/api/v1/issued-bmrs/{id}/revisions", "/api/v1/issued-bmrs/{id}/revisions/{revisionId}/review"]);
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const name of ["IssuedBmrPage", "IssuedBmrRow", "IssuedBmrHistory", "IssuedBmrChangeDto", "IssuedBmrRevisionDto",
+    "IssuedBmrRevisionStatus", "CorrectIssuedBmrNumber", "RequestIssuedBmrRevision", "ReviewIssuedBmrRevision"])
+    delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
   delete schemas["DOMAIN.Entities.Materials.Batch.UpdateMigrationRetestDate"];
   for (const name of ["MaterialBatchDto", "MaterialBatchListDto", "MaterialBatchReducedDto", "DistributedMaterialBatchDto"]) {
     const properties = object(object(schemas[`DOMAIN.Entities.Materials.Batch.${name}`] ?? null).properties ?? null);
@@ -218,7 +223,7 @@ test("the reviewed report, repair and migration contract passes release validati
   const current = parse(readFileSync("contracts/openapi/backend.v1.json", "utf8"));
   const digest = contractDigest(current);
   assert.ok(policy.backendContracts.includes("a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe"));
-  assert.equal(digest, "1b39795d5f488711aad8274fc59896e599860a7ea5a827783d60969a73bddee3");
+  assert.equal(digest, "72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f");
   checkCompatibility(hostConfig, policy, digest);
   const check = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
   assert.equal(check.status, 0, check.stderr);

@@ -1,5 +1,20 @@
 # Oryx Live Desktop plan
 
+## Issued BMR correction and revision (2026-11-03)
+
+The user authorized a dedicated QA list containing already-issued product-batch
+BMRs, separate from BMR issue requests. A separately permissioned typo correction
+changes only batch-number text, with a required reason and immutable before/after
+evidence. Manufacturing and expiry changes are requested as a revision and apply
+only after approval by another permitted person. Permissions cover list, typo
+correction, revision request and revision review. Use the department ownership
+rules on the backend; block unissued/retired records, stale values and duplicates.
+Changes propagate atomically to linked live batch data, with affected IDs recorded
+in the audit. Issued/superseded certificates remain immutable and use their own
+existing revision workflow; draft headers follow current batch data. Keep route
+files small, use generated domain endpoints, the shared table/actions/forms and
+module manifests, and preserve White Placebo separately.
+
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
 ## Active packaging and packing-style selection (2026-11-03)

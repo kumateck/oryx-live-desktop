@@ -59,6 +59,7 @@ export const generatedTagTypes = [
   "form/section",
   "form/with-response",
   "holiday",
+  "issued-bmr",
   "item",
   "item-grn",
   "item-inventory-transaction",
