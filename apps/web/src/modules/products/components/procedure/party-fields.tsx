@@ -41,7 +41,7 @@ export function PartyFields({ form, users, roles, ard }: { form: Form; users: re
   return <section className="space-y-3 rounded-lg border p-4" aria-label="Responsible users and roles">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div><h3 className="text-sm font-semibold">Responsible users and roles</h3>
-        <p className="text-xs text-muted-foreground">Who carries out this step, and the instruction each one follows.</p></div>
+        <p className="text-xs text-muted-foreground">Optional for automated steps; required for critical steps. Each assignment needs a user or role and an instruction.</p></div>
       <DropdownButton label="Add responsible" icon={Plus} items={[
         { id: "user", label: "User", icon: User, onSelect: () => add("user") },
         { id: "role", label: "Role", icon: Shield, onSelect: () => add("role") },

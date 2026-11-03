@@ -99,10 +99,14 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/production-schedule/activity/{productionActivityId}/repair-procedure",
     // Stock requisition voucher (2026-11-01): reads the requisition of an issue for its warehouse check; additive only.
     "/api/v1/requisition/issue/{issueId}",
+    // QA issued BMR report (2026-11-02): read-only issue-date query; additive only.
+    "/api/v1/report/bmr-issued",
     // Material repairs (2026-11-02): read-only previews and explicit apply, one material kind at a time.
     "/api/v1/production-schedule/activity/{activityId}/repair-bom/preview", "/api/v1/production-schedule/activity/{activityId}/repair-bom",
     "/api/v1/production-schedule/activity/{activityId}/repair-packaging/preview", "/api/v1/production-schedule/activity/{activityId}/repair-packaging"]);
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const name of ["IssuedBmrReportDto", "IssuedBmrReportRowDto"])
+    delete schemas[`DOMAIN.Entities.Reports.${name}`];
   delete schemas["DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"];
   for (const name of ["ProductionStepAnalysisDto", "ProductionStepExtraMaterialDto", "ProductionStepRecordsDto"])
     delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
@@ -175,6 +179,19 @@ test("production readiness adds one typed, authenticated, parameterized operatio
   const response = object(object(operation.responses ?? null)["200"] ?? null);
   assert.deepEqual(object(object(response.content ?? null)["application/json"] ?? null).schema,
     { $ref: "#/components/schemas/DOMAIN.Entities.Reports.ProductionReadinessReportDto" });
+  assert.deepEqual(current.security, reviewedImport().security);
+});
+
+test("issued BMR reporting adds only a typed date-range query under the existing security contract", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const operation = object(object(object(current.paths ?? null)["/api/v1/report/bmr-issued"] ?? null).get ?? null);
+  assert.equal(operation.operationId, "GetIssuedBmrReport");
+  assert.deepEqual(operation.tags, ["Report"]);
+  assert.ok(Array.isArray(operation.parameters));
+  assert.deepEqual(operation.parameters.map((entry) => object(entry)).filter((entry) => entry.in === "query")
+    .map((entry) => ({ name: entry.name, required: entry.required ?? false })), [
+      { name: "startDate", required: true }, { name: "endDate", required: true }, { name: "departmentId", required: false },
+    ]);
   assert.deepEqual(current.security, reviewedImport().security);
 });
 

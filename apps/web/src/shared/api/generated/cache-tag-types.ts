@@ -213,6 +213,7 @@ export const generatedTagTypes = [
   "qc/worksheet",
   "recoverable-items-report",
   "report",
+  "report/bmr-issued",
   "report/employee-movement",
   "report/expired-material",
   "report/fgtn",

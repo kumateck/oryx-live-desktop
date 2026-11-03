@@ -1,5 +1,15 @@
 # API contracts and generated hooks
 
+QA issued-BMR reporting (2026-11-02) adds only
+`GET /api/v1/report/bmr-issued` (`GetIssuedBmrReport`) and the
+`IssuedBmrReportDto` / `IssuedBmrReportRowDto` schemas from the companion backend's
+built, metadata-only OpenAPI export. The generator owns the reports client and
+cache tags. The compatibility regression explicitly allows this additive query
+and its two schemas while preserving prior operations and security. Required
+date-only `startDate`/`endDate` are inclusive UTC issue dates; `departmentId` is
+optional. The matching backend must precede frontend activation; the customer
+release fingerprint remains subject to coordinated compatibility review.
+
 The desktop keeps one RTK Query API in `apps/web/src/shared/api/base-api.ts`. Domain outputs inject endpoints into it. Route chunks import only their domain output, keeping the shell and login path free of the full ERP endpoint graph.
 
 ## Reproduce the contract
