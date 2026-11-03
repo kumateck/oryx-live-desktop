@@ -1,3 +1,4 @@
+import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,13 +9,14 @@ import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { UnsavedChangesGuard } from "@/shared/navigation/unsaved-changes";
 import { usePutApiV1ProductByProductIdMutation } from "../../api/product-api";
 import type { ProductOptions } from "../../hooks/use-product-options";
-import { audit, productPermissions, productDetailPath } from "../../lib/product-access";
+import { audit } from "../../lib/product-access";
 import { toFormValues, toProductRequest } from "../../lib/product-form";
 import { productFormSchema, type ProductFormSource, type ProductFormValues } from "../../schemas/product-form-schema";
 import { FormActions } from "./form-shell";
 import { ProductFormFields } from "./product-form-fields";
 
 export function EditProductInfoForm({ product, options }: { product: ProductFormSource; options: ProductOptions }) {
+  const { detailPath: productDetailPath, editRequirement } = useProductWorkspace();
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
   const [updateProduct, mutation] = usePutApiV1ProductByProductIdMutation();
@@ -22,7 +24,7 @@ export function EditProductInfoForm({ product, options }: { product: ProductForm
   const saved = useMemo(() => toFormValues(product), [product]);
   const form = useForm<ProductFormValues>({ resolver: zodResolver(productFormSchema), defaultValues: saved });
 
-  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.edit], departmentType: 0 });
+  const permission = usePermissionAction(editRequirement);
   const submit = form.handleSubmit(async (values) => {
     const denied = permission.check();
     if (denied) { setMessage(denied); return; }

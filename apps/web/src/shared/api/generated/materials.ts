@@ -554,6 +554,7 @@ const injectedRtkApi = api.injectEndpoints({
           materialCategoryId: queryArg.materialCategoryId,
           sortLabel: queryArg.sortLabel,
           sortDirection: queryArg.sortDirection,
+          productId: queryArg.productId,
         },
       }),
     }),
@@ -586,6 +587,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          productId: queryArg.productId,
         },
       }),
     }),
@@ -1492,6 +1496,7 @@ export type GetApiV1MaterialDepartmentApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  productId?: string;
 };
 export type GetApiV1MaterialDepartmentNotLinkedApiResponse =
   /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsMaterialWithWarehouseStockDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
@@ -1518,6 +1523,7 @@ export type GetApiV1MaterialByMaterialIdUomApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  productId?: string;
 };
 export type GetApiV1MaterialHoldingApiResponse =
   /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsHoldingMaterialTransferDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798ERead;

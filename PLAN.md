@@ -1,5 +1,17 @@
 # Oryx Live Desktop plan
 
+## QA products by department and readiness table (2026-11-03)
+
+Reuse the production product workflow under `/qa/products`. QA selects a production
+department in the URL; list, detail, edit tabs and cancel/back links retain that
+scope without switching the session department. Use existing planned-product,
+edit and verification grants; no role-name bypass or new permission keys. Detail
+and edit children mount only after the product matches the selected department.
+Material pickers and authoritative units must derive their department from that
+product on the backend. Preserve production routes and independent quality-document
+grants. Fix the report's responsive column-width specificity so product readiness
+status text cannot collapse into single letters. White Placebo stays separate.
+
 ## Issued BMR correction and revision (2026-11-03)
 
 The user authorized a dedicated QA list containing already-issued product-batch

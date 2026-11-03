@@ -1,4 +1,4 @@
-import { productPermissions } from "../lib/product-access";
+import { useProductWorkspace } from "./use-product-workspace";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -28,7 +28,8 @@ export function useProductStp(productId: string) {
   const [loadCount] = useLazyGetApiV1ConfigurationByModelTypeCountQuery();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.edit], departmentType: 0 });
+  const { editRequirement } = useProductWorkspace();
+  const permission = usePermissionAction(editRequirement);
   const refetchStp = stpQuery.refetch;
 
   const suggestNumber = useCallback(async () => {

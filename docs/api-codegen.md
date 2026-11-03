@@ -1,5 +1,10 @@
 # API contracts and generated hooks
 
+QA product editing adds optional `productId` context to the material-department
+list and material-unit read. Only those two parameters are imported from the
+metadata-only companion export; no operation, response schema or security changes.
+The materials client is regenerated. See [QA products](qa-products.md).
+
 Issued-BMR records (2026-11-03) add five typed operations under
 `/api/v1/issued-bmrs`: list, history, batch-number correction, date-revision request
 and revision review, tagged ProductionSchedule. Nine owned schemas are imported
