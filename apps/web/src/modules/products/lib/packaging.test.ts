@@ -22,13 +22,13 @@ it("sends back the fields the page does not edit, and the allowance in both fiel
   });
 });
 
-it("lists a material once for all packing styles or once per style, never both", () => {
+it("allows different packing styles and All styles together while rejecting duplicate material/style pairs", () => {
   const lines = fromSavedPackages(saved);
   expect(packagingConflict(lines, "m-bottle", "s1", null)).toBe("This material is already listed for this packing style");
   expect(packagingConflict(lines, "m-bottle", "s2", null)).toBeNull();
-  expect(packagingConflict(lines, "m-bottle", null, null)).toContain("Choose a packing style");
+  expect(packagingConflict(lines, "m-bottle", null, null)).toBeNull();
   expect(packagingConflict(lines, "m-carton", null, null)).toBe("This material is already listed");
-  expect(packagingConflict(lines, "m-carton", "s1", null)).toContain("all packing styles");
+  expect(packagingConflict(lines, "m-carton", "s1", null)).toBeNull();
   // Editing a line does not conflict with itself.
   expect(packagingConflict(lines, "m-bottle", "s1", "p1")).toBeNull();
   expect(packagingConflict(lines, "m-new", null, null)).toBeNull();
