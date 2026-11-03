@@ -3879,6 +3879,7 @@ export type DomainEntitiesMaterialsBatchDistributedMaterialBatchDto = {
   quantityDistributed?: number;
   sampleWeights?: DomainEntitiesMaterialsBatchSrDto[] | null;
   reservedQuantity?: number;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesChecklistsDistributedChecklistDto = {
   materialBatches?:
@@ -4118,6 +4119,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDto = {
   sampleQuantity?: number;
   analysedBy?: string | null;
   analysedDate?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   id?: string;
@@ -4153,6 +4155,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   sampleQuantity?: number;
   analysedBy?: string | null;
   analysedDate?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesWarehousesShelfMaterialBatchDto = {
   id?: string;
@@ -4214,6 +4217,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchListDto = {
   analysedDate?: string | null;
   issuedBy?: SharedCollectionItemDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
   id?: string;
@@ -4252,6 +4256,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
   analysedDate?: string | null;
   issuedBy?: SharedCollectionItemDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesWarehousesWarehouseLocationShelfDto = {
   id?: string;
@@ -4330,6 +4335,8 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDto = {
   analysedDate?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
+  isOpeningBalanceBatch?: boolean;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   id?: string;
@@ -4374,6 +4381,8 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   analysedDate?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
+  isOpeningBalanceBatch?: boolean;
 };
 export type DomainEntitiesReportsQaDashboardDto = {
   numberOfBmrRequests?: number;
@@ -4741,6 +4750,7 @@ export type DomainEntitiesReportsWarehouseReservedMaterialReportDto = {
   expiryDate?: string | null;
   balanceQuantity?: number;
   materialBatchNumber?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesReportsWarehouseMaterialChecklistItemDto = {
   materialName?: string | null;

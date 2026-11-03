@@ -2822,6 +2822,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDto = {
   sampleQuantity?: number;
   analysedBy?: string | null;
   analysedDate?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   id?: string;
@@ -2857,6 +2858,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   sampleQuantity?: number;
   analysedBy?: string | null;
   analysedDate?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesWarehousesDistributeMaterialStatus = 0 | 1;
 export type DomainEntitiesWarehousesDistributeMaterialDto = {

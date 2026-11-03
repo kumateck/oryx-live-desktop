@@ -16,6 +16,7 @@ import { attendance, productStock, shiftSchedule } from "../lib/sheets";
 import { uploadPermissions } from "../lib/upload-center";
 import { saveUrl } from "../lib/workbook";
 import { useDepartments } from "../hooks/use-departments";
+import { StockTopUpTab } from "./stock-top-up-tab";
 import { StockMigrationTab } from "./stock-migration-tab";
 import { UploadSheet } from "./upload-sheet";
 
@@ -75,6 +76,7 @@ function ScheduleTab() {
 
 const tabs = [
   { id: "material", label: "Material stock", require: uploadPermissions.material, Panel: StockMigrationTab },
+  { id: "topup", label: "Migration stock top-up", require: uploadPermissions.material, Panel: StockTopUpTab },
   { id: "product", label: "Product stock", require: uploadPermissions.product, Panel: ProductTab },
   { id: "attendance", label: "Attendance", require: uploadPermissions.attendance, Panel: AttendanceTab },
   { id: "schedule", label: "Shift schedule", require: uploadPermissions.schedule, Panel: ScheduleTab },
@@ -84,11 +86,12 @@ const tabs = [
 export function UploadCenterPage() {
   const { allows } = useAccess();
   const shown = tabs.filter((tab) => allows(tab.require));
+  const [topUpOpened, setTopUpOpened] = useState(false);
   const [tab, setTab] = useState<string>(shown[0]?.id ?? "material");
   return <section className="min-w-0 space-y-4">
     <SettingsHeader title="Upload Center" description="Upload a filled sheet, check and correct its rows, then submit." />
     {shown.length === 0 ? <p className="text-sm text-muted-foreground">You may not make any of these uploads.</p>
-      : <Tabs value={tab} onValueChange={setTab}><TabsList>{shown.map((item) => <TabsTrigger key={item.id} value={item.id}>{item.label}</TabsTrigger>)}</TabsList>
-        {shown.map((item) => <TabsContent key={item.id} value={item.id} className="pt-3"><item.Panel /></TabsContent>)}</Tabs>}
+      : <Tabs value={tab} onValueChange={(value) => { setTab(value); if (value === "topup") setTopUpOpened(true); }}><TabsList className="h-auto max-w-full flex-wrap justify-start">{shown.map((item) => <TabsTrigger key={item.id} value={item.id}>{item.label}</TabsTrigger>)}</TabsList>
+        {shown.map((item) => <TabsContent key={item.id} value={item.id} {...(item.id === "topup" && topUpOpened ? { forceMount: true } : {})} className="pt-3 data-[state=inactive]:hidden"><item.Panel /></TabsContent>)}</Tabs>}
   </section>;
 }

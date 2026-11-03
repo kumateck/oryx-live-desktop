@@ -1,5 +1,13 @@
 # API contracts and generated hooks
 
+Issued-BMR records (2026-11-03) add five typed operations under
+`/api/v1/issued-bmrs`: list, history, batch-number correction, date-revision request
+and revision review, tagged ProductionSchedule. Nine owned schemas are imported
+from the metadata-only backend export. Existing operations, security and schemas
+remain unchanged. The reviewed additive fingerprint is
+`72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f`;
+prior reviewed fingerprints are retained. See [issued BMR records](issued-bmr-records.md).
+
 ## Combined report and repair contract review (2026-11-03)
 
 The legacy host-Nginx release policy now records the exact combined import digest
@@ -18,6 +26,16 @@ backend report and repair APIs are in backend PRs #1681 and #1680. Material repa
 still require migration `20261102182519_AddProductionMaterialRepairs` before use.
 No customer backend, database, shell baseline or deployment protocol is changed
 by recording this source-contract review.
+
+Migration stock top-ups (2026-11-03) add `POST /api/v1/stock-migrations/top-ups`
+and multipart `POST /api/v1/stock-migrations/top-ups/upload`, plus mode/reason,
+posted-batch IDs, comparison added quantities and correctable receipt references
+in the owned stock-migration DTOs. Import only the stock-migration paths/schemas
+from the companion metadata export and regenerate the materials domain. Keep
+unrelated contract declarations and retain prior customer release fingerprints.
+The migration-only integration review below records its additional exact digest.
+The matching backend and top-up schema migration must precede activation. See
+[migration stock top-ups](migration-stock-top-ups.md).
 
 QA issued-BMR reporting (2026-11-02) adds only
 `GET /api/v1/report/bmr-issued` (`GetIssuedBmrReport`) and the
@@ -47,7 +65,7 @@ The desktop uses the same backend as Oryx Next. Additive features such as purcha
 
 Generation is strict per operation, not per domain. `scripts/api-contract.ts` reads the contract and skips any operation that would produce `any` or `unknown`: a 2xx response other than 204 with no declared body type, or a request, parameter, or response schema that reaches an untyped property. Skipped operations are listed with their reason in the generated `docs/api-untyped-operations.md`, which is the backend typing backlog. A 204 response becomes `void` automatically. ASP.NET ProblemDetails extensions are arbitrary JSON, represented by a recursive `JsonValue` type. Any `any` or `unknown` that still reaches the output fails generation. `api:check` regenerates everything, compares it with the committed files and the backlog, and leaves the working tree unchanged.
 
-The current contract has 1,381 operations: 1,142 have hooks across 20 domains and 239 are skipped. To get a missing hook, declare the type on the controller (`[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), then run `api:export` and `api:generate`.
+The current contract has 1,398 operations: 1,159 have hooks across 20 domains and 239 are skipped. To get a missing hook, declare the type on the controller (`[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), then run `api:export` and `api:generate`.
 
 For an offline export from the companion backend source, run `dotnet API.dll --export-openapi /absolute/path/backend.json` from its build directory, then `ORYX_OPENAPI_FILE=/absolute/path/backend.json bun run api:export`. The metadata-only export exits before database seeding, listeners and hosted services start. Review the source contract and update the customer-server compatibility fingerprint alongside a coordinated backend/UI release; generation alone is not compatibility approval.
 
@@ -113,3 +131,23 @@ and `bun run api:check` verifies reproducibility. Backend migration
 `20261102182519_AddProductionMaterialRepairs` and the matching API must precede UI
 activation. No deployment fingerprint was approved by this import. See
 [production configuration repairs](production-configuration-repair-study.md).
+
+Raw-material retest extension changes (2026-11-03) add the migration-retest-date
+write, its request schema, optional expiry-list search, and additive effective
+validity fields on batch/reservation DTOs. They require the coordinated companion
+backend; no deployed fingerprint is approved by this source-only review. See
+[material retest extensions](material-retest-extensions.md).
+
+
+## Migration-only integration review (2026-11-03)
+
+The local development integration excludes White Placebo and preserves the latest
+production-material repairs and packaging reads. The additive regression verifies
+all earlier operations, schemas and security after removing only the declared
+migration additions. The legacy host-Nginx allowlist retains earlier approvals
+and adds the exact reviewed typed import
+`1b39795d5f488711aad8274fc59896e599860a7ea5a827783d60969a73bddee3`.
+This is a source compatibility review, not evidence of a customer upgrade:
+apply both stock-top-up and retest-audit migrations and deploy the matching backend
+before activating the UI. No database migration, role grant or deployment occurs
+when these local Git commits are merged. Pushes remain manual.

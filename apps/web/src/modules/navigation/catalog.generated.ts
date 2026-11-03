@@ -1264,6 +1264,14 @@ export const navigationCatalog = [
         "permissions": [
           "CanViewOosInvestigations"
         ]
+      },
+      {
+        "id": "quality-assurance.issued-bmr-records",
+        "label": "Issued BMR records",
+        "path": "/qa/issued-bmrs",
+        "permissions": [
+          "CanViewIssuedBmrRecords"
+        ]
       }
     ]
   },

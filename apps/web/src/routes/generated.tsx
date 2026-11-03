@@ -686,6 +686,9 @@ export const routes: RouteObject[] = [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/issue-bmr/[id]/page")).default }) }
           ] }
         ] },
+        { path: "issued-bmrs", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/issued-bmrs/page")).default }) }
+        ] },
         { path: "oos-investigations", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/oos-investigations/page")).default }) },
           { path: ":id", Component: Outlet, children: [

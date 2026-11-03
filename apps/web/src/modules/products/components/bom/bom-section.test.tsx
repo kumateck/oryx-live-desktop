@@ -28,6 +28,8 @@ function open(saved: object | null = bom) {
     if (path === `/api/v1/product/${id}/bom` && input.method === "GET") return Response.json(saved);
     if (path === "/api/v1/bom" && input.method === "POST") return Response.json("new-bom-id", { status: 201 });
     if (path === `/api/v1/product/${id}/bom/archive`) return new Response(null, { status: 204 });
+    if (path === "/api/v1/material/m-api/uom") return Response.json({ id: "u-mg", symbol: "mg" });
+    if (path === "/api/v1/material/m-sugar/uom") return Response.json({ id: "u-g", symbol: "g" });
     return new Response(null, { status: 404 });
   });
   const router = createMemoryRouter([{ path: "/", element: <BomSection productId={id} compositionSize={5} batchSize={1_500_000} /> }]);
@@ -40,7 +42,7 @@ it("shows the formula scaled to a batch and saves the remaining lines as the nex
   expect(await screen.findByText("Albendazole")).toBeTruthy();
   expect(screen.getByRole("heading", { name: /version 3/ })).toBeTruthy();
   // 100 mg per 5 ml unit, 1,500,000 ml batch.
-  expect(screen.getByText("30 kg")).toBeTruthy();
+  expect(await screen.findByText("30 kg")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Reorder Albendazole" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Save bill of materials" }).hasAttribute("disabled")).toBe(true);
   await chooseAction("Actions for Albendazole", "Remove");
