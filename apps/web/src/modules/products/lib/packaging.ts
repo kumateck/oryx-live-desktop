@@ -42,15 +42,13 @@ export function fromSavedPackages(saved: SavedPackages): PackagingLine[] {
 
 /**
  * Why a material and packing style cannot be added alongside the others, or null when it can.
- * A material is listed either once for all packing styles, or once per packing style, never both.
+ * A material may have different styles, including an All styles row, but each pair is unique.
  */
 export function packagingConflict(lines: readonly PackagingLine[], materialId: string, packingId: string | null, exceptKey: string | null): string | null {
   const same = lines.filter((line) => line.key !== exceptKey && line.material.value === materialId);
   if (same.some((line) => (line.packing?.value ?? null) === packingId)) {
     return packingId ? "This material is already listed for this packing style" : "This material is already listed";
   }
-  if (packingId && same.some((line) => line.packing === null)) return "This material is already listed for all packing styles. Remove that line to list it per packing style.";
-  if (!packingId && same.length > 0) return "This material is listed for specific packing styles. Choose a packing style for this line too.";
   return null;
 }
 
