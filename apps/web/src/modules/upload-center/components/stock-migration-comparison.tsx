@@ -18,7 +18,7 @@ function Quantity({ value, unit, batches }: { value: number | undefined; unit: s
 }
 
 /** Each material's storage stock now against what approval leaves; materials the sheet leaves out go to zero. */
-export function StockMigrationComparison({ migrationId, approved }: { migrationId: string; approved: boolean }) {
+export function StockMigrationComparison({ migrationId, approved, topUp = false }: { migrationId: string; approved: boolean; topUp?: boolean }) {
   const [filter, setFilter] = useState<Filter>("changes");
   const comparison = stockMigrationApi.useComparisonQuery({ ...migrationAudit, id: migrationId });
   const rows = useMemo(() => (comparison.data ?? []).filter((row) => {
@@ -31,16 +31,18 @@ export function StockMigrationComparison({ migrationId, approved }: { migrationI
     column.accessor((row) => row.kind ?? 0, { id: "kind", header: "Kind", size: 110, cell: ({ row }) => row.original.kind === 1 ? "Packaging" : "Raw" }),
     column.accessor((row) => row.current ?? 0, { id: "current", header: approved ? "Before" : "Now", size: 170, cell: ({ row }) =>
       <Quantity value={row.original.current} unit={row.original.unit} batches={row.original.currentBatches} /> }),
-    column.accessor((row) => row.new ?? 0, { id: "new", header: approved ? "Loaded" : "After approval", size: 170, cell: ({ row }) =>
+    ...(topUp ? [column.accessor((row) => row.added ?? 0, { id: "added", header: "Top-up", size: 150, cell: ({ row }) => toLargestUnit(row.original.added, row.original.unit, "calculated")?.text ?? "–" })] : []),
+    column.accessor((row) => row.new ?? 0, { id: "new", header: approved ? (topUp ? "After approval" : "Loaded") : "After approval", size: 170, cell: ({ row }) =>
       <Quantity value={row.original.new} unit={row.original.unit} batches={row.original.newBatches} /> }),
     column.accessor((row) => comparisonChange(row), { id: "change", header: "Change", size: 130, cell: ({ row }) => {
       const change = comparisonChange(row.original);
       return <Badge variant={change === "removed" ? "destructive" : change === "same" ? "outline" : "secondary"}>{changeLabels[change]}</Badge>; } }),
-  ]), [approved]);
+  ]), [approved, topUp]);
   const removed = (comparison.data ?? []).filter((row) => comparisonChange(row) === "removed").length;
   return <div className="space-y-3">
+    {topUp && approved ? <p className="text-sm text-muted-foreground">Totals recorded at approval; later stock movements do not change this evidence.</p> : null}
     <div className="flex flex-wrap items-center gap-2">
-      {filters.map((item) => <Button key={item.id} type="button" size="sm" variant={filter === item.id ? "default" : "outline"} onClick={() => setFilter(item.id)}>{item.label}</Button>)}
+      {filters.filter((item) => !topUp || item.id !== "removed").map((item) => <Button key={item.id} type="button" size="sm" variant={filter === item.id ? "default" : "outline"} onClick={() => setFilter(item.id)}>{item.label}</Button>)}
       {removed > 0 && !approved ? <span className="text-sm text-destructive">{removed} material(s) have stock now but are not in the sheet; approval sets them to zero.</span> : null}
     </div>
     <ClientDataTable label="Stock before and after" columns={columns} rows={rows} getRowId={(row) => row.materialId ?? ""} initialPageSize={50} loading={comparison.isLoading}

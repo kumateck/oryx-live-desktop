@@ -69,6 +69,7 @@ export function StockMigrationLines({ migration, shelves }: { migration: Migrati
       return <div className="min-w-0 space-y-1"><Badge variant={badgeVariant[value]}>{lineStatusLabels[value]}</Badge><Messages line={row.original} onDetails={() => setViewing(row.original)} /></div>; } }),
     column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch / AR number", size: 170, cell: ({ row }) =>
       <div className="min-w-0 space-y-1"><div className="break-all">{row.original.batchNumber || dash}</div>
+        {row.original.importedBatchId ? <button type="button" className="text-xs underline underline-offset-2" onClick={() => setViewing(row.original)}>Posted batch trace</button> : null}
         <div className="break-all text-xs text-muted-foreground">AR: {row.original.arNumber || dash}</div></div> }),
     column.accessor((row) => row.resolvedShelf ?? row.shelfName ?? "", { id: "shelf", header: "Shelf", size: 170, cell: ({ row }) => row.original.resolvedShelf
       ? <div><div>{row.original.resolvedShelf}</div><div className="text-xs text-muted-foreground">{row.original.resolvedWarehouse}</div></div>

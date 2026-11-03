@@ -32,10 +32,21 @@ const uploadApi = api.injectEndpoints({ endpoints: (build) => ({
     },
     invalidatesTags: (_id, error) => error ? [] : [{ type: "stock-migration", id: "LIST" }],
   }),
+  uploadStockTopUp: build.mutation<string, { file: File; departmentId: string; reason: string; massUnit: string; volumeUnit: string }>({
+    query: ({ file, ...params }) => {
+      const body = new FormData();
+      body.append("file", file, file.name);
+      return { url: "/api/v1/stock-migrations/top-ups/upload", method: "POST", body, params,
+        headers: { Module: migrationAudit.module, SubModule: migrationAudit.subModule } };
+    },
+    invalidatesTags: (_id, error) => error ? [] : [{ type: "stock-migration", id: "LIST" }],
+  }),
 }) });
 
 export const stockMigrationApi = {
   useUploadMutation: uploadApi.useUploadStockMigrationMutation,
+  useUploadTopUpMutation: uploadApi.useUploadStockTopUpMutation,
+  useCreateTopUpMutation: materialsApi.usePostApiV1StockMigrationsTopUpsMutation,
   useListQuery: materialsApi.useGetApiV1StockMigrationsQuery,
   useMigrationQuery: materialsApi.useGetApiV1StockMigrationsByIdQuery,
   useLinesQuery: materialsApi.useGetApiV1StockMigrationsByIdLinesQuery,

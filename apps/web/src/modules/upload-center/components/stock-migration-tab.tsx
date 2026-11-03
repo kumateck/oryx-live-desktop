@@ -1,23 +1,19 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
-import { skipToken } from "@reduxjs/toolkit/query";
 import { Upload } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
-import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { formatDateTime } from "@/shared/format/dates";
 import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
-import { migrationAudit, stockMigrationApi, type MigrationDto } from "../api/stock-migration-api";
+import { stockMigrationApi } from "../api/stock-migration-api";
 import { useDepartments } from "../hooks/use-departments";
-import { massUnits, migrationPath, openingBalancePermissions, migrationStatusLabels, volumeUnits } from "../lib/stock-migration";
+import { massUnits, migrationPath, openingBalancePermissions, volumeUnits } from "../lib/stock-migration";
 
-const column = dataTableColumns<MigrationDto>();
+import { StockMigrationHistory } from "./stock-migration-history";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="space-y-1 text-sm"><span>{label}</span>{children}</label>;
@@ -43,7 +39,6 @@ export function StockMigrationTab() {
   const [error, setError] = useState("");
   const [upload, { isLoading }] = stockMigrationApi.useUploadMutation();
   const permission = usePermissionAction(openingBalancePermissions.upload);
-  const list = stockMigrationApi.useListQuery(department ? { ...migrationAudit, departmentId: department.value } : skipToken);
 
   const submit = async () => {
     const denied = permission.check();
@@ -54,16 +49,6 @@ export function StockMigrationTab() {
     if ("error" in result) { setError(apiErrorMessage(result.error)); return; }
     void navigate(migrationPath(result.data));
   };
-
-  const columns = useMemo(() => column.columns([
-    column.accessor((row) => row.fileName ?? "", { id: "file", header: "Sheet", cell: ({ row }) => <span className="break-words font-medium">{row.original.fileName ?? "Stock sheet"}</span> }),
-    column.accessor((row) => row.createdAt ?? "", { id: "uploaded", header: "Uploaded", size: 200, cell: ({ row }) =>
-      <div><div>{formatDateTime(row.original.createdAt)}</div><div className="text-xs text-muted-foreground">{row.original.createdBy}</div></div> }),
-    column.accessor((row) => row.status ?? 0, { id: "status", header: "Status", size: 120, cell: ({ row }) =>
-      <Badge variant={row.original.status === 1 ? "default" : row.original.status === 2 ? "outline" : "secondary"}>{migrationStatusLabels[row.original.status ?? 0]}</Badge> }),
-    column.accessor((row) => row.total ?? 0, { id: "rows", header: "Rows", size: 260, cell: ({ row }) =>
-      <span className="text-xs">{row.original.ok} ready · {row.original.warning} to check · <span className={row.original.blocked ? "text-destructive" : ""}>{row.original.blocked} to fix</span></span> }),
-  ]), []);
 
   return <div className="space-y-4">
     <div className="rounded-md border p-4">
@@ -83,8 +68,6 @@ export function StockMigrationTab() {
       </div>
       {error ? <p role="alert" className="mt-2 break-words text-sm text-destructive">{error}</p> : null}
     </div>
-    {department ? <ClientDataTable label="Opening balance drafts" columns={columns} rows={list.data} getRowId={(row) => row.id ?? ""} loading={list.isLoading} refreshing={list.isFetching}
-      error={list.error ? apiErrorMessage(list.error) : null} onRetry={() => void list.refetch()} onRowOpen={(row) => row.id && void navigate(migrationPath(row.id))} fill={false}
-      emptyTitle="No opening balance drafts yet" emptyDescription="Upload a stock sheet to save and verify a draft." /> : null}
+    {department ? <StockMigrationHistory departmentId={department.value} /> : null}
   </div>;
 }

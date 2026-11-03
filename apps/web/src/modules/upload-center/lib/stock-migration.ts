@@ -45,6 +45,7 @@ export function isDraft(migration: MigrationDto | undefined): boolean {
 /** Why approval is not possible yet, or null when it is. */
 export function approvalBlocker(migration: MigrationDto): string | null {
   if (!isDraft(migration)) return "This migration has already been approved or discarded.";
+  if (migration.mode === 1 && !migration.reason?.trim()) return "Enter a reason for this top-up.";
   if ((migration.blocked ?? 0) > 0) return `${migration.blocked} row(s) still need fixing or leaving out.`;
   if ((migration.ok ?? 0) + (migration.warning ?? 0) === 0) return "No row has stock to load.";
   return null;
@@ -89,6 +90,8 @@ export function lineFormValues(line: LineDto, shelves: readonly SelectOption[]):
   const shelfId = line.shelfId ?? line.resolvedShelfId;
   const picked = line.materialId ?? null;
   return {
+    grn: line.grn ?? "",
+    arNumber: line.arNumber ?? "",
     material: picked && line.resolvedMaterialId === picked ? { value: picked, label: `${line.resolvedMaterialCode ?? ""} ${line.resolvedMaterialName ?? ""}`.trim() } : null,
     materialCode: line.materialCode ?? "",
     shelf: shelves.find((shelf) => shelf.value === shelfId) ?? null,
@@ -105,6 +108,8 @@ export function lineFormValues(line: LineDto, shelves: readonly SelectOption[]):
 export function lineRequest(line: LineDto, values: LineFormValues): LineUpdate {
   const quantity = values.quantityInSheet;
   return {
+    grn: values.grn,
+    arNumber: values.arNumber,
     materialCode: values.materialCode || null,
     materialId: values.materialCode.trim().toUpperCase() === (line.materialCode ?? "").trim().toUpperCase()
       ? values.material?.value ?? null : null,

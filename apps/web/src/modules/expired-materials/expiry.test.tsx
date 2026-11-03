@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, expect, it } from "vitest";
 import AboutToExpireMaterialsPage from "../../pages/(workspace)/warehouse/about-to-expire-materials/page";
@@ -49,6 +50,16 @@ it("lists batches expiring in the current month with where they sit and what is 
   expect(screen.getByText("4 kg")).toBeTruthy();
   const month = monthRangeDays(monthOf())!;
   expect(calls.some((call) => call.includes(`startDate=${apiDay(month.from)}`) && call.includes(`endDate=${apiDay(month.to)}`) && call.includes("materialKind=0"))).toBe(true);
+});
+
+it("combines material code search with dates, and keeps searching after dates are cleared", async () => {
+  const user = userEvent.setup();
+  const calls = open("/warehouse/about-to-expire-materials?q=RM-2", ["CanViewAboutToExpireMaterials"]);
+  await screen.findByText("Lactose");
+  expect(calls.some((call) => call.includes("searchQuery=RM-2") && call.includes("startDate="))).toBe(true);
+  await user.click(screen.getByRole("button", { name: "Clear dates" }));
+  await waitFor(() => expect(calls.some((call) => call.includes("searchQuery=RM-2") && !call.includes("startDate=") && !call.includes("endDate="))).toBe(true));
+  expect(screen.getByText("Lactose")).toBeTruthy();
 });
 
 it("shows rejected batches with the reason, asking the server for the kind the user may see", async () => {

@@ -26,7 +26,7 @@ const blocked = {
   materialChoices: [{ id: "g1", code: "RMG039", name: "Green Tea Extract 50%" }, { id: "g2", code: "RMG039", name: "Glucose" }], shelfName: "G/09/B", resolvedShelfId: "s1",
 };
 
-function open(permissions: string[], arNumber: string | null = blocked.arNumber) {
+function open(permissions: string[], arNumber: string | null = blocked.arNumber, topUp = false) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: { method: string; path: string; body: string }[] = [];
@@ -36,9 +36,9 @@ function open(permissions: string[], arNumber: string | null = blocked.arNumber)
     const url = new URL(input.url);
     if (input.method !== "GET") { calls.push({ method: input.method, path: url.pathname, body: await input.text() }); return new Response(null, { status: 204 }); }
     const json = (value: object) => new Response(JSON.stringify(value), { headers: { "Content-Type": "application/json" } });
-    if (url.pathname === "/api/v1/stock-migrations/m1") return json(migration);
+    if (url.pathname === "/api/v1/stock-migrations/m1") return json(topUp ? { ...migration, mode: 1, reason: "Missed during migration", blocked: 0, ok: 1, warehouses: migration.warehouses.map((store) => ({ ...store, willBeWiped: false })) } : migration);
     if (url.pathname === "/api/v1/stock-migrations/m1/lines") return json({ data: [{ ...blocked, arNumber }], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
-    if (url.pathname === "/api/v1/stock-migrations/m1/comparison") return json([{ materialId: "x", code: "RMA010", name: "Ascorbic Acid", kind: 0, unit: "mg", current: 14_000_000, new: 0, currentBatches: 1, newBatches: 0 }]);
+    if (url.pathname === "/api/v1/stock-migrations/m1/comparison") return json([{ materialId: "x", code: "RMA010", name: "Ascorbic Acid", kind: 0, unit: "mg", current: 14_000_000, new: topUp ? 15_000_000 : 0, added: topUp ? 1_000_000 : 0, currentBatches: 1, newBatches: 0 }]);
     return new Response(null, { status: 404 });
   });
   const router = createMemoryRouter([{ path: "/settings/upload-center/stock-migrations/:id", element: <StockMigrationPage /> }], { initialEntries: ["/settings/upload-center/stock-migrations/m1"] });
@@ -108,4 +108,26 @@ it("lets an approver review without showing correction or discard controls", asy
   expect(screen.queryByRole("button", { name: "Actions for row 65 of Raw Material" })).toBeNull();
   await user.click(await screen.findByRole("button", { name: "1 preparation notes" }));
   expect(await screen.findByText("Missing shelf assigned to the first rack and shelf.")).toBeTruthy();
+}, 30_000);
+
+it("approves an additive top-up with its reason and without a replacement warning", async () => {
+  const user = userEvent.setup();
+  const calls = open(["CanViewOpeningBalances", "CanApproveOpeningBalances"], blocked.arNumber, true);
+  expect(await screen.findByText(/Missed during migration/)).toBeTruthy();
+  await user.click(await screen.findByRole("button", { name: "Approve stock top-up" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByText(/Existing balances are preserved/)).toBeTruthy();
+  expect(within(dialog).queryByText(/written off/)).toBeNull();
+  await user.click(within(dialog).getByRole("button", { name: "Approve stock top-up" }));
+  await waitFor(() => expect(calls.some((call) => call.path.endsWith("/approve"))).toBe(true));
+}, 30_000);
+
+it("shows the additive comparison and hides approval from a top-up creator", async () => {
+  const user = userEvent.setup();
+  open(["CanViewOpeningBalances", "CanUploadOpeningBalances"], blocked.arNumber, true);
+  expect(await screen.findByText(/Missed during migration/)).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Approve stock top-up" })).toBeNull();
+  await user.click(screen.getByRole("tab", { name: "Stock before and after" }));
+  expect(await screen.findByRole("columnheader", { name: /Top-up/ })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Going to zero" })).toBeNull();
 }, 30_000);

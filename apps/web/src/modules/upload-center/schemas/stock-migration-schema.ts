@@ -4,6 +4,8 @@ const option = z.object({ value: z.string().min(1), label: z.string() });
 
 /** A row corrected on the verification page. An empty quantity means the row has no stock to load. */
 export const lineFormSchema = z.object({
+  grn: z.string().trim().max(500),
+  arNumber: z.string().trim().max(500),
   material: option.nullable(),
   materialCode: z.string().trim(),
   shelf: option.nullable(),

@@ -3,7 +3,7 @@ import { z } from "zod";
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const amount = z.number().nullish().transform((value) => typeof value === "number" && Number.isFinite(value) ? value : 0);
 const date = z.string().nullish().transform((value) => value && new Date(value).getFullYear() >= 1900 ? value : null);
-const batch = z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish() }).nullish();
+const batch = z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish() }).nullish();
 const material = z.object({ material: z.object({ id: z.string().nullish(), name: text, code: text }).nullish(),
   currentReservedBatches: z.array(z.object({ batch, quantityToTake: amount, warehouseLocationShelfId: z.string().nullish() })).nullish(),
   alternativeBatches: z.array(z.object({ batch, quantityAvailable: amount, warehouse: z.object({ id: z.string().nullish(), name: text }).nullish(), warehouseLocationShelfId: z.string().nullish() })).nullish() });
@@ -14,9 +14,9 @@ export const alternativesSchema = z.array(material).nullish().transform((value) 
   if (!id) return [];
   return [{ materialId: id, materialName: entry.material?.name ?? "Unnamed material", materialCode: entry.material?.code ?? null,
     reserved: (entry.currentReservedBatches ?? []).flatMap((item) => item.batch?.id && item.warehouseLocationShelfId && item.quantityToTake > 0
-      ? [{ batchId: item.batch.id, shelfId: item.warehouseLocationShelfId, number: item.batch.batchNumber, expires: item.batch.expiryDate, quantity: item.quantityToTake, unitId: item.batch.uoM?.id ?? null, unit: item.batch.uoM?.symbol ?? null }] : []),
+      ? [{ batchId: item.batch.id, shelfId: item.warehouseLocationShelfId, number: item.batch.batchNumber, expires: item.batch.effectiveExpiryDate ?? item.batch.expiryDate, quantity: item.quantityToTake, unitId: item.batch.uoM?.id ?? null, unit: item.batch.uoM?.symbol ?? null }] : []),
     alternatives: (entry.alternativeBatches ?? []).flatMap((item) => item.batch?.id && item.warehouseLocationShelfId && item.warehouse?.id && item.quantityAvailable > 0
-      ? [{ batchId: item.batch.id, shelfId: item.warehouseLocationShelfId, number: item.batch.batchNumber, expires: item.batch.expiryDate, available: item.quantityAvailable, storeId: item.warehouse.id, store: item.warehouse.name ?? "Unnamed store" }] : []) }];
+      ? [{ batchId: item.batch.id, shelfId: item.warehouseLocationShelfId, number: item.batch.batchNumber, expires: item.batch.effectiveExpiryDate ?? item.batch.expiryDate, available: item.quantityAvailable, storeId: item.warehouse.id, store: item.warehouse.name ?? "Unnamed store" }] : []) }];
 }));
 export type MaterialAlternatives = z.infer<typeof alternativesSchema>[number];
 

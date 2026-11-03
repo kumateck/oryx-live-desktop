@@ -1,5 +1,20 @@
 # Oryx Live Desktop plan
 
+## Issued BMR correction and revision (2026-11-03)
+
+The user authorized a dedicated QA list containing already-issued product-batch
+BMRs, separate from BMR issue requests. A separately permissioned typo correction
+changes only batch-number text, with a required reason and immutable before/after
+evidence. Manufacturing and expiry changes are requested as a revision and apply
+only after approval by another permitted person. Permissions cover list, typo
+correction, revision request and revision review. Use the department ownership
+rules on the backend; block unissued/retired records, stale values and duplicates.
+Changes propagate atomically to linked live batch data, with affected IDs recorded
+in the audit. Issued/superseded certificates remain immutable and use their own
+existing revision workflow; draft headers follow current batch data. Keep route
+files small, use generated domain endpoints, the shared table/actions/forms and
+module manifests, and preserve White Placebo separately.
+
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
 ## Active packaging and packing-style selection (2026-11-03)
@@ -27,6 +42,38 @@ of changed authentication, permissions and responses. Run the isolated Docker
 release validator; do not alter the uncommitted White Placebo implementation or
 customer databases. See `docs/api-codegen.md` for review scope and backend rollout
 prerequisites.
+
+## Migration stock top-ups (2026-11-03)
+
+Add an additive migration top-up alongside opening balances for individual
+post-migration cases. A required reason and one department cover a list entered
+manually or uploaded with the existing material-stock workbook format. Saving
+creates a draft only; reuse the existing view/upload/correct/approve opening-
+balance permissions and department guards. Approval posts atomically once, adds
+new stock lots without writing off or merging existing stock, and retains source
+rows, batch/date/UOM/shelf/GRN/AR evidence, creator, approver and immutable
+before/added/after totals. Distinct receipt references must not be pooled. Keep
+the existing opening-balance replacement workflow explicit and unchanged. Match
+the existing migration month-based date contract. No live stock posting, role
+grants, database migration execution or deployment is authorized by this work.
+
+Implemented locally in the Upload Center top-up tab with manual/Excel draft
+entry, additive approval, posted-batch links and cumulative bin-card receipts.
+The prepared migration remains unapplied. Verification and activation requirements
+are recorded in `docs/migration-stock-top-ups.md`.
+
+## Raw-material migration retest extensions (2026-11-03)
+
+Use active expiry first. After expiry elapses, a future raw-material retest date
+extends usability; absent or elapsed extensions leave the batch expired. Apply
+one date rule to usable stock, reservation/supply selection and write guards,
+expiry lists and alerts. Preserve quality/status/approval gates. A separate
+backend permission allows individual retest-date corrections only for approved
+opening-migration batches in the actor's department, with reason, optimistic
+concurrency and transactional before/after audit. It does not create or complete
+a QC retest. No role grants, live data changes or deployment are authorized.
+Expiry lists combine optional month ranges with server-side code/name search;
+clearing months retains search and the list's expired/soon classification.
 
 ## Permission search and navigation consistency (2026-11-03)
 
