@@ -9,7 +9,7 @@ const shiftYears = (value: string, years: number) => `${Number(value.slice(0, 4)
 export const issueBounds = (today: Date = new Date()) => { const now = currentMonth(today); return { made: { minMonth: now, maxMonth: shiftYears(now, 5) }, expires: { minMonth: now, maxMonth: shiftYears(now, 10) } }; };
 
 export const issueSchema = z.object({
-  batchNumber: z.string().trim().min(1, "Enter the batch number."),
+  batchNumber: z.string().trim().min(1, "Enter the batch number.").max(100, "The batch number cannot exceed 100 characters."),
   made: month("manufacturing month").nullable(), expires: month("expiry month").nullable(),
   quantity: z.number({ message: "Enter the batch size." }).positive("The batch size must be more than zero."),
   unit: z.custom<SelectOption>().nullable(),

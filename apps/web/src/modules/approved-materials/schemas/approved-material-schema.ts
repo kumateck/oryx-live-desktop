@@ -20,13 +20,14 @@ export const materialHeaderSchema = z.object({ id: z.string().min(1), code: text
 /** Stock of one batch on one shelf. */
 export const shelfBatchRowsSchema = z.array(z.object({
   id: z.string().nullish(), quantity: amount, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(),
-  materialBatch: z.object({ id: z.string().nullish(), batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), retestDate: z.string().nullish(),
+  materialBatch: z.object({ id: z.string().nullish(), batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), effectiveExpiryDate: z.string().nullish(), retestDate: z.string().nullish(),
     material: z.object({ id: z.string().nullish(), code: text, name: text }).nullish() }).nullish(),
   warehouseLocationShelf: z.object({ id: z.string().nullish(), code: text, name: text,
     warehouseLocationRack: z.object({ name: text, warehouseLocation: z.object({ name: text, floorName: text }).nullish() }).nullish() }).nullish(),
 })).nullish().transform((value) => (value ?? []).map((item, index) => ({
   id: item.id ?? `row-${index}`, shelfBatchId: item.id ?? null, quantity: item.quantity, unit: item.uoM?.symbol ?? null, unitId: item.uoM?.id ?? null,
   batchNumber: item.materialBatch?.batchNumber ?? null, manufacturingDate: item.materialBatch?.manufacturingDate ?? null, expiryDate: item.materialBatch?.expiryDate ?? null,
+  batchId: item.materialBatch?.id ?? null, effectiveExpiryDate: item.materialBatch?.effectiveExpiryDate ?? item.materialBatch?.expiryDate ?? null,
   retestDate: item.materialBatch?.retestDate ?? null,
   materialName: item.materialBatch?.material?.name ?? null, materialCode: item.materialBatch?.material?.code ?? null,
   shelf: item.warehouseLocationShelf?.code ?? item.warehouseLocationShelf?.name ?? null, shelfId: item.warehouseLocationShelf?.id ?? null,
@@ -54,6 +55,6 @@ export type BinCardRow = z.infer<typeof binCardRowsSchema>[number];
 /** Stock set aside for a production batch. */
 export const reservedRowsSchema = z.array(z.object({
   schedule: text, dateTime: z.string().nullish(), productName: text, productCode: text, productBatchNumber: text, materialBatchNumber: text, arNumber: text, uomSymbol: text,
-  reservedQuantity: amount, balanceQuantity: amount, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(),
-})).nullish().transform((value) => (value ?? []).map((item, index) => ({ ...item, id: `reserved-${index}`, unit: item.uomSymbol, reserved: item.reservedQuantity, balance: item.balanceQuantity })));
+  reservedQuantity: amount, balanceQuantity: amount, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), effectiveExpiryDate: z.string().nullish(),
+})).nullish().transform((value) => (value ?? []).map((item, index) => ({ ...item, id: `reserved-${index}`, unit: item.uomSymbol, reserved: item.reservedQuantity, balance: item.balanceQuantity, effectiveExpiryDate: item.effectiveExpiryDate ?? item.expiryDate ?? null })));
 export type ReservedRow = z.infer<typeof reservedRowsSchema>[number];

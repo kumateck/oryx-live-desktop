@@ -12,6 +12,7 @@ export function StockMigrationLineDetails({ line, onClose }: { line: LineDto; on
         <dl className="grid gap-3 sm:grid-cols-2">
           <div className="min-w-0"><dt className="text-xs text-muted-foreground">AR number</dt><dd className="break-all">{line.arNumber || "–"}</dd></div>
           <div className="min-w-0"><dt className="text-xs text-muted-foreground">GRN</dt><dd className="break-all">{line.grn || "–"}</dd></div>
+          {line.importedBatchId ? <div className="min-w-0 sm:col-span-2"><dt className="text-xs text-muted-foreground">Posted stock batch ID</dt><dd className="break-all">{line.importedBatchId}</dd></div> : null}
         </dl>
         {(line.blockers ?? []).map((note) => <p key={`blocker-${note}`} className="break-words text-destructive">{note}</p>)}
         {(line.warnings ?? []).map((note) => <p key={`warning-${note}`} className="break-words">{note}</p>)}

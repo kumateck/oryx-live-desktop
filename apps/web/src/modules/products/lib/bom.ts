@@ -1,6 +1,7 @@
 import type { DomainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest } from "@/shared/api/generated/materials";
 import type { SavedBom } from "../schemas/bom-schema";
 import { batchQuantity } from "./product-detail";
+import type { MaterialUnit } from "./material-unit";
 
 interface Option { value: string; label: string }
 
@@ -13,6 +14,8 @@ export interface BomLine {
   category: string;
   specification: string;
   unit: { id: string; symbol: string };
+  /** Only picker or linkage lookups can establish this; a saved BOM unit may be stale. */
+  linkedUnit?: MaterialUnit;
   baseQuantity: number;
   grade: string;
   substitutes: Option[];
