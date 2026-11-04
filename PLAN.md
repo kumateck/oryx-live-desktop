@@ -1,5 +1,24 @@
 # Oryx Live Desktop plan
 
+## Stock-count print reports (2026-11-04)
+
+Add Current stock and Expired stock choices to the existing warehouse report
+workbench. Current stock means positive physical shelf plus issued, unconsumed reserved stock; unissued holds stay on source shelves and are counted once;
+expired is the effective-expiry subset. Reuse report filters, complete snapshots,
+export and print preview. Paper headers are Material, Batch, Source, Dates,
+Quantity, Physical count and Remarks. Group name/code, batch/AR,
+manufacturer/supplier and manufacturing/expiry/retest inside their cells; dates
+remain month/year. Count and remarks stay blank with room for handwriting.
+
+Use an additive, current-only stock-report read model so existing historical and
+stock-detail contracts remain intact. Scope it to the authenticated account's
+fresh department; assigned users cannot select another department. Unassigned
+users may choose a department or all. Stock ownership follows the warehouse,
+not material-use associations. Combine shelf/reservation positions in one SQL
+snapshot, preserve unit distinctions, and never adjust inventory when printing.
+Use the existing Warehouse report permission and generate typed hooks from a
+built OpenAPI export. Frontend PRs remain development-only. Promotion stays last.
+
 ## Manufacturing, expiry and retest month selection (2026-11-04)
 
 The user requests month-and-year selection across batch manufacturing, expiry and

@@ -1,7 +1,7 @@
 export type ReportCell = string | number | boolean | null;
 export interface ReportRow { id: string; cells: readonly ReportCell[] }
 export interface ReportPrintColumn { label: string; fields: readonly { column: number; label?: string }[]; width?: string }
-export interface ReportSheet { name: string; columns: readonly string[]; rows: readonly ReportRow[]; printColumns?: readonly ReportPrintColumn[] }
+export interface ReportSheet { id?: string; name: string; columns: readonly string[]; rows: readonly ReportRow[]; printColumns?: readonly ReportPrintColumn[]; printLayout?: { orientation: "landscape"; rowHeightMm: number; signatures: readonly string[] } }
 export interface ReportBook { title: string; generatedAt: string; filters: readonly { label: string; value: string }[]; sheets: readonly ReportSheet[]; warnings: readonly string[] }
 export interface ReportColumn<T> { label: string; read: (row: T) => ReportCell | undefined }
 /** A missing number stays missing; a real zero remains a zero in preview and export. */

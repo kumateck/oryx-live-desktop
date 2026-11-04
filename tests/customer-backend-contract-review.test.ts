@@ -108,12 +108,14 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/production-schedule/activity/{activityId}/repair-packaging/preview", "/api/v1/production-schedule/activity/{activityId}/repair-packaging",
     // Migration validity correction and additive stock top-up drafts (2026-11-03).
     "/api/v1/material/batch/{batchId}/migration-retest-date",
+    "/api/v1/material/batches/stock-report",
     "/api/v1/stock-migrations/top-ups/upload", "/api/v1/stock-migrations/top-ups",
     "/api/v1/production-schedule/{batchId}/issued-material-repair/{kind}",
     "/api/v1/production-schedule/activity/{activityId}/unstart",
     "/api/v1/issued-bmrs", "/api/v1/issued-bmrs/{id}/history", "/api/v1/issued-bmrs/{id}/batch-number",
     "/api/v1/issued-bmrs/{id}/revisions", "/api/v1/issued-bmrs/{id}/revisions/{revisionId}/review"].sort());
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Materials.Batch.MaterialStockReport")) delete schemas[name];
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ProductionUnstart") || name.startsWith("DOMAIN.Entities.Products.Production.IssuedMaterialRepair") || name === "DOMAIN.Entities.Products.Production.ApplyIssuedMaterialRepairRequest") delete schemas[name];
   delete object(object(schemas["DOMAIN.Entities.Requisitions.RequisitionItemDto"] ?? null).properties ?? null).approvedQuantity;
   for (const name of ["IssuedBmrPage", "IssuedBmrRow", "IssuedBmrHistory", "IssuedBmrChangeDto", "IssuedBmrRevisionDto",
@@ -123,7 +125,7 @@ test("historical reporting adds optional read parameters without changing existi
   for (const name of ["MaterialBatchDto", "MaterialBatchListDto", "MaterialBatchReducedDto", "DistributedMaterialBatchDto"]) {
     const properties = object(object(schemas[`DOMAIN.Entities.Materials.Batch.${name}`] ?? null).properties ?? null);
     delete properties.effectiveExpiryDate;
-    if (name === "MaterialBatchDto") delete properties.isOpeningBalanceBatch;
+    if (name === "MaterialBatchDto") { delete properties.isOpeningBalanceBatch; delete properties.stockDepartments; }
   }
   delete object(object(schemas["DOMAIN.Entities.Reports.Warehouse.ReservedMaterialReportDto"] ?? null).properties ?? null).effectiveExpiryDate;
 
@@ -228,11 +230,27 @@ test("the reviewed report, repair and migration contract passes release validati
   const digest = contractDigest(current);
   assert.ok(policy.backendContracts.includes("a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe"));
   assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
-  assert.equal(digest, "d26ad659839ddc4ec2e1fb26aadeaac692c19e27c7e075a7cc2fe56b8d4ff4ed");
+  assert.ok(policy.backendContracts.includes("d26ad659839ddc4ec2e1fb26aadeaac692c19e27c7e075a7cc2fe56b8d4ff4ed"));
+  assert.ok(policy.backendContracts.includes("35c00c063402f8cf1248db7ca3a9093ce997e66858311b4864de7890a50d3dad"));
+  assert.equal(digest, "f38dceee6e53dc16783197bce0ceb9d36b902f2d1d0b5185a77a1698adec5e9f");
   checkCompatibility(hostConfig, policy, digest);
   const check = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
   assert.equal(check.status, 0, check.stderr);
   assert.match(check.stdout, new RegExp(`Approved backend contract: ${digest}`));
+});
+
+test("expiry department metadata is an optional read addition, with no client-controlled department parameter", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const batch = object(object(object(current.components ?? null).schemas ?? null)["DOMAIN.Entities.Materials.Batch.MaterialBatchDto"] ?? null);
+  const field = object(object(batch.properties ?? null).stockDepartments ?? null);
+  assert.equal(field.type, "array");
+  assert.deepEqual(field.items, { $ref: "#/components/schemas/SHARED.CollectionItemDto" });
+  assert.ok(!Array.isArray(batch.required) || !batch.required.includes("stockDepartments"));
+  for (const path of ["/api/v1/material/batches/expired", "/api/v1/material/batches/about-to-expire"]) {
+    const parameters = object(object(object(current.paths ?? null)[path] ?? null).get ?? null).parameters;
+    assert.ok(Array.isArray(parameters));
+    assert.ok(!parameters.some((value) => ["departmentId", "userId"].includes(String(object(value).name))));
+  }
 });
 
 test("the separate legacy host-Nginx verifier still blocks unreviewed document changes", async () => {
@@ -250,4 +268,16 @@ test("the separate legacy host-Nginx verifier still blocks unreviewed document c
       assert.throws(() => checkCompatibility(hostConfig, policy, contractDigest(changed)), /has not been approved/);
     }
   }
+});
+
+test("stock count reporting adds only a typed read with department, kind and expiry filters", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const path = object(object(current.paths ?? null)["/api/v1/material/batches/stock-report"] ?? null);
+  assert.deepEqual(Object.keys(path), ["get"]);
+  const operation = object(path.get ?? null);
+  assert.ok(Array.isArray(operation.parameters));
+  assert.deepEqual(operation.parameters.map((entry) => object(entry)).filter((entry) => entry.in === "query").map((entry) => entry.name), ["departmentId", "materialKind", "expiredOnly"]);
+  const response = object(object(operation.responses ?? null)["200"] ?? null);
+  assert.deepEqual(object(object(response.content ?? null)["application/json"] ?? null).schema, { $ref: "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialStockReportDto" });
+  assert.deepEqual(current.security, reviewedImport().security);
 });
