@@ -22,6 +22,8 @@ no preload/native bridge, and a unique nonpersistent session partition. It does
 not reload or close the ERP window and cannot read its encrypted sign-in. New
 reset links do not replace an unfinished reset window. Browser windows, navigation,
 redirects and permissions are restricted. Choosing Sign in returns focus to the
+main app. While the reset window is focused, its macOS menu retains native editing
+and window actions without sending ERP tab/navigation commands to the background
 main app. The desktop handler does not log reset keys or save them in local
 preferences; they remain in memory/the reset page URL. The backend remains authoritative for token expiry, password
 validation, account scope and successful reset; this feature does not consume a

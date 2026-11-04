@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog } from "electron";
+import { BrowserWindow, dialog, Menu, type MenuItemConstructorOptions } from "electron";
 import { randomUUID } from "node:crypto";
 import { parseDesktopPasswordReset, passwordResetPage, type DesktopPasswordReset } from "../../../shared/password-reset-link";
 
@@ -9,7 +9,7 @@ export class PasswordResetLinks {
   private resetWindow: BrowserWindow | null = null;
   private address = "";
   private opening = false;
-  constructor(private parent: () => BrowserWindow, private site: () => string) {}
+  constructor(private parent: () => BrowserWindow, private site: () => string, private restoreMenu: () => void) {}
   receive(value: string): void {
     const link = parseDesktopPasswordReset(value);
     if (!link) return;
@@ -46,6 +46,14 @@ export class PasswordResetLinks {
       this.resetWindow = reset;
       this.address = address;
       reset.removeMenu();
+      if (process.platform === "darwin") {
+        reset.on("focus", () => {
+          const template: MenuItemConstructorOptions[] = [{ role: "appMenu" },
+            { label: "File", submenu: [{ role: "close" }] }, { role: "editMenu" }, { role: "windowMenu" }];
+          Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+        });
+        reset.on("blur", this.restoreMenu);
+      }
       reset.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
       reset.webContents.session.setPermissionCheckHandler(() => false);
       reset.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
@@ -58,7 +66,7 @@ export class PasswordResetLinks {
       reset.webContents.on("did-navigate-in-page", (_event, value, mainFrame) => {
         if (mainFrame && (!allowed(value) || new URL(value).pathname === "/login")) { reset.close(); parent.show(); parent.focus(); }
       });
-      reset.on("closed", () => { this.resetWindow = null; this.address = ""; });
+      reset.on("closed", () => { this.resetWindow = null; this.address = ""; this.restoreMenu(); });
       await reset.loadURL(address);
       reset.show(); reset.focus();
     } catch {

@@ -22,7 +22,7 @@ let connectionPageUrl = "";
 let siteUrl = "";
 let connectionError = "";
 let workspaceNavigationReady = false;
-const passwordResetLinks = new PasswordResetLinks(() => window, () => siteUrl);
+const passwordResetLinks = new PasswordResetLinks(() => window, () => siteUrl, () => refreshMenu());
 app.on("open-url", (event, url) => { event.preventDefault(); passwordResetLinks.receive(url); });
 
 function configPath(): string {
