@@ -1872,6 +1872,34 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    previewScheduleProductRepair: build.query<
+      PreviewScheduleProductRepairApiResponse,
+      PreviewScheduleProductRepairApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule", id: queryArg.scheduleId }],
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/${queryArg.scheduleId}/product/${queryArg.productId}/repair/${queryArg.kind}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    applyScheduleProductRepair: build.mutation<
+      ApplyScheduleProductRepairApiResponse,
+      ApplyScheduleProductRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule", id: "LIST" }, { type: "production-schedule", id: queryArg.scheduleId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/${queryArg.scheduleId}/product/${queryArg.productId}/repair/${queryArg.kind}`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionApplyScheduleRepair,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -3157,6 +3185,29 @@ export type ReviewIssuedBmrRevisionApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesProductsProductionReviewIssuedBmrRevision: DomainEntitiesProductsProductionReviewIssuedBmrRevision;
+};
+export type PreviewScheduleProductRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionScheduleRepairPreview;
+export type PreviewScheduleProductRepairApiArg = {
+  scheduleId: string;
+  productId: string;
+  kind: DomainEntitiesProductsProductionScheduleRepairKind;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ApplyScheduleProductRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionScheduleRepairResult;
+export type ApplyScheduleProductRepairApiArg = {
+  scheduleId: string;
+  productId: string;
+  kind: DomainEntitiesProductsProductionScheduleRepairKind;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionApplyScheduleRepair: DomainEntitiesProductsProductionApplyScheduleRepair;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -5307,6 +5358,39 @@ export type DomainEntitiesProductsProductionReviewIssuedBmrRevision = {
   approve?: boolean;
   reason: string;
 };
+export type DomainEntitiesProductsProductionScheduleRepairKind = 0 | 1 | 2;
+export type DomainEntitiesProductsProductionScheduleRepairBatchPreview = {
+  batchId?: string;
+  activityId?: string | null;
+  batchNumber?: string | null;
+  status?: string | null;
+  message?: string | null;
+  materials?: DomainEntitiesProductsProductionProductionMaterialRepairPreview;
+  procedure?: DomainEntitiesProductsProductionProductionProcedureRepairResult;
+  evidenceHash?: string | null;
+};
+export type DomainEntitiesProductsProductionScheduleRepairPreview = {
+  scheduleId?: string;
+  productId?: string;
+  kind?: DomainEntitiesProductsProductionScheduleRepairKind;
+  previewHash?: string | null;
+  canApply?: boolean;
+  blockers?: string[] | null;
+  batches?: DomainEntitiesProductsProductionScheduleRepairBatchPreview[] | null;
+};
+export type DomainEntitiesProductsProductionScheduleRepairResult = {
+  repairId?: string;
+  alreadyApplied?: boolean;
+  repaired?: number;
+  unchanged?: number;
+  skipped?: number;
+  requiringApproval?: number;
+};
+export type DomainEntitiesProductsProductionApplyScheduleRepair = {
+  requestId?: string;
+  previewHash: string;
+  reason: string;
+};
 export const {
   usePostApiV1ProductionOrdersMutation,
   useGetApiV1ProductionOrdersQuery,
@@ -5501,4 +5585,7 @@ export const {
   useCorrectIssuedBmrBatchNumberMutation,
   useRequestIssuedBmrRevisionMutation,
   useReviewIssuedBmrRevisionMutation,
+  usePreviewScheduleProductRepairQuery,
+  useLazyPreviewScheduleProductRepairQuery,
+  useApplyScheduleProductRepairMutation,
 } = injectedRtkApi;
