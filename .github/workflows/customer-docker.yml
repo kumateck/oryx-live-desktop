@@ -23,7 +23,7 @@ concurrency:
 jobs:
   web:
     name: Validate customer release
-    if: github.ref == 'refs/heads/entrance-server' || github.ref == 'refs/heads/testing'
+    if: github.ref == 'refs/heads/entrance-server' || github.ref == 'refs/heads/testing' || (github.event_name == 'workflow_dispatch' && inputs.build_windows)
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -272,7 +272,7 @@ jobs:
     if: >-
       always() && needs.web.result == 'success' &&
       ((github.ref == 'refs/heads/testing' && needs.testing-deploy.result == 'success' && needs.testing-deploy.outputs.desktop_changed == 'true') ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/entrance-server' && inputs.build_windows))
+      (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/testing' && inputs.build_windows))
     runs-on: windows-latest
     timeout-minutes: 45
     env:
@@ -331,8 +331,13 @@ jobs:
           $exe = Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter OryxLiveDesktop.exe | Select-Object -First 1
           if (-not $exe) { throw 'The installer did not install OryxLiveDesktop.exe' }
           "Installed: $($exe.FullName)"
-          $protocolCommand = (Get-Item 'Registry::HKEY_CLASSES_ROOT\oryx-live\shell\open\command').GetValue('')
-          if ($protocolCommand.IndexOf($exe.FullName, [StringComparison]::OrdinalIgnoreCase) -lt 0 -or -not $protocolCommand.Contains('%1')) { throw 'The installed password-reset protocol is not registered to this executable.' }
+          function Assert-ResetProtocol {
+            $protocolRoot = Get-Item 'Registry::HKEY_CLASSES_ROOT\oryx-live'
+            if ($protocolRoot.GetValueNames() -notcontains 'URL Protocol') { throw 'The installed reset handler is not a URL protocol.' }
+            $protocolCommand = (Get-Item 'Registry::HKEY_CLASSES_ROOT\oryx-live\shell\open\command').GetValue('')
+            if ($protocolCommand -cne ('"' + $exe.FullName + '" "%1"')) { throw 'The password-reset protocol must name the installed executable and quote its URL argument.' }
+          }
+          Assert-ResetProtocol
           $shortcuts = @((Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Oryx Live Desktop.lnk'), (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Oryx Live Desktop.lnk'))
           foreach ($link in $shortcuts) { if (-not (Test-Path $link)) { throw "Missing shortcut: $link" }; "Shortcut: $link" }
           New-Item -ItemType Directory shots -Force | Out-Null
@@ -392,6 +397,7 @@ jobs:
           $exe = Get-Item 'apps/desktop/out/make/nsis/win-ia32-unpacked/OryxLiveDesktop.exe'
           Launch 'x86-runtime' { param($titles) ($titles -contains 'Connect to Oryx') -and ($titles -contains 'ORYX Companion') }
           $exe = $installedExe
+          Assert-ResetProtocol
           $config = Join-Path $env:APPDATA 'Oryx Live Desktop'
           New-Item -ItemType Directory $config -Force | Out-Null
           $fixture = Start-Process node -ArgumentList 'scripts/windows-installer-site.ts' -RedirectStandardOutput 'shots/site.log' -RedirectStandardError 'shots/site-error.log' -PassThru

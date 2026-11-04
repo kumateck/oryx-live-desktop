@@ -191,7 +191,9 @@ app.on("second-instance", (_event, args) => {
   for (const arg of args) passwordResetLinks.receive(arg);
 });
 app.whenReady().then(async () => {
-  if (app.isPackaged) app.setAsDefaultProtocolClient(passwordResetScheme);
+  // Windows registration belongs to NSIS, including silent installs and upgrades.
+  // Unpacked test/portable copies must never take over the installed handler.
+  if (app.isPackaged && process.platform !== "win32") app.setAsDefaultProtocolClient(passwordResetScheme);
   for (const arg of process.argv) passwordResetLinks.receive(arg);
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   vault = createSessionVault(path.join(app.getPath("userData"), "session.bin"), osCipher);
