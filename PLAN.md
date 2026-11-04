@@ -1,5 +1,28 @@
 # Oryx Live Desktop plan
 
+## Desktop header tabs and explicit new-tab navigation (2026-11-04)
+
+The user authorized moving desktop tabs into the existing header: Oryx,
+Back/Forward, panel toggle, tabs, Add tab immediately after the tabs, then app
+actions. Keep overflow accessible and preserve the browser header. The user also
+revised the original sidebar decision: normal clicks navigate within the current
+tab; Ctrl/Cmd-click and the internal-link menu explicitly open another tab.
+Right-clicking a tab offers Duplicate tab, creating fresh page state at the same
+URL while retaining the original draft. Keep independent routers, permission
+guards, pending-write checks and unsaved-work protection. This supersedes the
+original sidebar-click behavior and content-area placement described below.
+
+## Deferred artifact promotion and customer automatic downloads
+
+The user places this work last: finish the current publishing, date-selection,
+header/navigation tasks and any new tasks first. Start promotion only when no
+other task is outstanding, except White Placebo. If new work arrives during
+promotion implementation, pause promotion, complete that work, then resume.
+Promotion takes priority over White Placebo; preserve its existing drafts.
+Reuse exact tested artifacts while retaining server configuration and deployment
+differences. Verify build-input equivalence; customer-specific code changes need
+their own tested artifact so no branch work is silently omitted.
+
 ## QA products by department and readiness table (2026-11-03)
 
 Reuse the production product workflow under `/qa/products`. QA selects a production
