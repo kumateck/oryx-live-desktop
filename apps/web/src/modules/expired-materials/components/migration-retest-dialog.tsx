@@ -5,17 +5,18 @@ import { z } from "zod";
 import { SettingsFormDialog } from "@/modules/settings-support/ui";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { formDate, utcBoundary } from "@/shared/format/date-boundary";
+import { monthEndIso, monthOfIso } from "@/shared/batch-dates/batch-dates";
+import { parseMonthYear } from "@/shared/date-pickers/date-utils";
 import { InputTypes } from "@/shared/forms/input-types";
 import type { WizardField } from "@/shared/forms/form-wizard";
 import type { DomainEntitiesMaterialsBatchMaterialBatchDto } from "@/shared/api/generated/materials";
 import { expiryApi as materialsApi } from "../api/expiry-api";
 
 export const migrationRetestPermission = { kind: "all", permissions: ["CanUpdateMigrationRetestDate"] } as const;
-const schema = z.object({ date: z.date().nullable(), reason: z.string().trim().min(3, "Record the reason for this correction").max(1000) });
+const schema = z.object({ date: z.string().refine((value) => parseMonthYear(value) !== null, "Select a valid month and year").nullable(), reason: z.string().trim().min(3, "Record the reason for this correction").max(1000) });
 type Values = z.infer<typeof schema>;
 const fields: WizardField<Values>[] = [
-  { type: InputTypes.DATE, name: "date", label: "Retest date", description: "Leave empty to remove an incorrect extension. The original expiry stays recorded." },
+  { type: InputTypes.MONTH, name: "date", label: "Retest date", description: "Valid through the end of the selected month. Leave empty to remove an incorrect extension. The original expiry stays recorded." },
   { type: InputTypes.TEXTAREA, name: "reason", label: "Correction reason", required: true },
 ];
 
@@ -26,17 +27,18 @@ export function MigrationRetestDialog({ record, onClose, onDone }: {
   const [save, mutation] = materialsApi.usePutApiV1MaterialBatchByBatchIdMigrationRetestDateMutation();
   const [message, setMessage] = useState("");
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: {
-    date: formDate(record.retestDate), reason: "",
+    date: monthOfIso(record.retestDate), reason: "",
   } });
   const submit = async (values: Values) => {
     const denied = permission.check();
     if (denied) { setMessage(denied); return; }
     if (!record.id) { setMessage("Reload this batch before saving."); return; }
-    if (values.date && record.expiryDate && new Date(utcBoundary(values.date)).getTime() <= new Date(record.expiryDate).getTime()) {
+    const retestDate = values.date ? monthEndIso(values.date) : null;
+    if (retestDate && record.expiryDate && new Date(retestDate).getTime() <= new Date(record.expiryDate).getTime()) {
       form.setError("date", { message: "The retest extension must be later than the original expiry." }); return;
     }
     const result = await save({ batchId: record.id, module: "Warehouse", subModule: "Expired Materials",
-      domainEntitiesMaterialsBatchUpdateMigrationRetestDate: { retestDate: values.date ? utcBoundary(values.date) : null,
+      domainEntitiesMaterialsBatchUpdateMigrationRetestDate: { retestDate,
         expectedRetestDate: record.retestDate ?? null, expectedExpiryDate: record.expiryDate ?? null, reason: values.reason } });
     if ("error" in result) setMessage(apiErrorMessage(result.error)); else onDone();
   };

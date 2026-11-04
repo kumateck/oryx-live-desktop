@@ -4,7 +4,8 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 
 const config: ForgeConfig = {
   // The extension is chosen per platform: build/icon.ico on Windows, build/icon.icns on macOS.
-  packagerConfig: { ...(process.env.ORYX_WINDOWS_ARCH ? { electronVersion: "43.8.3" } : {}), asar: true, executableName: "OryxLiveDesktop", icon: "build/icon", appBundleId: "com.kumateck.oryx-live-desktop" },
+  packagerConfig: { ...(process.env.ORYX_WINDOWS_ARCH ? { electronVersion: "43.8.3" } : {}), asar: true, executableName: "OryxLiveDesktop", icon: "build/icon", appBundleId: "com.kumateck.oryx-live-desktop",
+    protocols: [{ name: "Oryx password reset", schemes: ["oryx-live"] }] },
   makers: [
     new MakerZIP({}, ["darwin"]),
   ],
