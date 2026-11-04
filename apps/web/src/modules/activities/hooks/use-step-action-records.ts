@@ -1,4 +1,5 @@
 import { useAccess } from "@/shared/auth/use-access";
+import { useDesktopTabVisible } from "@/shared/workspace-tabs/context";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useGetProductionStepRecordsQuery } from "../api/activity-api";
 import { activityAudit, boardRefreshMs } from "../lib/activity-access";
@@ -8,11 +9,12 @@ import { stepRecordsSchema } from "../schemas/step-records-schema";
 export function useStepActionRecords({ activityId, stepId, batchId, completed }: {
   activityId: string; stepId: string; batchId: string | null; completed: boolean;
 }) {
+  const visible = useDesktopTabVisible();
   const access = useAccess();
   const allowed = access.allows({ kind: "all", permissions: ["CanViewPlannedProducts"], departmentType: 0 });
   const query = useGetProductionStepRecordsQuery({ ...activityAudit, activityId, stepId }, {
-    skip: !allowed || !batchId, pollingInterval: completed ? 0 : boardRefreshMs,
-    skipPollingIfUnfocused: true, refetchOnFocus: true, refetchOnReconnect: true,
+    skip: !allowed || !batchId, pollingInterval: completed || !visible ? 0 : boardRefreshMs,
+    skipPollingIfUnfocused: true, refetchOnFocus: visible, refetchOnReconnect: visible,
   });
   const retry = () => { void query.refetch(); };
   if (!allowed) return { kind: "denied" as const };

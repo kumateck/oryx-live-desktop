@@ -84,7 +84,7 @@ test("historical reporting adds optional read parameters without changing existi
       assert.deepEqual(operation, original, `${verb.toUpperCase()} ${path}`);
     }
   }
-  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))), [
+  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))).sort(), [
     // System alert recipients (2026-10-31): replaces an alert's roles and users only; additive only.
     "/api/v1/alert/{alertId}/recipients",
     // Admin user password reset (2026-10-31): one account sets another user's password; additive only.
@@ -109,9 +109,13 @@ test("historical reporting adds optional read parameters without changing existi
     // Migration validity correction and additive stock top-up drafts (2026-11-03).
     "/api/v1/material/batch/{batchId}/migration-retest-date",
     "/api/v1/stock-migrations/top-ups/upload", "/api/v1/stock-migrations/top-ups",
+    "/api/v1/production-schedule/{batchId}/issued-material-repair/{kind}",
+    "/api/v1/production-schedule/activity/{activityId}/unstart",
     "/api/v1/issued-bmrs", "/api/v1/issued-bmrs/{id}/history", "/api/v1/issued-bmrs/{id}/batch-number",
-    "/api/v1/issued-bmrs/{id}/revisions", "/api/v1/issued-bmrs/{id}/revisions/{revisionId}/review"]);
+    "/api/v1/issued-bmrs/{id}/revisions", "/api/v1/issued-bmrs/{id}/revisions/{revisionId}/review"].sort());
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ProductionUnstart") || name.startsWith("DOMAIN.Entities.Products.Production.IssuedMaterialRepair") || name === "DOMAIN.Entities.Products.Production.ApplyIssuedMaterialRepairRequest") delete schemas[name];
+  delete object(object(schemas["DOMAIN.Entities.Requisitions.RequisitionItemDto"] ?? null).properties ?? null).approvedQuantity;
   for (const name of ["IssuedBmrPage", "IssuedBmrRow", "IssuedBmrHistory", "IssuedBmrChangeDto", "IssuedBmrRevisionDto",
     "IssuedBmrRevisionStatus", "CorrectIssuedBmrNumber", "RequestIssuedBmrRevision", "ReviewIssuedBmrRevision"])
     delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
@@ -224,7 +228,7 @@ test("the reviewed report, repair and migration contract passes release validati
   const digest = contractDigest(current);
   assert.ok(policy.backendContracts.includes("a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe"));
   assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
-  assert.equal(digest, "d09fee761aad8d543b42a10bc0f661d9b7a31a6606a1d7b3bcd829da3c8fe747");
+  assert.equal(digest, "d26ad659839ddc4ec2e1fb26aadeaac692c19e27c7e075a7cc2fe56b8d4ff4ed");
   checkCompatibility(hostConfig, policy, digest);
   const check = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
   assert.equal(check.status, 0, check.stderr);

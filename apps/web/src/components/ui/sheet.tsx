@@ -1,3 +1,4 @@
+import { DesktopTabPortal } from "@/shared/workspace-tabs/context";
 import * as React from "react"
 import { cn } from "cn"
 import { Dialog as SheetPrimitive } from "radix-ui"
@@ -24,7 +25,7 @@ function SheetClose({
 function SheetPortal({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Portal>) {
-  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
+  return <DesktopTabPortal><SheetPrimitive.Portal data-slot="sheet-portal" {...props} /></DesktopTabPortal>
 }
 
 function SheetOverlay({

@@ -5,29 +5,39 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import type { NavigationGroupId } from "../../modules/navigation/catalog.generated";
 import { groupIcons } from "../../modules/navigation/group-icons";
 import type { ActiveNavigation, NavigationGroup, NavigationItem } from "../../modules/navigation/navigation-model";
+import { useDesktopTab } from "../../shared/workspace-tabs/context";
+import { internalDestination } from "../../shared/workspace-tabs/destinations";
+import type { MouseEvent } from "react";
 
 function isGroupId(id: string): id is NavigationGroupId {
   return id in groupIcons;
 }
 
 function Entry({ item, active, depth }: { item: NavigationItem; active: ActiveNavigation | null; depth: number }) {
+  const desktop = useDesktopTab();
+  const open = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!desktop || !item.path || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    const location = internalDestination(item.path, window.location.origin);
+    if (location) { event.preventDefault(); desktop.workspace.open(location, item.label); }
+  };
   const current = active?.itemId === item.id;
-  if (!item.children) return item.path ? <Link to={item.path} aria-current={current ? "page" : undefined}
+  if (!item.children) return item.path ? <Link to={item.path} onClick={open} aria-current={current ? "page" : undefined}
     className={`sidebar-link ${current ? "active" : ""}`} style={{ paddingLeft: 10 + depth * 12 }}>{item.label}</Link> : null;
   return <details className="sidebar-section" open={active?.trail.includes(item.id) || current || undefined}>
     <summary style={{ paddingLeft: 10 + depth * 12 }}><span className="min-w-0 flex-1">{item.label}</span><ChevronRight aria-hidden="true" className="sidebar-section-chevron" /></summary>
-    {item.path ? <Link to={item.path} aria-current={current ? "page" : undefined}
+    {item.path ? <Link to={item.path} onClick={open} aria-current={current ? "page" : undefined}
       className={`sidebar-link ${current ? "active" : ""}`} style={{ paddingLeft: 22 + depth * 12 }}>{item.label} overview</Link> : null}
     {item.children.map((child) => <Entry key={child.id} item={child} active={active} depth={depth + 1} />)}
   </details>;
 }
 
-export function WorkspaceNavigation({ groups, active, pathname, sidebarOpen, onOpenSidebar }: {
+export function WorkspaceNavigation({ groups, active, pathname, sidebarOpen, onOpenSidebar, navigationId = "module-navigation" }: {
   groups: readonly NavigationGroup[];
   active: ActiveNavigation | null;
   pathname: string;
   sidebarOpen: boolean;
   onOpenSidebar: () => void;
+  navigationId?: string;
 }) {
   // A group picked from the rail stays open until the user navigates somewhere else.
   const [picked, setPicked] = useState<{ at: string; id: string } | null>(null);
@@ -51,7 +61,7 @@ export function WorkspaceNavigation({ groups, active, pathname, sidebarOpen, onO
         </Tooltip>;
       })}
     </nav>
-    {sidebarOpen && selected ? <aside id="module-navigation" className="module-sidebar" aria-label={`${selected.label} navigation`}>
+    {sidebarOpen && selected ? <aside id={navigationId} className="module-sidebar" aria-label={`${selected.label} navigation`}>
       <div className="sidebar-heading"><h2>{selected.label}</h2></div>
       <div className="sidebar-items" key={selected.id}>
         {selected.items.map((item) => <Entry key={item.id} item={item} active={active} depth={0} />)}

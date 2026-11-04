@@ -1684,6 +1684,62 @@ const injectedRtkApi = api.injectEndpoints({
           },
         }),
       }),
+    previewIssuedMaterialRepair: build.query<
+      PreviewIssuedMaterialRepairApiResponse,
+      PreviewIssuedMaterialRepairApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule", id: queryArg.batchId }],
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/${queryArg.batchId}/issued-material-repair/${queryArg.kind}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    applyIssuedMaterialRepair: build.mutation<
+      ApplyIssuedMaterialRepairApiResponse,
+      ApplyIssuedMaterialRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule", id: "LIST" }, { type: "production-schedule", id: queryArg.batchId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/${queryArg.batchId}/issued-material-repair/${queryArg.kind}`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionApplyIssuedMaterialRepairRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    previewProductionUnstart: build.query<
+      PreviewProductionUnstartApiResponse,
+      PreviewProductionUnstartApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/activity", id: queryArg.activityId }],
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/unstart`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    applyProductionUnstart: build.mutation<
+      ApplyProductionUnstartApiResponse,
+      ApplyProductionUnstartApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/activity", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/activity", id: queryArg.activityId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/unstart`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionProductionUnstartRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     previewProductionBomRepair: build.query<
       PreviewProductionBomRepairApiResponse,
       PreviewProductionBomRepairApiArg
@@ -2976,6 +3032,46 @@ export type PostApiV1ProductionScheduleActivityByProductionActivityIdRepairProce
     /** The sub module this request falls under */
     subModule?: string;
   };
+export type PreviewIssuedMaterialRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionIssuedMaterialRepairPreviewDto;
+export type PreviewIssuedMaterialRepairApiArg = {
+  batchId: string;
+  kind: DomainEntitiesProductsProductionIssuedMaterialRepairKind;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ApplyIssuedMaterialRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionIssuedMaterialRepairResultDto;
+export type ApplyIssuedMaterialRepairApiArg = {
+  batchId: string;
+  kind: DomainEntitiesProductsProductionIssuedMaterialRepairKind;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionApplyIssuedMaterialRepairRequest: DomainEntitiesProductsProductionApplyIssuedMaterialRepairRequest;
+};
+export type PreviewProductionUnstartApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionUnstartPreviewDto;
+export type PreviewProductionUnstartApiArg = {
+  activityId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ApplyProductionUnstartApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionUnstartResultDto;
+export type ApplyProductionUnstartApiArg = {
+  activityId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionProductionUnstartRequest: DomainEntitiesProductsProductionProductionUnstartRequest;
+};
 export type PreviewProductionBomRepairApiResponse =
   /** status 200 OK */ DomainEntitiesProductsProductionProductionMaterialRepairPreview;
 export type PreviewProductionBomRepairApiArg = {
@@ -4056,6 +4152,7 @@ export type DomainEntitiesRequisitionsRequisitionItemDto = {
   quantityReceived?: number;
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
+  approvedQuantity?: number | null;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   id?: string;
@@ -4065,6 +4162,7 @@ export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   quantityReceived?: number;
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
+  approvedQuantity?: number | null;
 };
 export type DomainEntitiesRequisitionsVoucherSignatoryDto = {
   userId?: string | null;
@@ -5016,6 +5114,91 @@ export type DomainEntitiesProductsProductionProductionProcedureRepairResult = {
   /** Steps already started that the procedure no longer has: they are kept as they are. */
   stepsKept?: string[] | null;
 };
+export type DomainEntitiesProductsProductionIssuedMaterialRepairKind = 0 | 1;
+export type DomainEntitiesProductsProductionIssuedMaterialRepairLotDto = {
+  materialBatchId?: string;
+  shelfId?: string;
+  batchNumber?: string | null;
+  adjustment?: number;
+};
+export type DomainEntitiesProductsProductionIssuedMaterialRepairRowDto = {
+  materialId?: string;
+  code?: string | null;
+  name?: string | null;
+  unit?: string | null;
+  approvedQuantity?: number;
+  beforeQuantity?: number;
+  targetQuantity?: number;
+  adjustment?: number;
+  availableQuantity?: number;
+  lots?: DomainEntitiesProductsProductionIssuedMaterialRepairLotDto[] | null;
+};
+export type DomainEntitiesProductsProductionIssuedMaterialRepairHistoryDto = {
+  id?: string;
+  actorId?: string;
+  appliedAt?: string;
+  reason?: string | null;
+  rows?: DomainEntitiesProductsProductionIssuedMaterialRepairRowDto[] | null;
+};
+export type DomainEntitiesProductsProductionIssuedMaterialRepairPreviewDto = {
+  batchId?: string;
+  batchNumber?: string | null;
+  kind?: DomainEntitiesProductsProductionIssuedMaterialRepairKind;
+  requisitionCode?: string | null;
+  previewToken?: string | null;
+  canApply?: boolean;
+  hasChanges?: boolean;
+  blockers?: string[] | null;
+  rows?: DomainEntitiesProductsProductionIssuedMaterialRepairRowDto[] | null;
+  history?:
+    DomainEntitiesProductsProductionIssuedMaterialRepairHistoryDto[] | null;
+};
+export type DomainEntitiesProductsProductionIssuedMaterialRepairResultDto = {
+  repairId?: string | null;
+  applied?: boolean;
+  alreadyApplied?: boolean;
+};
+export type DomainEntitiesProductsProductionApplyIssuedMaterialRepairRequest = {
+  requestId?: string;
+  previewToken: string;
+  reason: string;
+};
+export type DomainEntitiesProductsProductionProductionUnstartReservationDto = {
+  id?: string;
+  materialCode?: string | null;
+  materialName?: string | null;
+  lotNumber?: string | null;
+  unit?: string | null;
+  quantity?: number;
+};
+export type DomainEntitiesProductsProductionProductionUnstartPreviewDto = {
+  activityId?: string;
+  batchId?: string;
+  scheduleId?: string;
+  productName?: string | null;
+  batchNumber?: string | null;
+  previewToken?: string | null;
+  canApply?: boolean;
+  alreadyUnstarted?: boolean;
+  blockers?: string[] | null;
+  stepsToArchive?: number;
+  draftDocumentsToArchive?: number;
+  scheduleStatusBefore?: number;
+  scheduleStatusAfter?: number;
+  reservations?:
+    DomainEntitiesProductsProductionProductionUnstartReservationDto[] | null;
+};
+export type DomainEntitiesProductsProductionProductionUnstartResultDto = {
+  repairId?: string;
+  batchId?: string;
+  scheduleId?: string;
+  alreadyApplied?: boolean;
+};
+export type DomainEntitiesProductsProductionProductionUnstartRequest = {
+  requestId?: string;
+  previewToken: string;
+  reason: string;
+};
 export type DomainEntitiesProductsProductionProductionMaterialRepairLine = {
   materialId?: string;
   name?: string | null;
@@ -5299,6 +5482,12 @@ export const {
   usePutApiV1WorkOrderByWorkOrderIdMutation,
   useDeleteApiV1WorkOrderByWorkOrderIdMutation,
   usePostApiV1ProductionScheduleActivityByProductionActivityIdRepairProcedureMutation,
+  usePreviewIssuedMaterialRepairQuery,
+  useLazyPreviewIssuedMaterialRepairQuery,
+  useApplyIssuedMaterialRepairMutation,
+  usePreviewProductionUnstartQuery,
+  useLazyPreviewProductionUnstartQuery,
+  useApplyProductionUnstartMutation,
   usePreviewProductionBomRepairQuery,
   useLazyPreviewProductionBomRepairQuery,
   useApplyProductionBomRepairMutation,

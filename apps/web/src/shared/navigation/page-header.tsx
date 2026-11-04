@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Skeleton } from "../skeleton/skeleton";
 import { PageBreadcrumbs, type PageCrumb } from "./page-breadcrumbs";
+import { useDesktopTabTitle } from "../workspace-tabs/context";
 
 /**
  * Heading of a nested page. With nothing on the right, the breadcrumb sits there, level with the
@@ -13,6 +14,7 @@ export function PageHeader({ title, crumbs, actions }: {
   /** Buttons for the page. Pass nothing (not an empty wrapper) when there are none. */
   actions?: ReactNode;
 }) {
+  useDesktopTabTitle(title);
   const heading = title === null ? <Skeleton className="h-7 w-64 max-w-full" /> : <h1 className="min-w-0 break-words text-xl font-semibold">{title}</h1>;
   if (!actions) return <header className="flex min-w-0 flex-wrap items-center justify-between gap-x-6 gap-y-2">
     {heading}<PageBreadcrumbs items={crumbs} />

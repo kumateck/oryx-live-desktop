@@ -29,6 +29,112 @@ module manifests, and preserve White Placebo separately.
 
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
+## Multiple workspace tabs proposal (2026-11-03)
+
+The customer requests browser-style page tabs inside the desktop application,
+using Codex as an interaction reference. The user selected design proposal first
+and confirmed that sidebar destinations open a new tab or focus an existing one.
+The user approved the generated visual mockup on 2026-11-03; preserve it at
+`docs/design/workspace-tabs-concept.png` as the visual reference for the tab strip,
+active state, close controls, unsaved indicator, add-tab and overflow controls.
+This approves the visual direction, not every illustrative page field or sample
+record. The user subsequently authorized implementation and restricted tabs to
+the installed desktop application. The local implementation and verification
+are described in `docs/workspace-tabs.md`; `docs/workspace-tabs-proposal.md`
+preserves the design brief. No customer deployment or installer publication is
+part of this work.
+
+Propose a compact tab strip above the central content, with one shared header,
+module navigation and footer. Sidebar destinations open a tab or focus an
+existing matching destination; ordinary record/detail/edit navigation would stay
+within the active tab, with an explicit Open in new tab action for parallel work.
+Distinct records may occupy separate tabs. Matching must account for meaningful
+query parameters so different department, queue or material-kind views do not
+silently collapse into one tab.
+
+Switching tabs should retain filters, pagination, scroll and unsaved form state.
+Mark dirty tabs and ask before discarding work on close; window close, sign-out
+and web-release refresh must account for every open tab. Use overflow controls
+and an open-tabs list without adding page/window horizontal scrolling. Include
+keyboard switching, accessible close controls and visible focus.
+
+Implement as a desktop-only hosted renderer feature selected by the existing
+isolated preload capability. Browser sessions retain their original router.
+Independent memory routers reuse the generated file routes and share the
+session/API cache; every tab retains manifest access guards. Keep domain
+controllers mounted to preserve drafts outside React Hook Form. Suspend header
+and portal effects separately and pause known polling hooks by tab visibility.
+One desktop route blocker composes registered form safety; pending writes also
+block switching pages, tab closure, sign-out and release refresh. Account or
+department changes reset both tab state and the desktop API cache.
+Avoid native webviews or a duplicated manual route list. Inactive pages must not
+continue unnecessary polling, expose stale permissions, retain active modal/focus
+behavior or run route side effects against another tab. Never silently evict a
+dirty tab. Clear tab state across site/account changes. Recommend deferring restart
+restoration and duplicate copies of the same destination from the first release;
+these are proposals, not confirmed exclusions. Do not persist form contents as part
+of tab restoration. Verify isolation, permission revocation, close/refresh safety,
+back/forward behavior and target-screen overflow before release; measure memory
+with realistic simultaneous pages rather than inventing a tab budget.
+
+## Demo database import (2026-11-03)
+
+The user selected the screenshot demo at `164.90.142.68:3011`, selected local
+`oryx_client_20261030` as its replacement, and authorized a private local full
+demo backup and proceeding with replacement. Imported source data into the
+actual deployed schema after local rehearsal and remote staging verification;
+the demo has a migration absent from this checkout. No grants, migration
+backfills or stock were introduced. All 439 data tables and 15 sequence positions
+matched before activation. Preserved all 477 deployed tables, 2,732 indexes,
+5,763 constraints and 189 audit triggers. Switched database names at 21:23 UTC,
+retaining `entrancedb_before_import_20261103` intact with connections disabled.
+Active `entrancedb` has 1,904 materials, 1,614 department links, 48 users and no
+stock or opening drafts. Final verification differs only in nine reconnect error
+logs from the brief switch; no continuing errors remained. The browser reached
+sign-in; authenticated acceptance remains. See `docs/fresh-opening-balances.md`.
+
+## Unstart production before BMR issue (2026-11-03)
+
+Add a permissioned, reasoned preview/apply repair for one accidentally started
+run whose BMR and BPR remain unissued and have no downstream work. Archive the
+run, steps and draft documents using soft deletion, release only its unissued
+reservations, and retain immutable before/after evidence. Preserve material
+batch identity, shelf quantities, stock movements and batch number. Permit a
+fresh start with a new run ID by making the run-per-batch unique index apply to
+active rows. A repeated repair is tied to its original run and cannot undo a
+later restart. Reconcile schedule status against its other active runs.
+
+Block issued or progressed documents/steps, stock requisitions, analytical/form
+records, returns, transfers and other dependent business evidence. Repeat the
+preview and permissions under transactional locks, guard archived run/document
+writes, and test issuance/start races, rollback, repeat repair and real restart.
+Implementation and isolated local tests are authorized; no customer/main data,
+role grants or deployment changes are included.
+
+## Post-issue BOM and packaging repair (2026-11-03)
+
+User authorizes reproducing the kg/mg incident in an isolated local PostgreSQL
+fixture and implementing post-issue repairs only. Correct the product master
+through its existing editor first. Preview the current master against an approved,
+issued requisition and its exact production reservations. Apply only the remaining
+delta, with separate backend BOM/packaging repair permissions, production department
+scope, fresh preview validation, atomic stock posting, immutable before/after and
+lot/movement/bin-card evidence, and request replay protection. No role grants,
+client stock changes or deployment are authorized. Preserve pre-issue behavior.
+
+Automatic quantity repair requires unchanged material membership, matching units
+and traceable unconsumed reservations. Refuse consumed/deleted or ambiguous stock,
+returns, extra-material requests, finished/cancelled runs and finalized packing;
+those require a reviewed workflow-specific correction rather than invented stock.
+Keep original approved requisition quantities intact; show effective issued
+quantities from the immutable repair ledger on requisition reads. Increased stock
+requirements use available, date-eligible approved source lots after subtracting
+other unissued reservations; decreases return only this batch's unconsumed stock
+to a verified source shelf. Serializable transactions and write-conflicting locks
+cover source configuration, issue, reservation, consumption and stock evidence.
+The existing activity update timestamp is a concurrency token shared with the
+first production-consumption save, so a step loaded before a repair must reload
+instead of consuming a stale reservation snapshot.
 ## Active packaging and packing-style selection (2026-11-03)
 
 The user reports extra historical rows in product details, print and schedule

@@ -2575,6 +2575,7 @@ export type DomainEntitiesRequisitionsRequisitionItemDto = {
   quantityReceived?: number;
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
+  approvedQuantity?: number | null;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   id?: string;
@@ -2584,6 +2585,7 @@ export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   quantityReceived?: number;
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
+  approvedQuantity?: number | null;
 };
 export type DomainEntitiesProductsEquipmentsEquipmentDto = {
   id?: string;

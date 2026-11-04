@@ -14,6 +14,9 @@ export interface MenuActions {
   forward: () => void;
   print: () => void;
   updates: () => void;
+  workspaceTabs: boolean;
+  newTab: () => void;
+  closeTab: () => void;
 }
 
 function serverMenu(actions: MenuActions): MenuItemConstructorOptions {
@@ -35,7 +38,15 @@ export function buildMenu(actions: MenuActions): void {
   const mac = process.platform === "darwin";
   const template: MenuItemConstructorOptions[] = [
     ...(mac ? [{ label: app.name, submenu: [{ role: "about" }, { type: "separator" }, { role: "hide" }, { role: "hideOthers" }, { role: "unhide" }, { type: "separator" }, { role: "quit" }] } satisfies MenuItemConstructorOptions] : []),
-    { label: "File", submenu: [{ label: "Print…", accelerator: "CmdOrCtrl+P", enabled: connected, click: actions.print }, { type: "separator" }, mac ? { role: "close" } : { role: "quit" }] },
+    { label: "File", submenu: [
+      ...(actions.workspaceTabs ? [
+        { label: "New tab", accelerator: "CmdOrCtrl+T", click: actions.newTab },
+        { label: "Close tab", accelerator: "CmdOrCtrl+W", click: actions.closeTab },
+        { type: "separator" },
+      ] satisfies MenuItemConstructorOptions[] : []),
+      { label: "Print…", accelerator: "CmdOrCtrl+P", enabled: connected, click: actions.print }, { type: "separator" },
+      actions.workspaceTabs && mac ? { role: "close", accelerator: "CmdOrCtrl+Shift+W" } : mac ? { role: "close" } : { role: "quit" },
+    ] },
     serverMenu(actions),
     { role: "editMenu" },
     { label: "View", submenu: [{ label: "Reload", accelerator: "CmdOrCtrl+R", click: actions.reload }, { type: "separator" },

@@ -15,6 +15,7 @@ import { roleEditSchema, type RoleEditValues, type RoleRow } from "../schemas/ro
 import type { PermissionModule } from "../schemas/permission-schema";
 import { PermissionPicker } from "./permission-picker";
 import { InputTypes } from "@/shared/forms/input-types";
+import { useDesktopTabSafety } from "@/shared/workspace-tabs/context";
 
 const fields = [
   { type: InputTypes.TEXT, name: "name", label: "Role name", required: true },
@@ -35,6 +36,7 @@ export function RoleEditor({ role, assigned, canEdit, canUpdatePermissions }: {
   const permissionAccess = usePermissionAction(rolePermissions.updatePermissions);
   const [updateRole, roleMutation] = usePutApiV1RoleByIdMutation();
   const [updatePermissions, permissionMutation] = usePutApiV1PermissionRoleByRoleIdMutation();
+  useDesktopTabSafety(Object.keys(overrides).length > 0, permissionMutation.isLoading);
   const form = useForm<RoleEditValues>({ resolver: zodResolver(roleEditSchema), defaultValues: {
     name: role.name, displayName: role.displayName,
     type: { ...departmentTypes[role.type] },
@@ -47,7 +49,7 @@ export function RoleEditor({ role, assigned, canEdit, canUpdatePermissions }: {
       name: values.name, displayName: values.displayName, type: departmentTypeFromValue(values.type.value),
     } });
     if ("error" in result) toast.error("Role details were not saved", { description: apiErrorMessage(result.error) });
-    else toast.success("Role details saved");
+    else { form.reset(values); toast.success("Role details saved"); }
   });
 
   const savePermissions = async () => {

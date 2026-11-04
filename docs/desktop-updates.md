@@ -126,4 +126,11 @@ Only raise `deploy/customer-docker/requirements.json`'s `minimumShellVersion` wh
 
 ## Verification limits
 
+Desktop workspace tabs register dirty work and pending form/API writes outside
+their page/portal lifecycles. The existing beforeunload safety check therefore
+vetoes a web/native refresh even when the active page is clean and another tab has
+unsaved work. This does not persist or restore all tabs on restart. Native File/Go
+tab commands use the new narrow `oryxWorkspace` bridge; older shells retain the
+hosted tab controls. See `docs/workspace-tabs.md` before accepting a shell release.
+
 Unit tests cover signing configuration, signature/target/version verification, corruption, cancellation, progress, reminders, offline cache, unsaved-work refusal, post-preparation integrity and install retries. Web tests cover desktop release prompts, first-check detection, missing build identity, polling/reconnection, deferral, uncached refresh preserving routes, HTML/connection failures, preflight compatibility changes, unsaved-work rechecks, duplicate refresh prevention, minimum-shell handling and the header. The Docker smoke checks that the feed and versioned installer are served through the dedicated read-only downloads mount and missing downloads return 404. The Windows workflow contains the real installed upgrade/restart test; it must pass before publishing a release. Its `update-smoke.log` is retained with the other smoke artifacts even on failure. Local development does not access the customer's server or install anything there.

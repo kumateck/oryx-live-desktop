@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useDesktopTabVisible } from "@/shared/workspace-tabs/context";
 import {
   useGetApiV1ProductionScheduleExtraPackingByProductByProductionScheduleProductIdQuery, useGetApiV1ProductionScheduleFinalPackingProductByProductionScheduleProductIdQuery,
   useGetApiV1ProductionScheduleManufacturingProductByProductionScheduleProductIdQuery,
@@ -21,10 +22,11 @@ export function useStepRecords({ batchId, stepId, enabled, needs }: {
   batchId: string | null; stepId: string; enabled: boolean;
   needs: { stockRequisition: boolean; bmr: boolean; atr: boolean };
 }) {
+  const visible = useDesktopTabVisible();
   const arg = { ...activityAudit, productionScheduleProductId: batchId ?? "" };
   const off = !enabled || !batchId;
   const extra = useGetApiV1ProductionScheduleExtraPackingByProductByProductionScheduleProductIdQuery(arg, {
-    skip: off, pollingInterval: boardRefreshMs, skipPollingIfUnfocused: true, refetchOnFocus: true, refetchOnReconnect: true,
+    skip: off, pollingInterval: visible ? boardRefreshMs : 0, skipPollingIfUnfocused: true, refetchOnFocus: visible, refetchOnReconnect: visible,
   });
   const bmr = useGetApiV1ProductionScheduleManufacturingProductByProductionScheduleProductIdQuery(arg, { skip: off || !(needs.bmr || needs.atr) });
   // The batch's two requisitions are read on every current step: packaging can be requested from any of them until final packing.

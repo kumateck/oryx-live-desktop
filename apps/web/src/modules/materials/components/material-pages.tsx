@@ -1,5 +1,6 @@
 import { permissionDeniedMessage } from "@/shared/auth/use-permission-action";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDesktopTabSafety } from "@/shared/workspace-tabs/context";
 import { Eraser, Eye, Link2, Link2Off, Pencil, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -177,6 +178,7 @@ export function UnlinkedMaterialsPage() {
   const [message, setMessage] = useState("");
   useEffect(() => { setDrafts(new Map()); setChecked(false); setMessage(""); }, [kind]);
   const [save, saving] = usePostApiV1MaterialDepartmentMutation();
+  useDesktopTabSafety(drafts.size > 0, saving.isLoading);
   const change = useCallback((material: Material, patch: Partial<LinkDraft>) => setDrafts((current) => { const next = new Map(current); const draft = { ...(current.get(material.id) ?? emptyDraft(material.name)), ...patch };
     if (draftIsEmpty(draft)) next.delete(material.id); else next.set(material.id, draft); return next; }), []);
   const ready = useMemo(() => readyLinks(drafts), [drafts]);

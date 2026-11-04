@@ -1,3 +1,4 @@
+import { DesktopTabPortal } from "@/shared/workspace-tabs/context";
 import * as React from "react"
 import { cn } from "cn"
 import { Popover as PopoverPrimitive } from "radix-ui"
@@ -21,7 +22,7 @@ function PopoverContent({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   return (
-    <PopoverPrimitive.Portal>
+    <DesktopTabPortal><PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
@@ -32,7 +33,7 @@ function PopoverContent({
         )}
         {...props}
       />
-    </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Portal></DesktopTabPortal>
   )
 }
 
