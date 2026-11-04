@@ -44,3 +44,18 @@ const updateBridge: import("../../../shared/desktop-updates").DesktopUpdatesBrid
   },
 };
 contextBridge.exposeInMainWorld("oryxUpdates", updateBridge);
+
+const workspaceBridge: import("../../../shared/desktop-workspace").DesktopWorkspaceBridge = {
+  onNavigate: (listener) => {
+    const receive = (_event: Electron.IpcRendererEvent, command: string) => {
+      if (command === "back" || command === "forward" || command === "home" || command === "new-tab" || command === "close-tab") listener(command);
+    };
+    ipcRenderer.on("workspace:navigate", receive);
+    void ipcRenderer.invoke("workspace:subscribe", true).catch(() => {});
+    return () => {
+      ipcRenderer.removeListener("workspace:navigate", receive);
+      void ipcRenderer.invoke("workspace:subscribe", false).catch(() => {});
+    };
+  },
+};
+contextBridge.exposeInMainWorld("oryxWorkspace", workspaceBridge);

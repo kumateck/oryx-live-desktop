@@ -72,14 +72,17 @@ export function StockIssueListPage() {
 const lineColumn = dataTableColumns<StockLine>();
 const lineColumns = lineColumn.columns([
   lineColumn.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div></div> }),
-  lineColumn.accessor("quantity", { header: "Requested", size: 150, cell: ({ row }) => { const short = shortfall(row.original);
-    return <div><div>{amount(row.original.quantity, row.original.unit)}</div>{short > 0 && row.original.batches.length > 0 ? <div className="text-xs text-destructive">{amount(short, row.original.unit)} not set aside</div> : null}</div>; } }),
+  lineColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => { const short = shortfall(row.original);
+    return <div><div>{amount(row.original.quantity, row.original.unit)}</div>
+      {row.original.approvedQuantity !== null ? <div className="text-xs text-muted-foreground">Originally approved: {amount(row.original.approvedQuantity, row.original.unit)} · repaired after issue</div> : null}
+      {short > 0 && row.original.batches.length > 0 ? <div className="text-xs text-destructive">{amount(short, row.original.unit)} not set aside</div> : null}</div>; } }),
   lineColumn.display({ id: "batches", header: "Issued from", cell: ({ row }) => <BatchBreakdown line={row.original} /> }),
 ]);
 const printColumns: PrintColumn<StockLine>[] = [
   { id: "n", header: "#", cell: (_row, index) => index + 1, width: "6%" },
   { id: "material", header: "Material", cell: (row) => <>{row.materialName}<small>{row.materialCode ?? "No code"}</small></> },
-  { id: "quantity", header: "Requested", align: "right", cell: (row) => amount(row.quantity, row.unit) },
+  { id: "quantity", header: "Quantity", align: "right", cell: (row) => <>{amount(row.quantity, row.unit)}
+    {row.approvedQuantity !== null ? <small>Originally approved: {amount(row.approvedQuantity, row.unit)}; repaired after issue</small> : null}</> },
   { id: "batches", header: "Batch · quantity · expiry", cell: (row) => row.batches.length ? row.batches.map((batch) => <div key={batch.key}>{batchNumber(batch.number)} · {amount(batch.quantity, row.unit)} · {formatMonthYear(batch.expires) ?? "no expiry"}</div>) : "None set aside" },
 ];
 

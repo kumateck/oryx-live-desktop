@@ -1,3 +1,4 @@
+import { DesktopTabPortal } from "@/shared/workspace-tabs/context";
 import * as React from "react"
 import { cn } from "cn"
 import { Select as SelectPrimitive } from "radix-ui"
@@ -62,7 +63,7 @@ function SelectContent({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   return (
-    <SelectPrimitive.Portal>
+    <DesktopTabPortal><SelectPrimitive.Portal>
       <SelectPrimitive.Content
         data-slot="select-content"
         data-align-trigger={position === "item-aligned"}
@@ -83,7 +84,7 @@ function SelectContent({
         </SelectPrimitive.Viewport>
         <SelectScrollDownButton />
       </SelectPrimitive.Content>
-    </SelectPrimitive.Portal>
+    </SelectPrimitive.Portal></DesktopTabPortal>
   )
 }
 

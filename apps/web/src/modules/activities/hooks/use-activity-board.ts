@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useDesktopTabVisible } from "@/shared/workspace-tabs/context";
 import { useCurrentUser } from "@/shared/auth/session-provider";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useGetApiV1ProductionScheduleActivityOperationGroupedQuery } from "../api/activity-api";
@@ -7,10 +8,11 @@ import { activityBoardSchema } from "../schemas/activity-schema";
 
 /** Every running batch in the user's department, grouped by the operation it is at, and kept current. */
 export function useActivityBoard() {
+  const visible = useDesktopTabVisible();
   const user = useCurrentUser();
   const departmentId = user?.departmentId ?? null;
   const query = useGetApiV1ProductionScheduleActivityOperationGroupedQuery({ ...activityAudit, departmentId: departmentId ?? "" },
-    { skip: !departmentId, pollingInterval: boardRefreshMs, skipPollingIfUnfocused: true, refetchOnFocus: true });
+    { skip: !departmentId, pollingInterval: visible ? boardRefreshMs : 0, skipPollingIfUnfocused: true, refetchOnFocus: visible });
   const parsed = useMemo(() => query.data ? activityBoardSchema.safeParse(query.data) : null, [query.data]);
   return {
     department: user?.department ?? null,
