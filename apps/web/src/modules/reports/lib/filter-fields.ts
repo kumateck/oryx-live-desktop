@@ -33,8 +33,8 @@ export function reportFilterFields(definition: ReportDefinition, load: (entity: 
       case "supplierIds": return { type: InputTypes.SELECT, name, label, mode: "multiple", source: "async", loadOptions: load("supplier"), placeholder: "All suppliers" };
       case "statuses": return { type: InputTypes.SELECT, name, label, mode: "multiple", source: "sync", options: [{ value: "New", label: "New" }, { value: "AtPort", label: "At port" }, { value: "Cleared", label: "Cleared" }, { value: "InTransit", label: "In transit" }, { value: "Arrived", label: "Arrived" }] };
       case "asOfDate": return { type: InputTypes.DATE, name, label, required, maxDate: new Date() };
-      case "startDate": case "endDate": case "expiryDateFrom": case "expiryDateTo": case "validityDateFrom": case "validityDateTo": case "date": return { type: InputTypes.DATE, name, label, required };
-      case "month": return { type: InputTypes.MONTH, name, label, required };
+      case "startDate": case "endDate": case "validityDateFrom": case "validityDateTo": case "date": return { type: InputTypes.DATE, name, label, required };
+      case "expiryDateFrom": case "expiryDateTo": case "month": return { type: InputTypes.MONTH, name, label, required };
       case "poNumber": case "batchNumber": case "materialName": case "supplierName": case "manufacturerName": return { type: InputTypes.TEXT, name, label, required };
       case "materialKind": case "warehouseType": case "store": case "classification": case "employeeType": case "grade": case "status": case "division": case "supplierType": case "valuationType": return { type: InputTypes.SELECT, name: `selections.${name}`, label, required, mode: "multiple", source: "sync", options: name === "warehouseType" && definition.group === "warehouse" ? choices.warehouseType.slice(0, 2) : name === "valuationType" && definition.group === "warehouse" ? choices.valuationType.slice(0, 1) : choices[name], placeholder: "All" };
       default: throw new Error(`No report field renderer for ${name}`);

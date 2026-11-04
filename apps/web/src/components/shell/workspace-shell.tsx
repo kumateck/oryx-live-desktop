@@ -6,7 +6,6 @@ import { WorkspaceHeader } from "./workspace-header";
 import { RouteAccess } from "./route-access";
 import { WorkspaceNavigation } from "./workspace-navigation";
 import { useDesktopTab, useDesktopTabVisible } from "../../shared/workspace-tabs/context";
-import { WorkspaceTabStrip } from "../../shared/workspace-tabs/tab-strip";
 import { WorkspacePagePicker } from "../../shared/workspace-tabs/page-picker";
 import { WorkspaceLinkMenu } from "../../shared/workspace-tabs/internal-link-menu";
 import { DesktopRouteBlocker } from "../../shared/workspace-tabs/route-blocker";
@@ -35,7 +34,6 @@ export function WorkspaceShell() {
         <WorkspaceNavigation groups={groups} active={active} pathname={pathname} navigationId={navigationId}
           sidebarOpen={sidebarOpen} onOpenSidebar={() => setSidebarOpen(true)} />
         {desktop ? <div className="desktop-workspace-content">
-          <WorkspaceTabStrip />
           <main className="content-scroller" role="tabpanel" id={`workspace-panel-${desktop.id}`}
             aria-labelledby={`workspace-tab-${desktop.id}-${desktop.id}`} tabIndex={0}>
             <div className="content-inner">{desktop.workspace.getSnapshot().tabs.find((tab) => tab.id === desktop.id)?.picker

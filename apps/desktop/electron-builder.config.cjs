@@ -11,9 +11,11 @@ module.exports = {
   directories: { output: "out/make/nsis" },
   electronVersion: "43.8.3",
   asar: true,
+  protocols: [{ name: "Oryx password reset", schemes: ["oryx-live"] }],
   files: [".vite/**/*", "build/**/*", "package.json"],
   win: { target: [{ target: "nsis", arch: architectures }], icon: "build/icon.ico" },
   nsis: {
+    include: "build/installer.nsh",
     oneClick: false,
     perMachine: false,
     allowElevation: true,
