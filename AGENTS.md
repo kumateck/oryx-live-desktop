@@ -73,6 +73,10 @@ For the desktop application, each ERP module also owns a small typed manifest un
 
 ## Working and verification
 
+Frontend pull requests target `development`, not `testing`. Feature branches do
+not bypass development by opening release-branch PRs; testing and customer
+promotion follow the release process after the development changes are reviewed.
+
 Use Bun 1.3.14 as the sole package manager for this workspace. Commit `bun.lock`, use `bun install --frozen-lockfile` for reproducible installs, and use `bunx shadcn@latest add <component>` when the reviewed shadcn registry has the control needed. Keep package overrides documented and scoped to the dependency that needs them.
 
 1. Inspect the affected route, API contract, existing components, and workflow before editing. State assumptions when evidence is incomplete.

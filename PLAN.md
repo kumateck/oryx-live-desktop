@@ -1,27 +1,15 @@
 # Oryx Live Desktop plan
 
-## Desktop header tabs and explicit new-tab navigation (2026-11-04)
+## Manufacturing, expiry and retest month selection (2026-11-04)
 
-The user authorized moving desktop tabs into the existing header: Oryx,
-Back/Forward, panel toggle, tabs, Add tab immediately after the tabs, then app
-actions. Keep overflow accessible and preserve the browser header. The user also
-revised the original sidebar decision: normal clicks navigate within the current
-tab; Ctrl/Cmd-click and the internal-link menu explicitly open another tab.
-Right-clicking a tab offers Duplicate tab, creating fresh page state at the same
-URL while retaining the original draft. Keep independent routers, permission
-guards, pending-write checks and unsaved-work protection. This supersedes the
-original sidebar-click behavior and content-area placement described below.
-
-## Deferred artifact promotion and customer automatic downloads
-
-The user places this work last: finish the current publishing, date-selection,
-header/navigation tasks and any new tasks first. Start promotion only when no
-other task is outstanding, except White Placebo. If new work arrives during
-promotion implementation, pause promotion, complete that work, then resume.
-Promotion takes priority over White Placebo; preserve its existing drafts.
-Reuse exact tested artifacts while retaining server configuration and deployment
-differences. Verify build-input equivalence; customer-specific code changes need
-their own tested artifact so no branch work is silently omitted.
+The user requests month-and-year selection across batch manufacturing, expiry and
+retest validity fields. Reuse the existing shared month picker and batch-date
+conversions: manufacturing starts at the first day, expiry/retest ends at the last
+day of the chosen month in UTC. Preserve permissions, approvals, audit evidence,
+stale-date comparisons and date ordering. Expiry report ranges include the whole
+selected months. Actual event dates and document/legal validity dates retain their
+day precision. Existing receiving, BMR and migration/top-up month fields stay in
+place; close the remaining retest, report and explicit worksheet lot-expiry gaps.
 
 ## QA products by department and readiness table (2026-11-03)
 
@@ -51,6 +39,29 @@ files small, use generated domain endpoints, the shared table/actions/forms and
 module manifests, and preserve White Placebo separately.
 
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
+
+## Desktop header tabs and explicit new-tab navigation (2026-11-04)
+
+The user authorized moving desktop tabs into the existing header: Oryx,
+Back/Forward, panel toggle, tabs, Add tab immediately after the tabs, then app
+actions. Keep overflow accessible and preserve the browser header. The user also
+revised the original sidebar decision: normal clicks navigate within the current
+tab; Ctrl/Cmd-click and the internal-link menu explicitly open another tab.
+Right-clicking a tab offers Duplicate tab, creating fresh page state at the same
+URL while retaining the original draft. Keep independent routers, permission
+guards, pending-write checks and unsaved-work protection. This supersedes the
+original sidebar-click behavior and content-area placement described below.
+
+## Deferred artifact promotion and customer automatic downloads
+
+The user places this work last: finish the current publishing, date-selection,
+header/navigation tasks and any new tasks first. Start promotion only when no
+other task is outstanding, except White Placebo. If new work arrives during
+promotion implementation, pause promotion, complete that work, then resume.
+Promotion takes priority over White Placebo; preserve its existing drafts.
+Reuse exact tested artifacts while retaining server configuration and deployment
+differences. Verify build-input equivalence; customer-specific code changes need
+their own tested artifact so no branch work is silently omitted.
 
 ## Multiple workspace tabs proposal (2026-11-03)
 
