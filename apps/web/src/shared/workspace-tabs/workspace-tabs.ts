@@ -45,6 +45,14 @@ export class WorkspaceTabs {
     if (this.hasPending()) { this.onBusy(); return; }
     const existing = !picker && this.state.tabs.find((tab) => !tab.picker && this.identity(tab.location) === this.identity(location));
     if (existing) { this.focus(existing.id); return; }
+    this.create(location, title, picker);
+  };
+  duplicate = (sourceId: string): void => {
+    if (this.hasPending()) { this.onBusy(); return; }
+    const source = this.state.tabs.find((tab) => tab.id === sourceId);
+    if (source) this.create({ ...source.location }, source.title, source.picker, sourceId);
+  };
+  private create(location: TabLocation, title: string | undefined, picker: boolean, duplicateOf?: string): void {
     const id = randomId();
     const router = createMemoryRouter(this.routes, { initialEntries: [tabAddress(location)] });
     const tab: WorkspaceTab = { id, router, location, title: title ?? fallbackTabTitle(location), picker, dirty: false, busy: false, back: false, forward: false };
@@ -55,6 +63,7 @@ export class WorkspaceTabs {
       const previous = this.state.tabs.find((entry) => entry.id === id);
       const history = this.history.get(id);
       if (!previous || !history || state.navigation.state !== "idle") return;
+      const navigated = state.location.key !== history.entries[history.index];
       const at = history.entries.indexOf(state.location.key);
       if (at >= 0) history.index = at;
       else if (state.historyAction === "REPLACE") history.entries[history.index] = state.location.key;
@@ -62,14 +71,17 @@ export class WorkspaceTabs {
       const moved = previous.location.pathname !== state.location.pathname;
       if (moved) this.dirty.get(id)?.clear();
       const next = { ...previous, location: state.location, back: history.index > 0, forward: history.index < history.entries.length - 1,
+        ...(previous.picker && navigated ? { picker: false } : {}),
         ...(moved ? { title: fallbackTabTitle(state.location), dirty: false } : {}) };
       this.publish(this.state.tabs.map((entry) => entry.id === id ? next : entry));
     }));
     // A blank picker is replaced by the selected destination, rather than accumulating empty tabs.
-    const blank = this.active();
+    const blank = duplicateOf ? undefined : this.active();
     if (blank?.picker && !picker) this.release(blank.id);
-    this.publish([...this.state.tabs.filter((entry) => entry.id !== (blank?.picker && !picker ? blank.id : "")), tab], id);
-  };
+    const remaining = this.state.tabs.filter((entry) => entry.id !== (blank?.picker && !picker ? blank.id : ""));
+    const at = duplicateOf ? remaining.findIndex((entry) => entry.id === duplicateOf) + 1 : remaining.length;
+    this.publish([...remaining.slice(0, at), tab, ...remaining.slice(at)], id);
+  }
   newTab = (): void => {
     const blank = this.state.tabs.find((tab) => tab.picker);
     if (blank) this.focus(blank.id);

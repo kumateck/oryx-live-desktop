@@ -7,20 +7,31 @@ publication, backend contract or business workflow change is included.
 
 ## Using tabs
 
-Sidebar destinations open a tab or focus an existing matching page. The existing
-tab keeps its search and other view state. Normal record, edit and breadcrumb
-links navigate within the active tab. Ctrl/Cmd-click, middle-click and the internal
+The [implemented header layout](design/workspace-tabs-header.png) shows the
+2026-11-04 revision; the original concept remains preserved separately.
+
+Normal sidebar, record, edit and breadcrumb links navigate within the active tab,
+using its unsaved-change and pending-save guards. Ctrl/Cmd-click, middle-click and the internal
 link context menu open a separate tab. External URLs and API/file links retain
 their normal handling.
 
-The tab strip has Back/Forward for the active tab, close buttons, Add tab and an
-All open tabs menu showing full titles. Add tab opens a searchable picker of
+The desktop header contains Back/Forward before the navigation-panel toggle,
+followed by the tabs and Add tab immediately after the final visible tab. The
+All open tabs menu shows full titles. Add tab opens a searchable picker of
 permitted destinations. Closing the final page leaves that picker. Overflow stays
 inside the tab strip rather than adding page/window horizontal scrolling.
 Ctrl/Cmd+T opens the picker, Ctrl+Tab/Shift+Ctrl+Tab switches tabs, and Ctrl/Cmd+W
 requests tab closure. Alt+Left/Right traverses the active tab's history. The new
 shell connects File → New tab/Close tab and Go → Back/Forward/Home to these same
 actions through a narrow validated preload subscription.
+
+Right-click a tab header and choose **Duplicate tab** to open an independent copy
+of its current URL, including query filters and fragment, next to the original.
+The original retains its draft; the duplicate starts with fresh page state and
+history. Duplicate is blocked while any write is pending. Ordinary Open in new tab
+commands still focus an existing matching destination; Duplicate explicitly allows
+two tabs at the same destination. The header change uses the existing hosted shell
+and requires no native bridge or installer change.
 
 Browser sessions do not load the desktop router or register its shortcuts. The
 desktop check uses the existing isolated `oryxSession` capability, never a URL
