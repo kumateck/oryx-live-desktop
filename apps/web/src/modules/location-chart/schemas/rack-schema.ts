@@ -20,7 +20,7 @@ export const rackSchema = z.object({
     id: z.string().nullish(), code: text, name: text,
     materialBatches: z.array(z.object({
       id: z.string().nullish(), quantity: amount, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(),
-      materialBatch: z.object({ batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), retestDate: z.string().nullish(),
+      materialBatch: z.object({ batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), effectiveExpiryDate: z.string().nullish(), retestDate: z.string().nullish(),
         uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), material: z.object({ code: text, name: text }).nullish() }).nullish(),
     })).nullish(),
   })).nullish(),
@@ -32,7 +32,7 @@ export const rackSchema = z.object({
       const unit = item.uoM ?? item.materialBatch?.uoM;
       return { id: item.id ?? `stock-${shelfIndex}-${index}`, shelfBatchId: item.id ?? null, quantity: item.quantity, unit: unit?.symbol ?? null, unitId: unit?.id ?? null,
         batchNumber: item.materialBatch?.batchNumber ?? null, materialName: item.materialBatch?.material?.name ?? "Unnamed material", materialCode: item.materialBatch?.material?.code ?? null,
-        manufacturingDate: item.materialBatch?.manufacturingDate ?? null, expiryDate: item.materialBatch?.expiryDate ?? null, retestDate: item.materialBatch?.retestDate ?? null };
+        manufacturingDate: item.materialBatch?.manufacturingDate ?? null, expiryDate: item.materialBatch?.expiryDate ?? null, effectiveExpiryDate: item.materialBatch?.effectiveExpiryDate ?? item.materialBatch?.expiryDate ?? null, retestDate: item.materialBatch?.retestDate ?? null };
     }),
   })),
 }));

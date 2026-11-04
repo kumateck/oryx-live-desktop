@@ -15,8 +15,8 @@ export function stockLevel(row: { stock: number; minimum: number; reorder: numbe
 export interface ShelfFigures { total: number; shelves: number; batches: number; earliestExpiry: string | null }
 
 /** Totals over a material's shelf records. */
-export function shelfFigures(rows: readonly { quantity: number; shelfId: string | null; batchNumber: string | null; expiryDate: string | null }[]): ShelfFigures {
-  const expiries = rows.flatMap((row) => row.expiryDate ? [row.expiryDate] : []).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+export function shelfFigures(rows: readonly { quantity: number; shelfId: string | null; batchNumber: string | null; expiryDate: string | null; effectiveExpiryDate?: string | null }[]): ShelfFigures {
+  const expiries = rows.flatMap((row) => { const date = row.effectiveExpiryDate ?? row.expiryDate; return date ? [date] : []; }).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
   return { total: rows.reduce((sum, row) => sum + row.quantity, 0), shelves: new Set(rows.map((row) => row.shelfId)).size,
     batches: new Set(rows.map((row) => row.batchNumber)).size, earliestExpiry: expiries[0] ?? null };
 }

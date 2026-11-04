@@ -22,7 +22,7 @@ export function DistributedTable({ rows, search, shelvePermission, paging, loadi
     column.accessor("quantity", { header: "To shelve", size: 150, cell: ({ row }) => <span className="font-medium">{toLargestUnit(row.original.quantity, row.original.unit, "calculated")?.text ?? String(row.original.quantity)}</span> }),
     column.accessor((row) => row.receivedAt ?? "", { id: "received", header: "Received", size: 190, cell: ({ row }) => <div><div>{formatDate(row.original.receivedAt) ?? "–"}</div>
       <div className="break-words text-xs text-muted-foreground">{row.original.store ?? "Store not recorded"}</div></div> }),
-    column.accessor((row) => row.expiryDate ?? "", { id: "expiry", header: "Expiry", size: 190, cell: ({ row }) => <ExpiryCell date={row.original.expiryDate} /> }),
+    column.accessor((row) => row.effectiveExpiryDate ?? "", { id: "expiry", header: "Valid until", size: 190, cell: ({ row }) => <ExpiryCell date={row.original.effectiveExpiryDate} /> }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.materialName}, batch ${row.original.batchNumber ?? "without a number"}`}
       items={[{ id: "shelve", label: "Put on shelves", icon: MapPin, require: shelvePermission, onSelect: () => onShelve(row.original),
         ...(row.original.batchId ? {} : { disabled: true, disabledReason: "This delivery has no batch record" }) }]} /> }),

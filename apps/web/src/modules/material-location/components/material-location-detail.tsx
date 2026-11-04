@@ -44,7 +44,7 @@ export function MaterialLocationDetail({ material }: { material: MaterialHeader 
     {departmentId ? <>
       <KeyFacts>
         <KeyFact label="On shelves" value={shelves.loading ? "…" : quantity(figures.total, unit)} note={`${figures.batches} ${figures.batches === 1 ? "batch" : "batches"} on ${figures.shelves} ${figures.shelves === 1 ? "shelf" : "shelves"}`} />
-        <KeyFact label="Earliest expiry" value={formatMonthYear(figures.earliestExpiry) ?? "None"} state={expiryState(figures.earliestExpiry)} />
+        <KeyFact label="Earliest valid until" value={formatMonthYear(figures.earliestExpiry) ?? "None"} state={expiryState(figures.earliestExpiry)} />
         {levels ? <>
           <KeyFact label="Minimum level" value={levels.minimum > 0 ? quantity(levels.minimum, levels.unit) : "Not set"} />
           <KeyFact label="Reorder level" value={levels.reorder > 0 ? quantity(levels.reorder, levels.unit) : "Not set"} />
