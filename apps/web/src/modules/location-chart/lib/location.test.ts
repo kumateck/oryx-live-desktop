@@ -67,3 +67,18 @@ it("totals a material's shelf records", () => {
     { quantity: 2, shelfId: "s2", batchNumber: "B-02", expiryDate: past }, { quantity: 1, shelfId: "s3", batchNumber: "B-03", expiryDate: null },
   ])).toEqual({ total: 11, shelves: 3, batches: 3, earliestExpiry: past });
 });
+
+
+it("counts validity from the API extension while keeping the original expiry", () => {
+  const original = "2020-03-31T00:00:00Z";
+  const extended = "2099-03-31T00:00:00Z";
+  const record = rackSchema.parse({ id: "rack", shelves: [{ id: "shelf", materialBatches: [
+    { quantity: 12, materialBatch: { batchNumber: "extended", expiryDate: original, effectiveExpiryDate: extended } },
+    { quantity: 7, materialBatch: { batchNumber: "packaging", expiryDate: original, effectiveExpiryDate: original } },
+  ] }] });
+  expect(rackSummary(record, new Date("2026-11-04"))).toMatchObject({ expired: 1, expiringSoon: 0 });
+  const rows = rackStockRows(record);
+  expect(rows[0]?.expiryDate).toBe(original);
+  expect(rows[0]?.effectiveExpiryDate).toBe(extended);
+  expect(shelfFigures(rows.slice(0, 1)).earliestExpiry).toBe(extended);
+});

@@ -76,3 +76,11 @@ consistency and EF's pending-model check. React Doctor reported no issues; the
 mechanical UI detector also reported no findings. Existing dependency/bundle
 warnings are outside this change. The audit migration is
 `20261103123050_AddMigrationRetestDateAudit` and remains unapplied.
+
+## Validity throughout stock screens
+
+Shelf, rack and received-stock validity indicators use the API's
+`effectiveExpiryDate`, as approved stock already does. Rack expiry counts and
+material-location earliest-validity summaries use that same date. Original expiry
+and retest dates remain available as recorded dates; the renderer does not grant
+eligibility or replace server-side stock, quality or permission checks.
