@@ -65,7 +65,7 @@ export const {
   useGetApiV1MaterialSpecificationsMaterialByMaterialIdQuery,
 } = analyticalApi;
 // Reference lists the product form chooses from.
-export const { useGetApiV1DepartmentQuery } = identityApi;
+export const { useGetApiV1DepartmentQuery, useLazyGetApiV1DepartmentQuery, useGetApiV1DepartmentByDepartmentIdQuery } = identityApi;
 export const { usePostApiV1CollectionMutation, usePostApiV1CollectionUomPaginatedMutation, useGetApiV1CollectionOperationsQuery } = settingsApi;
 
 // Saving a bill of materials is a materials endpoint; it changes the product it belongs to.
@@ -77,4 +77,4 @@ export const bomApi = materialsApi.enhanceEndpoints({
     }); },
   },
 });
-export const { usePostApiV1BomMutation, useLazyGetApiV1MaterialDepartmentQuery, useGetApiV1MaterialByMaterialIdUomQuery } = bomApi;
+export const { usePostApiV1BomMutation, useLazyGetApiV1MaterialDepartmentQuery, useGetApiV1MaterialByMaterialIdUomQuery, useLazyGetApiV1MaterialByMaterialIdUomQuery } = bomApi;

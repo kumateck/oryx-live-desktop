@@ -8,7 +8,7 @@ import RemoveScheduleProductsPage from "../../../pages/(workspace)/production/sc
 import { ApiProvider } from "../../../shared/api/api-provider";
 import { SessionProvider } from "../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../test/backend";
-import { openMenu } from "../../../test/menu";
+import { chooseAction, openMenu } from "../../../test/menu";
 
 afterEach(() => { cleanup(); forgetSession(); });
 
@@ -43,6 +43,8 @@ function open(address: string, options: { end?: number; rawFor?: Record<string, 
     if (path === "/api/v1/material/Sugar/stock/across-warehouses") return Response.json([{ warehouse: { id: "w1", name: "Main store", type: 0 }, stockQuantity: 4000, expiredQuantity: 1000 },
       { warehouse: { id: "w2", name: "Liquids floor", type: 3 }, stockQuantity: 200 }]);
     if (path === "/api/v1/material/Sugar/stock/pipeline") return Response.json([]);
+    if (path === "/api/v1/material/Bottles/stock/across-warehouses") return Response.json([]);
+    if (path === "/api/v1/material/Bottles/stock/pipeline") return Response.json([]);
     if (path === "/api/v1/customers") return Response.json({ data: [] });
     if (path === "/api/v1/configuration/by-model-type/Requisition") return Response.json({ prefix: "PR-", namingType: 0, minimumNameLength: 4, maximumNameLength: 6 });
     if (path === "/api/v1/configuration/Requisition/count") return Response.json(7);
@@ -160,4 +162,24 @@ it("shows where a material's other stock is, store by store", async () => {
   expect(within(dialog).getByText("Liquids floor")).toBeTruthy();
   expect(within(dialog).getAllByText("3 kg").length).toBeGreaterThan(0);
   expect(within(dialog).getByText("Production floors")).toBeTruthy();
+});
+
+it("offers the shared stock availability dialog from raw and packaging row actions, including zero stock", async () => {
+  const { calls } = open(`/production/schedules/${id}/details?batch=b2`, {
+    rawFor: { b2: [material("Sugar", 500, 100)] },
+    packagingFor: { b2: [material("Bottles", 100, 0)] },
+  });
+  await chooseAction("Actions for Sugar", "Stock availability");
+  const rawDialog = await screen.findByRole("dialog");
+  expect(within(rawDialog).getByRole("heading", { name: "Stock availability · Sugar" })).toBeTruthy();
+  expect(await within(rawDialog).findByText("Main store")).toBeTruthy();
+  fireEvent.click(within(rawDialog).getByRole("button", { name: "Close" }));
+
+  await chooseAction("Actions for Bottles", "Stock availability");
+  const packagingDialog = await screen.findByRole("dialog");
+  expect(within(packagingDialog).getByRole("heading", { name: "Stock availability · Bottles" })).toBeTruthy();
+  expect(await within(packagingDialog).findByText("No store holds this material.")).toBeTruthy();
+  fireEvent.click(within(packagingDialog).getByRole("tab", { name: "On its way in" }));
+  expect(await within(packagingDialog).findByText("Nothing is on order or on its way in.")).toBeTruthy();
+  expect(calls).toEqual([]);
 });

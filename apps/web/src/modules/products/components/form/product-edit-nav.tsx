@@ -1,11 +1,13 @@
+import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { NavLink } from "react-router";
 import { cn } from "cn";
 import { PageHeader } from "@/shared/navigation/page-header";
-import { productDetailPath, productEditPath } from "../../lib/product-access";
+import { productEditPath } from "../../lib/product-access";
 import { productEditTabs } from "../../lib/product-edit-tabs";
 
 /** Heading and section links of the product edit area. Sections not built yet are shown but cannot be opened. */
 export function ProductEditNav({ productId, name, loading = false }: { productId: string; name: string | null; loading?: boolean }) {
+  const { detailPath: productDetailPath, editPath: productEditPath } = useProductWorkspace();
   return <header className="min-w-0 space-y-3">
     <PageHeader title={loading ? null : name ? `Edit ${name}` : "Edit product"}
       crumbs={[{ label: loading ? null : name ?? "Product", to: productDetailPath(productId) }, { label: "Edit" }]} />

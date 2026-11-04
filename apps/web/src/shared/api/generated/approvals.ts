@@ -571,11 +571,13 @@ export type DomainEntitiesApprovalsApprovalEntity = {
   productionActivityStepId?: string | null;
   requestedBy?: DomainEntitiesUsersUserDto;
   onBehalfOf?: SharedCollectionItemDto;
+  contentRevision?: number | null;
 };
 export type DomainEntitiesFormsResponseRejectionOutcome = 0 | 1;
 export type DomainEntitiesApprovalsApprovalRequestBody = {
   comments?: string | null;
   responseRejectionOutcome?: DomainEntitiesFormsResponseRejectionOutcome;
+  contentRevision?: number | null;
 };
 export type AppServicesApprovalsPendingRevisionApprovalDto = {
   revisionId?: string;

@@ -73,6 +73,8 @@ Shared pieces added: `shared/codes` (code rules), `shared/navigation/unsaved-cha
 `/production/products/:id/edit/bom`. The formula's raw materials in step order, on the draggable table: drag a row (or use the keyboard) to change its step. Add and edit open a dialog; everything is a draft until "Save bill of materials", which creates the next version.
 
 - **A material's unit, function, and specification are shown as soon as it is chosen**, with its quantity for a full batch. The specification number comes with the material; Oryx Next made one extra request per line to fetch it every time the page loaded.
+- **BOM quantities use the department material linkage**, including raw materials counted in pieces. Saved BOM unit labels do not override that linkage. Add/edit shares packaging's quantity controls: mg allows mg/g/kg, ml allows ml/L, and counted units stay fixed. Entry conversions return to the linked unit for saving; saving rechecks every row's linkage and permissions before writing. A failed or missing unit blocks the write and keeps the draft available for retry.
+- **Existing production batches use Repair → BOM after the product correction.** The backend refuses stock requisitions and issues whose raw units disagree with the linkage; legacy reservation quantity mismatches also require repair. The repair refreshes the applied requirements and unissued reservations/requisition, retaining its preview, reason, audit and approval gates. It cannot reinterpret physical stock from weight to pieces.
 - **A material can be in the formula once**, cannot be its own substitute, and needs a unit of measure; each problem is explained in the dialog.
 - **An empty formula cannot be saved**, and the reason is shown on the page rather than in a passing toast.
 - **Steps are numbered by position when saving**, so the saved order always matches what is on screen.
@@ -84,7 +86,7 @@ Backend behavior worth knowing (unchanged, shared with Oryx Next): saving a bill
 
 ## Packing materials
 
-`/production/products/:id/edit/packaging`. Kept from Oryx Next: the fields (component material, packing style, prescribed quantity, packing allowance), the rule that a material is listed once for all packing styles or once per style, and saving the whole list in one request.
+`/production/products/:id/edit/packaging`. The fields are component material, packing style, prescribed quantity and packing allowance, saved as one whole-list request. A material can be saved under different packing styles, including an All styles row alongside specific styles. Only an identical material/style pair is a conflict; editing a row does not conflict with itself.
 
 Improved:
 
@@ -92,7 +94,9 @@ Improved:
 - **Nothing the page does not edit is lost.** The backend deletes every packing material and re-adds what is sent. Oryx Next sent only its own fields, so a line's thickness, other standards, linked material, and substitutes were erased by any save. The desktop sends them back unchanged.
 - **Edits are a draft until saved**, with "Discard changes" and a warning before leaving with unsaved changes.
 - **The table appears at once.** Oryx Next waited for one specification request per line before showing anything. Here each specification cell fills in on its own, and a material just chosen shows the number it came with.
-- **Conflicts are explained on the material field** in the dialog (already listed, listed for all styles, listed per style) rather than in a toast.
+- **Conflicts are explained on the material field** in the dialog for duplicate material/style pairs. The whole-list submit also checks these pairs, retains an invalid draft and makes no request. The backend checks both replacement requests and individual updates before writes.
+
+Product detail and print use active packaging rows from the product endpoint; deleted history is excluded without deduplicating different styles. Schedule requirements use the batch's saved packing-style ID: a matching specific row overrides All styles for that material, and All styles supplies other defaults. Other specific styles are excluded. Forecasts and newly adopted batch configurations use the same rule. Existing applied configurations remain authoritative until the explicit repair workflow changes them. Full/half batch scaling and the full allowance remain unchanged.
 - **Quantities follow the units rule:** prescribed quantity and allowance are shown as entered; the total is calculated and capped at four decimals.
 - **The allowance cannot be negative and the prescribed quantity must be above zero**, checked before the line is added.
 - **Only saved packing styles can be chosen**, since a line needs the style's ID. With none saved the field says so.

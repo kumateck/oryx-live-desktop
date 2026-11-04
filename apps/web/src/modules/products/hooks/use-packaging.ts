@@ -1,10 +1,10 @@
-import { productPermissions } from "../lib/product-access";
+import { useProductWorkspace } from "./use-product-workspace";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useGetApiV1ProductByProductIdPackagesQuery, usePostApiV1ProductByProductIdPackagesMutation } from "../api/product-api";
-import { fromSavedPackages, toPackagesRequest, type PackagingLine } from "../lib/packaging";
+import { fromSavedPackages, packagingConflict, toPackagesRequest, type PackagingLine } from "../lib/packaging";
 import { savedPackagesSchema } from "../schemas/packaging-schema";
 
 export const packagingAudit = { module: "Production", subModule: "Packing" } as const;
@@ -18,7 +18,8 @@ export function usePackaging(productId: string) {
   const saved = useMemo(() => parsed?.success ? fromSavedPackages(parsed.data) : none, [parsed]);
   const [draft, setDraft] = useState<PackagingLine[] | null>(null);
   const [message, setMessage] = useState("");
-  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.edit], departmentType: 0 });
+  const { editRequirement } = useProductWorkspace();
+  const permission = usePermissionAction(editRequirement);
   const lines = draft ?? saved;
 
   const saveAll = async () => {
@@ -26,6 +27,10 @@ export function usePackaging(productId: string) {
     if (denied) { setMessage(denied); return; }
     setMessage("");
     if (lines.length === 0) { setMessage("Add at least one packing material."); return; }
+    for (const line of lines) {
+      const conflict = packagingConflict(lines, line.material.value, line.packing?.value ?? null, line.key);
+      if (conflict) { setMessage(`${line.material.label}: ${conflict}.`); return; }
+    }
     const result = await save({ ...packagingAudit, productId, body: toPackagesRequest(lines) });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     setDraft(null);

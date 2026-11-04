@@ -21,6 +21,11 @@ The access token is kept in memory only. The refresh token is also kept in `sess
 
 The desktop retains the exact Oryx Next permission keys and active-module / `Access` semantics. No backend code or role assignments are changed. An authenticated user is not automatically authorized for ERP pages or mutations.
 
+The role/permission editor searches across every module. Activating a module tab
+clears that search and opens its submodules, including when the tab is already
+selected. Mouse, Enter and Space activation preserve unsaved permission edits;
+browsing never grants access or saves assignments.
+
 ### One permission model
 
 `shared/auth/access.ts` defines `PermissionRequirement`: a single key or an `AccessRule`. Rules require authentication, all named keys, at least one named key, or (kind `account`) one of the named accounts, matched on the signed-in user's stored email ignoring case. Empty key lists deny access. Use `account` only where the business limits a page to a person rather than a permission, and enforce the same list on the backend; today only [Change user password](user-passwords.md) does. A rule may also require the backend department type. `SessionProvider` indexes permissions centrally; guards reuse the shared context rather than rebuilding an index per component.

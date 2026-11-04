@@ -82,6 +82,10 @@ A running batch opens its production board from the schedule page; see `producti
 
 - **Purchase requisition from a short batch** (`components/detail/raise-shortage-requisition.tsx`).
 - **All other stock**: the figure opens where the material is held, store by store and on production floors, and what is on its way in (`shared/stock/stock-availability-dialog.tsx`, shared with requisitions).
+- **Stock availability** is also available from each material row's action menu,
+  matching the new requisition page. Raw and packaging materials use the same
+  shared dialog, including rows with zero stock; it queries only when opened and
+  retains the schedule's view permission and audit context.
 - **Monthly report** `/production/schedules/monthly-report` (`components/monthly-report.tsx`, `lib/monthly-plan.ts`): every batch of a schedule that runs during the month except cancelled ones, grouped by market, product and packing style, with expected batches (a half batch counts half), unit price, expected yield from the packing style, shippers and loose packs, and a grand total. Moving between months does not ask the server again. Printable.
   - The server cannot filter schedules by date, so every page is read once (250 a page), as Oryx Next does.
   - **The schedule endpoints do not send a batch's market** (neither the list nor the detail includes it), so Oryx Next grouped every batch under "Unspecified market". The page groups such batches under "No market recorded" and says why.

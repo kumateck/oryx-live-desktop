@@ -10,7 +10,7 @@ import { toLargestUnit } from "@/shared/units/quantity";
 import { Skeleton } from "@/shared/skeleton/skeleton";
 import { materialKind, useMaterialOptions } from "../../hooks/use-material-options";
 import { packagingAudit } from "../../hooks/use-packaging";
-import { usePackagingUnit } from "../../hooks/use-packaging-unit";
+import { useMaterialUnit } from "../../hooks/use-material-unit";
 import type { MaterialFacts } from "../../lib/bom";
 import { packagingConflict, type PackagingLine, type PackagingUnit } from "../../lib/packaging";
 import { packagingItemFormSchema, type PackagingItemFormValues } from "../../schemas/packaging-schema";
@@ -31,7 +31,7 @@ export function PackagingItemDialog({ editing, lines, packingStyles, onSubmit, o
     : { packing: null, packingExcessMargin: 0 } });
   const [material, prescribed, allowance] = useWatch({ control: form.control, name: ["material", "prescribedQuantity", "packingExcessMargin"] });
   const facts = materials.facts(material?.value);
-  const linked = usePackagingUnit(material?.value, facts?.unit ?? (editing?.material.value === material?.value ? editing?.unit ?? null : null));
+  const linked = useMaterialUnit(material?.value, facts?.unit ?? (editing?.material.value === material?.value ? editing?.unit ?? null : null), packagingAudit);
   // A stable loader: the picker reloads its options whenever the loader it is given changes.
   const makeLoader = materials.loader;
   const loadMaterials = useMemo(() => makeLoader(noExclusions), [makeLoader]);

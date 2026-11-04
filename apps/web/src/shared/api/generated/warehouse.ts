@@ -2719,6 +2719,7 @@ export type DomainEntitiesRequisitionsRequisitionDto = {
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
   signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
+  contentRevision?: number;
 };
 export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   id?: string;
@@ -2734,6 +2735,7 @@ export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
   signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
+  contentRevision?: number;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesRequisitionsRequisitionDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {

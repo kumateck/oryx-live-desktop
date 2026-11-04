@@ -1,5 +1,32 @@
 # Oryx Live Desktop plan
 
+## QA products by department and readiness table (2026-11-03)
+
+Reuse the production product workflow under `/qa/products`. QA selects a production
+department in the URL; list, detail, edit tabs and cancel/back links retain that
+scope without switching the session department. Use existing planned-product,
+edit and verification grants; no role-name bypass or new permission keys. Detail
+and edit children mount only after the product matches the selected department.
+Material pickers and authoritative units must derive their department from that
+product on the backend. Preserve production routes and independent quality-document
+grants. Fix the report's responsive column-width specificity so product readiness
+status text cannot collapse into single letters. White Placebo stays separate.
+
+## Issued BMR correction and revision (2026-11-03)
+
+The user authorized a dedicated QA list containing already-issued product-batch
+BMRs, separate from BMR issue requests. A separately permissioned typo correction
+changes only batch-number text, with a required reason and immutable before/after
+evidence. Manufacturing and expiry changes are requested as a revision and apply
+only after approval by another permitted person. Permissions cover list, typo
+correction, revision request and revision review. Use the department ownership
+rules on the backend; block unissued/retired records, stale values and duplicates.
+Changes propagate atomically to linked live batch data, with affected IDs recorded
+in the audit. Issued/superseded certificates remain immutable and use their own
+existing revision workflow; draft headers follow current batch data. Keep route
+files small, use generated domain endpoints, the shared table/actions/forms and
+module manifests, and preserve White Placebo separately.
+
 Status: foundation and first module implementation in progress, 2026-10-01. This document records decisions and execution gates; the scaffold is not a production ERP release.
 
 ## Multiple workspace tabs proposal (2026-11-03)
@@ -108,6 +135,31 @@ cover source configuration, issue, reservation, consumption and stock evidence.
 The existing activity update timestamp is a concurrency token shared with the
 first production-consumption save, so a step loaded before a repair must reload
 instead of consuming a stale reservation snapshot.
+## Active packaging and packing-style selection (2026-11-03)
+
+The user reports extra historical rows in product details, print and schedule
+packaging. The rehearsal copy confirms eight active and six deleted definitions.
+Filter deleted definitions on backend reads while retaining audit history. The
+user permits the same material under different styles, including All styles plus
+specific styles; reject duplicate material/style pairs in editor and backend
+replacement/update validation before writes. Use the schedule product's saved
+packing-style ID, prefer its specific definition for each material and fall back
+to All styles for other materials. Reuse that selection for forecasts and newly
+adopted requirements; do not rewrite applied batch snapshots or stock. Preserve
+batch scaling, allowances and failure/permission behavior. Read the rehearsal
+database only; use a separate disposable PostgreSQL fixture for write tests.
+
+## Combined release-contract review (2026-11-03)
+
+Fix the testing release failure in the legacy customer installation fixture by
+recording the reviewed, exact combined issued-BMR/material-repair contract digest.
+Preserve prior approvals, strict rejection of unreviewed fingerprints, deployment
+protocol and shell requirements. Retain the additive contract comparison and test
+the actual release-check command against the current import, including rejection
+of changed authentication, permissions and responses. Run the isolated Docker
+release validator; do not alter the uncommitted White Placebo implementation or
+customer databases. See `docs/api-codegen.md` for review scope and backend rollout
+prerequisites.
 
 ## Migration stock top-ups (2026-11-03)
 
@@ -245,6 +297,62 @@ one complete snapshot for screen/print/export, with validation before disclosure
 Missing legacy issuer data remains “Not recorded”; never infer who issued it.
 Names, department assignments and units come from current linked records because
 the source does not store an immutable issue-time master-data snapshot.
+
+## Running-batch configuration repairs (2026-11-02)
+
+Implementation authorized on 2026-11-02. The operator first corrects and saves
+the product, then previews and applies one batch repair. The user explicitly
+confirms that issued or consumed material cannot be repaired. Implemented an
+applied requirement snapshot per batch/material kind, explicit reservation
+release evidence, requisition content revisions with retained previous approval
+rows, and preview hashes covering saved source plus operational evidence.
+Refuse partial allocation on shortage and ambiguous legacy/substitute evidence.
+Legacy unissued baselines come from requisition/reservation evidence, never a
+fabricated original master. All cooperating production stock writers serialize
+before reading; backend grants and production-department checks remain required.
+Existing Procedure behaviour stays available in the shared descriptive dropdown.
+Database migrations are source changes only; no customer database/deployment is
+authorized by this implementation task.
+
+The user requests a Repair dropdown in the batch board header where Repair
+procedure currently appears, following Copy procedure's descriptive menu pattern.
+Its choices are Procedure, BOM and Packaging, each with an independent backend
+permission. Keep the existing CanRepairProcedure grant; register separate backend
+grants before using the new actions in the frontend, without granting roles
+automatically. The selected repair targets one running batch and must reconcile
+requirements, reservations and stock still awaiting issue together.
+
+Source study found that procedure steps are copied at start, but material
+requirements read current product masters while reservations and requisitions
+persist separately. A master correction can therefore already change displayed
+requirements without fixing operational records. Re-running the start reservation
+helper is unsafe: it appends allocations, can include main and substitute
+candidates, and does not account for other reservations in its supply selection.
+Deleted reservations also serve as consumed history, and changed unissued
+requisitions cannot retain approval of their earlier quantities.
+
+The read-only preview and atomic apply are implemented locally. Changed saved
+source, allocation, stock, approval or production evidence invalidates the preview.
+New runs pin both material kinds at start; legacy runs adopt reviewed unissued
+requirements explicitly. Stock issue uses the allocated shelf and current approval
+revision. Open purchase work and ambiguous physical history block repair; later
+procurement and full-allocation swaps validate against adopted requirements.
+Released holds remain auditable and are excluded from current reservations and
+consumption. No repair posts a stock issue or a consumption event.
+
+Local verification: 70 backend tests passed (including 16 disposable PostgreSQL
+repair tests), with four unrelated opt-in reporting database tests skipped; 37
+desktop feature tests and 23 contract/cache compatibility tests passed. Typechecks,
+API/web builds, API reproducibility, route generation and model drift checks
+passed. The new migration's down/up SQL was rehearsed in the disposable schema.
+React Doctor reported no issues (91/100); the targeted UI detector returned no
+findings. Synthetic visual checks passed at laptop sizes and scaling equivalents.
+No customer database was connected or migrated. Customer-schema forward migration,
+authenticated end-to-end stock/production acceptance, realistic contention and
+native Windows installed-client checks remain release requirements. Broad table
+locks use a 3-second timeout; this is a safeguard, not a measured performance
+budget. See `docs/production-configuration-repair-study.md` and the companion
+backend's `docs/production-material-repairs.md` for current rules and limitations.
 
 ## Shared team testing database (2026-11-01)
 

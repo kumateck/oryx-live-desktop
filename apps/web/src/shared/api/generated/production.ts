@@ -1740,6 +1740,138 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    previewProductionBomRepair: build.query<
+      PreviewProductionBomRepairApiResponse,
+      PreviewProductionBomRepairApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/activity", id: queryArg.activityId }],
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/repair-bom/preview`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    applyProductionBomRepair: build.mutation<
+      ApplyProductionBomRepairApiResponse,
+      ApplyProductionBomRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/activity", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/activity", id: queryArg.activityId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/repair-bom`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionApplyProductionMaterialRepair,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    previewProductionPackagingRepair: build.query<
+      PreviewProductionPackagingRepairApiResponse,
+      PreviewProductionPackagingRepairApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule/activity", id: queryArg.activityId }],
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/repair-packaging/preview`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    applyProductionPackagingRepair: build.mutation<
+      ApplyProductionPackagingRepairApiResponse,
+      ApplyProductionPackagingRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule/activity", id: "LIST" }, { type: "production-schedule", id: "LIST" }, { type: "production-schedule/activity", id: queryArg.activityId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/activity/${queryArg.activityId}/repair-packaging`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionApplyProductionMaterialRepair,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    listIssuedBmrRecords: build.query<
+      ListIssuedBmrRecordsApiResponse,
+      ListIssuedBmrRecordsApiArg
+    >({
+      providesTags: [{ type: "issued-bmr", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/issued-bmrs`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          searchQuery: queryArg.searchQuery,
+        },
+      }),
+    }),
+    getIssuedBmrHistory: build.query<
+      GetIssuedBmrHistoryApiResponse,
+      GetIssuedBmrHistoryApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "issued-bmr", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/issued-bmrs/${queryArg.id}/history`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    correctIssuedBmrBatchNumber: build.mutation<
+      CorrectIssuedBmrBatchNumberApiResponse,
+      CorrectIssuedBmrBatchNumberApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "issued-bmr", id: "LIST" }, { type: "issued-bmr", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/issued-bmrs/${queryArg.id}/batch-number`,
+        method: "PUT",
+        body: queryArg.domainEntitiesProductsProductionCorrectIssuedBmrNumber,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    requestIssuedBmrRevision: build.mutation<
+      RequestIssuedBmrRevisionApiResponse,
+      RequestIssuedBmrRevisionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "issued-bmr", id: "LIST" }, { type: "issued-bmr", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/issued-bmrs/${queryArg.id}/revisions`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionRequestIssuedBmrRevision,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    reviewIssuedBmrRevision: build.mutation<
+      ReviewIssuedBmrRevisionApiResponse,
+      ReviewIssuedBmrRevisionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "issued-bmr", id: "LIST" }, { type: "issued-bmr", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/issued-bmrs/${queryArg.id}/revisions/${queryArg.revisionId}/review`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionReviewIssuedBmrRevision,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2940,6 +3072,92 @@ export type ApplyProductionUnstartApiArg = {
   subModule?: string;
   domainEntitiesProductsProductionProductionUnstartRequest: DomainEntitiesProductsProductionProductionUnstartRequest;
 };
+export type PreviewProductionBomRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionMaterialRepairPreview;
+export type PreviewProductionBomRepairApiArg = {
+  activityId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ApplyProductionBomRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionMaterialRepairResult;
+export type ApplyProductionBomRepairApiArg = {
+  activityId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionApplyProductionMaterialRepair: DomainEntitiesProductsProductionApplyProductionMaterialRepair;
+};
+export type PreviewProductionPackagingRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionMaterialRepairPreview;
+export type PreviewProductionPackagingRepairApiArg = {
+  activityId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ApplyProductionPackagingRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionProductionMaterialRepairResult;
+export type ApplyProductionPackagingRepairApiArg = {
+  activityId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionApplyProductionMaterialRepair: DomainEntitiesProductsProductionApplyProductionMaterialRepair;
+};
+export type ListIssuedBmrRecordsApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionIssuedBmrPage;
+export type ListIssuedBmrRecordsApiArg = {
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetIssuedBmrHistoryApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionIssuedBmrHistory;
+export type GetIssuedBmrHistoryApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type CorrectIssuedBmrBatchNumberApiResponse = void;
+export type CorrectIssuedBmrBatchNumberApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionCorrectIssuedBmrNumber: DomainEntitiesProductsProductionCorrectIssuedBmrNumber;
+};
+export type RequestIssuedBmrRevisionApiResponse = /** status 200 OK */ string;
+export type RequestIssuedBmrRevisionApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionRequestIssuedBmrRevision: DomainEntitiesProductsProductionRequestIssuedBmrRevision;
+};
+export type ReviewIssuedBmrRevisionApiResponse = void;
+export type ReviewIssuedBmrRevisionApiArg = {
+  id: string;
+  revisionId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionReviewIssuedBmrRevision: DomainEntitiesProductsProductionReviewIssuedBmrRevision;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -3974,6 +4192,7 @@ export type DomainEntitiesRequisitionsRequisitionDto = {
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
   signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
+  contentRevision?: number;
 };
 export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   id?: string;
@@ -3989,6 +4208,7 @@ export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   productionScheduleProduct?: DomainEntitiesProductionSchedulesProductionScheduleProductDto;
   comments?: string | null;
   signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
+  contentRevision?: number;
 };
 export type DomainEntitiesProductsProductionProductionStepExtraMaterialDto = {
   id?: string;
@@ -4979,6 +5199,114 @@ export type DomainEntitiesProductsProductionProductionUnstartRequest = {
   previewToken: string;
   reason: string;
 };
+export type DomainEntitiesProductsProductionProductionMaterialRepairLine = {
+  materialId?: string;
+  name?: string | null;
+  unit?: string | null;
+  before?: number;
+  after?: number;
+  reservedBefore?: number;
+  reservedAfter?: number;
+  shortage?: number;
+};
+export type DomainEntitiesProductsProductionProductionMaterialRepairPreview = {
+  activityId?: string;
+  batchId?: string;
+  kind?: DomainEntitiesMaterialsMaterialKind;
+  previewHash?: string | null;
+  sourceHash?: string | null;
+  baseline?: string | null;
+  hasChanges?: boolean;
+  approvalRequired?: boolean;
+  requisitionId?: string | null;
+  lines?: DomainEntitiesProductsProductionProductionMaterialRepairLine[] | null;
+  blockers?: string[] | null;
+};
+export type DomainEntitiesProductsProductionProductionMaterialRepairResult = {
+  repairId?: string;
+  changed?: boolean;
+  approvalRequired?: boolean;
+  revision?: number;
+};
+export type DomainEntitiesProductsProductionApplyProductionMaterialRepair = {
+  requestId?: string;
+  previewHash: string;
+  reason: string;
+};
+export type DomainEntitiesProductsProductionIssuedBmrRow = {
+  id?: string;
+  scheduleProductId?: string;
+  productId?: string;
+  productName?: string | null;
+  productCode?: string | null;
+  departmentName?: string | null;
+  scheduleCode?: string | null;
+  batchNumber?: string | null;
+  manufacturingDate?: string | null;
+  expiryDate?: string | null;
+  issuedAt?: string;
+  isRetired?: boolean;
+  pendingRevisions?: number;
+};
+export type DomainEntitiesProductsProductionIssuedBmrPage = {
+  data?: DomainEntitiesProductsProductionIssuedBmrRow[] | null;
+  pageIndex?: number;
+  pageCount?: number;
+  totalRecordCount?: number;
+};
+export type DomainEntitiesProductsProductionIssuedBmrChangeDto = {
+  id?: string;
+  revisionId?: string | null;
+  actorName?: string | null;
+  occurredAt?: string;
+  reason?: string | null;
+  previousBatchNumber?: string | null;
+  batchNumber?: string | null;
+  previousManufacturingDate?: string | null;
+  previousExpiryDate?: string | null;
+  manufacturingDate?: string | null;
+  expiryDate?: string | null;
+};
+export type DomainEntitiesProductsProductionIssuedBmrRevisionStatus = 0 | 1 | 2;
+export type DomainEntitiesProductsProductionIssuedBmrRevisionDto = {
+  id?: string;
+  requestedByName?: string | null;
+  requestedAt?: string;
+  reason?: string | null;
+  batchNumber?: string | null;
+  previousManufacturingDate?: string | null;
+  previousExpiryDate?: string | null;
+  manufacturingDate?: string;
+  expiryDate?: string;
+  status?: DomainEntitiesProductsProductionIssuedBmrRevisionStatus;
+  reviewedByName?: string | null;
+  reviewedAt?: string | null;
+  reviewReason?: string | null;
+  isRequester?: boolean;
+};
+export type DomainEntitiesProductsProductionIssuedBmrHistory = {
+  changes?: DomainEntitiesProductsProductionIssuedBmrChangeDto[] | null;
+  revisions?: DomainEntitiesProductsProductionIssuedBmrRevisionDto[] | null;
+};
+export type DomainEntitiesProductsProductionCorrectIssuedBmrNumber = {
+  expectedBatchNumber: string;
+  expectedManufacturingDate?: string | null;
+  expectedExpiryDate?: string | null;
+  reason: string;
+  batchNumber: string;
+};
+export type DomainEntitiesProductsProductionRequestIssuedBmrRevision = {
+  expectedBatchNumber: string;
+  expectedManufacturingDate?: string | null;
+  expectedExpiryDate?: string | null;
+  reason: string;
+  manufacturingDate?: string;
+  expiryDate?: string;
+};
+export type DomainEntitiesProductsProductionReviewIssuedBmrRevision = {
+  approve?: boolean;
+  reason: string;
+};
 export const {
   usePostApiV1ProductionOrdersMutation,
   useGetApiV1ProductionOrdersQuery,
@@ -5160,4 +5488,17 @@ export const {
   usePreviewProductionUnstartQuery,
   useLazyPreviewProductionUnstartQuery,
   useApplyProductionUnstartMutation,
+  usePreviewProductionBomRepairQuery,
+  useLazyPreviewProductionBomRepairQuery,
+  useApplyProductionBomRepairMutation,
+  usePreviewProductionPackagingRepairQuery,
+  useLazyPreviewProductionPackagingRepairQuery,
+  useApplyProductionPackagingRepairMutation,
+  useListIssuedBmrRecordsQuery,
+  useLazyListIssuedBmrRecordsQuery,
+  useGetIssuedBmrHistoryQuery,
+  useLazyGetIssuedBmrHistoryQuery,
+  useCorrectIssuedBmrBatchNumberMutation,
+  useRequestIssuedBmrRevisionMutation,
+  useReviewIssuedBmrRevisionMutation,
 } = injectedRtkApi;

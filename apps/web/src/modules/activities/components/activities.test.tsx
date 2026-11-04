@@ -8,6 +8,7 @@ import ActivityStepPage from "../../../pages/(workspace)/production/activities/[
 import { ApiProvider } from "../../../shared/api/api-provider";
 import { SessionProvider } from "../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend, testUserId } from "../../../test/backend";
+import { chooseAction, openMenu } from "../../../test/menu";
 
 afterEach(() => { cleanup(); forgetSession(); });
 
@@ -17,6 +18,7 @@ const other = { id: "someone-else", firstName: "Kofi", lastName: "Boateng" };
 const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
 
 interface Options {
+  repairRevision?: number; repairBlockers?: string[];
   current?: { order: number; status: number; critical: boolean; mine: boolean; actions?: number[] }; nextIsFinalPacking?: boolean;
   cancelled?: boolean; permissions?: string[]; boardLags?: boolean; packagingAvailable?: boolean; requisition?: boolean | "raw"; packagingIssued?: boolean; packagingFrom?: string; finalPacked?: boolean; extraStatuses?: number[]; extraReadStatus?: number; malformedExtra?: boolean;
 }
@@ -50,6 +52,11 @@ function open(address: string, options: Options = {}) {
       { operation: { id: "o2", name: "Filling" }, activities: [] }]);
     if (path === "/api/v1/production-schedule/activity/a1") return Response.json(run(options));
     if (path === "/api/v1/production-schedule/activity/a1/repair-procedure") return Response.json({ stepsUpdated: 2, stepsAdded: 1, stepsRemoved: 0, stepsKept: [] });
+    if (/\/repair-(bom|packaging)\/preview$/.test(path)) return Response.json({ activityId: "a1", batchId: "b1", kind: path.includes("packaging") ? 1 : 0,
+      previewHash: (options.repairRevision ? "b" : "a").repeat(64), sourceHash: "c".repeat(64), baseline: "Existing requisition", hasChanges: true,
+      approvalRequired: true, requisitionId: "r1", blockers: options.repairBlockers ?? [],
+      lines: [{ materialId: "m1", name: "Sugar", unit: "mg", before: 1000, after: 2000, reservedBefore: 1000, reservedAfter: 2000, shortage: 0 }] });
+    if (/\/repair-(bom|packaging)$/.test(path)) return Response.json({ repairId: "repair-1", changed: true, approvalRequired: true, revision: 1 });
     if (path.startsWith("/api/v1/production-schedule/activity-step/") && input.method === "PUT") {
       const status = Number(url.searchParams.get("status"));
       // A board that lags keeps showing the step as it was, as the server's read model can for a moment.
@@ -303,7 +310,7 @@ it.each([{ extraReadStatus: 503 }, { malformedExtra: true }])("keeps completion 
 
 it("repairs one batch's procedure from the product's current procedure, after saying what changes", async () => {
   const { calls } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanRepairProcedure"] });
-  fireEvent.click(await screen.findByRole("button", { name: "Repair procedure" }));
+  await chooseAction("Repair", /^Procedure/);
   const dialog = await screen.findByRole("dialog");
   expect(dialog.textContent).toContain("Completed steps are not changed");
   expect(calls).toEqual([]);
@@ -314,9 +321,57 @@ it("repairs one batch's procedure from the product's current procedure, after sa
   // Only someone who may repair procedures is offered the repair, even if they may edit procedures, and never on a cancelled batch.
   open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanEditProductionPlan"] });
   expect(await screen.findByText(/steps completed/)).toBeTruthy();
-  expect(screen.queryByRole("button", { name: "Repair procedure" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Repair" })).toBeNull();
   cleanup(); forgetSession();
   open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanRepairProcedure"], cancelled: true });
   expect(await screen.findByText(/steps completed/)).toBeTruthy();
-  expect(screen.queryByRole("button", { name: "Repair procedure" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Repair" })).toBeNull();
+});
+
+it.each(["CanRepairBom", "CanRepairPackaging"])("offers each material repair only with its own permission: %s", async (permission) => {
+  const { reads } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", permission] });
+  await openMenu("Repair");
+  expect(screen.queryByRole("menuitem", { name: /^Procedure/ })).toBeNull();
+  expect(Boolean(screen.queryByRole("menuitem", { name: /^BOM/ }))).toBe(permission === "CanRepairBom");
+  expect(Boolean(screen.queryByRole("menuitem", { name: /^Packaging/ }))).toBe(permission === "CanRepairPackaging");
+  expect(reads.some((path) => path.includes("/preview"))).toBe(false);
+});
+
+it("previews BOM quantities and confirms a reason before sending one repair", async () => {
+  const { calls, reads } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanRepairBom"] });
+  await chooseAction("Repair", /^BOM/);
+  const dialog = await screen.findByRole("dialog");
+  const reason = await within(dialog).findByLabelText("Reason for repair");
+  expect(dialog.textContent).toContain("fresh approval");
+  expect(calls).toEqual([]);
+  fireEvent.change(reason, { target: { value: "Corrected the product formula" } });
+  const apply = within(dialog).getByRole("button", { name: "Apply BOM repair" });
+  await waitFor(() => expect(apply.hasAttribute("disabled")).toBe(false));
+  fireEvent.click(apply);
+  await waitFor(() => expect(calls).toHaveLength(1));
+  expect(calls[0]?.path).toBe("/api/v1/production-schedule/activity/a1/repair-bom");
+  expect(JSON.parse(calls[0]?.body ?? "{}")).toMatchObject({ previewHash: "a".repeat(64), reason: "Corrected the product formula" });
+  expect(reads.filter((path) => path.endsWith("repair-bom/preview")).length).toBeGreaterThanOrEqual(2);
+});
+
+it("refuses the reviewed repair if the product changes before applying", async () => {
+  const options: Options = { permissions: ["CanViewPlannedProducts", "CanRepairBom"] };
+  const { calls } = open("/production/activities/a1/board", options);
+  await chooseAction("Repair", /^BOM/);
+  fireEvent.change(await screen.findByLabelText("Reason for repair"), { target: { value: "Corrected the product formula" } });
+  const apply = screen.getByRole("button", { name: "Apply BOM repair" });
+  await waitFor(() => expect(apply.hasAttribute("disabled")).toBe(false));
+  options.repairRevision = 1;
+  fireEvent.click(apply);
+  await screen.findByText(/This record changed/);
+  expect(calls).toEqual([]);
+});
+
+it("shows issued-stock blockers and prevents applying a material repair", async () => {
+  const { calls } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanRepairPackaging"],
+    repairBlockers: ["Issued or consumed stock cannot be repaired."] });
+  await chooseAction("Repair", /^Packaging/);
+  await screen.findByText("Issued or consumed stock cannot be repaired.");
+  expect(screen.getByRole("button", { name: "Apply Packaging repair" }).hasAttribute("disabled")).toBe(true);
+  expect(calls).toEqual([]);
 });

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
+import { spawnSync } from "node:child_process";
 import { contractDigest, object, parse, type ObjectValue } from "../deploy/customer-server/data.ts";
 import { compatibility, checkCompatibility } from "../deploy/customer-server/release.ts";
 import { readConfig } from "../deploy/customer-server/config.ts";
@@ -65,7 +66,7 @@ test("historical reporting adds optional read parameters without changing existi
       const parameters = operation.parameters;
       if (Array.isArray(parameters)) operation.parameters = parameters.filter((entry) => {
         const parameter = object(entry);
-        return !(parameter.in === "query" && (parameter.name === "asOfDate" || (path === "/api/v1/attendance-records/general-summary" && parameter.name === "departmentId") || (path === "/api/v1/report/warehouse/materials-stock-batch-detail" && parameter.name === "materialId")
+        return !(parameter.in === "query" && (parameter.name === "asOfDate" || ((path === "/api/v1/material/department" || path === "/api/v1/material/{materialId}/uom") && parameter.name === "productId") || (path === "/api/v1/attendance-records/general-summary" && parameter.name === "departmentId") || (path === "/api/v1/report/warehouse/materials-stock-batch-detail" && parameter.name === "materialId")
           || ((path === "/api/v1/material/batches/expired" || path === "/api/v1/material/batches/about-to-expire") && parameter.name === "searchQuery")
           // User directory filters (2026-11-01): optional role and department filters on the user list; additive only.
           || (path === "/api/v1/user" && (parameter.name === "roleId" || parameter.name === "departmentId"))));
@@ -83,7 +84,7 @@ test("historical reporting adds optional read parameters without changing existi
       assert.deepEqual(operation, original, `${verb.toUpperCase()} ${path}`);
     }
   }
-  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))), [
+  assert.deepEqual(Object.keys(paths).filter((path) => !(path in object(before.paths ?? null))).sort(), [
     // System alert recipients (2026-10-31): replaces an alert's roles and users only; additive only.
     "/api/v1/alert/{alertId}/recipients",
     // Admin user password reset (2026-10-31): one account sets another user's password; additive only.
@@ -102,17 +103,22 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/requisition/issue/{issueId}",
     // QA issued BMR report (2026-11-02): read-only issue-date query; additive only.
     "/api/v1/report/bmr-issued",
-    // Raw-material migration retest correction (2026-11-03): separate permissioned write, additive only.
+    // Material repairs (2026-11-02): read-only previews and explicit apply, one material kind at a time.
+    "/api/v1/production-schedule/activity/{activityId}/repair-bom/preview", "/api/v1/production-schedule/activity/{activityId}/repair-bom",
+    "/api/v1/production-schedule/activity/{activityId}/repair-packaging/preview", "/api/v1/production-schedule/activity/{activityId}/repair-packaging",
+    // Migration validity correction and additive stock top-up drafts (2026-11-03).
     "/api/v1/material/batch/{batchId}/migration-retest-date",
-    // Additive migration top-ups (2026-11-03): draft entry/upload; approval uses the existing endpoint.
     "/api/v1/stock-migrations/top-ups/upload", "/api/v1/stock-migrations/top-ups",
-    // Post-issue BOM/packaging repair (2026-11-03): preview and corrective posting, additive only.
     "/api/v1/production-schedule/{batchId}/issued-material-repair/{kind}",
-    "/api/v1/production-schedule/activity/{activityId}/unstart"]);
+    "/api/v1/production-schedule/activity/{activityId}/unstart",
+    "/api/v1/issued-bmrs", "/api/v1/issued-bmrs/{id}/history", "/api/v1/issued-bmrs/{id}/batch-number",
+    "/api/v1/issued-bmrs/{id}/revisions", "/api/v1/issued-bmrs/{id}/revisions/{revisionId}/review"].sort());
   const schemas = object(object(current.components ?? null).schemas ?? null);
-  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ProductionUnstart")) delete schemas[name];
-  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.IssuedMaterialRepair") || name === "DOMAIN.Entities.Products.Production.ApplyIssuedMaterialRepairRequest") delete schemas[name];
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ProductionUnstart") || name.startsWith("DOMAIN.Entities.Products.Production.IssuedMaterialRepair") || name === "DOMAIN.Entities.Products.Production.ApplyIssuedMaterialRepairRequest") delete schemas[name];
   delete object(object(schemas["DOMAIN.Entities.Requisitions.RequisitionItemDto"] ?? null).properties ?? null).approvedQuantity;
+  for (const name of ["IssuedBmrPage", "IssuedBmrRow", "IssuedBmrHistory", "IssuedBmrChangeDto", "IssuedBmrRevisionDto",
+    "IssuedBmrRevisionStatus", "CorrectIssuedBmrNumber", "RequestIssuedBmrRevision", "ReviewIssuedBmrRevision"])
+    delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
   delete schemas["DOMAIN.Entities.Materials.Batch.UpdateMigrationRetestDate"];
   for (const name of ["MaterialBatchDto", "MaterialBatchListDto", "MaterialBatchReducedDto", "DistributedMaterialBatchDto"]) {
     const properties = object(object(schemas[`DOMAIN.Entities.Materials.Batch.${name}`] ?? null).properties ?? null);
@@ -137,6 +143,11 @@ test("historical reporting adds optional read parameters without changing existi
   delete schemas["DOMAIN.Entities.Products.Production.ProductionProcedureRepairResult"];
   delete schemas["DOMAIN.Entities.Requisitions.VoucherSignatoryDto"];
   delete schemas["DOMAIN.Entities.Requisitions.StockIssueSignatoriesDto"];
+  for (const name of ["ProductionMaterialRepairPreview", "ProductionMaterialRepairLine", "ProductionMaterialRepairResult", "ApplyProductionMaterialRepair"])
+    delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
+  // Repaired stock requisitions bind approvals to a content revision; all three fields are additive and optional on transport.
+  for (const name of ["Approvals.ApprovalEntity", "Approvals.ApprovalRequestBody", "Requisitions.RequisitionDto"])
+    delete object(object(schemas[`DOMAIN.Entities.${name}`] ?? null).properties ?? null).contentRevision;
   // Finance costing (2026-10-31): new costing schemas, and one optional currency property on each list-price and report schema.
   for (const name of Object.keys(schemas)) if (name.includes("DOMAIN.Entities.Costing.") || name.includes("DOMAIN.Entities.Customers.CustomerPricingAgreementDto")) delete schemas[name];
   const added: Readonly<Record<string, string>> = { "Products.CreateProductRequest": "priceCurrencyId", "Products.UpdateProductRequest": "priceCurrencyId", "Products.Product": "priceCurrencyId",
@@ -212,6 +223,18 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
   }
 });
 
+test("the reviewed report, repair and migration contract passes release validation", () => {
+  const current = parse(readFileSync("contracts/openapi/backend.v1.json", "utf8"));
+  const digest = contractDigest(current);
+  assert.ok(policy.backendContracts.includes("a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe"));
+  assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
+  assert.equal(digest, "d26ad659839ddc4ec2e1fb26aadeaac692c19e27c7e075a7cc2fe56b8d4ff4ed");
+  checkCompatibility(hostConfig, policy, digest);
+  const check = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
+  assert.equal(check.status, 0, check.stderr);
+  assert.match(check.stdout, new RegExp(`Approved backend contract: ${digest}`));
+});
+
 test("the separate legacy host-Nginx verifier still blocks unreviewed document changes", async () => {
   const changes: ((document: ObjectValue) => void)[] = [
     (document) => { delete object(document.paths ?? null)["/api/v1/auth/login"]; },
@@ -221,8 +244,10 @@ test("the separate legacy host-Nginx verifier still blocks unreviewed document c
     (document) => { object(document.components ?? null).securitySchemes = {}; },
     (document) => { object(object(document.components ?? null).schemas ?? null)["DOMAIN.Entities.Permissions.PermissionDto"] = { type: "object", properties: {} }; },
   ];
-  for (const change of changes) {
-    const changed = object(parse(raw)); change(changed);
-    assert.throws(() => checkCompatibility(hostConfig, policy, contractDigest(changed)), /has not been approved/);
+  for (const source of [raw, readFileSync("contracts/openapi/backend.v1.json", "utf8")]) {
+    for (const change of changes) {
+      const changed = object(parse(source)); change(changed);
+      assert.throws(() => checkCompatibility(hostConfig, policy, contractDigest(changed)), /has not been approved/);
+    }
   }
 });

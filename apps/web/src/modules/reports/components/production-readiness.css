@@ -47,7 +47,7 @@
 .production-readiness .readiness-tone-1 { color: var(--readiness-ready); }
 .production-readiness .readiness-tone-2 { color: var(--readiness-unavailable); }
 .production-readiness .readiness-mark { display: inline-flex; vertical-align: middle; }
-.production-readiness .readiness-badge { height: auto; min-height: var(--size-20); white-space: normal; max-width: 100%; }
+.production-readiness .readiness-badge { overflow-wrap: normal; word-break: normal; height: auto; min-height: var(--size-20); white-space: normal; max-width: 100%; }
 .production-readiness .readiness-market-heading { background: var(--muted); }
 .production-readiness .readiness-market-heading th { font-weight: 600; text-align: left; }
 .production-readiness .readiness-total-row { background: var(--background); font-weight: 600; }
@@ -89,7 +89,7 @@
   .production-readiness .readiness-table,
   .production-readiness .readiness-table :is(thead, tbody, tfoot) { display: block; }
   .production-readiness .readiness-table tr { display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr)) minmax(0, 1.2fr); }
-  .production-readiness .readiness-table :is(th, td) { width: auto; }
+  .production-readiness .readiness-table :is(.readiness-product, .readiness-markets, .readiness-number, .readiness-result, .readiness-desktop-check) { width: auto; }
   .production-readiness .readiness-table .readiness-desktop-check { display: none; }
   .production-readiness .readiness-market-heading th { grid-column: 1 / -1; }
   .production-readiness .readiness-table .readiness-check-band { display: block; grid-column: 1 / -1; padding-top: 0; padding-bottom: var(--space-12); }

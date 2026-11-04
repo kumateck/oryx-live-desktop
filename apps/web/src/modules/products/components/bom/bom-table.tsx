@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { DraggableDataTable, dataTableColumns } from "@/shared/datatable";
-import { toLargestUnit } from "@/shared/units/quantity";
+import { bomAudit } from "../../hooks/use-bom";
+import { MaterialQuantity } from "../material-quantity";
 import type { BomLine } from "../../lib/bom";
 import { batchQuantity } from "../../lib/product-detail";
 
@@ -31,8 +32,10 @@ export function BomLinesTable({ lines, compositionSize, batchSize, loading, erro
         Substitutes: {row.original.substitutes.map((item) => item.label).join(", ")}</div> : null}
     </div> }),
     column.accessor((line) => line.specification || dash, { id: "spec", header: "Spec ref" }),
-    column.accessor((line) => toLargestUnit(line.baseQuantity, line.unit.symbol)?.text ?? dash, { id: "unit", header: "Unit qty" }),
-    column.accessor((line) => toLargestUnit(batchQuantity(line.baseQuantity, compositionSize, batchSize), line.unit.symbol, "calculated")?.text ?? dash, { id: "batch", header: "Batch qty" }),
+    column.accessor("baseQuantity", { id: "unit", header: "Unit qty", cell: ({ row }) => <MaterialQuantity materialId={row.original.material.value}
+      known={row.original.linkedUnit ?? null} audit={bomAudit} value={row.original.baseQuantity} origin="entered" /> }),
+    column.display({ id: "batch", header: "Batch qty", cell: ({ row }) => <MaterialQuantity materialId={row.original.material.value}
+      known={row.original.linkedUnit ?? null} audit={bomAudit} value={batchQuantity(row.original.baseQuantity, compositionSize, batchSize)} origin="calculated" /> }),
     column.accessor((line) => line.category || dash, { id: "function", header: "Function" }),
     column.accessor((line) => line.grade || dash, { id: "grade", header: "Grade", size: 90 }),
     column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.material.label}`} items={[
