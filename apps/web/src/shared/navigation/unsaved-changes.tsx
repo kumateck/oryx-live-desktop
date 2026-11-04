@@ -2,12 +2,19 @@ import { useEffect } from "react";
 import { useBlocker } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useDesktopTab, useDesktopTabSafety } from "../workspace-tabs/context";
 
 /**
  * Asks before the user leaves a form with unsaved edits, whether by a link, the sidebar, back, or
  * closing the window. Render it inside the form's page and pass whether the form is dirty.
  */
 export function UnsavedChangesGuard({ when }: { when: boolean }) {
+  const desktop = useDesktopTab();
+  useDesktopTabSafety(when);
+  return desktop ? null : <BrowserUnsavedChangesGuard when={when} />;
+}
+
+function BrowserUnsavedChangesGuard({ when }: { when: boolean }) {
   const blocker = useBlocker(({ currentLocation, nextLocation }) => when && currentLocation.pathname !== nextLocation.pathname);
   useEffect(() => {
     if (!when) return;

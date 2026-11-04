@@ -1,4 +1,5 @@
 "use client"
+import { DesktopTabPortal } from "@/shared/workspace-tabs/context";
 
 import * as React from "react"
 import { Combobox as ComboboxPrimitive } from "@base-ui/react"
@@ -101,7 +102,7 @@ function ComboboxContent({
     "side" | "align" | "sideOffset" | "alignOffset" | "anchor"
   > & { container?: React.ComponentProps<typeof ComboboxPrimitive.Portal>["container"] }) {
   return (
-    <ComboboxPrimitive.Portal container={container}>
+    <DesktopTabPortal><ComboboxPrimitive.Portal container={container}>
       <ComboboxPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
@@ -117,7 +118,7 @@ function ComboboxContent({
           {...props}
         />
       </ComboboxPrimitive.Positioner>
-    </ComboboxPrimitive.Portal>
+    </ComboboxPrimitive.Portal></DesktopTabPortal>
   )
 }
 

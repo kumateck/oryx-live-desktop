@@ -11,6 +11,7 @@ import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { switchDepartmentPermission, type SessionUser } from "./session-api";
 import { useSession } from "./session-provider";
 import { usePermissionAction } from "./use-permission-action";
+import { useDesktopTab } from "../workspace-tabs/context";
 
 const audit = { module: "User Management", subModule: "Switch Department" };
 const productionType = 0;
@@ -22,6 +23,7 @@ const noDepartment: DepartmentOption = { value: "no-department", departmentId: n
  * everything read for the previous department is discarded after a successful change.
  */
 export function DepartmentSwitchDialog({ user, onClose }: { user: SessionUser; onClose: () => void }) {
+  const desktop = useDesktopTab();
   const dispatch = useDispatch();
   const { refresh } = useSession();
   const permission = usePermissionAction(switchDepartmentPermission);
@@ -39,6 +41,7 @@ export function DepartmentSwitchDialog({ user, onClose }: { user: SessionUser; o
   const target = options.find((option) => option.value === chosen) ?? null;
   const submit = async () => {
     if (!target || busy) return;
+    if (desktop?.workspace.hasWork()) { setError("Save or discard work in all tabs before switching department."); return; }
     const denied = permission.check();
     if (denied) { setError(denied); return; }
     setBusy(true); setError("");

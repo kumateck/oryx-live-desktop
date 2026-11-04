@@ -1,3 +1,4 @@
+import { DesktopTabPortal } from "@/shared/workspace-tabs/context";
 import * as React from "react"
 import { cn } from "cn"
 import { Dialog as DialogPrimitive } from "radix-ui"
@@ -20,7 +21,7 @@ function DialogTrigger({
 function DialogPortal({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+  return <DesktopTabPortal><DialogPrimitive.Portal data-slot="dialog-portal" {...props} /></DesktopTabPortal>
 }
 
 function DialogClose({
