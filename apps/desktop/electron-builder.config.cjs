@@ -15,6 +15,7 @@ module.exports = {
   files: [".vite/**/*", "build/**/*", "package.json"],
   win: { target: [{ target: "nsis", arch: architectures }], icon: "build/icon.ico" },
   nsis: {
+    include: "build/installer.nsh",
     oneClick: false,
     perMachine: false,
     allowElevation: true,

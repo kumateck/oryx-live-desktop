@@ -4,18 +4,35 @@ import test from "node:test";
 const pipeline=readFileSync(".github/workflows/customer-docker.yml","utf8");
 const workflow=pipeline.slice(pipeline.indexOf("  windows-installer:"), pipeline.indexOf("  testing-desktop-publish:"));
 
-test("Windows builds follow native testing changes or explicit production dispatch and cannot deploy services", () => {
+test("Windows builds follow native testing changes or explicit isolated dispatch and cannot deploy services", () => {
   assert.match(pipeline,/workflow_dispatch:/);
   assert.match(workflow,/needs: \[web, testing-deploy\]/);
   assert.match(workflow,/&& inputs\.build_windows/);
   assert.doesNotMatch(workflow,/^\s+(?:push|pull_request|schedule):/m);
-  assert.match(workflow,/github.event_name == 'workflow_dispatch' && github.ref == 'refs\/heads\/entrance-server'/);
+  assert.match(workflow,/github.event_name == 'workflow_dispatch' && github.ref != 'refs\/heads\/testing'/);
   assert.match(workflow, /needs.testing-deploy.outputs.desktop_changed == 'true'/);
   assert.match(workflow, /github.ref == 'refs\/heads\/testing' && needs.testing-deploy.result == 'success'/);
   assert.match(workflow, /always\(\) && needs.web.result == 'success'/);
   assert.match(workflow,/runs-on: windows-latest/);
   assert.match(workflow,/ref: \$\{\{ github.sha \}\}/);
   assert.doesNotMatch(workflow,/ssh-action|scp-action|docker\/|docker (?:run|build|compose)|SSH_HOST|SSH_PRIVATE_KEY|RABBITMQ_PASS/);
+});
+
+test("silent Windows installs own URL registration and unpacked architecture tests cannot hijack it", () => {
+  const builder = readFileSync("apps/desktop/electron-builder.config.cjs", "utf8");
+  const installer = readFileSync("apps/desktop/build/installer.nsh", "utf8");
+  const main = readFileSync("apps/desktop/src/main.ts", "utf8");
+  assert.match(builder, /include: "build\/installer.nsh"/);
+  assert.match(installer, /!macro customInstall/);
+  assert.match(installer, /WriteRegStr SHELL_CONTEXT "Software\\Classes\\oryx-live" "URL Protocol" ""/);
+  assert.match(installer, /!macro customUnInstall/);
+  assert.ok(installer.indexOf("StrCmp") < installer.indexOf("DeleteRegKey"));
+  assert.match(main, /app.isPackaged && process.platform !== "win32"\) app.setAsDefaultProtocolClient/);
+  assert.ok(workflow.indexOf("Assert-ResetProtocol\n") < workflow.indexOf("Launch 'first-launch'"));
+  assert.match(workflow, /\$exe = \$installedExe\s+Assert-ResetProtocol/);
+  assert.match(workflow, /-cne \('\"' \+ \$exe.FullName \+ '\" \"%1\"'\)/);
+  assert.match(workflow, /Launch 'reset-protocol-cold'/);
+  assert.match(workflow, /Warm reset protocol did not retain/);
 });
 
 test("installer reuses the existing maker for a combined x86/x64 installer and publishes only after native installation and launch checks", () => {
