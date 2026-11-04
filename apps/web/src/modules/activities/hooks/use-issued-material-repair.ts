@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
+import { randomId } from "@/shared/ids/random-id";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useApplyIssuedMaterialRepairMutation, usePreviewIssuedMaterialRepairQuery } from "../api/issued-material-repair-api";
 import { issuedRepairPermissions, repairPreviewSchema, repairReasonSchema, type RepairKind, type RepairReason } from "../schemas/issued-material-repair";
@@ -36,10 +37,11 @@ export function useIssuedMaterialRepair(batchId: string, kind: RepairKind, onClo
     if (!preview?.canApply || query.isFetching || needsReview || error) return;
     pending.current = true;
     setMessage("");
-    // Reuse the ID after an uncertain response; the server can return the original receipt.
-    if (!attempt.current || attempt.current.token !== preview.previewToken || attempt.current.reason !== reason)
-      attempt.current = { id: crypto.randomUUID(), token: preview.previewToken, reason };
     try {
+      // Reuse the ID after an uncertain response; the server can return the original receipt.
+      // The shared helper also supports the customer's plain HTTP intranet origin.
+      if (!attempt.current || attempt.current.token !== preview.previewToken || attempt.current.reason !== reason)
+        attempt.current = { id: randomId(), token: preview.previewToken, reason };
       const result = await apply({ ...audit, batchId, kind, domainEntitiesProductsProductionApplyIssuedMaterialRepairRequest: {
         requestId: attempt.current.id, previewToken: preview.previewToken, reason,
       } });

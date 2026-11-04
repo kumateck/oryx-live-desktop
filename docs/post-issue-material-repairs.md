@@ -148,3 +148,15 @@ regressions passed in the earlier 23-test run. React Doctor reported no issues
 for the new components and hook. EF reports no pending model changes, and zero
 disposable repair databases remain after cleanup. Native packaged-app testing
 was not run because this feature changes no Electron shell/update code.
+
+
+## Intranet repair request IDs (2026-11-04)
+
+Issued-material repair uses the existing shared `randomId()` helper so the apply
+request works on supported HTTP intranet origins without `crypto.randomUUID`.
+The fallback uses cryptographic `getRandomValues` bytes. One reviewed preview and
+reason retain the same request ID across an uncertain response and explicit
+reload/retry; the server's idempotency, preview, permission and audit checks are
+unchanged. ID generation is inside the submit error/finally boundary so a local
+failure cannot leave the dialog's pending guard permanently set. This is a hosted
+frontend fix; no API, database migration or native installer change is required.

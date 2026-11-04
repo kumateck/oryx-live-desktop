@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { ApiProvider } from "@/shared/api/api-provider";
 import { SessionProvider } from "@/shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
 import RepairDialog from "./issued-material-repair-dialog";
 import { IssuedMaterialRepairMenu } from "./issued-material-repair-menu";
 
-afterEach(() => { cleanup(); forgetSession(); });
+afterEach(() => { cleanup(); forgetSession(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 const token = "a".repeat(64);
 const makePreview = () => ({ batchId: "b1", batchNumber: "BFC4K338", kind: 1, requisitionCode: "PM/26/001", previewToken: token,
   canApply: true, hasChanges: true, blockers: [] as string[], history: [], rows: [
@@ -103,4 +103,38 @@ it("shows only permitted repair choices", async () => {
   fireEvent.pointerDown(button, { button: 0, ctrlKey: false });
   expect(await screen.findByRole("menuitem", { name: "Repair packaging after issue" })).toBeTruthy();
   expect(screen.queryByRole("menuitem", { name: "Repair BOM after issue" })).toBeNull();
+});
+
+
+it("submits and retries the same repair on HTTP where randomUUID is unavailable", async () => {
+  const cryptoApi = globalThis.crypto;
+  const randomBytes = vi.fn(cryptoApi.getRandomValues.bind(cryptoApi));
+  vi.stubGlobal("crypto", { getRandomValues: randomBytes });
+  const { calls, saved } = open({ failFirst: true });
+  await screen.findByText("PMF015");
+  fireEvent.change(screen.getByRole("textbox", { name: /Repair reason/ }), { target: { value: "Correct packaging units on the customer intranet" } });
+  fireEvent.click(screen.getByRole("button", { name: "Apply stock repair" }));
+  await screen.findByText("The stock changed. Reload the preview.");
+  const request = JSON.parse(calls[0]?.body ?? "null");
+  expect(request.requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  expect(randomBytes).toHaveBeenCalled();
+  expect(request.previewToken).toBe(token);
+  fireEvent.click(screen.getByRole("button", { name: "Reload preview" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Apply stock repair" })).toHaveProperty("disabled", false));
+  fireEvent.click(screen.getByRole("button", { name: "Apply stock repair" }));
+  await waitFor(() => expect(saved.closed).toBe(true));
+  expect(calls).toHaveLength(2);
+  expect(calls[1]?.body).toBe(calls[0]?.body);
+});
+
+it("handles an ID-generation failure without posting stock or trapping the repair dialog", async () => {
+  const { calls, saved } = open();
+  await screen.findByText("PMF015");
+  vi.stubGlobal("crypto", { getRandomValues: () => { throw new Error("Random source unavailable"); } });
+  fireEvent.change(screen.getByRole("textbox", { name: /Repair reason/ }), { target: { value: "Correct the issued packaging units" } });
+  fireEvent.click(screen.getByRole("button", { name: "Apply stock repair" }));
+  await screen.findByText("The repair response could not be confirmed. Reload the saved stock before retrying.");
+  expect(calls).toHaveLength(0);
+  fireEvent.click(screen.getByText("Close", { selector: "button" }));
+  await waitFor(() => expect(saved.closed).toBe(true));
 });
