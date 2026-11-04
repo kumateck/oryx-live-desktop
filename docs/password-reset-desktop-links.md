@@ -12,6 +12,23 @@ package metadata. Cold Windows launches use the initial arguments; running
 Windows apps handle second-instance arguments. macOS receives `open-url` before
 asynchronous startup, with delivery deferred until the main window is ready.
 
+Windows registration is written by `build/installer.nsh` during installation,
+including silent installation and upgrades, in the selected user's or machine's
+registry scope. Electron-builder's `protocols` metadata alone does not generate
+this registration for its NSIS target. Both executable and URL argument are
+quoted. Uninstallation removes the handler only if it still points to this
+installation. Unpacked copies never register themselves on Windows, so a smoke
+test or portable copy cannot hijack the installed handler. The Windows gate
+checks registration immediately after installation and again after launching the
+unpacked x86 build, then exercises cold and running-app reset links.
+
+To validate a fix before merging, manually dispatch **Customer release pipeline**
+on its feature branch with `build_windows=true`. This runs the complete release
+validator followed by the Windows installation, reset-link and upgrade checks.
+It uploads validation artifacts; the testing deployment and publication jobs
+remain restricted to `testing`, so this does not publish an installer or replace
+any server. Frontend PRs still target `development`.
+
 Only a valid reset key for the already configured HTTP(S) origin is accepted.
 Other paths, duplicate/extra parameters, credentials and invalid keys are refused.
 An unconfigured or different server produces an instruction to connect correctly

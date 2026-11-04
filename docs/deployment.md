@@ -86,3 +86,9 @@ Customer Docker preflight requires basic backend API connectivity, not an identi
 ## Manual customer Windows installer
 
 On `entrance-server`, the single `customer-docker.yml` workflow has an optional manual **build_windows** job after release validation, with a combined Windows x86/x64 build, native installation/launch and installed-upgrade checks, and the `oryx-live-windows-installer` artifact. Testing pushes use the same workflow and build Windows only for desktop input changes. Follow the [customer Windows installer guide](customer-windows-installer.md) to trigger it, download `OryxLiveDesktop-Setup.exe`, and connect the shell to `http://CUSTOMER_SERVER_IP:3001`. Customer Docker approval/deployment remains separate.
+
+The same manual `build_windows=true` dispatch is available on feature branches
+for native validation before a PR into `development`. It runs complete release
+validation and the Windows checks, uploading artifacts without deploying a site
+or publishing its desktop feed. The testing deploy/publish jobs still accept
+only `testing`; a feature-branch run cannot approve a customer deployment.

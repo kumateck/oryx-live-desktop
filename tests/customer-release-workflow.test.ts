@@ -63,7 +63,7 @@ test("one production workflow queues all runs and validates before optional Wind
   assert.equal((workflow.match(/concurrency:/g) ?? []).length, 1);
   assert.doesNotMatch(workflow, /group:.*github\.ref|strategy:|matrix:/);
   assert.match(workflow, /build_windows:[\s\S]*?type: boolean[\s\S]*?default: false/);
-  assert.match(workflow, /windows-installer:[\s\S]*?needs: \[web, testing-deploy\][\s\S]*?workflow_dispatch.*refs\/heads\/entrance-server.*inputs\.build_windows/);
+  assert.match(workflow, /windows-installer:[\s\S]*?needs: \[web, testing-deploy\][\s\S]*?workflow_dispatch.*github.ref != 'refs\/heads\/testing'.*inputs\.build_windows/);
   assert.match(workflow, /node scripts\/customer-release-validation\.ts --sha "\$\{\{ github.sha \}\}"/);
   assert.doesNotMatch(workflow.slice(0, workflow.indexOf("  testing-images:")), /docker\/build-push-action|run: bun run check|run: bun run build:web/);
 });
