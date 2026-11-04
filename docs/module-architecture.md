@@ -51,6 +51,21 @@ Expandable navigation entries place their chevrons at the right edge. Desktop la
 
 ## Performance at 27 modules
 
+Installed desktops use independent memory routers created from the same generated
+file routes for workspace tabs. The desktop host owns the session-scoped API
+provider; tab layouts reuse it. Browser sessions retain the single browser router
+and existing workspace API provider. Both paths apply manifest guards before ERP
+pages mount. The isolated preload selects the desktop presentation and provides
+only a validated native navigation subscription; it is not authorization.
+
+Domain controllers stay mounted across tab switches so draft state and editor
+initialization effects remain stable. Shared headers/portals suspend independently,
+and polling hooks use `useDesktopTabVisible()` to stop inactive-page polling.
+FormWizard and UnsavedChangesGuard register with desktop tab safety; custom draft
+controllers use `useDesktopTabSafety(dirty, pending)`. Never infer arbitrary local
+state as saved, or omit safety registration for a new editable panel. See
+`docs/workspace-tabs.md` for lifecycle, URL identity and release limits.
+
 Route pages and layouts are lazy imports. The small manifests may load at startup; module implementations and domain API endpoint chunks load when a route needs them. Keep the core shell, session, navigation, and error UI independent of large generated API files. A module should split expensive editors, reports, charts, and secondary detail sections further. Measure initial bundle, first route, route transitions, and memory on target laptops before setting budgets.
 
 ## Migration gate for each module

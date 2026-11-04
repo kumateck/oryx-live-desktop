@@ -1,3 +1,4 @@
+import { DesktopTabPortal } from "@/shared/workspace-tabs/context";
 import * as React from "react"
 import { cn } from "cn"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
@@ -30,7 +31,7 @@ function TooltipContent({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
   return (
-    <TooltipPrimitive.Portal>
+    <DesktopTabPortal><TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}
@@ -43,7 +44,7 @@ function TooltipContent({
         {children}
         <TooltipPrimitive.Arrow className="z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-xs bg-foreground fill-foreground" />
       </TooltipPrimitive.Content>
-    </TooltipPrimitive.Portal>
+    </TooltipPrimitive.Portal></DesktopTabPortal>
   )
 }
 

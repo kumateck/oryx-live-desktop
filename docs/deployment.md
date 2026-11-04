@@ -25,6 +25,10 @@ The testing deployment reuses the existing SSH/RabbitMQ repository secrets. It d
 
 To identify what is actually served, open [`/deployment.json`](http://164.90.142.68:3011/deployment.json) and compare `commit` with the **testing push** run's SHA. `unversioned` identifies an older build without commit metadata. An open PR or a commit on `development` does not update the testing site. Merging the PR into `testing` starts its QA release; merging into `entrance-server` starts customer release approval. After the workflow correction is manually pushed to `testing`, its push run must complete **Deploy testing web** before the web changes appear.
 
+### Recovering a desktop version collision
+
+If publication reports `Desktop version already published with different bytes`, do not overwrite or delete the published installer. Increase `apps/desktop/package.json` to an unused newer version, update `bun.lock` with Bun 1.3.14, and push the correction to `testing`. That new run rebuilds and smoke-tests the installer, then publishes it under the new version before advancing the update feed. Rerunning the failed publication job with the old artifacts cannot resolve a version collision. Desktop 0.2.2 replaces the unpublished native changes that collided with the existing 0.2.1 release; retain the published 0.2.1 files for recovery.
+
 ## The Windows installer
 
 `bun run --filter @oryx/desktop make:windows` (on Windows) compiles the shell with Electron Forge, then packages both Windows x86 and x64 applications in one NSIS installer with electron-builder (`apps/desktop/electron-builder.config.cjs`). The wizard selects the operating-system architecture, lets the user choose the folder, installs per user without administrator rights, creates Start-menu and desktop shortcuts, and offers to open the app at the end. The output is `apps/desktop/out/make/nsis/OryxLiveDesktop-Setup.exe`. See [desktop update setup and runtime support](desktop-updates.md) for the Windows runtime pin and signed update publishing.

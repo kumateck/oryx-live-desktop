@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useDesktopTabVisible } from "@/shared/workspace-tabs/context";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useGetApiV1ProductionScheduleActivityByProductionActivityIdQuery } from "../api/activity-api";
 import { activityAudit, boardRefreshMs } from "../lib/activity-access";
@@ -11,8 +12,9 @@ import { activitySchema } from "../schemas/activity-schema";
  * without a reload. One request carries every step and the log; nothing is asked per step.
  */
 export function useActivity(activityId: string) {
+  const visible = useDesktopTabVisible();
   const query = useGetApiV1ProductionScheduleActivityByProductionActivityIdQuery({ ...activityAudit, productionActivityId: activityId },
-    { pollingInterval: boardRefreshMs, skipPollingIfUnfocused: true, refetchOnFocus: true });
+    { pollingInterval: visible ? boardRefreshMs : 0, skipPollingIfUnfocused: true, refetchOnFocus: visible });
   const parsed = useMemo(() => query.data ? activitySchema.safeParse(query.data) : null, [query.data]);
   const activity = parsed?.success ? parsed.data : null;
   return {

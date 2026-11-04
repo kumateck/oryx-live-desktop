@@ -1,5 +1,45 @@
 # Fresh opening balances, 1 November 2026
 
+## Demo import completed, 3 November 2026
+
+The user subsequently authorized replacing the screenshot demo's `entrancedb`
+at `164.90.142.68:5433` with cleaned local `oryx_client_20261030` data.
+Statements below about no customer-server changes describe the 1 November work;
+this later import is complete. The local source is unchanged.
+
+The demo had eight newer migrations and 477 tables. Its actual deployed schema
+and migration history were restored with source data into an isolated local
+rehearsal and then remote `oryx_import_stage_20261103`. No checkout migrations
+or permission backfills were executed. New columns retain deployed defaults or
+nulls; data backfills from the later migrations were not replayed.
+
+All 439 source data tables matched row counts and hashes, all 15 sequence positions
+matched, every constraint validated, and deployed columns, constraints and audit
+trigger definitions matched before activation. At 21:23 UTC, database names were
+switched. The old database remains `entrancedb_before_import_20261103`, intact
+with connections disabled. The API keeps its existing database name, connection
+configuration, image and storage. External attachments were not copied.
+
+Final verification: 1,904 materials, 1,614 department links, 48 users, zero material
+batches, shelf batches and opening drafts; 477 tables, 2,732 indexes, 5,763 valid
+constraints and 189 audit triggers. After activation, 438 tables still match the
+source; only `ErrorLogs` differs, with nine connection-switch entries between
+21:23:31 and 21:23:32 UTC. No recent errors remained at the 21:27 UTC check.
+The application reached sign-in. Authenticated pages and imports still need user
+acceptance; the old browser session must sign in again.
+
+The imported source has no opening-balance or migration-retest grants. Assign
+the intended grants through Manage Permissions, then upload, review and approve
+opening balances before testing **Update migration retest date** on an eligible
+available raw batch. The previous demo draft and batch remain in the rollback
+database, not the active cleaned database.
+
+Private backup, checksums, scripts, fingerprints, rollback SQL and final evidence:
+`/Users/gigisiri/.codex/visualizations/2026/11/03/01a1a32a-23fb-7fc1-8552-dee45382720e/outputs/demo-database-import`.
+`demo-before.dump` is the complete pre-import backup. `rollback.sql` uses an
+administrator connection to `postgres`, preserves the imported copy and switches
+back to the previous database. Review new demo writes before any rollback.
+
 The authorized local reset of `oryx_client_20261030` is complete. No opening
 balances or upload drafts have been posted to that database. Application changes
 are local source changes: rebuild/restart the backend and web application before

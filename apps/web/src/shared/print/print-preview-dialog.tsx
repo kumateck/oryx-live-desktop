@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentUser } from "@/shared/auth/session-provider";
 import { formatDateTime } from "@/shared/format/dates";
+import { DesktopTabPortal } from "../workspace-tabs/context";
 
 function Sheet({ children, printedBy }: { children: ReactNode; printedBy: string | null }) {
   return <article className="print-sheet">{children}
@@ -29,6 +30,6 @@ export function PrintPreviewDialog({ title, note, ready = true, children, onClos
       </DialogFooter>
     </DialogContent>
     {/* The copy the printer sees. On screen it is hidden; in print it is the only thing shown. */}
-    {createPortal(<div className="print-portal" aria-hidden="true"><Sheet printedBy={printedBy}>{children}</Sheet></div>, document.body)}
+    <DesktopTabPortal>{createPortal(<div className="print-portal" aria-hidden="true"><Sheet printedBy={printedBy}>{children}</Sheet></div>, document.body)}</DesktopTabPortal>
   </Dialog>;
 }
