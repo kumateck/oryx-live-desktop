@@ -6,6 +6,8 @@ import { z } from "zod";
 import { SettingsFormDialog } from "@/modules/settings-support/ui";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
+import { currentMonth, monthEndIso } from "@/shared/batch-dates/batch-dates";
+import { parseMonthYear } from "@/shared/date-pickers/date-utils";
 import type { WizardField } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
 import { AssignmentsDialog } from "@/shared/qc/assignment-views";
@@ -43,7 +45,8 @@ export function TakeSampleDialog({ atr, onClose }: { atr: Atr; onClose: () => vo
     }} />;
 }
 
-const retestSchema = z.object({ expiry: z.date({ message: "Choose the new expiry date." }).nullable().refine((value): boolean => value !== null, "Choose the new expiry date.") });
+const retestSchema = z.object({ expiry: z.string().nullable().refine((value) =>
+  !!value && parseMonthYear(value) !== null && value >= currentMonth(), "Choose the current month or a later month.") });
 type RetestValues = z.infer<typeof retestSchema>;
 
 export function CompleteAtrRetestDialog({ atr, onClose }: { atr: Atr; onClose: () => void }) {
@@ -51,7 +54,8 @@ export function CompleteAtrRetestDialog({ atr, onClose }: { atr: Atr; onClose: (
   const permission = usePermissionAction(atrPermissions.completeRetest);
   const form = useForm<RetestValues>({ resolver: zodResolver(retestSchema), defaultValues: { expiry: null } });
   const [message, setMessage] = useState("");
-  const fields: WizardField<RetestValues>[] = [{ type: InputTypes.DATE, name: "expiry", label: "Extended expiry date", required: true, minDate: new Date() }];
+  const fields: WizardField<RetestValues>[] = [{ type: InputTypes.MONTH, name: "expiry", label: "Extended expiry date", required: true,
+    minMonth: currentMonth(), description: "Valid through the end of the selected month." }];
   return <SettingsFormDialog title={`Complete the retest of ${atr.batchNumber ?? atr.product}`} description="The batch's expiry is extended to the new date." form={form} fields={fields}
     saving={completing.isLoading} message={message} submitLabel="Complete retest" onClose={onClose}
     onSubmit={async (values) => {
@@ -59,7 +63,7 @@ export function CompleteAtrRetestDialog({ atr, onClose }: { atr: Atr; onClose: (
       const denied = permission.check();
       if (denied) { setMessage(denied); return; }
       if (!values.expiry) return;
-      const result = await complete({ ...atrAudit, id: atr.id, extendedExpiryDate: values.expiry.toISOString() });
+      const result = await complete({ ...atrAudit, id: atr.id, extendedExpiryDate: monthEndIso(values.expiry) });
       if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
       toast.success("Retest completed");
       onClose();

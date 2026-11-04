@@ -1,5 +1,16 @@
 # Oryx Live Desktop plan
 
+## Manufacturing, expiry and retest month selection (2026-11-04)
+
+The user requests month-and-year selection across batch manufacturing, expiry and
+retest validity fields. Reuse the existing shared month picker and batch-date
+conversions: manufacturing starts at the first day, expiry/retest ends at the last
+day of the chosen month in UTC. Preserve permissions, approvals, audit evidence,
+stale-date comparisons and date ordering. Expiry report ranges include the whole
+selected months. Actual event dates and document/legal validity dates retain their
+day precision. Existing receiving, BMR and migration/top-up month fields stay in
+place; close the remaining retest, report and explicit worksheet lot-expiry gaps.
+
 ## QA products by department and readiness table (2026-11-03)
 
 Reuse the production product workflow under `/qa/products`. QA selects a production
