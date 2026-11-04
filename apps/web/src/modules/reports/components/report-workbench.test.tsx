@@ -116,3 +116,27 @@ it("generates the combined matrix once and uses the same complete snapshot for p
   expect(book?.sheets.find((sheet) => sheet.name === "Product readiness")?.rows).toHaveLength(2);
   expect(reportReads).toBe(1);
 });
+
+it("locks stock reports to the account department and keeps the same lock after resetting filters", async () => {
+  const backend = stubBackend({ permissions: ["CanViewWarehouseReport"] });
+  const session = backend.fetcher.getMockImplementation(); rememberSession();
+  let requested = "";
+  backend.fetcher.mockImplementation(async (input, init) => {
+    if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
+    if (new URL(input.url).pathname.endsWith("material/batches/stock-report")) {
+      requested = new URL(input.url).searchParams.get("departmentId") ?? "";
+      return Response.json({ generatedAt: "2026-11-04T12:00:00Z", departmentId: "558da105-a506-44a9-8ff5-8d005a54f294", departmentName: "Quality", materialKind: null, expiredOnly: false, rows: [] });
+    }
+    return new Response(null, { status: 404 });
+  });
+  render(<SessionProvider><ApiProvider><MemoryRouter><Ready /><ReportWorkbench group="warehouse" initialKey={ReportKey.CurrentStock} /></MemoryRouter></ApiProvider></SessionProvider>);
+  await screen.findByText("Report session ready");
+  fireEvent.click(screen.getByRole("button", { name: "Choose filters" }));
+  const department = await screen.findByRole("combobox", { name: "Department" });
+  expect(department.getAttribute("aria-disabled") === "true" || department.hasAttribute("disabled")).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Reset filters" }));
+  expect(department.textContent).toContain("Quality");
+  fireEvent.click(screen.getByRole("button", { name: "Generate report" }));
+  await screen.findByRole("heading", { name: "Current stock · Quality" });
+  expect(requested).toBe("558da105-a506-44a9-8ff5-8d005a54f294");
+});

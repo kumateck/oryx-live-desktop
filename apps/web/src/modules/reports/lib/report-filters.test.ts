@@ -25,12 +25,12 @@ describe("report selection contracts", () => {
     expect(reportFiltersSchema.safeParse({ ...filters, expiryDateTo: "2028-13" }).success).toBe(false);
     expect(expiryParams(emptyReportFilters())).toEqual({});
   });
-  it("renders every optional All dropdown as a multiselect across all reports", () => {
-    expect(reportCatalog).toHaveLength(34);
+  it("preserves optional multiselects and explicit stock department single selectors", () => {
+    expect(reportCatalog).toHaveLength(36);
     for (const definition of reportCatalog) {
       const fields = reportFilterFields(definition, load);
       expect(fields).toHaveLength(definition.fields.length);
-      for (const field of fields) if (field.type === InputTypes.SELECT && !field.required) expect(field.mode).toBe("multiple");
+      for (const field of fields) if (field.type === InputTypes.SELECT && !field.required) expect(field.mode).toBe("name" in field && field.name === "department" && (definition.key === ReportKey.CurrentStock || definition.key === ReportKey.ExpiredStock) ? "single" : "multiple");
     }
   });
   it("preserves zero, identities and codes through validation; required single selects still work", () => {

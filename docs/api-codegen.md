@@ -1,5 +1,15 @@
 # API contracts and generated hooks
 
+Expiry stock departments (2026-11-04) add only optional
+`MaterialBatchDto.stockDepartments`, referencing the existing collection-item
+schema. Import it from a built metadata-only backend export with
+`bun scripts/import-expiry-departments.ts EXPORT.json`, then regenerate/check.
+The matching backend binds report reads to the authenticated account's current
+department; no client department selector or new permission key is introduced.
+The reviewed additive digest is
+`35c00c063402f8cf1248db7ca3a9093ce997e66858311b4864de7890a50d3dad`;
+all prior reviewed digests remain accepted. See [expiry report departments](expiry-report-departments.md).
+
 Production unstart repair (2026-11-03) adds typed preview/apply at
 `/api/v1/production-schedule/activity/{activityId}/unstart`, owned by the
 production transport domain. Import only these paths and
@@ -184,3 +194,14 @@ BMR corrections from development, plus post-issue repairs and production unstart
 All prior-operation/schema/security comparisons and rejection tests still apply.
 The exact merged typed digest is `d26ad659839ddc4ec2e1fb26aadeaac692c19e27c7e075a7cc2fe56b8d4ff4ed`; previous approvals remain.
 No customer deployment or database migration is performed.
+
+## Department stock-count reporting (2026-11-04)
+
+`bun scripts/import-expiry-departments.ts /path/to/backend-export.json` imports
+only the additive expiry `stockDepartments` field, the stock-report GET, and its
+owned DTO schemas. Run `bun run api:generate` and `bun run api:check`. The exact
+reviewed digest is `f38dceee6e53dc16783197bce0ceb9d36b902f2d1d0b5185a77a1698adec5e9f`;
+whole-document comparisons retain the existing endpoint, schema and security
+contracts after removing only declared additions. Deploy the backend before UI
+activation. No database migration or customer deployment is performed by this import.
+See [stock reporting](expiry-report-departments.md).
