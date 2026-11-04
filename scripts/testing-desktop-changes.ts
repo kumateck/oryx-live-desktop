@@ -7,7 +7,7 @@ import { pathToFileURL } from "node:url";
 // Desktop dependency updates must include apps/desktop/package.json.
 export function desktopInput(path: string): boolean {
   return path.startsWith("apps/desktop/") || path === "assets/oryx-wordmark.svg" ||
-    ["shared/desktop-updates.ts", "shared/alert-priority.ts", "shared/desktop-signing.ts", "shared/companion.ts"].includes(path) ||
+    ["shared/desktop-updates.ts", "shared/alert-priority.ts", "shared/desktop-signing.ts", "shared/companion.ts", "shared/password-reset-link.ts"].includes(path) ||
     /^scripts\/(?:make-windows|check-desktop-signing|create-desktop-update|windows-[\w-]+)\.ts$/.test(path);
 }
 

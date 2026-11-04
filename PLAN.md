@@ -253,6 +253,18 @@ Keep entered decimal text intact until the API adapter and serialize calendar
 dates at the existing UTC boundary. No API, inventory-posting or approval changes
 are part of this migration. See `docs/forms.md` for the resulting form contract.
 
+## Password-reset email desktop handoff (2026-11-04)
+
+The user requests emailed password-reset links to open the installed app. Keep
+the existing HTTP(S) link as the browser fallback and add an `oryx-live` protocol
+handoff from the reset page, with a visible retry link where browser approval is
+required. Register the installed Windows/macOS app and handle cold/warm launches.
+Accept only reset keys and the configured server origin; never auto-switch sites.
+Use a separate sandboxed, ephemeral reset window with no preload/session bridge
+so ERP tabs and unsaved work remain mounted. No password change occurs without
+the existing validated form and server reset-key checks. This work precedes the
+deferred artifact promotion task. Native release version is 0.2.3; preserve 0.2.2.
+
 ## Desktop web release freshness (2026-11-02)
 
 The user requests the web release prompt in installed desktops that keep an older

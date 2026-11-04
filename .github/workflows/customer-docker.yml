@@ -331,6 +331,8 @@ jobs:
           $exe = Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter OryxLiveDesktop.exe | Select-Object -First 1
           if (-not $exe) { throw 'The installer did not install OryxLiveDesktop.exe' }
           "Installed: $($exe.FullName)"
+          $protocolCommand = (Get-Item 'Registry::HKEY_CLASSES_ROOT\oryx-live\shell\open\command').GetValue('')
+          if ($protocolCommand.IndexOf($exe.FullName, [StringComparison]::OrdinalIgnoreCase) -lt 0 -or -not $protocolCommand.Contains('%1')) { throw 'The installed password-reset protocol is not registered to this executable.' }
           $shortcuts = @((Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Oryx Live Desktop.lnk'), (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Oryx Live Desktop.lnk'))
           foreach ($link in $shortcuts) { if (-not (Test-Path $link)) { throw "Missing shortcut: $link" }; "Shortcut: $link" }
           New-Item -ItemType Directory shots -Force | Out-Null
@@ -365,8 +367,8 @@ jobs:
             }
           }
           '@
-          function Launch([string] $name, [scriptblock] $ok) {
-            Start-Process $exe.FullName | Out-Null
+          function Launch([string] $name, [scriptblock] $ok, [string] $protocol = '') {
+            if ($protocol) { Start-Process $protocol | Out-Null } else { Start-Process $exe.FullName | Out-Null }
             Start-Sleep 20
             $running = @(Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue)
             $titles = if ($running) { [OryxWindows]::Titles([int[]] @($running | ForEach-Object { $_.Id })) } else { @() }
@@ -404,6 +406,15 @@ jobs:
             if (-not $ready) { throw 'The local port 3001 fixture did not start.' }
             Set-Content -NoNewline -Path (Join-Path $config 'site-url.txt') -Value 'http://127.0.0.1:3001'
             Launch 'connected' { param($titles) ($titles -contains 'Oryx installer smoke site') -and ($titles -contains 'ORYX Companion') }
+            $resetLink = 'oryx-live://reset-password?site=http%3A%2F%2F127.0.0.1%3A3001&key=6f9619ff-8b86-4011-b42d-00c04fc964ff'
+            Launch 'reset-protocol-cold' { param($titles) ($titles -contains 'Oryx installer smoke site') -and ($titles -contains 'Oryx reset smoke site') } $resetLink
+            $main = Start-Process $exe.FullName -PassThru
+            Start-Sleep 20
+            Start-Process $resetLink | Out-Null
+            Start-Sleep 20
+            $running = @(Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue)
+            $titles = [OryxWindows]::Titles([int[]] @($running | ForEach-Object { $_.Id }))
+            if ($main.HasExited -or -not ($titles -contains 'Oryx installer smoke site') -or -not ($titles -contains 'Oryx reset smoke site')) { throw 'Warm reset protocol did not retain the existing app and open its separate reset window.' }
           } finally {
             Get-Process OryxLiveDesktop -ErrorAction SilentlyContinue | Stop-Process -Force
             if (-not $fixture.HasExited) { Stop-Process -Id $fixture.Id -Force }
