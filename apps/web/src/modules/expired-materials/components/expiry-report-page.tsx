@@ -24,6 +24,9 @@ const fields: WizardField<Filter>[] = [{ type: InputTypes.MONTH_RANGE, name: "ra
 const column = dataTableColumns<ExpiryBatch>();
 const columns = column.columns([
   column.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div></div> }),
+  column.accessor((row) => row.departments.map((department) => department.name).join(", "), { id: "department", header: "Department", cell: ({ row }) => row.original.departments.length
+    ? <div className="max-w-48 space-y-1">{row.original.departments.map((department) => <div key={department.id} className="break-words">{department.name}</div>)}</div>
+    : <span className="text-muted-foreground">Not recorded</span> }),
   column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", cell: ({ row }) => <div><div className="break-all">{batchNumber(row.original.batchNumber)}</div><div className="text-xs text-muted-foreground">AR {row.original.arNumber ?? "not recorded"}</div></div> }),
   column.accessor((row) => row.made ?? "", { id: "made", header: "Manufactured", cell: ({ row }) => formatMonthYear(row.original.made) ?? "–" }),
   column.accessor((row) => row.expires ?? "", { id: "expires", header: "Valid until", cell: ({ row }) => { const days = daysToExpiry(row.original.expires);

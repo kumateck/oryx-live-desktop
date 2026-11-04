@@ -19,7 +19,7 @@ export function ScheduleDetail({ schedule, phase }: { schedule: ScheduleRow; pha
   return <div className="min-w-0 space-y-4">
     <ScheduleSummary schedule={schedule} phase={phase} showProducts={false} />
     {open ? <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
-      <BatchNav groups={groups} scheduleEnd={schedule.scheduledEndTime} active={open.id} onSelect={select} />
+      <BatchNav key={schedule.id} groups={groups} scheduleEnd={schedule.scheduledEndTime} active={open.id} onSelect={select} />
       {/* Keyed by batch so one batch's messages and dialogs never carry over to another. */}
       <BatchPanel key={open.id} batch={open.batch} batchId={open.id} label={open.label} state={batchState(open.batch, schedule.scheduledEndTime)} />
     </div> : <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">This schedule has no products yet.</p>}
