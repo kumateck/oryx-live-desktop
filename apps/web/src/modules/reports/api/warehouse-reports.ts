@@ -1,3 +1,4 @@
+import { loadStockCountReport } from "./stock-count-report";
 import { historyParams } from "../lib/history";
 import { singleReportFilters, reportSelection, selectedReportValue, selectedReportCode } from "../lib/selections";
 import type { ApiDispatch } from "@/shared/api/api-provider";
@@ -15,6 +16,8 @@ export async function loadWarehouseReport(dispatch: ApiDispatch, key: ReportKey,
   const materialKind = binaryChoice(f.materialKind?.value);
   const scope = { ...reportsAudit, ...historyParams(filters), ...departmentParam(f), ...(materialKind === undefined ? {} : { materialKind }) };
   switch (key) {
+    case ReportKey.CurrentStock: case ReportKey.ExpiredStock:
+      return loadStockCountReport(dispatch, filters, key === ReportKey.ExpiredStock, signal);
     case ReportKey.MaterialList: {
       const rows = await reportRequest(dispatch(materialReportApi.endpoints.readApprovedMaterialReport.initiate({ ...reportsAudit, ...historyParams(filters), ...departmentParam(f), ...(materialKind === undefined ? {} : { kind: materialKind }), ...(f.category ? { materialCategoryId: f.category.value } : {}) }, options)), signal);
       return { sheets: [materialMasterSheet(rows.filter((row)=>selectedReportValue(filters,"category",row.material?.materialCategory?.id)))] };

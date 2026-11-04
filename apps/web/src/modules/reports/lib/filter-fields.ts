@@ -26,8 +26,8 @@ export function reportFilterFields(definition: ReportDefinition, load: (entity: 
   return definition.fields.map((name): WizardField<ReportFilters> => {
     const label = reportFieldLabels[name]; const required = definition.required?.includes(name) ?? false;
     const lookup = lookupName(name);
-    if (lookup) return required
-      ? { type: InputTypes.SELECT, name: lookup, label, required, mode: "single", source: "async", loadOptions: load(lookup), placeholder: `Choose ${label.toLowerCase()}` }
+    if (lookup) return required || definition.single?.includes(name)
+      ? { type: InputTypes.SELECT, name: lookup, label, required, mode: "single", source: "async", loadOptions: load(lookup), placeholder: required ? `Choose ${label.toLowerCase()}` : "All" }
       : { type: InputTypes.SELECT, name: `selections.${lookup}`, label, mode: "multiple", source: "async", loadOptions: load(lookup), placeholder: "All" };
     switch (name) {
       case "supplierIds": return { type: InputTypes.SELECT, name, label, mode: "multiple", source: "async", loadOptions: load("supplier"), placeholder: "All suppliers" };

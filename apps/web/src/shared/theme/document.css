@@ -82,8 +82,11 @@
 .print-signer-name { display: block; margin-top: 2px; font-weight: 600; }
 .print-signer-note { color: #666; font-size: var(--document-font-10px); }
 .print-footer { margin-top: var(--document-space-20px); padding-top: var(--document-space-6px); border-top: 1px solid #bbb; color: #666; font-size: var(--document-font-10px); }
+.print-sheet-landscape { width: 273mm; max-width: none; }
 @media print {
   @page { margin: 14mm; }
+  @page oryx-landscape { size: A4 landscape; margin: 12mm; }
+  .print-sheet-landscape { page: oryx-landscape; width: auto; }
   html, body, #root { height: auto !important; overflow: visible !important; background: #fff !important; }
   body > * { display: none !important; }
   body > .print-portal { display: block !important; }

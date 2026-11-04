@@ -6,6 +6,7 @@ import type { ScheduleRow } from "../../schemas/schedule-schema";
 import { ScheduleSummary } from "../schedule-summary";
 import { BatchNav } from "./batch-nav";
 import { BatchPanel } from "./batch-panel";
+import { ScheduleRepairMenu } from "../repairs/schedule-repair-menu";
 
 /** A schedule and its batches. The open batch is kept in the address as ?batch= so it survives reload and can be linked. */
 export function ScheduleDetail({ schedule, phase }: { schedule: ScheduleRow; phase: SchedulePhase }) {
@@ -18,8 +19,9 @@ export function ScheduleDetail({ schedule, phase }: { schedule: ScheduleRow; pha
 
   return <div className="min-w-0 space-y-4">
     <ScheduleSummary schedule={schedule} phase={phase} showProducts={false} />
+    <div className="flex flex-wrap justify-end gap-2"><ScheduleRepairMenu schedule={schedule} initialProductId={open?.batch.productId ?? null} /></div>
     {open ? <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
-      <BatchNav groups={groups} scheduleEnd={schedule.scheduledEndTime} active={open.id} onSelect={select} />
+      <BatchNav key={schedule.id} groups={groups} scheduleEnd={schedule.scheduledEndTime} active={open.id} onSelect={select} />
       {/* Keyed by batch so one batch's messages and dialogs never carry over to another. */}
       <BatchPanel key={open.id} batch={open.batch} batchId={open.id} label={open.label} state={batchState(open.batch, schedule.scheduledEndTime)} />
     </div> : <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">This schedule has no products yet.</p>}

@@ -33,7 +33,7 @@ it("needs the whole delivery placed, no more and no less, with no shelf used twi
     { warehouseLocationShelfId: "s1", quantity: 2_000_000, uomId: "u-mg", note: "" }, { warehouseLocationShelfId: "s2", quantity: 3_000_000, uomId: "u-mg", note: "" }] });
 });
 
-function open(permissions: string[]) {
+function open(permissions: string[], extended = false) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: { method: string; path: string; search: string; body: unknown }[] = [];
@@ -42,7 +42,7 @@ function open(permissions: string[]) {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const url = new URL(input.url);
     calls.push({ method: input.method, path: url.pathname, search: url.search, body: input.method === "GET" ? null : await input.clone().json() });
-    if (url.pathname === "/api/v1/procurement/distribute-material") return Response.json({ data: [delivery], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
+    if (url.pathname === "/api/v1/procurement/distribute-material") return Response.json({ data: [extended ? { ...delivery, materialBatch: { ...delivery.materialBatch, expiryDate: "2020-03-31T00:00:00Z", effectiveExpiryDate: "2099-03-31T00:00:00Z" } } : delivery], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
     if (url.pathname === "/api/v1/warehouse/rack/by-department/summary") return Response.json([{ id: "r1", name: "Rack 1", warehouseLocation: { name: "Raw store" }, shelves: [{ id: "s1", code: "A1" }, { id: "s2", code: "A2" }] },
       { id: "r2", name: "Rack 2", warehouseLocation: { name: "Raw store" }, shelves: [{ id: "s3", code: "B1" }] }]);
     if (url.pathname === "/api/v1/material/distribute-material/move-batch") return new Response(null, { status: 204 });
@@ -90,4 +90,15 @@ it("shows deliveries to someone who may not shelve them, with no action", async 
   open(["CanViewDistributedRawMaterials", "CanReassignRawMaterialStock"]);
   await screen.findByText("Maize starch");
   expect(screen.queryByRole("button", { name: /Actions for/ })).toBeNull();
+});
+
+
+it("uses the server's extended validity on received stock", async () => {
+  open(["CanViewDistributedRawMaterials"], true);
+  const material = await screen.findByText("Maize starch");
+  const row = material.closest("tr");
+  if (!row) throw new Error("Delivery row was not rendered");
+  expect(within(row).queryByText("Expired")).toBeNull();
+  expect(within(row).getByText(/2099/)).toBeTruthy();
+  expect(screen.getByRole("columnheader", { name: "Valid until" })).toBeTruthy();
 });

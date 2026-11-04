@@ -23,14 +23,14 @@ export function PrintFacts({ facts }: { facts: readonly { label: string; value: 
 export interface PrintColumn<TRow> { id: string; header: string; cell: (row: TRow, index: number) => ReactNode; align?: "right"; width?: string }
 
 /** A table that repeats its header on every printed page and never splits a row across pages. */
-export function PrintTable<TRow>({ caption, columns, rows, rowKey, empty, footer }: {
-  caption?: string; columns: readonly PrintColumn<TRow>[]; rows: readonly TRow[]; rowKey: (row: TRow, index: number) => string; empty: string; footer?: ReactNode;
+export function PrintTable<TRow>({ caption, columns, rows, rowKey, empty, footer, rowHeightMm, repeatedTitle }: {
+  caption?: string; columns: readonly PrintColumn<TRow>[]; rows: readonly TRow[]; rowKey: (row: TRow, index: number) => string; empty: string; footer?: ReactNode; rowHeightMm?: number | undefined; repeatedTitle?: string | undefined;
 }) {
   return <table className="print-table">
     {caption ? <caption>{caption}</caption> : null}
-    <thead><tr>{columns.map((column) => <th key={column.id} scope="col" style={{ textAlign: column.align ?? "left", width: column.width }}>{column.header}</th>)}</tr></thead>
+    <thead>{repeatedTitle ? <tr><th colSpan={columns.length}>{repeatedTitle}</th></tr> : null}<tr>{columns.map((column) => <th key={column.id} scope="col" style={{ textAlign: column.align ?? "left", width: column.width }}>{column.header}</th>)}</tr></thead>
     <tbody>{rows.length === 0 ? <tr><td colSpan={columns.length} className="print-empty">{empty}</td></tr>
-      : rows.map((row, index) => <tr key={rowKey(row, index)}>{columns.map((column) => <td key={column.id} style={{ textAlign: column.align ?? "left" }}>{column.cell(row, index)}</td>)}</tr>)}</tbody>
+      : rows.map((row, index) => <tr key={rowKey(row, index)} style={rowHeightMm ? { height: `${rowHeightMm}mm` } : undefined}>{columns.map((column) => <td key={column.id} style={{ textAlign: column.align ?? "left" }}>{column.cell(row, index)}</td>)}</tr>)}</tbody>
     {footer ? <tfoot>{footer}</tfoot> : null}
   </table>;
 }

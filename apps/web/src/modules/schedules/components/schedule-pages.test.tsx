@@ -63,7 +63,7 @@ function open(address: string, options: { end?: number; rawFor?: Record<string, 
 it("shows a schedule with its batches, and the running batch's current step", async () => {
   open(`/production/schedules/${id}/details`);
   const nav = await screen.findByRole("navigation", { name: "Batches" });
-  expect(within(nav).getByText("Full (1,500 L) · 150 X 20ml")).toBeTruthy();
+  expect(within(nav).getByText("NL-047 · Full (1,500 L) · 150 X 20ml")).toBeTruthy();
   expect(within(nav).getAllByRole("button").map((button) => button.textContent)).toEqual(["WM-001In production", "Batch 2Awaiting start", "Batch 3Awaiting start"]);
   expect(await screen.findByText("Current step: Dispensing")).toBeTruthy();
   // A batch in production is not offered to start again.

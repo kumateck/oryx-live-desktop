@@ -20,7 +20,7 @@ export function MaterialShelvesTable({ rows, movePermission, loading, refreshing
     column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", size: 180, cell: ({ row }) => row.original.batchNumber ?? dash }),
     column.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => toLargestUnit(row.original.quantity, row.original.unit, "calculated")?.text ?? String(row.original.quantity) }),
     column.accessor((row) => row.manufacturingDate ?? "", { id: "made", header: "Manufactured", size: 150, cell: ({ row }) => formatMonthYear(row.original.manufacturingDate) ?? dash }),
-    column.accessor((row) => row.expiryDate ?? "", { id: "expiry", header: "Expiry", size: 190, cell: ({ row }) => <ExpiryCell date={row.original.expiryDate} /> }),
+    column.accessor((row) => row.effectiveExpiryDate ?? "", { id: "expiry", header: "Valid until", size: 190, cell: ({ row }) => <ExpiryCell date={row.original.effectiveExpiryDate} /> }),
     column.accessor((row) => row.retestDate ?? "", { id: "retest", header: "Retest", size: 150, cell: ({ row }) => formatDate(row.original.retestDate) ?? dash }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => <TableMenu label={`Actions for batch ${row.original.batchNumber ?? "without a number"} on shelf ${row.original.shelf ?? "unknown"}`}
       items={[{ id: "move", label: "Move to another shelf", icon: ArrowRightLeft, require: movePermission, onSelect: () => onMove(row.original),
