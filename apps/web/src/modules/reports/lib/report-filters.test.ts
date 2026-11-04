@@ -9,11 +9,22 @@ import { appliedReportFilters } from "./applied-filters";
 import { freezeHistoricalFilters, historyParams } from "./history";
 import { eligibleReportDepartments, filterSupplierMappings } from "../api/lookup-choices";
 import { loadScopedReport } from "../api/scoped-report";
+import { expiryParams } from "./filter-params";
 
 const choice = (value: string, label = value) => ({ value, label });
 const load = () => async () => ({ options: [], hasNext: false, hasPrevious: false });
 
 describe("report selection contracts", () => {
+  it("selects expiry months and queries the complete inclusive UTC month range", () => {
+    const fields = reportFilterFields(reportDefinition(ReportKey.MaterialStockDetail), load);
+    expect(fields.filter((field) => "name" in field && (field.name === "expiryDateFrom" || field.name === "expiryDateTo")).map((field) => field.type))
+      .toEqual([InputTypes.MONTH, InputTypes.MONTH]);
+    const filters = reportFiltersSchema.parse({ ...emptyReportFilters(), expiryDateFrom: "2028-02", expiryDateTo: "2028-02" });
+    expect(expiryParams(filters)).toEqual({ expiryDateFrom: "2028-02-01T00:00:00.000Z", expiryDateTo: "2028-02-29T23:59:59.999Z" });
+    expect(reportFiltersSchema.safeParse({ ...filters, expiryDateFrom: "2028-03" }).success).toBe(false);
+    expect(reportFiltersSchema.safeParse({ ...filters, expiryDateTo: "2028-13" }).success).toBe(false);
+    expect(expiryParams(emptyReportFilters())).toEqual({});
+  });
   it("renders every optional All dropdown as a multiselect across all reports", () => {
     expect(reportCatalog).toHaveLength(34);
     for (const definition of reportCatalog) {
