@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { WorksheetCellContext } from "./cell-context";
 import type { WorksheetValues } from "./worksheet-model";
 import { WorksheetFileField } from "./file-field";
+import { MonthYearPicker } from "@/shared/date-pickers/month-year-picker";
+import { monthEndIso, monthOfIso } from "@/shared/batch-dates/batch-dates";
 export default function WorksheetCellControl({ id, name, control, disabled, invalid, describedBy }: CustomFieldProps<WorksheetValues>) {
   const context = useContext(WorksheetCellContext);
   const index = Number(name.split(".")[1]);
@@ -17,6 +19,9 @@ export default function WorksheetCellControl({ id, name, control, disabled, inva
   const value = typeof field.value === "string" ? field.value : "";
   if (!definition || !context) return <p role="alert">The worksheet field could not be resolved.</p>;
   const props = { id, disabled, "aria-invalid": invalid, "aria-describedby": describedBy, onBlur: field.onBlur };
+  if (definition.type === 3 && definition.columnKey === "expiryDate") return <MonthYearPicker id={id} label={definition.label}
+    value={monthOfIso(value)} onChange={(month) => field.onChange(month ? monthEndIso(month).slice(0, 10) : "")}
+    onBlur={field.onBlur} disabled={disabled} invalid={invalid} describedBy={describedBy} />;
   if (definition.type === 25) return <WorksheetFileField id={id} instanceId={context.instanceId} fieldKey={definition.fieldKey} require={context.require} value={value} disabled={disabled} onChange={field.onChange} />;
   if (definition.type === 7) return <Checkbox {...props} checked={value === "true"} onCheckedChange={(next) => field.onChange(next === true ? "true" : "false")} />;
   if (definition.type === 6 && definition.options.length) {
