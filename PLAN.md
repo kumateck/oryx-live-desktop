@@ -1,5 +1,17 @@
 # Oryx Live Desktop plan
 
+## Password-reset email desktop handoff (2026-11-04)
+
+The user requests emailed password-reset links to open the installed app. Keep
+the existing HTTP(S) link as the browser fallback and add an `oryx-live` protocol
+handoff from the reset page, with a visible retry link where browser approval is
+required. Register the installed Windows/macOS app and handle cold/warm launches.
+Accept only reset keys and the configured server origin; never auto-switch sites.
+Use a separate sandboxed, ephemeral reset window with no preload/session bridge
+so ERP tabs and unsaved work remain mounted. No password change occurs without
+the existing validated form and server reset-key checks. This work precedes the
+deferred artifact promotion task. Native release version is 0.2.3; preserve 0.2.2.
+
 ## QA products by department and readiness table (2026-11-03)
 
 Reuse the production product workflow under `/qa/products`. QA selects a production

@@ -9,6 +9,8 @@ import { parseSiteUrl } from "./site-config";
 import { isSitePage, reconnectSite } from "./site-navigation";
 import { createSessionVault, type Cipher } from "./session-vault";
 import type { SiteStatus } from "./bridge";
+import { PasswordResetLinks } from "./password-reset-links";
+import { passwordResetScheme } from "../../../shared/password-reset-link";
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const MAIN_WINDOW_VITE_NAME: string;
@@ -20,6 +22,8 @@ let connectionPageUrl = "";
 let siteUrl = "";
 let connectionError = "";
 let workspaceNavigationReady = false;
+const passwordResetLinks = new PasswordResetLinks(() => window, () => siteUrl);
+app.on("open-url", (event, url) => { event.preventDefault(); passwordResetLinks.receive(url); });
 
 function configPath(): string {
   return path.join(app.getPath("userData"), "site-url.txt");
@@ -182,10 +186,13 @@ async function createWindow(): Promise<void> {
 
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
-app.on("second-instance", () => {
+app.on("second-instance", (_event, args) => {
   if (window && !window.isDestroyed()) { window.show(); window.focus(); updates?.updater.newLaunch(); }
+  for (const arg of args) passwordResetLinks.receive(arg);
 });
 app.whenReady().then(async () => {
+  if (app.isPackaged) app.setAsDefaultProtocolClient(passwordResetScheme);
+  for (const arg of process.argv) passwordResetLinks.receive(arg);
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   vault = createSessionVault(path.join(app.getPath("userData"), "session.bin"), osCipher);
   ipcMain.handle("session:load", (event): Promise<string | null> => vault.load(assertSitePage(event)));
@@ -218,6 +225,7 @@ app.whenReady().then(async () => {
     return status();
   });
   await createWindow();
+  passwordResetLinks.start();
   app.on("activate", () => { if (!window || window.isDestroyed()) void createWindow(); else { window.show(); window.focus(); } });
 }).catch((error: Error) => { console.error(error); app.quit(); });
 }

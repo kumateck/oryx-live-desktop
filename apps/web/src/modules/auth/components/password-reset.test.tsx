@@ -10,8 +10,11 @@ import { SessionProvider } from "../../../shared/auth/session-provider";
 import { ThemeProvider } from "../../../shared/theme/theme-provider";
 import { forgetSession } from "../../../test/backend";
 import { resetKey, resetPasswordSchema } from "../schemas/password-reset-schema";
+import { launchDesktopPasswordReset } from "../lib/desktop-password-reset";
 
-afterEach(() => { cleanup(); forgetSession(); });
+vi.mock("../lib/desktop-password-reset", () => ({ launchDesktopPasswordReset: vi.fn() }));
+
+afterEach(() => { cleanup(); forgetSession(); vi.clearAllMocks(); delete window.oryxSession; });
 // The theme follows the system colour scheme, which jsdom does not report.
 window.matchMedia ??= ((query: string) => ({ matches: false, media: query, onchange: null, addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false })) as typeof window.matchMedia;
 const key = "6f9619ff-8b86-4011-b42d-00c04fc964ff";
@@ -79,4 +82,23 @@ it("asks for the emailed link when the address has no key, and explains an expir
   await user.type(screen.getByLabelText(/Confirm the new password/), "Str0ng!pass");
   await user.click(screen.getByRole("button", { name: "Set new password" }));
   await waitFor(() => expect(screen.getByText(/has expired; links last two days/)).toBeTruthy());
+});
+
+it("attempts the desktop handoff once and retains a browser fallback without consuming the reset key", async () => {
+  const { calls } = open(`/reset-password?key=${key}`, () => Response.json({ success: true }));
+  const link = await screen.findByRole("link", { name: "Open in desktop" });
+  const address = link.getAttribute("href");
+  expect(address?.startsWith("oryx-live://reset-password?")).toBe(true);
+  expect(new URL(address ?? "").searchParams.get("key")).toBe(key);
+  expect(launchDesktopPasswordReset).toHaveBeenCalledExactlyOnceWith(address);
+  expect(await screen.findByLabelText(/^New password/)).toBeTruthy();
+  expect(calls).toEqual([]);
+});
+
+it.each(["desktop-window", "installed-workspace"])("does not hand a %s back to the OS", async (mode) => {
+  if (mode === "installed-workspace") window.oryxSession = { load: async () => null, save: async () => {} };
+  open(`/reset-password?key=${key}${mode === "desktop-window" ? "&desktop=1" : ""}`, () => Response.json({ success: true }));
+  await screen.findByLabelText(/^New password/);
+  expect(screen.queryByRole("link", { name: "Open in desktop" })).toBeNull();
+  expect(launchDesktopPasswordReset).not.toHaveBeenCalled();
 });
