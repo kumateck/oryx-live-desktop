@@ -1,5 +1,12 @@
 # Unstart production before BMR issue
 
+The 4 November correction treats unissued reservations as holds on shelf
+availability. Releasing them makes the held stock available again without adding
+physical shelf quantities or creating a return. Initial adopted configurations
+are archived as already intended and do not block their own archive. Issue
+information and document/ledger evidence still prevent unstarting issued stock;
+see [bulk repairs and reservation release](bulk-schedule-repairs.md).
+
 This repair returns an accidentally started batch to its schedule before its
 BMR has been issued. It preserves the old run and its draft documents as
 archived history, releases its unissued reservations, and permits a fresh start

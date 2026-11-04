@@ -1,5 +1,15 @@
 # API contracts and generated hooks
 
+Bulk product-within-schedule repairs (2026-11-04) add typed GET/POST at
+`/api/v1/production-schedule/{scheduleId}/product/{productId}/repair/{kind}`.
+`ProductionScheduleBulkRepair` belongs to the production transport domain. Use
+`bun scripts/import-schedule-repairs.ts EXPORT.json`, then regenerate/check;
+pre-existing operations and schemas are preserved. The companion bulk audit
+migration is required before activation. The source review for companion backend
+PR #1702 adds typed digest `bfaa319fb93979896947892ba9f3e665f1cbdff24700647b6a126c60a3a90f47`
+while preserving every prior approval. No customer deployment or migration is
+performed. See [bulk repairs](bulk-schedule-repairs.md).
+
 Expiry stock departments (2026-11-04) add only optional
 `MaterialBatchDto.stockDepartments`, referencing the existing collection-item
 schema. Import it from a built metadata-only backend export with

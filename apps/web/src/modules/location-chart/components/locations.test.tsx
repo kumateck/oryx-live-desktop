@@ -35,7 +35,7 @@ const shelfRecord = { id: "sb1", quantity: 5_000_000, uoM: mg, materialBatch: { 
   warehouseLocationShelf: { id: "s1", code: "A1", warehouseLocationRack: { name: "Rack 1", warehouseLocation: { name: "Raw store", floorName: "Ground" } } } };
 const page = (data: unknown[]) => Response.json({ data, pageIndex: 1, pageCount: 1, totalRecordCount: data.length });
 
-function open(address: string, permissions: string[], moveStatus = 204) {
+function open(address: string, permissions: string[], moveStatus = 204, extended = false) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: { method: string; path: string; body: unknown; search: string }[] = [];
@@ -47,13 +47,15 @@ function open(address: string, permissions: string[], moveStatus = 204) {
     calls.push({ method: input.method, path, search: url.search, body: input.method === "GET" ? null : await input.clone().json() });
     if (path === "/api/v1/material/approved-materials") return page(url.searchParams.get("kind") === "1" ? [] : [{ material: starch, unitOfMeasure: mg, totalAvailableQuantity: 5_000_000, reservedQuantity: 5_000_000 }]);
     if (path === "/api/v1/warehouse/rack/by-department/summary") return Response.json(url.searchParams.get("kind") === "1" ? [] : racks);
-    if (path === "/api/v1/warehouse/rack/r1") return Response.json(rackOne);
+    if (path === "/api/v1/warehouse/rack/r1") return Response.json(extended ? { ...rackOne, shelves: rackOne.shelves.map((shelf) => ({ ...shelf, materialBatches: shelf.materialBatches.map((entry) => ({ ...entry,
+      materialBatch: { ...entry.materialBatch, expiryDate: "2020-03-31T00:00:00Z", effectiveExpiryDate: "2099-03-31T00:00:00Z", retestDate: "2099-03-31T00:00:00Z" } })) })) } : rackOne);
     if (path === "/api/v1/warehouse/rack/r2") return Response.json({ id: "r2", name: "Rack 2", shelves: [{ id: "s3", code: "B1", materialBatches: [] }] });
     if (path === "/api/v1/material/batch/move/v2") return moveStatus === 204 ? new Response(null, { status: 204 }) : Response.json({ errors: [{ code: "Material.Move", description: "The target shelf is in a different warehouse" }] }, { status: moveStatus });
     if (path === "/api/v1/material/department") return page([{ material: starch, uoM: mg, warehouseStock: 5_000_000, minimumStockLevel: 10_000_000, reOrderLevel: 20_000_000, maximumStockLevel: 0, expiredQuantity: 1_000_000 }]);
     if (path === "/api/v1/material/m1") return Response.json(starch);
     if (path === "/api/v1/material/m2") return Response.json(film);
-    if (path === "/api/v1/material/m1/shelf") return Response.json([shelfRecord, { ...shelfRecord, id: "sb0", quantity: 0 }]);
+    if (path === "/api/v1/material/m1/shelf") return Response.json([extended ? { ...shelfRecord, materialBatch: { ...shelfRecord.materialBatch, expiryDate: "2020-03-31T00:00:00Z",
+      effectiveExpiryDate: "2099-03-31T00:00:00Z", retestDate: "2099-03-31T00:00:00Z" } } : shelfRecord, { ...shelfRecord, id: "sb0", quantity: 0 }]);
     return new Response(null, { status: 404 });
   });
   const router = createMemoryRouter([
@@ -202,4 +204,18 @@ it("prints the open rack and a material's shelves as documents, without writing 
   expect(within(record).getByText("Material location record")).toBeTruthy();
   expect(within(record).getByText("Critical")).toBeTruthy();
   expect(calls.every((call) => call.method === "GET")).toBe(true);
+});
+
+
+it.each([
+  ["/warehouse/location-chart?kind=0", "CanViewRawMaterialLocationChartList"],
+  ["/warehouse/material-location/m1/details?kind=0", "CanViewRawMaterialLocationList"],
+])("shows the server's retest validity on %s", async (path, permission) => {
+  open(path, [permission, "CanViewRawMaterialLocationChartList", "CanViewRawMaterialLocationList"], 204, true);
+  const batch = await screen.findByText("B-01");
+  const row = batch.closest("tr");
+  if (!row) throw new Error("Batch row was not rendered");
+  expect(within(row).queryByText("Expired")).toBeNull();
+  expect(within(row).getAllByText(/2099/).length).toBeGreaterThan(0);
+  expect(screen.getByRole("columnheader", { name: "Valid until" })).toBeTruthy();
 });

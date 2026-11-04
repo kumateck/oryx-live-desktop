@@ -19,7 +19,7 @@ export interface RackSummaryFigures { shelves: number; emptyShelves: string[]; b
 
 export function rackSummary(rack: Rack, now = new Date()): RackSummaryFigures {
   const rows = rackStockRows(rack);
-  const states = rows.map((row) => expiryState(row.expiryDate, now));
+  const states = rows.map((row) => expiryState(row.effectiveExpiryDate, now));
   return { shelves: rack.shelves.length, emptyShelves: rack.shelves.filter((shelf) => shelf.stock.length === 0).map((shelf) => shelf.label), batches: rows.length,
     expired: states.filter((state) => state === "overdue").length, expiringSoon: states.filter((state) => state === "soon").length };
 }
