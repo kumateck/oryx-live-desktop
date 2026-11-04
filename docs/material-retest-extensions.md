@@ -26,6 +26,20 @@ corrections/QC requests, rejects stale expected dates, and saves the change and 
 quantities, original expiry, QC status, approval or valuation changes occur.
 A QC retest already in progress must finish through its governed workflow.
 
+Retest validity selectors use the same month-and-year picker as expiry fields,
+with no day selection: migration retest corrections, governed material-retest
+proposed expiry, and product analytical retest extended expiry. A selected
+extension is saved as the last day of that month
+in UTC, using the shared batch-expiry conversion (including leap years). Clearing
+it sends no retest date. The original full dates are still sent unchanged as the
+expected values for migration stale-record checks, and a correction reason remains
+required. Actual sample-collection dates retain day selection for traceability.
+Receiving, BMR issue/revision and migration/top-up manufacturing and expiry
+selectors already use month precision. Report expiry filters now include whole
+months, and explicit worksheet reagent/reference-standard lot-expiry fields use
+the shared month picker while retaining their date-only request format. Existing
+stored dates and template-owned calculations are not rewritten by opening a form.
+
 Both Expired Materials and About to Expire Materials accept header search by
 material code/name. The optional month range combines with search on the server
 before pagination. **Clear dates** keeps the search. Expired stays an expired-only

@@ -13,6 +13,9 @@ import { useWorkspaceLeaveSafety } from "./use-workspace-leave-safety";
 import { hasUnsavedUpdateWork } from "../updates/leave-safety";
 import { useDesktopNavigation } from "./use-desktop-navigation";
 import { DesktopRouteBlocker } from "./route-blocker";
+import { WorkspaceLinkMenu } from "./internal-link-menu";
+import { WorkspaceNavigation } from "@/components/shell/workspace-navigation";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 let initialisations = 0;
 let running = 0;
@@ -24,12 +27,14 @@ function RecordPage() {
   useDesktopTabTitle(`Record ${id}`);
   useDesktopTabSafety(Boolean(draft));
   useEffect(() => { initialisations++; setDraft(""); running++; return () => { running--; }; }, []);
-  return <><DesktopRouteBlocker /><WorkspaceTabStrip /><h1>Record {id}</h1>
+  return <WorkspaceLinkMenu><><DesktopRouteBlocker /><WorkspaceTabStrip /><h1>Record {id}</h1>
+    <TooltipProvider><WorkspaceNavigation groups={[{ id: "warehouse-management", label: "Warehouse", items: [{ id: "other", label: "Other record", path: "/records/b" }] }]}
+      active={null} pathname={`/records/${id}`} sidebarOpen onOpenSidebar={() => {}} /></TooltipProvider>
     <input aria-label="Draft" value={draft} onChange={(event) => setDraft(event.target.value)} />
     <input aria-label="Filter" value={params.get("search") ?? ""} onChange={(event) => setParams({ search: event.target.value })} />
     <Link to="/records/detail">Details</Link><button onClick={() => setDialog(true)}>Open dialog</button>
     <Dialog open={dialog} onOpenChange={setDialog}><DialogContent><DialogTitle>Record dialog</DialogTitle><DialogDescription>Only the current tab can show this.</DialogDescription></DialogContent></Dialog>
-  </>;
+  </></WorkspaceLinkMenu>;
 }
 function Harness({ workspace }: { workspace: WorkspaceTabs }) {
   useWorkspaceLeaveSafety(workspace);
@@ -38,16 +43,67 @@ function Harness({ workspace }: { workspace: WorkspaceTabs }) {
   return tabs.map((tab) => <WorkspaceTabView key={tab.id} tab={tab} workspace={workspace} active={tab.id === activeId} pending={false} />);
 }
 const spaces: WorkspaceTabs[] = [];
-function open() {
+function open(hash = "") {
   initialisations = 0; running = 0;
   let pending = false;
   const workspace = new WorkspaceTabs([{ path: "/records/:id", Component: RecordPage }, { path: "/home", Component: RecordPage }], () => pending);
   spaces.push(workspace);
-  workspace.open({ pathname: "/records/a", search: "?search=acid", hash: "" });
+  workspace.open({ pathname: "/records/a", search: "?search=acid", hash });
   render(<Harness workspace={workspace} />);
   return { workspace, user: userEvent.setup(), pending: (value: boolean) => { pending = value; } };
 }
 afterEach(() => { cleanup(); for (const space of spaces) space.dispose(); spaces.length = 0; });
+
+it("uses the active tab for ordinary sidebar clicks and a separate tab for Ctrl-click", async () => {
+  const { workspace, user } = open();
+  const first = workspace.active()?.id;
+  await user.click(screen.getByRole("link", { name: "Other record" }));
+  await waitFor(() => expect(workspace.active()?.location.pathname).toBe("/records/b"));
+  expect(workspace.getSnapshot().tabs).toHaveLength(1);
+  expect(workspace.active()?.id).toBe(first);
+  fireEvent.click(screen.getByRole("link", { name: "Details" }), { ctrlKey: true });
+  await waitFor(() => expect(workspace.getSnapshot().tabs).toHaveLength(2));
+  expect(workspace.active()?.location.pathname).toBe("/records/detail");
+});
+
+it("opens a navigation link through its context menu", async () => {
+  const { workspace, user } = open();
+  fireEvent.contextMenu(screen.getByRole("link", { name: "Other record" }));
+  await user.click(await screen.findByRole("menuitem", { name: "Open in new tab" }));
+  await waitFor(() => expect(workspace.getSnapshot().tabs).toHaveLength(2));
+  expect(workspace.active()?.location.pathname).toBe("/records/b");
+});
+
+it("duplicates a tab through its header menu while retaining the original dirty draft and URL", async () => {
+  const { workspace, user, pending } = open("#notes");
+  const original = workspace.active();
+  await user.type(screen.getByRole("textbox", { name: "Draft" }), "original unsaved work");
+  fireEvent.contextMenu(screen.getByRole("tab", { name: /Record a/ }));
+  await user.click(await screen.findByRole("menuitem", { name: "Duplicate tab" }));
+  await waitFor(() => expect(workspace.getSnapshot().tabs).toHaveLength(2));
+  expect(workspace.active()?.id).not.toBe(original?.id);
+  expect(workspace.active()?.location).toMatchObject({ pathname: "/records/a", search: "?search=acid", hash: "#notes" });
+  expect(screen.getByRole<HTMLInputElement>("textbox", { name: "Draft" }).value).toBe("");
+  expect(workspace.hasWork()).toBe(true);
+  if (!original) throw new Error("Missing original tab");
+  act(() => workspace.focus(original.id));
+  expect(screen.getByRole<HTMLInputElement>("textbox", { name: "Draft" }).value).toBe("original unsaved work");
+  pending(true);
+  act(() => workspace.duplicate(original.id));
+  expect(workspace.getSnapshot().tabs).toHaveLength(2);
+});
+
+it("turns a blank picker into the selected sidebar page without creating another tab", async () => {
+  const { workspace, user } = open();
+  act(() => workspace.newTab());
+  const blankId = workspace.active()?.id;
+  expect(workspace.active()?.picker).toBe(true);
+  await user.click(screen.getByRole("link", { name: "Other record" }));
+  await waitFor(() => expect(workspace.active()?.picker).toBe(false));
+  expect(workspace.active()?.id).toBe(blankId);
+  expect(workspace.active()?.location.pathname).toBe("/records/b");
+  expect(workspace.getSnapshot().tabs).toHaveLength(2);
+});
 
 it("retains dirty form values and list filters independently without restarting form effects", async () => {
   const { workspace, user } = open();
@@ -77,7 +133,7 @@ it("keeps controller effects stable and histories in their owning tab", async ()
   expect(workspace.active()?.back).toBe(false);
   act(() => workspace.focus(first));
   act(() => workspace.travel(-1));
-  await waitFor(() => expect(screen.getByRole("heading").textContent).toBe("Record a"));
+  await waitFor(() => expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Record a"));
   expect(workspace.active()?.forward).toBe(true);
 });
 
@@ -129,10 +185,10 @@ it("hides dirty inactive dialog portals while preserving their form state", asyn
   fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
 });
 
-it("keeps dirty route navigation guarded and does not switch tabs during an asynchronous save", async () => {
+it.each(["Details", "Other record"])("guards dirty navigation through %s and blocks tab changes during a save", async (link) => {
   const { workspace, user } = open();
   await user.type(screen.getByRole("textbox", { name: "Draft" }), "work");
-  await user.click(screen.getByRole("link", { name: "Details" }));
+  await user.click(screen.getByRole("link", { name: link }));
   expect(await screen.findByRole("heading", { name: "Leave without saving?" })).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Keep editing" }));
   const first = workspace.getSnapshot().activeId;

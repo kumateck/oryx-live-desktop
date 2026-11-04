@@ -8,10 +8,14 @@ import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
 import { retestPermissions, retestSchema } from "../schemas/retest";
 import { RetestActionDialog, type RetestAction } from "./retest-action";
 vi.setConfig({ testTimeout: 30_000 });
+HTMLElement.prototype.hasPointerCapture = () => false;
+HTMLElement.prototype.setPointerCapture = () => {};
+HTMLElement.prototype.releasePointerCapture = () => {};
+HTMLElement.prototype.scrollIntoView = () => {};
 afterEach(() => { cleanup(); forgetSession(); });
 const initial = { id: "retest-1", materialBatchId: "batch-1", batchNumber: "B-1", materialKind: 0, origin: 1, status: 2, approved: true, events: [] };
 function open(action: RetestAction, { changed = false, assigned = true }: { changed?: boolean; assigned?: boolean } = {}) {
-  const source = { ...initial, status: action === "approve" ? 0 : 2 };
+  const source = { ...initial, status: action === "approve" ? 0 : action === "sample" ? 1 : 2, originalExpiryDate: "2026-01-31T00:00:00Z" };
   const record = retestSchema.parse(source);
   const backend = stubBackend({ permissions: [retestPermissions[action], retestPermissions.detail] });
   const auth = backend.fetcher.getMockImplementation();
@@ -56,4 +60,30 @@ it.each([true, false])("checks the assigned approval stage before signing (assig
     await waitFor(() => expect(done).toHaveBeenCalledOnce());
     expect(writes.map((entry) => ({ path: entry.path, body: JSON.parse(entry.body) }))).toEqual([{ path: "/api/v1/qc/material-retests/retest-1/approve", body: { password: "fixture-password", comments: "Authorize sample collection" } }]);
   }
+});
+
+it("records a governed sample with a month-only proposed expiry at leap-year month end", async () => {
+  const user = userEvent.setup();
+  const { writes, done } = open("sample");
+  const quantity = await screen.findByRole("spinbutton", { name: /Sample quantity/ });
+  await user.clear(quantity);
+  await user.type(quantity, "5");
+  const containers = screen.getByRole("spinbutton", { name: /Sampled containers/ });
+  await user.clear(containers);
+  await user.type(containers, "2");
+  await user.click(screen.getByRole("button", { name: "Record sample" }));
+  expect(await screen.findByText("Proposed expiry must be after today and the original expiry")).toBeTruthy();
+  expect(writes).toEqual([]);
+  await user.click(screen.getByRole("button", { name: /Proposed expiry/ }));
+  expect(screen.queryByRole("grid")).toBeNull();
+  await user.click(screen.getByRole("combobox", { name: "Year" }));
+  await user.click(screen.getByRole("option", { name: "2028" }));
+  await user.click(screen.getByRole("combobox", { name: "Month" }));
+  await user.click(screen.getByRole("option", { name: "February" }));
+  await user.click(screen.getByRole("button", { name: "Apply" }));
+  await user.click(screen.getByRole("button", { name: "Record sample" }));
+  await waitFor(() => expect(done).toHaveBeenCalledOnce());
+  expect(writes.map((entry) => ({ path: entry.path, body: JSON.parse(entry.body) }))).toEqual([
+    { path: "/api/v1/qc/material-retests/retest-1/sample", body: { sampleQuantity: 5, sampledContainers: 2, proposedExpiryDate: "2028-02-29T00:00:00.000Z" } },
+  ]);
 });

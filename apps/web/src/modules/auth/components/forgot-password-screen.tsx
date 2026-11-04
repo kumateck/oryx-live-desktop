@@ -26,7 +26,7 @@ export function ForgotPasswordScreen() {
   if (sentTo) return <AuthShell title="Check your email" subtitle="A reset link is on its way">
     <div className="space-y-4 text-sm">
       <p role="status">If an account uses <span className="font-medium">{sentTo}</span>, an email with a link to set a new password has been sent to it. The link works for two days.</p>
-      <p className="text-muted-foreground">The link opens in your browser. If you would rather finish here, <Link to={resetPasswordPath} className="text-primary underline-offset-2 hover:underline">paste the link</Link> instead.</p>
+      <p className="text-muted-foreground">The email link offers to open Oryx Live Desktop when installed, with a browser form available too. You can also <Link to={resetPasswordPath} className="text-primary underline-offset-2 hover:underline">paste the link here</Link>.</p>
       <Button asChild variant="outline" className="w-full"><Link to={loginPath}>Back to sign in</Link></Button>
     </div>
   </AuthShell>;

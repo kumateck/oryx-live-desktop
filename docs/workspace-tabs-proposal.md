@@ -1,5 +1,11 @@
 # Workspace tabs proposal
 
+The user revised and authorized the interaction on 2026-11-04: tabs now belong in
+the desktop header; normal sidebar clicks use the active tab; Ctrl/Cmd-click or
+the link context menu opens separately; a tab-header context menu offers Duplicate
+tab. See [current behavior](workspace-tabs.md). The original design below is kept
+as the historical proposal.
+
 Date: 2026-11-03. Status: visual direction approved; desktop-only implementation
 subsequently authorized. See [implementation notes](workspace-tabs.md).
 

@@ -11,6 +11,7 @@ import { InputTypes } from "@/shared/forms/input-types";
 import { forgotPasswordPath, loginPath } from "../lib/auth-paths";
 import { resetKey, resetPasswordSchema, type ResetPasswordValues } from "../schemas/password-reset-schema";
 import { AuthShell } from "./auth-shell";
+import { DesktopPasswordReset } from "./desktop-password-reset";
 
 const fields = [
   { type: InputTypes.PASSWORD, name: "password", label: "New password", autoComplete: "new-password", required: true, description: "At least 8 characters, with a digit, a capital letter and a symbol." },
@@ -51,6 +52,7 @@ export function ResetPasswordScreen() {
   </AuthShell>;
   if (!key) return <AuthShell title="Set a new password" subtitle="Paste the link from your password reset email"><PasteLink onKey={setKey} /></AuthShell>;
   return <AuthShell title="Set a new password" subtitle="Choose the password you will sign in with">
+    <DesktopPasswordReset resetKey={key} />
     <form noValidate onSubmit={(event) => void submit(event)} className="space-y-5">
       <FormWizard form={form} fields={fields} className="gap-5" />
       {message ? <p role="alert" className="text-sm text-destructive">{message} {/link/.test(message) ? <Link to={forgotPasswordPath} className="text-primary underline-offset-2 hover:underline">Ask for a new link</Link> : null}</p> : null}
