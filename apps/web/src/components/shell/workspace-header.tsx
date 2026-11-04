@@ -11,9 +11,10 @@ interface WorkspaceHeaderProps {
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
   groups: readonly NavigationGroup[];
+  navigationId?: string;
 }
 
-export function WorkspaceHeader({ title, sidebarOpen, onToggleSidebar, groups }: WorkspaceHeaderProps) {
+export function WorkspaceHeader({ title, sidebarOpen, onToggleSidebar, groups, navigationId = "module-navigation" }: WorkspaceHeaderProps) {
   const toggleLabel = sidebarOpen ? "Close navigation" : "Open navigation";
   return <header className="app-header">
     <div className="header-navigation">
@@ -22,7 +23,7 @@ export function WorkspaceHeader({ title, sidebarOpen, onToggleSidebar, groups }:
       <Tooltip>
         <TooltipTrigger asChild>
           <Button variant="ghost" size="icon-sm" className="icon-button" type="button"
-            aria-label={toggleLabel} aria-expanded={sidebarOpen} aria-controls="module-navigation" onClick={onToggleSidebar}>
+            aria-label={toggleLabel} aria-expanded={sidebarOpen} aria-controls={navigationId} onClick={onToggleSidebar}>
             <PanelLeft aria-hidden="true" className="size-[18px]" />
           </Button>
         </TooltipTrigger>

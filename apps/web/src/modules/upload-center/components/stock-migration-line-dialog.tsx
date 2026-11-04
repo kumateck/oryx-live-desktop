@@ -41,6 +41,8 @@ export function StockMigrationLineDialog({ migrationId, line, quantityUnit, shel
     { type: InputTypes.NUMBER, name: "quantityInSheet", label: `Quantity (${quantityUnit})`, min: 0, description: `Enter the amount in ${quantityUnit}; leave empty for no stock.` },
     { type: InputTypes.MONTH, name: "manufactured", label: "Manufactured" },
     { type: InputTypes.MONTH, name: "expiry", label: "Expiry" },
+    { type: InputTypes.TEXT, name: "grn", label: "GRN reference" },
+    { type: InputTypes.TEXT, name: "arNumber", label: "AR number" },
     { type: InputTypes.CHECKBOX, name: "excluded", label: "Leave this row out", className: "md:col-span-3" },
   ], [choices, line, picksMaterial, quantityUnit, shelves]);
 

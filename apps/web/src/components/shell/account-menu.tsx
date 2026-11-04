@@ -8,10 +8,14 @@ import { DepartmentSwitchDialog } from "@/shared/auth/department-switch-dialog";
 import { switchDepartmentPermission, type SessionUser } from "@/shared/auth/session-api";
 import { useAccess } from "@/shared/auth/use-access";
 import { UserAvatar } from "@/shared/auth/user-avatar";
+import { useDesktopTab } from "@/shared/workspace-tabs/context";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function AccountMenu({ user, onLogout }: { user: SessionUser | null; onLogout: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const desktop = useDesktopTab();
   const { has } = useAccess();
   const logout = async () => {
     setBusy(true);
@@ -33,9 +37,21 @@ export function AccountMenu({ user, onLogout }: { user: SessionUser | null; onLo
     <DropdownMenuItem asChild><Link to="/settings/appearance"><Palette className="size-4" />Appearance</Link></DropdownMenuItem>
     {has(switchDepartmentPermission) ? <DropdownMenuItem onSelect={() => setSwitching(true)}><Building2 className="size-4" />Switch department</DropdownMenuItem> : null}
     <DropdownMenuSeparator />
-    <DropdownMenuItem disabled={busy} onSelect={(event) => { event.preventDefault(); void logout(); }}>
+    <DropdownMenuItem disabled={busy} onSelect={(event) => {
+      event.preventDefault();
+      if (desktop?.workspace.hasWork()) setConfirmLogout(true); else void logout();
+    }}>
       <LogOut className="size-4" />{busy ? "Signing out…" : "Sign out"}
     </DropdownMenuItem>
   </DropdownMenuContent></DropdownMenu>
-  {switching && user ? <DepartmentSwitchDialog user={user} onClose={() => setSwitching(false)} /> : null}</>;
+  {switching && user ? <DepartmentSwitchDialog user={user} onClose={() => setSwitching(false)} /> : null}
+  <Dialog open={confirmLogout} onOpenChange={setConfirmLogout}><DialogContent>
+    <DialogHeader><DialogTitle>Sign out with unsaved work?</DialogTitle>
+      <DialogDescription>Unsaved changes in all open tabs will be lost. Wait for any save in progress before signing out.</DialogDescription></DialogHeader>
+    <DialogFooter><Button variant="outline" onClick={() => setConfirmLogout(false)}>Keep working</Button>
+      <Button variant="destructive" disabled={busy} onClick={() => {
+        if (desktop?.workspace.hasPending()) { toast.error("A save is still in progress. Wait for its result before signing out."); return; }
+        void logout();
+      }}>Discard changes and sign out</Button></DialogFooter>
+  </DialogContent></Dialog></>;
 }

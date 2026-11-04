@@ -19,6 +19,7 @@ let updates: DesktopUpdateRuntime | null = null;
 let connectionPageUrl = "";
 let siteUrl = "";
 let connectionError = "";
+let workspaceNavigationReady = false;
 
 function configPath(): string {
   return path.join(app.getPath("userData"), "site-url.txt");
@@ -116,11 +117,14 @@ const onSite = () => isSitePage(siteUrl, window.webContents.getURL());
 
 function refreshMenu(): void {
   buildMenu({ siteUrl, companion: () => companion?.toggle(), reload: () => window.webContents.reload(),
+    workspaceTabs: workspaceNavigationReady,
+    newTab: () => { if (onSite() && workspaceNavigationReady) window.webContents.send("workspace:navigate", "new-tab"); },
+    closeTab: () => { if (onSite() && workspaceNavigationReady) window.webContents.send("workspace:navigate", "close-tab"); },
     reconnect: () => reconnectSite(siteUrl, window.webContents, () => { void openSite(); }), changeServer, forgetServer: () => { void forgetServer(); },
     updates: () => { void updates?.open().catch((error: Error) => console.error(error.message)); },
-    home: () => { void openSite(); },
-    back: () => { const history = window.webContents.navigationHistory; if (onSite() && history.canGoBack()) history.goBack(); },
-    forward: () => { const history = window.webContents.navigationHistory; if (onSite() && history.canGoForward()) history.goForward(); },
+    home: () => { if (onSite() && workspaceNavigationReady) window.webContents.send("workspace:navigate", "home"); else void openSite(); },
+    back: () => { const history = window.webContents.navigationHistory; if (onSite() && workspaceNavigationReady) window.webContents.send("workspace:navigate", "back"); else if (onSite() && history.canGoBack()) history.goBack(); },
+    forward: () => { const history = window.webContents.navigationHistory; if (onSite() && workspaceNavigationReady) window.webContents.send("workspace:navigate", "forward"); else if (onSite() && history.canGoForward()) history.goForward(); },
     print: () => { if (onSite()) window.webContents.print(); } });
 }
 
@@ -134,6 +138,9 @@ async function createWindow(): Promise<void> {
     },
   });
   let closing = false;
+  window.webContents.on("did-start-navigation", (_event, _url, inPlace, mainFrame) => {
+    if (mainFrame && !inPlace) { workspaceNavigationReady = false; refreshMenu(); }
+  });
   window.on("close", (event) => {
     if (closing || quitting) return;
     if (!quitting && companion?.canRunInBackground()) { event.preventDefault(); window.hide(); return; }
@@ -182,6 +189,12 @@ app.whenReady().then(async () => {
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   vault = createSessionVault(path.join(app.getPath("userData"), "session.bin"), osCipher);
   ipcMain.handle("session:load", (event): Promise<string | null> => vault.load(assertSitePage(event)));
+  ipcMain.handle("workspace:subscribe", (event, enabled: boolean): void => {
+    assertSitePage(event);
+    if (typeof enabled !== "boolean") throw new Error("Invalid workspace subscription.");
+    workspaceNavigationReady = enabled;
+    refreshMenu();
+  });
   ipcMain.handle("session:save", (event, token: unknown): Promise<void> => {
     const origin = assertSitePage(event);
     if (token !== null && typeof token !== "string") throw new Error("Invalid sign-in.");

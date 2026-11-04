@@ -115,7 +115,7 @@ function WizardFieldSlot<TValues extends FieldValues>({ field, form }: {
 
 export function FormWizard<TValues extends FieldValues>({ form, fields, className }: FormWizardProps<TValues>) {
   const { isDirty, isSubmitting } = useFormState({ control: form.control });
-  useFormUpdateSafety(isDirty || isSubmitting);
+  useFormUpdateSafety(isDirty, isSubmitting);
   return <FormProvider {...form}><div className={cn("grid min-w-0 grid-cols-1 gap-4", className)}>
     {fields.map((field) => <Suspense key={"name" in field ? field.name : field.id} fallback={<div className="h-14 min-w-0 animate-pulse rounded-lg bg-muted" aria-label={`Loading ${"label" in field ? field.label : "form layout"}`} />}>
       <WizardFieldSlot field={field} form={form} />

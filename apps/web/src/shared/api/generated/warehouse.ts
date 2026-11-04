@@ -2516,6 +2516,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchListDto = {
   analysedDate?: string | null;
   issuedBy?: SharedCollectionItemDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
   id?: string;
@@ -2554,6 +2555,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
   analysedDate?: string | null;
   issuedBy?: SharedCollectionItemDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchBatchToSupply = {
   batch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
@@ -2573,6 +2575,7 @@ export type DomainEntitiesRequisitionsRequisitionItemDto = {
   quantityReceived?: number;
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
+  approvedQuantity?: number | null;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   id?: string;
@@ -2582,6 +2585,7 @@ export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   quantityReceived?: number;
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
+  approvedQuantity?: number | null;
 };
 export type DomainEntitiesProductsEquipmentsEquipmentDto = {
   id?: string;
@@ -3129,6 +3133,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDto = {
   sampleQuantity?: number;
   analysedBy?: string | null;
   analysedDate?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   id?: string;
@@ -3164,6 +3169,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   sampleQuantity?: number;
   analysedBy?: string | null;
   analysedDate?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesWarehousesShelfMaterialBatchDto = {
   id?: string;
@@ -3362,6 +3368,7 @@ export type DomainEntitiesMaterialsBatchDistributedMaterialBatchDto = {
   quantityDistributed?: number;
   sampleWeights?: DomainEntitiesMaterialsBatchSrDto[] | null;
   reservedQuantity?: number;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesChecklistsDistributedChecklistDto = {
   materialBatches?:
@@ -3777,6 +3784,8 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDto = {
   analysedDate?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
+  isOpeningBalanceBatch?: boolean;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   id?: string;
@@ -3821,6 +3830,8 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   analysedDate?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
+  isOpeningBalanceBatch?: boolean;
 };
 export type DomainEntitiesWarehousesWarehouseArrivalLocationDto = {
   id?: string;

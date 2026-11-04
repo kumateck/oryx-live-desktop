@@ -14,6 +14,7 @@ function createApiStore() {
 }
 
 export type ApiDispatch = ReturnType<typeof createApiStore>["dispatch"];
+export type ApiStore = ReturnType<typeof createApiStore>;
 
 function ApiStore({ children }: { children: ReactNode }) {
   const [store] = useState(createApiStore);

@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { useMemo } from "react";
 import { ClientDataTable, ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
@@ -16,12 +18,12 @@ interface Props { materialId: string; departmentId: string }
 
 const batchColumn = dataTableColumns<ShelfBatchRow>();
 const batchColumns = batchColumn.columns([
-  batchColumn.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", cell: ({ row }) => row.original.batchNumber ?? dash }),
+  batchColumn.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", cell: ({ row }) => <div>{row.original.batchNumber ?? dash}{row.original.batchId ? <PermissionGuard require={{ kind: "all", permissions: ["CanViewExpiredMaterials"] }}><Link className="block text-xs text-primary underline underline-offset-2" to={`/warehouse/expired-materials/${encodeURIComponent(row.original.batchId)}`}>Batch validity</Link></PermissionGuard> : null}</div> }),
   batchColumn.accessor((row) => row.shelf ?? "", { id: "shelf", header: "Shelf", cell: ({ row }) => row.original.shelf ? <div><div className="font-medium">{row.original.shelf}</div>
     <div className="text-xs text-muted-foreground">{[row.original.rack, row.original.location, row.original.floor].filter(Boolean).join(" · ")}</div></div> : dash }),
   batchColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => quantity(row.original.quantity, row.original.unit) }),
   batchColumn.accessor((row) => formatMonthYear(row.manufacturingDate) ?? "", { id: "made", header: "Manufactured", size: 150, cell: ({ row }) => formatMonthYear(row.original.manufacturingDate) ?? dash }),
-  batchColumn.accessor((row) => row.expiryDate ?? "", { id: "expiry", header: "Expiry", size: 190, cell: ({ row }) => <ExpiryCell date={row.original.expiryDate} /> }),
+  batchColumn.accessor((row) => row.effectiveExpiryDate ?? "", { id: "expiry", header: "Valid until", size: 190, cell: ({ row }) => <div><ExpiryCell date={row.original.effectiveExpiryDate} />{row.original.effectiveExpiryDate !== row.original.expiryDate ? <span className="text-xs text-muted-foreground">Retest extension · expiry {formatMonthYear(row.original.expiryDate) ?? "not recorded"}</span> : null}</div> }),
   batchColumn.accessor((row) => formatDate(row.retestDate) ?? "", { id: "retest", header: "Retest", size: 150, cell: ({ row }) => formatDate(row.original.retestDate) ?? dash }),
 ]);
 
@@ -74,7 +76,7 @@ const reservedColumns = reservedColumn.columns([
     <div className="text-xs text-muted-foreground">AR {row.original.arNumber ?? "–"}</div></div> }),
   reservedColumn.accessor("reserved", { header: "Reserved", size: 140, cell: ({ row }) => <span className="font-medium">{quantity(row.original.reserved, row.original.unit)}</span> }),
   reservedColumn.accessor("balance", { header: "Balance after", size: 140, cell: ({ row }) => quantity(row.original.balance, row.original.unit) }),
-  reservedColumn.accessor((row) => row.expiryDate ?? "", { id: "expiry", header: "Expiry", size: 190, cell: ({ row }) => <ExpiryCell date={row.original.expiryDate} /> }),
+  reservedColumn.accessor((row) => row.effectiveExpiryDate ?? "", { id: "expiry", header: "Valid until", size: 190, cell: ({ row }) => <div><ExpiryCell date={row.original.effectiveExpiryDate} />{row.original.effectiveExpiryDate !== row.original.expiryDate ? <span className="text-xs text-muted-foreground">Retest extension · expiry {formatMonthYear(row.original.expiryDate) ?? "not recorded"}</span> : null}</div> }),
 ]);
 
 /** Stock of the material set aside for production batches that have not drawn it yet. */

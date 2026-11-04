@@ -636,6 +636,7 @@ const injectedRtkApi = api.injectEndpoints({
           SubModule: queryArg.subModule,
         },
         params: {
+          searchQuery: queryArg.searchQuery,
           startDate: queryArg.startDate,
           endDate: queryArg.endDate,
           warehouseIds: queryArg.warehouseIds,
@@ -659,6 +660,7 @@ const injectedRtkApi = api.injectEndpoints({
           SubModule: queryArg.subModule,
         },
         params: {
+          searchQuery: queryArg.searchQuery,
           startDate: queryArg.startDate,
           endDate: queryArg.endDate,
           warehouseIds: queryArg.warehouseIds,
@@ -1013,6 +1015,57 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/v1/stock-migrations/${queryArg.id}/approve`,
         method: "POST",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1MaterialBatchByBatchIdMigrationRetestDate: build.mutation<
+      PutApiV1MaterialBatchByBatchIdMigrationRetestDateApiResponse,
+      PutApiV1MaterialBatchByBatchIdMigrationRetestDateApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }, { type: "material/batch", id: queryArg.batchId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/material/batch/${queryArg.batchId}/migration-retest-date`,
+        method: "PUT",
+        body: queryArg.domainEntitiesMaterialsBatchUpdateMigrationRetestDate,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1StockMigrationsTopUpsUpload: build.mutation<
+      PostApiV1StockMigrationsTopUpsUploadApiResponse,
+      PostApiV1StockMigrationsTopUpsUploadApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "stock-migration/top-up", id: "LIST" }, { type: "stock-migration", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/top-ups/upload`,
+        method: "POST",
+        body: queryArg.body,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          departmentId: queryArg.departmentId,
+          reason: queryArg.reason,
+          massUnit: queryArg.massUnit,
+          volumeUnit: queryArg.volumeUnit,
+        },
+      }),
+    }),
+    postApiV1StockMigrationsTopUps: build.mutation<
+      PostApiV1StockMigrationsTopUpsApiResponse,
+      PostApiV1StockMigrationsTopUpsApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "stock-migration/top-up", id: "LIST" }, { type: "stock-migration", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/top-ups`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsStockMigrationsCreateStockTopUpRequest,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -1497,6 +1550,7 @@ export type PostApiV1MaterialBatchesImportApiArg = {
 export type GetApiV1MaterialBatchesExpiredApiResponse =
   /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsBatchMaterialBatchDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798ERead;
 export type GetApiV1MaterialBatchesExpiredApiArg = {
+  searchQuery?: string;
   startDate?: string;
   endDate?: string;
   warehouseIds?: string[];
@@ -1513,6 +1567,7 @@ export type GetApiV1MaterialBatchesExpiredApiArg = {
 export type GetApiV1MaterialBatchesAboutToExpireApiResponse =
   /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsBatchMaterialBatchDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798ERead;
 export type GetApiV1MaterialBatchesAboutToExpireApiArg = {
+  searchQuery?: string;
   startDate?: string;
   endDate?: string;
   warehouseIds?: string[];
@@ -1755,6 +1810,39 @@ export type PostApiV1StockMigrationsByIdApproveApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+};
+export type PutApiV1MaterialBatchByBatchIdMigrationRetestDateApiResponse = void;
+export type PutApiV1MaterialBatchByBatchIdMigrationRetestDateApiArg = {
+  batchId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsBatchUpdateMigrationRetestDate: DomainEntitiesMaterialsBatchUpdateMigrationRetestDate;
+};
+export type PostApiV1StockMigrationsTopUpsUploadApiResponse =
+  /** status 200 OK */ string;
+export type PostApiV1StockMigrationsTopUpsUploadApiArg = {
+  departmentId?: string;
+  reason: string;
+  massUnit?: string;
+  volumeUnit?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  body: {
+    file?: Blob;
+  };
+};
+export type PostApiV1StockMigrationsTopUpsApiResponse =
+  /** status 200 OK */ string;
+export type PostApiV1StockMigrationsTopUpsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsStockMigrationsCreateStockTopUpRequest: DomainEntitiesMaterialsStockMigrationsCreateStockTopUpRequest;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -2009,6 +2097,7 @@ export type DomainEntitiesMaterialsBatchDistributedMaterialBatchDto = {
   quantityDistributed?: number;
   sampleWeights?: DomainEntitiesMaterialsBatchSrDto[] | null;
   reservedQuantity?: number;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesChecklistsDistributedChecklistDto = {
   materialBatches?:
@@ -2248,6 +2337,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDto = {
   sampleQuantity?: number;
   analysedBy?: string | null;
   analysedDate?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   id?: string;
@@ -2283,6 +2373,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   sampleQuantity?: number;
   analysedBy?: string | null;
   analysedDate?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesWarehousesShelfMaterialBatchDto = {
   id?: string;
@@ -2344,6 +2435,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchListDto = {
   analysedDate?: string | null;
   issuedBy?: SharedCollectionItemDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
   id?: string;
@@ -2382,6 +2474,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
   analysedDate?: string | null;
   issuedBy?: SharedCollectionItemDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesWarehousesWarehouseLocationShelfDto = {
   id?: string;
@@ -2460,6 +2553,8 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDto = {
   analysedDate?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
+  isOpeningBalanceBatch?: boolean;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   id?: string;
@@ -2504,6 +2599,8 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   analysedDate?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   issuedAt?: string | null;
+  effectiveExpiryDate?: string | null;
+  isOpeningBalanceBatch?: boolean;
 };
 export type DomainEntitiesMaterialsBatchCreateSrRequest = {
   srNumber?: string | null;
@@ -2785,6 +2882,7 @@ export type DomainEntitiesReportsWarehouseReservedMaterialReportDto = {
   expiryDate?: string | null;
   balanceQuantity?: number;
   materialBatchNumber?: string | null;
+  effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchCountDto = {
   warehouseId?: string;
@@ -2862,6 +2960,7 @@ export type SharedBatchInconsistencyReportRead = {
 };
 export type DomainEntitiesMaterialsStockMigrationsStockMigrationStatus =
   0 | 1 | 2;
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationMode = 0 | 1;
 export type DomainEntitiesMaterialsStockMigrationsStockMigrationShelfDto = {
   id?: string;
   name?: string | null;
@@ -2881,6 +2980,8 @@ export type DomainEntitiesMaterialsStockMigrationsStockMigrationDto = {
   departmentName?: string | null;
   fileName?: string | null;
   status?: DomainEntitiesMaterialsStockMigrationsStockMigrationStatus;
+  mode?: DomainEntitiesMaterialsStockMigrationsStockMigrationMode;
+  reason?: string | null;
   massUnit?: string | null;
   volumeUnit?: string | null;
   createdAt?: string;
@@ -2908,6 +3009,7 @@ export type DomainEntitiesMaterialsStockMigrationsStockMigrationMaterialChoiceDt
   };
 export type DomainEntitiesMaterialsStockMigrationsStockMigrationLineDto = {
   id?: string;
+  importedBatchId?: string | null;
   sheet?: string | null;
   rowNumber?: number;
   sheetWarehouse?: string | null;
@@ -2967,6 +3069,8 @@ export type DomainEntitiesMaterialsStockMigrationsBulkUpdateStockMigrationLinesR
   };
 export type DomainEntitiesMaterialsStockMigrationsUpdateStockMigrationLineRequest =
   {
+    grn?: string | null;
+    arNumber?: string | null;
     materialCode?: string | null;
     materialId?: string | null;
     warehouseName?: string | null;
@@ -2993,9 +3097,23 @@ export type DomainEntitiesMaterialsStockMigrationsStockMigrationComparisonDto =
     unit?: string | null;
     current?: number;
     new?: number;
+    added?: number;
     currentBatches?: number;
     newBatches?: number;
   };
+export type DomainEntitiesMaterialsBatchUpdateMigrationRetestDate = {
+  retestDate?: string | null;
+  expectedRetestDate?: string | null;
+  expectedExpiryDate?: string | null;
+  reason: string;
+};
+export type DomainEntitiesMaterialsStockMigrationsCreateStockTopUpRequest = {
+  departmentId: string;
+  reason: string;
+  massUnit: string;
+  volumeUnit: string;
+  lines: DomainEntitiesMaterialsStockMigrationsUpdateStockMigrationLineRequest[];
+};
 export const {
   usePostApiV1BomMutation,
   usePutApiV1BomByBillOfMaterialIdMutation,
@@ -3101,4 +3219,7 @@ export const {
   useGetApiV1StockMigrationsByIdComparisonQuery,
   useLazyGetApiV1StockMigrationsByIdComparisonQuery,
   usePostApiV1StockMigrationsByIdApproveMutation,
+  usePutApiV1MaterialBatchByBatchIdMigrationRetestDateMutation,
+  usePostApiV1StockMigrationsTopUpsUploadMutation,
+  usePostApiV1StockMigrationsTopUpsMutation,
 } = injectedRtkApi;

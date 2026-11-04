@@ -1,5 +1,34 @@
 # API contracts and generated hooks
 
+Production unstart repair (2026-11-03) adds typed preview/apply at
+`/api/v1/production-schedule/activity/{activityId}/unstart`, owned by the
+production transport domain. Import only these paths and
+`DOMAIN.Entities.Products.Production.ProductionUnstart*` schemas with
+`bun scripts/import-production-unstart.ts EXPORT.json`, then regenerate/check.
+It requires the matching backend and prepared unstart migration before UI
+activation; no deployed release fingerprint is approved. See
+[unstart production](production-unstart-repair.md).
+
+Post-issue material repairs (2026-11-03) add typed preview/apply operations at
+`/api/v1/production-schedule/{batchId}/issued-material-repair/{kind}`, owned by
+the production transport domain, and optional `ApprovedQuantity` on requisition
+item reads. The scoped metadata import is
+`bun scripts/import-issued-material-repair.ts EXPORT.json`; regenerate through
+the existing generator. The companion audit migration must precede activation.
+See [post-issue repairs](post-issue-material-repairs.md). Existing operations,
+approval payloads and deployed release fingerprints remain unchanged.
+The production-step status operation additionally documents 409 for a stale
+consumption snapshot; its request and success response are unchanged.
+
+Migration stock top-ups (2026-11-03) add `POST /api/v1/stock-migrations/top-ups`
+and multipart `POST /api/v1/stock-migrations/top-ups/upload`, plus mode/reason,
+posted-batch IDs, comparison added quantities and correctable receipt references
+in the owned stock-migration DTOs. Import only the stock-migration paths/schemas
+from the companion metadata export and regenerate the materials domain. Keep
+unrelated contract declarations and customer release fingerprints unchanged.
+The matching backend and top-up schema migration must precede activation. See
+[migration stock top-ups](migration-stock-top-ups.md).
+
 QA issued-BMR reporting (2026-11-02) adds only
 `GET /api/v1/report/bmr-issued` (`GetIssuedBmrReport`) and the
 `IssuedBmrReportDto` / `IssuedBmrReportRowDto` schemas from the companion backend's
@@ -28,7 +57,7 @@ The desktop uses the same backend as Oryx Next. Additive features such as purcha
 
 Generation is strict per operation, not per domain. `scripts/api-contract.ts` reads the contract and skips any operation that would produce `any` or `unknown`: a 2xx response other than 204 with no declared body type, or a request, parameter, or response schema that reaches an untyped property. Skipped operations are listed with their reason in the generated `docs/api-untyped-operations.md`, which is the backend typing backlog. A 204 response becomes `void` automatically. ASP.NET ProblemDetails extensions are arbitrary JSON, represented by a recursive `JsonValue` type. Any `any` or `unknown` that still reaches the output fails generation. `api:check` regenerates everything, compares it with the committed files and the backlog, and leaves the working tree unchanged.
 
-The current contract has 1,381 operations: 1,142 have hooks across 20 domains and 239 are skipped. To get a missing hook, declare the type on the controller (`[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), then run `api:export` and `api:generate`.
+The current contract has 1,396 operations: 1,157 have hooks across 20 domains and 239 are skipped. To get a missing hook, declare the type on the controller (`[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(...))]`), then run `api:export` and `api:generate`.
 
 For an offline export from the companion backend source, run `dotnet API.dll --export-openapi /absolute/path/backend.json` from its build directory, then `ORYX_OPENAPI_FILE=/absolute/path/backend.json bun run api:export`. The metadata-only export exits before database seeding, listeners and hosted services start. Review the source contract and update the customer-server compatibility fingerprint alongside a coordinated backend/UI release; generation alone is not compatibility approval.
 
@@ -81,3 +110,9 @@ The export's documented `Module`/`SubModule` string-schema adjustment changes th
 Historical report parameters and report-only vendor lookup were reviewed as additive changes on 2026-10-27. The dated customer export review test preserves the original proof independently and checks every pre-existing operation/schema/security declaration against the current import after removing only the documented optional read parameters and 409 responses. See [reports](reports.md).
 
 The combined production-readiness operation was added on 2026-10-28 from the companion backend offline export. It adds one reports-domain query and nine response schemas; the contract regression proves every pre-existing operation/schema/security declaration remains unchanged. The legacy host-Nginx policy retains previous approvals and adds the reviewed raw and typed digests. Frontend activation requires this companion endpoint; see [reports](reports.md).
+
+Raw-material retest extension changes (2026-11-03) add the migration-retest-date
+write, its request schema, optional expiry-list search, and additive effective
+validity fields on batch/reservation DTOs. They require the coordinated companion
+backend; no deployed fingerprint is approved by this source-only review. See
+[material retest extensions](material-retest-extensions.md).

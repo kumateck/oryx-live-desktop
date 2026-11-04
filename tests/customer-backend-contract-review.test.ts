@@ -66,6 +66,7 @@ test("historical reporting adds optional read parameters without changing existi
       if (Array.isArray(parameters)) operation.parameters = parameters.filter((entry) => {
         const parameter = object(entry);
         return !(parameter.in === "query" && (parameter.name === "asOfDate" || (path === "/api/v1/attendance-records/general-summary" && parameter.name === "departmentId") || (path === "/api/v1/report/warehouse/materials-stock-batch-detail" && parameter.name === "materialId")
+          || ((path === "/api/v1/material/batches/expired" || path === "/api/v1/material/batches/about-to-expire") && parameter.name === "searchQuery")
           // User directory filters (2026-11-01): optional role and department filters on the user list; additive only.
           || (path === "/api/v1/user" && (parameter.name === "roleId" || parameter.name === "departmentId"))));
       });
@@ -100,8 +101,26 @@ test("historical reporting adds optional read parameters without changing existi
     // Stock requisition voucher (2026-11-01): reads the requisition of an issue for its warehouse check; additive only.
     "/api/v1/requisition/issue/{issueId}",
     // QA issued BMR report (2026-11-02): read-only issue-date query; additive only.
-    "/api/v1/report/bmr-issued"]);
+    "/api/v1/report/bmr-issued",
+    // Raw-material migration retest correction (2026-11-03): separate permissioned write, additive only.
+    "/api/v1/material/batch/{batchId}/migration-retest-date",
+    // Additive migration top-ups (2026-11-03): draft entry/upload; approval uses the existing endpoint.
+    "/api/v1/stock-migrations/top-ups/upload", "/api/v1/stock-migrations/top-ups",
+    // Post-issue BOM/packaging repair (2026-11-03): preview and corrective posting, additive only.
+    "/api/v1/production-schedule/{batchId}/issued-material-repair/{kind}",
+    "/api/v1/production-schedule/activity/{activityId}/unstart"]);
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ProductionUnstart")) delete schemas[name];
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.IssuedMaterialRepair") || name === "DOMAIN.Entities.Products.Production.ApplyIssuedMaterialRepairRequest") delete schemas[name];
+  delete object(object(schemas["DOMAIN.Entities.Requisitions.RequisitionItemDto"] ?? null).properties ?? null).approvedQuantity;
+  delete schemas["DOMAIN.Entities.Materials.Batch.UpdateMigrationRetestDate"];
+  for (const name of ["MaterialBatchDto", "MaterialBatchListDto", "MaterialBatchReducedDto", "DistributedMaterialBatchDto"]) {
+    const properties = object(object(schemas[`DOMAIN.Entities.Materials.Batch.${name}`] ?? null).properties ?? null);
+    delete properties.effectiveExpiryDate;
+    if (name === "MaterialBatchDto") delete properties.isOpeningBalanceBatch;
+  }
+  delete object(object(schemas["DOMAIN.Entities.Reports.Warehouse.ReservedMaterialReportDto"] ?? null).properties ?? null).effectiveExpiryDate;
+
   for (const name of ["IssuedBmrReportDto", "IssuedBmrReportRowDto"])
     delete schemas[`DOMAIN.Entities.Reports.${name}`];
   delete schemas["DOMAIN.Entities.Reports.ReportHistoryCapabilitiesDto"];

@@ -296,6 +296,7 @@ export const generatedTagTypes = [
   "stock-adjustment",
   "stock-discrepancy",
   "stock-migration",
+  "stock-migration/top-up",
   "stp-document",
   "stp-document/document",
   "template-area",
