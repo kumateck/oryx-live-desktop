@@ -37,7 +37,7 @@ export function useReportRunner(definition: ReportDefinition, requirement = repo
       const output = await loadScopedReport(definition, snapshot, controller.signal, (filters) => load(dispatch, definition.key, filters, controller.signal));
       if (controller.signal.aborted || active.current !== controller) return;
       const revoked = access.check(); if (revoked) { setResult(null); setError(revoked); return false; }
-      setResult({ readiness: output.readiness, book: { title: definition.title, generatedAt: output.generatedAt ?? new Date().toISOString(), filters: appliedReportFilters(definition, snapshot), sheets: output.sheets, warnings: [...(snapshot.asOfInstant ? [`Recorded state as of ${snapshot.asOfInstant}. Dates before recorded history began are unavailable.`] : []), ...(output.warnings ?? [])] } });
+      setResult({ readiness: output.readiness, book: { title: definition.title, generatedAt: output.generatedAt ?? new Date().toISOString(), filters: output.filters ?? appliedReportFilters(definition, snapshot), sheets: output.sheets, warnings: [...(snapshot.asOfInstant ? [`Recorded state as of ${snapshot.asOfInstant}. Dates before recorded history began are unavailable.`] : []), ...(output.warnings ?? [])] } });
       return true;
     } catch (reason) {
       if (!controller.signal.aborted && active.current === controller) {

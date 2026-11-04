@@ -26,11 +26,11 @@ export function ReportResults({ book, children, printContent, actions, compactAc
       ]} />
       : <><Button variant="outline" disabled={exporting} onClick={() => void exportFile()}>{exporting ? "Exporting…" : "Export Excel"}</Button>
         <Button variant="outline" disabled={exporting} onClick={() => void exportFile(true)}>Export CSV</Button></>}
-      <PrintButton preview={(close) => <PrintPreviewDialog title={book.title} onClose={close}>{printContent ?? <ReportPrint book={book} />}</PrintPreviewDialog>} />
+      <PrintButton preview={(close) => <PrintPreviewDialog title={book.title} onClose={close} landscape={book.sheets.some((sheet) => sheet.printLayout?.orientation === "landscape")}>{printContent ?? <ReportPrint book={book} />}</PrintPreviewDialog>} />
     </div></div>
 
     {book.warnings.length ? <ul role="status" className="list-disc space-y-1 rounded-md border p-3 pl-7">{book.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul> : null}
     {error ? <p role="alert" className="text-destructive">{error}</p> : null}
-    {children ?? book.sheets.map((sheet) => <ResultSheet key={sheet.name} sheet={sheet} />)}
+    {children ?? book.sheets.map((sheet) => <ResultSheet key={sheet.id ?? sheet.name} sheet={sheet} />)}
   </div>;
 }
