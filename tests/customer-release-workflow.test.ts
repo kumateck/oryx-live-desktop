@@ -12,6 +12,12 @@ const path = ".github/workflows/customer-docker.yml";
 const workflow = readFileSync(path, "utf8");
 const sha = "a".repeat(40);
 
+test("the installer release policy parses and approves the checked-in backend contract", () => {
+  const result = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Approved backend contract: [a-f0-9]{64}/);
+});
+
 test("development work and open PRs stay quiet until a milestone reaches a release branch", () => {
   const triggers = workflow.slice(workflow.indexOf("\non:\n"), workflow.indexOf("\npermissions:"));
   assert.deepEqual([...triggers.matchAll(/^ {2}([\w_]+):/gm)].map((match) => match[1]), ["push", "workflow_dispatch"]);

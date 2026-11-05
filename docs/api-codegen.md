@@ -1,3 +1,12 @@
+The 2026-11-05 merged forecast, migration batch-number correction and manual
+top-up contracts have typed digest
+`ba9b4556768dbaf418600e907610ec613e52b3e6a89aadc2bd675c367f503f75`.
+The contract regression removes exactly those three documented additions to
+reproduce the approved reservation-repair baseline `fa46de38…d238`, then checks
+the earlier baselines and rejection cases. The legacy release policy retains
+each individual approval and adds this combined import. This source review does
+not deploy the backend or apply migrations.
+
 Production material forecast (2026-11-05) adds one typed read,
 `GET /api/v1/report/production-material-forecast?year=&month=`, in the reports
 domain, guarded by `CanViewProductionScheduleMaterialForecast`. Import only it and
