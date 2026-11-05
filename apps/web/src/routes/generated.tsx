@@ -1226,6 +1226,7 @@ export const routes: RouteObject[] = [
           { path: "new", Component: Outlet, children: [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/migration-top-ups/new/page")).default }) }
           ] }
+        ] },
         { path: "production-forecast", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/production-forecast/page")).default }) }
         ] },
