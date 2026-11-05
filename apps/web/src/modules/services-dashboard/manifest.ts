@@ -1,10 +1,10 @@
 import type { ModuleManifest } from "../contract";
 
-// The permissions are the ones the sidebar shows this dashboard for.
+// Each dashboard has its own view key, which the server checks too.
 export const manifest = {
   id: "services-dashboard",
   label: "Services dashboard",
   root: "/services-dashboard",
   order: 106,
-  access: { kind: "some", permissions: ["CanViewServices", "CanViewContractors", "CanViewJobRequests", "CanViewJobOrders", "CanViewServicesQuotationResponses", "CanViewServicesPricingSelection", "CanViewServicesProformaRequests", "CanViewServicesProformaResponses", "CanViewServicesMemo", "CanViewServicesPurchaseOrders"] },
+  access: { kind: "all", permissions: ["CanViewServicesDashboard"] },
 } satisfies ModuleManifest<"services-dashboard", "/services-dashboard">;

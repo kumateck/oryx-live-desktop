@@ -196,8 +196,8 @@ it("shows the inventory command centre and names the chosen inactivity threshold
 });
 
 it("shows the QA and QC dashboards, with the inspection backlog of the user's own department when they are in production", async () => {
-  open("/qa-qc-dashboard", { permissions: ["CanViewAnalyticalTestRequests"] });
-  // Without the QC permissions the quality dashboards open on QA.
+  open("/qa-qc-dashboard", { permissions: ["CanViewQaDashboard"] });
+  // Without the QC dashboard key the quality dashboards open on QA.
   expect(await screen.findByRole("heading", { name: "QA dashboard" })).toBeTruthy();
   expect(await screen.findByText("2 pending review")).toBeTruthy();
   // The BMR total came back as zero: 2 + 3 + 1.
@@ -234,9 +234,15 @@ it("shows the HR dashboard from real figures only, and the executive summary", a
 });
 
 it("welcomes the user by name and lists only the dashboards they may open", async () => {
-  open("/home", { permissions: ["CanViewRawMaterialsItems"] });
+  open("/home", { permissions: ["CanViewWarehouseDashboard"] });
   expect(await screen.findByRole("heading", { name: "Welcome Ada Mensah" })).toBeTruthy();
   const links = within(screen.getByRole("region", { name: "Your dashboards" })).getAllByRole("link");
   expect(links.some((link) => link.getAttribute("href") === "/warehouse-dashboard")).toBe(true);
   expect(links.some((link) => link.getAttribute("href") === "/hr-dashboard")).toBe(false);
+  cleanup(); forgetSession();
+
+  // An old page key no longer opens a dashboard by itself.
+  open("/home", { permissions: ["CanViewRawMaterialsItems"] });
+  await screen.findByRole("heading", { name: "Welcome Ada Mensah" });
+  expect(screen.queryByRole("link", { name: /Warehouse/ })).toBeNull();
 });
