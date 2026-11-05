@@ -3144,6 +3144,8 @@ export type DomainEntitiesMaterialsBatchUpdateMigrationRetestDate = {
   expectedExpiryDate?: string | null;
   arNumber?: string | null;
   expectedArNumber?: string | null;
+  batchNumber?: string | null;
+  expectedBatchNumber?: string | null;
   reason: string;
 };
 export type DomainEntitiesMaterialsStockMigrationsCreateStockTopUpRequest = {
