@@ -16,6 +16,12 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+Migration batch-number corrections (2026-11-05) add optional `batchNumber` and
+`expectedBatchNumber` to `DOMAIN.Entities.Materials.Batch.UpdateMigrationRetestDate`
+(backend kumateck/oryx-backend#1719). Reviewed typed digest
+`1bf73fd1eefb5e2ff029b420277ad7efaf02364c66b2fdc4e65560a66b99d09a`; removing exactly
+these two fields reproduces `fa46de385e587bca0821ff164522fedda3dca60d5e0b044336bd7093fe87d238`.
+
 Formula repair and migration AR corrections (2026-11-05) are reviewed together as
 typed digest `d31b1bc59265cc6a98c995e9c3b3249dc8f73d948701228e1573cf31d01e888f`.
 Removing exactly their declared additions (the five `/api/v1/formula-repairs`

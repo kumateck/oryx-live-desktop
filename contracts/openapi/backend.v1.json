@@ -177345,6 +177345,16 @@
             "type": "string",
             "nullable": true
           },
+          "batchNumber": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "expectedBatchNumber": {
+            "type": "string",
+            "nullable": true
+          },
           "reason": {
             "maxLength": 1000,
             "minLength": 3,
