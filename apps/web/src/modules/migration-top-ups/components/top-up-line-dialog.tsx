@@ -12,6 +12,8 @@ import { useDepartmentMaterials, useDepartmentShelves } from "../hooks/use-top-u
 import { sameLot, type TopUpLine } from "../lib/top-up";
 import { topUpLineFormSchema, type TopUpLineFormValues } from "../schemas/top-up-schema";
 
+/** Weights in mg and liquids in ml can be typed in a larger unit of the same family. */
+const measured = (unit: string) => ["mg", "ml"].includes(unit.trim().toLowerCase());
 const kinds = [{ value: "0", label: materialKindLabels[0] }, { value: "1", label: materialKindLabels[1] }];
 const quantityFields: readonly MaterialQuantityField<TopUpLineFormValues>[] = [
   { name: "quantity", label: "Quantity in stock", required: true, description: "What is physically on the shelf for this batch." },
@@ -48,8 +50,8 @@ export function TopUpLineDialog({ editing, lines, onSave, onClose }: {
     { type: InputTypes.SELECT, name: "material", label: "Material", mode: "single", source: "async", loadOptions: materials.loadOptions, required: true,
       placeholder: `Select a ${materialKindLabels[kind].toLowerCase()} material`, searchPlaceholder: "Search by name or code", className: "md:col-span-2",
       description: "Only materials linked to your department are listed." },
-    { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number", required: true, description: "As printed on the supplier label." },
-    { type: InputTypes.TEXT, name: "arNumber", label: "AR number", description: "The QC analytical report number, if released." },
+    { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number", description: "As printed on the label. Leave empty if there is none; the line is kept as its own lot." },
+    { type: InputTypes.TEXT, name: "arNumber", label: "AR number", description: "The QC analytical report number, if there is one." },
     { type: InputTypes.SELECT, name: "shelf", label: "Shelf", mode: "single", source: "sync", options: shelves.options, required: true,
       placeholder: shelves.loading ? "Loading shelves…" : "Select the shelf", searchPlaceholder: "Search shelves", className: "md:col-span-2" },
     { type: InputTypes.DATE, name: "manufactured", label: "Manufacturing date", maxDate: new Date() },
@@ -81,8 +83,11 @@ export function TopUpLineDialog({ editing, lines, onSave, onClose }: {
           <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
           {shelves.error ? <p role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">{shelves.error}
             <Button type="button" size="sm" variant="outline" onClick={shelves.retry}>Retry shelves</Button></p> : null}
-          {picked?.unit ? <MaterialQuantityFields key={`${picked.id}-${picked.unit}`} form={form} unit={{ id: picked.id, symbol: picked.unit }} fields={quantityFields}
-            description={`Stored in ${picked.unit}. You can type it in a larger unit.`} />
+          {picked?.unit ? <div className="space-y-2">
+            {/* The unit comes from the material's department link: weights and liquids may be typed in a larger unit, anything else is fixed. */}
+            {measured(picked.unit) ? null : <p className="text-sm">Unit: <strong>{picked.unit}</strong> <span className="text-muted-foreground">(set on the material)</span></p>}
+            <MaterialQuantityFields key={`${picked.id}-${picked.unit}`} form={form} unit={{ id: picked.id, symbol: picked.unit }} fields={quantityFields}
+              description={`The material's unit is ${picked.unit}; you can type the quantity in a larger unit.`} /></div>
             : material?.value ? <p role="alert" className="text-sm text-destructive">This material has no unit on its department link, so its quantity cannot be entered.</p>
             : <p className="text-sm text-muted-foreground">Choose the material to enter its quantity.</p>}
         </DialogBody>

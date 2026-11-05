@@ -47,9 +47,13 @@ export function topUpLineRequest(line: TopUpLine): LineUpdate {
   };
 }
 
-/** The same material and batch number may not be entered twice on one top-up. */
+/**
+ * The same material and batch number may not be entered twice on one top-up. Lines without a batch
+ * number are never the same lot: each is kept as its own lot.
+ */
 export function sameLot(a: Pick<TopUpLine, "material" | "batchNumber">, b: Pick<TopUpLine, "material" | "batchNumber">): boolean {
-  return a.material.id === b.material.id && a.batchNumber.trim().toUpperCase() === b.batchNumber.trim().toUpperCase();
+  const batch = a.batchNumber.trim().toUpperCase();
+  return batch !== "" && a.material.id === b.material.id && batch === b.batchNumber.trim().toUpperCase();
 }
 
 const calendar = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });

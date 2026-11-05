@@ -102,7 +102,7 @@ export function TopUpEntryPage() {
       }} /> : null}
 
     {open?.mode === "remove" ? <Dialog open onOpenChange={(next) => { if (!next) setOpen(null); }}><DialogContent>
-      <DialogHeader><DialogTitle>Remove {open.line.material.code} batch {open.line.batchNumber}?</DialogTitle>
+      <DialogHeader><DialogTitle>Remove {open.line.material.code}{open.line.batchNumber ? ` batch ${open.line.batchNumber}` : ""}?</DialogTitle>
         <DialogDescription>The line is taken off this list. Nothing has been saved yet.</DialogDescription></DialogHeader>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={() => setOpen(null)}>Cancel</Button>

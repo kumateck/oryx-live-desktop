@@ -21,6 +21,7 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const materials = { data: [
   { material: { id: "m-amaranth", code: "RMA016", name: "Amaranth (W/S)" }, uoM: { symbol: "mg" } },
   { material: { id: "m-nolink", code: "RMA099", name: "Unlinked dye" }, uoM: null },
+  { material: { id: "m-cap", code: "PMC010", name: "Bottle cap 28 mm" }, uoM: { symbol: "pcs" } },
 ], pageIndex: 1, pageCount: 1 };
 const shelves = [{ id: "s-b2", name: "B2", code: "RM/B2", warehouseLocationRack: { name: "Rack B", warehouseLocation: { name: "Room 1", warehouse: { name: "Raw store" } } } }];
 
@@ -120,6 +121,42 @@ describe("warehouse migration stock top-up", () => {
     expect(screen.getByText("LOT-9")).toBeTruthy();
   }, 40_000);
 
+  it("adds a packaging line with no batch or AR number, in its fixed counted unit", async () => {
+    const user = userEvent.setup();
+    const calls = open("/warehouse/migration-top-ups/new");
+    await user.type(await screen.findByLabelText(/^Reason for this top-up/), "Caps received before go-live without a batch number");
+    await user.click(await screen.findByRole("button", { name: "Add stock line" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("radio", { name: "Packaging" }));
+    await user.click(await within(dialog).findByRole("combobox", { name: /^Material/ }, { timeout: 5000 }));
+    await user.click(await screen.findByRole("option", { name: "PMC010 · Bottle cap 28 mm" }));
+    await user.click(within(dialog).getByRole("combobox", { name: /^Shelf/ }));
+    await user.click(await screen.findByRole("option", { name: "B2 — Rack B · Raw store" }));
+    expect(within(dialog).getByText("pcs", { selector: "strong" })).toBeTruthy();
+    expect(within(dialog).queryByRole("combobox", { name: "Enter quantities in" })).toBeNull();
+    await user.type(within(dialog).getByRole("spinbutton", { name: /Quantity in stock \(pcs\)/ }), "1200");
+    await user.click(within(dialog).getByRole("button", { name: "Add to list" }));
+    expect(await screen.findByText("No batch number")).toBeTruthy();
+    // A second line without a batch number is a separate lot, not a repeat.
+    await user.click(screen.getByRole("button", { name: "Add stock line" }));
+    const second = await screen.findByRole("dialog");
+    await user.click(within(second).getByRole("radio", { name: "Packaging" }));
+    await user.click(await within(second).findByRole("combobox", { name: /^Material/ }, { timeout: 5000 }));
+    await user.click(await screen.findByRole("option", { name: "PMC010 · Bottle cap 28 mm" }));
+    await user.click(within(second).getByRole("combobox", { name: /^Shelf/ }));
+    await user.click(await screen.findByRole("option", { name: "B2 — Rack B · Raw store" }));
+    await user.type(within(second).getByRole("spinbutton", { name: /Quantity in stock \(pcs\)/ }), "300");
+    await user.click(within(second).getByRole("button", { name: "Add to list" }));
+    await waitFor(() => expect(screen.getAllByText("No batch number")).toHaveLength(2));
+    await user.click(screen.getByRole("button", { name: "Submit for approval" }));
+    const confirm = await screen.findByRole("dialog");
+    await user.click(within(confirm).getByRole("checkbox"));
+    await user.click(within(confirm).getByRole("button", { name: "Submit for approval" }));
+    await screen.findByText("Top-up review page");
+    expect(calls[0]?.body).toMatchObject({ lines: [{ materialId: "m-cap", batchNumber: "", arNumber: null, unitSymbol: "pcs", quantityInSheet: 1200 },
+      { materialId: "m-cap", batchNumber: "", quantityInSheet: 300 }] });
+  }, 60_000);
+
   it("blocks a material with no department unit", async () => {
     const user = userEvent.setup();
     open("/warehouse/migration-top-ups/new");
@@ -156,6 +193,7 @@ describe("top-up line rules", () => {
   it("matches lots by material and batch regardless of case", () => {
     expect(sameLot(line, { ...line, batchNumber: " b1 " })).toBe(true);
     expect(sameLot(line, { ...line, material: { ...line.material, id: "other" } })).toBe(false);
+    expect(sameLot({ ...line, batchNumber: "" }, { ...line, batchNumber: " " })).toBe(false);
   });
 
   it("keeps the retest date within the lot's life", () => {

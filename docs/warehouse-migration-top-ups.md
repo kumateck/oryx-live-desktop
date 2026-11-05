@@ -7,10 +7,10 @@ It is the hand-entry counterpart of the Excel top-up in Settings › Upload Cent
 ## Flow
 
 1. **New top-up**: enter the reason, then add one line per material batch in a dialog. The list stays on the page, and lines can be edited or removed, like the product BOM, packaging and procedure editors. Each line has:
-   - material kind, then the material, picked from the department's linked materials;
-   - batch number (required) and AR number;
+   - material kind (raw or packaging), then the material, picked from the department's linked materials;
+   - batch number and AR number, both optional. A line without a batch number is kept as its own lot;
    - shelf, picked from the department's raw or packaging store;
-   - quantity, in the material's department unit or a larger unit of the same family (for example kg for an mg material);
+   - quantity, in the unit set on the material's department link. For an mg or ml material a dropdown offers mg, g or kg (ml or L); any other unit (pcs and similar) is shown as a fixed label;
    - optional manufacturing, expiry and retest dates (full dates), and an optional GRN or waybill reference.
 2. **Submit for approval**: a confirmation states that adding stock cannot be reversed after approval. The user must tick that they checked every line against the physical stock before the list is sent (`POST /api/v1/stock-migrations/top-ups` with `exactDates: true`). Nothing is added to stock at this point.
 3. **Review and approve** (`/warehouse/migration-top-ups/:id`): this is the same page as the Upload Center draft review. The backend checks every row:

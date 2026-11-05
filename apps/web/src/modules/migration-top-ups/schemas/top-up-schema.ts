@@ -8,7 +8,7 @@ export const topUpLineFormSchema = z.object({
   kind: z.enum(["0", "1"]),
   material: option.nullable().refine((value) => value !== null, "Choose the material"),
   shelf: option.nullable().refine((value) => value !== null, "Choose the shelf it is stored on"),
-  batchNumber: z.string().trim().min(1, "Enter the batch number on the label").max(500, "At most 500 characters"),
+  batchNumber: z.string().trim().max(500, "At most 500 characters"),
   arNumber: z.string().trim().max(500, "At most 500 characters"),
   grn: z.string().trim().max(500, "At most 500 characters"),
   quantity: z.number({ message: "Enter the quantity in stock" }).finite("Enter the quantity in stock").positive("The quantity must be greater than 0").nullable()

@@ -14,7 +14,7 @@ export function TopUpLinesTable({ lines, disabled, onEdit, onRemove }: {
   const columns = useMemo(() => column.columns([
     column.accessor((row) => row.material.code, { id: "material", header: "Material", cell: ({ row }) => <div className="min-w-0 break-words">
       <div className="font-medium">{row.original.material.code}</div><div className="text-xs text-muted-foreground">{row.original.material.name} · {materialKindLabels[row.original.kind]}</div></div> }),
-    column.accessor("batchNumber", { header: "Batch / AR", cell: ({ row }) => <div className="break-words">{row.original.batchNumber}
+    column.accessor("batchNumber", { header: "Batch / AR", cell: ({ row }) => <div className="break-words">{row.original.batchNumber || <span className="text-muted-foreground">No batch number</span>}
       <div className="text-xs text-muted-foreground">{row.original.arNumber || "No AR number"}</div></div> }),
     column.accessor("quantity", { header: "Quantity", size: 130, cell: ({ row }) => toLargestUnit(row.original.quantity, row.original.unit, "entered")?.text ?? `${row.original.quantity} ${row.original.unit}` }),
     column.accessor((row) => row.shelf.label, { id: "shelf", header: "Shelf", cell: ({ row }) => <span className="break-words">{row.original.shelf.label}</span> }),
