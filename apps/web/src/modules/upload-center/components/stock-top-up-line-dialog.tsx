@@ -8,7 +8,7 @@ import { topUpLineSchema, type TopUpLineValues } from "../schemas/stock-top-up-s
 
 const fields = [
   { type: InputTypes.TEXT, name: "materialCode", label: "Material code", required: true },
-  { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number", required: true },
+  { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number (optional)", description: "Leave blank if unavailable. This line will remain a separate lot." },
   { type: InputTypes.TEXT, name: "unitSymbol", label: "Base UOM", required: true, description: "Use the material-department UOM, such as mg, ml or piece." },
   { type: InputTypes.TEXT, name: "quantity", label: "Quantity in selected weight / liquid units", inputMode: "decimal", required: true },
   { type: InputTypes.TEXT, name: "warehouseName", label: "Warehouse name", description: "Leave blank to resolve from the material and department." },

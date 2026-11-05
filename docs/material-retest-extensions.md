@@ -39,6 +39,24 @@ selectors already use month precision. Report expiry filters now include whole
 months, and explicit worksheet reagent/reference-standard lot-expiry fields use
 the shared month picker while retaining their date-only request format. Existing
 stored dates and template-owned calculations are not rewritten by opening a form.
+The batch details show the **AR number**. The retest editor accepts an optional
+AR correction for migrated opening stock and top-ups, with **Save changes**
+allowing the date, AR reference, or both to change. A separate **Update migration
+AR number** action opens only the AR reference and required reason. It preserves
+the retest date exactly, including an absent date or an older imported value
+before expiry; only a changed extension must pass the later-than-expiry rule.
+Both editors pre-fill the current reference and allow retaining, correcting or
+clearing it. Date-only API callers may omit `arNumber`
+to preserve it. An explicit blank clears it, and `expectedArNumber` prevents
+overwriting a concurrent AR correction. The same permission, reason, department,
+available-stock and QC gates apply. Before/after AR references are appended to
+the date-correction audit; source migration rows and receipt/bin-card evidence
+remain unchanged. Batch reads show the corrected reference (including an explicit
+clear), falling back to the recorded migration references when no correction
+exists. A later QC sampling supplies its own governed AR reference and takes
+priority over an earlier migration correction. Apply `AddMigrationArCorrections`
+before activating this coordinated backend/UI update; the migration is prepared
+locally, not applied by this task.
 
 Both Expired Materials and About to Expire Materials accept header search by
 material code/name. The optional month range combines with search on the server
@@ -84,3 +102,23 @@ Shelf, rack and received-stock validity indicators use the API's
 material-location earliest-validity summaries use that same date. Original expiry
 and retest dates remain available as recorded dates; the renderer does not grant
 eligibility or replace server-side stock, quality or permission checks.
+AR correction verification on 4 November 2026: 59 focused backend tests, 33
+frontend tests and 23 contract/cache/module checks passed, along with backend and
+web production builds (including TypeScript), generated API consistency and EF's
+pending-model check. Two backend integration tests
+(PostgreSQL posting and real-workbook rehearsal) skipped because their external
+test settings were absent. Browser fixtures checked both changed dialogs at
+1366×768, 1280×720, 1024×576 and 853×480: save controls remained visible and there
+was no horizontal overflow. These are scaling equivalents, not native Windows
+acceptance. The mechanical UI detector found no issues. Automatic approval review
+blocked the external React Doctor package over unverified source-data handling;
+local tests, static compilation and browser checks provide the validation here.
+
+AR-only follow-up on 4 November 2026: 40 focused frontend tests and six backend
+correction tests passed, including absent/legacy retest dates, unchanged timestamp
+preservation, stale-write rejection and HTTP-compatible UUID/retry behavior.
+The web production build and generated API consistency check passed. Both editors
+were checked at 1366×768, 1280×720, 1024×576 and 853×480 with visible save controls
+and no horizontal overflow. React Doctor could not run from its local cache
+because its `oxc-parser` dependency was unavailable. Native Windows scaling and
+customer-data acceptance were not run; no deployment or database change was made.

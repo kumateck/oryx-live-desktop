@@ -7,10 +7,12 @@ import { Spinner } from "@/components/ui/spinner";
 import type { PermissionRequirement } from "@/shared/auth/access";
 import { AnswerSheet } from "@/shared/form-response/answer-sheet";
 import { type AnswerValue } from "@/shared/form-response/answers";
-import { assignedSections, formFields, type AnswerForm } from "@/shared/form-response/form-model";
+import { assignedSections, formFields, type AnswerForm, type FormField } from "@/shared/form-response/form-model";
 import { useAnswerForm, type StoredAnswers } from "@/shared/form-response/use-answer-form";
 import { useResponseWriter, type ResponseContext } from "@/shared/form-response/use-response-writer";
 import { useEquipmentOptions } from "@/shared/questions/use-equipment-options";
+import { answerFingerprint, storedFingerprint } from "@/shared/form-response/answers";
+import { QuestionType } from "@/shared/questions/question-types";
 
 export function TestEntryEmpty({ kind, details, onBack }: { kind: "not-assigned" | "no-form"; details: readonly { label: string; value: string | null }[]; onBack: () => void }) {
   const Icon = kind === "not-assigned" ? UserX : ClipboardX;
@@ -27,19 +29,29 @@ export function TestEntryEmpty({ kind, details, onBack }: { kind: "not-assigned"
 /**
  * An analyst saves each assigned answer as a draft before submitting the completed response.
  */
-export function TestEntry({ form, mine, stored, context, audit, require, summary, onReload, onDone }: {
+export function TestEntry({ form, mine, stored, context, audit, require, summary, onReload, onDone, formulaActions }: {
   form: AnswerForm; mine: ReadonlySet<string>; stored: StoredAnswers; context: ResponseContext; audit: { module: string; subModule: string }; require: PermissionRequirement;
   summary: ReactNode; onReload: () => void; onDone: () => void;
+  formulaActions?: (hasUnsavedWork: boolean) => ReactNode;
 }) {
   const loadEquipment = useEquipmentOptions();
   const sections = useMemo(() => assignedSections(form, mine), [form, mine]);
   const myFields = useMemo(() => sections.flatMap((section) => section.fields), [sections]);
   const everyField = useMemo(() => formFields(form), [form]);
+  // Keep the configuration the analyst opened, even if another user's repair refreshes the cache.
+  const [originalConfigurations] = useState<ReadonlyMap<string, string>>(() => new Map(everyField
+    .flatMap(field => field.formulaConfigurationHash ? [[field.id, field.formulaConfigurationHash] as const] : [])));
+  const fieldForSave = (field: FormField) => ({ ...field, formulaConfigurationHash: originalConfigurations.get(field.id) ?? "" });
   const answers = useAnswerForm(myFields, stored);
   const writer = useResponseWriter({ formId: form.id, context, stored, audit, require, onChange: onReload });
   const [message, setMessage] = useState("");
   const current = useWatch({ control: answers.control }) as Record<string, AnswerValue | undefined>;
   const blocked = writer.submissionProblem(everyField, mine, current);
+  const hasUnsavedWork = writer.busy || writer.saving.size > 0 || myFields.some(field => {
+    const value = answerFingerprint(current[field.id], field.question.type);
+    if (field.question.type === QuestionType.FileUpload && value === null) return false;
+    return value !== (writer.acknowledged.get(field.id) ?? storedFingerprint(stored.get(field.id)?.value, field.question.type));
+  });
   void answers.formState.errors;
   const submit = answers.handleSubmit(async (values) => {
     setMessage("");
@@ -50,9 +62,10 @@ export function TestEntry({ form, mine, stored, context, audit, require, summary
   });
   return <div className="min-w-0 space-y-4">
     {summary}
+    {formulaActions?.(hasUnsavedWork)}
     <form noValidate className="space-y-4" onSubmit={(event) => void submit(event)}>
       <AnswerSheet form={answers} sections={sections} loadEquipment={loadEquipment} disabled={writer.busy}
-        drafts={{ acknowledged: (id) => writer.acknowledged.get(id) ?? null, attachments: (id) => stored.get(id)?.attachments ?? [], stored: (id) => stored.get(id)?.value ?? null, saving: writer.saving, failed: writer.failed, save: (field, value) => void writer.saveOne(field, value) }} />
+        drafts={{ acknowledged: (id) => writer.acknowledged.get(id) ?? null, attachments: (id) => stored.get(id)?.attachments ?? [], stored: (id) => stored.get(id)?.value ?? null, saving: writer.saving, failed: writer.failed, save: (field, value) => void writer.saveOne(fieldForSave(field), value) }} />
       {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
       <div className="flex flex-wrap items-center justify-end gap-2">
         {blocked ? <span className="min-w-0 flex-1 break-words text-sm text-muted-foreground">{blocked} All analysts' fields must be complete and saved.</span> : null}

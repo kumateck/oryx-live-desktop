@@ -1,11 +1,46 @@
-import { Activity, createContext, useContext, useEffect, useId, useSyncExternalStore, type ReactNode } from "react";
-import type { WorkspaceTabs } from "./workspace-tabs";
+import { Activity, createContext, useCallback, useContext, useEffect, useId, useState, useSyncExternalStore, type ReactNode } from "react";
+import type { WorkspaceTab, WorkspaceTabs } from "./workspace-tabs";
+import { isEditableTarget, readSidebarPreference, writeSidebarPreference } from "./sidebar-preference";
 
 export interface DesktopTabContextValue { workspace: WorkspaceTabs; id: string }
 export const DesktopTabContext = createContext<DesktopTabContextValue | null>(null);
 export const useDesktopTab = () => useContext(DesktopTabContext);
 const noSubscription = () => () => {};
 const visible = () => true;
+/** This tab's own record (title, picker, dirty…), re-rendering only when the store publishes. */
+export function useDesktopTabState(): WorkspaceTab | undefined {
+  const tab = useDesktopTab();
+  return useSyncExternalStore(tab?.workspace.subscribe ?? noSubscription,
+    () => tab?.workspace.getSnapshot().tabs.find((entry) => entry.id === tab.id));
+}
+
+/** Sidebar state shared by every desktop tab (or local in a browser), remembered across launches. */
+export function useWorkspaceSidebar(): readonly [boolean, (open: boolean) => void] {
+  const tab = useDesktopTab();
+  const [browserOpen, setBrowserOpen] = useState(readSidebarPreference);
+  const desktopOpen = useSyncExternalStore(tab?.workspace.subscribe ?? noSubscription,
+    () => tab ? tab.workspace.getSnapshot().sidebarOpen : null);
+  const setOpen = useCallback((open: boolean) => {
+    if (tab) tab.workspace.setSidebar(open);
+    else { setBrowserOpen(open); writeSidebarPreference(open); }
+  }, [tab]);
+  return [desktopOpen ?? browserOpen, setOpen] as const;
+}
+
+/** Ctrl/Cmd+B toggles the browser sidebar; desktop tabs register it once in useDesktopNavigation. */
+export function useBrowserSidebarShortcut(toggle: () => void, enabled: boolean): void {
+  useEffect(() => {
+    if (!enabled) return;
+    const keydown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.shiftKey || event.altKey) return;
+      if (event.key.toLowerCase() !== "b" || isEditableTarget(event.target)) return;
+      event.preventDefault(); toggle();
+    };
+    window.addEventListener("keydown", keydown);
+    return () => window.removeEventListener("keydown", keydown);
+  }, [toggle, enabled]);
+}
+
 export function useDesktopTabVisible(): boolean {
   const tab = useDesktopTab();
   return useSyncExternalStore(tab?.workspace.subscribe ?? noSubscription, tab ? () => tab.workspace.isActive(tab.id) : visible);

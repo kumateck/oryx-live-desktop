@@ -24,7 +24,7 @@ export const renderSpecificationResult = (
 
   const compact = getCompactFormulaEvaluations(
     response.value,
-    sanitizeString(templateField.question?.options?.[0]?.name),
+    sanitizeString((response.formField?.formulaConfigurationHash ? response.formField.question?.options?.[0]?.name : templateField.question?.options?.[0]?.name)),
   );
   const hasAverage = compact.average !== null;
   const entries = compact.entries.filter((entry) => entry.result !== null);

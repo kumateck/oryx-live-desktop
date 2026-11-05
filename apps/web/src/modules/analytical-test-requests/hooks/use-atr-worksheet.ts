@@ -1,5 +1,5 @@
 import { skipToken } from "@reduxjs/toolkit/query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formSchema } from "@/shared/form-response/form-model";
@@ -31,23 +31,30 @@ export function useAtrWorksheet(id: string) {
   const ard = useMemo(() => { const parsed = productArdsSchema.safeParse(ards.data ?? null); return parsed.success && atr ? ardForStage(parsed.data, atr.stage) : null; }, [ards.data, atr]);
   const formId = ard?.form?.id ?? null;
   const formQuery = atrFormsApi.useGetApiV1FormByFormIdQuery(formId ? { ...atrAudit, formId } : skipToken);
-  const form = useMemo(() => { const parsed = formSchema.safeParse(formQuery.data ?? null); return parsed.success ? parsed.data : null; }, [formQuery.data]);
   const context = atr?.bmrId && atr.stepId ? { batchManufacturingRecordId: atr.bmrId, productionActivityStepId: atr.stepId } : null;
   const responseId = atrFormsApi.useGetApiV1FormResponseQuery(context ? { ...atrAudit, ...context } : skipToken);
   const id404 = Boolean(responseId.error && "status" in responseId.error && responseId.error.status === 404);
   const currentResponseId = typeof responseId.data === "string" && responseId.data ? responseId.data : null;
   const response = atrFormsApi.useGetApiV1FormResponsesByFormResponseIdQuery(currentResponseId ? { ...atrAudit, formResponseId: currentResponseId } : skipToken);
+  const rawForm = response.data?.effectiveForm ?? formQuery.data ?? null;
+  const form = useMemo(() => { const parsed = formSchema.safeParse(rawForm); return parsed.success ? parsed.data : null; }, [rawForm]);
   const parsedResponse = useMemo(() => { const parsed = responseSchema.safeParse(response.data ?? null); return parsed.success ? parsed.data : null; }, [response.data]);
   const assignees = atrFormsApi.useGetApiV1FormAssigneesBmrByBmrIdQuery(atr?.bmrId ? { ...atrAudit, bmrId: atr.bmrId, ...(atr.stage === 0 || atr.stage === 1 || atr.stage === 2 ? { stage: atr.stage } : {}), ...(atr.stepId ? { productionActivityStepId: atr.stepId } : {}) } : skipToken);
   const assigned = useMemo(() => { const parsed = formAssigneeSchema.safeParse(assignees.data ?? null); return parsed.success ? parsed.data : null; }, [assignees.data]);
   const stored = useMemo(() => latestAnswers((parsedResponse?.formResponses ?? []).map((row) => ({ ...row, value: row.value ?? null, responseId: row.responseId ?? currentResponseId, createdAt: row.createdAt ?? null }))),
     [currentResponseId, parsedResponse]);
-  const loading = atrQuery.isLoading || ards.isLoading || (Boolean(formId) && formQuery.isLoading) || responseId.isLoading || response.isLoading;
+  const firstLoad = atrQuery.isLoading || ards.isLoading || (Boolean(formId) && formQuery.isLoading) || responseId.isLoading || response.isLoading;
+  // The skeleton is for a request's first load only. A draft save refetches the response lookup, which has no data
+  // until the first draft creates the response, so its isLoading turns true again; showing the skeleton then would
+  // unmount the answer form and drop every unsaved answer.
+  const [shown, setShown] = useState<string | null>(null);
+  if (!firstLoad && shown !== id) setShown(id);
+  const loading = firstLoad && shown !== id;
   const error = atrQuery.error ? apiErrorMessage(atrQuery.error) : !atrQuery.isLoading && !atr ? "The server returned a test request the app could not read." : ards.error ? apiErrorMessage(ards.error)
     : responseId.error && !id404 ? apiErrorMessage(responseId.error) : null;
   return {
-    atr, rawAtr: atrQuery.data ?? null, ard, form, rawForm: formQuery.data ?? null, loading, error, formMissing: !loading && !form, stored, responses: response.data?.formResponses ?? [], assignees: assigned,
-    certificate: certificateState(parsedResponse), context,
+    atr, rawAtr: atrQuery.data ?? null, ard, form, rawForm, loading, error, formMissing: !loading && !form, stored, responses: response.data?.formResponses ?? [], assignees: assigned,
+    certificate: response.data?.formResponses?.some(row => row.formulaRepairPending) ? { canGenerate: false, label: "Repaired formulas need recalculation" } : certificateState(parsedResponse), context,
     reload: () => { if (context) void responseId.refetch(); if (currentResponseId) void response.refetch(); if (atr?.bmrId) void assignees.refetch(); },
     retry: () => { void atrQuery.refetch(); if (atr?.productId) void ards.refetch(); },
   };

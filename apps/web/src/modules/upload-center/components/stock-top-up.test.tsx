@@ -2,7 +2,7 @@
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { ApiProvider } from "../../../shared/api/api-provider";
 import { SessionProvider } from "../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../test/backend";
@@ -55,7 +55,8 @@ async function addLine() {
   await screen.findByText("B-2026-02");
 }
 
-it("saves all manual lines once as a draft with reason and batch evidence", async () => {
+it.each([false, true])("saves manual top-up lines with batch evidence (HTTP fallback: %s)", async (http) => {
+  if (http) vi.stubGlobal("crypto", { getRandomValues: crypto.getRandomValues.bind(crypto), subtle: crypto.subtle });
   const user = userEvent.setup();
   const calls = open();
   await ready();
@@ -105,4 +106,21 @@ it("lets a reviewer see history without creating top-ups", async () => {
   expect(await screen.findByRole("button", { name: "Save top-up draft" })).toHaveProperty("disabled", true);
   expect(screen.getByRole("button", { name: "Add stock line" })).toHaveProperty("disabled", true);
   expect(await screen.findByText("No migration top-ups yet")).toBeTruthy();
+});
+
+it("adds and saves a top-up line without batch or AR numbers", async () => {
+  const user = userEvent.setup();
+  const calls = open();
+  await ready();
+  await user.type(screen.getByLabelText(/^Reason for migration top-up/), "Unnumbered stock found");
+  await user.click(screen.getByRole("button", { name: "Add stock line" }));
+  const dialog = await screen.findByRole("dialog");
+  await user.type(await within(dialog).findByLabelText(/^Material code/), "RM002");
+  await user.type(within(dialog).getByLabelText(/^Base UOM/), "mg");
+  await user.type(within(dialog).getByLabelText(/^Quantity/), "2.5");
+  await user.click(within(dialog).getByRole("button", { name: "Keep line" }));
+  await screen.findByText("RM002");
+  await user.click(screen.getByRole("button", { name: "Save top-up draft" }));
+  await screen.findByText("Review saved top-up");
+  expect(JSON.parse(calls[0]?.body ?? "{}")).toMatchObject({ lines: [{ materialCode: "RM002", batchNumber: "", arNumber: null, quantityInSheet: 2.5 }] });
 });

@@ -42,4 +42,4 @@ export const parseStoredFormulaResults = (
 };
 
 export const isGovernedFormulaResponse = (response?: FormResponseDto) =>
-  Boolean((response as GovernedFormResponse | undefined)?.formulaGoverned);
+  Boolean(response?.formulaGoverned || response?.formulaRepairPending || response?.formulaRepairEvaluated);

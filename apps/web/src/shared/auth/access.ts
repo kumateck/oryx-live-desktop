@@ -5,6 +5,8 @@ export const departmentTypes = { production: 0, nonProduction: 1, researchAndDev
 interface RuleBase {
   /** When set, the user's department must also be of this type. */
   readonly departmentType?: DepartmentType;
+  /** Additional OR group, combined with the rule's other requirements. */
+  readonly anyPermissions?: readonly string[];
 }
 
 export type AccessRule =
@@ -35,6 +37,7 @@ export type AccessContext =
 export function canAccess(rule: AccessRule, context: AccessContext): boolean {
   if (context.state === "anonymous") return false;
   if (rule.departmentType !== undefined && context.departmentType !== rule.departmentType) return false;
+  if (rule.anyPermissions !== undefined && !rule.anyPermissions.some(key => context.permissions.has(key))) return false;
   if (rule.kind === "authenticated") return true;
   if (rule.kind === "account") {
     const email = context.email?.toLowerCase();

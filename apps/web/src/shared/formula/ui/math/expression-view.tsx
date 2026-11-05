@@ -1,6 +1,7 @@
 import { memo, useMemo, type ReactNode } from "react";
 import { create, parseDependencies, type MathNode } from "mathjs";
 import { cn } from "cn";
+import { canonicalizeUniversalInputTokens } from "@/shared/formula/builder/universal-variable-keys";
 
 // Typeset formula rendering without MathJax: Oryx Next loaded MathJax from a CDN, which the desktop's content policy
 // does not allow. The expression is parsed with mathjs (the same parser the evaluator uses) and drawn as nested spans:
@@ -19,10 +20,14 @@ export interface ExpressionViewProps {
 const greek: Record<string, string> = { alpha: "α", beta: "β", gamma: "γ", delta: "δ", epsilon: "ε", theta: "θ", lambda: "λ", mu: "μ", pi: "π", rho: "ρ", sigma: "σ", tau: "τ", phi: "φ", omega: "ω", Delta: "Δ", Sigma: "Σ", Omega: "Ω" };
 const symbols: Record<string, string> = { add: "+", subtract: "−", multiply: "×", divide: "÷", mod: "mod", unaryMinus: "−", unaryPlus: "+", larger: ">", smaller: "<", largerEq: "≥", smallerEq: "≤", equal: "=", unequal: "≠" };
 
-/** ":wt1" and "Weight2" as written by the formula builders, shown as a name with its number subscripted. */
+/**
+ * ":wt1" and "Weight2" as written by the formula builders, shown as a name with its number subscripted. Old table
+ * input tokens (":standardInput.wt", ":sampleInput1.wt") are shown by their dot-free names (standardWeight,
+ * sample1Weight); only the display changes, never the stored formula.
+ */
 function normalize(raw: string): string {
   let pipes = false;
-  return raw.replace(/−/g, "-").replace(/×/g, "*").replace(/÷/g, "/").replace(/√/g, "sqrt")
+  return canonicalizeUniversalInputTokens(raw).replace(/−/g, "-").replace(/×/g, "*").replace(/÷/g, "/").replace(/√/g, "sqrt")
     .replace(/:([A-Za-z_][A-Za-z0-9_.]*)/g, (_match, name: string) => name.replace(/\./g, "_"))
     .split("").map((character) => { if (character !== "|") return character; pipes = !pipes; return pipes ? "abs(" : ")"; }).join("") + (pipes ? ")" : "");
 }
@@ -68,7 +73,7 @@ function render(node: MathNode, key: string): ReactNode {
 export const ExpressionView = memo(function ExpressionView({ expression, className, print = false, option }: ExpressionViewProps) {
   const tree = useMemo(() => { try { if (!parse) return null; const source = normalize(expression); return parse(option?.append100 ? `(${source}) * 100` : source); } catch { return null; } }, [expression, option?.append100]);
   const result = option?.result;
-  return <div className={cn("flex flex-wrap items-center justify-center gap-1 p-3 text-lg", print && "p-1 text-sm", className)} aria-label={`Formula: ${expression}`}>
+  return <div className={cn("flex flex-wrap items-center justify-center gap-1 p-3 text-lg", print && "p-1 text-sm", className)} aria-label={`Formula: ${canonicalizeUniversalInputTokens(expression)}`}>
     {tree ? render(tree, "root") : <span className="font-mono text-sm">{expression}</span>}
     <span className="mx-1">=</span>{result !== null && result !== undefined ? <span className="font-semibold">{String(result)}</span> : null}
   </div>;

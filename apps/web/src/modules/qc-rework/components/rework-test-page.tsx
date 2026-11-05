@@ -28,7 +28,7 @@ function ReworkTest({ record }: { record: ReworkDetail }) {
   const response = useMemo(() => responseSchema.safeParse(responseQuery.data), [responseQuery.data]);
   const formId = response.success ? response.data.form.id : null;
   const formQuery = qcApi.useGetApiV1QcReworkTasksByIdFormQuery({ ...audit, id: task.id });
-  const form = formSchema.safeParse(formQuery.data);
+  const form = formSchema.safeParse(responseQuery.data?.effectiveForm ?? formQuery.data);
   const batch = materialsApi.useGetApiV1MaterialBatchByBatchIdQuery(task.materialBatchId ? { ...audit, batchId: task.materialBatchId } : skipToken);
   const materialInfo = materialsApi.useGetApiV1MaterialByMaterialIdQuery(batch.data?.material?.id ? { ...audit, materialId: batch.data.material.id } : skipToken);
   const materialAssignments = formsApi.useGetApiV1FormAssigneesMaterialBatchByMaterialBatchIdQuery(task.materialBatchId ? { ...audit, materialBatchId: task.materialBatchId } : skipToken);
