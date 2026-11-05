@@ -1,5 +1,27 @@
 # Oryx Live Desktop plan
 
+## Batch-level reservation repair (2026-11-05)
+
+Implemented locally after the user's authorization with a dedicated permission.
+`CanRepairStockReservations` is registered in the backend catalogue independently
+of issued-BOM/packaging grants. The production board's **Repair stock reservations**
+action opens a lazy activities-module dialog showing the current approved
+replacement, affected requisitions, materials, old/replacement lots and shelves,
+quantities, blockers and history. It requires a reason and reviewed preview.
+
+Authenticated server preview/apply checks current permission, department and
+record state, validates a fresh snapshot, protects concurrent writes and records
+an idempotent immutable receipt plus production activity log atomically. The
+operator comes from the session. Whole-queue capacity checks protect other
+waiting batches, while writes affect only the selected batch. Reservation IDs,
+quantities, stock, approvals and workflow state are preserved. Ambiguous or
+insufficient replacements and missing/deleted/untraceable lot evidence block
+automatic repair. The department-wide maintenance tool remains separate.
+
+The companion `AddReservationRepairs` migration is prepared, not applied to any
+client database. No client data, role grants or deployment changed. See
+`docs/batch-reservation-repair.md` for deployment prerequisites and verification.
+
 ## Bulk schedule repairs and unissued unstart (2026-11-04)
 
 The user authorizes selecting one product within a schedule and repairing every
