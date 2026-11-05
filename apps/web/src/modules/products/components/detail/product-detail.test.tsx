@@ -39,7 +39,7 @@ function open(permissions: string[], address = `/production/products/${id}/detai
 }
 
 it("shows the product, its scaled bill of materials, and only permitted actions", async () => {
-  open(["CanViewPlannedProducts"]);
+  open(["CanViewProductionProducts", "CanViewProductionProductInfo", "CanViewProductionProductBom", "CanViewProductionProductPackingMaterials", "CanViewProductionProductPackingStyles", "CanViewProductionProductPackingOrder", "CanViewProductionProductProcedure", "CanViewProductionProductSpecifications", "CanViewProductionProductStps", "CanViewProductionProductArds", "CanPrintProductionProduct"]);
   expect(await screen.findByRole("heading", { name: "Wormee 4 Suspension" })).toBeTruthy();
   expect(screen.getByText("1,500 L")).toBeTruthy();
   expect(screen.getByText("albendazole").tagName).toBe("STRONG");
@@ -51,7 +51,7 @@ it("shows the product, its scaled bill of materials, and only permitted actions"
 });
 
 it("loads a tab's records only when it is opened, and opens the tab named in the address", async () => {
-  const paths = open(["CanViewPlannedProducts", "CanEditProductionPlan"], `/production/products/${id}/details?tab=outdated-boms`);
+  const paths = open(["CanViewProductionProducts", "CanViewProductionProductInfo", "CanViewProductionProductBom", "CanViewProductionProductPackingMaterials", "CanViewProductionProductPackingStyles", "CanViewProductionProductPackingOrder", "CanViewProductionProductProcedure", "CanViewProductionProductSpecifications", "CanViewProductionProductStps", "CanViewProductionProductArds", "CanPrintProductionProduct", "CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure"], `/production/products/${id}/details?tab=outdated-boms`);
   expect(await screen.findByText("Old sugar")).toBeTruthy();
   expect(screen.getByRole("link", { name: "Edit product" }).getAttribute("href")).toBe(`/production/products/${id}/edit/info`);
   expect(paths).not.toContain(`/api/v1/product/${id}/routes`);
@@ -67,13 +67,13 @@ it("loads a tab's records only when it is opened, and opens the tab named in the
 });
 
 it("says so when the product does not exist", async () => {
-  open(["CanViewPlannedProducts"], undefined, 404);
+  open(["CanViewProductionProducts", "CanViewProductionProductInfo", "CanViewProductionProductBom", "CanViewProductionProductPackingMaterials", "CanViewProductionProductPackingStyles", "CanViewProductionProductPackingOrder", "CanViewProductionProductProcedure", "CanViewProductionProductSpecifications", "CanViewProductionProductStps", "CanViewProductionProductArds", "CanPrintProductionProduct"], undefined, 404);
   await waitFor(() => expect(screen.getByRole("heading", { name: "This product could not be found" })).toBeTruthy());
   expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
 });
 
 it("prints the product as the head of a batch manufacturing record", async () => {
-  open(["CanViewPlannedProducts"]);
+  open(["CanViewProductionProducts", "CanViewProductionProductInfo", "CanViewProductionProductBom", "CanViewProductionProductPackingMaterials", "CanViewProductionProductPackingStyles", "CanViewProductionProductPackingOrder", "CanViewProductionProductProcedure", "CanViewProductionProductSpecifications", "CanViewProductionProductStps", "CanViewProductionProductArds", "CanPrintProductionProduct"]);
   fireEvent.click(await screen.findByRole("button", { name: "Print" }));
   const dialog = await screen.findByRole("dialog");
   expect(dialog.textContent).toContain("Batch manufacturing record");

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { DraggableDataTable, dataTableColumns } from "@/shared/datatable";
 import type { ProcedureStep } from "../../lib/procedure";
+import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { PartySummary } from "./party-summary";
 
 const column = dataTableColumns<ProcedureStep>();
@@ -19,6 +20,7 @@ export function ProcedureTable({ steps, loading, error, onRetry, onReorder, onEd
   onRemove: (step: ProcedureStep) => void;
   disabled: boolean;
 }) {
+  const { task, keys } = useProductWorkspace();
   const columns = useMemo(() => column.columns([
     column.display({ id: "step", header: "Step", size: 60, cell: ({ row }) => row.index + 1 }),
     column.accessor((step) => step.operation.label, { id: "operation", header: "Operation", cell: ({ row }) => <div className="break-words">{row.original.operation.label}</div> }),
@@ -29,10 +31,10 @@ export function ProcedureTable({ steps, loading, error, onRetry, onReorder, onEd
     column.accessor((step) => step.estimatedTime || "–", { id: "time", header: "Estimated time", size: 140 }),
     column.display({ id: "parties", header: "Responsible", cell: ({ row }) => <PartySummary parties={row.original.parties} operation={row.original.operation.label} /> }),
     column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.operation.label}`} items={[
-      { id: "edit", label: "Edit", icon: Pencil, onSelect: () => onEdit(row.original) },
-      { id: "remove", label: "Remove", icon: Trash2, destructive: true, onSelect: () => onRemove(row.original) },
+      { id: "edit", label: "Edit", icon: Pencil, require: task(keys.sections.procedure.edit), onSelect: () => onEdit(row.original) },
+      { id: "remove", label: "Remove", icon: Trash2, destructive: true, require: task(keys.sections.procedure.delete ?? keys.sections.procedure.edit), onSelect: () => onRemove(row.original) },
     ]} /> }),
-  ]), [onEdit, onRemove]);
+  ]), [onEdit, onRemove, task, keys]);
   return <DraggableDataTable label="Procedure" columns={columns} rows={steps} getRowId={(step) => step.key} loading={loading} error={error}
     onRetry={onRetry} disabled={disabled} describeRow={(step) => step.operation.label} onReorder={(next) => onReorder(next)}
     emptyTitle="No steps yet" emptyDescription="Add the operations this product goes through, in order, then save." />;

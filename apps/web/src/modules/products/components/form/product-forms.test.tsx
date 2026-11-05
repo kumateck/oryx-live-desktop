@@ -19,7 +19,7 @@ const saved = { id, name: "Wormee", code: "NL-047", division: 1, baseQuantity: 5
 interface Call { method: string; path: string; body: string | null }
 
 function open(address: string) {
-  const backend = stubBackend({ permissions: ["CanViewPlannedProducts", "CanCreateNewProductionPlan", "CanEditProductionPlan"] });
+  const backend = stubBackend({ permissions: ["CanViewProductionProducts", "CanViewProductionProductInfo", "CanViewProductionProductBom", "CanViewProductionProductPackingMaterials", "CanViewProductionProductPackingStyles", "CanViewProductionProductPackingOrder", "CanViewProductionProductProcedure", "CanViewProductionProductSpecifications", "CanViewProductionProductStps", "CanViewProductionProductArds", "CanPrintProductionProduct", "CanCreateProductionProduct", "CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure", "CanCreateProductSpecification", "CanEditProductSpecification", "CanCreateProductArd", "CanEditProductArd", "CanCreateProductStp", "CanEditProductStp"] });
   rememberSession();
   const calls: Call[] = [];
   const session = backend.fetcher.getMockImplementation();

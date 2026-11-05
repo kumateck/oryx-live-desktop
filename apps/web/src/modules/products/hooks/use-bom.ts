@@ -28,8 +28,9 @@ export function useBom(productId: string, compositionSize: number | null, batchS
   const saved = useMemo(() => parsed?.success ? fromSavedBom(parsed.data) : none, [parsed]);
   const [draft, setDraft] = useState<BomLine[] | null>(null);
   const [message, setMessage] = useState("");
-  const { editRequirement, lookupProductId } = useProductWorkspace();
-  const permission = usePermissionAction(editRequirement);
+  const { save: saveRequirement, task, keys, context, lookupProductId } = useProductWorkspace();
+  const permission = usePermissionAction(saveRequirement("bom"));
+  const archivePermission = usePermissionAction(task(keys.sections.bom.archive ?? keys.sections.bom.edit));
   const lines = draft ?? saved;
 
   const saveAll = async () => {
@@ -55,7 +56,7 @@ export function useBom(productId: string, compositionSize: number | null, batchS
       const verified = checked.flatMap(({ line, unit }) => unit ? [{ ...line, unit, linkedUnit: unit }] : []);
       const revoked = permission.check();
       if (revoked) { setMessage(revoked); return; }
-      const result = await save({ ...bomAudit, domainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest: toBomRequest(productId, verified, compositionSize, batchSize) });
+      const result = await save({ ...bomAudit, ...context, domainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest: toBomRequest(productId, verified, compositionSize, batchSize) });
       if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
       setDraft(null);
       toast.success("Bill of materials saved");
@@ -65,10 +66,10 @@ export function useBom(productId: string, compositionSize: number | null, batchS
     }
   };
   const archiveActive = async () => {
-    const denied = permission.check();
+    const denied = archivePermission.check();
     if (denied) { setMessage(denied); return false; }
     setMessage("");
-    const result = await archive({ ...bomAudit, productId });
+    const result = await archive({ ...bomAudit, ...context, productId });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return false; }
     setDraft(null);
     toast.success("Bill of materials archived");

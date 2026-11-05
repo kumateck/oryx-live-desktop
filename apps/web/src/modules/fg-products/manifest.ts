@@ -7,5 +7,5 @@ export const manifest = {
   label: "FG products",
   root: "/warehouse/fg-products",
   order: 93,
-  access: { kind: "all", permissions: ["CanViewApprovedProducts"] },
+  access: { kind: "all", permissions: ["CanViewFgProducts"] },
 } satisfies ModuleManifest<"fg-products", "/warehouse/fg-products">;

@@ -11,6 +11,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          context: queryArg.context,
+        },
       }),
     }),
     putApiV1BomByBillOfMaterialId: build.mutation<
@@ -26,6 +29,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          context: queryArg.context,
+        },
       }),
     }),
     deleteApiV1BomByBillOfMaterialId: build.mutation<
@@ -39,6 +45,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          context: queryArg.context,
         },
       }),
     }),
@@ -1100,6 +1109,7 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as materialsApi };
 export type PostApiV1BomApiResponse = /** status 201 Created */ string;
 export type PostApiV1BomApiArg = {
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1111,6 +1121,7 @@ export type PutApiV1BomByBillOfMaterialIdApiResponse = void;
 export type PutApiV1BomByBillOfMaterialIdApiArg = {
   /** The ID of the Bill of Material to be updated. */
   billOfMaterialId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -1122,6 +1133,7 @@ export type DeleteApiV1BomByBillOfMaterialIdApiResponse = void;
 export type DeleteApiV1BomByBillOfMaterialIdApiArg = {
   /** The ID of the Bill of Material to be deleted. */
   billOfMaterialId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */

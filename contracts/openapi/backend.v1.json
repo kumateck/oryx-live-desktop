@@ -3885,6 +3885,13 @@
         "summary": "Creates a new Bill of Material.",
         "parameters": [
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -4108,6 +4115,13 @@
             }
           },
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -4206,6 +4220,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -50717,6 +50738,13 @@
         "summary": "Creates a new product.",
         "parameters": [
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -51010,6 +51038,13 @@
             }
           },
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -51106,6 +51141,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -51227,6 +51269,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -51407,6 +51456,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -51643,6 +51699,13 @@
             }
           },
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -51702,6 +51765,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -51878,6 +51948,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -52264,6 +52341,13 @@
             }
           },
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -52363,6 +52447,13 @@
             }
           },
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -52422,6 +52513,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -52533,6 +52631,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -53071,6 +53176,13 @@
         "summary": "Imports products from an Excel file.",
         "parameters": [
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -53144,6 +53256,13 @@
         "summary": "Imports product bill of materials (BOM) from an Excel file.",
         "parameters": [
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -53216,6 +53335,13 @@
         ],
         "summary": "Imports product packaging information from an Excel file.",
         "parameters": [
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "Module",
             "in": "header",
@@ -53443,6 +53569,13 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/DOMAIN.Entities.Products.Division"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {

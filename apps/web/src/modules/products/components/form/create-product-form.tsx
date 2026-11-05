@@ -10,7 +10,8 @@ import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { UnsavedChangesGuard } from "@/shared/navigation/unsaved-changes";
 import { usePostApiV1ProductMutation } from "../../api/product-api";
 import type { ProductOptions } from "../../hooks/use-product-options";
-import { audit, productPermissions, productDetailPath, productsPath } from "../../lib/product-access";
+import { audit, productDetailPath, productsPath } from "../../lib/product-access";
+import { productKeys } from "../../lib/product-keys";
 import { toProductRequest } from "../../lib/product-form";
 import { productFormSchema, type ProductFormValues } from "../../schemas/product-form-schema";
 import { FormActions } from "./form-shell";
@@ -37,7 +38,7 @@ export function CreateProductForm({ options }: { options: ProductOptions }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once, when the rule becomes available
   }, [code.ready]);
 
-  const permission = usePermissionAction({ kind: "all", permissions: [productPermissions.create], departmentType: 0 });
+  const permission = usePermissionAction({ kind: "all", permissions: [productKeys.production.create ?? "CanCreateProductionProduct"], departmentType: 0 });
   const submit = form.handleSubmit(async (values) => {
     const denied = permission.check();
     if (denied) { setMessage(denied); return; }

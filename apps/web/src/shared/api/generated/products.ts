@@ -14,6 +14,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          context: queryArg.context,
+        },
       }),
     }),
     getApiV1Product: build.query<
@@ -65,6 +68,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          context: queryArg.context,
+        },
       }),
     }),
     deleteApiV1ProductByProductId: build.mutation<
@@ -78,6 +84,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          context: queryArg.context,
         },
       }),
     }),
@@ -107,6 +116,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          context: queryArg.context,
+        },
       }),
     }),
     getApiV1ProductByProductIdBom: build.query<
@@ -134,6 +146,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          context: queryArg.context,
         },
       }),
     }),
@@ -175,6 +190,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          context: queryArg.context,
+        },
       }),
     }),
     postApiV1ProductByProductIdPackages: build.mutation<
@@ -189,6 +207,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          context: queryArg.context,
         },
       }),
     }),
@@ -217,6 +238,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          context: queryArg.context,
         },
       }),
     }),
@@ -274,6 +298,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          context: queryArg.context,
+        },
       }),
     }),
     deleteApiV1ProductPackagesByProductPackageId: build.mutation<
@@ -287,6 +314,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          context: queryArg.context,
         },
       }),
     }),
@@ -303,6 +333,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          context: queryArg.context,
+        },
       }),
     }),
     putApiV1ProductByProductIdBomArchive: build.mutation<
@@ -316,6 +349,9 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+        params: {
+          context: queryArg.context,
         },
       }),
     }),
@@ -438,6 +474,7 @@ const injectedRtkApi = api.injectEndpoints({
         params: {
           departmentId: queryArg.departmentId,
           departmentDivision: queryArg.departmentDivision,
+          context: queryArg.context,
         },
       }),
     }),
@@ -447,6 +484,7 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as productsApi };
 export type PostApiV1ProductApiResponse = /** status 201 Created */ string;
 export type PostApiV1ProductApiArg = {
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -482,6 +520,7 @@ export type GetApiV1ProductByProductIdApiArg = {
 export type PutApiV1ProductByProductIdApiResponse = void;
 export type PutApiV1ProductByProductIdApiArg = {
   productId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -491,6 +530,7 @@ export type PutApiV1ProductByProductIdApiArg = {
 export type DeleteApiV1ProductByProductIdApiResponse = void;
 export type DeleteApiV1ProductByProductIdApiArg = {
   productId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -507,6 +547,7 @@ export type GetApiV1ProductCategoriesApiArg = {
 export type PutApiV1ProductPackageDescriptionByProductIdApiResponse = void;
 export type PutApiV1ProductPackageDescriptionByProductIdApiArg = {
   productId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -525,6 +566,7 @@ export type GetApiV1ProductByProductIdBomApiArg = {
 export type PostApiV1ProductByProductIdRoutesApiResponse = void;
 export type PostApiV1ProductByProductIdRoutesApiArg = {
   productId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -552,6 +594,7 @@ export type GetApiV1ProductRoutesByRouteIdApiArg = {
 export type DeleteApiV1ProductRoutesByRouteIdApiResponse = void;
 export type DeleteApiV1ProductRoutesByRouteIdApiArg = {
   routeId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -561,6 +604,7 @@ export type PostApiV1ProductByProductIdPackagesApiResponse =
   /** status 201 Created */ string;
 export type PostApiV1ProductByProductIdPackagesApiArg = {
   productId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -580,6 +624,7 @@ export type PostApiV1ProductByProductIdPackingApiResponse =
   /** status 201 Created */ string;
 export type PostApiV1ProductByProductIdPackingApiArg = {
   productId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -617,6 +662,7 @@ export type GetApiV1ProductPackagesByProductPackageIdApiArg = {
 export type PutApiV1ProductPackagesByProductPackageIdApiResponse = void;
 export type PutApiV1ProductPackagesByProductPackageIdApiArg = {
   productPackageId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -626,6 +672,7 @@ export type PutApiV1ProductPackagesByProductPackageIdApiArg = {
 export type DeleteApiV1ProductPackagesByProductPackageIdApiResponse = void;
 export type DeleteApiV1ProductPackagesByProductPackageIdApiArg = {
   productPackageId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -635,6 +682,7 @@ export type PostApiV1ProductByProductIdFinishedApiResponse =
   /** status 201 Created */ string;
 export type PostApiV1ProductByProductIdFinishedApiArg = {
   productId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -645,6 +693,7 @@ export type PutApiV1ProductByProductIdBomArchiveApiResponse = void;
 export type PutApiV1ProductByProductIdBomArchiveApiArg = {
   /** The ID of the Product for which the bom should be archived. */
   productId: string;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -718,6 +767,7 @@ export type GetApiV1ProductDownloadApiResponse = /** status 200 OK */ string;
 export type GetApiV1ProductDownloadApiArg = {
   departmentId?: string;
   departmentDivision?: DomainEntitiesProductsDivision;
+  context?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */

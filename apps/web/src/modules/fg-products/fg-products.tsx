@@ -12,7 +12,7 @@ import { usePageSearch } from "@/shared/search/page-search";
 export const fgProductsPath = "/warehouse/fg-products";
 export const fgProductPath = (id: string) => `${fgProductsPath}/${id}`;
 export const fgProductsAudit = { module: "Warehouse", subModule: "Products" } as const;
-const viewPermission = "CanViewApprovedProducts";
+const viewPermission = "CanViewFgProducts";
 
 /** Beta-lactam and non-beta-lactam products are made apart and listed apart. */
 export type Division = 0 | 1;
