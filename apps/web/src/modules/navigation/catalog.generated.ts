@@ -815,8 +815,8 @@ export const navigationCatalog = [
         "id": "production-planning.requisition",
         "label": "Requisition",
         "permissions": [
-          "CanViewRawMaterialRequisitions",
-          "CanViewPackagingMaterialRequisitions",
+          "CanViewProductionRawMaterialRequisitions",
+          "CanViewProductionPackagingMaterialRequisitions",
           "CanViewRawMaterialRequisitionsForCreation",
           "CanViewPackageMaterialRequisitionsForCreation",
           "CanCreateRawMaterialRequisitions",
@@ -828,8 +828,8 @@ export const navigationCatalog = [
             "label": "Material Requisitions",
             "path": "/production/requisition/general",
             "permissions": [
-              "CanViewRawMaterialRequisitions",
-              "CanViewPackagingMaterialRequisitions"
+              "CanViewProductionRawMaterialRequisitions",
+              "CanViewProductionPackagingMaterialRequisitions"
             ]
           },
           {
