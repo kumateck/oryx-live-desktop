@@ -5,6 +5,7 @@ import { BatchSummary } from "@/modules/activities/components/batch/batch-summar
 import { RepairMenu } from "@/modules/activities/components/batch/repair-menu";
 import { ProductionUnstart } from "@/modules/activities/components/batch/production-unstart";
 import { IssuedMaterialRepairMenu } from "@/modules/activities/components/batch/issued-material-repair-menu";
+import { ReservationRepair } from "@/modules/activities/components/batch/reservation-repair";
 import { RunProgress } from "@/modules/activities/components/batch/run-progress";
 import { StepList } from "@/modules/activities/components/batch/step-list";
 import { useActivity } from "@/modules/activities/hooks/use-activity";
@@ -19,6 +20,7 @@ function BatchBoard({ id }: { id: string }) {
       actions={state.activity && title && !state.activity.batch.cancelled && state.activity.status !== 2 && state.activity.status !== 4
         ? <><RepairMenu activityId={state.activity.id} batchLabel={title} />
           {state.activity.batch.id ? <IssuedMaterialRepairMenu batchId={state.activity.batch.id} /> : null}
+          {state.activity.batch.id ? <ReservationRepair batchId={state.activity.batch.id} /> : null}
           <ProductionUnstart activityId={state.activity.id} /></> : undefined} />
     <ActivityPageState state={state}>{(activity, progress) => <>
       <CancelledNotice activity={activity} />

@@ -1900,6 +1900,34 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    previewReservationRepair: build.query<
+      PreviewReservationRepairApiResponse,
+      PreviewReservationRepairApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-schedule", id: queryArg.batchId }],
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/${queryArg.batchId}/reservation-repair`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    applyReservationRepair: build.mutation<
+      ApplyReservationRepairApiResponse,
+      ApplyReservationRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-schedule", id: "LIST" }, { type: "production-schedule", id: queryArg.batchId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-schedule/${queryArg.batchId}/reservation-repair`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionReservationRepairRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -3208,6 +3236,25 @@ export type ApplyScheduleProductRepairApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesProductsProductionApplyScheduleRepair: DomainEntitiesProductsProductionApplyScheduleRepair;
+};
+export type PreviewReservationRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionReservationRepairPreviewDto;
+export type PreviewReservationRepairApiArg = {
+  batchId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ApplyReservationRepairApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionReservationRepairResultDto;
+export type ApplyReservationRepairApiArg = {
+  batchId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionReservationRepairRequest: DomainEntitiesProductsProductionReservationRepairRequest;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -5394,6 +5441,56 @@ export type DomainEntitiesProductsProductionApplyScheduleRepair = {
   previewHash: string;
   reason: string;
 };
+export type DomainEntitiesProductsProductionReservationRepairCandidateDto = {
+  batchId?: string;
+  batchNumber?: string | null;
+  shelfId?: string;
+  shelf?: string | null;
+  availableQuantity?: number;
+};
+export type DomainEntitiesProductsProductionReservationRepairRowDto = {
+  reservationId?: string;
+  requisitionCode?: string | null;
+  materialCode?: string | null;
+  materialName?: string | null;
+  unit?: string | null;
+  quantity?: number;
+  oldBatchId?: string;
+  oldBatchNumber?: string | null;
+  oldShelf?: string | null;
+  candidates?:
+    DomainEntitiesProductsProductionReservationRepairCandidateDto[] | null;
+};
+export type DomainEntitiesProductsProductionReservationRepairHistoryDto = {
+  id?: string;
+  actorId?: string;
+  actorName?: string | null;
+  appliedAt?: string;
+  reason?: string | null;
+  rows?: DomainEntitiesProductsProductionReservationRepairRowDto[] | null;
+};
+export type DomainEntitiesProductsProductionReservationRepairPreviewDto = {
+  batchId?: string;
+  batchNumber?: string | null;
+  migrationId?: string;
+  migrationFile?: string | null;
+  previewToken?: string | null;
+  hasChanges?: boolean;
+  canApply?: boolean;
+  blockers?: string[] | null;
+  rows?: DomainEntitiesProductsProductionReservationRepairRowDto[] | null;
+  history?:
+    DomainEntitiesProductsProductionReservationRepairHistoryDto[] | null;
+};
+export type DomainEntitiesProductsProductionReservationRepairResultDto = {
+  repairId?: string;
+  alreadyApplied?: boolean;
+};
+export type DomainEntitiesProductsProductionReservationRepairRequest = {
+  requestId?: string;
+  previewToken: string;
+  reason: string;
+};
 export const {
   usePostApiV1ProductionOrdersMutation,
   useGetApiV1ProductionOrdersQuery,
@@ -5591,4 +5688,7 @@ export const {
   usePreviewScheduleProductRepairQuery,
   useLazyPreviewScheduleProductRepairQuery,
   useApplyScheduleProductRepairMutation,
+  usePreviewReservationRepairQuery,
+  useLazyPreviewReservationRepairQuery,
+  useApplyReservationRepairMutation,
 } = injectedRtkApi;

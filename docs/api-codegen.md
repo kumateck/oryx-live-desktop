@@ -1,3 +1,10 @@
+Batch reservation repair (2026-11-05) adds typed preview/apply operations under
+`/api/v1/production-schedule/{batchId}/reservation-repair` in the production domain.
+Import only its paths and owned schemas using
+`bun scripts/import-reservation-repair.ts EXPORT.json`, then regenerate/check.
+The companion `AddReservationRepairs` migration must precede UI activation. See
+[batch reservation repair](batch-reservation-repair.md).
+
 Formula repair (2026-11-05) adds five typed operations under
 `/api/v1/formula-repairs`, owned by the forms domain, plus
 `formulaConfigurationHash` on form fields and draft saves, repair state on form
