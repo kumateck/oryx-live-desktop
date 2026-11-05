@@ -1,3 +1,4 @@
+import { randomId } from "@/shared/ids/random-id";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useForm, useWatch } from "react-hook-form";
@@ -87,7 +88,7 @@ export function StockTopUpTab() {
     </form>
     {department ? <StockMigrationHistory departmentId={department.value} topUp /> : null}
     {editing ? <StockTopUpLineDialog initial={editing === "new" ? emptyTopUpLine : editing} onClose={() => setEditing(null)} onSave={(line) => {
-      setRows((current) => editing === "new" ? [...current, { ...line, id: crypto.randomUUID() }] : current.map((row) => row.id === editing.id ? { ...line, id: row.id } : row));
+      setRows((current) => editing === "new" ? [...current, { ...line, id: randomId() }] : current.map((row) => row.id === editing.id ? { ...line, id: row.id } : row));
       setEditing(null);
     }} /> : null}
     <UnsavedChangesGuard when={!saved && (Boolean(dirty.reason || dirty.file || dirty.massUnit || dirty.volumeUnit) || rows.length > 0)} />

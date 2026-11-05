@@ -7,7 +7,7 @@ export const topUpLineSchema = z.object({
   materialCode: z.string().trim().min(1, "Enter the material code").max(200),
   warehouseName: z.string().trim().max(500),
   shelfName: z.string().trim().max(200),
-  batchNumber: z.string().trim().min(1, "Enter the batch number").max(500),
+  batchNumber: z.string().trim().max(500),
   unitSymbol: z.string().trim().min(1, "Enter the base UOM").max(50),
   quantity: z.string().trim().refine((value) => /^\d+(\.\d+)?$/.test(value) && Number.isFinite(Number(value)) && Number(value) > 0, "Enter a quantity above zero"),
   manufactured: month,

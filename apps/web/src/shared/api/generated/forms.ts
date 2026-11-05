@@ -49,6 +49,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          responseId: queryArg.responseId,
+        },
       }),
     }),
     putApiV1FormByFormId: build.mutation<
@@ -678,6 +681,77 @@ const injectedRtkApi = api.injectEndpoints({
           },
         }),
       }),
+    getFormulaRepairContext: build.query<
+      GetFormulaRepairContextApiResponse,
+      GetFormulaRepairContextApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "formula-repair/question", id: queryArg.questionId }],
+      query: (queryArg) => ({
+        url: `/api/v1/formula-repairs/questions/${queryArg.questionId}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    previewFormulaRepair: build.mutation<
+      PreviewFormulaRepairApiResponse,
+      PreviewFormulaRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "formula-repair/question", id: "LIST" }, { type: "formula-repair", id: "LIST" }, { type: "formula-repair/question", id: queryArg.questionId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/formula-repairs/questions/${queryArg.questionId}/preview`,
+        method: "POST",
+        body: queryArg.appServicesFormulasFormulaRepairCandidate,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    evaluateRepairedFormula: build.mutation<
+      EvaluateRepairedFormulaApiResponse,
+      EvaluateRepairedFormulaApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "formula-repair/test", id: "LIST" }, { type: "formula-repair", id: "LIST" }, { type: "formula-repair/test", id: queryArg.atrId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/formula-repairs/tests/${queryArg.atrId}/fields/${queryArg.formFieldId}/evaluate`,
+        method: "POST",
+        body: queryArg.apiControllersEvaluateRepairedFormulaRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    applyFormulaRepair: build.mutation<
+      ApplyFormulaRepairApiResponse,
+      ApplyFormulaRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "formula-repair/question", id: "LIST" }, { type: "formula-repair", id: "LIST" }, { type: "formula-repair/question", id: queryArg.questionId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/formula-repairs/questions/${queryArg.questionId}/apply`,
+        method: "POST",
+        body: queryArg.appServicesFormulasApplyFormulaRepairRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getFormulaRepairHistory: build.query<
+      GetFormulaRepairHistoryApiResponse,
+      GetFormulaRepairHistoryApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "formula-repair/question", id: queryArg.questionId }],
+      query: (queryArg) => ({
+        url: `/api/v1/formula-repairs/questions/${queryArg.questionId}/history`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -718,6 +792,7 @@ export type GetApiV1FormByFormIdApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  responseId?: string;
 };
 export type PutApiV1FormByFormIdApiResponse = void;
 export type PutApiV1FormByFormIdApiArg = {
@@ -1149,6 +1224,54 @@ export type PostApiV1FormulaRuntimeResponsesByResponseIdPlacementsAndPlacementKe
     subModule?: string;
     appServicesFormulasFormulaEvaluationRequest: AppServicesFormulasFormulaEvaluationRequest;
   };
+export type GetFormulaRepairContextApiResponse =
+  /** status 200 OK */ AppServicesFormulasFormulaRepairContextDto;
+export type GetFormulaRepairContextApiArg = {
+  questionId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PreviewFormulaRepairApiResponse =
+  /** status 200 OK */ AppServicesFormulasFormulaRepairPreviewDto;
+export type PreviewFormulaRepairApiArg = {
+  questionId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesFormulasFormulaRepairCandidate: AppServicesFormulasFormulaRepairCandidate;
+};
+export type EvaluateRepairedFormulaApiResponse = /** status 200 OK */ string;
+export type EvaluateRepairedFormulaApiArg = {
+  atrId: string;
+  formFieldId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  apiControllersEvaluateRepairedFormulaRequest: ApiControllersEvaluateRepairedFormulaRequest;
+};
+export type ApplyFormulaRepairApiResponse =
+  /** status 200 OK */ AppServicesFormulasFormulaRepairResultDto;
+export type ApplyFormulaRepairApiArg = {
+  questionId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesFormulasApplyFormulaRepairRequest: AppServicesFormulasApplyFormulaRepairRequest;
+};
+export type GetFormulaRepairHistoryApiResponse =
+  /** status 200 OK */ AppServicesFormulasFormulaRepairHistoryDto[];
+export type GetFormulaRepairHistoryApiArg = {
+  questionId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -1290,6 +1413,7 @@ export type DomainEntitiesFormsFormFieldDto = {
   required?: boolean;
   description?: string | null;
   rank?: number;
+  formulaConfigurationHash?: string | null;
 };
 export type DomainEntitiesFormsFormSectionDto = {
   id?: string;
@@ -1329,6 +1453,8 @@ export type DomainEntitiesFormsFormResponseDto = {
   formulaResultFinalized?: boolean;
   formulaExecutionId?: string | null;
   formulaDisplayResultsJson?: string | null;
+  formulaRepairPending?: boolean;
+  formulaRepairEvaluated?: boolean;
 };
 export type DomainEntitiesFormsFormDto = {
   id?: string;
@@ -1390,6 +1516,7 @@ export type DomainEntitiesFormsRequestSaveResponseDraftRequest = {
   productSpecificationId?: string | null;
   productionActivityStepId?: string | null;
   routineTrackId?: string | null;
+  formulaConfigurationHash?: string | null;
 };
 export type DomainEntitiesFormsRequestCreateFormResponseRequest = {
   formFieldId?: string;
@@ -1425,6 +1552,7 @@ export type DomainEntitiesFormsResponseDetailDto = {
   approved?: boolean;
   rejected?: boolean;
   hasPendingApproval?: boolean;
+  effectiveForm?: DomainEntitiesFormsFormDto;
 };
 export type DomainEntitiesFormsRequestCreateQuestionOptionsRequest = {
   name?: string | null;
@@ -1508,6 +1636,80 @@ export type AppServicesFormulasFormulaExecutionDto = {
 export type AppServicesFormulasFormulaEvaluationRequest = {
   idempotencyKey?: string | null;
 };
+export type AppServicesFormulasFormulaRepairTestDto = {
+  atrId?: string;
+  responseId?: string;
+  formFieldId?: string;
+  label?: string | null;
+  eligible?: boolean;
+  blocker?: string | null;
+};
+export type AppServicesFormulasFormulaRepairContextDto = {
+  questionId?: string;
+  label?: string | null;
+  definition?: string | null;
+  definitionHash?: string | null;
+  canRepairQuestion?: boolean;
+  canRepairTests?: boolean;
+  formsUsingQuestion?: number;
+  responsesAffected?: number;
+  tests?: AppServicesFormulasFormulaRepairTestDto[] | null;
+  blockers?: string[] | null;
+};
+export type AppServicesFormulasFormulaRepairPreviewTestDto = {
+  atrId?: string;
+  formFieldId?: string;
+  label?: string | null;
+  hasReadings?: boolean;
+  configurationChanges?: boolean;
+  missingInputs?: boolean;
+};
+export type AppServicesFormulasFormulaRepairPreviewDto = {
+  previewToken?: string | null;
+  before?: string | null;
+  after?: string | null;
+  captures?: number;
+  selectedTests?: number;
+  missingInputs?: string[] | null;
+  blockers?: string[] | null;
+  tests?: AppServicesFormulasFormulaRepairPreviewTestDto[] | null;
+};
+export type AppServicesFormulasFormulaRepairTarget = {
+  atrId?: string;
+  formFieldId?: string;
+};
+export type AppServicesFormulasFormulaRepairCandidate = {
+  definition?: string | null;
+  updateQuestion?: boolean;
+  targets?: AppServicesFormulasFormulaRepairTarget[] | null;
+};
+export type ApiControllersEvaluateRepairedFormulaRequest = {
+  expectedConfigurationHash?: string | null;
+};
+export type AppServicesFormulasFormulaRepairResultDto = {
+  repairId?: string;
+  alreadyApplied?: boolean;
+  formIds?: string[] | null;
+  responseIds?: string[] | null;
+};
+export type AppServicesFormulasApplyFormulaRepairRequest = {
+  candidate?: AppServicesFormulasFormulaRepairCandidate;
+  previewToken?: string | null;
+  requestId?: string;
+  reason?: string | null;
+};
+export type AppServicesFormulasFormulaRepairHistoryDto = {
+  id?: string;
+  actorId?: string;
+  actorName?: string | null;
+  appliedAt?: string;
+  reason?: string | null;
+  definitionBefore?: string | null;
+  definitionAfter?: string | null;
+  updatedQuestion?: boolean;
+  repairedTests?: number;
+  capturedTests?: number;
+};
 export const {
   usePostApiV1FormMutation,
   useGetApiV1FormQuery,
@@ -1568,4 +1770,11 @@ export const {
   useGetApiV1FormFormAssigneeQuery,
   useLazyGetApiV1FormFormAssigneeQuery,
   usePostApiV1FormulaRuntimeResponsesByResponseIdPlacementsAndPlacementKeyEvaluateMutation,
+  useGetFormulaRepairContextQuery,
+  useLazyGetFormulaRepairContextQuery,
+  usePreviewFormulaRepairMutation,
+  useEvaluateRepairedFormulaMutation,
+  useApplyFormulaRepairMutation,
+  useGetFormulaRepairHistoryQuery,
+  useLazyGetFormulaRepairHistoryQuery,
 } = injectedRtkApi;

@@ -16,6 +16,7 @@ import { useDeleteApiV1FormQuestionByQuestionIdMutation, useGetApiV1FormQuestion
 import { editRoute, formulaQuestionPath, questionPermissions, questionsAudit, tableQuestionPath, typeFilterOptions } from "../lib/questions";
 import { questionRowsSchema, type QuestionRow } from "../schemas/question-schema";
 import { QuestionDialog } from "./question-dialog";
+import { anyFormulaRepairPermission, formulaRepairPath } from "@/shared/formula/repairs/access";
 
 const column = dataTableColumns<QuestionRow>();
 function Configuration({ row }: { row: QuestionRow }) {
@@ -50,6 +51,7 @@ export function QuestionsPage() {
     column.accessor((row) => row.createdAt ?? "", { id: "created", header: "Created", size: 130, cell: ({ row }) => formatDate(row.original.createdAt) ?? "–" }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.label}`} items={[
       { id: "edit", label: "Edit", icon: Pencil, require: questionPermissions.edit, onSelect: () => open(row.original) },
+      ...(row.original.type === QuestionType.Formula ? [{ id: "repair", label: "Repair formula", icon: FunctionSquare, require: anyFormulaRepairPermission, to: formulaRepairPath(row.original.id) }] : []),
       { id: "remove", label: "Delete", icon: Trash2, destructive: true, separated: true, require: questionPermissions.remove, onSelect: () => setRemoving(row.original) },
     ]} /> }),
   ]); }, [navigate]);

@@ -4,22 +4,49 @@
 .workspace:not(.sidebar-open) .desktop-workspace-content .content-scroller { margin-left: 0; }
 .desktop-workspace-header .header-navigation { flex: none; justify-content: flex-start; gap: var(--space-8); }
 .desktop-workspace-header .header-content { gap: var(--space-8); padding-left: 0; }
-.workspace-tab-bar { display: flex; flex: 1; align-items: center; gap: var(--space-2); min-width: 0; }
-.workspace-tab-bar > [data-slot="button"], .workspace-tab-bar > [data-slot="dropdown-menu-trigger"] { flex: none; }
+
+/* Tab bar in the header: compact pill tabs, then New tab, the all-tabs menu at the end. */
+.workspace-tab-bar { --tab-height: 30px; --tab-radius: 8px; display: flex; flex: 1; align-items: center; gap: var(--space-2); min-width: 0; height: 100%; }
 .workspace-tab-history { display: flex; flex: none; gap: var(--space-2); }
-.workspace-page-tabs { flex: 0 1 auto; width: max-content; min-width: 0; overflow: hidden; }
-.workspace-page-tab-list[data-slot="tabs-list"] { display: flex; justify-content: flex-start; width: max-content; max-width: 100%; height: auto; gap: var(--space-4); padding: var(--space-4); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; scroll-behavior: auto; }
-.workspace-page-tab-list::-webkit-scrollbar { display: none; }
-.workspace-page-tab { position: relative; display: flex; flex: 0 0 auto; align-items: center; max-width: 240px; min-width: 100px; border: var(--stroke-width) solid transparent; border-radius: var(--radius); background: transparent; }
-.workspace-page-tab.selected { background: var(--canvas); }
-.workspace-page-tab.selected { border-color: var(--surface-border); }
-.workspace-page-tab-trigger[data-slot="tabs-trigger"] { justify-content: flex-start; flex: 1; min-width: 0; height: var(--control-height); padding: var(--space-4) var(--space-8); border: 0; border-radius: var(--radius) 0 0 var(--radius); color: var(--text-muted); font-size: var(--ui-font-size); }
-.workspace-page-tab-trigger[data-slot="tabs-trigger"]::after { display: none; }
-.workspace-page-tab.selected .workspace-page-tab-trigger { color: var(--text); font-weight: 600; }
-.workspace-tab-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.workspace-tab-close[data-slot="button"] { flex: none; margin-right: var(--space-2); width: 24px; height: 24px; color: var(--text-muted); }
-.workspace-tab-close svg { width: var(--size-14); height: var(--size-14); }
-.workspace-tab-dirty { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--color-amber-600); }
+.workspace-tab-action[data-slot="button"] { flex: none; width: 28px; height: 28px; border-radius: 7px; color: var(--text-muted); }
+.workspace-tab-action[data-slot="button"]:hover:not(:disabled) { background: var(--hover); color: var(--text); }
+.workspace-tab-action svg { width: 16px; height: 16px; }
+.workspace-tab-scroller { flex: 0 1 auto; min-width: 0; height: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.workspace-tab-scroller::-webkit-scrollbar { display: none; }
+.workspace-tab-scroller[data-fade-start] { mask-image: linear-gradient(to right, transparent, #000 24px); }
+.workspace-tab-scroller[data-fade-end] { mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
+.workspace-tab-scroller[data-fade-start][data-fade-end] { mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
+.workspace-tab-list { display: flex; align-items: center; gap: var(--space-2); min-width: min-content; height: 100%; padding: 0 var(--space-2); }
+.workspace-tab-spacer { flex: 1; align-self: stretch; min-width: var(--space-8); }
+
+.workspace-tab { position: relative; display: flex; flex: 0 1 200px; align-items: center; min-width: 96px; max-width: 220px; height: var(--tab-height); border-radius: var(--tab-radius); color: var(--text-muted); font-size: var(--ui-font-size); cursor: default; user-select: none; touch-action: none; }
+.workspace-tab:hover { background: var(--hover); color: var(--text); }
+.workspace-tab.selected { background: var(--canvas); color: var(--text); box-shadow: 0 0 0 var(--stroke-width) var(--surface-border), var(--shadow-xs); }
+.workspace-tab.dragging { z-index: 1; box-shadow: 0 0 0 var(--stroke-width) var(--surface-border), var(--shadow-md); cursor: grabbing; }
+.workspace-tab:has(.workspace-tab-trigger:focus-visible) { outline: 2px solid var(--focus); outline-offset: -2px; }
+.workspace-tab-trigger { display: flex; flex: 1; align-items: center; gap: var(--space-6); min-width: 0; height: 100%; padding-left: var(--space-10); outline: none; }
+.workspace-tab-icon { flex: none; width: 14px; height: 14px; }
+.workspace-tab:not(.selected) .workspace-tab-icon { opacity: .75; }
+.workspace-tab-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-tab.selected .workspace-tab-label { font-weight: 550; }
+
+/* The close button sits in a fixed slot; an unsaved tab shows a dot there until hovered (as in VS Code). */
+.workspace-tab-end { display: grid; flex: none; place-items: center; width: 20px; height: 20px; margin: 0 var(--space-5) 0 var(--space-3); }
+.workspace-tab-end > * { grid-area: 1 / 1; }
+.workspace-tab-close { display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--text-muted); opacity: 0; cursor: pointer; }
+.workspace-tab-close svg { width: 13px; height: 13px; }
+.workspace-tab:hover .workspace-tab-close, .workspace-tab.selected .workspace-tab-close { opacity: 1; }
+.workspace-tab-close:hover { background: var(--selected); color: var(--text); }
+.workspace-tab-dirty { display: inline-block; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--color-amber-600); }
+.workspace-tab.dirty .workspace-tab-close { opacity: 0; }
+.workspace-tab.dirty:hover .workspace-tab-close { opacity: 1; }
+.workspace-tab.dirty:hover .workspace-tab-end .workspace-tab-dirty { opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .workspace-tab, .workspace-tab-close, .workspace-tab-action[data-slot="button"] { transition: background-color 120ms, color 120ms, opacity 120ms; }
+}
+@media (max-width: 650px) { .workspace-tab { min-width: 72px; } }
+
+/* New tab picker */
 .workspace-page-picker { max-width: 850px; margin: var(--space-12) auto; }
 .workspace-page-picker h1 { margin: 0 0 var(--space-8); font-size: var(--heading-font-size); font-weight: 600; }
 .workspace-page-picker p { color: var(--text-muted); }
@@ -27,7 +54,7 @@
 .workspace-page-choice[data-slot="button"] { justify-content: flex-start; height: auto; min-height: calc(var(--control-height) + var(--space-12)); padding: var(--space-8); text-align: left; white-space: normal; }
 .workspace-page-choice > span { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: var(--space-2); overflow-wrap: anywhere; }
 .workspace-page-choice small { color: var(--text-muted); font-weight: 400; }
-@media (max-width: 650px) { .workspace-page-tab { max-width: 190px; } }
+
 .desktop-tab-view { width: 100%; height: 100%; }
 .desktop-tab-view[hidden] { display: none !important; }
 .desktop-link-surface { width: 100%; height: 100%; }

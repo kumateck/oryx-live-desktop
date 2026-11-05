@@ -14,6 +14,8 @@ import { formulaTypeOptions, type QuestionFormulaValues } from "../schemas/formu
 import { DraftFormulaChecks } from "@/shared/formula/review/formula-checks";
 import { FormulaRevisionPanel } from "./formula-revision-panel";
 import { VariableScopeFields } from "./variable-scope-fields";
+import { Link } from "react-router";
+import { anyFormulaRepairPermission, formulaRepairPath } from "@/shared/formula/repairs/access";
 
 const fields: WizardField<QuestionFormulaValues>[] = [
   { type: InputTypes.TEXT, name: "label", label: "Question", required: true, placeholder: "e.g. Assay" },
@@ -36,6 +38,7 @@ function FormulaQuestion({ questionId }: { questionId: string | null }) {
         <Button type="button" variant="outline" onClick={page.back}>Cancel</Button>
         <Button type="submit" form="formula-question" disabled={page.saving || page.locked}>{page.saving ? <><Spinner />Saving…</> : questionId ? "Save draft" : "Create formula question"}</Button>
       </PermissionGuard>} />
+    {questionId ? <PermissionGuard require={anyFormulaRepairPermission}><Button asChild type="button" size="sm" variant="outline"><Link to={formulaRepairPath(questionId)}>Repair formula configuration</Link></Button></PermissionGuard> : null}
     <form id="formula-question" noValidate onSubmit={page.save} className="space-y-4 rounded-lg border bg-card p-4">
       <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
       <div className="space-y-1.5"><p className="text-sm font-medium">Formula <span className="text-destructive">*</span></p>

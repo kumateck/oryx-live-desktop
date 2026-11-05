@@ -23,8 +23,12 @@ import { atrFormsApi } from "../api/atr-api";
 import { useAtrWorksheet } from "../hooks/use-atr-worksheet";
 import { atrAudit, atrListPath, atrPermissions, atrStepPath, stageLabels } from "../lib/atr";
 import { AtrWorksheet } from "./atr-worksheet";
+import { AtrFormulaActions } from "./atr-formula-actions";
+import { formFields } from "@/shared/form-response/form-model";
 
 type Sheet = ReturnType<typeof useAtrWorksheet>;
+/** Saving a draft refreshes only the saved response through its cache tags (atr-api.ts), so entry needs no page reload. */
+const noReload = () => {};
 const useAtrId = () => useParams().id ?? "";
 
 function Frame({ sheet, title, children }: { sheet: Sheet; title: string; children: ReactNode }) {
@@ -84,7 +88,9 @@ export function AtrTestPage() {
   return <Frame sheet={sheet} title="Enter results">
     {!sheet.form || !sheet.context ? <TestEntryEmpty kind="no-form" details={details} onBack={() => void navigate(back(sheet))} />
       : mine.size === 0 ? <>{summary(sheet)}<TestEntryEmpty kind="not-assigned" details={details} onBack={() => void navigate(back(sheet))} /></>
-      : <TestEntry form={sheet.form} mine={mine} stored={sheet.stored} context={sheet.context} audit={atrAudit} require={atrPermissions.start} summary={summary(sheet)} onReload={sheet.reload} onDone={() => void navigate(back(sheet))} />}
+      : <TestEntry form={sheet.form} mine={mine} stored={sheet.stored} context={sheet.context} audit={atrAudit} require={atrPermissions.start} summary={summary(sheet)} onReload={noReload} onDone={() => void navigate(back(sheet))}
+        formulaActions={disabled => <AtrFormulaActions atrId={sheet.atr?.id ?? ""} fields={sheet.form ? formFields(sheet.form).filter(field => mine.has(field.id)) : []}
+          responses={sheet.responses} disabled={disabled} onReload={sheet.reload} />} />}
   </Frame>;
 }
 

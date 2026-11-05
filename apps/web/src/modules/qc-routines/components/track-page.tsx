@@ -70,7 +70,7 @@ export function RoutineTrackPage() {
   const response = formsApi.useGetApiV1FormResponsesByFormResponseIdQuery(known ? { ...audit, formResponseId: known } : skipToken);
   const [submit] = routinesApi.useSubmitTrackMutation();
   const [submitting, setSubmitting] = useState(false);
-  const form = useMemo(() => { const parsed = formSchema.safeParse(formQuery.data ?? null); return parsed.success ? parsed.data : null; }, [formQuery.data]);
+  const form = useMemo(() => { const parsed = formSchema.safeParse(response.data?.effectiveForm ?? formQuery.data ?? null); return parsed.success ? parsed.data : null; }, [formQuery.data, response.data?.effectiveForm]);
   const stored = useMemo(() => {
     const rows = answerRows.safeParse(response.data?.formResponses ?? []);
     return latestAnswers((rows.success ? rows.data : []).map((row) => ({ ...row, value: row.value ?? null, responseId: row.responseId ?? known, createdAt: row.createdAt ?? null })));
@@ -104,7 +104,7 @@ export function RoutineTrackPage() {
     {!assignment.data ? <>{header}<AssignPanel trackId={id} formId={form.id} fieldIds={fieldIds} /></>
       : locked ? <>{header}
         {detail?.rejected || context0.rejected ? <p role="alert" className="rounded-lg border border-destructive/40 p-3 text-sm text-destructive">This worksheet was rejected. A retest or revision is recorded as a new routine sample.</p> : null}
-        <div className="overflow-x-auto rounded-lg border bg-card p-3"><ArdTemplateBody sections={formQuery.data?.sections} responses={detail?.formResponses ?? []} /></div></>
+        <div className="overflow-x-auto rounded-lg border bg-card p-3"><ArdTemplateBody sections={(response.data?.effectiveForm ?? formQuery.data)?.sections} responses={detail?.formResponses ?? []} /></div></>
       : <PermissionGuard require={routinePermissions.perform} fallback={<>{header}<p className="text-sm text-muted-foreground">Results are entered by the analyst the worksheet was given to.</p></>}>
         <TestEntry form={form} mine={mine} stored={stored} context={context} audit={audit} require={routinePermissions.perform} summary={header} onReload={reload} onDone={() => void navigate(routinePath(context0.routineExecutionId))} />
       </PermissionGuard>}
