@@ -120,8 +120,11 @@ test("historical reporting adds optional read parameters without changing existi
     // Formula repair (2026-11-05): separately permissioned legacy formula repair and server recalculation; additive only.
     "/api/v1/formula-repairs/questions/{questionId}", "/api/v1/formula-repairs/questions/{questionId}/preview",
     "/api/v1/formula-repairs/questions/{questionId}/apply", "/api/v1/formula-repairs/questions/{questionId}/history",
-    "/api/v1/formula-repairs/tests/{atrId}/fields/{formFieldId}/evaluate"].sort());
+    "/api/v1/formula-repairs/tests/{atrId}/fields/{formFieldId}/evaluate",
+    // Reservation repair: additive, independently permissioned batch preview/apply.
+    "/api/v1/production-schedule/{batchId}/reservation-repair"].sort());
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ReservationRepair")) delete schemas[name];
   for (const name of ["ScheduleRepairKind", "ScheduleRepairPreview", "ScheduleRepairBatchPreview", "ApplyScheduleRepair", "ScheduleRepairResult"])
     delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Materials.Batch.MaterialStockReport")) delete schemas[name];
@@ -245,9 +248,16 @@ test("the reviewed bulk repair contract preserves the approved predecessor and p
   assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
   assert.ok(policy.backendContracts.includes("d26ad659839ddc4ec2e1fb26aadeaac692c19e27c7e075a7cc2fe56b8d4ff4ed"));
   assert.ok(policy.backendContracts.includes("35c00c063402f8cf1248db7ca3a9093ce997e66858311b4864de7890a50d3dad"));
-  assert.equal(digest, "d31b1bc59265cc6a98c995e9c3b3249dc8f73d948701228e1573cf31d01e888f");
+  assert.equal(digest, "fa46de385e587bca0821ff164522fedda3dca60d5e0b044336bd7093fe87d238");
+  const reservationPredecessor = structuredClone(current);
+  delete object(reservationPredecessor.paths ?? null)["/api/v1/production-schedule/{batchId}/reservation-repair"];
+  const reservationSchemas = object(object(reservationPredecessor.components ?? null).schemas ?? null);
+  for (const name of Object.keys(reservationSchemas))
+    if (name.startsWith("DOMAIN.Entities.Products.Production.ReservationRepair")) delete reservationSchemas[name];
+  assert.equal(contractDigest(reservationPredecessor), "d31b1bc59265cc6a98c995e9c3b3249dc8f73d948701228e1573cf31d01e888f");
+  checkCompatibility(hostConfig, policy, contractDigest(reservationPredecessor));
   // Formula repair and migration AR corrections (2026-11-05) are additive over the bulk repair contract.
-  const bulk = structuredClone(current);
+  const bulk = structuredClone(reservationPredecessor);
   const bulkPaths = object(bulk.paths ?? null);
   for (const path of Object.keys(bulkPaths)) if (path.startsWith("/api/v1/formula-repairs/")) delete bulkPaths[path];
   const formGet = object(object(bulkPaths["/api/v1/form/{formId}"] ?? null).get ?? null);
