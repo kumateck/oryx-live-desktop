@@ -1,0 +1,11 @@
+{
+  "name": "ATR 01a1a8ad: Assay Dry powders input references",
+  "note": "User confirmed a separate ml input and :purity. Correct standard/sample weight references, declare both manual inputs, and preserve all other settings, entered values and workflow states. Audit operator: Isaac A. Aidoo.",
+  "questionId": "019af455-024a-76f0-823c-8ec2e065cbe2",
+  "expectedDefinitionSha256": "cd3f2557736c7b9d25f51110f319884ee86d5e941fc0869891d3c8cb7f73d1fa",
+  "definition": [
+    { "op": "set", "path": ["expression"], "value": "(:sampleAvg/:standardAvg)*(:standardInput.wt/:sampleInput.wt)*(:wt/:ml*5*1000/:cl)*:purity" },
+    { "op": "set", "path": ["manualVarLabels", "purity"], "value": "Purity" },
+    { "op": "set", "path": ["manualVarLabels", "ml"], "value": "ml" }
+  ]
+}

@@ -22,6 +22,7 @@ export const renderPrintStoredResponseValue = (
 ) => {
   if (!response || !templateField) return renderStoredValue(response);
 
+  if (response.formField?.formulaConfigurationHash) return renderStoredValue(response);
   const formField: FormFieldDto = { ...response.formField, ...templateField };
   const question = templateField.question ?? response.formField?.question;
   if (question) formField.question = question;

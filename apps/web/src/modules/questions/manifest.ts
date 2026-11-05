@@ -3,6 +3,7 @@ import type { ModuleManifest } from "../contract";
 export const manifest = { id: "questions", label: "Questions", root: "/settings/questions", order: 94,
   access: { kind: "all", permissions: ["CanViewQuestions"] },
   routes: [
+    { pattern: "/settings/questions/formula/:id/repair", access: { kind: "all", permissions: ["CanViewQuestions"], anyPermissions: ["CanRepairQuestionFormula", "CanRepairTestFormula"] } },
     { pattern: "/settings/questions/table/create", access: { kind: "all", permissions: ["CanViewQuestions", "CanCreateQuestions"] } },
     { pattern: "/settings/questions/table/:id/edit", access: { kind: "all", permissions: ["CanViewQuestions", "CanEditQuestions"] } },
     { pattern: "/settings/questions/formula/create", access: { kind: "all", permissions: ["CanViewQuestions", "CanCreateQuestions"] } },

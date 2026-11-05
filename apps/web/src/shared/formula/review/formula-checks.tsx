@@ -9,9 +9,15 @@ import { runFormulaTestCasesV1 } from "@/shared/formula/core/test-suite";
 
 const pairs = (values: Readonly<Record<string, string | null>>) => Object.entries(values).map(([key, value]) => `${key}=${value ?? "null"}`).join(", ") || "–";
 
+/** A check result; the server's relayed results may omit the resolved inputs, so the case's own inputs are shown then. */
+type CheckOutcome = Omit<FormulaTestOutcomeV1, "resolvedInputs" | "errors"> & {
+  resolvedInputs?: FormulaTestOutcomeV1["resolvedInputs"] | undefined;
+  errors: readonly { status: FormulaEvaluationStatus; path: string; message: string; variableKey?: string | null | undefined }[];
+};
+
 /** The calculation checks of a formula and, once run, whether each one gave the expected result. */
 export function FormulaChecks({ cases, outcomes = [], evaluatorVersion, engineBuildHash, authority = "authoritative" }: {
-  cases: readonly FormulaTestCaseV1[]; outcomes?: readonly FormulaTestOutcomeV1[] | undefined; evaluatorVersion?: string | undefined; engineBuildHash?: string | undefined; authority?: "provisional" | "authoritative";
+  cases: readonly FormulaTestCaseV1[]; outcomes?: readonly CheckOutcome[] | undefined; evaluatorVersion?: string | undefined; engineBuildHash?: string | undefined; authority?: "provisional" | "authoritative";
 }) {
   const byId = new Map(outcomes.map((outcome) => [outcome.id, outcome]));
   const passed = outcomes.filter((outcome) => outcome.passed).length;
