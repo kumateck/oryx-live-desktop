@@ -1218,6 +1218,15 @@ export const routes: RouteObject[] = [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/materials/unlink/page")).default }) }
           ] }
         ] },
+        { path: "migration-top-ups", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/migration-top-ups/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/migration-top-ups/[id]/page")).default }) }
+          ] },
+          { path: "new", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/migration-top-ups/new/page")).default }) }
+          ] }
+        ] },
         { path: "quarantine-area", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/quarantine-area/page")).default }) },
           { path: ":id", Component: Outlet, children: [

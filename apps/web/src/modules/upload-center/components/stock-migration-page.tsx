@@ -43,7 +43,10 @@ function Units({ migration }: { migration: MigrationDto }) {
 }
 
 /** Checks an uploaded stock count row by row before it replaces the department's storage stock. */
-export function StockMigrationPage() {
+export interface MigrationHome { path: string; label: string }
+const uploadCenterHome: MigrationHome = { path: uploadCenterPath, label: "Back to Upload Center" };
+
+export function StockMigrationPage({ home = uploadCenterHome }: { home?: MigrationHome } = {}) {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const query = stockMigrationApi.useMigrationQuery({ ...migrationAudit, id }, { skip: !id });
@@ -61,7 +64,7 @@ export function StockMigrationPage() {
   const [discard] = stockMigrationApi.useDiscardMutation();
   const [confirm, setConfirm] = useState<Confirm>(null);
   const shelves = useMemo(() => shelfOptions(query.data?.warehouses), [query.data?.warehouses]);
-  const back = <Button asChild variant="ghost" size="sm"><Link to={uploadCenterPath}><ArrowLeft />Back to Upload Center</Link></Button>;
+  const back = <Button asChild variant="ghost" size="sm"><Link to={home.path}><ArrowLeft />{home.label}</Link></Button>;
 
   if (query.isLoading) return <DetailPageSkeleton label="Loading the stock migration" />;
   const migration = query.data;
@@ -108,7 +111,7 @@ export function StockMigrationPage() {
       onClose={() => setConfirm(null)} /> : null}
     {confirm === "discard" ? <ConfirmActionDialog title="Discard this draft?" require={openingBalancePermissions.correct} confirmLabel="Discard" busyLabel="Discarding…"
       description="The checked rows are kept for reference but nothing is loaded. The stock is not changed."
-      onConfirm={async () => { const denied = correctionPermission.check(); if (denied) return denied; const result = await discard({ ...migrationAudit, id }); if ("error" in result) return apiErrorMessage(result.error); void navigate(uploadCenterPath); return null; }}
+      onConfirm={async () => { const denied = correctionPermission.check(); if (denied) return denied; const result = await discard({ ...migrationAudit, id }); if ("error" in result) return apiErrorMessage(result.error); void navigate(home.path); return null; }}
       onClose={() => setConfirm(null)} /> : null}
   </article>;
 }

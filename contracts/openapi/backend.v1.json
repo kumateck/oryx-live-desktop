@@ -176630,6 +176630,14 @@
             "format": "date-time",
             "nullable": true
           },
+          "retestDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "exactDates": {
+            "type": "boolean"
+          },
           "excluded": {
             "type": "boolean"
           },
@@ -176857,6 +176865,16 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "retestDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "The lot's retest date. On a correction, empty keeps the saved date; see DOMAIN.Entities.Materials.StockMigrations.UpdateStockMigrationLineRequest.ClearRetestDate."
+          },
+          "clearRetestDate": {
+            "type": "boolean",
+            "description": "On a correction, removes the saved retest date."
           },
           "excluded": {
             "type": "boolean"
@@ -177379,6 +177397,10 @@
           "volumeUnit": {
             "minLength": 1,
             "type": "string"
+          },
+          "exactDates": {
+            "type": "boolean",
+            "description": "The rows carry full manufacturing, expiry and retest dates rather than months."
           },
           "lines": {
             "maxItems": 1000,
