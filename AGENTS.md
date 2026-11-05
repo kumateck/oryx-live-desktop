@@ -71,6 +71,21 @@ For the desktop application, each ERP module also owns a small typed manifest un
 - Deploy site assets as immutable versioned builds, validate before switching, and retain prior assets for active sessions. Sign shell releases and test rollback, interrupted updates, and API/minimum-shell compatibility.
 - Handle unsaved work before a live-UI refresh. Show connection failure and retry clearly; do not imply that work was saved when the server is unreachable.
 
+## Permissions: required for every task
+
+A task is not finished until its permissions are done, on both sides. The backend guide (`oryx-backend/docs/agent-guide.md`) has the server rules. The desktop part:
+
+- **One key per task.** Every page, tab, record view and action names the one backend key for that task: view, create, edit, delete, approve, verify, issue, assign and export each have their own. Variants (raw/packaging, foreign/local, store type) use the variant's key, chosen from the record's stored kind. Do not borrow a neighbouring key.
+- **Only keys the backend defines.** Before using a key, find it in `PermissionKeys` (`oryx-backend/APP/Utils/PermissionUtils.cs`). If the task needs a new key, add it to the backend in the same piece of work: constant, one `addPermission` registration, `[Authorize]` on the endpoint, and a grant migration for existing roles. Then use the identical string here. A key the backend does not define can never be granted, so the feature is unreachable for everyone.
+- **Where the key goes:**
+  - the module manifest (`access` and per-route `routes`) for pages;
+  - `require` on `TableMenu`, `DropdownButton` items and `PermissionGuard` for visibility;
+  - `usePermissionAction(key).check()` immediately before each mutation;
+  - the sidebar entry in `scripts/import-navigation.ts` and `catalog.generated.ts` for new pages.
+- **No any-of rules** (`kind: "some"`) for a single task. Use them only where a page legitimately serves several tasks, for example a tab per permitted variant, and say why in a comment.
+- **Tests:** a deny test (a user without the key sees no page, tab or action, and the mutation is not sent) and an allow test for each new key. The workspace route coverage test must keep passing.
+- **Pull request:** list the keys the change uses or adds, and link the backend PR that enforces them.
+
 ## Working and verification
 
 Frontend pull requests target `development`, not `testing`. Feature branches do

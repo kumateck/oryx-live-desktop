@@ -1,6 +1,7 @@
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import type { ComparisonDto, LineDto, LineStatus, LineUpdate, MigrationDto, WarehouseDto } from "../api/stock-migration-api";
 import type { LineFormValues } from "../schemas/stock-migration-schema";
+import { formDate, utcBoundary } from "@/shared/format/date-boundary";
 import { relatedUnits } from "@/shared/units/quantity";
 import { uploadCenterPath } from "./upload-center";
 
@@ -85,6 +86,8 @@ export function shelfOptions(warehouses: readonly WarehouseDto[] | null | undefi
     shelf.id ? [{ value: shelf.id, label: `${shelf.name ?? shelf.code ?? "Shelf"} · ${store.name ?? "Store"}` }] : []));
 }
 
+const day = (date: Date | null) => date ? utcBoundary(date) : null;
+
 /** The dialog's starting values: what the row is read as now. */
 export function lineFormValues(line: LineDto, shelves: readonly SelectOption[]): LineFormValues {
   const shelfId = line.shelfId ?? line.resolvedShelfId;
@@ -100,6 +103,9 @@ export function lineFormValues(line: LineDto, shelves: readonly SelectOption[]):
     quantityInSheet: line.quantityInSheet ?? null,
     manufactured: monthInput(line.manufacturingDate) || null,
     expiry: monthInput(line.expiryDate) || null,
+    manufacturedDay: line.exactDates ? formDate(line.manufacturingDate) : null,
+    expiryDay: line.exactDates ? formDate(line.expiryDate) : null,
+    retest: formDate(line.retestDate),
     excluded: line.excluded ?? false,
   };
 }
@@ -119,8 +125,11 @@ export function lineRequest(line: LineDto, values: LineFormValues): LineUpdate {
     batchNumber: values.batchNumber || null,
     unitSymbol: values.unitSymbol || null,
     quantityInSheet: quantity !== null && Number.isFinite(quantity) && quantity > 0 ? quantity : null,
-    manufacturingDate: values.manufactured ? monthValue(values.manufactured) : null,
-    expiryDate: values.expiry ? monthValue(values.expiry) : null,
+    manufacturingDate: line.exactDates ? day(values.manufacturedDay) : values.manufactured ? monthValue(values.manufactured) : null,
+    expiryDate: line.exactDates ? day(values.expiryDay) : values.expiry ? monthValue(values.expiry) : null,
+    retestDate: day(values.retest),
+    // An empty retest date keeps the saved one unless it is cleared on purpose.
+    clearRetestDate: !values.retest && Boolean(line.retestDate),
     excluded: values.excluded,
   };
 }

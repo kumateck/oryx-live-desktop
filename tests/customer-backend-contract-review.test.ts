@@ -122,8 +122,11 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/formula-repairs/questions/{questionId}/apply", "/api/v1/formula-repairs/questions/{questionId}/history",
     "/api/v1/formula-repairs/tests/{atrId}/fields/{formFieldId}/evaluate",
     // Reservation repair: additive, independently permissioned batch preview/apply.
-    "/api/v1/production-schedule/{batchId}/reservation-repair"].sort());
+    "/api/v1/production-schedule/{batchId}/reservation-repair",
+    // Production material forecast (2026-11-05): read-only, separately permissioned warehouse report; additive only.
+    "/api/v1/report/production-material-forecast"].sort());
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Reports.ProductionMaterialForecast")) delete schemas[name];
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ReservationRepair")) delete schemas[name];
   for (const name of ["ScheduleRepairKind", "ScheduleRepairPreview", "ScheduleRepairBatchPreview", "ApplyScheduleRepair", "ScheduleRepairResult"])
     delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
@@ -241,15 +244,34 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
   }
 });
 
-test("the reviewed bulk repair contract preserves the approved predecessor and passes release validation", () => {
+test("the merged forecast and migration contracts preserve the approved predecessor and pass release validation", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   const digest = contractDigest(current);
   assert.ok(policy.backendContracts.includes("a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe"));
   assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
   assert.ok(policy.backendContracts.includes("d26ad659839ddc4ec2e1fb26aadeaac692c19e27c7e075a7cc2fe56b8d4ff4ed"));
   assert.ok(policy.backendContracts.includes("35c00c063402f8cf1248db7ca3a9093ce997e66858311b4864de7890a50d3dad"));
-  assert.equal(digest, "fa46de385e587bca0821ff164522fedda3dca60d5e0b044336bd7093fe87d238");
-  const reservationPredecessor = structuredClone(current);
+  assert.equal(digest, "ba9b4556768dbaf418600e907610ec613e52b3e6a89aadc2bd675c367f503f75");
+  // Migration batch-number corrections (2026-11-05) add two optional fields to the correction request.
+  const batchPredecessor = structuredClone(current);
+  const batchRequest = object(object(object(object(batchPredecessor.components ?? null).schemas ?? null)
+    ["DOMAIN.Entities.Materials.Batch.UpdateMigrationRetestDate"] ?? null).properties ?? null);
+  delete batchRequest.batchNumber; delete batchRequest.expectedBatchNumber;
+  // Manual migration top-ups (2026-11-05) add optional retest and full-date fields to stock migration rows.
+  const topUpPredecessor = structuredClone(batchPredecessor);
+  const topUpSchemas = object(object(topUpPredecessor.components ?? null).schemas ?? null);
+  for (const [name, properties] of Object.entries({ StockMigrationLineDto: ["retestDate", "exactDates"],
+    UpdateStockMigrationLineRequest: ["retestDate", "clearRetestDate"], CreateStockTopUpRequest: ["exactDates"] }))
+    for (const property of properties) delete object(object(topUpSchemas[`DOMAIN.Entities.Materials.StockMigrations.${name}`] ?? null).properties ?? null)[property];
+  // The production material forecast (2026-11-05) is one additive read path and its owned schemas.
+  const forecastPredecessor = structuredClone(topUpPredecessor);
+  delete object(forecastPredecessor.paths ?? null)["/api/v1/report/production-material-forecast"];
+  const forecastSchemas = object(object(forecastPredecessor.components ?? null).schemas ?? null);
+  for (const name of Object.keys(forecastSchemas))
+    if (name.startsWith("DOMAIN.Entities.Reports.ProductionMaterialForecast")) delete forecastSchemas[name];
+  assert.equal(contractDigest(forecastPredecessor), "fa46de385e587bca0821ff164522fedda3dca60d5e0b044336bd7093fe87d238");
+  checkCompatibility(hostConfig, policy, contractDigest(forecastPredecessor));
+  const reservationPredecessor = structuredClone(forecastPredecessor);
   delete object(reservationPredecessor.paths ?? null)["/api/v1/production-schedule/{batchId}/reservation-repair"];
   const reservationSchemas = object(object(reservationPredecessor.components ?? null).schemas ?? null);
   for (const name of Object.keys(reservationSchemas))

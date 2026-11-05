@@ -16,7 +16,7 @@ export function ChangeRoleDialog({ user, onClose }: { user: UserRow; onClose: ()
   const { roles, loading, error, retry } = useRoleOptions();
   const [roleName, setRoleName] = useState(user.role?.name ?? "");
   const [message, setMessage] = useState("");
-  const permission = usePermissionAction(userPermissions.edit);
+  const permission = usePermissionAction(userPermissions.assignRole);
   const [updateRole, mutation] = usePutApiV1UserRoleByIdMutation();
   const unchanged = roleName === (user.role?.name ?? "");
 

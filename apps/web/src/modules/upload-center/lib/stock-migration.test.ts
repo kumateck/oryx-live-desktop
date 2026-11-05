@@ -10,6 +10,17 @@ const line: LineDto = {
 const shelves = shelfOptions([{ id: "w1", name: "SYRUP Raw Warehouse", shelves: [{ id: "s1", name: "G/09/B" }] }]);
 
 describe("stock migration", () => {
+  it("keeps full dates and the retest date of a manually entered row, and clears the retest date only on purpose", () => {
+    const exact: LineDto = { ...line, exactDates: true, manufacturingDate: "2026-08-03T00:00:00Z", expiryDate: "2029-07-14T00:00:00Z", retestDate: "2027-08-02T00:00:00Z" };
+    const values = lineFormValues(exact, shelves);
+    expect([values.manufacturedDay?.getDate(), values.expiryDay?.getDate(), values.retest?.getDate()]).toEqual([3, 14, 2]);
+    expect(lineRequest(exact, values)).toMatchObject({ manufacturingDate: "2026-08-03T00:00:00.000Z", expiryDate: "2029-07-14T00:00:00.000Z",
+      retestDate: "2027-08-02T00:00:00.000Z", clearRetestDate: false });
+    expect(lineRequest(exact, { ...values, retest: null })).toMatchObject({ retestDate: null, clearRetestDate: true });
+    // A sheet row keeps its months and has nothing to clear.
+    expect(lineRequest(line, lineFormValues(line, shelves))).toMatchObject({ expiryDate: "2028-04-01T00:00:00Z", retestDate: null, clearRetestDate: false });
+  });
+
   it("allows approval only for a draft with stock and no blocked rows", () => {
     expect(approvalBlocker(draft)).toBeNull();
     expect(approvalBlocker({ ...draft, blocked: 2 })).toBe("2 row(s) still need fixing or leaving out.");
