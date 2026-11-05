@@ -8,6 +8,7 @@ import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
+import { formDate } from "@/shared/format/date-boundary";
 import { formatMonthYear } from "@/shared/format/dates";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { formatQuantityNumber, toLargestUnit } from "@/shared/units/quantity";
@@ -16,6 +17,9 @@ import { correctionQuantityUnit, isDraft, lineStatus, lineStatusLabels, material
 import { StockMigrationLineDialog } from "./stock-migration-line-dialog";
 import { StockMigrationLineDetails } from "./stock-migration-line-details";
 
+const dayFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+/** A date-only value shown as the calendar day it was written as. */
+const calendarDay = (value: string | null | undefined) => { const date = formDate(value); return date ? dayFormat.format(date) : null; };
 const column = dataTableColumns<LineDto>();
 const dash = <span className="text-muted-foreground">–</span>;
 const badgeVariant: Record<LineStatus, "default" | "secondary" | "destructive" | "outline"> = { 0: "default", 1: "secondary", 2: "destructive", 3: "outline", 4: "outline" };
@@ -79,7 +83,9 @@ export function StockMigrationLines({ migration, shelves }: { migration: Migrati
       const loaded = toLargestUnit(row.original.quantity, row.original.unit, "calculated");
       return <div><div>{loaded?.text ?? dash}</div>{sheetValue !== null && sheetValue !== undefined
         ? <div className="text-xs text-muted-foreground">Sheet: {formatQuantityNumber(sheetValue, "entered")} {row.original.sheetUnit ?? ""}</div> : null}</div>; } }),
-    column.accessor((row) => row.expiryDate ?? "", { id: "expiry", header: "Expiry", size: 110, cell: ({ row }) => formatMonthYear(row.original.expiryDate) ?? dash }),
+    column.accessor((row) => row.expiryDate ?? "", { id: "expiry", header: "Expiry / retest", size: 130, cell: ({ row }) => <div>
+      {(row.original.exactDates ? calendarDay(row.original.expiryDate) : formatMonthYear(row.original.expiryDate)) ?? dash}
+      {row.original.retestDate ? <div className="text-xs text-muted-foreground">Retest {calendarDay(row.original.retestDate)}</div> : null}</div> }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => <TableMenu label={`Actions for row ${row.original.rowNumber} of ${row.original.sheet}`}
       items={editable ? [
         { id: "edit", label: "Correct row", icon: Pencil, require: openingBalancePermissions.correct, onSelect: () => setEditing(row.original) },

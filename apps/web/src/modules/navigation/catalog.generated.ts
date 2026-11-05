@@ -674,6 +674,14 @@ export const navigationCatalog = [
         ]
       },
       {
+        "id": "warehouse-management.production-material-forecast",
+        "label": "Production Forecast",
+        "path": "/warehouse/production-forecast",
+        "permissions": [
+          "CanViewProductionScheduleMaterialForecast"
+        ]
+      },
+      {
         "id": "warehouse-management.stock-location",
         "label": "Stock Location",
         "permissions": [
@@ -718,7 +726,8 @@ export const navigationCatalog = [
           "CanViewRawMaterialLocationChartList",
           "CanViewPackagingMaterialLocationChartList",
           "CanAssignRawMaterialsStockToShelves",
-          "CanAssignPackagingMaterialsStockToShelves"
+          "CanAssignPackagingMaterialsStockToShelves",
+          "CanViewOpeningBalances"
         ],
         "children": [
           {
@@ -784,6 +793,14 @@ export const navigationCatalog = [
             "permissions": [
               "CanAssignRawMaterialsStockToShelves",
               "CanAssignPackagingMaterialsStockToShelves"
+            ]
+          },
+          {
+            "id": "warehouse-management.stock-movement.migration-top-ups",
+            "label": "Migration Stock Top-ups",
+            "path": "/warehouse/migration-top-ups",
+            "permissions": [
+              "CanViewOpeningBalances"
             ]
           }
         ]
@@ -1186,9 +1203,9 @@ export const navigationCatalog = [
         "id": "quality-control.routine-quality-control",
         "label": "Routine Quality Control",
         "permissions": [
-          "CanViewQcRoutineTests",
-          "CanViewQcRoutineSetup",
-          "CanViewQcRoutineWaterQuality"
+          "CanViewRoutineTests",
+          "CanViewRoutineSetup",
+          "CanViewWaterQuality"
         ],
         "children": [
           {
@@ -1196,7 +1213,7 @@ export const navigationCatalog = [
             "label": "Routine Tests",
             "path": "/qc/routines",
             "permissions": [
-              "CanViewQcRoutineTests"
+              "CanViewRoutineTests"
             ]
           },
           {
@@ -1204,7 +1221,7 @@ export const navigationCatalog = [
             "label": "Routine Setup",
             "path": "/qc/routines/setup",
             "permissions": [
-              "CanViewQcRoutineSetup"
+              "CanViewRoutineSetup"
             ]
           },
           {
@@ -1212,7 +1229,7 @@ export const navigationCatalog = [
             "label": "Water Quality",
             "path": "/qc/routines/water-quality",
             "permissions": [
-              "CanViewQcRoutineWaterQuality"
+              "CanViewWaterQuality"
             ]
           }
         ]

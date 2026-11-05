@@ -1,6 +1,31 @@
 # Permissions and authorization audit (5 November 2026)
 
-**Status: proposal for review. Nothing has been rewired.** No backend keys, guards, endpoints, roles or data have changed. This report is the inventory and gap analysis that comes before the redesign; the redesign (new keys, rewiring, role migration) starts only after the decisions in [section 12](#12-decisions-needed) are made.
+**Status (5 November 2026): approved; the recommended answer to each decision in [section 12](#12-decisions-needed) was taken.**
+
+| Phase | State |
+| --- | --- |
+| 0 | Done. Critical findings C1–C10 fixed, except anonymous file *reads*: the desktop shows signatures and attachments as plain images, so reads need signed links first (phase 3). The 11 undefined desktop keys are fixed. The rules for future work are in `AGENTS.md` here and `docs/agent-guide.md` in the backend. |
+| 1–5 | Planned below. The findings tables describe the state before phase 0. |
+
+Phase 0 changes:
+
+- **Access check:** server policies read current grants on every request, through the same rules as the service checks. Disabled accounts and deleted roles grant nothing, and the 12-hour cache is gone.
+- **Accounts:** self sign-up is refused, and user creation needs `CanCreateUser`.
+- **Roles:**
+  - changing a role needs `CanAssignUserRole` (new; granted to roles that hold `CanEditUser`);
+  - role permission edits need `CanUpdateExistingPermission`, and role creation needs `CanCreateRole`;
+  - nobody changes their own role or account, or grants a permission they do not hold, and only catalog keys can be stored.
+- **User management:**
+  - user edit needs `CanEditUser`, and user delete needs `CanDeleteUser` (new; granted to nobody). Delete now removes the named user; it used to remove the caller;
+  - block and unblock need `CanBlockUser` / `CanUnblockUser` by direction.
+- **Signatures and avatars:** own only; a signature also needs `CanCreateSignatureSettings`.
+- **Files and stock:** file uploads and the department stock list need sign-in.
+- **Quality gates:**
+  - batch approval needs `CanApproveMaterialBatch` (new; granted to nobody);
+  - ATR retest request and completion need `CanRequestRetestProductTest` / `CanCompleteRetestProductTest` (new);
+  - approval workflow create and delete need `CanCreateNewApproval` / `CanDeleteApprovals`, and rights transfer needs `CanTransferApprovalRights`;
+  - QA/QC verification needs the specific verify key for that kind of document.
+- **Permission reads:** reading a role's permissions needs `CanViewPermissions`, and so does reading another user's.
 
 Scope: `oryx-backend` (all 152 controller files, 1,402 actions, the permission registry and both enforcement paths) and `oryx-live-desktop` (152 module manifests, 392 route/query rules, every permission-key literal, every mutation call site).
 

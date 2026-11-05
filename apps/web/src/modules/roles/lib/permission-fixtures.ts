@@ -11,7 +11,7 @@ export const permissionFixture: PermissionModule[] = [{ module: "Procurement", i
 export const openingBalancePermissionFixture: PermissionModule[] = [
   { module: "Settings", isActive: false, children: [
     ...["View", "Upload", "Correct", "Approve"].map((action) => ({ key: `Can${action}OpeningBalances`, name: `${action} opening balances`, description: "Manage opening stock balances.", subModule: "Opening Balances", hasOptions: false, types: [] })),
-    { key: "CanViewProductCategory", name: "View product category", description: null, subModule: "Product Category", hasOptions: false, types: [] },
+    { key: "CanViewProductCategories", name: "View product category", description: null, subModule: "Product Category", hasOptions: false, types: [] },
   ] },
   { module: "Procurement", isActive: false, children: [
     { key: "CanViewForeignPurchaseOrder", name: "Can View Foreign Purchase Order", description: "Allows the user to view foreign purchase order.", subModule: "Create Purchase Orders Page", hasOptions: false, types: [] },

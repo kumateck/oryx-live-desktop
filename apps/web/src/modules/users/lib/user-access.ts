@@ -6,6 +6,8 @@ export const userPermissions = {
   viewInactive: "CanViewInactiveUser",
   create: "CanCreateUser",
   edit: "CanEditUser",
+  /** Changing a user's role is its own task; the server also refuses your own role and roles with permissions you lack. */
+  assignRole: "CanAssignUserRole",
   block: "CanBlockUser",
   unblock: "CanUnblockUser",
 } as const;
