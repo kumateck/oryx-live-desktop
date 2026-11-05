@@ -251,6 +251,15 @@ test("the reviewed bulk repair contract preserves the approved predecessor and p
   assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
   assert.ok(policy.backendContracts.includes("d26ad659839ddc4ec2e1fb26aadeaac692c19e27c7e075a7cc2fe56b8d4ff4ed"));
   assert.ok(policy.backendContracts.includes("35c00c063402f8cf1248db7ca3a9093ce997e66858311b4864de7890a50d3dad"));
+  assert.equal(digest, "1bf73fd1eefb5e2ff029b420277ad7efaf02364c66b2fdc4e65560a66b99d09a");
+  // Migration batch-number corrections (2026-11-05) add two optional fields to the correction request.
+  const batchPredecessor = structuredClone(current);
+  const batchRequest = object(object(object(object(batchPredecessor.components ?? null).schemas ?? null)
+    ["DOMAIN.Entities.Materials.Batch.UpdateMigrationRetestDate"] ?? null).properties ?? null);
+  delete batchRequest.batchNumber; delete batchRequest.expectedBatchNumber;
+  assert.equal(contractDigest(batchPredecessor), "fa46de385e587bca0821ff164522fedda3dca60d5e0b044336bd7093fe87d238");
+  checkCompatibility(hostConfig, policy, contractDigest(batchPredecessor));
+  const reservationPredecessor = structuredClone(batchPredecessor);
   assert.equal(digest, "634929a7cfb2eb8ccdcca0bd24fc2c02b7b1ce63d502efdabfe82474469bcf99");
   // Manual migration top-ups (2026-11-05) add optional retest and full-date fields to stock migration rows.
   const topUpPredecessor = structuredClone(current);

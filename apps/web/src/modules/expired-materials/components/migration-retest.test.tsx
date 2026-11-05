@@ -47,6 +47,7 @@ it("hides migration corrections without their separate permission", async () => 
   await screen.findByText("Starch");
   expect(screen.queryByRole("button", { name: "Update migration retest date" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Update migration AR number" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Update migration batch number" })).toBeNull();
 });
 
 it("requires a reason, sends expected dates and preserves the correction after a stale-record refusal", async () => {
@@ -151,4 +152,26 @@ it("keeps an AR-only correction open after a concurrent-change refusal", async (
   expect(writes).toHaveLength(1);
   expect(screen.getByDisplayValue("AR-DRAFT")).toBeTruthy();
   expect(screen.getByDisplayValue("Reference correction")).toBeTruthy();
+});
+
+it.each([null, "2099-01-01T12:34:56Z"])("updates only the batch number, keeping the dates and AR reference exactly (%s)", async (retestDate) => {
+  const user = userEvent.setup();
+  const writes = open(["CanViewExpiredMaterials", "CanUpdateMigrationRetestDate"], false, "AR-OLD", retestDate);
+  await user.click(await screen.findByRole("button", { name: "Update migration batch number" }));
+  expect(screen.queryByLabelText("Retest date")).toBeNull();
+  expect(screen.queryByLabelText(/^AR number/)).toBeNull();
+  const input = await screen.findByLabelText(/^Batch number/);
+  expect(input).toHaveProperty("value", "MIG-1");
+  await user.clear(input);
+  await user.type(screen.getByLabelText(/Correction reason/), "Spreadsheet turned the batch into a date");
+  await user.click(screen.getByRole("button", { name: "Save changes" }));
+  expect(await screen.findByText("Enter the batch number")).toBeTruthy();
+  expect(writes).toHaveLength(0);
+  await user.type(input, "RMA016");
+  await user.click(screen.getByRole("button", { name: "Save changes" }));
+  await screen.findByRole("button", { name: "Update migration batch number" });
+  expect(writes).toHaveLength(1);
+  const body = JSON.parse(writes[0] ?? "{}");
+  expect(body).toMatchObject({ batchNumber: "RMA016", expectedBatchNumber: "MIG-1", retestDate, expectedRetestDate: retestDate });
+  expect(body).not.toHaveProperty("arNumber");
 });
