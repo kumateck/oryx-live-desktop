@@ -243,6 +243,7 @@ export const generatedTagTypes = [
   "report/product-stock-summary",
   "report/production",
   "report/production-dashboard",
+  "report/production-material-forecast",
   "report/production-readiness",
   "report/purchase-order",
   "report/purchased-po-report",
