@@ -69,7 +69,9 @@ test("historical reporting adds optional read parameters without changing existi
         return !(parameter.in === "query" && (parameter.name === "asOfDate" || ((path === "/api/v1/material/department" || path === "/api/v1/material/{materialId}/uom") && parameter.name === "productId") || (path === "/api/v1/attendance-records/general-summary" && parameter.name === "departmentId") || (path === "/api/v1/report/warehouse/materials-stock-batch-detail" && parameter.name === "materialId")
           || ((path === "/api/v1/material/batches/expired" || path === "/api/v1/material/batches/about-to-expire") && parameter.name === "searchQuery")
           // User directory filters (2026-11-01): optional role and department filters on the user list; additive only.
-          || (path === "/api/v1/user" && (parameter.name === "roleId" || parameter.name === "departmentId"))));
+          || (path === "/api/v1/user" && (parameter.name === "roleId" || parameter.name === "departmentId"))
+          // Formula repair (2026-11-05): optional response whose pinned formula configuration the form is read with; additive only.
+          || (path === "/api/v1/form/{formId}" && parameter.name === "responseId")));
       });
       const responses = object(operation.responses ?? null);
       if (!("409" in object(original.responses ?? null))) delete responses["409"];
@@ -114,7 +116,11 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/production-schedule/activity/{activityId}/unstart",
     "/api/v1/production-schedule/{scheduleId}/product/{productId}/repair/{kind}",
     "/api/v1/issued-bmrs", "/api/v1/issued-bmrs/{id}/history", "/api/v1/issued-bmrs/{id}/batch-number",
-    "/api/v1/issued-bmrs/{id}/revisions", "/api/v1/issued-bmrs/{id}/revisions/{revisionId}/review"].sort());
+    "/api/v1/issued-bmrs/{id}/revisions", "/api/v1/issued-bmrs/{id}/revisions/{revisionId}/review",
+    // Formula repair (2026-11-05): separately permissioned legacy formula repair and server recalculation; additive only.
+    "/api/v1/formula-repairs/questions/{questionId}", "/api/v1/formula-repairs/questions/{questionId}/preview",
+    "/api/v1/formula-repairs/questions/{questionId}/apply", "/api/v1/formula-repairs/questions/{questionId}/history",
+    "/api/v1/formula-repairs/tests/{atrId}/fields/{formFieldId}/evaluate"].sort());
   const schemas = object(object(current.components ?? null).schemas ?? null);
   for (const name of ["ScheduleRepairKind", "ScheduleRepairPreview", "ScheduleRepairBatchPreview", "ApplyScheduleRepair", "ScheduleRepairResult"])
     delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
@@ -142,6 +148,10 @@ test("historical reporting adds optional read parameters without changing existi
     delete schemas[`DOMAIN.Entities.Reports.${name}`];
   for (const name of Object.keys(schemas)) if (name.includes("DOMAIN.Entities.Materials.StockMigrations.")) delete schemas[name];
   delete schemas["DOMAIN.Entities.Auth.AdminResetUserPasswordRequest"];
+  for (const name of Object.keys(schemas)) if (/FormulaRepair|RepairedFormula/.test(name)) delete schemas[name];
+  for (const [name, properties] of Object.entries({ FormFieldDto: ["formulaConfigurationHash"], FormResponseDto: ["formulaRepairPending", "formulaRepairEvaluated"],
+    ResponseDetailDto: ["effectiveForm"], "Request.SaveResponseDraftRequest": ["formulaConfigurationHash"] }))
+    for (const property of properties) delete object(object(schemas[`DOMAIN.Entities.Forms.${name}`] ?? null).properties ?? null)[property];
   delete schemas["DOMAIN.Entities.Users.Request.SwitchDepartmentRequest"];
   delete schemas["DOMAIN.Entities.Alerts.UpdateAlertRecipientsRequest"];
   // Procedure repair and voucher signatures (2026-11-01): new response schemas; the requisition gains one optional property below.
@@ -235,8 +245,23 @@ test("the reviewed bulk repair contract preserves the approved predecessor and p
   assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
   assert.ok(policy.backendContracts.includes("d26ad659839ddc4ec2e1fb26aadeaac692c19e27c7e075a7cc2fe56b8d4ff4ed"));
   assert.ok(policy.backendContracts.includes("35c00c063402f8cf1248db7ca3a9093ce997e66858311b4864de7890a50d3dad"));
-  assert.equal(digest, "bfaa319fb93979896947892ba9f3e665f1cbdff24700647b6a126c60a3a90f47");
-  const predecessor = structuredClone(current);
+  assert.equal(digest, "d31b1bc59265cc6a98c995e9c3b3249dc8f73d948701228e1573cf31d01e888f");
+  // Formula repair and migration AR corrections (2026-11-05) are additive over the bulk repair contract.
+  const bulk = structuredClone(current);
+  const bulkPaths = object(bulk.paths ?? null);
+  for (const path of Object.keys(bulkPaths)) if (path.startsWith("/api/v1/formula-repairs/")) delete bulkPaths[path];
+  const formGet = object(object(bulkPaths["/api/v1/form/{formId}"] ?? null).get ?? null);
+  assert.ok(Array.isArray(formGet.parameters));
+  formGet.parameters = formGet.parameters.filter((entry) => object(entry).name !== "responseId");
+  const bulkSchemas = object(object(bulk.components ?? null).schemas ?? null);
+  for (const name of Object.keys(bulkSchemas)) if (/FormulaRepair|RepairedFormula/.test(name)) delete bulkSchemas[name];
+  for (const [name, properties] of Object.entries({ "Forms.FormFieldDto": ["formulaConfigurationHash"], "Forms.FormResponseDto": ["formulaRepairPending", "formulaRepairEvaluated"],
+    "Forms.ResponseDetailDto": ["effectiveForm"], "Forms.Request.SaveResponseDraftRequest": ["formulaConfigurationHash"],
+    "Materials.Batch.UpdateMigrationRetestDate": ["arNumber", "expectedArNumber"] }))
+    for (const property of properties) delete object(object(bulkSchemas[`DOMAIN.Entities.${name}`] ?? null).properties ?? null)[property];
+  assert.equal(contractDigest(bulk), "bfaa319fb93979896947892ba9f3e665f1cbdff24700647b6a126c60a3a90f47");
+  checkCompatibility(hostConfig, policy, contractDigest(bulk));
+  const predecessor = structuredClone(bulk);
   delete object(predecessor.paths ?? null)["/api/v1/production-schedule/{scheduleId}/product/{productId}/repair/{kind}"];
   const schemas = object(object(predecessor.components ?? null).schemas ?? null);
   for (const name of ["ScheduleRepairKind", "ScheduleRepairPreview", "ScheduleRepairBatchPreview", "ApplyScheduleRepair", "ScheduleRepairResult"])

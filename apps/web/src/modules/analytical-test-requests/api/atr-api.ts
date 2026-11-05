@@ -5,6 +5,7 @@ import { addTags } from "@/shared/api/add-tags";
 const list = { type: "Atrs" as const, id: "all" };
 const one = (id: string) => ({ type: "Atrs" as const, id });
 const work = (bmrId: string) => ({ type: "AtrWork" as const, id: bmrId });
+const responseRows = (responseId: string) => ({ type: "AtrWork" as const, id: `response:${responseId}` });
 
 export const atrApi = analyticalApi.enhanceEndpoints({ addTagTypes: ["Atrs", "AtrWork"], endpoints: {
   getApiV1QaAnalyticalTests: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
@@ -15,7 +16,9 @@ export const atrApi = analyticalApi.enhanceEndpoints({ addTagTypes: ["Atrs", "At
 } });
 export const atrFormsApi = formsApi.enhanceEndpoints({ addTagTypes: ["Atrs", "AtrWork"], endpoints: {
   getApiV1FormResponse: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [work(arg.batchManufacturingRecordId ?? "")]); },
-  getApiV1FormResponsesByFormResponseId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "AtrWork" as const, id: `response:${arg.formResponseId}` }]); },
+  getApiV1FormResponsesByFormResponseId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [responseRows(arg.formResponseId)]); },
+  // A saved draft returns the response it was saved in: refetch that response's answers only, not the whole test page.
+  postApiV1FormResponsesDraft: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (result, error) => error || !result ? [] : [responseRows(result)]); },
   getApiV1FormAssigneesBmrByBmrId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [work(arg.bmrId)]); },
   postApiV1FormAssignees: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list, "AtrWork"]); },
   postApiV1FormGenerateCertificateProductByBatchManufacturingRecordIdAndProductionActivityStepId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list, "AtrWork"]); },

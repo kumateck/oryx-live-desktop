@@ -3,7 +3,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
 import { buildFormulaRevisionDraft } from "@/shared/formula/builder/definition-adapter";
-import { readableVariableName, resolveVariableScopes } from "../lib/formula-question";
+import { readableVariableName, resolveVariableScopes, scopeFieldName } from "../lib/formula-question";
 import { formulaScopeOptions, type QuestionFormulaValues } from "../schemas/formula-question-schema";
 
 /** For each variable the formula uses: is it entered or worked out inside the formula, or supplied by another question of the same form? */
@@ -22,7 +22,7 @@ export function VariableScopeFields({ form, definition, preset }: { form: UseFor
     return () => { active = false; window.clearTimeout(timer); };
   }, [definition, form, preset]);
   const fields = useMemo<WizardField<QuestionFormulaValues>[]>(() => variables.map((variable) => ({
-    type: InputTypes.SELECT, mode: "single", source: "sync", name: `variableScopes.${encodeURIComponent(variable.key)}`, label: readableVariableName(variable),
+    type: InputTypes.SELECT, mode: "single", source: "sync", name: `variableScopes.${scopeFieldName(variable.key)}`, label: readableVariableName(variable),
     description: `Formula key: ${variable.key}`, options: formulaScopeOptions, required: true,
   })), [variables]);
   if (variables.length === 0) return null;

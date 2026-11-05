@@ -1038,6 +1038,9 @@ export const routes: RouteObject[] = [
             { path: ":id", Component: Outlet, children: [
               { path: "edit", Component: Outlet, children: [
                 { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/questions/formula/[id]/edit/page")).default }) }
+              ] },
+              { path: "repair", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/questions/formula/[id]/repair/page")).default }) }
               ] }
             ] },
             { path: "create", Component: Outlet, children: [

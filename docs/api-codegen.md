@@ -1,4 +1,23 @@
+Formula repair (2026-11-05) adds five typed operations under
+`/api/v1/formula-repairs`, owned by the forms domain, plus
+`formulaConfigurationHash` on form fields and draft saves, repair state on form
+responses, `effectiveForm` on response details and an optional `responseId` on
+`GET /api/v1/form/{formId}`. Import only those with
+`bun scripts/import-formula-repairs.ts EXPORT.json`, then regenerate/check. The
+companion `AddLegacyFormulaRepairs` migration must precede activation. See
+[formula repair](question-formula-repair-proposal.md).
+
 # API contracts and generated hooks
+
+Formula repair and migration AR corrections (2026-11-05) are reviewed together as
+typed digest `d31b1bc59265cc6a98c995e9c3b3249dc8f73d948701228e1573cf31d01e888f`.
+Removing exactly their declared additions (the five `/api/v1/formula-repairs`
+paths and schemas, the optional `responseId` on `GET /api/v1/form/{formId}`,
+the formula-configuration/repair fields on form DTOs, and `arNumber`/
+`expectedArNumber` on `UpdateMigrationRetestDate`) reproduces the bulk-repair
+digest `bfaa319fb93979896947892ba9f3e665f1cbdff24700647b6a126c60a3a90f47`; every
+prior approval remains. Apply `AddMigrationArCorrections` and
+`AddLegacyFormulaRepairs` and deploy the matching backend before activation.
 
 Bulk product-within-schedule repairs (2026-11-04) add typed GET/POST at
 `/api/v1/production-schedule/{scheduleId}/product/{productId}/repair/{kind}`.
@@ -215,3 +234,10 @@ whole-document comparisons retain the existing endpoint, schema and security
 contracts after removing only declared additions. Deploy the backend before UI
 activation. No database migration or customer deployment is performed by this import.
 See [stock reporting](expiry-report-departments.md).
+Migration reference corrections (2026-11-04) extend only
+`DOMAIN.Entities.Materials.Batch.UpdateMigrationRetestDate` with optional
+`arNumber` and `expectedArNumber`. Import this request schema from the built
+companion metadata export, then regenerate and check the materials client.
+An omitted AR preserves the current reference; an empty string clears it. This
+requires the companion `AddMigrationArCorrections` audit migration. No customer
+release fingerprint is approved by this source change.

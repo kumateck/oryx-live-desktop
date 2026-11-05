@@ -14,8 +14,8 @@ export const questionSchema = z.object({
 }));
 export type FormQuestion = z.infer<typeof questionSchema>;
 
-export const fieldSchema = z.object({ id: z.string().min(1), required: z.boolean().nullish(), rank: z.number().nullish(), description: text, question: questionSchema.nullish() })
-  .transform((field) => ({ id: field.id, required: field.required ?? false, rank: field.rank ?? 0, description: field.description,
+export const fieldSchema = z.object({ id: z.string().min(1), formulaConfigurationHash: z.string().nullish(), required: z.boolean().nullish(), rank: z.number().nullish(), description: text, question: questionSchema.nullish() })
+  .transform((field) => ({ id: field.id, ...(field.formulaConfigurationHash ? { formulaConfigurationHash: field.formulaConfigurationHash } : {}), required: field.required ?? false, rank: field.rank ?? 0, description: field.description,
     question: field.question ?? { id: null, label: "Untitled question", type: QuestionType.ShortAnswer, isMultiSelect: false, reference: null, description: null, options: [] } }));
 export type FormField = z.infer<typeof fieldSchema>;
 

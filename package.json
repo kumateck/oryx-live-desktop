@@ -13,6 +13,8 @@
     "node": ">=22.22.0"
   },
   "scripts": {
+    "repair:migration-reservations": "bun scripts/repairs/migration-reservations/index.ts",
+    "test:repair-migration-reservations": "node --test tests/migration-reservation-repair.test.ts",
     "repair:production-atr": "bun scripts/repairs/production-atr/index.ts",
     "repair:production-atr:export": "bun scripts/repairs/production-atr/export.ts",
     "repair:formula-config": "bun scripts/repairs/formula-config/index.ts",

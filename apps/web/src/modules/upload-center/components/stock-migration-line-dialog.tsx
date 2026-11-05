@@ -36,7 +36,7 @@ export function StockMigrationLineDialog({ migrationId, line, quantityUnit, shel
       : []),
     { type: InputTypes.SELECT, name: "shelf", label: "Shelf", mode: "single", source: "sync", options: shelves, placeholder: line.shelfName ? `Sheet says ${line.shelfName}` : "Choose a shelf",
       searchPlaceholder: "Search shelves", className: picksMaterial ? "md:col-span-2" : "md:col-span-2" },
-    { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number", required: true },
+    { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number (optional)", description: "A blank batch number keeps this row as a separate lot." },
     { type: InputTypes.TEXT, name: "unitSymbol", label: "Base UOM in the sheet", description: "Quantity conversion follows the file's weight and liquid settings." },
     { type: InputTypes.NUMBER, name: "quantityInSheet", label: `Quantity (${quantityUnit})`, min: 0, description: `Enter the amount in ${quantityUnit}; leave empty for no stock.` },
     { type: InputTypes.MONTH, name: "manufactured", label: "Manufactured" },

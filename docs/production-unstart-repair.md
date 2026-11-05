@@ -73,6 +73,20 @@ new run has started—returns the old repair receipt and leaves the new run alon
 Conflicting reuse of a request ID is refused. Start operations serialize and the
 partial unique index permits at most one active run.
 
+The renderer creates request IDs with `shared/ids/random-id.ts`, including on
+intranet HTTP origins where `crypto.randomUUID` is unavailable. Its fallback uses
+cryptographic random bytes and produces a version 4 UUID. Unstart and post-issue
+repair retain the ID when retrying the same preview and reason. ID generation is
+inside the guarded submission so an unexpected failure releases the pending
+state. Manual migration top-up rows use the same
+helper rather than requiring a secure-context browser API.
+
+The HTTP regression reproduces the original `crypto.randomUUID is not a function`
+failure before the fix. Focused UI tests verify successful unstart without that
+API, retained IDs after explicit preview reload/retry, and recovery from a random
+byte generation failure. Companion tests exercise post-issue repair retries,
+manual top-up entry and preparation submission with the same HTTP fallback.
+
 Draft and step archival timestamps are concurrency tokens. Database reference
 guards prevent late inserts/updates against an archived run/document, and
 archived records cannot be changed. BMR issuance no longer reads archived

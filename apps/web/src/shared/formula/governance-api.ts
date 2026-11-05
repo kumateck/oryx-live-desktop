@@ -19,8 +19,10 @@ const category = z.enum(FormulaTestCategory);
 const text = z.string().nullish().transform((value) => value ?? null);
 const testCase = z.object({ schemaVersion: z.literal(FORMULA_TEST_CASES_V1).catch(FORMULA_TEST_CASES_V1), id: z.string(), name: z.string(), category,
   resolvedInputs: z.record(z.string(), z.string().nullable()), expectedStatus: evaluationStatus, expectedResults: z.record(z.string(), z.string()) });
-const evaluationError = z.object({ status: evaluationStatus, path: z.string().catch(""), message: z.string().catch(""), variableKey: z.string().optional() });
-const testOutcome = z.object({ id: z.string(), name: z.string(), category, resolvedInputs: z.record(z.string(), z.string().nullable()), passed: z.boolean(),
+const evaluationError = z.object({ status: evaluationStatus, path: z.string().catch(""), message: z.string().catch(""), variableKey: z.string().nullish() });
+// The backend relays the calculation service's outcomes without their resolved inputs, so they are optional here:
+// requiring them turned every outcome invalid and the whole list empty, which left Submit for review disabled.
+const testOutcome = z.object({ id: z.string(), name: z.string(), category, resolvedInputs: z.record(z.string(), z.string().nullable()).optional(), passed: z.boolean(),
   expectedStatus: evaluationStatus, actualStatus: evaluationStatus, expectedResults: z.record(z.string(), z.string()), actualResults: z.record(z.string(), z.string()), errors: z.array(evaluationError).catch([]) });
 
 export const formulaRevisionSchema = z.object({

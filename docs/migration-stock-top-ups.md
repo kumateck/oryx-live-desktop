@@ -5,6 +5,12 @@ stock cases discovered after the opening migration. Opening balances remain a
 separate replacement workflow. A top-up adds new lots and never writes off,
 consumes or merges existing lots.
 
+For existing unissued requisitions whose reservations were left on lots written
+off by an opening replacement, use the preview/apply maintenance procedure in
+[migration reservation repair](migration-reservation-repair.md). It covers the
+affected waiting queue and retains issue history; it does not turn the original
+replacement into an additive top-up.
+
 Choose the production department, weight/liquid quantity units, and a required
 reason. Either add stock lines manually or upload an `.xlsx` workbook with the
 existing material-stock columns. Manual lines include material code, supplier
@@ -18,8 +24,10 @@ uses the existing first-shelf resolver and produces a review warning.
 bin-card entries or movements. The next page reuses migration row resolution,
 correction, exclusion, unit conversion and validation. Missing or ambiguous
 materials, invalid department/shelf links and date errors block approval. A top-up
-requires a supplier batch number on every included stock row; it does not use a
-GRN as a replacement batch number. Missing GRN/AR values are never invented;
+accepts an optional supplier batch number when adding or correcting a line, or
+uploading a workbook. Each unnumbered row remains a separate lot and produces a
+review warning; it does not use a GRN as a replacement batch number. Missing
+GRN/AR values are never invented;
 the workbook parser still reads an AR embedded in a GRN cell when present.
 Date behavior matches the existing migration:
 manufacturing months and expiry month end. Top-ups do not reconcile conflicting

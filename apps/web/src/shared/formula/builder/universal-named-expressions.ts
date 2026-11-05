@@ -50,6 +50,16 @@ export const parseUniversalNamedExpressions = (
       : [],
   );
   const inputKeys = configuredUniversalInputVariableKeys(config);
+  const manualKeys = Object.keys(
+    config.manualVars &&
+      typeof config.manualVars === "object" &&
+      !Array.isArray(config.manualVars)
+      ? config.manualVars
+      : {},
+  );
+  const canonical =
+    variableKeyFormatFor(config) ===
+    UniversalVariableKeyFormat.CanonicalAlphanumeric;
   const keys = new Set<string>();
   return config.namedExpressions.map((value, index) => {
     if (!value || typeof value !== "object" || Array.isArray(value))
@@ -85,6 +95,15 @@ export const parseUniversalNamedExpressions = (
       scope !== UniversalNamedExpressionScope.PerSample
     )
       throw new Error(`Named expression “${key}” has an invalid scope.`);
+    // Per-sample names expand to sample1Key, sample2Key…, which must not land on an input or variable name.
+    if (scope === UniversalNamedExpressionScope.PerSample && canonical) {
+      const expanded = new RegExp(`^sample\\d+${key.charAt(0).toUpperCase()}${key.slice(1)}$`);
+      const taken = [...inputKeys, ...constantKeys, ...manualKeys].find((name) => expanded.test(name));
+      if (taken)
+        throw new Error(
+          `Named expression key “${key}” would become “${taken}”, which is already used.`,
+        );
+    }
     keys.add(key);
     return { key, label, expression, scope };
   });

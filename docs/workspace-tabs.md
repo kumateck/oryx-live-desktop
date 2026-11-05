@@ -8,22 +8,52 @@ publication, backend contract or business workflow change is included.
 ## Using tabs
 
 The [implemented header layout](design/workspace-tabs-header.png) shows the
-2026-11-04 revision; the original concept remains preserved separately.
+2026-11-04 revision; the original concept remains preserved separately. The tab
+behaviours below were added on 2026-11-05 to follow browser, VS Code, Claude and
+Codex conventions, keeping the tabs in the header.
 
 Normal sidebar, record, edit and breadcrumb links navigate within the active tab,
 using its unsaved-change and pending-save guards. Ctrl/Cmd-click, middle-click and the internal
-link context menu open a separate tab. External URLs and API/file links retain
+link context menu open a new tab beside the current one. External URLs and API/file links retain
 their normal handling.
 
 The desktop header contains Back/Forward before the navigation-panel toggle,
-followed by the tabs and Add tab immediately after the final visible tab. The
-All open tabs menu shows full titles. Add tab opens a searchable picker of
-permitted destinations. Closing the final page leaves that picker. Overflow stays
-inside the tab strip rather than adding page/window horizontal scrolling.
-Ctrl/Cmd+T opens the picker, Ctrl+Tab/Shift+Ctrl+Tab switches tabs, and Ctrl/Cmd+W
-requests tab closure. Alt+Left/Right traverses the active tab's history. The new
-shell connects File → New tab/Close tab and Go → Back/Forward/Home to these same
-actions through a narrow validated preload subscription.
+followed by the tabs, New tab (+) immediately after the final visible tab, and the
+All open tabs menu. Tabs are compact pills showing their module icon and title;
+they shrink to fit and then scroll (mouse wheel works, with edge fades) without
+page or window horizontal scrolling. The close button shows on hover and on the
+current tab; an unsaved tab shows an amber dot in its place until hovered. A
+spinner replaces the icon while a tab is saving. Tabs can be dragged to reorder,
+and double-clicking the empty bar opens a new tab. Closing a tab selects its
+right-hand neighbour. New tab opens a searchable picker of permitted destinations;
+closing the final page leaves that picker.
+
+Right-clicking a tab offers Close, Close other tabs, Close tabs to the right,
+Duplicate, Move left/right, New tab and Reopen closed tab. Duplicate opens an
+independent copy of the tab's current URL, including query filters and fragment,
+next to the original; the original keeps its draft and the duplicate starts with
+fresh page state and history. Duplicate is blocked while any write is pending.
+Bulk closes never discard work: tabs with unsaved changes stay open and a notice
+says how many were kept. The All open tabs menu lists full titles and Reopen
+closed tab (the last 20 closed pages; locations only, never drafts).
+
+| Shortcut | Action |
+| --- | --- |
+| Ctrl/Cmd+T | New tab (page picker) |
+| Ctrl/Cmd+W | Close tab (asks first if unsaved) |
+| Ctrl/Cmd+Shift+T | Reopen closed tab |
+| Ctrl+Tab / Ctrl+Shift+Tab, Ctrl+PageDown / PageUp | Next / previous tab |
+| Ctrl/Cmd+1…8, Ctrl/Cmd+9 | Go to tab by position, last tab |
+| Ctrl/Cmd+B (outside text fields) | Show/hide the module sidebar |
+| Alt+Left / Alt+Right | Back / forward in the current tab |
+| Arrows, Home, End, Delete (tab bar focused) | Select tabs, close the selected tab |
+
+The native File → New tab/Close tab and Go → Back/Forward/Home menu items reach
+the same actions through the narrow validated preload subscription.
+
+The module sidebar's open/closed state is shared by all tabs and remembered
+across launches (a layout preference only). The shell subscribes to that state;
+reading it without subscribing left the toggle without effect in the desktop app.
 
 Right-click a tab header and choose **Duplicate tab** to open an independent copy
 of its current URL, including query filters and fragment, next to the original.

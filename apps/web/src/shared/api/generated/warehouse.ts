@@ -3537,6 +3537,7 @@ export type DomainEntitiesFormsFormFieldDto = {
   required?: boolean;
   description?: string | null;
   rank?: number;
+  formulaConfigurationHash?: string | null;
 };
 export type DomainEntitiesFormsFormSectionDto = {
   id?: string;
@@ -3570,6 +3571,8 @@ export type DomainEntitiesFormsFormResponseDto = {
   formulaResultFinalized?: boolean;
   formulaExecutionId?: string | null;
   formulaDisplayResultsJson?: string | null;
+  formulaRepairPending?: boolean;
+  formulaRepairEvaluated?: boolean;
 };
 export type DomainEntitiesFormsFormDto = {
   id?: string;
