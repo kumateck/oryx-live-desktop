@@ -674,6 +674,14 @@ export const navigationCatalog = [
         ]
       },
       {
+        "id": "warehouse-management.production-material-forecast",
+        "label": "Production Forecast",
+        "path": "/warehouse/production-forecast",
+        "permissions": [
+          "CanViewProductionScheduleMaterialForecast"
+        ]
+      },
+      {
         "id": "warehouse-management.stock-location",
         "label": "Stock Location",
         "permissions": [

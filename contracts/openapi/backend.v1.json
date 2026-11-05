@@ -116434,6 +116434,153 @@
           }
         }
       }
+    },
+    "/api/v1/report/production-material-forecast": {
+      "get": {
+        "tags": [
+          "Report"
+        ],
+        "summary": "The month's production schedules for the user's department with, per product, the materials one batch\r\nneeds, all planned batches need, and what the department's storage can cover now.",
+        "operationId": "GetProductionMaterialForecast",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionMaterialForecastDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionMaterialForecastDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionMaterialForecastDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -178944,6 +179091,324 @@
           },
           "alreadyApplied": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ProductionMaterialForecastDto": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "month": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "periodStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "departmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "departmentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "totalBatches": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rawReadyBatches": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "packagingReadyBatches": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "schedules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionMaterialForecastScheduleDto"
+            },
+            "nullable": true
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionMaterialForecastProductDto"
+            },
+            "nullable": true
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ProductionMaterialForecastScheduleDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduledStartTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scheduledEndTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Base.ProductionStatus"
+          },
+          "batches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionMaterialForecastBatchDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ProductionMaterialForecastBatchDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scheduleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchSize": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.ProductionSchedules.BatchSize"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "packingStyleId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "packingStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "started": {
+            "type": "boolean"
+          },
+          "rawReserved": {
+            "type": "boolean"
+          },
+          "packagingReserved": {
+            "type": "boolean"
+          },
+          "rawReady": {
+            "type": "boolean"
+          },
+          "packagingReady": {
+            "type": "boolean"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ProductionMaterialForecastProductDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchSize": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.ProductionSchedules.BatchSize"
+          },
+          "packingStyleId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "packingStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "batchIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          },
+          "rawBatchesSatisfiable": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "packagingBatchesSatisfiable": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "batchesSatisfiable": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rawMaterials": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionMaterialForecastMaterialDto"
+            },
+            "nullable": true
+          },
+          "packagingMaterials": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Reports.ProductionMaterialForecastMaterialDto"
+            },
+            "nullable": true
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Reports.ProductionMaterialForecastMaterialDto": {
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialName": {
+            "type": "string",
+            "nullable": true
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialKind"
+          },
+          "unitId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "perBatchQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "perBatchQuantityVaries": {
+            "type": "boolean"
+          },
+          "batchCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "reservedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "canSatisfyQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "shortfallQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "batchesSatisfiable": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "freeInWarehouse": {
+            "type": "number",
+            "format": "double"
+          },
+          "sharedWithProducts": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
