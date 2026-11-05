@@ -1,3 +1,13 @@
+Production material forecast (2026-11-05) adds one typed read,
+`GET /api/v1/report/production-material-forecast?year=&month=`, in the reports
+domain, guarded by `CanViewProductionScheduleMaterialForecast`. Import only it and
+its `DOMAIN.Entities.Reports.ProductionMaterialForecast*` schemas using
+`bun scripts/import-production-material-forecast.ts EXPORT.json`, then
+regenerate/check. Reviewed digest
+`f36fcd3ae72f006f627a654bdb9020a697fbc5977577308ad5cef9570daf810f`; removing
+exactly that path and its schemas gives the reservation-repair digest
+`fa46de38…d238`. See [production material forecast](production-material-forecast.md).
+
 Batch reservation repair (2026-11-05) adds typed preview/apply operations under
 `/api/v1/production-schedule/{batchId}/reservation-repair` in the production domain.
 Import only its paths and owned schemas using
@@ -15,6 +25,12 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 [formula repair](question-formula-repair-proposal.md).
 
 # API contracts and generated hooks
+
+Migration batch-number corrections (2026-11-05) add optional `batchNumber` and
+`expectedBatchNumber` to `DOMAIN.Entities.Materials.Batch.UpdateMigrationRetestDate`
+(backend kumateck/oryx-backend#1719). Reviewed typed digest
+`1bf73fd1eefb5e2ff029b420277ad7efaf02364c66b2fdc4e65560a66b99d09a`; removing exactly
+these two fields reproduces `fa46de385e587bca0821ff164522fedda3dca60d5e0b044336bd7093fe87d238`.
 
 Formula repair and migration AR corrections (2026-11-05) are reviewed together as
 typed digest `d31b1bc59265cc6a98c995e9c3b3249dc8f73d948701228e1573cf31d01e888f`.

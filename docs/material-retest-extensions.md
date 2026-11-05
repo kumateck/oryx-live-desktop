@@ -39,6 +39,15 @@ selectors already use month precision. Report expiry filters now include whole
 months, and explicit worksheet reagent/reference-standard lot-expiry fields use
 the shared month picker while retaining their date-only request format. Existing
 stored dates and template-owned calculations are not rewritten by opening a form.
+A separate **Update migration batch number** action corrects the batch number of
+migrated opening stock, for example a supplier batch that the spreadsheet turned
+into a date. It changes only the batch number: retest date and AR reference are
+kept exactly. It needs a reason and the same permission, department and QC gates;
+the server refuses a blank number and a number that changed since the page loaded
+(`expectedBatchNumber`). The old and new numbers are added to the correction
+audit, and the original import row keeps the spreadsheet value. Apply the backend
+`AddMigrationBatchNumberCorrections` migration before activating this action.
+
 The batch details show the **AR number**. The retest editor accepts an optional
 AR correction for migrated opening stock and top-ups, with **Save changes**
 allowing the date, AR reference, or both to change. A separate **Update migration

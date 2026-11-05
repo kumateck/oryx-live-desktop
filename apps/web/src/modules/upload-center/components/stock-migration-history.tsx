@@ -9,7 +9,11 @@ import { migrationPath, migrationStatusLabels } from "../lib/stock-migration";
 
 const column = dataTableColumns<MigrationDto>();
 
-export function StockMigrationHistory({ departmentId, topUp = false }: { departmentId: string; topUp?: boolean }) {
+export function StockMigrationHistory({ departmentId, topUp = false, openPath = migrationPath }: {
+  departmentId: string; topUp?: boolean;
+  /** Where a row opens; the warehouse top-up page opens drafts under its own address. */
+  openPath?: (id: string) => string;
+}) {
   const navigate = useNavigate();
   const list = stockMigrationApi.useListQuery({ ...migrationAudit, departmentId });
   const rows = useMemo(() => (list.data ?? []).filter((row) => (row.mode === 1) === topUp), [list.data, topUp]);
@@ -25,6 +29,6 @@ export function StockMigrationHistory({ departmentId, topUp = false }: { departm
   ]), []);
   return <ClientDataTable label={topUp ? "Migration stock top-ups" : "Opening balance drafts"} columns={columns} rows={rows} getRowId={(row) => row.id ?? ""}
     loading={list.isLoading} refreshing={list.isFetching} error={list.error ? apiErrorMessage(list.error) : null} onRetry={() => void list.refetch()}
-    onRowOpen={(row) => row.id && void navigate(migrationPath(row.id))} fill={false}
+    onRowOpen={(row) => row.id && void navigate(openPath(row.id))} fill={false}
     emptyTitle={topUp ? "No migration top-ups yet" : "No opening balance drafts yet"} emptyDescription="Save a draft to review and approve its stock." />;
 }
