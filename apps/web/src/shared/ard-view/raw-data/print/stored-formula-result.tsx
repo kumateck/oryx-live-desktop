@@ -11,7 +11,7 @@ const StoredFormulaResult = ({ response }: { response?: FormResponseDto | undefi
   if (!results.length) {
     return (
       <span className="text-sm text-destructive print:text-black">
-        Authoritative formula result unavailable.
+        {response?.formulaRepairPending ? "Formula repaired — recalculate the saved readings before using this result." : "Authoritative formula result unavailable."}
       </span>
     );
   }

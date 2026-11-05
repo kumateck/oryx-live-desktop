@@ -45,7 +45,8 @@ export function useResponseWriter({ formId, context, stored, audit, require, onC
     if (stringValue === null) return { error: "There is nothing to save for this answer." };
     const stillAllowed = drafts.check();
     if (stillAllowed) return { error: stillAllowed };
-    const result = await saveDraft({ ...audit, domainEntitiesFormsRequestSaveResponseDraftRequest: { ...context, formId, formFieldId: field.id, value: stringValue, responseId } });
+    const result = await saveDraft({ ...audit, domainEntitiesFormsRequestSaveResponseDraftRequest: { ...context, formId, formFieldId: field.id, value: stringValue, responseId,
+      ...(field.formulaConfigurationHash ? { formulaConfigurationHash: field.formulaConfigurationHash } : {}) } });
     if ("error" in result) return { error: apiErrorMessage(result.error) };
     if (typeof result.data !== "string" || !result.data.trim()) return { error: "The server did not confirm a saved draft. Save this answer again." };
     if (activeScope.current !== scope) return { responseId: result.data };

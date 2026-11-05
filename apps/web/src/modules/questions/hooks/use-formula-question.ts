@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
@@ -12,7 +12,7 @@ import { FormulaRevisionStatus, governanceApi, type FormulaRevision, type Govern
 import { UNIVERSAL_FORMULA_FLUSH_EVENT } from "@/shared/formula/ui/events";
 import { FormulaType, formulaTypeName } from "@/shared/questions/question-types";
 import { useGetApiV1FormQuestionByQuestionIdQuery } from "../api/questions-api";
-import { formulaQuestionRequest, savedMessage, toFormulaValues } from "../lib/formula-question";
+import { formulaQuestionRequest, savedMessage, toFormulaValues, universalEditorDefinition } from "../lib/formula-question";
 import { formulaQuestionPath, questionPermissions, questionsAudit, questionsPath } from "../lib/questions";
 import { getFormulaVariableSyntaxError } from "../lib/variable-syntax";
 import { formulaDefaults, questionFormulaSchema, type QuestionFormulaValues } from "../schemas/formula-question-schema";
@@ -49,7 +49,7 @@ export function useFormulaQuestion(questionId: string | null) {
   }, [form, parsedQuestion, questionId, revisions.data, revisions.isLoading]);
   const type = typeOf(useWatch({ control: form.control, name: "formulaType" })?.value);
   const expression = useWatch({ control: form.control, name: "expression" });
-  const definition = type === FormulaType.Universal ? universalPayload || expression : expression;
+  const definition = useMemo(() => type === FormulaType.Universal ? universalEditorDefinition(universalPayload || expression) : expression, [expression, type, universalPayload]);
   // A definition written for one formula type means nothing to another builder, so changing the type starts it afresh.
   const previousType = useRef(type);
   useEffect(() => {
@@ -63,6 +63,9 @@ export function useFormulaQuestion(questionId: string | null) {
   const onUniversal = useCallback((value: string) => { universal.current = value; setUniversalPayload(value); }, []);
   const onProblem = useCallback((problem: string) => form.setError("expression", { type: "validate", message: problem }), [form]);
 
+  /** A blocked save must say why; otherwise the button appears to do nothing. */
+  const invalid = (errors: FieldErrors<QuestionFormulaValues>) =>
+    setMessage(errors.variableScopes ? "Choose where each value comes from before saving." : "Fix the highlighted fields before saving.");
   const submit = form.handleSubmit(async (values) => {
     setMessage("");
     const denied = permission.check();
@@ -81,7 +84,7 @@ export function useFormulaQuestion(questionId: string | null) {
     setStatus(result.data.revision.status);
     loadedOption.current = request.options?.[0]?.name ?? text;
     if (!questionId) void navigate(formulaQuestionPath(result.data.questionId), { replace: true });
-  });
+  }, invalid);
   /** The Universal builder keeps its latest edits until asked, so it is asked before the form is checked. */
   const save = (event: FormEvent<HTMLFormElement>) => { if (type === FormulaType.Universal) window.dispatchEvent(new Event(UNIVERSAL_FORMULA_FLUSH_EVENT)); void submit(event); };
   return {

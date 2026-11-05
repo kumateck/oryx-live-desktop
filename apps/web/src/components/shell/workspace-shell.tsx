@@ -1,11 +1,11 @@
-import { Activity, useState } from "react";
+import { Activity, useCallback } from "react";
 import { Outlet, useNavigation as useRouteProgress } from "react-router";
 import { useNavigation } from "../../modules/navigation/use-navigation";
 import { PageSearchProvider } from "../../shared/search/page-search";
 import { WorkspaceHeader } from "./workspace-header";
 import { RouteAccess } from "./route-access";
 import { WorkspaceNavigation } from "./workspace-navigation";
-import { useDesktopTab, useDesktopTabVisible } from "../../shared/workspace-tabs/context";
+import { useBrowserSidebarShortcut, useDesktopTab, useDesktopTabState, useDesktopTabVisible, useWorkspaceSidebar } from "../../shared/workspace-tabs/context";
 import { WorkspacePagePicker } from "../../shared/workspace-tabs/page-picker";
 import { WorkspaceLinkMenu } from "../../shared/workspace-tabs/internal-link-menu";
 import { DesktopRouteBlocker } from "../../shared/workspace-tabs/route-blocker";
@@ -13,9 +13,11 @@ import { DesktopRouteBlocker } from "../../shared/workspace-tabs/route-blocker";
 export function WorkspaceShell() {
   const desktop = useDesktopTab();
   const visible = useDesktopTabVisible();
-  const [browserSidebarOpen, setBrowserSidebarOpen] = useState(true);
-  const sidebarOpen = desktop ? desktop.workspace.getSnapshot().sidebarOpen : browserSidebarOpen;
-  const setSidebarOpen = (open: boolean) => { if (desktop) desktop.workspace.setSidebar(open); else setBrowserSidebarOpen(open); };
+  // Subscribed state: reading the tab store without subscribing left the sidebar toggle without effect on desktop.
+  const [sidebarOpen, setSidebarOpen] = useWorkspaceSidebar();
+  const tab = useDesktopTabState();
+  const toggleSidebar = useCallback(() => setSidebarOpen(!sidebarOpen), [setSidebarOpen, sidebarOpen]);
+  useBrowserSidebarShortcut(toggleSidebar, !desktop);
   const progress = useRouteProgress();
   const { groups, active, pathname } = useNavigation();
   const title = groups.find((group) => group.id === active?.groupId)?.label ?? "Workspace";
@@ -27,7 +29,7 @@ export function WorkspaceShell() {
     <WorkspaceLinkMenu><div className={`workspace ${sidebarOpen ? "sidebar-open" : ""}`}>
       <Activity mode={visible ? "visible" : "hidden"}>
         <WorkspaceHeader title={title} sidebarOpen={sidebarOpen} groups={groups} navigationId={navigationId}
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+          onToggleSidebar={toggleSidebar} />
       </Activity>
 
       <div className="workspace-body">
@@ -36,8 +38,7 @@ export function WorkspaceShell() {
         {desktop ? <div className="desktop-workspace-content">
           <main className="content-scroller" role="tabpanel" id={`workspace-panel-${desktop.id}`}
             aria-labelledby={`workspace-tab-${desktop.id}-${desktop.id}`} tabIndex={0}>
-            <div className="content-inner">{desktop.workspace.getSnapshot().tabs.find((tab) => tab.id === desktop.id)?.picker
-              ? <WorkspacePagePicker groups={groups} /> : <RouteAccess><Outlet /></RouteAccess>}</div>
+            <div className="content-inner">{tab?.picker ? <WorkspacePagePicker groups={groups} /> : <RouteAccess><Outlet /></RouteAccess>}</div>
           </main>
         </div> : <main className="content-scroller" id="main-content">
           <div className="content-inner"><RouteAccess><Outlet /></RouteAccess></div>

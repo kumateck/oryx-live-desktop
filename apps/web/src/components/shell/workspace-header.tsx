@@ -37,7 +37,7 @@ export function WorkspaceHeader({ title, sidebarOpen, onToggleSidebar, groups, n
       {desktop ? null : <Separator orientation="vertical" className="header-divider" />}
     </div>
     <div className="header-content">
-      {desktop ? <WorkspaceTabStrip /> : <><span className="header-title">{title}</span><span className="header-spacer" /></>}
+      {desktop ? <WorkspaceTabStrip groups={groups} /> : <><span className="header-title">{title}</span><span className="header-spacer" /></>}
       <HeaderActions pages={groups} />
     </div>
   </header>;

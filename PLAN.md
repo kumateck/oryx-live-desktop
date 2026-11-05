@@ -101,6 +101,61 @@ Promotion takes priority over White Placebo; preserve its existing drafts.
 Reuse exact tested artifacts while retaining server configuration and deployment
 differences. Verify build-input equivalence; customer-specific code changes need
 their own tested artifact so no branch work is silently omitted.
+## Permissioned question and test formula repair proposal (2026-11-04)
+
+The user requests an in-app exceptional repair path for formula questions and
+involved tests, replacing manual database maintenance. Propose separate backend
+capabilities for repairing the reusable question and explicitly selected open
+test placements, with question-only, test-only and combined atomic scopes.
+Use authenticated actor attribution, reason, typed validation, reviewed preview,
+fresh permissions, state/concurrency checks, idempotency and immutable audit.
+Preserve entered readings; invalidate obsolete results and require the normal
+execution/submission path. Pin legacy response configurations so master repairs
+cannot change unselected or historical tests, including unanswered fields.
+
+Implemented locally on 5 November 2026 (uncommitted; no grants, migration run or
+deployment). See the implementation section of the proposal document.
+Initial scope excludes direct changes to governed or
+submitted/approved/released records; approved rebasing and historical amendment
+need separate workflows. Do not bypass formula review/approval or manufacture
+approved revisions for legacy repairs. No implementation, grants, migration or
+deployment is performed by this planning step. See
+`docs/question-formula-repair-proposal.md` for the proposed UX, storage boundary,
+permission model, API and verification requirements.
+
+## Outstanding migration reservations repair (2026-11-04)
+
+Prepare a portable preview/apply maintenance script for the client's 5 November
+run. A replacement opening migration wrote off lots still reserved by waiting
+requisitions. Rebind every affected, approved, wholly unissued requisition in
+the chosen replacement's department to a unique eligible replacement lot/shelf.
+Preserve reservation IDs, approved quantities, stock balances, status/approval
+gates and issued history. Refuse insufficient/ambiguous stock, stale previews,
+progressed production, issue evidence, unit/scope mismatches and missing live
+issue permissions. Audit the user-specified operator, reason and before/after
+rows atomically. Frederick's email is supplied for this repair; resolve his ID
+and current department/permissions independently on each server.
+
+Rehearse apply/rollback on disposable local PostgreSQL and preview the demo's
+entire outstanding queue. Client writes/deployment are not part of preparation;
+client IDs and stock must be inspected afresh tomorrow. See
+`docs/migration-reservation-repair.md`.
+
+## Migration AR-only corrections and HTTP repair IDs (2026-11-04)
+
+Show the migrated batch AR reference and provide a separate AR-only correction
+action alongside the retest-date editor, which can save either field or both.
+Preserve an unchanged retest timestamp exactly, including absent or legacy dates;
+validate the extension rule when changing the date. Reuse the existing migration
+correction permission, department/QC gates, reason, optimistic concurrency and
+transactional audit. No new endpoint or schema change is needed beyond the
+already prepared AR-correction contract and audit migration.
+
+Unstart production must also work on installed clients using intranet HTTP.
+Use the existing cryptographic UUID helper for all remaining direct renderer
+`crypto.randomUUID` callers. Keep retry request IDs stable for the same reviewed
+preview and reason, and release pending state if ID generation fails. No stock
+correction, migration application, role grant or deployment is authorized here.
 
 ## Multiple workspace tabs proposal (2026-11-03)
 

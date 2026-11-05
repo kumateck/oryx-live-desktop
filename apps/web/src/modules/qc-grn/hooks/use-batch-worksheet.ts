@@ -21,7 +21,8 @@ export function useBatchWorksheet(batchId: string, options: { assignees?: boolea
   const responses = qcGrnFormsApi.useGetApiV1FormResponsesMaterialBatchByMaterialBatchIdQuery(arg);
   const assignees = qcGrnFormsApi.useGetApiV1FormAssigneesMaterialBatchByMaterialBatchIdQuery(options.assignees === false ? skipToken : arg);
   const formId = useMemo(() => { const parsed = ardSchema.safeParse(ard.data ?? null); return parsed.success ? parsed.data.form?.id ?? null : null; }, [ard.data]);
-  const formQuery = qcGrnFormsApi.useGetApiV1FormByFormIdQuery(formId ? { ...qcGrnAudit, formId } : skipToken);
+  const latestResponseId = responses.data?.filter(row => row.responseId).sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))[0]?.responseId;
+  const formQuery = qcGrnFormsApi.useGetApiV1FormByFormIdQuery(formId ? { ...qcGrnAudit, formId, ...(latestResponseId ? { responseId: latestResponseId } : {}) } : skipToken);
   const form = useMemo(() => { const parsed = formSchema.safeParse(formQuery.data ?? null); return parsed.success ? parsed.data : null; }, [formQuery.data]);
   const stored = useMemo(() => { const parsed = answerRows.safeParse(responses.data ?? []); return latestAnswers(parsed.success ? parsed.data : []); }, [responses.data]);
   const assigned = useMemo(() => { const parsed = formAssigneeSchema.safeParse(assignees.data ?? null); return parsed.success ? parsed.data : null; }, [assignees.data]);

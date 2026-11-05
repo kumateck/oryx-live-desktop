@@ -12,7 +12,7 @@ const revision = (overrides: Partial<FormulaRevision> = {}): FormulaRevision => 
 describe("formula questions", () => {
   it("loads the revision's authoring payload in preference to the stored option", () => {
     const question = { id: "q1", label: "Assay", type: QuestionType.Formula, isMultiSelect: false, reference: null, description: null, options: [JSON.stringify({ type: 0, expression: ":legacy+1" })] };
-    expect(toFormulaValues(question, JSON.stringify({ type: 0, expression: ":corrected+1", variableScopes: { "spl.wt": 1 } }))).toMatchObject({ expression: ":corrected+1", variableScopes: { "spl.wt": { value: "1" } } });
+    expect(toFormulaValues(question, JSON.stringify({ type: 0, expression: ":corrected+1", variableScopes: { "spl.wt": 1 } }))).toMatchObject({ expression: ":corrected+1", variableScopes: { "spl%2Ewt": { value: "1" } } });
   });
   it("stores form-scoped variables by their decoded key", () => {
     expect(JSON.parse(buildFormulaOptionValue(":a*2", 0, "", { [encodeURIComponent("spl.wt")]: { value: "1", label: "Form" } }))).toEqual({ type: 0, expression: ":a*2", variableScopes: { "spl.wt": 1 } });

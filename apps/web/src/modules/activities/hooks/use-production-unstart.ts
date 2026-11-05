@@ -1,3 +1,4 @@
+import { randomId } from "@/shared/ids/random-id";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,9 +38,9 @@ export function useProductionUnstart(activityId: string, onClose: () => void) {
     if (denied) { setMessage(denied); return; }
     if (!preview?.canApply || error || query.isFetching || needsReview) return;
     pending.current = true; setMessage("");
-    if (!attempt.current || attempt.current.token !== preview.previewToken || attempt.current.reason !== reason)
-      attempt.current = { id: crypto.randomUUID(), token: preview.previewToken, reason };
     try {
+      if (!attempt.current || attempt.current.token !== preview.previewToken || attempt.current.reason !== reason)
+        attempt.current = { id: randomId(), token: preview.previewToken, reason };
       const result = await apply({ ...audit, activityId, domainEntitiesProductsProductionProductionUnstartRequest: {
         requestId: attempt.current.id, previewToken: preview.previewToken, reason,
       } });
