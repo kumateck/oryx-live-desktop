@@ -33,7 +33,7 @@ function openProducts(permissions: string[]) {
 }
 
 it("lists the user's department products with quantities in readable units", async () => {
-  const calls = openProducts(["CanViewPlannedProducts"]);
+  const calls = openProducts(["CanViewProductionProducts", "CanViewProductionProductInfo", "CanViewProductionProductBom", "CanViewProductionProductPackingMaterials", "CanViewProductionProductPackingStyles", "CanViewProductionProductPackingOrder", "CanViewProductionProductProcedure", "CanViewProductionProductSpecifications", "CanViewProductionProductStps", "CanViewProductionProductArds", "CanPrintProductionProduct"]);
   expect(await screen.findByText("Amoxicillin 500")).toBeTruthy();
   expect(calls.find((call) => call.path === "/api/v1/product")?.search).toContain("departmentId=558da105-a506-44a9-8ff5-8d005a54f294");
   expect(screen.getByText("2.5 kg")).toBeTruthy();
@@ -45,7 +45,7 @@ it("lists the user's department products with quantities in readable units", asy
 });
 
 it("verifies a product for a user who may, then reloads the list", async () => {
-  const calls = openProducts(["CanViewPlannedProducts", "CanVerifyProduct", "CanCreateNewProductionPlan"]);
+  const calls = openProducts(["CanViewProductionProducts", "CanViewProductionProductInfo", "CanViewProductionProductBom", "CanViewProductionProductPackingMaterials", "CanViewProductionProductPackingStyles", "CanViewProductionProductPackingOrder", "CanViewProductionProductProcedure", "CanViewProductionProductSpecifications", "CanViewProductionProductStps", "CanViewProductionProductArds", "CanPrintProductionProduct", "CanVerifyProduct", "CanCreateProductionProduct"]);
   expect(screen.queryByRole("link", { name: "Create" }) ?? await screen.findByRole("link", { name: "Create" })).toBeTruthy();
   fireEvent.click(await screen.findByRole("button", { name: "Verify Amoxicillin 500" }));
   await waitFor(() => expect(calls.some((call) => call.method === "POST" && call.path === "/api/v1/verification")).toBe(true));

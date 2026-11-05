@@ -20,7 +20,7 @@ const styles = [
 ];
 
 function open(saveStatus = 201) {
-  const backend = stubBackend({ permissions: ["CanEditProductionPlan"] });
+  const backend = stubBackend({ permissions: ["CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure"] });
   rememberSession();
   const posts: string[] = [];
   const session = backend.fetcher.getMockImplementation();

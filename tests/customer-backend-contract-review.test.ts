@@ -71,7 +71,9 @@ test("historical reporting adds optional read parameters without changing existi
           // User directory filters (2026-11-01): optional role and department filters on the user list; additive only.
           || (path === "/api/v1/user" && (parameter.name === "roleId" || parameter.name === "departmentId"))
           // Formula repair (2026-11-05): optional response whose pinned formula configuration the form is read with; additive only.
-          || (path === "/api/v1/form/{formId}" && parameter.name === "responseId")));
+          || (path === "/api/v1/form/{formId}" && parameter.name === "responseId")
+          // Product permissions (2026-11-05): optional context (qa) on product writes picks the QA keys; additive only.
+          || ((path.startsWith("/api/v1/product") || path.startsWith("/api/v1/bom")) && parameter.name === "context")));
       });
       const responses = object(operation.responses ?? null);
       if (!("409" in object(original.responses ?? null))) delete responses["409"];
@@ -245,7 +247,18 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
 });
 
 test("the merged forecast and migration contracts preserve the approved predecessor and pass release validation", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const head = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  assert.equal(contractDigest(head), "7598763c860877a64d36bce3f9e730bf08cd7ac3b072384a7ae30afc235b6414");
+  // Product permissions (2026-11-05) add an optional context query parameter to product and BOM writes.
+  const current = structuredClone(head);
+  for (const [path, item] of Object.entries(object(current.paths ?? null))) {
+    if (!path.startsWith("/api/v1/product") && !path.startsWith("/api/v1/bom")) continue;
+    for (const operation of Object.values(object(item))) {
+      const parameters = object(operation).parameters;
+      if (Array.isArray(parameters)) object(operation).parameters = parameters.filter((entry) => object(entry).name !== "context");
+    }
+  }
+  checkCompatibility(hostConfig, policy, contractDigest(current));
   const digest = contractDigest(current);
   assert.ok(policy.backendContracts.includes("a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe"));
   assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
@@ -304,7 +317,7 @@ test("the merged forecast and migration contracts preserve the approved predeces
   checkCompatibility(hostConfig, policy, digest);
   const check = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
   assert.equal(check.status, 0, check.stderr);
-  assert.match(check.stdout, new RegExp(`Approved backend contract: ${digest}`));
+  assert.match(check.stdout, new RegExp(`Approved backend contract: ${contractDigest(head)}`));
 });
 
 test("expiry department metadata is an optional read addition, with no client-controlled department parameter", () => {

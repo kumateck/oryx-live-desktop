@@ -850,7 +850,7 @@ export const navigationCatalog = [
         "label": "Products",
         "path": "/production/products",
         "permissions": [
-          "CanViewPlannedProducts"
+          "CanViewProductionProducts"
         ]
       },
       {
@@ -1245,7 +1245,7 @@ export const navigationCatalog = [
         "label": "Products",
         "path": "/qa/products",
         "permissions": [
-          "CanViewPlannedProducts"
+          "CanViewQaProducts"
         ]
       },
       {
@@ -1349,7 +1349,7 @@ export const navigationCatalog = [
         "label": "Products",
         "path": "/warehouse/fg-products",
         "permissions": [
-          "CanViewApprovedProducts"
+          "CanViewFgProducts"
         ]
       },
       {

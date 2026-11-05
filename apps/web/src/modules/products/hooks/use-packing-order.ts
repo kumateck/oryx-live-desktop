@@ -13,14 +13,14 @@ export function usePackingOrder(productId: string) {
   const [update, mutation] = usePutApiV1ProductPackageDescriptionByProductIdMutation();
   const parsed = useMemo(() => query.data ? packingOrderSourceSchema.safeParse(query.data) : null, [query.data]);
   const [message, setMessage] = useState("");
-  const { editRequirement } = useProductWorkspace();
-  const permission = usePermissionAction(editRequirement);
+  const { task, keys, context } = useProductWorkspace();
+  const permission = usePermissionAction(task(keys.sections.packingOrder.edit));
 
   const save = async (values: PackingOrderFormValues): Promise<boolean> => {
     const denied = permission.check();
     if (denied) { setMessage(denied); return false; }
     setMessage("");
-    const result = await update({ ...audit, productId, domainEntitiesProductsUpdateProductPackageDescriptionRequest: values });
+    const result = await update({ ...audit, ...context, productId, domainEntitiesProductsUpdateProductPackageDescriptionRequest: values });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return false; }
     toast.success("Packing order saved");
     return true;

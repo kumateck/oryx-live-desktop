@@ -18,8 +18,8 @@ export function useProcedure(productId: string) {
   const saved = useMemo(() => parsed?.success ? fromSavedRoutes(parsed.data) : none, [parsed]);
   const [draft, setDraft] = useState<ProcedureStep[] | null>(null);
   const [message, setMessage] = useState("");
-  const { editRequirement } = useProductWorkspace();
-  const permission = usePermissionAction(editRequirement);
+  const { save: saveRequirement, context } = useProductWorkspace();
+  const permission = usePermissionAction(saveRequirement("procedure"));
   const steps = draft ?? saved;
 
   const saveAll = async () => {
@@ -27,7 +27,7 @@ export function useProcedure(productId: string) {
     if (denied) { setMessage(denied); return; }
     setMessage("");
     if (steps.length === 0) { setMessage("Add at least one step."); return; }
-    const result = await save({ ...procedureAudit, productId, body: toRoutesRequest(steps) });
+    const result = await save({ ...procedureAudit, ...context, productId, body: toRoutesRequest(steps) });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     setDraft(null);
     toast.success("Procedure saved");

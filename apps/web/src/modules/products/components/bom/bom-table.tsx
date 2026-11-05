@@ -5,6 +5,7 @@ import { DraggableDataTable, dataTableColumns } from "@/shared/datatable";
 import { bomAudit } from "../../hooks/use-bom";
 import { MaterialQuantity } from "../material-quantity";
 import type { BomLine } from "../../lib/bom";
+import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { batchQuantity } from "../../lib/product-detail";
 
 const column = dataTableColumns<BomLine>();
@@ -23,6 +24,7 @@ export function BomLinesTable({ lines, compositionSize, batchSize, loading, erro
   onRemove: (line: BomLine) => void;
   disabled: boolean;
 }) {
+  const { task, keys } = useProductWorkspace();
   const columns = useMemo(() => column.columns([
     column.display({ id: "step", header: "Step", size: 60, cell: ({ row }) => row.index + 1 }),
     column.accessor((line) => line.code || dash, { id: "code", header: "Code", size: 120 }),
@@ -39,10 +41,10 @@ export function BomLinesTable({ lines, compositionSize, batchSize, loading, erro
     column.accessor((line) => line.category || dash, { id: "function", header: "Function" }),
     column.accessor((line) => line.grade || dash, { id: "grade", header: "Grade", size: 90 }),
     column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.material.label}`} items={[
-      { id: "edit", label: "Edit", icon: Pencil, onSelect: () => onEdit(row.original) },
-      { id: "remove", label: "Remove", icon: Trash2, destructive: true, onSelect: () => onRemove(row.original) },
+      { id: "edit", label: "Edit", icon: Pencil, require: task(keys.sections.bom.edit), onSelect: () => onEdit(row.original) },
+      { id: "remove", label: "Remove", icon: Trash2, destructive: true, require: task(keys.sections.bom.delete ?? keys.sections.bom.edit), onSelect: () => onRemove(row.original) },
     ]} /> }),
-  ]), [compositionSize, batchSize, onEdit, onRemove]);
+  ]), [compositionSize, batchSize, onEdit, onRemove, task, keys]);
   return <DraggableDataTable label="Bill of materials" columns={columns} rows={lines} getRowId={(line) => line.key} loading={loading} error={error}
     onRetry={onRetry} disabled={disabled} describeRow={(line) => line.material.label} onReorder={(next) => onReorder(next)}
     emptyTitle="No materials yet" emptyDescription="Add the raw materials of this product's formula, then save." />;

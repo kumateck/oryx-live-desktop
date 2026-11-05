@@ -73,7 +73,7 @@ it("redirects to an allowed tab before its page can mount and fetch", async () =
 });
 
 it("blocks a production-only page for a user outside production departments", async () => {
-  stubBackend({ permissions: ["CanViewPlannedProducts"], departmentType: 1 });
+  stubBackend({ permissions: ["CanViewProductionProducts"], departmentType: 1 });
   rememberSession();
   render(<SessionProvider><MemoryRouter initialEntries={["/production/products"]}><RouteAccess><p>Page content</p></RouteAccess></MemoryRouter></SessionProvider>);
   expect(await screen.findByRole("alert")).toBeTruthy();
@@ -81,7 +81,7 @@ it("blocks a production-only page for a user outside production departments", as
 });
 
 it("opens the production-only page for a production user", async () => {
-  stubBackend({ permissions: ["CanViewPlannedProducts"], departmentType: 0 });
+  stubBackend({ permissions: ["CanViewProductionProducts"], departmentType: 0 });
   rememberSession();
   render(<SessionProvider><MemoryRouter initialEntries={["/production/products"]}><RouteAccess><p>Page content</p></RouteAccess></MemoryRouter></SessionProvider>);
   expect(await screen.findByText("Page content")).toBeTruthy();

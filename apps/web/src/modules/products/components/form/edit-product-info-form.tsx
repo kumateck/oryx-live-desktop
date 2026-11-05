@@ -16,7 +16,7 @@ import { FormActions } from "./form-shell";
 import { ProductFormFields } from "./product-form-fields";
 
 export function EditProductInfoForm({ product, options }: { product: ProductFormSource; options: ProductOptions }) {
-  const { detailPath: productDetailPath, editRequirement } = useProductWorkspace();
+  const { detailPath: productDetailPath, task, keys, context } = useProductWorkspace();
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
   const [updateProduct, mutation] = usePutApiV1ProductByProductIdMutation();
@@ -24,12 +24,12 @@ export function EditProductInfoForm({ product, options }: { product: ProductForm
   const saved = useMemo(() => toFormValues(product), [product]);
   const form = useForm<ProductFormValues>({ resolver: zodResolver(productFormSchema), defaultValues: saved });
 
-  const permission = usePermissionAction(editRequirement);
+  const permission = usePermissionAction(task(keys.sections.info.edit));
   const submit = form.handleSubmit(async (values) => {
     const denied = permission.check();
     if (denied) { setMessage(denied); return; }
     setMessage("");
-    const result = await updateProduct({ ...audit, productId: product.id, domainEntitiesProductsUpdateProductRequest: toProductRequest(values) });
+    const result = await updateProduct({ ...audit, ...context, productId: product.id, domainEntitiesProductsUpdateProductRequest: toProductRequest(values) });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     form.reset(values);
     toast.success("Product information saved");
