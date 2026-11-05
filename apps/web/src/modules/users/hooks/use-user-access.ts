@@ -8,6 +8,7 @@ export function useUserAccess() {
     viewInactive: has(userPermissions.viewInactive),
     create: has(userPermissions.create),
     edit: has(userPermissions.edit),
+    assignRole: has(userPermissions.assignRole),
     block: has(userPermissions.block),
     unblock: has(userPermissions.unblock),
   };

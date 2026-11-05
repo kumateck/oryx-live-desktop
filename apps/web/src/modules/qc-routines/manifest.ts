@@ -5,12 +5,12 @@ const all = (...permissions: string[]) => ({ kind: "all" as const, permissions }
 // setup (schedules, routine ARDs, microbial applicability) and water quality coverage.
 export const manifest = {
   id: "qc-routines", label: "Routine tests", root: "/qc/routines", order: 79,
-  access: all("CanViewQcRoutineTests"),
+  access: all("CanViewRoutineTests"),
   routes: [
-    { pattern: "/qc/routines/setup", access: all("CanViewQcRoutineSetup") },
-    { pattern: "/qc/routines/water-quality", access: all("CanViewQcRoutineWaterQuality") },
-    { pattern: "/qc/routines/:id", access: all("CanViewQcRoutineTests") },
-    { pattern: "/qc/routines/tracks/:id", access: all("CanViewQcRoutineTests") },
-    { pattern: "/qc/routines/certificates/:id", access: { kind: "some", permissions: ["CanViewQcRoutineTests", "CanViewQcRoutineWaterQuality"] } },
+    { pattern: "/qc/routines/setup", access: all("CanViewRoutineSetup") },
+    { pattern: "/qc/routines/water-quality", access: all("CanViewWaterQuality") },
+    { pattern: "/qc/routines/:id", access: all("CanViewRoutineTests") },
+    { pattern: "/qc/routines/tracks/:id", access: all("CanViewRoutineTests") },
+    { pattern: "/qc/routines/certificates/:id", access: { kind: "some", permissions: ["CanViewRoutineTests", "CanViewWaterQuality"] } },
   ],
 } satisfies ModuleManifest<"qc-routines", "/qc/routines">;

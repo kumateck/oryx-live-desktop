@@ -13,7 +13,7 @@ export function UserRowActions({ user, access, onAction }: {
   const canToggle = user.isDisabled ? access.unblock : access.block;
   return <TableMenu label={`Actions for ${user.name}`} items={[
     { id: "details", label: "User details", icon: Eye, onSelect: () => onAction("details", user) },
-    access.edit && { id: "role", label: "Change role", icon: UserCog, onSelect: () => onAction("role", user) },
+    access.assignRole && { id: "role", label: "Change role", icon: UserCog, onSelect: () => onAction("role", user) },
     canToggle && (user.isDisabled
       ? { id: "toggle", label: "Unblock user", icon: RotateCcw, separated: true, onSelect: () => onAction("toggle", user) }
       : { id: "toggle", label: "Block user", icon: Ban, destructive: true, separated: true, onSelect: () => onAction("toggle", user) }),

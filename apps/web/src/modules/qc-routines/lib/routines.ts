@@ -33,9 +33,9 @@ export const certificatePath = (id: string) => `${routinesPath}/certificates/${i
 
 /** The server checks no permission on these endpoints; the keys Oryx Next defined gate every screen and action here. */
 export const routinePermissions = {
-  view: "CanViewQcRoutineTests", create: "CanCreateQcRoutineTest", perform: "CanPerformQcRoutineTest",
-  setupView: "CanViewQcRoutineSetup", setupManage: "CanManageQcRoutineSetup", microbial: "CanManageQcMicrobialRequirements",
-  waterView: "CanViewQcRoutineWaterQuality", waterManage: "CanManageQcRoutineWaterQuality",
+  view: "CanViewRoutineTests", create: "CanCreateRoutineTest", perform: "CanPerformRoutineTest",
+  setupView: "CanViewRoutineSetup", setupManage: "CanManageRoutineSetup", microbial: "CanManageMicrobialRequirements",
+  waterView: "CanViewWaterQuality", waterManage: "CanManageWaterQuality",
 } as const;
 
 /** The calendar month or quarter containing a date, which is what a scheduled routine's period must be. */

@@ -126,6 +126,17 @@ if (!qualityAssurance) throw new Error("Quality Assurance navigation group is mi
 qualityAssurance.items.unshift({ id: "quality-assurance.products", label: "Products", path: "/qa/products", permissions: ["CanViewPlannedProducts"] });
 qualityAssurance.items.push({ id: "quality-assurance.issued-bmr-records", label: "Issued BMR records", path: "/qa/issued-bmrs", permissions: ["CanViewIssuedBmrRecords"] });
 
+// Oryx Next names some keys the backend never defined, so no role could open those entries. Use the backend's names.
+const backendKeys: Readonly<Record<string, string>> = {
+  CanViewQcRoutineTests: "CanViewRoutineTests", CanViewQcRoutineSetup: "CanViewRoutineSetup", CanViewQcRoutineWaterQuality: "CanViewWaterQuality",
+};
+const renameKeys = (items: CatalogItem[]): void => {
+  for (const item of items) {
+    if (item.permissions) item.permissions = item.permissions.map((key) => backendKeys[key] ?? key);
+    if (item.children) renameKeys(item.children);
+  }
+};
+for (const group of catalog) renameKeys(group.items);
 // Warehouse entry of stock missed by the opening-balance migration (Settings → Upload Center has the sheet upload).
 const stockMovement = catalog.find((group) => group.id === "warehouse-management")?.items.find((item) => item.id === "warehouse-management.stock-movement");
 if (!stockMovement?.children || !stockMovement.permissions) throw new Error("Warehouse Stock Movement navigation entry is missing.");

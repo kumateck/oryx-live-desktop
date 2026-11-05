@@ -1203,9 +1203,9 @@ export const navigationCatalog = [
         "id": "quality-control.routine-quality-control",
         "label": "Routine Quality Control",
         "permissions": [
-          "CanViewQcRoutineTests",
-          "CanViewQcRoutineSetup",
-          "CanViewQcRoutineWaterQuality"
+          "CanViewRoutineTests",
+          "CanViewRoutineSetup",
+          "CanViewWaterQuality"
         ],
         "children": [
           {
@@ -1213,7 +1213,7 @@ export const navigationCatalog = [
             "label": "Routine Tests",
             "path": "/qc/routines",
             "permissions": [
-              "CanViewQcRoutineTests"
+              "CanViewRoutineTests"
             ]
           },
           {
@@ -1221,7 +1221,7 @@ export const navigationCatalog = [
             "label": "Routine Setup",
             "path": "/qc/routines/setup",
             "permissions": [
-              "CanViewQcRoutineSetup"
+              "CanViewRoutineSetup"
             ]
           },
           {
@@ -1229,7 +1229,7 @@ export const navigationCatalog = [
             "label": "Water Quality",
             "path": "/qc/routines/water-quality",
             "permissions": [
-              "CanViewQcRoutineWaterQuality"
+              "CanViewWaterQuality"
             ]
           }
         ]
