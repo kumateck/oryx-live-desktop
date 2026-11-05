@@ -95,7 +95,7 @@ and footer stayed visible while the body scrolled. Native Windows scaling and
 installed-client end-to-end acceptance were not run.
 
 The PR contract review proves that removing only the new repair path and its
-seven owned DTO schemas restores predecessor digest
+six owned DTO schemas restores predecessor digest
 `d31b1bc59265cc6a98c995e9c3b3249dc8f73d948701228e1573cf31d01e888f`.
 The legacy source-release manifest retains all older reviewed digests and adds
 only the new typed digest
