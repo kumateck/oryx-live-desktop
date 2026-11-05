@@ -1981,6 +1981,23 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getProductionMaterialForecast: build.query<
+      GetProductionMaterialForecastApiResponse,
+      GetProductionMaterialForecastApiArg
+    >({
+      providesTags: [{ type: "report/production-material-forecast", id: "LIST" }, { type: "report", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/report/production-material-forecast`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          year: queryArg.year,
+          month: queryArg.month,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -3230,6 +3247,16 @@ export type GetIssuedBmrReportApiArg = {
   startDate: string;
   endDate: string;
   departmentId?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetProductionMaterialForecastApiResponse =
+  /** status 200 OK */ DomainEntitiesReportsProductionMaterialForecastDto;
+export type GetProductionMaterialForecastApiArg = {
+  year?: number;
+  month?: number;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -5710,6 +5737,88 @@ export type DomainEntitiesReportsIssuedBmrReportDto = {
   totalIssued?: number;
   rows?: DomainEntitiesReportsIssuedBmrReportRowDto[] | null;
 };
+export type DomainEntitiesBaseProductionStatus = 0 | 1 | 2 | 3 | 4;
+export type DomainEntitiesProductionSchedulesBatchSize = 0 | 1;
+export type DomainEntitiesReportsProductionMaterialForecastBatchDto = {
+  id?: string;
+  scheduleId?: string;
+  productKey?: string | null;
+  productId?: string;
+  productCode?: string | null;
+  productName?: string | null;
+  batchNumber?: string | null;
+  batchSize?: DomainEntitiesProductionSchedulesBatchSize;
+  quantity?: number;
+  packingStyleId?: string | null;
+  packingStyle?: string | null;
+  started?: boolean;
+  rawReserved?: boolean;
+  packagingReserved?: boolean;
+  rawReady?: boolean;
+  packagingReady?: boolean;
+  warnings?: string[] | null;
+};
+export type DomainEntitiesReportsProductionMaterialForecastScheduleDto = {
+  id?: string;
+  code?: string | null;
+  scheduledStartTime?: string;
+  scheduledEndTime?: string;
+  status?: DomainEntitiesBaseProductionStatus;
+  batches?: DomainEntitiesReportsProductionMaterialForecastBatchDto[] | null;
+};
+export type DomainEntitiesReportsProductionMaterialForecastMaterialDto = {
+  materialId?: string;
+  materialCode?: string | null;
+  materialName?: string | null;
+  kind?: DomainEntitiesMaterialsMaterialKind;
+  unitId?: string;
+  unit?: string | null;
+  perBatchQuantity?: number;
+  perBatchQuantityVaries?: boolean;
+  batchCount?: number;
+  totalQuantity?: number;
+  reservedQuantity?: number;
+  canSatisfyQuantity?: number;
+  shortfallQuantity?: number;
+  batchesSatisfiable?: number;
+  freeInWarehouse?: number;
+  sharedWithProducts?: number;
+};
+export type DomainEntitiesReportsProductionMaterialForecastProductDto = {
+  key?: string | null;
+  productId?: string;
+  productCode?: string | null;
+  productName?: string | null;
+  batchSize?: DomainEntitiesProductionSchedulesBatchSize;
+  packingStyleId?: string | null;
+  packingStyle?: string | null;
+  batchCount?: number;
+  batchIds?: string[] | null;
+  rawBatchesSatisfiable?: number;
+  packagingBatchesSatisfiable?: number;
+  batchesSatisfiable?: number;
+  rawMaterials?:
+    DomainEntitiesReportsProductionMaterialForecastMaterialDto[] | null;
+  packagingMaterials?:
+    DomainEntitiesReportsProductionMaterialForecastMaterialDto[] | null;
+  warnings?: string[] | null;
+};
+export type DomainEntitiesReportsProductionMaterialForecastDto = {
+  year?: number;
+  month?: number;
+  periodStart?: string;
+  periodEnd?: string;
+  departmentId?: string;
+  departmentName?: string | null;
+  generatedAt?: string;
+  totalBatches?: number;
+  rawReadyBatches?: number;
+  packagingReadyBatches?: number;
+  schedules?:
+    DomainEntitiesReportsProductionMaterialForecastScheduleDto[] | null;
+  products?: DomainEntitiesReportsProductionMaterialForecastProductDto[] | null;
+  warnings?: string[] | null;
+};
 export const {
   useGetProductionReadinessReportQuery,
   useLazyGetProductionReadinessReportQuery,
@@ -5927,4 +6036,6 @@ export const {
   useLazyGetApiV1ReportHistoryVendorsQuery,
   useGetIssuedBmrReportQuery,
   useLazyGetIssuedBmrReportQuery,
+  useGetProductionMaterialForecastQuery,
+  useLazyGetProductionMaterialForecastQuery,
 } = injectedRtkApi;
