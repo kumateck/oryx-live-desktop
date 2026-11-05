@@ -48,7 +48,7 @@ function open(path: string, permissions: string[], state: { assigned: boolean; r
 }
 
 it("asks for an assignment before results, and offers it only to those who may create routines", async () => {
-  open("/qc/routines/tracks/t1", ["CanViewQcRoutineTests", "CanPerformQcRoutineTest"], { assigned: false, responseId: null });
+  open("/qc/routines/tracks/t1", ["CanViewRoutineTests", "CanPerformRoutineTest"], { assigned: false, responseId: null });
   expect(await screen.findByText("Assign the worksheet")).toBeTruthy();
   expect(screen.getByText(/A supervisor assigns this worksheet/)).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Submit for approval" })).toBeNull();
@@ -56,7 +56,7 @@ it("asks for an assignment before results, and offers it only to those who may c
 
 it("submits a started worksheet for approval only after confirming", async () => {
   const user = userEvent.setup();
-  const { calls } = open("/qc/routines/tracks/t1", ["CanViewQcRoutineTests", "CanPerformQcRoutineTest"], { assigned: true, responseId: "resp1" });
+  const { calls } = open("/qc/routines/tracks/t1", ["CanViewRoutineTests", "CanPerformRoutineTest"], { assigned: true, responseId: "resp1" });
   await user.click(await screen.findByRole("button", { name: "Submit for approval" }));
   expect(calls).toEqual([]);
   await user.click(await screen.findByRole("button", { name: "Submit for approval", hidden: false }));
@@ -65,7 +65,7 @@ it("submits a started worksheet for approval only after confirming", async () =>
 
 it("generates a water sample's combined certificate once confirmed, then opens it", async () => {
   const user = userEvent.setup();
-  const { calls, router } = open("/qc/routines/r1", ["CanViewQcRoutineTests", "CanPerformQcRoutineTest"], { assigned: true, responseId: null });
+  const { calls, router } = open("/qc/routines/r1", ["CanViewRoutineTests", "CanPerformRoutineTest"], { assigned: true, responseId: null });
   await user.click(await screen.findByRole("button", { name: /Generate combined certificate/ }));
   await user.click(await screen.findByRole("button", { name: "Generate certificate" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/qc/routines/certificates/c9"));
