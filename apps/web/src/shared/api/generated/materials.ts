@@ -3070,6 +3070,8 @@ export type DomainEntitiesMaterialsStockMigrationsStockMigrationLineDto = {
   quantityInSheet?: number | null;
   manufacturingDate?: string | null;
   expiryDate?: string | null;
+  retestDate?: string | null;
+  exactDates?: boolean;
   excluded?: boolean;
   resolvedMaterialId?: string | null;
   resolvedMaterialCode?: string | null;
@@ -3118,6 +3120,10 @@ export type DomainEntitiesMaterialsStockMigrationsUpdateStockMigrationLineReques
     quantityInSheet?: number | null;
     manufacturingDate?: string | null;
     expiryDate?: string | null;
+    /** The lot's retest date. On a correction, empty keeps the saved date; see DOMAIN.Entities.Materials.StockMigrations.UpdateStockMigrationLineRequest.ClearRetestDate. */
+    retestDate?: string | null;
+    /** On a correction, removes the saved retest date. */
+    clearRetestDate?: boolean;
     excluded?: boolean;
   };
 export type DomainEntitiesMaterialsStockMigrationsUpdateStockMigrationUnitsRequest =
@@ -3144,6 +3150,8 @@ export type DomainEntitiesMaterialsBatchUpdateMigrationRetestDate = {
   expectedExpiryDate?: string | null;
   arNumber?: string | null;
   expectedArNumber?: string | null;
+  batchNumber?: string | null;
+  expectedBatchNumber?: string | null;
   reason: string;
 };
 export type DomainEntitiesMaterialsStockMigrationsCreateStockTopUpRequest = {
@@ -3151,6 +3159,8 @@ export type DomainEntitiesMaterialsStockMigrationsCreateStockTopUpRequest = {
   reason: string;
   massUnit: string;
   volumeUnit: string;
+  /** The rows carry full manufacturing, expiry and retest dates rather than months. */
+  exactDates?: boolean;
   lines: DomainEntitiesMaterialsStockMigrationsUpdateStockMigrationLineRequest[];
 };
 export type DomainEntitiesMaterialsBatchMaterialStockReportRow = {

@@ -67,6 +67,17 @@ it("offers every action to a full administrator and blocks a user after confirma
   await waitFor(() => expect(calls.filter((call) => call.path === "/api/v1/user").length).toBeGreaterThan(1));
 });
 
+it("offers Change role only with its own permission, not with user editing", async () => {
+  openUsers(["CanViewActiveUser", "CanEditUser"]);
+  await openMenu();
+  expect(await screen.findByRole("menuitem", { name: "User details" })).toBeTruthy();
+  expect(screen.queryByRole("menuitem", { name: "Change role" })).toBeNull();
+  cleanup();
+  openUsers(["CanViewActiveUser", "CanAssignUserRole"]);
+  await openMenu();
+  expect(await screen.findByRole("menuitem", { name: "Change role" })).toBeTruthy();
+});
+
 it("filters the directory by role and department on the server", async () => {
   const calls = openUsers(["CanViewActiveUser"]);
   const lastList = () => calls.filter((call) => call.path === "/api/v1/user").at(-1)?.search ?? "";
