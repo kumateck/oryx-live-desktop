@@ -39,8 +39,12 @@ export function StockMigrationLineDialog({ migrationId, line, quantityUnit, shel
     { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number (optional)", description: "A blank batch number keeps this row as a separate lot." },
     { type: InputTypes.TEXT, name: "unitSymbol", label: "Base UOM in the sheet", description: "Quantity conversion follows the file's weight and liquid settings." },
     { type: InputTypes.NUMBER, name: "quantityInSheet", label: `Quantity (${quantityUnit})`, min: 0, description: `Enter the amount in ${quantityUnit}; leave empty for no stock.` },
-    { type: InputTypes.MONTH, name: "manufactured", label: "Manufactured" },
-    { type: InputTypes.MONTH, name: "expiry", label: "Expiry" },
+    ...(line.exactDates
+      ? [{ type: InputTypes.DATE, name: "manufacturedDay", label: "Manufacturing date", maxDate: new Date() },
+        { type: InputTypes.DATE, name: "expiryDay", label: "Expiry date" }] satisfies WizardField<LineFormValues>[]
+      : [{ type: InputTypes.MONTH, name: "manufactured", label: "Manufactured" },
+        { type: InputTypes.MONTH, name: "expiry", label: "Expiry" }] satisfies WizardField<LineFormValues>[]),
+    { type: InputTypes.DATE, name: "retest", label: "Retest date", description: "Leave empty when the lot has none." },
     { type: InputTypes.TEXT, name: "grn", label: "GRN reference" },
     { type: InputTypes.TEXT, name: "arNumber", label: "AR number" },
     { type: InputTypes.CHECKBOX, name: "excluded", label: "Leave this row out", className: "md:col-span-3" },

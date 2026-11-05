@@ -126,6 +126,11 @@ if (!qualityAssurance) throw new Error("Quality Assurance navigation group is mi
 qualityAssurance.items.unshift({ id: "quality-assurance.products", label: "Products", path: "/qa/products", permissions: ["CanViewPlannedProducts"] });
 qualityAssurance.items.push({ id: "quality-assurance.issued-bmr-records", label: "Issued BMR records", path: "/qa/issued-bmrs", permissions: ["CanViewIssuedBmrRecords"] });
 
+// Warehouse entry of stock missed by the opening-balance migration (Settings → Upload Center has the sheet upload).
+const stockMovement = catalog.find((group) => group.id === "warehouse-management")?.items.find((item) => item.id === "warehouse-management.stock-movement");
+if (!stockMovement?.children || !stockMovement.permissions) throw new Error("Warehouse Stock Movement navigation entry is missing.");
+stockMovement.permissions.push("CanViewOpeningBalances");
+stockMovement.children.push({ id: "warehouse-management.stock-movement.migration-top-ups", label: "Migration Stock Top-ups", path: "/warehouse/migration-top-ups", permissions: ["CanViewOpeningBalances"] });
 // The warehouse plans stock against the month's production schedules with a material forecast per product.
 const warehouse = catalog.find(group => group.id === "warehouse-management");
 const requestsIndex = warehouse?.items.findIndex((item) => item.id === "warehouse-management.material-requests") ?? -1;

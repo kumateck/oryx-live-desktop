@@ -726,7 +726,8 @@ export const navigationCatalog = [
           "CanViewRawMaterialLocationChartList",
           "CanViewPackagingMaterialLocationChartList",
           "CanAssignRawMaterialsStockToShelves",
-          "CanAssignPackagingMaterialsStockToShelves"
+          "CanAssignPackagingMaterialsStockToShelves",
+          "CanViewOpeningBalances"
         ],
         "children": [
           {
@@ -792,6 +793,14 @@ export const navigationCatalog = [
             "permissions": [
               "CanAssignRawMaterialsStockToShelves",
               "CanAssignPackagingMaterialsStockToShelves"
+            ]
+          },
+          {
+            "id": "warehouse-management.stock-movement.migration-top-ups",
+            "label": "Migration Stock Top-ups",
+            "path": "/warehouse/migration-top-ups",
+            "permissions": [
+              "CanViewOpeningBalances"
             ]
           }
         ]

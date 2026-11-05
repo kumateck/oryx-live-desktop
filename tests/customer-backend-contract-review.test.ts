@@ -251,6 +251,16 @@ test("the reviewed bulk repair contract preserves the approved predecessor and p
   assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
   assert.ok(policy.backendContracts.includes("d26ad659839ddc4ec2e1fb26aadeaac692c19e27c7e075a7cc2fe56b8d4ff4ed"));
   assert.ok(policy.backendContracts.includes("35c00c063402f8cf1248db7ca3a9093ce997e66858311b4864de7890a50d3dad"));
+  assert.equal(digest, "634929a7cfb2eb8ccdcca0bd24fc2c02b7b1ce63d502efdabfe82474469bcf99");
+  // Manual migration top-ups (2026-11-05) add optional retest and full-date fields to stock migration rows.
+  const topUpPredecessor = structuredClone(current);
+  const topUpSchemas = object(object(topUpPredecessor.components ?? null).schemas ?? null);
+  for (const [name, properties] of Object.entries({ StockMigrationLineDto: ["retestDate", "exactDates"],
+    UpdateStockMigrationLineRequest: ["retestDate", "clearRetestDate"], CreateStockTopUpRequest: ["exactDates"] }))
+    for (const property of properties) delete object(object(topUpSchemas[`DOMAIN.Entities.Materials.StockMigrations.${name}`] ?? null).properties ?? null)[property];
+  assert.equal(contractDigest(topUpPredecessor), "fa46de385e587bca0821ff164522fedda3dca60d5e0b044336bd7093fe87d238");
+  checkCompatibility(hostConfig, policy, contractDigest(topUpPredecessor));
+  const reservationPredecessor = structuredClone(topUpPredecessor);
   assert.equal(digest, "f36fcd3ae72f006f627a654bdb9020a697fbc5977577308ad5cef9570daf810f");
   // The production material forecast (2026-11-05) is one additive read path and its owned schemas.
   const forecastPredecessor = structuredClone(current);
