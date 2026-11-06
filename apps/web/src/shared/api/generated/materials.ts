@@ -3099,6 +3099,8 @@ export type DomainEntitiesReportsWarehouseReservedMaterialReportDto = {
   balanceQuantity?: number;
   materialBatchNumber?: string | null;
   effectiveExpiryDate?: string | null;
+  rackName?: string | null;
+  shelfName?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchCountDto = {
   warehouseId?: string;
@@ -3405,6 +3407,7 @@ export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboStockDto = {
   unitSymbol?: string | null;
   quantity?: number;
   expiryDate?: string | null;
+  rack?: string | null;
 };
 export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboWorkspaceDto = {
   recipe?: DomainEntitiesMaterialsWhitePlaceboWhitePlaceboRecipeDto;
@@ -3437,6 +3440,7 @@ export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboInputDto = {
   unitSymbol?: string | null;
   recipeQuantity?: number;
   quantity?: number;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
 };
 export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboPreparationDto = {
   id?: string;

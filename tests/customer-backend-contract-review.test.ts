@@ -49,6 +49,43 @@ function stripWhitePlacebo(schemas: ObjectValue) {
   delete object(object(schemas["DOMAIN.Entities.Requisitions.RequisitionDto"] ?? null).properties ?? null).whitePlaceboPreparationId;
 }
 
+const stockLocationFields: Record<string, readonly string[]> = {
+  "DOMAIN.Entities.Materials.Batch.BatchToSupply": ["warehouseLocationShelf"],
+  "DOMAIN.Entities.Warehouses.SwapShelfMaterialBatchDto": ["warehouseLocationShelf"],
+  "DOMAIN.Entities.Requisitions.AlternativeBatchDto": ["warehouseLocationShelf"],
+  "DOMAIN.Entities.Reports.Warehouse.ReservedMaterialReportDto": ["rackName", "shelfName"],
+  "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboStockDto": ["rack"],
+  "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboInputDto": ["warehouseLocationShelf"],
+};
+function stripStockLocations(schemas: ObjectValue) {
+  for (const [name, fields] of Object.entries(stockLocationFields)) {
+    if (schemas[name] === undefined) continue;
+    const properties = object(object(schemas[name] ?? null).properties ?? null);
+    for (const field of fields) delete properties[field];
+  }
+}
+
+test("stock picking adds only seven optional read fields and preserves the approved contract", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  const digest = contractDigest(current);
+  assert.equal(digest, "4cd376b6624dfe633457cb79f7bf8592cd283590d7a6bc855ccb7afa196bd64c");
+  for (const [name, fields] of Object.entries(stockLocationFields)) {
+    const schema = object(schemas[name] ?? null);
+    const properties = object(schema.properties ?? null);
+    for (const field of fields) {
+      assert.ok(!Array.isArray(schema.required) || !schema.required.includes(field));
+      assert.deepEqual(properties[field], field === "warehouseLocationShelf"
+        ? { $ref: "#/components/schemas/DOMAIN.Entities.Warehouses.MaterialWarehouseLocationShelfDto" }
+        : { type: "string", nullable: true });
+    }
+  }
+  stripStockLocations(schemas);
+  assert.equal(contractDigest(current), "5211b900a46aff5d1ece7c3e4f73c8ef9ae3127969ffb0945bfca034d3aefe35");
+  checkCompatibility(hostConfig, policy, digest);
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+});
+
 test("the preserved customer export matches the reported digest and retains both exact approved contracts", () => {
   assert.equal(contractDigest(customer), customerFingerprint);
   assert.equal(contractDigest(reviewedImport()), approvedFingerprint);
@@ -141,6 +178,7 @@ test("historical reporting adds optional read parameters without changing existi
   const schemas = object(object(current.components ?? null).schemas ?? null);
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Reports.ProductionMaterialForecast")) delete schemas[name];
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ReservationRepair")) delete schemas[name];
+  stripStockLocations(schemas);
   stripWhitePlacebo(schemas);
   for (const name of ["ScheduleRepairKind", "ScheduleRepairPreview", "ScheduleRepairBatchPreview", "ApplyScheduleRepair", "ScheduleRepairResult"])
     delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
@@ -260,6 +298,9 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
 
 test("the merged forecast and migration contracts preserve the approved predecessor and pass release validation", () => {
   const head = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const publishedDigest = contractDigest(head);
+  // Keep this historical predecessor review independent of the later stock-location fields.
+  stripStockLocations(object(object(head.components ?? null).schemas ?? null));
   assert.equal(contractDigest(head), "5211b900a46aff5d1ece7c3e4f73c8ef9ae3127969ffb0945bfca034d3aefe35");
   // White Placebo preparation (2026-11-06) adds six paths, their owned schemas and three optional markers.
   const placeboPredecessor = structuredClone(head);
@@ -336,7 +377,7 @@ test("the merged forecast and migration contracts preserve the approved predeces
   checkCompatibility(hostConfig, policy, digest);
   const check = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
   assert.equal(check.status, 0, check.stderr);
-  assert.match(check.stdout, new RegExp(`Approved backend contract: ${contractDigest(head)}`));
+  assert.match(check.stdout, new RegExp(`Approved backend contract: ${publishedDigest}`));
 });
 
 test("expiry department metadata is an optional read addition, with no client-controlled department parameter", () => {

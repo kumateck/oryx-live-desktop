@@ -1,3 +1,4 @@
+import { stockShelfSchema, stockShelfLocation } from "@/shared/warehouse/stock-location";
 import { z } from "zod";
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 
@@ -13,7 +14,7 @@ const signatories = z.object({ issuedBy: signatory, checkedBy: signatory, receiv
     checkStatus: (checkStatuses as readonly string[]).includes(value?.checkStatus ?? "") ? value?.checkStatus as (typeof checkStatuses)[number] : null }));
 
 const line = z.object({ id: z.string().nullish(), quantity: amount, approvedQuantity: z.number().finite().nullish(), status: z.number().nullish(), material: z.object({ id: z.string().nullish(), code: text, name: text, kind: z.number().nullish() }).nullish(), uoM: z.object({ symbol: text }).nullish(),
-  batches: z.array(z.object({ quantityToTake: amount, batch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, isReturn: z.boolean().nullish() }).nullish() })).nullish() });
+  batches: z.array(z.object({ warehouseLocationShelf: stockShelfSchema, quantityToTake: amount, batch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, isReturn: z.boolean().nullish() }).nullish() })).nullish() });
 const requisition = z.object({ id: z.string().nullish(), contentRevision: z.number().int().nonnegative().nullish(), code: text, status: z.number().nullish(), approved: z.boolean().nullish(), comments: text, createdAt: z.string().nullish(), requestedBy: person, department: z.object({ name: text }).nullish(),
   productionScheduleProduct: z.object({ batchNumber: text, product: z.object({ name: text, code: text }).nullish(), productionSchedule: z.object({ code: text }).nullish() }).nullish(), items: z.array(line).nullish(),
   signatories, whitePlaceboPreparationId: z.string().uuid().nullish() });
@@ -22,7 +23,7 @@ function read(entry: z.infer<typeof requisition>) {
   if (!entry.id) return null;
   const items = (entry.items ?? []).map((item, index) => ({ id: item.id ?? `line-${index}`, materialName: item.material?.name ?? "Unnamed material", materialCode: item.material?.code ?? null, kind: (item.material?.kind === 1 ? 1 : 0) as MaterialKind,
     quantity: item.quantity, approvedQuantity: item.approvedQuantity ?? null, unit: item.uoM?.symbol ?? null, issued: item.status === 3,
-    batches: (item.batches ?? []).map((batch, position) => ({ key: `${batch.batch?.id ?? "batch"}-${position}`, number: batch.batch?.batchNumber ?? null, quantity: batch.quantityToTake, expires: batch.batch?.effectiveExpiryDate ?? batch.batch?.expiryDate ?? null, returned: batch.batch?.isReturn === true })) }));
+    batches: (item.batches ?? []).map((batch, position) => ({ key: `${batch.batch?.id ?? "batch"}-${position}`, number: batch.batch?.batchNumber ?? null, quantity: batch.quantityToTake, expires: batch.batch?.effectiveExpiryDate ?? batch.batch?.expiryDate ?? null, returned: batch.batch?.isReturn === true, location: stockShelfLocation(batch.warehouseLocationShelf) })) }));
   const schedule = entry.productionScheduleProduct;
   return { id: entry.id, code: entry.code ?? "No number", status: entry.status ?? 0, approved: entry.approved === true, comments: entry.comments, createdAt: entry.createdAt ?? null, requestedBy: entry.requestedBy, department: entry.department?.name ?? null,
     signatories: entry.signatories, contentRevision: entry.contentRevision ?? 0, whitePlaceboPreparationId: entry.whitePlaceboPreparationId ?? null,

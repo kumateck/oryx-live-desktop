@@ -4781,6 +4781,8 @@ export type DomainEntitiesReportsWarehouseReservedMaterialReportDto = {
   balanceQuantity?: number;
   materialBatchNumber?: string | null;
   effectiveExpiryDate?: string | null;
+  rackName?: string | null;
+  shelfName?: string | null;
 };
 export type DomainEntitiesReportsWarehouseMaterialChecklistItemDto = {
   materialName?: string | null;
