@@ -1,6 +1,6 @@
 import { FormulaRevisionStatus, type FormulaRevision } from "../governance-api";
 
-/** The two independent decisions a submitted formula revision needs before it can be used. */
+/** The two decisions a submitted formula revision needs before it can be used. */
 export type RevisionStage = "review" | "approval";
 
 export const formulaRevisionPermissions = {
@@ -23,7 +23,7 @@ export function awaitingStage(revision: Pick<FormulaRevision, "status" | "review
 export function revisionStandingText(revision: Pick<FormulaRevision, "status" | "reviewedById">): string {
   switch (revision.status) {
     case FormulaRevisionStatus.Draft: return "Draft. The author has not submitted it for review.";
-    case FormulaRevisionStatus.InReview: return revision.reviewedById ? "Reviewed. Waiting for approval." : "Submitted. Waiting for an independent review.";
+    case FormulaRevisionStatus.InReview: return revision.reviewedById ? "Reviewed. Waiting for approval." : "Submitted. Waiting for review.";
     case FormulaRevisionStatus.Approved: return "Approved. This is the formula in use.";
     default: return "Retired. A later approved revision replaced it.";
   }
@@ -31,7 +31,7 @@ export function revisionStandingText(revision: Pick<FormulaRevision, "status" | 
 
 /**
  * Why the user cannot record this stage's decision on the revision, or null when they can.
- * Mirrors the server's rules: the author never reviews, and neither the author nor the reviewer approves.
+ * Mirrors the server's rule: any two roles may overlap, but at least two users must participate.
  */
 export function decisionProblem(revision: Pick<FormulaRevision, "status" | "reviewedById" | "createdById">, stage: RevisionStage, userId: string | null | undefined): string | null {
   const awaiting = awaitingStage(revision);
@@ -40,14 +40,17 @@ export function decisionProblem(revision: Pick<FormulaRevision, "status" | "revi
     if (stage === "approval" && awaiting === "review") return "This revision has not been reviewed yet. It must be reviewed before it can be approved.";
     return `This revision is not waiting for ${stage === "review" ? "a review" : "approval"}. ${revisionStandingText(revision)}`;
   }
-  if (same(revision.createdById, userId)) return `You wrote this revision. Someone else must ${stage === "review" ? "review" : "approve"} it.`;
-  if (stage === "approval" && same(revision.reviewedById, userId)) return "You reviewed this revision. Someone else must approve it.";
+  if (!userId) return "Your user identity is unavailable. Sign in again before deciding.";
+  if (stage === "approval" && !revision.createdById) return "The author is not recorded. Approval requires a recorded author and reviewer.";
+  if (stage === "approval" && same(revision.createdById, userId) && same(revision.reviewedById, userId))
+    return "You wrote and reviewed this revision. Someone else must approve it. At least two users must participate.";
   return null;
 }
 
 /** True when nothing a decision depends on changed between reading the revision and deciding. */
 export function sameDecisionEvidence(read: FormulaRevision, fresh: FormulaRevision): boolean {
   return read.id === fresh.id && read.definitionHash === fresh.definitionHash && read.status === fresh.status
+    && (read.createdById ?? null) === (fresh.createdById ?? null)
     && (read.reviewedById ?? null) === (fresh.reviewedById ?? null) && (read.approvedById ?? null) === (fresh.approvedById ?? null);
 }
 

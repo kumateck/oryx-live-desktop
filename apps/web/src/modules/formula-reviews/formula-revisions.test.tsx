@@ -84,15 +84,20 @@ describe("formula reviewer access", () => {
 
   it("applies the server's separation of duties and stage rules", () => {
     const record = formulaRevisionSchema.parse(revision());
-    expect(decisionProblem(record, "review", author)).toContain("You wrote");
+    expect(decisionProblem(record, "review", author)).toBeNull();
     expect(decisionProblem(record, "review", testUserId)).toBeNull();
     expect(decisionProblem(record, "approval", testUserId)).toContain("not been reviewed");
     const reviewed = formulaRevisionSchema.parse(revision({ reviewedById: testUserId }));
-    expect(decisionProblem(reviewed, "approval", testUserId)).toContain("You reviewed");
-    expect(decisionProblem(reviewed, "approval", author.toUpperCase())).toContain("You wrote");
+    expect(decisionProblem(reviewed, "approval", testUserId)).toBeNull();
+    expect(decisionProblem(reviewed, "approval", author.toUpperCase())).toBeNull();
+    const selfReviewed = formulaRevisionSchema.parse(revision({ reviewedById: author }));
+    expect(decisionProblem(selfReviewed, "approval", author.toUpperCase())).toContain("You wrote and reviewed");
+    expect(decisionProblem(selfReviewed, "approval", testUserId)).toBeNull();
+    expect(decisionProblem({ ...selfReviewed, createdById: null }, "approval", testUserId)).toContain("author is not recorded");
     expect(decisionProblem(reviewed, "review", otherReviewer)).toContain("already been reviewed");
     expect(decisionProblem(formulaRevisionSchema.parse(revision({ status: 2 })), "approval", testUserId)).toContain("not waiting");
     expect(sameDecisionEvidence(record, { ...record, definitionHash: "f".repeat(64) })).toBe(false);
+    expect(sameDecisionEvidence(record, { ...record, createdById: testUserId })).toBe(false);
     expect(selectRevision([record], "gone", "review")).toEqual({ revision: null, missing: true });
   });
 
@@ -149,10 +154,34 @@ describe("formula review pages", () => {
     expect(page.writes()).toHaveLength(0);
   });
 
-  it("tells the author they cannot review their own revision", async () => {
-    open("/qa/formula-reviews/q1", reviewer, revision({ createdById: testUserId }));
-    expect(await screen.findByText("You wrote this revision. Someone else must review it.")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Record review" })).toBeNull();
+  it("allows the author to record the review", async () => {
+    const user = userEvent.setup();
+    const page = open("/qa/formula-reviews/q1", reviewer, revision({ createdById: testUserId }));
+    await user.type(await screen.findByLabelText(/Review findings/), "Checked the formula against the controlled STP.");
+    await user.click(screen.getByRole("button", { name: "Record review" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Record review" }));
+    await waitFor(() => expect(page.writes()).toHaveLength(1));
+  });
+
+  it.each([
+    { createdById: testUserId, reviewedById: otherReviewer },
+    { createdById: author, reviewedById: testUserId },
+    { createdById: author, reviewedById: author },
+  ])("allows approval when two users participate: %j", async (actors) => {
+    const user = userEvent.setup();
+    const page = open("/qa/formula-approvals/q1", approver, revision(actors));
+    await user.type(await screen.findByLabelText(/Reason for approval/), "The checked formula is ready for release.");
+    await user.click(screen.getByRole("button", { name: "Approve revision" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Approve revision" }));
+    await waitFor(() => expect(page.writes()).toHaveLength(1));
+    expect(page.writes()[0]?.path).toContain("/approve");
+  });
+
+  it("blocks one user from completing all three roles", async () => {
+    const page = open("/qa/formula-approvals/q1", approver, revision({ createdById: testUserId, reviewedById: testUserId }));
+    expect(await screen.findByText(/You wrote and reviewed this revision/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Approve revision" })).toBeNull();
+    expect(page.writes()).toHaveLength(0);
   });
 
   it("shows the revision read-only to someone who may view but not decide", async () => {
