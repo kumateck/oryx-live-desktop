@@ -1,5 +1,23 @@
 # Oryx Live Desktop plan
 
+## Formula concentration names (2026-11-06)
+
+Universal formula questions offer `:standardConc` and `:sampleConc` as the two
+weight input aliases. Each pair uses one stored value; sample inputs remain per
+sample. Labels follow the names used by the main and named expressions, including
+Weight / Concentration when both names occur. The author chooses one concentration
+unit for the formula, mg/mL (default) or %. This is a label, with no conversion.
+Weight-only inputs retain their existing gram labels.
+
+Save `concentrationUnit` only when an alias occurs. It explicitly enables the two
+aliases for canonical variable keys. Old configurations without it retain their
+meaning, including any existing manual variable named standardConc or sampleConc.
+Compile aliases to weight keys before governed hashing and bindings; keep raw
+configuration hashes sensitive to expression/unit changes for stale-save checks.
+The bounded backend repair adapter follows the same normalization and still
+prohibits changing units through a repair. No migration or permission change.
+
+
 ## Warehouse batch picking locations (2026-11-06)
 
 The user requires warehouse batches to show their location directly below the

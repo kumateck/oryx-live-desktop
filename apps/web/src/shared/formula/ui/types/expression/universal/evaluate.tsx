@@ -29,6 +29,7 @@ import { countOccurrences, sanitizeForEval } from "../../utils";
 import { useTableData } from "./hooks";
 import { Button } from "@/components/ui/button";
 import { resolveToken, expandAutoSampleTemplates } from "./token";
+import { sampleExpansionInputKeys } from "@/shared/formula/builder/universal-variable-keys";
 import { normalizeExpressionPayload } from "./normalizer";
 import { evaluateDerivedColumns } from "./column-expression";
 import {
@@ -39,6 +40,7 @@ import {
   buildInputVariables,
   isManualVarKey,
 } from "@/shared/formula/compute/formula-compute-helpers";
+import { weightInputPresentation } from "@/shared/formula/builder/universal-variable-keys";
 
 interface Props extends TheAduseiFormulaProps {
   settings: string;
@@ -657,7 +659,10 @@ export const UniversalEvaluate: React.FC<Props> = ({
         expr = expandAutoSampleTemplates(
           expr,
           sampleNumber,
-          (parsed.sampleInputs?.[sampleNumber - 1] ?? []).map(({ key }) => key),
+          sampleExpansionInputKeys(
+            parsed,
+            sampleNumber,
+          ),
         );
 
         const displayExpr = expr.replace(
@@ -1097,7 +1102,14 @@ export const UniversalEvaluate: React.FC<Props> = ({
                     {standardInputs.map((input, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <label className="text-xs font-medium text-foreground min-w-[120px]">
-                          {input.label}:
+                          {
+                            weightInputPresentation(
+                              parsed,
+                              "standard",
+                              input,
+                            ).label
+                          }
+                          :
                         </label>
                         <div className="flex-1 flex items-center gap-2">
                           <input
@@ -1141,7 +1153,14 @@ export const UniversalEvaluate: React.FC<Props> = ({
                               className="flex items-center gap-2"
                             >
                               <label className="text-sm font-medium text-muted-foreground min-w-[80px]">
-                                {input.label}:
+                                {
+                                  weightInputPresentation(
+                                    parsed,
+                                    "sample",
+                                    input,
+                                  ).label
+                                }
+                                :
                               </label>
                               <div className="flex-1 flex items-center gap-2">
                                 <input

@@ -5,7 +5,10 @@ import {
   UniversalNamedExpressionScope,
   type UniversalNamedExpression,
 } from "@/shared/formula/builder/universal-named-expressions";
-import { UniversalVariableKeyFormat } from "@/shared/formula/builder/universal-variable-keys";
+import {
+  UniversalVariableKeyFormat,
+  type ConcentrationUnit,
+} from "@/shared/formula/builder/universal-variable-keys";
 
 export type FirstColumnPurpose = "standard" | "blank" | "titre" | "control";
 
@@ -99,6 +102,8 @@ export interface ExpressionExtract {
   namedExpressionsEnabled?: boolean | undefined;
   namedExpressions?: NamedExpressionDefinition[] | undefined;
   variableKeyFormat?: UniversalVariableKeyFormat | undefined;
+  /** Saved when the formula uses :standardConc or :sampleConc; switches those aliases on. */
+  concentrationUnit?: ConcentrationUnit | undefined;
 
   // Display and calculation settings
   average?: boolean | undefined; // legacy alias for averageAllResults
@@ -211,6 +216,8 @@ export interface ConfigSettings {
   namedExpressionsEnabled: boolean;
   namedExpressions: NamedExpressionDefinition[];
   variableKeyFormat: UniversalVariableKeyFormat;
+  /** Unit for :standardConc and :sampleConc; absent when this formula cannot use those aliases. */
+  concentrationUnit?: ConcentrationUnit | undefined;
   columnExpressions: ColumnExpressionMap;
   rowHeaders: { id: string; label: string }[];
   type: FormulaTypes; // added to live settings for easier access during freeze and Evaluate

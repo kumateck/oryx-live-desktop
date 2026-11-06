@@ -22,6 +22,7 @@ import {
   parseFormulaResponse,
   parseJson,
 } from "@/shared/formula/compute/formula-compute";
+import { weightInputPresentation } from "@/shared/formula/builder/universal-variable-keys";
 
 interface Props {
   settings: string;
@@ -348,7 +349,14 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
               {standardInputs.map((input) => (
                 <div key={input.key} className="flex items-center gap-2">
                   <label className="text-document-11 font-medium text-foreground min-w-[120px]">
-                    {input.label}:
+                    {
+                      weightInputPresentation(
+                        parsed,
+                        "standard",
+                        input,
+                      ).label
+                    }
+                    :
                   </label>
                   <span className="flex-1 bg-muted border border-border rounded px-2 py-1 text-document-11 text-foreground tabular-nums">
                     {input.value || (
@@ -385,7 +393,14 @@ export const UniversalPreview: React.FC<Props> = ({ settings, response }) => {
                     {sample.map((input, inputIndex) => (
                       <div key={inputIndex} className="flex items-center gap-2">
                         <label className="text-document-10 font-medium text-muted-foreground min-w-[80px]">
-                          {input.label}:
+                          {
+                            weightInputPresentation(
+                              parsed,
+                              "sample",
+                              input,
+                            ).label
+                          }
+                          :
                         </label>
                         <span className="flex-1 bg-muted border border-border rounded px-2 py-1 text-document-11 text-foreground tabular-nums">
                           {input.value || (
