@@ -16,7 +16,9 @@ import { addTags } from "@/shared/api/add-tags";
 
 const { useGetApiV1ApprovalUsersWithPendingQuery, usePostApiV1ApprovalTransferRightsMutation } = approvalsApi.enhanceEndpoints({
   endpoints: { getApiV1ApprovalUsersWithPending: (definition) => { definition.providesTags = addTags(definition.providesTags, [{ type: "PendingApprovals", id: "all" }]); }, postApiV1ApprovalTransferRights: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["PendingApprovals"]); } } });
-const { useLazyGetApiV1UserQuery } = identityApi;
+const { useLazyGetApiV1UserByPermissionQuery } = identityApi;
+/** The receiver decides from the pending approvals page; the server refuses anyone else. */
+const approverKey = "CanViewPendingApprovals";
 const audit = { module: "Quality Assurance", subModule: "Approval Rights Transfer" } as const;
 
 interface Person { id?: string | null | undefined; firstName?: string | null | undefined; lastName?: string | null | undefined; email?: string | null | undefined }
@@ -38,7 +40,7 @@ type TransferValues = z.infer<typeof transferSchema>;
  */
 export function TransferRightsPage() {
   const pending = useGetApiV1ApprovalUsersWithPendingQuery({ ...audit });
-  const [loadUsers] = useLazyGetApiV1UserQuery();
+  const [loadUsers] = useLazyGetApiV1UserByPermissionQuery();
   const [transfer] = usePostApiV1ApprovalTransferRightsMutation();
   const [confirming, setConfirming] = useState<{ from: SelectOption; to: SelectOption } | null>(null);
   const form = useForm<TransferValues>({ resolver: zodResolver(transferSchema), defaultValues: { from: null, to: null } });
@@ -46,15 +48,15 @@ export function TransferRightsPage() {
   void form.formState.errors;
   const from = useWatch({ control: form.control, name: "from" });
   const fromOptions = useMemo(() => userOptions(pending.data), [pending.data]);
-  // The server's filter is named "isActive" but means "is disabled"; false asks for accounts that can sign in.
+  // Only active people who can open pending approvals, by the server's own rule; search narrows that list.
   const loadActive = useCallback<SelectLoader>(async (search, page) => {
-    const result = await loadUsers({ ...audit, isActive: false, page, pageSize: 20, searchQuery: search.trim() }).unwrap();
+    const result = await loadUsers({ ...audit, permissionKey: [approverKey], page, pageSize: 20, searchQuery: search.trim() }).unwrap();
     return { options: userOptions(result.data).filter((user) => user.value !== from?.value), hasNext: Number(result.pageIndex) < Number(result.pageCount), hasPrevious: Number(result.pageIndex) > 1 };
   }, [loadUsers, from?.value]);
   const fields = useMemo((): WizardField<TransferValues>[] => [
     { type: InputTypes.SELECT, name: "from", label: "Take approvals from", mode: "single", source: "sync", options: fromOptions, required: true,
       placeholder: pending.isLoading ? "Loading…" : fromOptions.length ? "Select a person" : "Nobody has approvals waiting", description: "People with at least one request waiting for them." },
-    { type: InputTypes.SELECT, name: "to", label: "Give them to", mode: "single", source: "async", loadOptions: loadActive, required: true, placeholder: "Search for a person", description: "Any active user." },
+    { type: InputTypes.SELECT, name: "to", label: "Give them to", mode: "single", source: "async", loadOptions: loadActive, required: true, placeholder: "Search for a person", description: "Active people who can see pending approvals." },
   ], [fromOptions, pending.isLoading, loadActive]);
 
   const submit = form.handleSubmit((values) => { if (values.from && values.to) setConfirming({ from: values.from, to: values.to }); });
