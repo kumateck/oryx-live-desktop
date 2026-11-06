@@ -150,7 +150,22 @@ warehouse.items.splice(requestsIndex + 1, 0, { id: "warehouse-management.product
   path: "/warehouse/production-forecast", permissions: ["CanViewProductionScheduleMaterialForecast"] });
 
 // Pages whose key changed in the permissions redesign (one key per task and context).
-const pageKeys: Readonly<Record<string, string[]>> = { "/production/products": ["CanViewProductionProducts"] };
+const pageKeys: Readonly<Record<string, string[]>> = {
+  "/production/products": ["CanViewProductionProducts"],
+  // Dashboards: one view key each.
+  "/hr-dashboard": ["CanViewHrDashboard"],
+  "/hr-executive-summary": ["CanViewHrExecutiveSummary"],
+  "/qa-qc-dashboard/qc": ["CanViewQcDashboard"],
+  "/qa-qc-dashboard/qa": ["CanViewQaDashboard"],
+  "/warehouse-dashboard": ["CanViewWarehouseDashboard"],
+  "/procurement-dashboard": ["CanViewProcurementDashboard"],
+  "/logistics-dashboard": ["CanViewLogisticsDashboard"],
+  "/services-dashboard": ["CanViewServicesDashboard"],
+  "/stores-dashboard": ["CanViewStoresDashboard"],
+  "/inventory-command-center": ["CanViewInventoryCommandCenter"],
+  "/production-health-dashboard": ["CanViewProductionHealthDashboard"],
+  "/fgtn-dashbord": ["CanViewFgtnDashboard"],
+};
 const setPageKeys = (items: CatalogItem[]): void => {
   for (const item of items) {
     if (item.path && pageKeys[item.path]) item.permissions = [...(pageKeys[item.path] ?? [])];

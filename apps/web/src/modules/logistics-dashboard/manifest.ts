@@ -5,5 +5,5 @@ export const manifest = {
   label: "Logistics dashboard",
   root: "/logistics-dashboard",
   order: 86,
-  access: { kind: "some", permissions: ["CanViewShipmentInvoice", "CanViewWaybill"] },
+  access: { kind: "all", permissions: ["CanViewLogisticsDashboard"] },
 } satisfies ModuleManifest<"logistics-dashboard", "/logistics-dashboard">;
