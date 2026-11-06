@@ -21,7 +21,7 @@ const makePreview = () => ({ batchId: "b1", batchNumber: "BFC4K338", kind: 1, re
   ] });
 
 function open({ permission = true, menu = false, preview = makePreview(), failFirst = false, malformed = false } = {}) {
-  const backend = stubBackend({ permissions: ["CanViewPlannedProducts", ...(permission ? ["CanRepairIssuedPackaging"] : [])] });
+  const backend = stubBackend({ permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", ...(permission ? ["CanRepairIssuedPackaging"] : [])] });
   rememberSession();
   const session = backend.fetcher.getMockImplementation();
   const calls: { method: string; path: string; body: string }[] = [];
