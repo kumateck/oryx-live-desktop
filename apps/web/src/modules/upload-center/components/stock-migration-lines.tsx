@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
@@ -107,8 +108,8 @@ export function StockMigrationLines({ migration, shelves }: { migration: Migrati
     </div>
     {editable && ids.length > 0 ? <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 p-2 text-sm">
       <span>{ids.length} row(s) selected</span>
-      <Select onValueChange={(shelfId) => void apply({ shelfId }, ids)} disabled={bulkState.isLoading}><SelectTrigger aria-label="Put selected rows on shelf" className="w-64"><SelectValue placeholder="Put them on shelf…" /></SelectTrigger>
-        <SelectContent>{shelves.map((shelf) => <SelectItem key={shelf.value} value={shelf.value}>{shelf.label}</SelectItem>)}</SelectContent></Select>
+      <SearchableSelect label="Put selected rows on shelf" className="w-64" options={shelves} value={null} clearable={false} disabled={bulkState.isLoading}
+        onChange={(shelf) => { if (shelf) void apply({ shelfId: shelf.value }, ids); }} placeholder="Put them on shelf…" searchPlaceholder="Search shelves" emptyMessage="No shelves found" />
       <Button type="button" size="sm" variant="outline" disabled={bulkState.isLoading} onClick={() => void apply({ excluded: true }, ids)}><Ban />Leave out</Button>
       <Button type="button" size="sm" variant="outline" disabled={bulkState.isLoading} onClick={() => void apply({ excluded: false }, ids)}><CheckCheck />Include</Button>
     </div> : null}

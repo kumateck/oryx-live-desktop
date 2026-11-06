@@ -3,10 +3,10 @@ import { RotateCcw } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PermissionPicker } from "@/modules/roles/components/permission-picker";
 import { rolesPath } from "@/modules/roles/lib/permissions";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import { UnsavedChangesGuard } from "@/shared/navigation/unsaved-changes";
 import { Skeleton, SkeletonRegion } from "@/shared/skeleton/skeleton";
 import { usePermissionsWorkspace } from "./hooks/use-permissions-workspace";
@@ -21,11 +21,9 @@ export function PermissionsPage() {
       <div><p className="eyebrow">IT SUPPORT</p><h1 className="text-xl font-semibold">Roles and permissions</h1><p className="text-sm text-muted-foreground">What each role can see and do. Changes apply to everyone who holds the role.</p></div>
       <div className="flex flex-wrap items-end gap-2">
         <div className="max-w-full space-y-1"><label htmlFor="permission-role" className="block text-xs font-medium">Role</label>
-          <Select value={editor.role?.value ?? ""} disabled={editor.rolesLoading || editor.saving} onValueChange={(value) => {
-            const next = editor.options.find((option) => option.value === value); if (next) editor.chooseRole(next);
-          }}><SelectTrigger id="permission-role" className="w-64 max-w-full"><SelectValue placeholder={editor.rolesLoading ? "Loading roles…" : "Select a role"} /></SelectTrigger>
-            <SelectContent>{editor.options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
-          </Select>
+          <SearchableSelect id="permission-role" label="Role" className="w-64 max-w-full" options={editor.options} loading={editor.rolesLoading}
+            error={editor.rolesError} onRetry={editor.retryRoles} disabled={editor.saving} clearable={false} value={editor.role}
+            onChange={(next) => { if (next) editor.chooseRole(next); }} placeholder="Select a role" searchPlaceholder="Search roles" emptyMessage="No roles found" />
         </div>
         {editor.mayManageRoles ? <Button asChild size="sm" variant="outline"><Link to={rolesPath}>Manage roles</Link></Button> : null}
       </div>

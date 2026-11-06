@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { CalendarClock, TrendingDown, TriangleAlert, Wallet, Warehouse } from "lucide-react";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableFilterSelect } from "@/shared/forms/searchable-filter-select";
 import { identityApi } from "@/shared/api/generated/identity";
 import { reportsApi } from "@/shared/api/generated/reports";
 import { warehouseApi } from "@/shared/api/generated/warehouse";
@@ -36,8 +37,8 @@ function InventoryFilterBar({ filters, onChange }: { filters: InventoryFilters; 
   const departments = identityApi.useGetApiV1DepartmentQuery({ page: 1, pageSize: 100, ...context });
   const set = <K extends keyof InventoryFilters>(key: K, value: InventoryFilters[K] | undefined) => { const next = { ...filters }; if (value === undefined) delete next[key]; else next[key] = value; onChange(next); };
   return <div role="group" aria-label="Filters" className="flex flex-wrap items-center gap-2">
-    <FilterSelect label="Warehouse" all="All warehouses" value={filters.warehouseId} options={names(warehouses.data)} onChange={(value) => set("warehouseId", value)} />
-    <FilterSelect label="Department" all="All departments" value={filters.departmentId} options={names(departments.data)} onChange={(value) => set("departmentId", value)} />
+    <SearchableFilterSelect label="Warehouse" className="w-full sm:w-44" all="All warehouses" value={filters.warehouseId} loading={warehouses.isLoading} options={names(warehouses.data)} onChange={(value) => set("warehouseId", value)} />
+    <SearchableFilterSelect label="Department" className="w-full sm:w-44" all="All departments" value={filters.departmentId} loading={departments.isLoading} options={names(departments.data)} onChange={(value) => set("departmentId", value)} />
     <FilterSelect label="Expiry window" all="All expiry windows" value={filters.expiryWindow?.toString()} options={expiryOptions} onChange={(value) => set("expiryWindow", value === undefined ? undefined : Number(value) as 0 | 1 | 2 | 3)} />
     <FilterSelect label="Inactivity" value={filters.threshold.toString()} options={thresholdOptions} onChange={(value) => set("threshold", Number(value ?? 90) as 90 | 180 | 365)} />
   </div>;

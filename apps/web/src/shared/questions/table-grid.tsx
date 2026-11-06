@@ -3,7 +3,7 @@ import { Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import type { SelectLoader } from "@/shared/forms/form-wizard-types";
 import { cellKey, type CellConfig, type TableAnswer, type TableConfig } from "./table-question";
 
@@ -37,7 +37,7 @@ const Cell = memo(function Cell({ row, col, cell, mode, value, label, loadEquipm
   if (cell.type === "input") return <td {...span} className="border p-1.5"><Input aria-label={name} value={value} placeholder={cell.placeholder || "Enter value"} disabled={Boolean(disabled)}
     readOnly={mode === "preview"} onChange={(event) => onAnswer?.(key, event.target.value)} className="h-8" /></td>;
   if (cell.dataSource === "async" && cell.asyncSource) return <td {...span} className="border p-1.5">
-    <AsyncOptionPicker label={name} loadOptions={loadEquipment} disabled={readOnly} value={value ? { value, label: label ?? value } : null} onChange={(option) => onAnswer?.(key, option.value, option.label)} /></td>;
+    <SearchableSelect clearable={false} label={name} loadOptions={loadEquipment} disabled={readOnly} value={value ? { value, label: label ?? value } : null} onChange={(option) => { if (option) onAnswer?.(key, option.value, option.label); }} /></td>;
   return <td {...span} className="border p-1.5"><Select value={value} disabled={readOnly} onValueChange={(next) => onAnswer?.(key, next)}>
     <SelectTrigger aria-label={name} className="h-8 w-full"><SelectValue placeholder="Select an option" /></SelectTrigger>
     <SelectContent>{(cell.options ?? []).map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>

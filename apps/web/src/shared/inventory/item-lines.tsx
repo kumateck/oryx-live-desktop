@@ -1,7 +1,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import type { SelectLoader } from "@/shared/forms/form-wizard-types";
 import type { ItemChoice } from "./use-item-choices";
 
@@ -25,8 +25,8 @@ export function ItemLinesEditor({ lines, onChange, loadItems, label, lookup, pro
         const problem = problems.get(line.key);
         const number = String(index + 1);
         return <tr key={line.key} className="border-b align-top last:border-0">
-          <td className="p-2"><AsyncOptionPicker label={`Item for line ${number}`} placeholder="Search for an item" loadOptions={loadItems}
-              value={line.item ? { value: line.item.id, label: label(line.item) } : null} onChange={(option) => update(line.key, { item: lookup(option.value) })} />
+          <td className="p-2"><SearchableSelect clearable={false} label={`Item for line ${number}`} placeholder="Search for an item" loadOptions={loadItems}
+              value={line.item ? { value: line.item.id, label: label(line.item) } : null} onChange={(option) => { if (option) update(line.key, { item: lookup(option.value) }); }} />
             {problem ? <p role="alert" className="mt-1 text-xs text-destructive">{problem}</p> : null}</td>
           <td className="p-2 font-mono text-xs">{line.item?.code ?? "–"}</td>
           {showStock ? <td className="p-2">{line.item ? `${String(line.item.available)} ${unit(line.item)}`.trim() : "–"}</td> : null}
