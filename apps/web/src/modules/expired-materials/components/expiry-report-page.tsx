@@ -1,3 +1,4 @@
+import { StockBatchLocation } from "@/shared/warehouse/stock-batch-location";
 import { useNavigate } from "react-router";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -27,11 +28,10 @@ const columns = column.columns([
   column.accessor((row) => row.departments.map((department) => department.name).join(", "), { id: "department", header: "Department", cell: ({ row }) => row.original.departments.length
     ? <div className="max-w-48 space-y-1">{row.original.departments.map((department) => <div key={department.id} className="break-words">{department.name}</div>)}</div>
     : <span className="text-muted-foreground">Not recorded</span> }),
-  column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", cell: ({ row }) => <div><div className="break-all">{batchNumber(row.original.batchNumber)}</div><div className="text-xs text-muted-foreground">AR {row.original.arNumber ?? "not recorded"}</div></div> }),
+  column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", cell: ({ row }) => <div><div className="break-all">{batchNumber(row.original.batchNumber)}</div><StockBatchLocation locations={row.original.shelves} /><div className="text-xs text-muted-foreground">AR {row.original.arNumber ?? "not recorded"}</div></div> }),
   column.accessor((row) => row.made ?? "", { id: "made", header: "Manufactured", cell: ({ row }) => formatMonthYear(row.original.made) ?? "–" }),
   column.accessor((row) => row.expires ?? "", { id: "expires", header: "Valid until", cell: ({ row }) => { const days = daysToExpiry(row.original.expires);
     return <div><div>{formatMonthYear(row.original.expires) ?? "–"}</div>{row.original.extended ? <div className="text-xs text-muted-foreground">Retest extension · expiry {formatMonthYear(row.original.originalExpiry) ?? "not recorded"}</div> : null}{days === null ? null : <div className={`text-xs ${days <= 0 ? "font-medium text-destructive" : "text-muted-foreground"}`}>{days < 0 ? `${-days} ${days === -1 ? "day" : "days"} ago` : days === 0 ? "Today" : `In ${days} ${days === 1 ? "day" : "days"}`}</div>}</div>; } }),
-  column.display({ id: "shelves", header: "Shelves", cell: ({ row }) => row.original.shelves.length ? <span className="break-words">{row.original.shelves.join(", ")}</span> : <span className="text-muted-foreground">Not on a shelf</span> }),
   column.accessor("remaining", { header: "Remaining", cell: ({ row }) => <div><div className="font-medium">{show(row.original.remaining, row.original.unit)}</div><div className="text-xs text-muted-foreground">of {show(row.original.total, row.original.unit)}</div></div> }),
 ]);
 

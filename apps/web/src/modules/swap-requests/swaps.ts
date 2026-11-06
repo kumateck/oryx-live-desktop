@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { stockShelfSchema, stockShelfLocation } from "@/shared/warehouse/stock-location";
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 
 export const swapsPath = "/warehouse/swap-requests";
@@ -14,7 +15,7 @@ export const swapStatusLabels: Record<number, string> = { 0: "Waiting for a deci
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const amount = z.number().nullish().transform((value) => typeof value === "number" && Number.isFinite(value) ? value : 0);
 const date = z.string().nullish().transform((value) => value && new Date(value).getFullYear() >= 1900 ? value : null);
-const batches = z.array(z.object({ quantity: amount, uoM: z.object({ symbol: text }).nullish(), materialBatch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, isReturn: z.boolean().nullish(),
+const batches = z.array(z.object({ warehouseLocationShelf: stockShelfSchema, quantity: amount, uoM: z.object({ symbol: text }).nullish(), materialBatch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, isReturn: z.boolean().nullish(),
   material: z.object({ name: text, code: text, kind: z.number().nullish() }).nullish() }).nullish() })).nullish();
 // The status arrives as a number, or as its name on older records.
 const status = z.union([z.number(), z.string()]).nullish().transform((value) => { if (typeof value === "number") return value; const name = String(value ?? "").trim().toLowerCase(); return name === "pending" ? 0 : name === "approved" ? 1 : name === "rejected" ? 2 : Number.isNaN(Number(name)) || name === "" ? -1 : Number(name); });
@@ -22,7 +23,7 @@ const swap = z.object({ id: z.string().nullish(), status, actionedAt: date, acti
   firstSwapShelfMaterialBatches: batches, secondSwapShelfMaterialBatches: batches });
 
 function side(list: z.infer<typeof batches>) {
-  return (list ?? []).map((item, index) => ({ key: `${item.materialBatch?.id ?? "batch"}-${index}`, batchId: item.materialBatch?.id ?? null, number: item.materialBatch?.batchNumber ?? null, quantity: item.quantity, expires: item.materialBatch?.expiryDate ?? null, returned: item.materialBatch?.isReturn === true,
+  return (list ?? []).map((item, index) => ({ key: `${item.materialBatch?.id ?? "batch"}-${index}`, batchId: item.materialBatch?.id ?? null, number: item.materialBatch?.batchNumber ?? null, quantity: item.quantity, expires: item.materialBatch?.expiryDate ?? null, returned: item.materialBatch?.isReturn === true, location: stockShelfLocation(item.warehouseLocationShelf),
     unit: item.uoM?.symbol ?? null }));
 }
 function read(entry: z.infer<typeof swap>) {

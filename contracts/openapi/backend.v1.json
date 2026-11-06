@@ -139556,6 +139556,9 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "warehouseLocationShelf": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Warehouses.MaterialWarehouseLocationShelfDto"
           }
         },
         "additionalProperties": false
@@ -166246,6 +166249,14 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "rackName": {
+            "type": "string",
+            "nullable": true
+          },
+          "shelfName": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -166978,6 +166989,9 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "warehouseLocationShelf": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Warehouses.MaterialWarehouseLocationShelfDto"
           }
         },
         "additionalProperties": false
@@ -175934,6 +175948,9 @@
           "quantity": {
             "type": "number",
             "format": "double"
+          },
+          "warehouseLocationShelf": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Warehouses.MaterialWarehouseLocationShelfDto"
           }
         },
         "additionalProperties": false
@@ -180246,6 +180263,10 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "rack": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -180493,6 +180514,9 @@
           "quantity": {
             "type": "number",
             "format": "double"
+          },
+          "warehouseLocationShelf": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Warehouses.MaterialWarehouseLocationShelfDto"
           }
         },
         "additionalProperties": false

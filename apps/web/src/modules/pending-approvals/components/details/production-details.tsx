@@ -1,3 +1,5 @@
+import { stockShelfSchema, stockShelfLocation } from "@/shared/warehouse/stock-location";
+import { StockBatchLocation } from "@/shared/warehouse/stock-batch-location";
 import { useMemo } from "react";
 import { z } from "zod";
 import { productionApi } from "@/shared/api/generated/production";
@@ -25,8 +27,8 @@ function useParsed<T>(schema: z.ZodType<T>, data: unknown): T | null {
 }
 
 const extraSchema = z.object({ quantity: amount, uoM: unit, material: named, productionScheduleProduct: z.object({ product: named, batchNumber: text }).nullish(),
-  batches: z.array(z.object({ quantityToTake: amount, batch: z.object({ batchNumber: text, expiryDate: z.string().nullish() }).nullish() })).nullish() });
-type ExtraBatch = { key: string; number: string | null; take: number | null; expires: string | null };
+  batches: z.array(z.object({ warehouseLocationShelf: stockShelfSchema, quantityToTake: amount, batch: z.object({ batchNumber: text, expiryDate: z.string().nullish() }).nullish() })).nullish() });
+type ExtraBatch = { key: string; number: string | null; take: number | null; expires: string | null; location: string | null };
 const extraColumn = dataTableColumns<ExtraBatch>();
 /** Extra material asked for on a batch already in production, and the stock it would be taken from. */
 export function ExtraMaterialDetails({ id }: { id: string }) {
@@ -34,14 +36,14 @@ export function ExtraMaterialDetails({ id }: { id: string }) {
   const value = useParsed(extraSchema, query.data);
   const symbol = value?.uoM?.symbol ?? null;
   const columns = useMemo(() => extraColumn.columns([
-    extraColumn.accessor((row) => row.number ?? "", { id: "batch", header: "Material batch", cell: ({ row }) => row.original.number ?? "No number" }),
+    extraColumn.accessor((row) => row.number ?? "", { id: "batch", header: "Material batch", cell: ({ row }) => <div>{row.original.number ?? "No number"}<StockBatchLocation locations={[row.original.location]} /></div> }),
     extraColumn.accessor((row) => row.take ?? 0, { id: "take", header: "To take", size: 180, cell: ({ row }) => quantity(row.original.take, symbol) }),
     extraColumn.accessor((row) => row.expires ?? "", { id: "expires", header: "Expires", size: 160, cell: ({ row }) => formatMonthYear(row.original.expires) ?? "–" }),
   ]), [symbol]);
   return <DetailState {...queryState(query)} value={value} label="extra material request">{(extra) => <div className="space-y-4">
     <DetailGroup title="Request"><DetailItem label="Product" value={extra.productionScheduleProduct?.product?.name} /><DetailItem label="Batch" value={extra.productionScheduleProduct?.batchNumber} />
       <DetailItem label="Material" value={[extra.material?.name, extra.material?.code].filter(Boolean).join(" · ")} /><DetailItem label="Extra quantity" value={quantity(extra.quantity, symbol)} /></DetailGroup>
-    <ClientDataTable label="Stock to take it from" columns={columns} rows={(extra.batches ?? []).map((item, index) => ({ key: `b-${index}`, number: item.batch?.batchNumber ?? null, take: item.quantityToTake, expires: item.batch?.expiryDate ?? null }))}
+    <ClientDataTable label="Stock to take it from" columns={columns} rows={(extra.batches ?? []).map((item, index) => ({ key: `b-${index}`, number: item.batch?.batchNumber ?? null, take: item.quantityToTake, expires: item.batch?.expiryDate ?? null, location: stockShelfLocation(item.warehouseLocationShelf) }))}
       getRowId={(row) => row.key} fill={false} emptyTitle="No stock has been picked for this request" />
   </div>}</DetailState>;
 }

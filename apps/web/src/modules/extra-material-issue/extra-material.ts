@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { stockShelfSchema, stockShelfLocation } from "@/shared/warehouse/stock-location";
 import { expiredOrDue, shortfall } from "@/modules/stock-issue/lib/stock-issue";
 
 export const audit = { module: "Warehouse", subModule: "Extra Material Requisitions" } as const;
@@ -8,13 +9,13 @@ const date = z.string().nullish().transform((value) => value && new Date(value).
 
 const extra = z.object({ id: z.string().nullish(), createdAt: z.string().nullish(), quantity: amount, approved: z.boolean().nullish(), uoM: z.object({ symbol: text }).nullish(), material: z.object({ name: text, code: text }).nullish(),
   createdBy: z.object({ firstName: text, lastName: text }).nullish(), productionScheduleProduct: z.object({ batchNumber: text, product: z.object({ name: text }).nullish(), productionSchedule: z.object({ code: text }).nullish() }).nullish(),
-  batches: z.array(z.object({ quantityToTake: amount, batch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, isReturn: z.boolean().nullish() }).nullish() })).nullish() });
+  batches: z.array(z.object({ warehouseLocationShelf: stockShelfSchema, quantityToTake: amount, batch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, isReturn: z.boolean().nullish() }).nullish() })).nullish() });
 
 /** Extra material asked for on a batch in production, with the stock the server has picked to meet it. */
 export const extraRowsSchema = z.array(extra).nullish().transform((value) => (value ?? []).flatMap((entry) => entry.id ? [{ id: entry.id, createdAt: entry.createdAt ?? null, quantity: entry.quantity, approved: entry.approved === true, unit: entry.uoM?.symbol ?? null,
   materialName: entry.material?.name ?? "Unnamed material", materialCode: entry.material?.code ?? null, requestedBy: [entry.createdBy?.firstName, entry.createdBy?.lastName].filter(Boolean).join(" ") || null,
   product: entry.productionScheduleProduct?.product?.name ?? null, schedule: entry.productionScheduleProduct?.productionSchedule?.code ?? null, batch: entry.productionScheduleProduct?.batchNumber ?? null,
-  batches: (entry.batches ?? []).map((item, index) => ({ key: `${item.batch?.id ?? "batch"}-${index}`, id: item.batch?.id ?? null, number: item.batch?.batchNumber ?? null, quantity: item.quantityToTake, expires: item.batch?.expiryDate ?? null, returned: item.batch?.isReturn === true })) }] : []));
+  batches: (entry.batches ?? []).map((item, index) => ({ key: `${item.batch?.id ?? "batch"}-${index}`, id: item.batch?.id ?? null, number: item.batch?.batchNumber ?? null, quantity: item.quantityToTake, expires: item.batch?.expiryDate ?? null, returned: item.batch?.isReturn === true, location: stockShelfLocation(item.warehouseLocationShelf) })) }] : []));
 export type ExtraMaterial = z.infer<typeof extraRowsSchema>[number];
 
 /** Why extra material cannot be issued, or null when it can. */

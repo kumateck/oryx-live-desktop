@@ -1,3 +1,5 @@
+import { StockBatchLocation } from "@/shared/warehouse/stock-batch-location";
+import { rackShelfLocation } from "@/shared/warehouse/stock-location";
 import { useMemo } from "react";
 import { ArrowRightLeft } from "lucide-react";
 import { ExpiryCell } from "@/modules/approved-materials/components/expiry-cell";
@@ -18,7 +20,7 @@ export function RackStockTable({ rows, search, movePermission, loading, refreshi
     column.accessor("shelf", { header: "Shelf", size: 130, cell: ({ row }) => <span className="font-medium">{row.original.shelf}</span> }),
     column.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div>
       <div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div></div> }),
-    column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", size: 170, cell: ({ row }) => row.original.batchNumber ?? dash }),
+    column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", size: 170, cell: ({ row }) => <div>{row.original.batchNumber ?? dash}<StockBatchLocation locations={[rackShelfLocation(row.original.rack, row.original.shelf)]} /></div> }),
     column.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => toLargestUnit(row.original.quantity, row.original.unit, "calculated")?.text ?? String(row.original.quantity) }),
     column.accessor((row) => row.manufacturingDate ?? "", { id: "made", header: "Manufactured", size: 150, cell: ({ row }) => formatMonthYear(row.original.manufacturingDate) ?? dash }),
     column.accessor((row) => row.effectiveExpiryDate ?? "", { id: "expiry", header: "Valid until", size: 190, cell: ({ row }) => <ExpiryCell date={row.original.effectiveExpiryDate} /> }),

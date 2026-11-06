@@ -1,3 +1,4 @@
+import { rackShelfLocation } from "@/shared/warehouse/stock-location";
 import { formatMonthYear } from "@/shared/format/dates";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { PrintFacts, PrintHeader, PrintTable, type PrintColumn } from "@/shared/print/print-sheet";
@@ -9,7 +10,7 @@ import type { Rack } from "../schemas/rack-schema";
 const columns: PrintColumn<RackStockRow>[] = [
   { id: "shelf", header: "Shelf", cell: (row) => row.shelf, width: "10%" },
   { id: "material", header: "Material", cell: (row) => <>{row.materialName}<small>{row.materialCode ?? "No code"}</small></> },
-  { id: "batch", header: "Batch", cell: (row) => row.batchNumber ?? "–" },
+  { id: "batch", header: "Batch", cell: (row) => <>{row.batchNumber ?? "–"}<small>{rackShelfLocation(row.rack, row.shelf)}</small></> },
   { id: "quantity", header: "Quantity", align: "right", cell: (row) => toLargestUnit(row.quantity, row.unit, "calculated")?.text ?? String(row.quantity) },
   { id: "made", header: "Manufactured", cell: (row) => formatMonthYear(row.manufacturingDate) ?? "–" },
   { id: "expiry", header: "Expiry", cell: (row) => formatMonthYear(row.expiryDate) ?? "–" },
