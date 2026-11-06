@@ -999,6 +999,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   suppliers?: DomainEntitiesProcurementSuppliersSupplierListDto[] | null;
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
+  isWhitePlacebo?: boolean;
 };
 export type DomainEntitiesBillOfMaterialsBillOfMaterialItemSubstituteDto = {
   id?: string;
@@ -1505,6 +1506,7 @@ export type DomainEntitiesMaterialsMaterial = {
   status?: DomainEntitiesMaterialsBatchKind;
   isUnlimited?: boolean;
   departments?: DomainEntitiesMaterialsMaterialDepartment[] | null;
+  isWhitePlacebo?: boolean;
 };
 export type DomainEntitiesMaterialsMaterialRead = {
   id?: string;
@@ -1530,6 +1532,7 @@ export type DomainEntitiesMaterialsMaterialRead = {
   isUnlimited?: boolean;
   totalStock?: number;
   departments?: DomainEntitiesMaterialsMaterialDepartmentRead[] | null;
+  isWhitePlacebo?: boolean;
 };
 export type DomainEntitiesBaseProductionStatus = 0 | 1 | 2 | 3 | 4;
 export type DomainEntitiesProductionSchedulesProductionSchedule = {

@@ -1,4 +1,7 @@
 import { useMemo } from "react";
+import { Link } from "react-router";
+import { Button } from "@/components/ui/button";
+import { whitePlaceboPreparationPath } from "@/shared/production/white-placebo-path";
 import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { PrintButton } from "@/shared/print/print-button";
@@ -22,7 +25,8 @@ export function RequisitionDetail({ requisition }: { requisition: Requisition })
   ]), [requisition.type]);
   return <article className="min-w-0 space-y-4">
     <PageHeader title={requisition.code} crumbs={[{ label: "Material requisitions", to: requisitionsPath }, { label: requisition.code }]}
-      actions={<PrintButton preview={(close) => <RequisitionPrint requisition={requisition} onClose={close} />} />} />
+      actions={<><PrintButton preview={(close) => <RequisitionPrint requisition={requisition} onClose={close} />} />
+        {requisition.whitePlaceboPreparationId ? <Button asChild><Link to={whitePlaceboPreparationPath(requisition.whitePlaceboPreparationId)}>White Placebo preparation</Link></Button> : null}</>} />
     <RequisitionStatusBadge status={requisition.status} type={requisition.type} />
     <RequisitionFacts requisition={requisition} />
     {requisition.comments ? <section className="space-y-1 rounded-lg border bg-card p-4"><h2 className="text-sm font-semibold">Remarks</h2><RichTextView html={requisition.comments} className="text-sm" /></section> : null}

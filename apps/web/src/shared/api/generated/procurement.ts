@@ -2097,6 +2097,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   suppliers?: DomainEntitiesProcurementSuppliersSupplierListDto[] | null;
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
+  isWhitePlacebo?: boolean;
 };
 export type DomainEntitiesProcurementManufacturersQuantityPerPackOption = {
   type?: DomainEntitiesProcurementManufacturersQuantityType;

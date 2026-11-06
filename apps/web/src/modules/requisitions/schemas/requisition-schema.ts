@@ -16,6 +16,7 @@ const requisition = z.object({
   id: z.string().min(1), code: text, requisitionType: type, status, approved: z.boolean().nullish(), comments: text,
   requestedBy: named, department: named, createdAt: z.string().nullish(), expectedDelivery: z.string().nullish(), items: z.array(item).nullish(),
   productionScheduleProduct: z.object({ product: z.object({ name: text }).nullish() }).nullish(),
+  whitePlaceboPreparationId: z.string().uuid().nullish(),
 });
 
 function read(value: z.infer<typeof requisition>) {
@@ -23,6 +24,7 @@ function read(value: z.infer<typeof requisition>) {
     id: value.id, code: value.code ?? "No number", type: value.requisitionType, status: value.status, approved: value.approved === true, comments: value.comments,
     requestedBy: value.requestedBy?.name ?? null, department: value.department?.name ?? null, createdAt: value.createdAt ?? null, expectedDelivery: value.expectedDelivery ?? null,
     product: value.productionScheduleProduct?.product?.name ?? null,
+    whitePlaceboPreparationId: value.whitePlaceboPreparationId ?? null,
     items: (value.items ?? []).map((line, index) => ({
       id: line.id ?? `line-${index}`, materialId: line.material?.id ?? null, materialName: line.material?.name ?? "Unnamed material", materialCode: line.material?.code ?? null,
       quantity: line.quantity, unit: line.uoM?.symbol ?? null, unitId: line.uoM?.id ?? null, status: line.status,
@@ -41,10 +43,10 @@ export type RequisitionLine = Requisition["items"][number];
 
 /** A material the department keeps, as offered when raising a purchase requisition. Quantities are in the material's stored unit. */
 export const pickRowsSchema = z.array(z.object({
-  material: z.object({ id: z.string().nullish(), code: text, name: text, totalStock: amount, materialCategory: z.object({ name: text }).nullish() }).nullish(),
+  material: z.object({ id: z.string().nullish(), code: text, name: text, totalStock: amount, isWhitePlacebo: z.boolean().optional(), materialCategory: z.object({ name: text }).nullish() }).nullish(),
   uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(),
   warehouseStock: amount, reOrderLevel: amount, minimumStockLevel: amount, maximumStockLevel: amount, expiredQuantity: amount,
-})).nullish().transform((value) => (value ?? []).flatMap((entry) => entry.material?.id ? [{
+})).nullish().transform((value) => (value ?? []).flatMap((entry) => entry.material?.id && !entry.material.isWhitePlacebo ? [{
   id: entry.material.id, code: entry.material.code, name: entry.material.name ?? "Unnamed material", category: entry.material.materialCategory?.name ?? null,
   unit: entry.uoM?.symbol ?? null, unitId: entry.uoM?.id ?? null, stock: entry.warehouseStock,
   // What the rest of the company holds: everything, less what is already in this department's warehouse.

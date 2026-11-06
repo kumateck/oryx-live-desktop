@@ -121,6 +121,10 @@ const finance = catalog.find((group) => group.id === "finance-and-cashflow");
 if (!finance) throw new Error("Finance navigation group is missing.");
 finance.items.push({ id: "finance-and-cashflow.costing", label: "Costing", path: "/finance/costing", permissions: ["ManageCosting"] });
 
+const productionPlanning = catalog.find((group) => group.id === "production-planning");
+if (!productionPlanning) throw new Error("Production Planning navigation group is missing.");
+productionPlanning.items.push({ id: "production-planning.white-placebo", label: "White Placebo", path: "/production/white-placebo", permissions: ["CanViewWhitePlacebo"] });
+
 const qualityAssurance = catalog.find(group => group.id === "quality-assurance");
 if (!qualityAssurance) throw new Error("Quality Assurance navigation group is missing.");
 qualityAssurance.items.unshift({ id: "quality-assurance.products", label: "Products", path: "/qa/products", permissions: ["CanViewQaProducts"] });
