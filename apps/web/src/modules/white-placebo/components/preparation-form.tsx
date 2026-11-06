@@ -1,3 +1,4 @@
+import { rackShelfLocation } from "@/shared/warehouse/stock-location";
 import { randomId } from "@/shared/ids/random-id";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
@@ -51,9 +52,9 @@ export function PreparationForm({ recipe: currentRecipe, stock, saving, save }: 
         {array.fields.map((item, index) => <div key={item.id} className="grid min-w-0 items-start gap-3 border-b pb-3 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]">
           <Controller control={form.control} name={`inputs.${index}.shelfMaterialBatchId`} render={({ field, fieldState }) => <FieldFrame id={`input-${index}`} label={`Ingredient batch ${index + 1}`} required error={fieldState.error?.message}>
             <Select value={field.value} onValueChange={field.onChange}><SelectTrigger id={`input-${index}`} className="w-full" aria-invalid={Boolean(fieldState.error)}><SelectValue placeholder="Choose a batch and shelf" /></SelectTrigger>
-              <SelectContent>{eligible.map((batch) => <SelectItem key={batch.id} value={batch.id}>{batch.batchNumber} · {batch.materialName} · {batch.shelf} · {quantity(batch.quantity, batch.unitSymbol)} free</SelectItem>)}</SelectContent>
+              <SelectContent>{eligible.map((batch) => <SelectItem key={batch.id} value={batch.id}>{batch.batchNumber} · {batch.materialName} · {rackShelfLocation(batch.rack, batch.shelf)} · {quantity(batch.quantity, batch.unitSymbol)} free</SelectItem>)}</SelectContent>
             </Select>
-            {eligible.filter((batch) => batch.id === field.value).map((batch) => <p key={batch.id} className="break-words text-sm text-muted-foreground">{batch.materialName} · Batch {batch.batchNumber} · {batch.shelf} · {quantity(batch.quantity, batch.unitSymbol)} free</p>)}
+            {eligible.filter((batch) => batch.id === field.value).map((batch) => <p key={batch.id} className="break-words text-sm text-muted-foreground">{batch.materialName} · Batch {batch.batchNumber} · {rackShelfLocation(batch.rack, batch.shelf)} · {quantity(batch.quantity, batch.unitSymbol)} free</p>)}
           </FieldFrame>} />
           <Controller control={form.control} name={`inputs.${index}.quantity`} render={({ field, fieldState }) => {
             const batch = stock.find((batch) => batch.id === form.watch(`inputs.${index}.shelfMaterialBatchId`));

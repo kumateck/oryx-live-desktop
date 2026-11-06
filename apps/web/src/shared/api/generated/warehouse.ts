@@ -2558,15 +2558,37 @@ export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
   issuedAt?: string | null;
   effectiveExpiryDate?: string | null;
 };
+export type DomainEntitiesWarehousesWareHouseLocationDto = {
+  id?: string;
+  name?: string | null;
+  floorName?: string | null;
+  description?: string | null;
+  warehouse?: SharedCollectionItemDto;
+};
+export type DomainEntitiesWarehousesWareHouseLocationRackDto = {
+  id?: string;
+  warehouseLocation?: DomainEntitiesWarehousesWareHouseLocationDto;
+  name?: string | null;
+  description?: string | null;
+};
+export type DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto = {
+  id?: string;
+  warehouseLocationRack?: DomainEntitiesWarehousesWareHouseLocationRackDto;
+  code?: string | null;
+  name?: string | null;
+  description?: string | null;
+};
 export type DomainEntitiesMaterialsBatchBatchToSupply = {
   batch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
   quantityToTake?: number;
   warehouseLocationShelfId?: string | null;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
 };
 export type DomainEntitiesMaterialsBatchBatchToSupplyRead = {
   batch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
   quantityToTake?: number;
   warehouseLocationShelfId?: string | null;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDto = {
   id?: string;
@@ -2765,12 +2787,14 @@ export type DomainEntitiesRequisitionsAlternativeBatchDto = {
   quantityAvailable?: number;
   warehouse?: SharedCollectionItemDto;
   warehouseLocationShelfId?: string | null;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
 };
 export type DomainEntitiesRequisitionsAlternativeBatchDtoRead = {
   batch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
   quantityAvailable?: number;
   warehouse?: SharedCollectionItemDto;
   warehouseLocationShelfId?: string | null;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
 };
 export type DomainEntitiesRequisitionsMaterialAlternativeBatchesDto = {
   material?: DomainEntitiesMaterialsMaterialDto;
@@ -3085,26 +3109,6 @@ export type DomainEntitiesWarehousesWarehouseWithoutLocationDto = {
   name?: string | null;
   description?: string | null;
   type?: DomainEntitiesWarehousesWarehouseType;
-};
-export type DomainEntitiesWarehousesWareHouseLocationDto = {
-  id?: string;
-  name?: string | null;
-  floorName?: string | null;
-  description?: string | null;
-  warehouse?: SharedCollectionItemDto;
-};
-export type DomainEntitiesWarehousesWareHouseLocationRackDto = {
-  id?: string;
-  warehouseLocation?: DomainEntitiesWarehousesWareHouseLocationDto;
-  name?: string | null;
-  description?: string | null;
-};
-export type DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto = {
-  id?: string;
-  warehouseLocationRack?: DomainEntitiesWarehousesWareHouseLocationRackDto;
-  code?: string | null;
-  name?: string | null;
-  description?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchReducedDto = {
   id?: string;
@@ -4199,11 +4203,13 @@ export type DomainEntitiesWarehousesSwapShelfMaterialBatchDto = {
   materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchReducedDto;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   quantity?: number;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
 };
 export type DomainEntitiesWarehousesSwapShelfMaterialBatchDtoRead = {
   materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   quantity?: number;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
 };
 export type DomainEntitiesWarehousesSwapRequestStatus = 0 | 1 | 2;
 export type DomainEntitiesWarehousesSwapRequestDto = {

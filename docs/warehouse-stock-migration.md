@@ -40,6 +40,31 @@ A detail page reached by address checks the permission for the material's own ki
 
 ## Location chart
 
+Batch location display (6 November 2026): warehouse batch entries show
+`rack (shelf)` directly below the batch number. The shared formatter is used by
+issue allocations, extra material, stock transfers, swaps, approved stock,
+reserved stock, rack contents, material locations, expired/about-to-expire
+reports and batch expiry details. Picking vouchers and location printouts also
+carry the location. A batch split across shelves keeps a separate quantity per
+allocation; expiry reports list each occupied shelf and omit emptied records.
+Unrecorded locations remain explicit; no shelf is inferred from a batch alone.
+White Placebo ingredient picks and the linked issue detail use their selected
+source shelf through one batched location read. Stock events, permissions,
+approvals, reservations and issue requests are unchanged.
+
+The backend adds shelf/rack metadata to `BatchToSupply` and swap allocations,
+and rack/shelf names to reserved-stock and ingredient DTOs. Matching schemas
+are imported from its OpenAPI export and generated endpoints remain generated.
+Deploy the backend with the UI for complete picking locations; older responses
+remain readable and show missing location text. No database migration is needed.
+
+Local verification: 49 focused web tests and 21 backend tests passed, along with
+web TypeScript/build and API generation checks. The shared batch presentation
+was inspected with fixture data at 1280×720, 1366×768 and 853×480 without horizontal
+overflow. This is component preview verification, not live customer or packaged
+desktop acceptance. React Doctor reports only the existing workspace-tabs lookup
+warning; no new scan issues were found.
+
 - Racks of the user's department on the left (`GET /warehouse/rack/by-department/summary`), the open rack in the address as `?rack=`.
 - The open rack (`GET /warehouse/rack/{id}`): shelves in use, empty shelves named, batches, expired and expiring counts, and one table of every batch on every shelf, filtered by the header search (shelf, material, code, batch).
 - `oryx-next` fetched a paged rack list and then each rack; this reads one summary and one rack.
@@ -119,3 +144,9 @@ caller supplies its stock details, labels and `onPlace` API callback.
 `MoveStockDialog` is a separate dialog for moving existing shelf stock, used by
 Location Chart and Material Location. Both dialogs render the same `MoveLine`
 fields, including the searchable Rack selector and dependent Shelf selector.
+
+The stock-location contract review adds seven optional read fields across six
+existing DTO schemas, with no path, operation, request or existing property
+changes. The host-deployment compatibility policy retains prior fingerprints
+and also includes the reviewed stock-location contract fingerprint
+`4cd376b6624dfe633457cb79f7bf8592cd283590d7a6bc855ccb7afa196bd64c`.
