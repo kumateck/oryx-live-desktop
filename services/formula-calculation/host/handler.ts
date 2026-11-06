@@ -46,7 +46,7 @@ const health = (
 export const createFormulaHostHandler =
   (config: FormulaHostHandlerConfig) =>
   async (request: FormulaHostRequest): Promise<FormulaHostResponse> => {
-    const started = performance.now();
+    const started = request.startedAt ?? performance.now();
     let response: FormulaHostResponse;
     let requestId: string | null = null;
     let serviceStatus: string | null = null;
@@ -82,8 +82,14 @@ export const createFormulaHostHandler =
           const input: FormulaInput = JSON.parse(
             new TextDecoder().decode(request.body),
           );
+          // Time already spent receiving and parsing the request counts toward the deadline.
+          const remaining = Math.max(
+            0,
+            config.deadlineMs - (performance.now() - started),
+          );
           const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), config.deadlineMs);
+          if (remaining === 0) controller.abort();
+          const timer = setTimeout(() => controller.abort(), remaining);
           try {
             const result = await executor.execute(
               operation,
