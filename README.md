@@ -75,3 +75,8 @@ Companion device controls are under Settings → Appearance. Run `bun run --filt
 ## Manual customer Docker installation
 
 Use [the customer Docker package](deploy/customer-docker/README.md) for the Ubuntu `entrance` account: production follows **`origin/entrance-server` only**, project **`oryx-live`**, port **3001**, existing external **`sail`** network and backend **`oryx_api:5001`**. It reuses the existing web Docker build with pinned **Bun 1.4.4**. The administrator installs it through SSH commands and enables Cron; no Codex installation is needed. Deployment checks, Discord reporting, locking, pause/resume and archived-image rollback are included. The host-Nginx agent remains separate.
+
+The separately released authoritative formula runtime is owned by this repo;
+see [formula service build and delivery](docs/formula-service.md). It shares the
+existing formula core and produces a pinned offline bundle for backend customer
+deployment, independently of site/Electron activation.

@@ -933,3 +933,15 @@ The queue-aware validator also rejects the existing Node 20 action runtimes. Use
 ## Publish outstanding dual-architecture desktop release (2026-10-28)
 
 The user verified that the testing download remains the v0.1.0 x64-only installer and the customer downloads directory has no EXE. GitHub has only that older successful installer artifact; current v0.2.0 x86/x64 source has never been published. Comparing with the last successful web run/event.before can silently skip this outstanding native release. Move testing change detection after web activation, read a private source/checksum record over the existing testing SSH connection, verify the installed EXE's SHA-256, and compare desktop inputs with that published source. No verified record means initial native publication is required. Keep the one sequential queue, existing dual-payload NSIS build and Windows installation/launch/upgrade smoke; advance the source record only after atomic installer/checksum/feed publication. Failed native jobs leave the baseline pending; later web-only changes skip native work once the current desktop is published. Expose a public checksum sidecar. Preserve customer-server isolation and manual first EXE copy; no push, workflow dispatch, server access or deployment by the agent. Document the manual-dispatch prerequisite that the workflow must exist on default main, and the existing automatic testing path as the way to build/publish this outstanding QA desktop release after the user's next milestone push.
+
+## Customer authoritative formula service (2026-11-06)
+
+Own the hardened Node formula service in `services/formula-calculation` in this
+repository. Share the existing pure formula core with the renderer; keep the
+Node host, workload token and worker pool outside the renderer and Electron.
+Build a separate image and content-addressed release manifest from desktop
+source; customer backend deployment consumes that immutable bundle. No build,
+pull or runtime dependency on the obsolete Next application. Preserve the
+backend service contract, permissions, regulated workflow and audit behavior.
+Keep service updates separate from UI activation; retain matching image/hash
+and previous release artifacts for rollback. No real server changes.
