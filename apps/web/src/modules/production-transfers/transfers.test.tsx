@@ -15,7 +15,7 @@ import { manifest } from "./manifest";
 import { decisionProblem, sameDecisionEvidence, statusLabel, transferSchema } from "./lib/transfers";
 
 const departmentId = "558da105-a506-44a9-8ff5-8d005a54f294";
-const permissions = ["CanViewIncomingStockTransferRequests", "CanViewOutgoingStockTransferRequests", "CanApproveIncomingStockTransferRequest"];
+const permissions = ["CanViewIncomingStockTransferRequests", "CanViewOutgoingStockTransferRequests", "CanApproveIncomingStockTransferRequest", "CanRejectIncomingStockTransferRequest"];
 const transfer = (status = 0) => ({ id: "t1", status, quantity: 1250, fromDepartment: { id: departmentId, name: "Production A" }, toDepartment: { id: "destination", name: "Production B" }, material: { id: "m1", code: "M01", name: "Lactose" }, uoM: { id: "u1", symbol: "g" }, createdAt: "2026-10-20T10:00:00Z", reason: "<p>Batch shortage</p>" });
 function RefreshAccess() { const session = useSession(); return <button onClick={() => void session.refresh()}>Recheck access</button>; }
 function open(address = "/production/stock-transfer-requests", granted = permissions) {

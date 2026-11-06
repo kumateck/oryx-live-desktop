@@ -20,7 +20,7 @@ const recordPath = (stepId = "done") => `/api/v1/production-schedule/activity/a1
 function open({ permission = true, response = () => Response.json(stepEvidenceFixture()) }: {
   permission?: boolean; response?: (stepId: string) => Response | Promise<Response>;
 } = {}) {
-  const backend = stubBackend({ permissions: permission ? ["CanViewPlannedProducts"] : [] });
+  const backend = stubBackend({ permissions: permission ? ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking"] : [] });
   const session = backend.fetcher.getMockImplementation();
   const reads: string[] = [];
   const writes: string[] = [];

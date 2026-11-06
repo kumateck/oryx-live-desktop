@@ -9,5 +9,8 @@ export const manifest = {
   root: "/production/activities",
   order: 51,
   access: view,
-  routes: [],
+  routes: [
+    { pattern: "/production/activities/:activityId/extra-material", access: { kind: "all", permissions: ["CanViewPlannedProducts", "CanRequestExtraPacking"], departmentType: 0 } },
+    { pattern: "/production/activities/:activityId/final-packing", access: { kind: "all", permissions: ["CanViewPlannedProducts", "CanRecordFinalPacking", "CanReturnProductionMaterials"], departmentType: 0 } },
+  ],
 } satisfies ModuleManifest<"activities", "/production/activities">;

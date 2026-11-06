@@ -8,7 +8,7 @@ import { formsApi } from "@/shared/api/generated/forms";
 import type { PermissionRequirement } from "@/shared/auth/access";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import type { FormAssignees } from "./assignments";
 import { useAnalystOptions } from "./use-analyst-options";
@@ -72,8 +72,8 @@ export function ReassignPanel({ assignees, require, audit, onDone }: { assignees
   return <ul className="space-y-3">{assignees.analysts.map((analyst) => <li key={analyst.assigneeId} className="space-y-3 rounded-lg border bg-card p-4">
     <div><p className="font-semibold">{analyst.name}</p>
       <p className="text-sm text-muted-foreground">Reassigning moves all questions in this analyst’s assignment.</p></div>
-    <div className="flex flex-wrap items-center gap-2"><div className="w-72 max-w-full"><AsyncOptionPicker label={`New analyst for ${analyst.name}'s fields`} placeholder="Choose the new analyst" value={chosen[analyst.assigneeId] ?? null}
-      loadOptions={loadAnalysts} onChange={(option) => setChosen({ ...chosen, [analyst.assigneeId]: option })} /></div>
+    <div className="flex flex-wrap items-center gap-2"><div className="w-72 max-w-full"><SearchableSelect clearable={false} label={`New analyst for ${analyst.name}'s fields`} placeholder="Choose the new analyst" value={chosen[analyst.assigneeId] ?? null}
+      loadOptions={loadAnalysts} onChange={(option) => { if (option) setChosen({ ...chosen, [analyst.assigneeId]: option }); }} /></div>
       <Button type="button" disabled={busy !== null} onClick={() => void move(analyst.assigneeId, analyst.name)}>{busy === analyst.assigneeId ? <><Spinner />Reassigning…</> : "Reassign"}</Button></div>
     {message[analyst.assigneeId] ? <p role="alert" className="text-sm text-destructive">{message[analyst.assigneeId]}</p> : null}
   </li>)}</ul>;

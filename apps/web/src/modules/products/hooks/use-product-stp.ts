@@ -1,4 +1,3 @@
-import { useProductWorkspace } from "./use-product-workspace";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -8,6 +7,7 @@ import {
   usePostApiV1ProductStpsMutation, usePutApiV1ProductStpsByIdMutation, useUploadStpDocumentVersionMutation,
 } from "../api/stp-api";
 import { nextStpNumber, stpNumbering } from "../lib/stp";
+import { productStpPermissions } from "../lib/product-access";
 import { savedStpSchema, stpDocumentSchema, type StpFormValues } from "../schemas/stp-schema";
 
 const audit = { module: "Quality Assurance", subModule: "Standard Test Procedure" } as const;
@@ -28,8 +28,8 @@ export function useProductStp(productId: string) {
   const [loadCount] = useLazyGetApiV1ConfigurationByModelTypeCountQuery();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const { editRequirement } = useProductWorkspace();
-  const permission = usePermissionAction(editRequirement);
+  // STPs are QC documents: authoring them needs QC's STP keys, whatever the product page.
+  const permission = usePermissionAction({ kind: "some", permissions: [productStpPermissions.create, productStpPermissions.edit] });
   const refetchStp = stpQuery.refetch;
 
   const suggestNumber = useCallback(async () => {

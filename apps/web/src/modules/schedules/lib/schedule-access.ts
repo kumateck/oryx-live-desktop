@@ -12,6 +12,7 @@ export const schedulePermissions = {
   edit: "CanEditProductSchedule",
   addProducts: "CanAddProductsToProductSchedule",
   removeProducts: "CanRemoveProductsFromProductSchedule",
+  start: "CanStartProduction",
 } as const;
 
 export const audit = { module: "Production", subModule: "Product Schedule" } as const;

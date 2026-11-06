@@ -53,7 +53,8 @@ function open(address: string, permissions: string[]) {
   const session = backend.fetcher.getMockImplementation();
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
-    const path = new URL(input.url).pathname;
+    const url = new URL(input.url);
+    const path = url.pathname;
     const text = input.method === "GET" ? "" : await input.clone().text();
     calls.push({ method: input.method, path, body: text ? JSON.parse(text) as unknown : null });
     if (path === "/api/v1/collection") return Response.json({ Role: [{ id: "r1", name: "Procurement Manager" }, { id: "r2", name: "Finance Manager" }], User: [{ id: "u1", name: "Ama Owusu" }] });
@@ -61,7 +62,8 @@ function open(address: string, permissions: string[]) {
     if (path === "/api/v1/approval") return Response.json("w-9", { status: 201 });
     if (path === "/api/v1/approval/w-1") return input.method === "GET" ? Response.json(workflow) : new Response(null, { status: 204 });
     if (path === "/api/v1/approval/users-with-pending") return Response.json([{ id: "u1", firstName: "Ama", lastName: "Owusu" }]);
-    if (path === "/api/v1/user") return Response.json({ data: [{ id: "u1", firstName: "Ama", lastName: "Owusu" }, { id: "u2", firstName: "Kofi", lastName: "Boateng" }], pageIndex: 1, pageCount: 1 });
+    // Receivers come only from people who can see pending approvals.
+    if (path === "/api/v1/user/by-permission" && url.searchParams.getAll("permissionKey").join() === "CanViewPendingApprovals") return Response.json({ data: [{ id: "u1", firstName: "Ama", lastName: "Owusu" }, { id: "u2", firstName: "Kofi", lastName: "Boateng" }], pageIndex: 1, pageCount: 1 });
     if (path === "/api/v1/approval/transfer-rights") return new Response(null, { status: 204 });
     return new Response(null, { status: 404 });
   });

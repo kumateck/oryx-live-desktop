@@ -659,6 +659,18 @@ export const routes: RouteObject[] = [
               { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/stock-transfer-requests/[id]/details/page")).default }) }
             ] }
           ] }
+        ] },
+        { path: "white-placebo", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/white-placebo/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/white-placebo/[id]/page")).default }) }
+          ] },
+          { path: "new", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/white-placebo/new/page")).default }) }
+          ] },
+          { path: "recipe", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/production/white-placebo/recipe/page")).default }) }
+          ] }
         ] }
       ] },
       { path: "production-health-dashboard", Component: Outlet, children: [

@@ -1,3 +1,14 @@
+White Placebo preparation (2026-11-06) adds seven typed operations across six
+`/api/v1/white-placebo` paths in the materials domain, their owned
+`DOMAIN.Entities.Materials.WhitePlacebo.*` schemas, optional `isWhitePlacebo` on
+Material/MaterialDto/MaterialWithWarehouseStockDto and optional
+`whitePlaceboPreparationId` on RequisitionDto. Import only those with
+`bun scripts/import-white-placebo.ts EXPORT.json`, then regenerate/check. Typed
+digest `5211b900a46aff5d1ece7c3e4f73c8ef9ae3127969ffb0945bfca034d3aefe35`;
+removing exactly those additions reproduces `7598763c…6414`. The companion
+`AddWhitePlaceboPreparation` migration must precede activation. See
+[White Placebo preparation](white-placebo.md).
+
 The 2026-11-05 merged forecast, migration batch-number correction and manual
 top-up contracts have typed digest
 `ba9b4556768dbaf418600e907610ec613e52b3e6a89aadc2bd675c367f503f75`.

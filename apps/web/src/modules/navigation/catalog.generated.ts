@@ -21,16 +21,7 @@ export const navigationCatalog = [
             "label": "HR Dashboard",
             "path": "/hr-dashboard",
             "permissions": [
-              "CanViewActiveEmployee",
-              "CanViewCompensation",
-              "CanViewPayrollConfiguration",
-              "CanViewPayrollRuns",
-              "CanViewPayslip",
-              "CanViewOwnPayslip",
-              "CanViewPerformanceCycles",
-              "CanViewOwnGoals",
-              "CanViewTeamGoals",
-              "CanViewPerformanceReviews"
+              "CanViewHrDashboard"
             ]
           },
           {
@@ -38,7 +29,7 @@ export const navigationCatalog = [
             "label": "HR Executive Summary",
             "path": "/hr-executive-summary",
             "permissions": [
-              "CanViewActiveEmployee"
+              "CanViewHrExecutiveSummary"
             ]
           },
           {
@@ -46,8 +37,7 @@ export const navigationCatalog = [
             "label": "QC Dashboard",
             "path": "/qa-qc-dashboard/qc",
             "permissions": [
-              "CanViewRawMaterialGoodsReceiptNotes",
-              "CanViewPackagingMaterialGoodsReceiptNotes"
+              "CanViewQcDashboard"
             ]
           },
           {
@@ -55,7 +45,7 @@ export const navigationCatalog = [
             "label": "QA Dashboard",
             "path": "/qa-qc-dashboard/qa",
             "permissions": [
-              "CanViewAnalyticalTestRequests"
+              "CanViewQaDashboard"
             ]
           },
           {
@@ -63,8 +53,7 @@ export const navigationCatalog = [
             "label": "Warehouse Dashboard",
             "path": "/warehouse-dashboard",
             "permissions": [
-              "CanViewRawMaterialsItems",
-              "CanViewPackagingMaterialsItems"
+              "CanViewWarehouseDashboard"
             ]
           },
           {
@@ -72,7 +61,7 @@ export const navigationCatalog = [
             "label": "Procurement Dashboard",
             "path": "/procurement-dashboard",
             "permissions": [
-              "CanViewPurchaseRequisitions"
+              "CanViewProcurementDashboard"
             ]
           },
           {
@@ -80,8 +69,7 @@ export const navigationCatalog = [
             "label": "Logistics Dashboard",
             "path": "/logistics-dashboard",
             "permissions": [
-              "CanViewShipmentInvoice",
-              "CanViewWaybill"
+              "CanViewLogisticsDashboard"
             ]
           },
           {
@@ -89,16 +77,7 @@ export const navigationCatalog = [
             "label": "Services Dashboard",
             "path": "/services-dashboard",
             "permissions": [
-              "CanViewServices",
-              "CanViewContractors",
-              "CanViewJobRequests",
-              "CanViewJobOrders",
-              "CanViewServicesQuotationResponses",
-              "CanViewServicesPricingSelection",
-              "CanViewServicesProformaRequests",
-              "CanViewServicesProformaResponses",
-              "CanViewServicesMemo",
-              "CanViewServicesPurchaseOrders"
+              "CanViewServicesDashboard"
             ]
           },
           {
@@ -106,48 +85,7 @@ export const navigationCatalog = [
             "label": "Stores Dashboard",
             "path": "/stores-dashboard",
             "permissions": [
-              "CanViewItemsInReagentStore",
-              "CanViewItemsInEquipmentStore",
-              "CanViewItemsInGeneralStore",
-              "CanViewItemsInItStore",
-              "CanViewReagentStoreReceivingArea",
-              "CanViewEquipmentStoreReceivingArea",
-              "CanViewGeneralStoreReceivingArea",
-              "CanViewItStoreReceivingArea",
-              "CanViewReagentStoreAvailableStocks",
-              "CanViewEquipmentStoreAvailableStocks",
-              "CanViewGeneralStoreAvailableStocks",
-              "CanViewItStoreAvailableStocks",
-              "CanViewReagentStorePurchaseRequisitions",
-              "CanViewEquipmentStorePurchaseRequisitions",
-              "CanViewGeneralStorePurchaseRequisitions",
-              "CanViewItStorePurchaseRequisitions",
-              "CanViewReagentStoreStockRequisitions",
-              "CanViewEquipmentStoreStockRequisitions",
-              "CanViewGeneralStoreStockRequisitions",
-              "CanViewItStoreStockRequisitions",
-              "CanViewReagentStoreIssueStocks",
-              "CanViewEquipmentStoreIssueStocks",
-              "CanViewGeneralStoreIssueStocks",
-              "CanViewItStoreIssueStocks",
-              "CanViewReagentStoreReturnItems",
-              "CanViewEquipmentStoreReturnItems",
-              "CanViewGeneralStoreReturnItems",
-              "CanViewItStoreReturnItems",
-              "CanViewReagentStoreDamageMissingItems",
-              "CanViewEquipmentStoreDamageMissingItems",
-              "CanViewGeneralStoreDamageMissingItems",
-              "CanViewItStoreDamageMissingItems",
-              "CanViewPurchaseRequisitionsSourcing",
-              "CanViewQuotationRequestsForTrustedVendors",
-              "CanViewQuotationResponsesForTrustedVendors",
-              "CanViewTrustedVendorPricingSelection",
-              "CanViewMemoForTrustedVendors",
-              "CanViewPurchaseOrdersForTrustedVendors",
-              "CanViewOpenMarketQuotationSheets",
-              "CanViewOpenMarketPricingSelection",
-              "CanViewOpenMarketMemo",
-              "CanViewOpenMarketPurchaseOrders"
+              "CanViewStoresDashboard"
             ]
           },
           {
@@ -155,8 +93,7 @@ export const navigationCatalog = [
             "label": "Inventory Command Center",
             "path": "/inventory-command-center",
             "permissions": [
-              "CanViewRawMaterialsItems",
-              "CanViewPackagingMaterialsItems"
+              "CanViewInventoryCommandCenter"
             ]
           },
           {
@@ -164,7 +101,7 @@ export const navigationCatalog = [
             "label": "Production Health",
             "path": "/production-health-dashboard",
             "permissions": [
-              "CanViewPlannedProducts"
+              "CanViewProductionHealthDashboard"
             ]
           },
           {
@@ -172,7 +109,7 @@ export const navigationCatalog = [
             "label": "FGTN Dashboard",
             "path": "/fgtn-dashbord",
             "permissions": [
-              "CanViewOrder"
+              "CanViewFgtnDashboard"
             ]
           }
         ]
@@ -815,8 +752,8 @@ export const navigationCatalog = [
         "id": "production-planning.requisition",
         "label": "Requisition",
         "permissions": [
-          "CanViewRawMaterialRequisitions",
-          "CanViewPackagingMaterialRequisitions",
+          "CanViewProductionRawMaterialRequisitions",
+          "CanViewProductionPackagingMaterialRequisitions",
           "CanViewRawMaterialRequisitionsForCreation",
           "CanViewPackageMaterialRequisitionsForCreation",
           "CanCreateRawMaterialRequisitions",
@@ -828,8 +765,8 @@ export const navigationCatalog = [
             "label": "Material Requisitions",
             "path": "/production/requisition/general",
             "permissions": [
-              "CanViewRawMaterialRequisitions",
-              "CanViewPackagingMaterialRequisitions"
+              "CanViewProductionRawMaterialRequisitions",
+              "CanViewProductionPackagingMaterialRequisitions"
             ]
           },
           {
@@ -850,7 +787,7 @@ export const navigationCatalog = [
         "label": "Products",
         "path": "/production/products",
         "permissions": [
-          "CanViewPlannedProducts"
+          "CanViewProductionProducts"
         ]
       },
       {
@@ -868,6 +805,14 @@ export const navigationCatalog = [
         "permissions": [
           "CanViewIncomingStockTransferRequests",
           "CanViewOutgoingStockTransferRequests"
+        ]
+      },
+      {
+        "id": "production-planning.white-placebo",
+        "label": "White Placebo",
+        "path": "/production/white-placebo",
+        "permissions": [
+          "CanViewWhitePlacebo"
         ]
       }
     ]
@@ -1245,7 +1190,7 @@ export const navigationCatalog = [
         "label": "Products",
         "path": "/qa/products",
         "permissions": [
-          "CanViewPlannedProducts"
+          "CanViewQaProducts"
         ]
       },
       {
@@ -1349,7 +1294,7 @@ export const navigationCatalog = [
         "label": "Products",
         "path": "/warehouse/fg-products",
         "permissions": [
-          "CanViewApprovedProducts"
+          "CanViewFgProducts"
         ]
       },
       {

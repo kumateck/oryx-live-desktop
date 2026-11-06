@@ -132,7 +132,7 @@ function Detail({ invoice }: { invoice: ProformaInvoice }) {
         <PrintSignatures roles={["Prepared by", "Approved by"]} />
       </PrintPreviewDialog>} />
       {/* Loading does not wait for the customer's purchase order: it can be marked before or after it is attached. */}
-      {allocation?.approved && !allocation.loadedAt && has(dispatchPermissions.allocations) ? <Button type="button" size="sm" variant="outline" onClick={() => setOpen("load")}><PackageCheck />Mark as loaded</Button> : null}
+      {allocation?.approved && !allocation.loadedAt && has(dispatchPermissions.load) ? <Button type="button" size="sm" variant="outline" onClick={() => setOpen("load")}><PackageCheck />Mark as loaded</Button> : null}
       {invoice.status === invoiceStatus.sent && has(dispatchPermissions.sendProforma) ? <Button type="button" size="sm" variant="outline" onClick={() => setOpen("attach")}><Paperclip />Attach purchase order</Button> : null}
       {invoice.status === invoiceStatus.pending && has(dispatchPermissions.sendProforma) ? <Button type="button" size="sm" disabled={loading || unavailable} title={unavailable ? "Prices could not be checked." : undefined} onClick={() => setOpen("send")}><Send />Send to customer</Button> : null}
     </>} />

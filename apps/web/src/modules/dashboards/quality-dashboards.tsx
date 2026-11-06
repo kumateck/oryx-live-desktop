@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { BadgeCheck, Beaker, Boxes, ClipboardCheck, ClipboardList, Factory, FileCheck, FileText, FlaskConical, PackageCheck, PackageSearch, TestTubes } from "lucide-react";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableFilterSelect } from "@/shared/forms/searchable-filter-select";
 import { identityApi } from "@/shared/api/generated/identity";
 import { reportsApi } from "@/shared/api/generated/reports";
 import { useCurrentUser } from "@/shared/auth/session-provider";
@@ -104,8 +105,9 @@ export function QcDashboardPage() {
   return <article className="min-w-0 space-y-4">
     <DashboardHeading eyebrow="QUALITY CONTROL" title="QC dashboard" description="Test procedures, raw data, batch tests, approvals and laboratory backlogs." queries={queries} period={period} periods={periods} onPeriod={setPeriod}
       actions={<><MaterialKindFilter value={materialKind} onChange={setMaterialKind} />
-        <Select value={departmentId ?? ALL} disabled={locked} onValueChange={(next) => setChosenDepartment(next === ALL ? undefined : next)}><SelectTrigger aria-label="Department" size="sm" className="w-full sm:w-48"><SelectValue placeholder={locked ? user?.department ?? "Your department" : "All departments"} /></SelectTrigger>
-          <SelectContent position="popper"><SelectItem value={ALL}>All departments</SelectItem>{locked && departmentId ? <SelectItem value={departmentId}>{user?.department ?? "Your department"}</SelectItem> : departments.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></>} />
+        <SearchableFilterSelect label="Department" className="w-full sm:w-48" all="All departments" value={departmentId} disabled={locked} loading={departmentQuery.isLoading}
+          options={locked && departmentId ? [{ value: departmentId, label: user?.department ?? "Your department" }] : departments.map((item) => ({ value: item.id, label: item.name }))}
+          onChange={setChosenDepartment} /></>} />
     <DashboardState queries={queries}>
       <MetricGrid>
         <MetricTile label="Material STP" value={data.numberOfStpRawMaterials} note="Raw material test procedures" icon={FileText} {...state} />

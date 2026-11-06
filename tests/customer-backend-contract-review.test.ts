@@ -41,6 +41,14 @@ function auditHeaderReview(document: ObjectValue) {
   return { normalized, paths: Object.keys(paths).length, operations, headers };
 }
 
+/** White Placebo preparation (2026-11-06): its owned schemas and the optional material/requisition markers. */
+function stripWhitePlacebo(schemas: ObjectValue) {
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Materials.WhitePlacebo.")) delete schemas[name];
+  for (const name of ["Material", "MaterialDto", "MaterialWithWarehouseStockDto"])
+    delete object(object(schemas[`DOMAIN.Entities.Materials.${name}`] ?? null).properties ?? null).isWhitePlacebo;
+  delete object(object(schemas["DOMAIN.Entities.Requisitions.RequisitionDto"] ?? null).properties ?? null).whitePlaceboPreparationId;
+}
+
 test("the preserved customer export matches the reported digest and retains both exact approved contracts", () => {
   assert.equal(contractDigest(customer), customerFingerprint);
   assert.equal(contractDigest(reviewedImport()), approvedFingerprint);
@@ -71,7 +79,9 @@ test("historical reporting adds optional read parameters without changing existi
           // User directory filters (2026-11-01): optional role and department filters on the user list; additive only.
           || (path === "/api/v1/user" && (parameter.name === "roleId" || parameter.name === "departmentId"))
           // Formula repair (2026-11-05): optional response whose pinned formula configuration the form is read with; additive only.
-          || (path === "/api/v1/form/{formId}" && parameter.name === "responseId")));
+          || (path === "/api/v1/form/{formId}" && parameter.name === "responseId")
+          // Product permissions (2026-11-05): optional context (qa) on product writes picks the QA keys; additive only.
+          || ((path.startsWith("/api/v1/product") || path.startsWith("/api/v1/bom")) && parameter.name === "context")));
       });
       const responses = object(operation.responses ?? null);
       if (!("409" in object(original.responses ?? null))) delete responses["409"];
@@ -124,10 +134,14 @@ test("historical reporting adds optional read parameters without changing existi
     // Reservation repair: additive, independently permissioned batch preview/apply.
     "/api/v1/production-schedule/{batchId}/reservation-repair",
     // Production material forecast (2026-11-05): read-only, separately permissioned warehouse report; additive only.
-    "/api/v1/report/production-material-forecast"].sort());
+    "/api/v1/report/production-material-forecast",
+    // White Placebo preparation (2026-11-06): one key per task, additive only.
+    "/api/v1/white-placebo/workspace", "/api/v1/white-placebo/recipe", "/api/v1/white-placebo",
+    "/api/v1/white-placebo/{id}", "/api/v1/white-placebo/{id}/issue", "/api/v1/white-placebo/{id}/output"].sort());
   const schemas = object(object(current.components ?? null).schemas ?? null);
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Reports.ProductionMaterialForecast")) delete schemas[name];
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ReservationRepair")) delete schemas[name];
+  stripWhitePlacebo(schemas);
   for (const name of ["ScheduleRepairKind", "ScheduleRepairPreview", "ScheduleRepairBatchPreview", "ApplyScheduleRepair", "ScheduleRepairResult"])
     delete schemas[`DOMAIN.Entities.Products.Production.${name}`];
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Materials.Batch.MaterialStockReport")) delete schemas[name];
@@ -245,7 +259,25 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
 });
 
 test("the merged forecast and migration contracts preserve the approved predecessor and pass release validation", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const head = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  assert.equal(contractDigest(head), "5211b900a46aff5d1ece7c3e4f73c8ef9ae3127969ffb0945bfca034d3aefe35");
+  // White Placebo preparation (2026-11-06) adds six paths, their owned schemas and three optional markers.
+  const placeboPredecessor = structuredClone(head);
+  const placeboPaths = object(placeboPredecessor.paths ?? null);
+  for (const path of Object.keys(placeboPaths)) if (path === "/api/v1/white-placebo" || path.startsWith("/api/v1/white-placebo/")) delete placeboPaths[path];
+  stripWhitePlacebo(object(object(placeboPredecessor.components ?? null).schemas ?? null));
+  assert.equal(contractDigest(placeboPredecessor), "7598763c860877a64d36bce3f9e730bf08cd7ac3b072384a7ae30afc235b6414");
+  checkCompatibility(hostConfig, policy, contractDigest(placeboPredecessor));
+  // Product permissions (2026-11-05) add an optional context query parameter to product and BOM writes.
+  const current = structuredClone(placeboPredecessor);
+  for (const [path, item] of Object.entries(object(current.paths ?? null))) {
+    if (!path.startsWith("/api/v1/product") && !path.startsWith("/api/v1/bom")) continue;
+    for (const operation of Object.values(object(item))) {
+      const parameters = object(operation).parameters;
+      if (Array.isArray(parameters)) object(operation).parameters = parameters.filter((entry) => object(entry).name !== "context");
+    }
+  }
+  checkCompatibility(hostConfig, policy, contractDigest(current));
   const digest = contractDigest(current);
   assert.ok(policy.backendContracts.includes("a485b5e6830f1102c312ad08b9ddd4a9992ce64109018a5b59961294b47496fe"));
   assert.ok(policy.backendContracts.includes("72b0d96542fd4728f86f4dc0f80986021abed7569010420a0734296e12bb219f"));
@@ -304,7 +336,7 @@ test("the merged forecast and migration contracts preserve the approved predeces
   checkCompatibility(hostConfig, policy, digest);
   const check = spawnSync(process.execPath, ["deploy/customer-server/check-release.ts"], { encoding: "utf8" });
   assert.equal(check.status, 0, check.stderr);
-  assert.match(check.stdout, new RegExp(`Approved backend contract: ${digest}`));
+  assert.match(check.stdout, new RegExp(`Approved backend contract: ${contractDigest(head)}`));
 });
 
 test("expiry department metadata is an optional read addition, with no client-controlled department parameter", () => {

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Spinner } from "@/components/ui/spinner";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { stockMigrationApi } from "../api/stock-migration-api";
 import { useDepartments } from "../hooks/use-departments";
@@ -57,7 +57,7 @@ export function StockMigrationTab() {
         Drafts do not change available stock. Uploading, correcting and approving use separate permissions.</p>
       <div className="grid gap-3 md:grid-cols-4">
         <Field label="Production department">{departments.own ? <p className="rounded-md border bg-muted/40 px-3 py-2 text-sm">{departments.own.label}</p>
-          : <AsyncOptionPicker label="Production department" value={chosen} onChange={setChosen} loadOptions={departments.loadOptions} placeholder="Choose a department" />}</Field>
+          : <SearchableSelect clearable={false} label="Production department" value={chosen} onChange={(option) => { if (option) setChosen(option); }} loadOptions={departments.loadOptions} placeholder="Choose a department" />}</Field>
         <Field label="Weights in the sheet are in"><UnitSelect label="Weights in the sheet are in" value={massUnit} units={massUnits} onChange={setMassUnit} /></Field>
         <Field label="Liquids in the sheet are in"><UnitSelect label="Liquids in the sheet are in" value={volumeUnit} units={volumeUnits} onChange={setVolumeUnit} /></Field>
         <Field label="Stock sheet"><Input type="file" accept=".xlsx" aria-label="Stock sheet" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></Field>

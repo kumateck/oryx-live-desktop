@@ -15,7 +15,7 @@ const preview = () => ({ activityId: "run-1", batchId: "batch-1", scheduleId: "s
   reservations: [{ id: "reserve-1", materialCode: "PMF015", materialName: "Amoxicillin foil", lotNumber: "SYNTHETIC-LOT", unit: "mg", quantity: 22_500_000 }] });
 
 function open({ permission = true, button = false, evidence = preview(), malformed = false, fail = false } = {}) {
-  const backend = stubBackend({ permissions: ["CanViewPlannedProducts", ...(permission ? ["CanUnstartProduction"] : [])] });
+  const backend = stubBackend({ permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", ...(permission ? ["CanUnstartProduction"] : [])] });
   rememberSession();
   const session = backend.fetcher.getMockImplementation();
   const writes: string[] = [];

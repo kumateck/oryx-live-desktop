@@ -11,11 +11,8 @@ export const sendOrderPermissions: Record<SupplierType, string> = { 0: "CanSendA
 
 /** Changing the lines of an order that has already gone to its supplier. */
 export const reviseOrderPermissions: Record<SupplierType, string> = { 0: "CanReviseForeignPurchaseOrder", 1: "CanReviseLocalPurchaseOrder" };
-/**
- * Cancelling an order. The server has no permission of its own for it (any signed-in user may call it),
- * so the app asks for the permission to revise orders of that kind, the nearest the server has.
- */
-export const cancelOrderPermissions = reviseOrderPermissions;
+/** Cancelling an order: its own key per kind (granted on deploy to the roles that could revise orders). */
+export const cancelOrderPermissions: Record<SupplierType, string> = { 0: "CanCancelForeignPurchaseOrder", 1: "CanCancelLocalPurchaseOrder" };
 
 export const ordersPath = "/procurement/purchase-orders";
 export const orderListPath = "/procurement/purchase-order-lists";

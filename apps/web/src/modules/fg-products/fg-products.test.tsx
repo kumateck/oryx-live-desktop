@@ -51,7 +51,7 @@ function open(address: string, permissions: string[]) {
 }
 
 it("loads every product of the chosen division, from all departments, not by department", async () => {
-  const { lists, router } = open("/warehouse/fg-products", ["CanViewApprovedProducts"]);
+  const { lists, router } = open("/warehouse/fg-products", ["CanViewFgProducts"]);
   expect(await screen.findByText("Amoxicillin 250")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Non-beta-lactam" }));
   expect(await screen.findByText("Wormee 4")).toBeTruthy();
@@ -62,21 +62,21 @@ it("loads every product of the chosen division, from all departments, not by dep
 });
 
 it("opens a product's packing styles when its row is clicked", async () => {
-  const { router } = open("/warehouse/fg-products", ["CanViewApprovedProducts"]);
+  const { router } = open("/warehouse/fg-products", ["CanViewFgProducts"]);
   fireEvent.click(await screen.findByText("Amoxicillin 250"));
   await waitFor(() => expect(router.state.location.pathname).toBe(`/warehouse/fg-products/${beta}`));
   expect(await screen.findByText("100 ml bottle")).toBeTruthy();
 });
 
 it("shows packing styles read-only without the approved-product packing permission", async () => {
-  open(`/warehouse/fg-products/${beta}`, ["CanViewApprovedProducts"]);
+  open(`/warehouse/fg-products/${beta}`, ["CanViewFgProducts"]);
   expect(await screen.findByText("100 ml bottle")).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Add style" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Save packing styles" })).toBeNull();
 });
 
 it("saves packing styles through the finished goods endpoint", async () => {
-  const { posts } = open(`/warehouse/fg-products/${beta}`, ["CanViewApprovedProducts", "CanEditApprovedProductPackingStyle"]);
+  const { posts } = open(`/warehouse/fg-products/${beta}`, ["CanViewFgProducts", "CanEditApprovedProductPackingStyle"]);
   expect(await screen.findByText("100 ml bottle")).toBeTruthy();
   await chooseAction("Actions for 100 ml bottle", "Remove");
   fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Remove" }));

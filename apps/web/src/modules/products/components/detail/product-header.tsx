@@ -13,16 +13,16 @@ import { QualityBadge, VerifyProductButton } from "../verify-product-button";
 import { ProductPrint } from "./product-print";
 
 export function ProductHeader({ product }: { product: ProductDetail }) {
-  const { editPath: productEditPath } = useProductWorkspace();
+  const { editPath: productEditPath, editRequirement, task, keys } = useProductWorkspace();
   const created = formatDateTime(product.createdAt);
   const division = divisionLabel(product.division);
   return <header className="min-w-0 space-y-3">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <PageBreadcrumbs items={[{ label: product.name ?? "Unnamed product" }]} />
       <div className="flex flex-wrap items-center gap-2">
-        <PrintButton preview={(close) => <ProductPrint product={product} onClose={close} />} />
+        <PermissionGuard require={task(keys.print ?? keys.sections.info.view)}><PrintButton preview={(close) => <ProductPrint product={product} onClose={close} />} /></PermissionGuard>
         <PermissionGuard require={productPermissions.verify}><VerifyProductButton product={product} /></PermissionGuard>
-        <PermissionGuard require={productPermissions.edit}>
+        <PermissionGuard require={editRequirement}>
           <Button asChild size="sm" variant="outline"><Link to={productEditPath(product.id)}><Pencil />Edit product</Link></Button>
         </PermissionGuard>
       </div>

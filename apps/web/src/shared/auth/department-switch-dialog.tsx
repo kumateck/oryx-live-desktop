@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/shared/api/base-api";
 import { identityApi } from "@/shared/api/generated/identity";
@@ -39,6 +39,7 @@ export function DepartmentSwitchDialog({ user, onClose }: { user: SessionUser; o
     return user.departmentId ? [noDepartment, ...assigned] : assigned;
   }, [departments.data, user.departmentId]);
   const target = options.find((option) => option.value === chosen) ?? null;
+  const choices = useMemo(() => options.map((option) => ({ value: option.value, label: option.name })), [options]);
   const submit = async () => {
     if (!target || busy) return;
     if (desktop?.workspace.hasWork()) { setError("Save or discard work in all tabs before switching department."); return; }
@@ -73,12 +74,10 @@ export function DepartmentSwitchDialog({ user, onClose }: { user: SessionUser; o
         </dl>
         <div className="space-y-2">
         <label htmlFor="switch-department" className="text-sm font-medium">Department</label>
-        <Select value={chosen} onValueChange={(value) => { setChosen(value); setError(""); }} disabled={busy || (departments.isLoading && options.length === 0)}>
-          <SelectTrigger id="switch-department" className="w-full" aria-invalid={Boolean(error)} aria-describedby={error ? "switch-department-error" : undefined}>
-            <SelectValue placeholder={departments.isLoading ? "Loading departments…" : options.length ? "Choose a department" : "No other production department"} />
-          </SelectTrigger>
-          <SelectContent>{options.map((option) => <SelectItem key={option.value} value={option.value}>{option.name}</SelectItem>)}</SelectContent>
-        </Select>
+        <SearchableSelect id="switch-department" label="Department" className="w-full" disabled={busy} loading={departments.isLoading && options.length === 0}
+          options={choices} value={target ? { value: target.value, label: target.name } : null} clearable={false}
+          onChange={(option) => { if (option) { setChosen(option.value); setError(""); } }} aria-invalid={Boolean(error)} aria-describedby={error ? "switch-department-error" : undefined}
+          placeholder={options.length ? "Choose a department" : "No other production department"} searchPlaceholder="Search departments" emptyMessage="No departments found" />
         {departments.error ? <p role="alert" className="text-sm text-destructive">{apiErrorMessage(departments.error)}</p> : null}
         {error ? <p id="switch-department-error" role="alert" className="text-sm text-destructive">{error}</p> : null}
         </div>

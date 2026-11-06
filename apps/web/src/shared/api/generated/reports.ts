@@ -3459,6 +3459,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   suppliers?: DomainEntitiesProcurementSuppliersSupplierListDto[] | null;
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
+  isWhitePlacebo?: boolean;
 };
 export type DomainEntitiesBaseUnitOfMeasureType = 0 | 1 | 2 | 3;
 export type DomainEntitiesBaseUnitOfMeasureCategory = 0 | 1 | 2 | 3 | 4;

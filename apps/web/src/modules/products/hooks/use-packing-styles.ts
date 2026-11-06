@@ -1,5 +1,5 @@
 import { useProductWorkspace } from "./use-product-workspace";
-import { approvedProductPackingPermission, productPermissions } from "../lib/product-access";
+import { approvedProductPackingPermission } from "../lib/product-access";
 import type { PermissionRequirement } from "@/shared/auth/access";
 import { useAccess } from "@/shared/auth/use-access";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
@@ -18,7 +18,8 @@ import { randomId } from "@/shared/ids/random-id";
 export type PackingSaveTarget = "product" | "approved-product";
 
 const targets: Record<PackingSaveTarget, { audit: { module: string; subModule: string }; require: PermissionRequirement }> = {
-  product: { audit: { module: "Production", subModule: "Packing Style" }, require: { kind: "all", permissions: [productPermissions.edit], departmentType: 0 } },
+  // The product edit page's own requirement comes from the workspace: packing-style keys for its context.
+  product: { audit: { module: "Production", subModule: "Packing Style" }, require: { kind: "all", permissions: ["CanEditProductionProductPackingStyles"], departmentType: 0 } },
   "approved-product": { audit: { module: "Warehouse", subModule: "Approved Products" }, require: approvedProductPackingPermission },
 };
 const none: PackingStyle[] = [];
@@ -28,9 +29,9 @@ const none: PackingStyle[] = [];
  * here as a draft until the user saves; `dirty` is true while the draft differs from what is saved.
  */
 export function usePackingStyles(productId: string, target: PackingSaveTarget = "product") {
-  const { editRequirement } = useProductWorkspace();
+  const { save: saveRequirement, context } = useProductWorkspace();
   const { audit } = targets[target];
-  const require = target === "product" ? editRequirement : targets[target].require;
+  const require = target === "product" ? saveRequirement("packingStyle") : targets[target].require;
   const query = useGetApiV1ProductByProductIdPackingQuery({ ...audit, productId });
   const [saveProduct, productMutation] = usePostApiV1ProductByProductIdPackingMutation();
   const [saveApproved, approvedMutation] = usePostApiV1ProductByProductIdPackingApprovedProductMutation();
@@ -47,7 +48,7 @@ export function usePackingStyles(productId: string, target: PackingSaveTarget = 
     if (denied) { setMessage(denied); return; }
     setMessage("");
     const request = { ...audit, productId, body: toPackingRequest(styles) };
-    const result = target === "approved-product" ? await saveApproved(request) : await saveProduct(request);
+    const result = target === "approved-product" ? await saveApproved(request) : await saveProduct({ ...request, ...context });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     setDraft(null);
     toast.success("Packing styles saved");

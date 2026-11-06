@@ -19,7 +19,7 @@ const routes = [
 ];
 
 function open(saved: object[] = routes) {
-  const backend = stubBackend({ permissions: ["CanEditProductionPlan"] });
+  const backend = stubBackend({ permissions: ["CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure"] });
   rememberSession();
   const calls: { method: string; path: string; body: string }[] = [];
   const session = backend.fetcher.getMockImplementation();

@@ -4053,6 +4053,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   suppliers?: DomainEntitiesProcurementSuppliersSupplierListDto[] | null;
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
+  isWhitePlacebo?: boolean;
 };
 export type DomainEntitiesBasePackageStyleDto = {
   id?: string;
@@ -4294,6 +4295,7 @@ export type DomainEntitiesRequisitionsRequisitionDto = {
   comments?: string | null;
   signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
   contentRevision?: number;
+  whitePlaceboPreparationId?: string | null;
 };
 export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   id?: string;
@@ -4310,6 +4312,7 @@ export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   comments?: string | null;
   signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
   contentRevision?: number;
+  whitePlaceboPreparationId?: string | null;
 };
 export type DomainEntitiesProductsProductionProductionStepExtraMaterialDto = {
   id?: string;

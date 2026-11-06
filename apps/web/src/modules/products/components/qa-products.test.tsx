@@ -24,8 +24,8 @@ const id = "658da105-a506-44a9-8ff5-8d005a54f294";
 const departmentId = "758da105-a506-44a9-8ff5-8d005a54f294";
 const otherDepartmentId = "858da105-a506-44a9-8ff5-8d005a54f294";
 const name = "Gelatin Capsule Shells - Zinvite";
-const view = "CanViewPlannedProducts";
-const edit = "CanEditProductionPlan";
+const view = ["CanViewQaProducts", "CanViewQaProductInfo", "CanViewQaProductBom", "CanViewQaProductPackingMaterials", "CanViewQaProductPackingStyles", "CanViewQaProductPackingOrder", "CanViewQaProductProcedure", "CanViewQaProductSpecifications", "CanViewQaProductStps", "CanViewQaProductArds"];
+const edit = ["CanEditQaProductInfo", "CanAddQaProductBom", "CanEditQaProductBom", "CanDeleteQaProductBom", "CanArchiveQaProductBom", "CanAddQaProductPackingMaterials", "CanEditQaProductPackingMaterials", "CanDeleteQaProductPackingMaterials", "CanAddQaProductPackingStyles", "CanEditQaProductPackingStyles", "CanDeleteQaProductPackingStyles", "CanEditQaProductPackingOrder", "CanAddQaProductProcedure", "CanEditQaProductProcedure", "CanDeleteQaProductProcedure"];
 
 function open(permissions: string[], address = "/qa/products", productDepartment = departmentId) {
   const backend = stubBackend({ permissions, departmentType: 1 }); rememberSession();
@@ -67,7 +67,7 @@ it("guards QA products before queries mount and does not grant access from QA me
 });
 
 it("loads products only after QA chooses a production department", async () => {
-  const { calls } = open([view]);
+  const { calls } = open([...view]);
   const user = userEvent.setup();
   await user.click(await screen.findByRole("combobox", { name: "Production department" }));
   await user.click(await screen.findByRole("option", { name: "Tablet" }));
@@ -80,14 +80,14 @@ it("loads products only after QA chooses a production department", async () => {
 });
 
 it("keeps QA detail/edit links in the selected department and hides ungranted edit actions", async () => {
-  open([view], `/qa/products/${id}/details?departmentId=${departmentId}`);
+  open([...view], `/qa/products/${id}/details?departmentId=${departmentId}`);
   expect(await screen.findByRole("heading", { name: "Zinvite" })).toBeTruthy();
   expect(screen.queryByRole("link", { name: "Edit product" })).toBeNull();
   expect(screen.queryByRole("button", { name: /Verify Zinvite/ })).toBeNull();
 });
 
 it("retains department context in the QA edit link", async () => {
-  const { router } = open([view, edit], `/qa/products/${id}/details?departmentId=${departmentId}`);
+  const { router } = open([...view, ...edit], `/qa/products/${id}/details?departmentId=${departmentId}`);
   expect((await screen.findByRole("link", { name: "Edit product" })).getAttribute("href"))
     .toBe(`/qa/products/${id}/edit/info?departmentId=${departmentId}`);
   fireEvent.click(screen.getByRole("tab", { name: "Procedure" }));
@@ -95,19 +95,19 @@ it("retains department context in the QA edit link", async () => {
 });
 
 it("refuses a mismatched department before any editor or material lookup mounts", async () => {
-  const { calls } = open([view, edit], `/qa/products/${id}/edit/bom?departmentId=${departmentId}`, otherDepartmentId);
+  const { calls } = open([...view, ...edit], `/qa/products/${id}/edit/bom?departmentId=${departmentId}`, otherDepartmentId);
   expect(await screen.findByText("This product is not available in the selected department.")).toBeTruthy();
   expect(calls.some(call => call.path.endsWith("/bom") || call.path.startsWith("/api/v1/material"))).toBe(false);
 });
 
 it("denies a QA edit bookmark without edit permission before even reading the product", async () => {
-  const { calls } = open([view], `/qa/products/${id}/edit/bom?departmentId=${departmentId}`);
+  const { calls } = open([...view], `/qa/products/${id}/edit/bom?departmentId=${departmentId}`);
   expect(await screen.findByRole("heading", { name: "You don't have access to this page" })).toBeTruthy();
   expect(calls).toEqual([]);
 });
 
 it("uses the product's linkage for QA BOM editing and rechecks that unit before saving", async () => {
-  const { calls } = open([view, edit], `/qa/products/${id}/edit/bom?departmentId=${departmentId}`);
+  const { calls } = open([...view, ...edit], `/qa/products/${id}/edit/bom?departmentId=${departmentId}`);
   await chooseAction(`Actions for ${name}`, "Edit");
   const dialog = await screen.findByRole("dialog");
   expect(await within(dialog).findByRole("spinbutton", { name: "Unit quantity (piece)" })).toBeTruthy();
@@ -123,7 +123,7 @@ it("uses the product's linkage for QA BOM editing and rechecks that unit before 
 });
 
 it("uses product-scoped materials in the QA picker", async () => {
-  const { calls } = open([view, edit], `/qa/products/${id}/edit/bom?departmentId=${departmentId}`);
+  const { calls } = open([...view, ...edit], `/qa/products/${id}/edit/bom?departmentId=${departmentId}`);
   await screen.findByText(name);
   fireEvent.click(await screen.findByRole("button", { name: "Add material" }));
   fireEvent.click(await screen.findByRole("combobox", { name: /Material/ }));
@@ -131,7 +131,7 @@ it("uses product-scoped materials in the QA picker", async () => {
 });
 
 it("allows explicitly granted QA verification without changing the active department", async () => {
-  const { calls } = open([view, "CanVerifyProduct"], `/qa/products?departmentId=${departmentId}`);
+  const { calls } = open([...view, "CanVerifyProduct"], `/qa/products?departmentId=${departmentId}`);
   fireEvent.click(await screen.findByRole("button", { name: "Verify Zinvite" }));
   await waitFor(() => expect(calls.some(call => call.path === "/api/v1/verification")).toBe(true));
   expect(calls.find(call => call.path === "/api/v1/verification")?.body).toBe(JSON.stringify({ modelId: id, modelType: 0 }));
