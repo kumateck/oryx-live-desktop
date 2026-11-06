@@ -70,7 +70,7 @@ export function StepDialog({ step, allocation, onClose }: { step: DispatchStep; 
   const [deliver] = usePutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdMutation();
   if (step === "waybill") return <WaybillDialog allocation={allocation} onClose={onClose} />;
   const loading = step === "load";
-  return <ConfirmActionDialog require={stepPermission(step, allocation.approved ? 1 : 0)} destructive={false} title={`${stepLabels[step]}: ${allocation.orderCode ?? "this order"}?`}
+  return <ConfirmActionDialog require={stepPermission(step)} destructive={false} title={`${stepLabels[step]}: ${allocation.orderCode ?? "this order"}?`}
     description={loading ? `The goods for ${allocation.customer.name} are recorded as loaded onto the vehicle. This cannot be undone.` : `The goods are recorded as delivered to ${allocation.customer.name}. This cannot be undone.`}
     confirmLabel={stepLabels[step]} busyLabel="Saving…" onClose={onClose} onConfirm={async () => {
       const result = loading ? await load({ ...audit, allocateProductionOrderId: allocation.id }) : await deliver({ ...audit, allocateProductionOrderId: allocation.id });
@@ -79,7 +79,8 @@ export function StepDialog({ step, allocation, onClose }: { step: DispatchStep; 
       return null; }} />;
 }
 const stepIcons = { load: PackageCheck, waybill: FileText, deliver: Truck } as const;
-const stepPermission = (step: DispatchStep, kind: AllocationKind) => step === "waybill" ? dispatchPermissions.createWaybill : allocationKinds[kind].permission;
+// Each dispatch step has its own key, which the server checks too.
+const stepPermission = (step: DispatchStep) => step === "waybill" ? dispatchPermissions.createWaybill : dispatchPermissions[step];
 
 const column = dataTableColumns<Allocation>();
 /** Packing lists waiting for approval, or approved allocations on their way to the customer. */
@@ -108,7 +109,7 @@ export function AllocationListPage() {
       <Badge variant={row.original.hasWaybill ? "default" : "outline"}>Waybill {row.original.hasWaybill ? "raised" : "missing"}</Badge></div> }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => { const step = nextStep(row.original);
       return <TableMenu label={`Actions for order ${row.original.orderCode ?? row.original.id}`} items={[{ id: "view", label: "View", icon: Eye, to: allocationPath(row.original.id) },
-        step !== null && { id: step, label: stepLabels[step], icon: stepIcons[step], require: stepPermission(step, kind), onSelect: () => setActing({ step, allocation: row.original }) }]} />; } }),
+        step !== null && { id: step, label: stepLabels[step], icon: stepIcons[step], require: stepPermission(step), onSelect: () => setActing({ step, allocation: row.original }) }]} />; } }),
   ]), [kind]);
   if (!allowed) return <NoAccess />;
   return <section className="page-fill">
@@ -147,7 +148,7 @@ function Detail({ allocation }: { allocation: Allocation }) {
       <PrintButton preview={(close) => <PackingListPrint allocation={allocation} onClose={close} />} />
       {editable && has(orderPermissions.generatePackingList) ? <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil />Edit packing list</Button> : null}
       {!allocation.hasInvoice && has(dispatchPermissions.generateProforma) ? <Button type="button" size="sm" variant="outline" onClick={() => setInvoicing(true)}><FileText />Generate proforma invoice</Button> : null}
-      {step && has(stepPermission(step, kind)) ? <Button type="button" size="sm" onClick={() => setActing(step)}>{stepLabels[step]}</Button> : null}
+      {step && has(stepPermission(step)) ? <Button type="button" size="sm" onClick={() => setActing(step)}>{stepLabels[step]}</Button> : null}
     </>} />
     <div className="flex flex-wrap items-center gap-2"><Badge variant={allocation.approved ? "default" : "outline"}>{allocation.approved ? "Approved" : "Awaiting approval"}</Badge>
       <Badge variant={allocation.hasInvoice ? "secondary" : "outline"}>Invoice {allocation.hasInvoice ? allocation.invoiceCode ?? "raised" : "missing"}</Badge><Badge variant={allocation.hasWaybill ? "secondary" : "outline"}>Waybill {allocation.hasWaybill ? "raised" : "missing"}</Badge></div>
