@@ -806,6 +806,14 @@ export const navigationCatalog = [
           "CanViewIncomingStockTransferRequests",
           "CanViewOutgoingStockTransferRequests"
         ]
+      },
+      {
+        "id": "production-planning.white-placebo",
+        "label": "White Placebo",
+        "path": "/production/white-placebo",
+        "permissions": [
+          "CanViewWhitePlacebo"
+        ]
       }
     ]
   },

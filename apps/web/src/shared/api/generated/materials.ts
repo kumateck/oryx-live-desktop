@@ -1103,6 +1103,109 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getWhitePlaceboWorkspace: build.query<
+      GetWhitePlaceboWorkspaceApiResponse,
+      GetWhitePlaceboWorkspaceApiArg
+    >({
+      providesTags: [{ type: "white-placebo/workspace", id: "LIST" }, { type: "white-placebo", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/white-placebo/workspace`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    saveWhitePlaceboRecipe: build.mutation<
+      SaveWhitePlaceboRecipeApiResponse,
+      SaveWhitePlaceboRecipeApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "white-placebo/recipe", id: "LIST" }, { type: "white-placebo", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/white-placebo/recipe`,
+        method: "PUT",
+        body: queryArg.domainEntitiesMaterialsWhitePlaceboSaveWhitePlaceboRecipe,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    listWhitePlaceboPreparations: build.query<
+      ListWhitePlaceboPreparationsApiResponse,
+      ListWhitePlaceboPreparationsApiArg
+    >({
+      providesTags: [{ type: "white-placebo", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/white-placebo`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          search: queryArg.search,
+        },
+      }),
+    }),
+    createWhitePlaceboPreparation: build.mutation<
+      CreateWhitePlaceboPreparationApiResponse,
+      CreateWhitePlaceboPreparationApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "white-placebo", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/white-placebo`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsWhitePlaceboCreateWhitePlaceboPreparation,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getWhitePlaceboPreparation: build.query<
+      GetWhitePlaceboPreparationApiResponse,
+      GetWhitePlaceboPreparationApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "white-placebo", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/white-placebo/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    issueWhitePlaceboIngredients: build.mutation<
+      IssueWhitePlaceboIngredientsApiResponse,
+      IssueWhitePlaceboIngredientsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "white-placebo", id: "LIST" }, { type: "white-placebo", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/white-placebo/${queryArg.id}/issue`,
+        method: "POST",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    recordWhitePlaceboOutput: build.mutation<
+      RecordWhitePlaceboOutputApiResponse,
+      RecordWhitePlaceboOutputApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "white-placebo", id: "LIST" }, { type: "white-placebo", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/white-placebo/${queryArg.id}/output`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsWhitePlaceboRecordWhitePlaceboOutput,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -1891,6 +1994,68 @@ export type GetApiV1MaterialBatchesStockReportApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetWhitePlaceboWorkspaceApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsWhitePlaceboWhitePlaceboWorkspaceDto;
+export type GetWhitePlaceboWorkspaceApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type SaveWhitePlaceboRecipeApiResponse = void;
+export type SaveWhitePlaceboRecipeApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsWhitePlaceboSaveWhitePlaceboRecipe: DomainEntitiesMaterialsWhitePlaceboSaveWhitePlaceboRecipe;
+};
+export type ListWhitePlaceboPreparationsApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsWhitePlaceboWhitePlaceboPreparationPageDto;
+export type ListWhitePlaceboPreparationsApiArg = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type CreateWhitePlaceboPreparationApiResponse =
+  /** status 200 OK */ string;
+export type CreateWhitePlaceboPreparationApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsWhitePlaceboCreateWhitePlaceboPreparation: DomainEntitiesMaterialsWhitePlaceboCreateWhitePlaceboPreparation;
+};
+export type GetWhitePlaceboPreparationApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsWhitePlaceboWhitePlaceboPreparationDto;
+export type GetWhitePlaceboPreparationApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type IssueWhitePlaceboIngredientsApiResponse = void;
+export type IssueWhitePlaceboIngredientsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type RecordWhitePlaceboOutputApiResponse = void;
+export type RecordWhitePlaceboOutputApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsWhitePlaceboRecordWhitePlaceboOutput: DomainEntitiesMaterialsWhitePlaceboRecordWhitePlaceboOutput;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -2040,6 +2205,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   suppliers?: DomainEntitiesProcurementSuppliersSupplierListDto[] | null;
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
+  isWhitePlacebo?: boolean;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsMaterialDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -2851,6 +3017,7 @@ export type DomainEntitiesMaterialsMaterialWithWarehouseStockDto = {
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
   warehouseStock?: number;
+  isWhitePlacebo?: boolean;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsMaterialWithWarehouseStockDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -3200,6 +3367,129 @@ export type DomainEntitiesMaterialsBatchMaterialStockReportDto = {
   expiredOnly?: boolean;
   rows?: DomainEntitiesMaterialsBatchMaterialStockReportRow[] | null;
 };
+export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboIngredientDto = {
+  materialId?: string;
+  name?: string | null;
+  code?: string | null;
+  uoMId?: string;
+  unitSymbol?: string | null;
+  quantity?: number;
+};
+export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboRecipeDto = {
+  materialId?: string;
+  materialName?: string | null;
+  unitSymbol?: string | null;
+  revision?: number;
+  reference?: string | null;
+  instructions?: string | null;
+  storageConditions?: string | null;
+  holdHours?: number;
+  expectedQuantity?: number;
+  ingredients?:
+    DomainEntitiesMaterialsWhitePlaceboWhitePlaceboIngredientDto[] | null;
+};
+export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboMaterialDto = {
+  id?: string;
+  name?: string | null;
+  code?: string | null;
+  uoMId?: string;
+  unitSymbol?: string | null;
+  isWhitePlacebo?: boolean;
+};
+export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboStockDto = {
+  id?: string;
+  materialId?: string;
+  materialName?: string | null;
+  batchNumber?: string | null;
+  shelf?: string | null;
+  unitSymbol?: string | null;
+  quantity?: number;
+  expiryDate?: string | null;
+};
+export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboWorkspaceDto = {
+  recipe?: DomainEntitiesMaterialsWhitePlaceboWhitePlaceboRecipeDto;
+  materials?:
+    DomainEntitiesMaterialsWhitePlaceboWhitePlaceboMaterialDto[] | null;
+  stock?: DomainEntitiesMaterialsWhitePlaceboWhitePlaceboStockDto[] | null;
+};
+export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboIngredientRequest = {
+  materialId?: string;
+  quantity?: number;
+};
+export type DomainEntitiesMaterialsWhitePlaceboSaveWhitePlaceboRecipe = {
+  materialId?: string;
+  revision?: number;
+  reference: string;
+  instructions: string;
+  storageConditions: string;
+  holdHours?: number;
+  expectedQuantity?: number;
+  ingredients?:
+    DomainEntitiesMaterialsWhitePlaceboWhitePlaceboIngredientRequest[] | null;
+};
+export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboInputDto = {
+  id?: string;
+  materialId?: string;
+  materialBatchId?: string;
+  materialName?: string | null;
+  materialCode?: string | null;
+  batchNumber?: string | null;
+  unitSymbol?: string | null;
+  recipeQuantity?: number;
+  quantity?: number;
+};
+export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboPreparationDto = {
+  id?: string;
+  batchNumber?: string | null;
+  materialName?: string | null;
+  unitSymbol?: string | null;
+  recipeRevision?: number;
+  recipeReference?: string | null;
+  instructions?: string | null;
+  storageConditions?: string | null;
+  holdHours?: number;
+  expectedQuantity?: number;
+  actualQuantity?: number | null;
+  notes?: string | null;
+  outputNotes?: string | null;
+  requisitionId?: string;
+  approved?: boolean;
+  rejected?: boolean;
+  createdAt?: string;
+  issuedById?: string | null;
+  issuedAt?: string | null;
+  recordedById?: string | null;
+  recordedAt?: string | null;
+  preparedAt?: string | null;
+  outputBatchId?: string | null;
+  grnId?: string | null;
+  qualityStatus?: DomainEntitiesMaterialsBatchBatchStatus;
+  useBy?: string | null;
+  inputs?: DomainEntitiesMaterialsWhitePlaceboWhitePlaceboInputDto[] | null;
+};
+export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboPreparationPageDto =
+  {
+    items?:
+      DomainEntitiesMaterialsWhitePlaceboWhitePlaceboPreparationDto[] | null;
+    totalRows?: number;
+  };
+export type DomainEntitiesMaterialsWhitePlaceboWhitePlaceboInputRequest = {
+  shelfMaterialBatchId?: string;
+  quantity?: number;
+};
+export type DomainEntitiesMaterialsWhitePlaceboCreateWhitePlaceboPreparation = {
+  id?: string;
+  recipeRevision?: number;
+  batchNumber: string;
+  expectedQuantity?: number;
+  notes?: string | null;
+  inputs?: DomainEntitiesMaterialsWhitePlaceboWhitePlaceboInputRequest[] | null;
+};
+export type DomainEntitiesMaterialsWhitePlaceboRecordWhitePlaceboOutput = {
+  quantity?: number;
+  preparedAt?: string;
+  notes: string;
+};
 export const {
   usePostApiV1BomMutation,
   usePutApiV1BomByBillOfMaterialIdMutation,
@@ -3310,4 +3600,14 @@ export const {
   usePostApiV1StockMigrationsTopUpsMutation,
   useGetApiV1MaterialBatchesStockReportQuery,
   useLazyGetApiV1MaterialBatchesStockReportQuery,
+  useGetWhitePlaceboWorkspaceQuery,
+  useLazyGetWhitePlaceboWorkspaceQuery,
+  useSaveWhitePlaceboRecipeMutation,
+  useListWhitePlaceboPreparationsQuery,
+  useLazyListWhitePlaceboPreparationsQuery,
+  useCreateWhitePlaceboPreparationMutation,
+  useGetWhitePlaceboPreparationQuery,
+  useLazyGetWhitePlaceboPreparationQuery,
+  useIssueWhitePlaceboIngredientsMutation,
+  useRecordWhitePlaceboOutputMutation,
 } = injectedRtkApi;
