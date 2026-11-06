@@ -144,3 +144,9 @@ caller supplies its stock details, labels and `onPlace` API callback.
 `MoveStockDialog` is a separate dialog for moving existing shelf stock, used by
 Location Chart and Material Location. Both dialogs render the same `MoveLine`
 fields, including the searchable Rack selector and dependent Shelf selector.
+
+The stock-location contract review adds seven optional read fields across six
+existing DTO schemas, with no path, operation, request or existing property
+changes. The host-deployment compatibility policy retains prior fingerprints
+and also includes the reviewed stock-location contract fingerprint
+`4cd376b6624dfe633457cb79f7bf8592cd283590d7a6bc855ccb7afa196bd64c`.
