@@ -1,5 +1,18 @@
 # Oryx Live Desktop plan
 
+## Formula question revision participation (2026-11-06)
+
+The user authorizes any two of authoring, review and approval to be performed
+by the same user. Keep all three sequential steps and require at least two
+distinct users overall: an author may review or approve, and a reviewer may
+approve, but an author who also reviewed must leave approval to another user.
+Apply the same rule in backend transitions, pending approval eligibility and
+the shared frontend decision controls. Preserve existing permissions, stage
+assignments, definition/hash validation, immutable revisions and audit reasons
+and actor attribution. This changes formula questions only; other regulated
+revision workflows and migration import evidence retain their own policies.
+Prepared locally; no deployment, role grants or database migration.
+
 ## Batch-level reservation repair (2026-11-05)
 
 Implemented locally after the user's authorization with a dedicated permission.

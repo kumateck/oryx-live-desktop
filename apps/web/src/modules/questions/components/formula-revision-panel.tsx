@@ -24,7 +24,7 @@ const reasonFields: WizardField<ReasonValues>[] = [{ type: InputTypes.TEXTAREA, 
 
 /**
  * The governed revision of a formula question: run the server's calculation checks, submit it for review, record the review,
- * and approve it. Each step is a separate permission, and review and approval are by someone other than the author on the server.
+ * and approve it. Each step is a separate permission; the server requires at least two users across the three roles.
  * Reviewers and approvers without editing rights use the Quality Assurance queues, which show the same decisions.
  */
 export function FormulaRevisionPanel({ questionId, saved, onStatus, onSubmitted }: { questionId: string; saved: GovernedQuestion | null; onStatus: (status: FormulaRevision["status"]) => void; onSubmitted: () => void }) {
