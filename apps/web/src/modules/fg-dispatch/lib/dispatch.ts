@@ -7,7 +7,8 @@ export const invoicesPath = "/crm/invoices";
 export const audit = { module: "Finished Goods Warehouse", subModule: "Allocations" } as const;
 export const invoiceAudit = { module: "Finished Goods Warehouse", subModule: "Proforma Invoices" } as const;
 export const dispatchPermissions = { packingLists: "CanViewPackingList", allocations: "CanViewInvoice", generateProforma: "CanGenerateProformaInvoice", viewProforma: "CanViewProformaInvoice", sendProforma: "CanSendProformaInvoice",
-  viewInvoice: "CanViewInvoice", createWaybill: "CanCreateWaybillForFgw" } as const;
+  viewInvoice: "CanViewInvoice", createWaybill: "CanCreateWaybillForFgw",
+  load: "CanLoadFinishedGoods", deliver: "CanDeliverFinishedGoods" } as const;
 /** A packing list is an allocation still waiting for approval (0); once approved it is an allocation ready to be invoiced and shipped (1). */
 export type AllocationKind = 0 | 1;
 export const allocationKinds: Record<AllocationKind, { title: string; permission: string }> = { 0: { title: "Packing lists", permission: dispatchPermissions.packingLists }, 1: { title: "Allocations", permission: dispatchPermissions.allocations } };
