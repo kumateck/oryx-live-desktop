@@ -28,6 +28,8 @@ interface SessionContextValue {
 
 const SessionContext = createContext<SessionContextValue | null>(null);
 const revalidateAfterMs = 60_000;
+/** How often an open, visible workspace re-reads permissions, so access given or taken away applies without signing out. */
+export const permissionRefreshMs = 5 * 60_000;
 
 function sameSession(a: SessionView, b: SessionView): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -38,7 +40,7 @@ function sessionAccess(session: SessionView | null): AccessContext {
     : { state: "anonymous" };
 }
 
-export function SessionProvider({ children }: { children: ReactNode }) {
+export function SessionProvider({ children, refreshEveryMs = permissionRefreshMs }: { children: ReactNode; refreshEveryMs?: number }) {
   const [state, setState] = useState<SessionState>({ status: "loading" });
   const accessContext = useMemo<AccessContext>(() => sessionAccess(state.status === "authenticated" ? state.session : null), [state]);
   const committedAccess = useRef<AccessContext>({ state: "anonymous" });
@@ -109,6 +111,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       void refresh().finally(() => { pending = false; });
     });
   }, [refresh]);
+
+  // Permissions change while people work: re-read them now and then while the workspace is open and in view.
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible" && status.current === "authenticated") void refresh();
+    }, refreshEveryMs);
+    return () => window.clearInterval(timer);
+  }, [refresh, refreshEveryMs]);
 
   // Permissions and the cookie can change while the window is in the background.
   useEffect(() => {

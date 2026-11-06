@@ -71,20 +71,20 @@ test("corrupt, oversized, truncated and cancelled downloads never replace a vali
 
 test("checks, download, revalidation and install are explicit; duplicate work and downgrades are refused", async () => {
   const directory = await temp();let prompts=0;let installs=0;let requests=0;
-  const updater = new DesktopUpdater({version:"0.2.0",arch:"ia32",cache:directory,publicKey:keys.publicKey,supported:true,changed:()=>{},prompt:()=>{prompts++;},install:async()=>{installs++;},fetcher:async(input)=>{requests++;return String(input).endsWith("latest.json")?new Response(envelope()):new Response(bytes);} });
+  const updater = new DesktopUpdater({version:"0.2.0",arch:"ia32",cache:directory,publicKey:keys.publicKey,updateOrigin:"",supported:true,changed:()=>{},prompt:()=>{prompts++;},install:async()=>{installs++;},fetcher:async(input)=>{requests++;return String(input).endsWith("latest.json")?new Response(envelope()):new Response(bytes);} });
   try {
     updater.connect("http://customer.test");await settled(updater);assert.equal(updater.state.phase,"available");assert.equal(prompts,1);assert.equal(installs,0);
     await updater.install();assert.equal(installs,0);
     await Promise.all([updater.download(),updater.download()]);assert.equal(updater.state.phase,"ready");assert.equal(requests,2);
     await updater.install();assert.equal(installs,1);
-    const current = new DesktopUpdater({version:"0.4.0",arch:"x64",cache:directory,publicKey:keys.publicKey,supported:true,changed:()=>{},prompt:()=>{prompts++;},install:async()=>{},fetcher:async()=>new Response(envelope())});
+    const current = new DesktopUpdater({version:"0.4.0",arch:"x64",cache:directory,publicKey:keys.publicKey,updateOrigin:"",supported:true,changed:()=>{},prompt:()=>{prompts++;},install:async()=>{},fetcher:async()=>new Response(envelope())});
     current.connect("http://customer.test");await settled(current);assert.equal(current.state.phase,"current");assert.equal(prompts,1);
   } finally { await rm(directory,{recursive:true,force:true}); }
 });
 
 test("remind later lasts only this launch; verified pending downloads are offered again offline after restart", async () => {
   const directory=await temp();let prompts=0;
-  const options={version:"0.2.0",arch:"x64" as const,cache:directory,publicKey:keys.publicKey,supported:true,changed:()=>{},prompt:()=>{prompts++;},install:async()=>{}};
+  const options={version:"0.2.0",arch:"x64" as const,cache:directory,publicKey:keys.publicKey,updateOrigin:"",supported:true,changed:()=>{},prompt:()=>{prompts++;},install:async()=>{}};
   try {
     const first=new DesktopUpdater({...options,fetcher:async(input)=>String(input).endsWith("latest.json")?new Response(envelope()):new Response(bytes)});
     first.connect("http://customer.test");await settled(first);first.remindLater();await first.download();await first.check();assert.equal(prompts,1);
@@ -95,7 +95,7 @@ test("remind later lasts only this launch; verified pending downloads are offere
 
 test("a changed installer cannot run and a failed installation remains retryable", async () => {
   const directory=await temp();let installs=0;
-  const updater=new DesktopUpdater({version:"0.2.0",arch:"x64",cache:directory,publicKey:keys.publicKey,supported:true,changed:()=>{},prompt:()=>{},install:async()=>{installs++;throw new Error("Save your work");},fetcher:async(input)=>String(input).endsWith("latest.json")?new Response(envelope()):new Response(bytes)});
+  const updater=new DesktopUpdater({version:"0.2.0",arch:"x64",cache:directory,publicKey:keys.publicKey,updateOrigin:"",supported:true,changed:()=>{},prompt:()=>{},install:async()=>{installs++;throw new Error("Save your work");},fetcher:async(input)=>String(input).endsWith("latest.json")?new Response(envelope()):new Response(bytes)});
   try {
     updater.connect("http://customer.test");await settled(updater);await updater.download();await updater.install();assert.equal(updater.state.phase,"ready");assert.equal(installs,1);assert.match(updater.state.error,/Save your work/);
     const file=(await readdir(directory)).find((file)=>file.endsWith(".exe"));if(!file)throw new Error("No cached installer");await writeFile(join(directory,file),"changed");
@@ -106,7 +106,7 @@ test("a changed installer cannot run and a failed installation remains retryable
 test("launching again reminds during a deferred active download without starting another download", async () => {
   const directory = await temp(); let prompts = 0; let downloads = 0;
   let finish: (response: Response) => void = () => { throw new Error("No download started"); };
-  const updater = new DesktopUpdater({ version: "0.2.0", arch: "x64", cache: directory, publicKey: keys.publicKey, supported: true,
+  const updater = new DesktopUpdater({ version: "0.2.0", arch: "x64", cache: directory, publicKey: keys.publicKey, updateOrigin: "", supported: true,
     changed: () => {}, prompt: () => { prompts++; }, install: async () => {},
     fetcher: async (input) => {
       if (String(input).endsWith("latest.json")) return new Response(envelope());
@@ -141,7 +141,7 @@ test("interrupted download cleanup preserves completed installers and unrelated 
 
 test("installation checks unsaved work and revalidates the installer after asynchronous preparation", async () => {
   const directory = await temp(); let allowed = false; let changed = false; let installs = 0; let preparation = 0;
-  const updater = new DesktopUpdater({ version: "0.2.0", arch: "x64", cache: directory, publicKey: keys.publicKey, supported: true,
+  const updater = new DesktopUpdater({ version: "0.2.0", arch: "x64", cache: directory, publicKey: keys.publicKey, updateOrigin: "", supported: true,
     changed: () => {}, prompt: () => {}, install: async () => { installs++; },
     beforeInstall: async () => {
       preparation++;

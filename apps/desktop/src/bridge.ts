@@ -1,5 +1,7 @@
 export interface SiteStatus {
   siteUrl: string;
+  /** Offered in the address field when no server is saved yet. */
+  defaultSiteUrl: string;
   error: string;
 }
 

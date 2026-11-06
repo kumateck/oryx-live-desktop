@@ -1,6 +1,5 @@
-import { reportSheet, type ReportSheet } from "@/shared/reports/report-data";
+import { reportQuantity, reportSheet, type ReportSheet } from "@/shared/reports/report-data";
 import { formatMonthYear } from "@/shared/format/dates";
-import { formatQuantityNumber } from "@/shared/units/quantity";
 import type { StockCountReport } from "../schemas/stock-count-report";
 import type { ReportOutput } from "./report-model";
 const widths = ["18%", "12%", "20%", "22%", "8%", "9%", "11%"];
@@ -25,7 +24,7 @@ export function stockCountOutput(report: StockCountReport): ReportOutput {
       { label: "Batch", read: (row) => `${value(row.batchNumber)}\nAR: ${value(row.arNumber)}` },
       { label: "Source", read: (row) => `${value(row.manufacturerName)}\n${value(row.supplierName)}` },
       { label: "Dates", read: (row) => `Mfg: ${month(row.manufacturingDate)}\nExp: ${month(row.expiryDate)} – Retest: ${month(row.retestDate)}` },
-      { label: "Quantity", read: (row) => `${formatQuantityNumber(row.quantity, "calculated")} ${row.uoM}` },
+      { label: "Quantity", read: (row) => reportQuantity(row.quantity, row.uoM) },
       { label: "Physical count", read: () => "" }, { label: "Remarks", read: () => "" },
     ]);
     return { ...sheet, id, printColumns: sheet.columns.map((label, column) => ({ label, fields: [{ column }], width: widths[column] ?? "" })),

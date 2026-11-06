@@ -1,6 +1,8 @@
 import { PrintHeader, PrintSignatures, PrintTable } from "@/shared/print/print-sheet";
 import type { ReportBook, ReportCell, ReportSheet } from "./report-data";
-export const showReportCell = (value: ReportCell | undefined) => value == null ? "–" : typeof value === "boolean" ? value ? "Yes" : "No" : String(value);
+import { isReportQuantity, reportQuantityText } from "./report-quantity";
+export const showReportCell = (value: ReportCell | undefined) => value == null ? "–" : typeof value === "boolean" ? value ? "Yes" : "No"
+  : isReportQuantity(value) ? reportQuantityText(value) : String(value);
 /** Wide data is split into readable column groups, carrying the row reference through every group. */
 export function ReportPrint({ book }: { book: ReportBook }) {
   return <><PrintHeader title={book.title} aside={<p>Generated {new Date(book.generatedAt).toLocaleString()}</p>} />

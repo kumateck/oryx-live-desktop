@@ -23,7 +23,9 @@ export async function loadQualityReport(dispatch: ApiDispatch, key: ReportKey, f
     return { sheets: [reportSheet("Quality material list", rows.filter((row) => selectedReportValue(filters,"category",row.materialCategory?.id)), [
       { label: "Material", read: (r) => r.name }, { label: "Code", read: (r) => r.code }, { label: "Type", read: (r) => reportEnum(r.kind, ["Raw material", "Packaging material"]) }, { label: "Category", read: (r) => r.materialCategory?.name },
       { label: "Pharmacopoeia", read: (r) => r.pharmacopoeia }, { label: "Alphabet", read: (r) => r.alphabet }, { label: "Unlimited", read: (r) => r.isUnlimited }, { label: "Description", read: (r) => r.description ? richTextToPlain(r.description) : null },
-      { label: "Specification", read: (r) => r.specification?.specificationNumber }, { label: "Total stock", read: (r) => r.totalStock }, { label: "Reserved stock", read: (r) => r.reservedStock },
+      { label: "Specification", read: (r) => r.specification?.specificationNumber }, 
+      // The server sends these in the material's stored (smallest) unit without naming it, so they cannot be shown in a larger unit yet.
+      { label: "Total stock (smallest unit)", read: (r) => r.totalStock }, { label: "Reserved stock (smallest unit)", read: (r) => r.reservedStock },
       { label: "Suppliers", read: (r) => r.suppliers?.map((party) => party.name).join(", ") }, { label: "Manufacturers", read: (r) => r.manufacturers?.map((party) => party.name).join(", ") },
     ])] };
   }
