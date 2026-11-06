@@ -7,7 +7,8 @@ import { ConfirmActionDialog } from "@/shared/actions";
 import { useCurrentUser } from "@/shared/auth/session-provider";
 import { useStepCommands } from "../../hooks/use-step-commands";
 import { useStepRecords } from "../../hooks/use-step-records";
-import { extraMaterialPath, finalPackingPath } from "../../lib/activity-access";
+import { batchTask, batchTaskPermissions, extraMaterialPath, finalPackingPath } from "../../lib/activity-access";
+import { useAccess } from "@/shared/auth/use-access";
 import { configuredTestStage } from "../../lib/atr";
 import { stepPolicy } from "../../lib/step-policy";
 import { stepAction, stepActionLabel, stepStatus } from "../../lib/step-status";
@@ -38,6 +39,8 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
   const policy = stepPolicy({ step, currentStepId: activity.currentStepId, cancelled: activity.batch.cancelled, userId: user?.id ?? null,
     extraMaterialPending: records.extraMaterialPending, extraMaterialOpen: records.extraMaterialOpen, atrExists: Boolean(records.atr) });
   const commands = useStepCommands(step.id, batchId);
+  const { can } = useAccess();
+  const may = (permission: string) => can(batchTask(permission));
   const [open, setOpen] = useState<Open>(null);
   const autoStartAttempted = useRef<string | null>(null);
   const busy = commands.busy !== null;
@@ -83,19 +86,19 @@ export function StepWorkspace({ activity, step }: { activity: Activity; step: Ac
 
     {canRequestPackaging && packagingShort ? <p className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">{packagingShort}</p> : null}
     <div className="flex flex-wrap gap-2">
-      {policy.canStart ? <Button type="button" size="sm" disabled={busy || !records.ready} onClick={() => void commands.start()}>{commands.busy === "start" ? <><Spinner />Starting…</> : <><Play />Start step</>}</Button> : null}
-      {policy.canManuallyComplete ? <Button type="button" size="sm" disabled={busy || commands.awaitingNextStep || !records.ready || !policy.canComplete || packagingMissing} onClick={() => setOpen("complete")}>{commands.busy === "complete" ? <><Spinner />Completing…</> : commands.awaitingNextStep ? <><Spinner />Moving to the next step…</> : <><Check />Complete step</>}</Button> : null}
+      {policy.canStart && may(batchTaskPermissions.step) ? <Button type="button" size="sm" disabled={busy || !records.ready} onClick={() => void commands.start()}>{commands.busy === "start" ? <><Spinner />Starting…</> : <><Play />Start step</>}</Button> : null}
+      {policy.canManuallyComplete && may(batchTaskPermissions.step) ? <Button type="button" size="sm" disabled={busy || commands.awaitingNextStep || !records.ready || !policy.canComplete || packagingMissing} onClick={() => setOpen("complete")}>{commands.busy === "complete" ? <><Spinner />Completing…</> : commands.awaitingNextStep ? <><Spinner />Moving to the next step…</> : <><Check />Complete step</>}</Button> : null}
       {policy.canRequestStock && !records.loading && !records.rawRequisition && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("stock")}><Send />Request stock</Button> : null}
       {canRequestPackaging ? <Button type="button" size="sm" variant="outline" disabled={busy || packagingStock.isLoading || Boolean(packagingShort)} title={packagingShort ?? undefined} onClick={() => setOpen("packaging")}><Send />Request packaging material</Button> : null}
       {policy.canRequestAtr && !records.loading && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("atr")}><FlaskConical />Request analysis</Button> : null}
-      {policy.canRequestExtraMaterial ? <Button asChild size="sm" variant="outline"><Link to={extraMaterialPath(activity.id)}><PackagePlus />Request extra material</Link></Button> : null}
-      {policy.canFinalPack ? <Button asChild size="sm"><Link to={finalPackingPath(activity.id)}><PackageCheck />Record final packing</Link></Button> : null}
-      {policy.canTransferFinishedGoods && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("goods")}><Truck />Transfer finished goods</Button> : null}
-      {policy.canFullReturn ? <Button type="button" size="sm" variant="outline" className="text-destructive" disabled={busy} onClick={() => setOpen("return")}><RotateCcw />Full return</Button> : null}
+      {policy.canRequestExtraMaterial && may(batchTaskPermissions.extraMaterial) ? <Button asChild size="sm" variant="outline"><Link to={extraMaterialPath(activity.id)}><PackagePlus />Request extra material</Link></Button> : null}
+      {policy.canFinalPack && may(batchTaskPermissions.finalPacking) && may(batchTaskPermissions.returns) ? <Button asChild size="sm"><Link to={finalPackingPath(activity.id)}><PackageCheck />Record final packing</Link></Button> : null}
+      {policy.canTransferFinishedGoods && may(batchTaskPermissions.finishedGoods) && batchId ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen("goods")}><Truck />Transfer finished goods</Button> : null}
+      {policy.canFullReturn && may(batchTaskPermissions.returns) ? <Button type="button" size="sm" variant="outline" className="text-destructive" disabled={busy} onClick={() => setOpen("return")}><RotateCcw />Full return</Button> : null}
     </div>
     {commands.message ? <p role="alert" className="text-sm text-destructive">{commands.message}</p> : null}
 
-    {open === "complete" ? <ConfirmActionDialog require={{ kind: "all", permissions: ["CanViewPlannedProducts"], departmentType: 0 }} title={`Complete "${step.name}"?`} description={`The batch moves on to its next step. A completed step cannot be reopened. ${batchLabel}.`}
+    {open === "complete" ? <ConfirmActionDialog require={batchTask(batchTaskPermissions.step)} title={`Complete "${step.name}"?`} description={`The batch moves on to its next step. A completed step cannot be reopened. ${batchLabel}.`}
       confirmLabel="Complete step" busyLabel="Completing…" destructive={false} onClose={() => setOpen(null)}
       onConfirm={async () => packagingWait ? packagingWait : !records.ready || !policy.canComplete ? "This step cannot be completed until its records are verified and all extra material is issued." : (await commands.complete()) ? null : "The step was not completed. The reason is shown on the page."} /> : null}
     {open === "return" ? <ReasonDialog title="Return all materials?" description={`Every material issued to ${batchLabel} goes back to the warehouse and the batch's production is cancelled. This cannot be undone.`}

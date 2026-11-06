@@ -21,7 +21,7 @@ export function useBatch(batchId: string) {
   const activityQuery = useGetApiV1ProductionScheduleActivityProductByProductionScheduleProductIdQuery(arg);
   const [startBatch, starting] = usePostApiV1ProductionScheduleActivityStartByProductionScheduleProductIdMutation();
   const [message, setMessage] = useState("");
-  const permission = usePermissionAction({ kind: "all", permissions: [schedulePermissions.view], departmentType: 0 });
+  const permission = usePermissionAction({ kind: "all", permissions: [schedulePermissions.start], departmentType: 0 });
 
   const rawRows = useMemo(() => { const parsed = batchMaterialsSchema.safeParse(raw.data ?? null); return parsed.success ? shortFirst(parsed.data) : null; }, [raw.data]);
   const packagingRows = useMemo(() => { const parsed = batchMaterialsSchema.safeParse(packaging.data ?? null); return parsed.success ? shortFirst(parsed.data) : null; }, [packaging.data]);

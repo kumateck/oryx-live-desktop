@@ -18,7 +18,7 @@ function AccessProbe() {
 }
 
 function open(options: Options = {}, address = "/production/activities/a1/final-packing") {
-  const backend = stubBackend({ permissions: ["CanViewPlannedProducts"] });
+  const backend = stubBackend({ permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking"] });
   const session = backend.fetcher.getMockImplementation();
   rememberSession();
   const calls: { path: string; body: string }[] = [];

@@ -11,7 +11,7 @@ import {
 } from "../api/activity-api";
 import { unitsMismatch } from "../lib/pack-messages";
 import { finalPackingRequest, materialRequests, packingMaterials, packingProblem, packCategory, returnedMaterials, yieldFigures, yieldTerms, type MaterialEntry, type YieldFigures, type YieldInputs } from "../lib/final-packing";
-import { activityAudit } from "../lib/activity-access";
+import { activityAudit, batchTaskPermissions } from "../lib/activity-access";
 import { activitySchema, extraMaterialsSchema, type Activity } from "../schemas/activity-schema";
 import { extraMaterialStatus } from "../lib/step-status";
 import { stepPolicy } from "../lib/step-policy";
@@ -24,7 +24,8 @@ const missing = (error: object | undefined) => Boolean(error && "status" in erro
 
 /** What final packing starts from, and saving it. The packing record is saved first; what is left over is returned to the warehouse after it. */
 export function useFinalPacking(batchId: string, activity: Activity) {
-  const permission = usePermissionAction({ kind: "all", permissions: ["CanViewPlannedProducts"], departmentType: 0 });
+  // Saving records the packing and then returns what is left to the warehouse, so it needs both keys.
+  const permission = usePermissionAction({ kind: "all", permissions: [batchTaskPermissions.finalPacking, batchTaskPermissions.returns], departmentType: 0 });
   const user = useCurrentUser();
   const activityQuery = useGetApiV1ProductionScheduleActivityByProductionActivityIdQuery({ ...activityAudit, productionActivityId: activity.id });
   const arg = { ...audit, productionScheduleProductId: batchId };

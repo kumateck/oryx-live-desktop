@@ -2,14 +2,15 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { activityApi, usePostApiV1ProductionScheduleReturnBeforeProductionMutation, usePutApiV1ProductionScheduleActivityStepByProductionStepIdStatusMutation } from "../api/activity-api";
-import { stepAudit } from "../lib/activity-access";
+import { batchTask, batchTaskPermissions, stepAudit } from "../lib/activity-access";
 import { extraMaterialStatus, stepStatus } from "../lib/step-status";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { extraMaterialsSchema } from "../schemas/activity-schema";
 
 /** Starting and finishing a step, and returning a batch's materials. Each reports the server's reason when refused. */
 export function useStepCommands(stepId: string, batchId: string | null) {
-  const permission = usePermissionAction({ kind: "all", permissions: ["CanViewPlannedProducts"], departmentType: 0 });
+  const permission = usePermissionAction(batchTask(batchTaskPermissions.step));
+  const returnPermission = usePermissionAction(batchTask(batchTaskPermissions.returns));
   const [update] = usePutApiV1ProductionScheduleActivityStepByProductionStepIdStatusMutation();
   const [readExtra] = activityApi.useLazyGetApiV1ProductionScheduleExtraPackingByProductByProductionScheduleProductIdQuery();
   const [returnAll] = usePostApiV1ProductionScheduleReturnBeforeProductionMutation();
@@ -51,7 +52,7 @@ export function useStepCommands(stepId: string, batchId: string | null) {
   };
 
   const fullReturn = async (reason: string): Promise<string | null> => {
-    const denied = permission.check();
+    const denied = returnPermission.check();
     if (denied) return denied;
     if (!batchId) return "The batch could not be identified.";
     setBusy("return");

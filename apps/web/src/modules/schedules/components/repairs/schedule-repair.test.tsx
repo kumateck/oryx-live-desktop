@@ -30,7 +30,7 @@ const batch = (id: string) => ({ batchId: id, activityId: `a-${id}`, batchNumber
   procedure: null });
 
 function open(options: { permission?: boolean; refuse?: number; blocked?: boolean; malformed?: boolean; repeatFailure?: boolean } = {}) {
-  const backend = stubBackend({ permissions: ["CanViewProductSchedules", "CanViewPlannedProducts", ...(options.permission === false ? [] : ["CanRepairBom", "CanRepairPackaging", "CanRepairProcedure"])] });
+  const backend = stubBackend({ permissions: ["CanViewProductSchedules", "CanStartProduction", "CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", ...(options.permission === false ? [] : ["CanRepairBom", "CanRepairPackaging", "CanRepairProcedure"])] });
   rememberSession();
   const calls: { method: string; path: string; body: string }[] = [];
   const session = backend.fetcher.getMockImplementation();

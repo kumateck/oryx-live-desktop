@@ -19,7 +19,7 @@ const schedules = [
 ];
 
 function open() {
-  const backend = stubBackend({ permissions: ["CanViewProductSchedules"] });
+  const backend = stubBackend({ permissions: ["CanViewProductSchedules", "CanStartProduction"] });
   rememberSession();
   const pages: string[] = [];
   const session = backend.fetcher.getMockImplementation();

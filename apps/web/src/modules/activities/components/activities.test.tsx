@@ -37,7 +37,7 @@ function run(options: Options) {
 }
 
 function open(address: string, options: Options = {}) {
-  const backend = stubBackend({ permissions: options.permissions ?? ["CanViewPlannedProducts"] });
+  const backend = stubBackend({ permissions: options.permissions ?? ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking"] });
   rememberSession();
   const calls: { method: string; path: string; search: string; body: string }[] = [];
   const reads: string[] = [];
@@ -130,6 +130,15 @@ it("asks before completing a step, on the step's own page", async () => {
   expect(calls).toEqual([]);
   fireEvent.click(within(dialog).getByRole("button", { name: "Complete step" }));
   await waitFor(() => expect(calls.map((call) => call.search)).toEqual(["?status=2"]));
+});
+
+it("offers each step action only to holders of that task's key", async () => {
+  open("/production/activities/a1/board/current", { current: { order: 3, status: 1, critical: true, mine: true, actions: [2] },
+    permissions: ["CanViewPlannedProducts", "CanReturnProductionMaterials"] });
+  expect(await screen.findByRole("heading", { name: "Step 3: Dispensing" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Full return" })).toBeTruthy();
+  // Seeing the board is not enough to complete a step.
+  expect(screen.queryByRole("button", { name: "Complete step" })).toBeNull();
 });
 
 it("keeps Complete step disabled after completing until the board shows the next step", async () => {
@@ -309,7 +318,7 @@ it.each([{ extraReadStatus: 503 }, { malformedExtra: true }])("keeps completion 
 });
 
 it("repairs one batch's procedure from the product's current procedure, after saying what changes", async () => {
-  const { calls } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanRepairProcedure"] });
+  const { calls } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", "CanRepairProcedure"] });
   await chooseAction("Repair", /^Procedure/);
   const dialog = await screen.findByRole("dialog");
   expect(dialog.textContent).toContain("Completed steps are not changed");
@@ -319,17 +328,17 @@ it("repairs one batch's procedure from the product's current procedure, after sa
   cleanup(); forgetSession();
 
   // Only someone who may repair procedures is offered the repair, even if they may edit procedures, and never on a cancelled batch.
-  open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanEditProductionPlan"] });
+  open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", "CanEditProductionPlan"] });
   expect(await screen.findByText(/steps completed/)).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Repair" })).toBeNull();
   cleanup(); forgetSession();
-  open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanRepairProcedure"], cancelled: true });
+  open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", "CanRepairProcedure"], cancelled: true });
   expect(await screen.findByText(/steps completed/)).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Repair" })).toBeNull();
 });
 
 it.each(["CanRepairBom", "CanRepairPackaging"])("offers each material repair only with its own permission: %s", async (permission) => {
-  const { reads } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", permission] });
+  const { reads } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", permission] });
   await openMenu("Repair");
   expect(screen.queryByRole("menuitem", { name: /^Procedure/ })).toBeNull();
   expect(Boolean(screen.queryByRole("menuitem", { name: /^BOM/ }))).toBe(permission === "CanRepairBom");
@@ -338,7 +347,7 @@ it.each(["CanRepairBom", "CanRepairPackaging"])("offers each material repair onl
 });
 
 it("previews BOM quantities and confirms a reason before sending one repair", async () => {
-  const { calls, reads } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanRepairBom"] });
+  const { calls, reads } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", "CanRepairBom"] });
   await chooseAction("Repair", /^BOM/);
   const dialog = await screen.findByRole("dialog");
   const reason = await within(dialog).findByLabelText("Reason for repair");
@@ -355,7 +364,7 @@ it("previews BOM quantities and confirms a reason before sending one repair", as
 });
 
 it("refuses the reviewed repair if the product changes before applying", async () => {
-  const options: Options = { permissions: ["CanViewPlannedProducts", "CanRepairBom"] };
+  const options: Options = { permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", "CanRepairBom"] };
   const { calls } = open("/production/activities/a1/board", options);
   await chooseAction("Repair", /^BOM/);
   fireEvent.change(await screen.findByLabelText("Reason for repair"), { target: { value: "Corrected the product formula" } });
@@ -368,7 +377,7 @@ it("refuses the reviewed repair if the product changes before applying", async (
 });
 
 it("shows issued-stock blockers and prevents applying a material repair", async () => {
-  const { calls } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanRepairPackaging"],
+  const { calls } = open("/production/activities/a1/board", { permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", "CanRepairPackaging"],
     repairBlockers: ["Issued or consumed stock cannot be repaired."] });
   await chooseAction("Repair", /^Packaging/);
   await screen.findByText("Issued or consumed stock cannot be repaired.");

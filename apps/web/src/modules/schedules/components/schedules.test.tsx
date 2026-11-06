@@ -44,7 +44,7 @@ function open(address: string, permissions: string[]) {
 }
 
 it("lists schedules with their batches counted, their state, and only the actions allowed", async () => {
-  open("/production/schedules", ["CanViewProductSchedules", "CanEditProductSchedule"]);
+  open("/production/schedules", ["CanViewProductSchedules", "CanStartProduction", "CanEditProductSchedule"]);
   const row = (await screen.findByText("PS-0007")).closest("tr");
   if (!row) throw new Error("row not found");
   expect(within(row).getByText("Wormee (1,500 L) ×2")).toBeTruthy();
@@ -61,7 +61,7 @@ it("lists schedules with their batches counted, their state, and only the action
 });
 
 it("explains in the menu why an ended schedule cannot be edited", async () => {
-  open("/production/schedules", ["CanViewProductSchedules", "CanEditProductSchedule"]);
+  open("/production/schedules", ["CanViewProductSchedules", "CanStartProduction", "CanEditProductSchedule"]);
   await openMenu("Actions for PS-0001");
   const item = screen.getByRole("menuitem", { name: /Edit dates and remarks/ });
   expect(item.getAttribute("aria-disabled")).toBe("true");
@@ -69,7 +69,7 @@ it("explains in the menu why an ended schedule cannot be edited", async () => {
 });
 
 it("suggests the next code and says what a new schedule is missing before sending anything", async () => {
-  const { calls } = open("/production/schedules/create", ["CanViewProductSchedules", "CanCreateProductSchedule"]);
+  const { calls } = open("/production/schedules/create", ["CanViewProductSchedules", "CanStartProduction", "CanCreateProductSchedule"]);
   const code = await screen.findByLabelText(/Schedule code/, { selector: "input" });
   await waitFor(() => expect((code as HTMLInputElement).value).toBe("PS-0008"));
   expect(await screen.findByText(/Market types could not be loaded/)).toBeTruthy();
@@ -86,14 +86,14 @@ it("suggests the next code and says what a new schedule is missing before sendin
 });
 
 it("says a running schedule must move its start date, and refuses to edit an ended one", async () => {
-  const { calls } = open(`/production/schedules/${running.id}/edit`, ["CanViewProductSchedules", "CanEditProductSchedule"]);
+  const { calls } = open(`/production/schedules/${running.id}/edit`, ["CanViewProductSchedules", "CanStartProduction", "CanEditProductSchedule"]);
   expect(await screen.findByText(/has already started/)).toBeTruthy();
   expect(screen.getAllByText("PS-0006").length).toBeGreaterThan(0);
   fireEvent.click(await screen.findByRole("button", { name: "Save changes" }));
   expect(await screen.findByText("The start date must be after today")).toBeTruthy();
   expect(calls).toEqual([]);
   cleanup(); forgetSession();
-  open(`/production/schedules/${ended.id}/edit`, ["CanViewProductSchedules", "CanEditProductSchedule"]);
+  open(`/production/schedules/${ended.id}/edit`, ["CanViewProductSchedules", "CanStartProduction", "CanEditProductSchedule"]);
   expect((await screen.findByRole("alert")).textContent).toContain("This schedule has ended");
   expect(screen.queryByRole("button", { name: "Save changes" })).toBeNull();
 });
