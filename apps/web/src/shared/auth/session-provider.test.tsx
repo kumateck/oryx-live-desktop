@@ -33,6 +33,17 @@ it("applies permission changes on refresh without leaving the workspace", async 
   expect(status()).toBe("authenticated");
 });
 
+it("re-reads permissions on its own while the workspace is open, so new access needs no sign-out", async () => {
+  const backend = stubBackend();
+  rememberSession();
+  render(<SessionProvider refreshEveryMs={50}><Probe /></SessionProvider>);
+  await waitFor(() => expect(status()).toBe("authenticated"));
+  expect(screen.getByText("roles hidden")).toBeTruthy();
+  backend.set({ permissions: ["CanViewRoles"] });
+  expect(await screen.findByText("roles shown", {}, { timeout: 2000 })).toBeTruthy();
+  expect(status()).toBe("authenticated");
+});
+
 it("keeps the workspace open when a background check cannot reach the server", async () => {
   const backend = stubBackend({ permissions: ["CanViewRoles"] });
   rememberSession();
