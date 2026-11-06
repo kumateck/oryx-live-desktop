@@ -1,5 +1,6 @@
 import type { ReportBook } from "./report-data";
 import { worksheetName } from "./worksheet-name";
+import { isReportQuantity, reportQuantityExcel } from "./report-quantity";
 /** Exports the loaded snapshot, with its applied filters. Text is never interpreted as a spreadsheet formula. */
 export async function createReportWorkbook(book: ReportBook, actor: string | null) {
   const { default: ExcelJS } = await import("exceljs");
@@ -13,7 +14,12 @@ export async function createReportWorkbook(book: ReportBook, actor: string | nul
     const name = worksheetName(sheet.name, names);
     const page = workbook.addWorksheet(name, { views: [{ state: "frozen", ySplit: 1 }] });
     page.columns = sheet.columns.map((header, column) => ({ header, key: String(column), width: Math.min(42, Math.max(16, header.length + 3)) }));
-    for (const row of sheet.rows) page.addRow([...row.cells]);
+    for (const row of sheet.rows) {
+      // Quantities stay numbers in their largest unit, formatted with that unit as on screen.
+      const quantities = row.cells.map((cell) => isReportQuantity(cell) ? reportQuantityExcel(cell) : null);
+      const added = page.addRow(row.cells.map((cell, column) => quantities[column]?.value ?? (isReportQuantity(cell) ? null : cell)));
+      quantities.forEach((quantity, column) => { if (quantity?.numFmt) added.getCell(column + 1).numFmt = quantity.numFmt; });
+    }
     page.getRow(1).font = { bold: true };
     page.getRow(1).alignment = { vertical: "middle", wrapText: true };
     page.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: Math.max(1, sheet.columns.length) } };

@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { formatQuantityNumber, toLargestUnit } from "./quantity";
+import { formatQuantityNumber, smallestUnit, toLargestUnit } from "./quantity";
 
 it("shows a quantity in the largest unit that keeps it at 1 or more", () => {
   expect(toLargestUnit(2_500_000, "mg")?.text).toBe("2.5 kg");
@@ -38,4 +38,13 @@ it("leaves other units alone and tolerates missing data", () => {
   expect(toLargestUnit(undefined, "mg")).toBeNull();
   expect(toLargestUnit(Number.NaN, "mg")).toBeNull();
   expect(toLargestUnit(0, "mg")?.text).toBe("0 mg");
+});
+
+it("reads units sent by name, as some reports do", () => {
+  expect(toLargestUnit(100_000_000, "Milligram", "calculated")?.text).toBe("100 kg");
+  expect(toLargestUnit(2500, "Milliliter", "calculated")?.text).toBe("2.5 L");
+  expect(toLargestUnit(40, "Pack", "calculated")?.text).toBe("40 Pack");
+  expect(smallestUnit("Kilogram")).toBe("mg");
+  expect(smallestUnit("L")).toBe("ml");
+  expect(smallestUnit(" pcs ")).toBe("pcs");
 });

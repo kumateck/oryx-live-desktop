@@ -5,11 +5,15 @@ import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
 import type { ReportRow, ReportSheet } from "./report-data";
 import { showReportCell } from "./report-print";
+import { compareReportCells } from "./report-quantity";
 const column = dataTableColumns<ReportRow>();
 export function ResultSheet({ sheet }: { sheet: ReportSheet }) {
   const [selected, setSelected] = useState<ReportRow | null>(null);
   const columns = useMemo(() => column.columns([
-    ...sheet.columns.slice(0, 5).map((label, index) => column.accessor((row) => showReportCell(row.cells[index]), { id: String(index), header: label, cell: ({ getValue }) => <span className="whitespace-pre-wrap break-words">{getValue()}</span> })),
+    ...sheet.columns.slice(0, 5).map((label, index) => column.accessor((row) => showReportCell(row.cells[index]), { id: String(index), header: label,
+      // Sort on the underlying value (a quantity's stored amount), not the formatted text.
+      sortFn: (a, b) => compareReportCells(a.original.cells[index], b.original.cells[index]),
+      cell: ({ getValue }) => <span className="whitespace-pre-wrap break-words">{getValue()}</span> })),
     column.display({ id: "details", header: TableMenuHeader, size: 40, cell: ({ row }) => <TableMenu label={`Details for report row ${Number(row.original.id) + 1}`} items={[{ id: "view", label: "View all fields", icon: Eye, onSelect: () => setSelected(row.original) }]} /> }),
   ]), [sheet.columns]);
   return <section className="space-y-2"><h2 className="font-semibold">{sheet.name}</h2>
