@@ -45,3 +45,23 @@ enabled. Both endpoints contain no workload data. POST
 workload bearer token. Request bytes/concurrency/deadlines/cache are bounded;
 workers are recycled after deadlines/errors. Runtime runs as UID 10001 with a
 read-only filesystem, no capabilities, no-new-privileges and resource limits.
+
+## Review follow-up (2026-11-06)
+
+- **Readiness is real.** Workers report ready only after building the calculation
+  service, and `/ready` requires at least one started worker. Workers that keep
+  crashing restart with exponential backoff (250 ms up to 30 s) instead of a tight loop.
+- **Requests are authenticated before the body is read.** Unauthorized, disabled or
+  not-ready requests are answered from headers alone; only an authorized POST is
+  buffered (up to the size limit). The deadline counts from request arrival.
+- **Engine identity covers dependencies.** `engineBuildHash` now includes `bun.lock`
+  and the service `package.json`, so a dependency upgrade that could change results
+  changes the pinned engine. Expect a new engine hash on the next release even if
+  formula source is unchanged.
+- **No dirty production bundles.** `bun run formula:package` refuses uncommitted source;
+  `--allow-dirty` builds a local test bundle marked `sourceDirty: true`, which the
+  customer deployer rejects.
+- **Keep release bundles.** CI keeps the `oryx-formula-<SHA>` artifact for 90 days.
+  Copy every released bundle to long-term storage; it is required for offline
+  reinstall and formula rollback, and a rebuilt image is not bit-identical.
+- The runtime image's code is root-owned, so the `formula` user cannot rewrite it.

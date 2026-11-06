@@ -22,6 +22,7 @@ import {
   assertCanonicalUniversalConfigKeys,
   canonicalVariableLabel,
   canonicalizeUniversalInputTokens,
+  resolveConcentrationAliases,
   UniversalVariableKeyFormat,
   variableKeyFormatFor,
 } from "./universal-variable-keys";
@@ -59,8 +60,14 @@ export const buildUniversalDefinition = async (
   const canonicalKeys =
     variableKeyFormatFor(config) ===
     UniversalVariableKeyFormat.CanonicalAlphanumeric;
+  // Concentration aliases become the weight keys here, so the definition and its hash match the weight formula.
   const normalizeInputTokens = (expression: string) =>
-    canonicalKeys ? canonicalizeUniversalInputTokens(expression) : expression;
+    canonicalKeys
+      ? resolveConcentrationAliases(
+          canonicalizeUniversalInputTokens(expression),
+          config,
+        )
+      : expression;
   if (canonicalKeys) assertCanonicalUniversalConfigKeys(config);
   const base = inlineUniversalConstants(
     normalizeInputTokens(String(config.expression ?? "").trim()),

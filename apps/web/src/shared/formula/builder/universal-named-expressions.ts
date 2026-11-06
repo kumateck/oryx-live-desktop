@@ -3,6 +3,7 @@ import { expandUniversalSampleExpression } from "./universal-sample-tokens";
 import {
   ALPHANUMERIC_VARIABLE_KEY,
   configuredUniversalInputVariableKeys,
+  isConcentrationAliasKey,
   perSampleDerivedVariableKey,
   UniversalVariableKeyFormat,
   variableKeyFormatFor,
@@ -146,7 +147,9 @@ export const materializeUniversalNamedExpressions = (
   );
   return definitions.flatMap((item) => {
     if (item.scope === UniversalNamedExpressionScope.Global) {
-      if (sampleTokenPattern.test(item.expression))
+      const concentrationTokens = item.expression.match(/:sample\d*Conc\b/g) ?? [];
+      if (sampleTokenPattern.test(item.expression) ||
+          concentrationTokens.some((token) => isConcentrationAliasKey(token.slice(1), config)))
         throw new Error(
           `Global named expression “${item.key}” cannot use sample-scoped variables.`,
         );

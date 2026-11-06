@@ -12,6 +12,8 @@ export interface FormulaHostRequest {
   authorization: string | undefined;
   contentType: string | undefined;
   body: Uint8Array;
+  /** performance.now() when the request arrived; the deadline counts from here. */
+  startedAt?: number;
 }
 
 export interface FormulaHostResponse {

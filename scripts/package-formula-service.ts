@@ -7,6 +7,7 @@ import { z } from "zod";
 
 const root = resolve(import.meta.dirname, "..");
 const output = process.argv[2];
+const allowDirty = process.argv.includes("--allow-dirty");
 if (!output) throw new Error("Use bun run formula:package /absolute/path/to/new-release-directory");
 const destination = resolve(output);
 if (destination === root || destination.startsWith(`${root}/`)) throw new Error("Keep release bundles outside the source checkout");
@@ -27,12 +28,16 @@ const digest = async (paths: readonly string[]): Promise<string> => {
 const serviceFiles = await files("services/formula-calculation");
 const coreFiles = await files("apps/web/src/shared/formula/core");
 const engineFiles = [...serviceFiles, ...coreFiles].filter(path => path.endsWith(".ts") && !path.includes("/__tests__/") && !path.endsWith("vitest.config.ts"));
-const engineBuildHash = await digest(engineFiles);
+// Results depend on locked dependency versions (decimal/rounding libraries) as well as source,
+// so a dependency upgrade must change the engine identity that evaluations are pinned to.
+const engineBuildHash = await digest([...engineFiles, "bun.lock", "services/formula-calculation/package.json"]);
 const sourceHash = await digest([...serviceFiles, ...coreFiles, "deploy/formula-service.Dockerfile", "scripts/package-formula-service.ts", "bun.lock", "package.json", "apps/web/package.json", "apps/desktop/package.json", "apps/gateway/package.json"]);
 const image = `oryx-formula-calculation:${sourceHash}`;
 const git = (...args: string[]): string => execFileSync("git", ["-C", root, ...args], { encoding: "utf8" }).trim();
 const sourceSha = git("rev-parse", "HEAD");
 const sourceDirty = git("status", "--porcelain").length > 0;
+// Customer deployers refuse sourceDirty bundles; a dirty build is only for local testing.
+if (sourceDirty && !allowDirty) throw new Error("Refusing to package uncommitted source. Commit it, or pass --allow-dirty for a local test bundle (customer deployment rejects it).");
 await mkdir(destination, { recursive: false, mode: 0o700 });
 execFileSync("docker", ["buildx", "build", "--load", "--platform", "linux/amd64", "--file", "deploy/formula-service.Dockerfile", "--build-arg", `ENGINE_BUILD_HASH=${engineBuildHash}`, "--tag", image, "."], { cwd: root, stdio: "inherit" });
 const inspect = z.object({ Id: z.string().regex(/^sha256:[a-f0-9]{64}$/), Architecture: z.literal("amd64"), Os: z.literal("linux"), Config: z.object({ User: z.literal("formula"), Labels: z.record(z.string(), z.string()) }) });

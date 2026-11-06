@@ -15,7 +15,11 @@ import { UniversalVariableKeyFormat } from "./types";
 import SettingsPanel from "./panels/settings";
 import ExpressionPanel from "./panels/expression";
 import { normalizeExpressionPayload } from "./normalizer";
-import { canonicalInputKey } from "@/shared/formula/builder/universal-variable-keys";
+import {
+  canonicalInputKey,
+  concentrationUnitForEditing,
+  DEFAULT_CONCENTRATION_UNIT,
+} from "@/shared/formula/builder/universal-variable-keys";
 
 const PURPOSE_LABEL: Record<FirstColumnPurpose, string> = {
   standard: "Standard",
@@ -48,6 +52,7 @@ const defaultSettings = (
   namedExpressionsEnabled: false,
   namedExpressions: [],
   variableKeyFormat: UniversalVariableKeyFormat.CanonicalAlphanumeric,
+  concentrationUnit: DEFAULT_CONCENTRATION_UNIT,
   manualVarLabels: {},
   manualVars: {},
   noOfReadings: 5,
@@ -229,6 +234,7 @@ export const UniversalConfig: React.FC<TheAduseiFormulaProps> = ({
           namedExpressions: parsed.namedExpressions ?? prev.namedExpressions,
           variableKeyFormat:
             parsed.variableKeyFormat ?? UniversalVariableKeyFormat.LegacyDotted,
+          concentrationUnit: concentrationUnitForEditing(parsed),
         };
         return next;
       });
@@ -296,6 +302,7 @@ export const UniversalConfig: React.FC<TheAduseiFormulaProps> = ({
           namedExpressions: parsed.namedExpressions ?? [],
           variableKeyFormat:
             parsed.variableKeyFormat ?? UniversalVariableKeyFormat.LegacyDotted,
+          concentrationUnit: concentrationUnitForEditing(parsed),
           columnExpressions: parsed.columnExpressions ?? {},
           rowHeaders: restoredRowHeaders,
         };
@@ -510,6 +517,7 @@ export const UniversalConfig: React.FC<TheAduseiFormulaProps> = ({
             namedExpressionsEnabled: snapshot.settings.namedExpressionsEnabled,
             namedExpressions: snapshot.settings.namedExpressions,
             variableKeyFormat: snapshot.settings.variableKeyFormat,
+            concentrationUnit: snapshot.settings.concentrationUnit,
 
             // manualVars: manualVars, // current manual vars (raw + evaluated)
             tableData: snapshot.tableData, // includes latest cell edits

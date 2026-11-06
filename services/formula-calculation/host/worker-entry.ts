@@ -16,6 +16,9 @@ const data = z.object({ serviceConfig: z.object({
   supportedNumericPolicyVersion: z.string(), maxCompiledDefinitions: z.number().int(),
 }).strict() }).strict().parse(workerData);
 const service = createFormulaCalculationService(data.serviceConfig);
+// Readiness is reported only once the calculation service exists, so /ready cannot
+// pass while workers fail during start-up.
+port.postMessage({ id: 0, ready: true } satisfies FormulaWorkerResponse);
 
 port.on("message", async (message: FormulaWorkerRequest) => {
   try {

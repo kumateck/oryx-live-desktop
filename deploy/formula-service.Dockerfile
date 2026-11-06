@@ -24,7 +24,8 @@ ENV NODE_ENV=production FORMULA_V2_INTERNAL_SERVICE_ENABLED=false \
     FORMULA_SERVICE_HOST=0.0.0.0 FORMULA_SERVICE_PORT=3101 \
     FORMULA_SERVICE_RELEASE_ENGINE_HASH=$ENGINE_BUILD_HASH
 RUN groupadd --gid 10001 formula && useradd --uid 10001 --gid formula --no-create-home formula
-COPY --from=build --chown=formula:formula /out ./formula-service
+# Root-owned and read-only to the service user: the process cannot rewrite its own code.
+COPY --from=build /out ./formula-service
 USER formula
 EXPOSE 3101
 CMD ["node", "formula-service/main.mjs"]
