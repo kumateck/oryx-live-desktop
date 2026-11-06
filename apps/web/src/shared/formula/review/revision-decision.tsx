@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/shared/actions";
 import { useAccess } from "@/shared/auth/use-access";
 import { useCurrentUser } from "@/shared/auth/session-provider";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
@@ -22,7 +23,7 @@ const fields: Record<RevisionStage, WizardField<ReasonValues>[]> = {
 const copy = {
   review: { button: "Record review", busy: "Recording…", done: "Review recorded",
     title: (revision: number) => `Record your review of revision ${String(revision)}?`,
-    description: "Your review and reason are recorded against this exact definition. The revision then waits for approval by someone other than you and the author." },
+    description: "Your review and reason are recorded against this exact definition. The revision then waits for approval. One user may perform two roles, but at least two users must participate overall." },
   approval: { button: "Approve revision", busy: "Approving…", done: "Revision approved",
     title: (revision: number) => `Approve revision ${String(revision)}?`,
     description: "This revision becomes the formula in use from now on, and any revision approved before it is retired. This cannot be undone." },
@@ -32,7 +33,7 @@ const copy = {
 export type RevisionReread = () => Promise<FormulaRevision | string | null>;
 
 /**
- * Records the independent review or the approval of a formula revision. The decision is confirmed, the revision
+ * Records the review or the approval of a formula revision. The decision is confirmed, the revision
  * is read again just before it is sent, and nothing is sent when it changed, so a decision never applies to
  * evidence the user did not see. The server enforces the same separation of duties.
  */
@@ -46,6 +47,7 @@ export function FormulaRevisionDecision({ revision, stage, audit, reread, onDeci
   const [confirming, setConfirming] = useState<string | null>(null);
   const form = useForm<ReasonValues>({ resolver: zodResolver(reasonSchema), defaultValues: { reason: "" } });
   const permission = decisionPermission(stage);
+  const permissionAction = usePermissionAction(permission);
   const problem = decisionProblem(revision, stage, userId);
   const text = copy[stage];
   if (problem) return <p className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">{problem}</p>;
@@ -58,6 +60,8 @@ export function FormulaRevisionDecision({ revision, stage, audit, reread, onDeci
     if (!sameDecisionEvidence(revision, fresh)) return "This revision changed after you opened it. Close this, check the revision again, then decide.";
     const refused = decisionProblem(fresh, stage, userId);
     if (refused) return refused;
+    const denied = permissionAction.check();
+    if (denied) return denied;
     const request = { ...audit, questionId: fresh.questionId || revision.questionId, revisionId: fresh.id, body: { expectedDefinitionHash: fresh.definitionHash, reason } };
     const result = stage === "review" ? await recordReview(request) : await approve(request);
     if ("error" in result) return apiErrorMessage(result.error);

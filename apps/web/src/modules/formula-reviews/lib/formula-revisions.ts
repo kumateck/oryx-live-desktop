@@ -4,7 +4,7 @@ export const formulaRevisionAudit = { module: "QualityAssurance", subModule: "Fo
 
 export const stageConfig = {
   review: { path: "/qa/formula-reviews", title: "Formula reviews", detailTitle: "Formula review", view: formulaRevisionPermissions.viewReview,
-    description: "Submitted formula revisions waiting for an independent review.", empty: "No revisions are waiting for review" },
+    description: "Submitted formula revisions waiting for review.", empty: "No revisions are waiting for review" },
   approval: { path: "/qa/formula-approvals", title: "Formula approvals", detailTitle: "Formula approval", view: formulaRevisionPermissions.viewApproval,
     description: "Reviewed formula revisions waiting for approval before they can be used.", empty: "No revisions are waiting for approval" },
 } as const satisfies Record<RevisionStage, unknown>;
