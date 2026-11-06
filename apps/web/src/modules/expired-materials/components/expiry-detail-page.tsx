@@ -1,3 +1,5 @@
+import { StockBatchLocation } from "@/shared/warehouse/stock-batch-location";
+import { stockShelfLocation } from "@/shared/warehouse/stock-location";
 import { MigrationRetestDialog, migrationRetestPermission, type MigrationCorrectionMode } from "./migration-retest-dialog";
 import { useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -22,7 +24,7 @@ export function ExpiryDetailPage() {
   const [correction, setCorrection] = useState<MigrationCorrectionMode | null>(null);
   return <article className="min-w-0 space-y-4"><PageHeader title="Material batch expiry" crumbs={[{ label, to: root }, { label: "Batch" }]} />
     <RecordState loading={query.isLoading} data={query.data} error={query.error ? apiErrorMessage(query.error) : null} retry={() => void query.refetch()}>{(record) => <>
-      <DetailGroup title="Batch"><DetailItem label="Material" value={record.material?.name} /><DetailItem label="Batch" value={record.batchNumber} /><DetailItem label="AR number" value={record.arNumber} /><DetailItem label="Manufactured" value={formatDate(record.manufacturingDate)} /><DetailItem label="Expiry" value={formatDate(record.expiryDate)} /><DetailItem label="Retest date" value={formatDate(record.retestDate)} /><DetailItem label="Valid until" value={formatDate(record.effectiveExpiryDate)} /><DetailItem label="Quantity" value={toLargestUnit(record.totalQuantity, record.uoM?.symbol)?.text} /></DetailGroup>
+      <DetailGroup title="Batch"><DetailItem label="Material" value={record.material?.name} /><DetailItem label="Batch" value={<><span>{record.batchNumber}</span><StockBatchLocation locations={(record.shelves ?? []).filter((shelf) => shelf.quantity === undefined || shelf.quantity > 0).map((shelf) => stockShelfLocation(shelf.warehouseLocationShelf))} /></>} /><DetailItem label="AR number" value={record.arNumber} /><DetailItem label="Manufactured" value={formatDate(record.manufacturingDate)} /><DetailItem label="Expiry" value={formatDate(record.expiryDate)} /><DetailItem label="Retest date" value={formatDate(record.retestDate)} /><DetailItem label="Valid until" value={formatDate(record.effectiveExpiryDate)} /><DetailItem label="Quantity" value={toLargestUnit(record.totalQuantity, record.uoM?.symbol)?.text} /></DetailGroup>
       <div className="flex flex-wrap gap-2">{record.isOpeningBalanceBatch && record.status === 3 ? <PermissionGuard require={migrationRetestPermission}>
         <Button variant="outline" onClick={() => setCorrection("retest")}>Update migration retest date</Button>
         <Button variant="outline" onClick={() => setCorrection("ar-number")}>Update migration AR number</Button>

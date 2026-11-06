@@ -2,10 +2,10 @@ import { expiryState } from "@/modules/approved-materials/lib/stock";
 import type { Rack, ShelfStock } from "../schemas/rack-schema";
 
 /** One batch on one shelf of the open rack. */
-export interface RackStockRow extends ShelfStock { shelfId: string | null; shelf: string }
+export interface RackStockRow extends ShelfStock { shelfId: string | null; shelf: string; rack: string }
 
 export function rackStockRows(rack: Rack): RackStockRow[] {
-  return rack.shelves.flatMap((shelf) => shelf.stock.map((stock) => ({ ...stock, shelfId: shelf.shelfId, shelf: shelf.label })));
+  return rack.shelves.flatMap((shelf) => shelf.stock.map((stock) => ({ ...stock, shelfId: shelf.shelfId, shelf: shelf.label, rack: rack.name })));
 }
 
 /** Rows whose shelf, material, code or batch number contains the search term. */

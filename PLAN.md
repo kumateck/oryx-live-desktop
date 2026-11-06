@@ -1,5 +1,17 @@
 # Oryx Live Desktop plan
 
+## Warehouse batch picking locations (2026-11-06)
+
+The user requires warehouse batches to show their location directly below the
+batch number as `rack (shelf)`, including expired and about-to-expire stock.
+Use the selected allocation's shelf; keep each quantity paired with its source
+when one batch spans multiple shelves. Share formatting across stock and issue
+views, retain expiry information and print the location on picking documents.
+Missing source metadata must be explicit rather than guessed. Add read-only
+location fields to backend DTOs and retain the existing permissions, approvals,
+stock movements, reservations and audit behavior. No schema migration or live
+deployment is part of the local change.
+
 ## Formula question revision participation (2026-11-06)
 
 The user authorizes any two of authoring, review and approval to be performed

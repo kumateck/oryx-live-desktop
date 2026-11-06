@@ -1,3 +1,4 @@
+import { rackShelfLocation, missingStockLocation } from "@/shared/warehouse/stock-location";
 import type { MaterialHeader } from "@/modules/approved-materials/components/approved-material-detail";
 import type { ShelfBatchRow } from "@/modules/approved-materials/schemas/approved-material-schema";
 import { formatDate, formatMonthYear } from "@/shared/format/dates";
@@ -11,7 +12,7 @@ import type { MaterialStockRow } from "../schemas/material-location-schema";
 const quantity = (value: number, unit: string | null) => toLargestUnit(value, unit, "calculated")?.text ?? String(value);
 const columns: PrintColumn<ShelfBatchRow>[] = [
   { id: "shelf", header: "Shelf", cell: (row) => <>{row.shelf ?? "–"}<small>{[row.rack, row.location, row.floor].filter(Boolean).join(" · ")}</small></> },
-  { id: "batch", header: "Batch", cell: (row) => row.batchNumber ?? "–" },
+  { id: "batch", header: "Batch", cell: (row) => <>{row.batchNumber ?? "–"}<small>{rackShelfLocation(row.rack, row.shelf) ?? missingStockLocation}</small></> },
   { id: "quantity", header: "Quantity", align: "right", cell: (row) => quantity(row.quantity, row.unit) },
   { id: "made", header: "Manufactured", cell: (row) => formatMonthYear(row.manufacturingDate) ?? "–" },
   { id: "expiry", header: "Expiry", cell: (row) => formatMonthYear(row.expiryDate) ?? "–" },

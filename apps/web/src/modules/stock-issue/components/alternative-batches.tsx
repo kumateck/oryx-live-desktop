@@ -1,3 +1,4 @@
+import { StockBatchLocation } from "@/shared/warehouse/stock-batch-location";
 import { useMemo, useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { Link } from "react-router";
@@ -20,9 +21,9 @@ const column = dataTableColumns<SwapSuggestion>();
 const expiry = (value: string | null) => value ? `Expires ${formatMonthYear(value) ?? ""}` : "No expiry date";
 const columns = column.columns([
   column.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div></div> }),
-  column.display({ id: "current", header: "Set aside now", cell: ({ row }) => <div><div className="font-medium">{batchNumber(row.original.current.number)}</div>
+  column.display({ id: "current", header: "Set aside now", cell: ({ row }) => <div><div className="font-medium">{batchNumber(row.original.current.number)}</div><StockBatchLocation locations={[row.original.current.location]} />
     <div className="text-xs text-muted-foreground">{expiry(row.original.current.expires)} · {amount(row.original.current.reserved, row.original.unit)}</div></div> }),
-  column.display({ id: "alternative", header: "Earlier batch", cell: ({ row }) => <div><div className="font-medium">{batchNumber(row.original.alternative.number)}</div>
+  column.display({ id: "alternative", header: "Earlier batch", cell: ({ row }) => <div><div className="font-medium">{batchNumber(row.original.alternative.number)}</div><StockBatchLocation locations={[row.original.alternative.location]} />
     <div className="text-xs text-muted-foreground">{expiry(row.original.alternative.expires)} · {amount(row.original.alternative.available, row.original.unit)} on the shelf</div></div> }),
   column.accessor((row) => row.alternative.store, { id: "store", header: "Held by" }),
   column.display({ id: "quantity", header: "To swap", size: 170, cell: ({ row }) => <div className="flex flex-wrap items-center gap-1.5"><span>{amount(row.original.quantity, row.original.unit)}</span>{row.original.partial ? <Badge variant="secondary">Part of batch</Badge> : null}</div> }),

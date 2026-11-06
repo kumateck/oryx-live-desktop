@@ -1,3 +1,4 @@
+import { stockShelfSchema } from "@/shared/warehouse/stock-location";
 import { z } from "zod";
 
 const id = z.string().uuid();
@@ -7,7 +8,7 @@ export const materialSchema = z.object({ id, name: text, code: text, uoMId: id, 
 export const recipeSchema = z.object({ materialId: id, materialName: text, unitSymbol: text, revision: z.number().int().positive(),
   reference: text, instructions: text, storageConditions: text, holdHours: z.number().int().positive(), expectedQuantity: positive,
   ingredients: z.array(z.object({ materialId: id, name: text, code: text, uoMId: id, unitSymbol: text, quantity: positive })).min(1) });
-export const stockSchema = z.object({ id, materialId: id, materialName: text, batchNumber: text, shelf: text, unitSymbol: text,
+export const stockSchema = z.object({ id, materialId: id, materialName: text, batchNumber: text, shelf: text, rack: text.nullish(), unitSymbol: text,
   quantity: positive, expiryDate: text.nullable() });
 export const workspaceSchema = z.object({ recipe: recipeSchema.nullable(), materials: z.array(materialSchema), stock: z.array(stockSchema) });
 export const preparationSchema = z.object({ id, batchNumber: text, materialName: text, unitSymbol: text, recipeRevision: z.number(),
@@ -16,7 +17,7 @@ export const preparationSchema = z.object({ id, batchNumber: text, materialName:
   approved: z.boolean(), rejected: z.boolean(), createdAt: text, issuedById: id.nullable(), issuedAt: text.nullable(),
   recordedById: id.nullable(), recordedAt: text.nullable(), preparedAt: text.nullable(), outputBatchId: id.nullable(), grnId: id.nullable(),
   qualityStatus: z.number().nullable(), useBy: text.nullable(), inputs: z.array(z.object({ id, materialId: id, materialBatchId: id,
-    materialName: text, materialCode: text, batchNumber: text, unitSymbol: text, recipeQuantity: positive, quantity: positive })) });
+    warehouseLocationShelf: stockShelfSchema, materialName: text, materialCode: text, batchNumber: text, unitSymbol: text, recipeQuantity: positive, quantity: positive })) });
 export const preparationsSchema = z.array(preparationSchema);
 export const preparationPageSchema = z.object({ items: preparationsSchema, totalRows: z.number().int().nonnegative() });
 export type Workspace = z.infer<typeof workspaceSchema>;

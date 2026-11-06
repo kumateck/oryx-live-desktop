@@ -1,3 +1,4 @@
+import { missingStockLocation } from "@/shared/warehouse/stock-location";
 import { useEffect, useMemo, useState } from "react";
 import { PackageCheck } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -84,7 +85,7 @@ const printColumns: PrintColumn<StockLine>[] = [
   { id: "material", header: "Material", cell: (row) => <>{row.materialName}<small>{row.materialCode ?? "No code"}</small></> },
   { id: "quantity", header: "Quantity", align: "right", cell: (row) => <>{amount(row.quantity, row.unit)}
     {row.approvedQuantity !== null ? <small>Originally approved: {amount(row.approvedQuantity, row.unit)}; repaired after issue</small> : null}</> },
-  { id: "batches", header: "Batch · quantity · expiry", cell: (row) => row.batches.length ? row.batches.map((batch) => <div key={batch.key}>{batchNumber(batch.number)} · {amount(batch.quantity, row.unit)} · {formatMonthYear(batch.expires) ?? "no expiry"}</div>) : "None set aside" },
+  { id: "batches", header: "Batch · location · quantity · expiry", cell: (row) => row.batches.length ? row.batches.map((batch) => <div key={batch.key}>{batchNumber(batch.number)} · {amount(batch.quantity, row.unit)} · {formatMonthYear(batch.expires) ?? "no expiry"}<small>{batch.location ?? missingStockLocation}</small></div>) : "None set aside" },
 ];
 
 /** The voucher's signature lines: the store user who issued it, the approver who checked the issue, and the requester who receives it. */

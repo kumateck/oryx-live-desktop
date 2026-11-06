@@ -1,3 +1,5 @@
+import { StockBatchLocation } from "@/shared/warehouse/stock-batch-location";
+import { stockShelfLocation } from "@/shared/warehouse/stock-location";
 import { useMemo, useState } from "react";
 import { useDesktopTabVisible } from "@/shared/workspace-tabs/context";
 import { Link, useParams } from "react-router";
@@ -54,7 +56,7 @@ function Detail({ id }: { id: string }) {
     <Facts item={item} />
     <section className="space-y-2"><h2 className="font-semibold">Ingredient batches</h2>
       <div className="divide-y rounded-lg border">{item.inputs.map((input) => <div key={input.id} className="flex min-w-0 flex-wrap items-center justify-between gap-2 p-3">
-        <div className="min-w-0 break-words"><p className="font-medium">{input.materialName}</p><p className="text-sm text-muted-foreground">{input.materialCode} · Batch {input.batchNumber}</p></div>
+        <div className="min-w-0 break-words"><p className="font-medium">{input.materialName}</p><p className="text-sm text-muted-foreground">{input.materialCode} · Batch {input.batchNumber}</p><StockBatchLocation locations={[stockShelfLocation(input.warehouseLocationShelf)]} /></div>
         <span>{quantity(input.quantity, input.unitSymbol)}</span>
       </div>)}</div>
     </section>
