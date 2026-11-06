@@ -5,10 +5,10 @@ export const productDetailPath = (id: string) => `${productsPath}/${id}/details`
 export const productEditPath = (id: string, tab = "info") => `${productsPath}/${id}/edit/${tab}`;
 export const productCreatePath = `${productsPath}/create`;
 
+/** Production product list and creation. Each section has its own keys: see `product-keys.ts`. */
 export const productPermissions = {
-  view: "CanViewPlannedProducts",
-  create: "CanCreateNewProductionPlan",
-  edit: "CanEditProductionPlan",
+  view: "CanViewProductionProducts",
+  create: "CanCreateProductionProduct",
   verify: "CanVerifyProduct",
 } as const;
 
@@ -17,6 +17,9 @@ export const approvedProductPackingPermission = "CanEditApprovedProductPackingSt
 
 /** Analytical raw data has its own permissions: editing a product does not grant them. */
 export const productArdPermissions = { create: "CanCreateProductArd", edit: "CanEditProductArd" } as const;
+
+/** Product STPs are QC documents with their own permissions: editing a product does not grant them. */
+export const productStpPermissions = { create: "CanCreateProductStp", edit: "CanEditProductStp" } as const;
 
 /** Product specifications have their own permissions too. */
 export const productSpecificationPermissions = { create: "CanCreateProductSpecification", edit: "CanEditProductSpecification" } as const;

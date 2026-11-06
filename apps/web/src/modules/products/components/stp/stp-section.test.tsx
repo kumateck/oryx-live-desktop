@@ -13,7 +13,7 @@ const id = "658da105-a506-44a9-8ff5-8d005a54f294";
 const stpId = "11111111-1111-4111-8111-111111111111";
 
 function open(options: { stp: boolean; status?: number }) {
-  const backend = stubBackend({ permissions: ["CanEditProductionPlan"] });
+  const backend = stubBackend({ permissions: ["CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure", "CanCreateProductSpecification", "CanEditProductSpecification", "CanCreateProductArd", "CanEditProductArd", "CanCreateProductStp", "CanEditProductStp"] });
   rememberSession();
   const calls: { method: string; path: string; body: string; form: boolean }[] = [];
   let exists = options.stp;

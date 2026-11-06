@@ -12,7 +12,7 @@ afterEach(() => { cleanup(); forgetSession(); });
 const stock = (id: string, name: string) => [{ material: { id, name, code: id.toUpperCase(), totalStock: 5000 }, materialDepartment: { uoM: { id: "u-g", symbol: "g" } }, quantityNeeded: 500, quantityOnHand: 5000 }];
 
 function open(raised: { raw: boolean; packaging: boolean }) {
-  const backend = stubBackend({ permissions: ["CanViewPlannedProducts"] });
+  const backend = stubBackend({ permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking"] });
   rememberSession();
   const session = backend.fetcher.getMockImplementation();
   backend.fetcher.mockImplementation(async (input, init) => {

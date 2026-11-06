@@ -18,8 +18,8 @@ export function usePackaging(productId: string) {
   const saved = useMemo(() => parsed?.success ? fromSavedPackages(parsed.data) : none, [parsed]);
   const [draft, setDraft] = useState<PackagingLine[] | null>(null);
   const [message, setMessage] = useState("");
-  const { editRequirement } = useProductWorkspace();
-  const permission = usePermissionAction(editRequirement);
+  const { save: saveRequirement, context } = useProductWorkspace();
+  const permission = usePermissionAction(saveRequirement("packaging"));
   const lines = draft ?? saved;
 
   const saveAll = async () => {
@@ -31,7 +31,7 @@ export function usePackaging(productId: string) {
       const conflict = packagingConflict(lines, line.material.value, line.packing?.value ?? null, line.key);
       if (conflict) { setMessage(`${line.material.label}: ${conflict}.`); return; }
     }
-    const result = await save({ ...packagingAudit, productId, body: toPackagesRequest(lines) });
+    const result = await save({ ...packagingAudit, ...context, productId, body: toPackagesRequest(lines) });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     setDraft(null);
     toast.success("Packing materials saved");

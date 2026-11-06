@@ -2,7 +2,7 @@ import type { ModuleManifest } from "../contract";
 import { permissionTabs } from "../../shared/auth/permission-tabs";
 import { pickMaterialPermissions } from "./lib/requisition-access";
 
-const view = ["CanViewRawMaterialRequisitions", "CanViewPackagingMaterialRequisitions"];
+const view = ["CanViewProductionRawMaterialRequisitions", "CanViewProductionPackagingMaterialRequisitions"];
 const pick = ["CanViewRawMaterialRequisitionsForCreation", "CanViewPackageMaterialRequisitionsForCreation"];
 
 export const manifest = {

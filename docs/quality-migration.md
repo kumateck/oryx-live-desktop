@@ -47,7 +47,7 @@ Changed:
 ## Shared foundations
 
 - `shared/questions`: question and formula type numbers and labels, specification references, the table-question model (`table-question.ts`, tested), its builder (configure, preview, cell setup, export and import, delete row or column, all confirmed), the analyst's table input and read-back view, and a QC equipment option loader.
-- `shared/forms/async-option-picker.tsx`: the paged async choice without a form binding.
+- `shared/forms/searchable-select.tsx`: the searchable sync or paged async choice without a form binding.
 - `shared/form-response`: the form template model, answer parsing and serialising in Oryx Next's stored formats (`answers.ts`), per-field validation, the answer form hook (reloaded drafts never overwrite what the person changed), the response writer, and the answer sheet.
 - `shared/formula`: the governed formula engine (`core`, `builder`; Oryx Next's 81 tests pass unchanged), the formula builders and evaluators (`ui`: Simple, Uniformity, Universal), result helpers (`compute`), the governance API with validated responses (`governance-api.ts`), and `formula-preview.ts`.
 - `shared/ard-view`: the analytical raw data sheet, its print, worksheet headers for materials and products, compliance inference, and the certificate of analysis preview.

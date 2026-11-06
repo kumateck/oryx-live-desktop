@@ -129,6 +129,17 @@ A `SELECT` field with `source: "async"` loads its options page by page from `loa
 - Enter in the search box picks the highlighted option; it never submits the surrounding form. Arrow keys move the highlight.
 - Keep the `loadOptions` function stable (`useCallback`/`useMemo`): the options reload whenever the function changes.
 
+## Searchable selects outside FormWizard
+
+For a long list that is not a FormWizard field (filter bars, dialogs, table cells, page toolbars), use `SearchableSelect` from `shared/forms/searchable-select.tsx`. It is shadcn's Combobox pattern (Popover + Command) and takes the same option shapes as FormWizard:
+
+- `options` for an in-memory list, filtered on the device (case-insensitive label match, at most 100 rows shown with a "type to narrow" hint). `loading`, `error` and `onRetry` describe where that list comes from.
+- `loadOptions(search, page, signal)` for a server list: debounced search (`debounceMs`, default 300), Previous/Next paging, aborts of superseded requests, and retry after a failure.
+- `value`/`onChange` with a `{ value, label }` option or `null`; `multiple` takes and returns an array and keeps the list open while toggling.
+- `label` names the trigger, the search box, the list and the clear button. Pass `id` when a visible `<label htmlFor>` sits next to it. `clearable={false}` hides the clear button when a choice cannot be undone.
+
+Arrow keys move, Enter picks, Escape closes, and focus returns to the trigger. Chosen rows carry `aria-checked` (cmdk uses `aria-selected` for the highlighted row). For an "All …" filter whose state is an id or `undefined`, use `SearchableFilterSelect`. Keep short fixed lists (statuses, two or three choices) on the shadcn `Select`.
+
 ## Analytical test answers
 
 The shared answer sheet renders section and field descriptions through `RichTextView`. Saved paragraphs, emphasis, lists, and subscripts display as content; inline colors and unsafe HTML are discarded so the current theme remains readable. Formula questions stay lazy custom fields in FormWizard. Evaluators load directly without importing their builders. Nested JSON definitions and legacy `settings`, `schema`, `data`, `value`, and `formula` envelopes are normalized without changing calculation metadata or answer serialization. An unreadable definition shows an explicit configuration error.

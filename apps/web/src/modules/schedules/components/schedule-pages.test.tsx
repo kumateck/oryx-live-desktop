@@ -24,7 +24,7 @@ const schedule = (endOffset: number) => ({ id, code: "PS-0007", scheduledStartTi
 const material = (name: string, needed: number, onHand: number) => ({ material: { id: name, name, code: `C-${name}` }, materialDepartment: { uoM: { symbol: "g" } }, quantityNeeded: needed, quantityOnHand: onHand, status: 2 });
 
 function open(address: string, options: { end?: number; rawFor?: Record<string, object[]>; packagingFor?: Record<string, object[]>; refuse?: string[]; extraPermissions?: string[] } = {}) {
-  const backend = stubBackend({ permissions: ["CanViewProductSchedules", "CanEditProductSchedule", "CanAddProductsToProductSchedule", "CanRemoveProductsFromProductSchedule", ...(options.extraPermissions ?? [])] });
+  const backend = stubBackend({ permissions: ["CanViewProductSchedules", "CanStartProduction", "CanEditProductSchedule", "CanAddProductsToProductSchedule", "CanRemoveProductsFromProductSchedule", ...(options.extraPermissions ?? [])] });
   rememberSession();
   const calls: { method: string; path: string; body: string }[] = [];
   const session = backend.fetcher.getMockImplementation();

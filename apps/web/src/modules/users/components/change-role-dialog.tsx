@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import { Skeleton, SkeletonRegion } from "@/shared/skeleton/skeleton";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
@@ -15,6 +15,8 @@ import type { UserRow } from "../schemas/user-schema";
 export function ChangeRoleDialog({ user, onClose }: { user: UserRow; onClose: () => void }) {
   const { roles, loading, error, retry } = useRoleOptions();
   const [roleName, setRoleName] = useState(user.role?.name ?? "");
+  // The backend identifies a role by its name, so that is the value sent.
+  const options = useMemo(() => roles.map((role) => ({ value: role.name, label: role.label })), [roles]);
   const [message, setMessage] = useState("");
   const permission = usePermissionAction(userPermissions.assignRole);
   const [updateRole, mutation] = usePutApiV1UserRoleByIdMutation();
@@ -37,10 +39,9 @@ export function ChangeRoleDialog({ user, onClose }: { user: UserRow; onClose: ()
       {loading ? <SkeletonRegion label="Loading roles"><Skeleton className="h-9 w-full" /></SkeletonRegion> :
         error ? <div role="alert" className="space-y-2 text-sm"><p>Roles could not be loaded. {error}</p>
           <Button type="button" size="sm" variant="outline" onClick={retry}>Retry</Button></div> :
-          <Select value={roleName} onValueChange={setRoleName} disabled={mutation.isLoading}>
-            <SelectTrigger aria-label="Role" className="w-full"><SelectValue placeholder="Select a role" /></SelectTrigger>
-            <SelectContent>{roles.map((role) => <SelectItem key={role.id} value={role.name}>{role.label}</SelectItem>)}</SelectContent>
-          </Select>}
+          <SearchableSelect label="Role" className="w-full" options={options} disabled={mutation.isLoading} clearable={false}
+            value={options.find((option) => option.value === roleName) ?? null} onChange={(option) => { if (option) setRoleName(option.value); }}
+            placeholder="Select a role" searchPlaceholder="Search roles" emptyMessage="No roles found" />}
       {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
       <DialogFooter>
         <Button type="button" variant="outline" disabled={mutation.isLoading} onClick={onClose}>Cancel</Button>

@@ -8,12 +8,15 @@ import { useBom } from "../../hooks/use-bom";
 import type { BomLine } from "../../lib/bom";
 import { BomItemDialog } from "./bom-item-dialog";
 import { BomLinesTable } from "./bom-table";
+import { PermissionGuard } from "@/shared/auth/permission-guard";
+import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { randomId } from "@/shared/ids/random-id";
 
 type Open = { mode: "add" } | { mode: "edit"; line: BomLine } | { mode: "remove"; line: BomLine } | { mode: "archive" } | null;
 
 export function BomSection({ productId, compositionSize, batchSize }: { productId: string; compositionSize: number | null; batchSize: number | null }) {
   const bom = useBom(productId, compositionSize, batchSize);
+  const { task, keys } = useProductWorkspace();
   const [open, setOpen] = useState<Open>(null);
   const onEdit = useCallback((line: BomLine) => setOpen({ mode: "edit", line }), []);
   const onRemove = useCallback((line: BomLine) => setOpen({ mode: "remove", line }), []);
@@ -27,8 +30,8 @@ export function BomSection({ productId, compositionSize, batchSize }: { productI
           : "The raw materials in one composition unit, in the order they are used. Drag a row to change its step."}</p></div>
       <div className="flex flex-wrap gap-2">
         {bom.dirty ? <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={bom.discard}>Discard changes</Button> : null}
-        {bom.hasSaved && !bom.dirty ? <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen({ mode: "archive" })}><Archive />Archive</Button> : null}
-        <Button type="button" size="sm" variant="outline" disabled={busy || bom.loading} onClick={() => setOpen({ mode: "add" })}><Plus />Add material</Button>
+        {bom.hasSaved && !bom.dirty ? <PermissionGuard require={task(keys.sections.bom.archive ?? keys.sections.bom.edit)}><Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen({ mode: "archive" })}><Archive />Archive</Button></PermissionGuard> : null}
+        <PermissionGuard require={task(keys.sections.bom.add ?? keys.sections.bom.edit)}><Button type="button" size="sm" variant="outline" disabled={busy || bom.loading} onClick={() => setOpen({ mode: "add" })}><Plus />Add material</Button></PermissionGuard>
         <Button type="button" size="sm" disabled={!bom.dirty || busy} onClick={() => void bom.saveAll()}>{bom.saving ? <><Spinner />Saving…</> : "Save bill of materials"}</Button>
       </div>
     </div>

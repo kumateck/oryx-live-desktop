@@ -13,8 +13,9 @@ export interface CopyOutcome { product: string; error: string | null }
 export function useCopyProcedure(sourceProductId: string) {
   const [load] = useLazyGetApiV1ProductQuery();
   const [save] = usePostApiV1ProductByProductIdRoutesMutation();
-  const { editRequirement } = useProductWorkspace();
-  const permission = usePermissionAction(editRequirement);
+  const { save: saveRequirement, context } = useProductWorkspace();
+  // Copying writes the target's procedure: the server requires the key for each kind of change it makes there.
+  const permission = usePermissionAction(saveRequirement("procedure"));
   const [copying, setCopying] = useState(false);
   const [outcomes, setOutcomes] = useState<CopyOutcome[] | null>(null);
 
@@ -37,7 +38,7 @@ export function useCopyProcedure(sourceProductId: string) {
     const results = await Promise.all(targets.map(async (target): Promise<CopyOutcome> => {
       const denied = permission.check();
       if (denied) return { product: target.label, error: denied };
-      const result = await save({ ...procedureAudit, productId: target.value, body });
+      const result = await save({ ...procedureAudit, ...context, productId: target.value, body });
       return { product: target.label, error: "error" in result ? apiErrorMessage(result.error) : null };
     }));
     setOutcomes(results);
@@ -54,7 +55,7 @@ export function useCopyProcedure(sourceProductId: string) {
       setCopying(false);
       return result;
     }
-    const response = await save({ ...procedureAudit, productId: sourceProductId, body: toRoutesRequest(steps, false) });
+    const response = await save({ ...procedureAudit, ...context, productId: sourceProductId, body: toRoutesRequest(steps, false) });
     const result = [{ product: sourceProductId, error: "error" in response ? apiErrorMessage(response.error) : null }];
     setOutcomes(result);
     setCopying(false);

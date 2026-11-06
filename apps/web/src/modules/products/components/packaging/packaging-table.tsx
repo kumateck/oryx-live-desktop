@@ -5,6 +5,7 @@ import { ListDataTable, dataTableColumns } from "@/shared/datatable";
 import { packagingTotal, type PackagingLine } from "../../lib/packaging";
 import { MaterialSpecRef } from "../material-spec-ref";
 import { packagingAudit } from "../../hooks/use-packaging";
+import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { MaterialQuantity } from "../material-quantity";
 
 const column = dataTableColumns<PackagingLine>();
@@ -18,6 +19,7 @@ export function PackagingLinesTable({ lines, loading, error, onRetry, onEdit, on
   onEdit: (line: PackagingLine) => void;
   onRemove: (line: PackagingLine) => void;
 }) {
+  const { task, keys } = useProductWorkspace();
   const columns = useMemo(() => column.columns([
     column.display({ id: "number", header: "#", cell: ({ row }) => row.index + 1 }),
     column.accessor((line) => line.code || dash, { id: "code", header: "Code" }),
@@ -32,10 +34,10 @@ export function PackagingLinesTable({ lines, loading, error, onRetry, onEdit, on
     column.accessor(packagingTotal, { id: "total", header: "Total qty",
       cell: ({ row }) => <MaterialQuantity materialId={row.original.material.value} known={row.original.unit} audit={packagingAudit} value={packagingTotal(row.original)} origin="calculated" /> }),
     column.display({ id: "actions", header: TableMenuHeader, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.material.label}`} items={[
-      { id: "edit", label: "Edit", icon: Pencil, onSelect: () => onEdit(row.original) },
-      { id: "remove", label: "Remove", icon: Trash2, destructive: true, onSelect: () => onRemove(row.original) },
+      { id: "edit", label: "Edit", icon: Pencil, require: task(keys.sections.packaging.edit), onSelect: () => onEdit(row.original) },
+      { id: "remove", label: "Remove", icon: Trash2, destructive: true, require: task(keys.sections.packaging.delete ?? keys.sections.packaging.edit), onSelect: () => onRemove(row.original) },
     ]} /> }),
-  ]), [onEdit, onRemove]);
+  ]), [onEdit, onRemove, task, keys]);
   return <ListDataTable label="Packing materials" columns={columns} rows={lines} getRowId={(line) => line.key} loading={loading} error={error}
     onRetry={onRetry} emptyTitle="No packing materials yet" emptyDescription="Add the materials this product is packed in, then save." />;
 }

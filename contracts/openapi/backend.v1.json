@@ -3885,6 +3885,13 @@
         "summary": "Creates a new Bill of Material.",
         "parameters": [
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -4108,6 +4115,13 @@
             }
           },
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -4206,6 +4220,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -50717,6 +50738,13 @@
         "summary": "Creates a new product.",
         "parameters": [
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -51010,6 +51038,13 @@
             }
           },
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -51106,6 +51141,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -51227,6 +51269,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -51407,6 +51456,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -51643,6 +51699,13 @@
             }
           },
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -51702,6 +51765,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -51878,6 +51948,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -52264,6 +52341,13 @@
             }
           },
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -52363,6 +52447,13 @@
             }
           },
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -52422,6 +52513,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -52533,6 +52631,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -53071,6 +53176,13 @@
         "summary": "Imports products from an Excel file.",
         "parameters": [
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -53144,6 +53256,13 @@
         "summary": "Imports product bill of materials (BOM) from an Excel file.",
         "parameters": [
           {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -53216,6 +53335,13 @@
         ],
         "summary": "Imports product packaging information from an Excel file.",
         "parameters": [
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "Module",
             "in": "header",
@@ -53443,6 +53569,13 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/DOMAIN.Entities.Products.Division"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -116581,6 +116714,516 @@
           }
         }
       }
+    },
+    "/api/v1/white-placebo/workspace": {
+      "get": {
+        "tags": [
+          "WhitePlacebo"
+        ],
+        "operationId": "GetWhitePlaceboWorkspace",
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboWorkspaceDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboWorkspaceDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboWorkspaceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/white-placebo/recipe": {
+      "put": {
+        "tags": [
+          "WhitePlacebo"
+        ],
+        "operationId": "SaveWhitePlaceboRecipe",
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.SaveWhitePlaceboRecipe"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.SaveWhitePlaceboRecipe"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.SaveWhitePlaceboRecipe"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/white-placebo": {
+      "get": {
+        "tags": [
+          "WhitePlacebo"
+        ],
+        "operationId": "ListWhitePlaceboPreparations",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboPreparationPageDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboPreparationPageDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboPreparationPageDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "WhitePlacebo"
+        ],
+        "operationId": "CreateWhitePlaceboPreparation",
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.CreateWhitePlaceboPreparation"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.CreateWhitePlaceboPreparation"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.CreateWhitePlaceboPreparation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/white-placebo/{id}": {
+      "get": {
+        "tags": [
+          "WhitePlacebo"
+        ],
+        "operationId": "GetWhitePlaceboPreparation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboPreparationDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboPreparationDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboPreparationDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/white-placebo/{id}/issue": {
+      "post": {
+        "tags": [
+          "WhitePlacebo"
+        ],
+        "operationId": "IssueWhitePlaceboIngredients",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/white-placebo/{id}/output": {
+      "post": {
+        "tags": [
+          "WhitePlacebo"
+        ],
+        "operationId": "RecordWhitePlaceboOutput",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.RecordWhitePlaceboOutput"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.RecordWhitePlaceboOutput"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.RecordWhitePlaceboOutput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -141241,6 +141884,9 @@
               "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialDepartment"
             },
             "nullable": true
+          },
+          "isWhitePlacebo": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -141616,6 +142262,9 @@
               "$ref": "#/components/schemas/DOMAIN.Entities.Procurement.Manufacturers.ManufacturerListDto"
             },
             "nullable": true
+          },
+          "isWhitePlacebo": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -141939,6 +142588,9 @@
           "warehouseStock": {
             "type": "number",
             "format": "double"
+          },
+          "isWhitePlacebo": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -166793,6 +167445,11 @@
           "contentRevision": {
             "type": "integer",
             "format": "int32"
+          },
+          "whitePlaceboPreparationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -179419,6 +180076,498 @@
           "sharedWithProducts": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "recipe": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboRecipeDto"
+          },
+          "materials": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboMaterialDto"
+            },
+            "nullable": true
+          },
+          "stock": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboStockDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboRecipeDto": {
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialName": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitSymbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reference": {
+            "type": "string",
+            "nullable": true
+          },
+          "instructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "storageConditions": {
+            "type": "string",
+            "nullable": true
+          },
+          "holdHours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "expectedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboIngredientDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboIngredientDto": {
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "uoMId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unitSymbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboMaterialDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "uoMId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unitSymbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "isWhitePlacebo": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboStockDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialName": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "shelf": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitSymbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "expiryDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.SaveWhitePlaceboRecipe": {
+        "required": [
+          "instructions",
+          "reference",
+          "storageConditions"
+        ],
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reference": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
+          },
+          "instructions": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "storageConditions": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "holdHours": {
+            "maximum": 8760,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "expectedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboIngredientRequest"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboIngredientRequest": {
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboPreparationPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboPreparationDto"
+            },
+            "nullable": true
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboPreparationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialName": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitSymbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "recipeRevision": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recipeReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "instructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "storageConditions": {
+            "type": "string",
+            "nullable": true
+          },
+          "holdHours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "expectedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "actualQuantity": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "outputNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "requisitionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "rejected": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "issuedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "recordedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "preparedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "outputBatchId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "grnId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "qualityStatus": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.BatchStatus"
+          },
+          "useBy": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboInputDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboInputDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialName": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitSymbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "recipeQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.CreateWhitePlaceboPreparation": {
+        "required": [
+          "batchNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipeRevision": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "batchNumber": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "expectedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "notes": {
+            "maxLength": 2000,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboInputRequest"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboInputRequest": {
+        "type": "object",
+        "properties": {
+          "shelfMaterialBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.WhitePlacebo.RecordWhitePlaceboOutput": {
+        "required": [
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "preparedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "maxLength": 2000,
+            "minLength": 0,
+            "type": "string"
           }
         },
         "additionalProperties": false

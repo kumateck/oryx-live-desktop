@@ -10,7 +10,7 @@ import { SessionProvider } from "../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../test/backend";
 import { decidedElsewhere, decisionPermission, decisionProblem, documentLabel, isReadable, waitingDocuments } from "../lib/approval-documents";
 
-afterEach(() => { cleanup(); forgetSession(); });
+afterEach(() => { cleanup(); forgetSession(); queries.length = 0; });
 
 it("names documents, says where each is decided, and asks for a reason only when rejecting", () => {
   expect([documentLabel("PurchaseOrder"), documentLabel("ProductionExtraPacking"), documentLabel("QcCoa"), documentLabel("QcOosCase"), documentLabel("TemplateFormRevision"), documentLabel(null), documentLabel("Response")])
@@ -33,6 +33,7 @@ it("names documents, says where each is decided, and asks for a reason only when
 
 import { entity, leave } from "./__fixtures__/approval-records";
 interface Call { method: string; path: string; body: unknown }
+const queries: URL[] = [];
 
 function open(address: string, options: { countsFail?: boolean; permissions?: string[] } = {}) {
   const backend = stubBackend({ permissions: options.permissions ?? ["CanViewPendingApprovals", "CanApprovePendingApproval", "CanRejectPendingApproval"] });
@@ -44,6 +45,7 @@ function open(address: string, options: { countsFail?: boolean; permissions?: st
     const url = new URL(input.url);
     const path = url.pathname;
     const text = input.method === "GET" ? "" : await input.clone().text();
+    queries.push(url);
     calls.push({ method: input.method, path, body: text ? JSON.parse(text) as unknown : null });
     if (path === "/api/v1/approval/my-pending/document-counts") return options.countsFail ? new Response(null, { status: 404 }) : Response.json({ LeaveRequest: 2, PurchaseOrder: 1, QcCoa: 3, PayrollRun: 1, BillingSheet: 0 });
     if (path === "/api/v1/approval/my-pending/stats") return Response.json({ LeaveRequest: 2 });
@@ -51,6 +53,7 @@ function open(address: string, options: { countsFail?: boolean; permissions?: st
     if (path === "/api/v1/approval/delegations/mine") return Response.json({ given: [{ id: "dg-1", delegator: { name: "Ada Mensah" }, delegate: { name: "Kofi Boateng" }, startsAt: "2026-10-14T08:00:00Z", endsAt: "2026-10-20T00:00:00Z", reason: "Annual leave", status: 1 }],
       received: [{ id: "dg-2", delegator: { name: "Ama Owusu" }, delegate: { name: "Ada Mensah" }, startsAt: "2026-10-01T08:00:00Z", endsAt: "2026-10-03T00:00:00Z", status: 2 }] });
     if (path === "/api/v1/approval/delegations/dg-1" && input.method === "DELETE") return new Response(null, { status: 204 });
+    if (path === "/api/v1/user/by-permission") return Response.json({ data: [{ id: "u-kofi", firstName: "Kofi", lastName: "Boateng" }], pageIndex: 1, pageCount: 1 });
     if (path === "/api/v1/approval/my-pending/LeaveRequest/lr-1") return Response.json(entity("LeaveRequest", "lr-1", { approvalLogs: [{ user: { name: "K. Mensah" }, status: 2, approvedAt: "2026-09-30T12:00:00Z", comments: "Dates clash with the audit" }] }));
     if (path === "/api/v1/approval/my-pending/Response/doc-1") return Response.json(entity("Response", "doc-1"));
     if (path === "/api/v1/approval/my-pending/ServiceMemo/sm-1") return Response.json(entity("ServiceMemo", "sm-1"));
@@ -100,6 +103,23 @@ it("lists delegations given and received, and ends one only after confirming", a
   expect(writes(calls)).toEqual([]);
   await user.click(within(dialog).getByRole("button", { name: "End delegation" }));
   await waitFor(() => expect(writes(calls).map((call) => [call.method, call.path])).toEqual([["DELETE", "/api/v1/approval/delegations/dg-1"]]));
+}, 20_000);
+
+it("offers as a delegate only people who can see pending approvals, also when searching", async () => {
+  const user = userEvent.setup();
+  open("/qa/pending-approvals");
+  expect(await screen.findByText("Kofi Boateng")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Delegate my approvals" }));
+  const dialog = within(await screen.findByRole("dialog", { name: "Delegate my approvals" }));
+  await user.click((await dialog.findAllByRole("combobox"))[0]!);
+  await user.keyboard("Kof");
+  await waitFor(() => expect(queries.some((url) => url.pathname === "/api/v1/user/by-permission" && url.searchParams.get("searchQuery") === "Kof")).toBe(true));
+  const lookups = queries.filter((url) => url.pathname.startsWith("/api/v1/user"));
+  // Every lookup, searched or not, asks only for holders of the pending approvals key.
+  for (const lookup of lookups) {
+    expect(lookup.pathname).toBe("/api/v1/user/by-permission");
+    expect(lookup.searchParams.getAll("permissionKey")).toEqual(["CanViewPendingApprovals"]);
+  }
 }, 20_000);
 
 it("falls back to the older count when the full one is not there", async () => {

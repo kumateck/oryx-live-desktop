@@ -88,7 +88,7 @@ it("lists packing lists and allocations behind their own permissions and loads a
   // Allocations need the invoice permission; the packing list permission does not open them.
   await waitFor(() => expect(screen.queryByText("Acme Pharmacy")).toBeNull());
   cleanup();
-  const { calls } = open("/crm/allocations?type=1", ["CanViewInvoice"]);
+  const { calls } = open("/crm/allocations?type=1", ["CanViewInvoice", "CanLoadFinishedGoods"]);
   expect(await screen.findByText("Acme Pharmacy")).toBeTruthy();
   expect(calls.find((call) => call.path === "/api/v1/production-orders/allocate")?.search).toContain("approved=true");
   await openMenu("Actions for order PO-9");
@@ -153,7 +153,7 @@ it("does not offer editing once a packing list is approved", async () => {
 
 it("marks the goods as loaded from the proforma invoice, before the purchase order is attached", async () => {
   const user = userEvent.setup();
-  const { calls } = open("/crm/proforma-invoice/pi-1", ["CanViewProformaInvoice", "CanViewInvoice"]);
+  const { calls } = open("/crm/proforma-invoice/pi-1", ["CanViewProformaInvoice", "CanViewInvoice", "CanLoadFinishedGoods"]);
   await user.click(await screen.findByRole("button", { name: "Mark as loaded" }));
   expect(writes(calls)).toEqual([]);
   await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Mark as loaded" }));

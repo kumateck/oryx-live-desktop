@@ -1,10 +1,10 @@
 import type { ModuleManifest } from "../contract";
 
-// The permissions are the ones the sidebar shows this dashboard for.
+// Each dashboard has its own view key, which the server checks too.
 export const manifest = {
   id: "production-health-dashboard",
   label: "Production health dashboard",
   root: "/production-health-dashboard",
   order: 109,
-  access: { kind: "some", permissions: ["CanViewPlannedProducts"] },
+  access: { kind: "all", permissions: ["CanViewProductionHealthDashboard"] },
 } satisfies ModuleManifest<"production-health-dashboard", "/production-health-dashboard">;

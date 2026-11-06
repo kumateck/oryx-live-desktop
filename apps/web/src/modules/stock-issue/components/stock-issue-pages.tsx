@@ -20,6 +20,7 @@ import { KindSwitch } from "@/shared/reference-data/kind-switch";
 import { useKindTabs } from "@/shared/reference-data/kind-tabs";
 import { RichTextView, richTextToPlain } from "@/shared/rich-text/rich-text-view";
 import { usePageSearch } from "@/shared/search/page-search";
+import { whitePlaceboPreparationPath } from "@/shared/production/white-placebo-path";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation } from "../api/stock-issue-api";
 import { audit, batchNumber, checkNote, issueBlock, issuePermissions, issueRequisitionPath, shortfall, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
@@ -63,7 +64,7 @@ export function StockIssueListPage() {
       <KindSwitch tabs={tabs} kind={kind} onSelect={select} />
     </div>
     <ServerDataTable label="Stock requisitions" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
-      loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} onRowOpen={(row) => void navigate(issueRequisitionPath(row.id, kind ?? 0))}
+      loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} onRowOpen={(row) => void navigate(row.whitePlaceboPreparationId ? whitePlaceboPreparationPath(row.whitePlaceboPreparationId) : issueRequisitionPath(row.id, kind ?? 0))}
       error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned requisitions the app could not read." : null}
       emptyTitle={search.trim() ? "No requisitions match this search" : "No stock requisitions"} emptyDescription={search.trim() ? "Search by requisition number." : "Requisitions appear here when production asks your store for materials."} />
   </section>;
@@ -151,6 +152,8 @@ function Loaded({ id }: { id: string }) {
   // The materials say whether this is a raw or a packaging requisition; the permission for that kind is the one checked.
   const kind = requisition.kind ?? 0;
   if (!has(viewPermissions[kind]) && !has(issuePermissions[kind])) return <NoAccess />;
+  if (requisition.whitePlaceboPreparationId) return <section className="space-y-3"><h1 className="text-lg font-semibold">White Placebo ingredient request</h1>
+    <p>Issue the selected ingredient batches from the linked preparation record.</p><Button asChild><Link to={whitePlaceboPreparationPath(requisition.whitePlaceboPreparationId)}>Open White Placebo preparation</Link></Button></section>;
   return <Issue requisition={requisition} kind={kind} />;
 }
 export function StockIssuePage() {

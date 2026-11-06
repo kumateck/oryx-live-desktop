@@ -19,12 +19,14 @@ import { useDelegateApprovalsMutation, useGetMyDelegationsQuery, useRevokeDelega
 import { approvalPermissions, audit } from "../lib/approval-documents";
 import { delegationFormSchema, delegationRequest, maximumDays, myDelegationsSchema, type Delegation, type DelegationFormValues } from "../lib/delegation";
 
-const { useLazyGetApiV1UserQuery } = identityApi;
+const { useLazyGetApiV1UserByPermissionQuery } = identityApi;
+/** Whoever decides your approvals works from the pending approvals page; the server refuses anyone else. */
+const approverKey = "CanViewPendingApprovals";
 const today = () => { const now = new Date(); return new Date(now.getFullYear(), now.getMonth(), now.getDate()); };
 
 function DelegateDialog({ onClose }: { onClose: () => void }) {
   const me = useCurrentUser();
-  const [loadUsers] = useLazyGetApiV1UserQuery();
+  const [loadUsers] = useLazyGetApiV1UserByPermissionQuery();
   const [delegate] = useDelegateApprovalsMutation();
   const [message, setMessage] = useState("");
   const [first] = useState(today);
@@ -32,9 +34,9 @@ function DelegateDialog({ onClose }: { onClose: () => void }) {
   // Read here so the form re-renders, and its fields show their messages, when validation fails.
   void form.formState.errors;
   const [chosen, start, end] = useWatch({ control: form.control, name: ["delegate", "start", "end"] });
-  // The server's filter is named "isActive" but means "is disabled"; false asks for accounts that can sign in.
+  // Only active people who can open pending approvals, by the server's own rule; search narrows that list.
   const loadPeople = useCallback<SelectLoader>(async (search, page) => {
-    const result = await loadUsers({ ...audit, isActive: false, page, pageSize: 20, searchQuery: search.trim() }).unwrap();
+    const result = await loadUsers({ ...audit, permissionKey: [approverKey], page, pageSize: 20, searchQuery: search.trim() }).unwrap();
     return { options: (result.data ?? []).flatMap((user) => user.id && user.id !== me?.id ? [{ value: user.id, label: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email || "Unnamed user" }] : []),
       hasNext: Number(result.pageIndex) < Number(result.pageCount), hasPrevious: Number(result.pageIndex) > 1 };
   }, [loadUsers, me?.id]);

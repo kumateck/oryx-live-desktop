@@ -6,7 +6,7 @@ import { identityApi } from "@/shared/api/generated/identity";
 import { useCurrentUser } from "@/shared/auth/session-provider";
 import { useAccess } from "@/shared/auth/use-access";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { SettingsHeader } from "@/modules/settings-support/ui";
 import { Input } from "@/components/ui/input";
@@ -67,7 +67,7 @@ function ScheduleTab() {
   const options = (shifts.data ?? []).flatMap((item) => item.id ? [{ value: item.id, label: item.scheduleName ?? "Shift schedule" }] : []);
   return <UploadSheet profile={shiftSchedule} require={uploadPermissions.schedule} ready={!department ? "Choose the department." : !shift ? "Choose the shift schedule." : null}
     options={<>
-      <Choice label="Department"><AsyncOptionPicker label="Department" value={department} onChange={(next) => { setDepartment(next); setShift(""); }} loadOptions={departments.loadOptions} placeholder="Choose a department" /></Choice>
+      <Choice label="Department"><SearchableSelect clearable={false} label="Department" value={department} onChange={(next) => { if (!next) return; setDepartment(next); setShift(""); }} loadOptions={departments.loadOptions} placeholder="Choose a department" /></Choice>
       <Choice label="Shift schedule"><Select value={shift} onValueChange={setShift} disabled={!department}><SelectTrigger aria-label="Shift schedule" className="w-full"><SelectValue placeholder={department ? options.length ? "Choose a schedule" : "No schedules for this department" : "Choose the department first"} /></SelectTrigger>
         <SelectContent>{options.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select></Choice>
     </>}
