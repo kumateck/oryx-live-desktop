@@ -1,3 +1,5 @@
+import { StockBatchLocation } from "@/shared/warehouse/stock-batch-location";
+import { rackShelfLocation } from "@/shared/warehouse/stock-location";
 import { Link } from "react-router";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { useMemo } from "react";
@@ -18,7 +20,7 @@ interface Props { materialId: string; departmentId: string }
 
 const batchColumn = dataTableColumns<ShelfBatchRow>();
 const batchColumns = batchColumn.columns([
-  batchColumn.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", cell: ({ row }) => <div>{row.original.batchNumber ?? dash}{row.original.batchId ? <PermissionGuard require={{ kind: "all", permissions: ["CanViewExpiredMaterials"] }}><Link className="block text-xs text-primary underline underline-offset-2" to={`/warehouse/expired-materials/${encodeURIComponent(row.original.batchId)}`}>Batch validity</Link></PermissionGuard> : null}</div> }),
+  batchColumn.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", cell: ({ row }) => <div>{row.original.batchNumber ?? dash}<StockBatchLocation locations={[rackShelfLocation(row.original.rack, row.original.shelf)]} />{row.original.batchId ? <PermissionGuard require={{ kind: "all", permissions: ["CanViewExpiredMaterials"] }}><Link className="block text-xs text-primary underline underline-offset-2" to={`/warehouse/expired-materials/${encodeURIComponent(row.original.batchId)}`}>Batch validity</Link></PermissionGuard> : null}</div> }),
   batchColumn.accessor((row) => row.shelf ?? "", { id: "shelf", header: "Shelf", cell: ({ row }) => row.original.shelf ? <div><div className="font-medium">{row.original.shelf}</div>
     <div className="text-xs text-muted-foreground">{[row.original.rack, row.original.location, row.original.floor].filter(Boolean).join(" · ")}</div></div> : dash }),
   batchColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => quantity(row.original.quantity, row.original.unit) }),
@@ -72,7 +74,7 @@ const reservedColumns = reservedColumn.columns([
     <div className="text-xs text-muted-foreground">{formatDateTime(row.original.dateTime) ?? "–"}</div></div> }),
   reservedColumn.accessor((row) => row.productName ?? "", { id: "product", header: "Reserved for", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.productName ?? "–"}</div>
     <div className="text-xs text-muted-foreground">{row.original.productCode ?? "–"} · batch {row.original.productBatchNumber ?? "–"}</div></div> }),
-  reservedColumn.accessor((row) => row.materialBatchNumber ?? "", { id: "batch", header: "Material batch", cell: ({ row }) => <div><div>{row.original.materialBatchNumber ?? "–"}</div>
+  reservedColumn.accessor((row) => row.materialBatchNumber ?? "", { id: "batch", header: "Material batch", cell: ({ row }) => <div><div>{row.original.materialBatchNumber ?? "–"}</div><StockBatchLocation locations={[rackShelfLocation(row.original.rackName, row.original.shelfName)]} />
     <div className="text-xs text-muted-foreground">AR {row.original.arNumber ?? "–"}</div></div> }),
   reservedColumn.accessor("reserved", { header: "Reserved", size: 140, cell: ({ row }) => <span className="font-medium">{quantity(row.original.reserved, row.original.unit)}</span> }),
   reservedColumn.accessor("balance", { header: "Balance after", size: 140, cell: ({ row }) => quantity(row.original.balance, row.original.unit) }),

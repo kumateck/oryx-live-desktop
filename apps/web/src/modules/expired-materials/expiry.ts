@@ -1,9 +1,10 @@
+import { stockShelfSchema, stockShelfLocation } from "@/shared/warehouse/stock-location";
 import { z } from "zod";
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const amount = z.number().nullish().transform((value) => typeof value === "number" && Number.isFinite(value) ? value : 0);
 const date = z.string().nullish().transform((value) => value && new Date(value).getFullYear() >= 1900 ? value : null);
-const shelf = z.object({ quantity: amount, warehouseLocationShelf: z.object({ name: text, code: text, warehouseLocationRack: z.object({ name: text }).nullish() }).nullish() });
+const shelf = z.object({ quantity: z.number().nullish(), warehouseLocationShelf: stockShelfSchema });
 const department = z.object({ id: text, name: text, code: text });
 
 const batch = z.object({ id: z.string().nullish(), batchNumber: text, arNumber: text, manufacturingDate: date, expiryDate: date, effectiveExpiryDate: date, retestDate: date, totalQuantity: amount, remainingQuantity: amount, uoM: z.object({ symbol: text }).nullish(),
@@ -12,7 +13,7 @@ const batch = z.object({ id: z.string().nullish(), batchNumber: text, arNumber: 
 export const expiryRowsSchema = z.array(batch).nullish().transform((value) => (value ?? []).flatMap((entry, index) => [{ id: entry.id ?? `batch-${index}`, batchNumber: entry.batchNumber, arNumber: entry.arNumber, made: entry.manufacturingDate, originalExpiry: entry.expiryDate, expires: entry.effectiveExpiryDate ?? entry.expiryDate, extended: !!entry.effectiveExpiryDate && entry.effectiveExpiryDate === entry.retestDate && entry.retestDate !== entry.expiryDate,
   total: entry.totalQuantity, remaining: entry.remainingQuantity, unit: entry.uoM?.symbol ?? null, materialName: entry.material?.name ?? "Unnamed material", materialCode: entry.material?.code ?? null, supplier: entry.supplierName, manufacturer: entry.manufacturerName,
   departments: (entry.stockDepartments ?? []).map((item) => ({ id: item.id ?? item.code ?? item.name ?? "unrecorded", name: item.name ?? item.code ?? "Unnamed department" })),
-  shelves: (entry.shelves ?? []).flatMap((item) => { const name = [item.warehouseLocationShelf?.warehouseLocationRack?.name, item.warehouseLocationShelf?.name ?? item.warehouseLocationShelf?.code].filter(Boolean).join(" / "); return name ? [name] : []; }) }]));
+  shelves: (entry.shelves ?? []).flatMap((item) => { if (item.quantity !== null && item.quantity !== undefined && item.quantity <= 0) return []; const name = stockShelfLocation(item.warehouseLocationShelf); return name ? [name] : []; }) }]));
 export type ExpiryBatch = z.infer<typeof expiryRowsSchema>[number];
 
 /** A calendar day as the server's date filter takes it. */

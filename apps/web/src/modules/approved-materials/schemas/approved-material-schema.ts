@@ -55,6 +55,6 @@ export type BinCardRow = z.infer<typeof binCardRowsSchema>[number];
 /** Stock set aside for a production batch. */
 export const reservedRowsSchema = z.array(z.object({
   schedule: text, dateTime: z.string().nullish(), productName: text, productCode: text, productBatchNumber: text, materialBatchNumber: text, arNumber: text, uomSymbol: text,
-  reservedQuantity: amount, balanceQuantity: amount, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), effectiveExpiryDate: z.string().nullish(),
+  rackName: text, shelfName: text, reservedQuantity: amount, balanceQuantity: amount, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), effectiveExpiryDate: z.string().nullish(),
 })).nullish().transform((value) => (value ?? []).map((item, index) => ({ ...item, id: `reserved-${index}`, unit: item.uomSymbol, reserved: item.reservedQuantity, balance: item.balanceQuantity, effectiveExpiryDate: item.effectiveExpiryDate ?? item.expiryDate ?? null })));
 export type ReservedRow = z.infer<typeof reservedRowsSchema>[number];

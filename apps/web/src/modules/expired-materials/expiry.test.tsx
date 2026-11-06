@@ -47,7 +47,7 @@ function open(address: string, permissions: string[], stockDepartments: { id?: s
 it("lists batches expiring in the current month with where they sit and what is left", async () => {
   const calls = open("/warehouse/about-to-expire-materials", ["CanViewAboutToExpireMaterials"]);
   expect(await screen.findByText("Lactose")).toBeTruthy();
-  expect(screen.getByText("R1 / S1")).toBeTruthy();
+  expect(screen.getByText("R1 (S1)")).toBeTruthy();
   expect(screen.getByText("4 kg")).toBeTruthy();
   const month = monthRangeDays(monthOf())!;
   expect(calls.some((call) => call.includes(`startDate=${apiDay(month.from)}`) && call.includes(`endDate=${apiDay(month.to)}`) && call.includes("materialKind=0"))).toBe(true);

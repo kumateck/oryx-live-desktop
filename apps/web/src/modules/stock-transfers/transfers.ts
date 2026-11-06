@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { stockShelfSchema, stockShelfLocation } from "@/shared/warehouse/stock-location";
 import { expiredOrDue } from "@/modules/stock-issue/lib/stock-issue";
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 
@@ -30,15 +31,15 @@ export const transferRowsSchema = z.array(transfer).nullish().transform((value) 
 export type Transfer = z.infer<typeof transferRowsSchema>[number];
 
 /** The batches the server has picked to meet a transfer. */
-export const transferBatchesSchema = z.array(z.object({ quantityToTake: amount, batch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, isReturn: z.boolean().nullish() }).nullish() })).nullish()
-  .transform((value) => (value ?? []).map((item, index) => ({ key: `${item.batch?.id ?? "batch"}-${index}`, id: item.batch?.id ?? null, number: item.batch?.batchNumber ?? null, quantity: item.quantityToTake, expires: item.batch?.expiryDate ?? null, returned: item.batch?.isReturn === true })));
+export const transferBatchesSchema = z.array(z.object({ warehouseLocationShelf: stockShelfSchema, quantityToTake: amount, batch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, isReturn: z.boolean().nullish() }).nullish() })).nullish()
+  .transform((value) => (value ?? []).map((item, index) => ({ key: `${item.batch?.id ?? "batch"}-${index}`, id: item.batch?.id ?? null, number: item.batch?.batchNumber ?? null, quantity: item.quantityToTake, expires: item.batch?.expiryDate ?? null, returned: item.batch?.isReturn === true, location: stockShelfLocation(item.warehouseLocationShelf) })));
 export type TransferBatch = z.infer<typeof transferBatchesSchema>[number];
 
 /**
  * Why a transfer cannot be issued, or null when it can. The server checks only that the batches hold enough,
  * so that it is approved, not already issued, and not from expired stock is checked here.
  */
-export function transferIssueBlock(transfer: Pick<Transfer, "status" | "quantity">, batches: readonly TransferBatch[], today: Date = new Date()): string | null {
+export function transferIssueBlock(transfer: Pick<Transfer, "status" | "quantity">, batches: readonly Pick<TransferBatch, "id" | "quantity" | "expires">[], today: Date = new Date()): string | null {
   if (transfer.status === transferStatus.issued) return "This transfer has already been issued.";
   if (transfer.status === transferStatus.rejected) return "This transfer was rejected.";
   if (transfer.status !== transferStatus.approved) return "This transfer is waiting for approval.";

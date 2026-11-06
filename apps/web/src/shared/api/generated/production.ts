@@ -4236,15 +4236,37 @@ export type DomainEntitiesMaterialsBatchMaterialBatchListDtoRead = {
   issuedAt?: string | null;
   effectiveExpiryDate?: string | null;
 };
+export type DomainEntitiesWarehousesWareHouseLocationDto = {
+  id?: string;
+  name?: string | null;
+  floorName?: string | null;
+  description?: string | null;
+  warehouse?: SharedCollectionItemDto;
+};
+export type DomainEntitiesWarehousesWareHouseLocationRackDto = {
+  id?: string;
+  warehouseLocation?: DomainEntitiesWarehousesWareHouseLocationDto;
+  name?: string | null;
+  description?: string | null;
+};
+export type DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto = {
+  id?: string;
+  warehouseLocationRack?: DomainEntitiesWarehousesWareHouseLocationRackDto;
+  code?: string | null;
+  name?: string | null;
+  description?: string | null;
+};
 export type DomainEntitiesMaterialsBatchBatchToSupply = {
   batch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
   quantityToTake?: number;
   warehouseLocationShelfId?: string | null;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
 };
 export type DomainEntitiesMaterialsBatchBatchToSupplyRead = {
   batch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
   quantityToTake?: number;
   warehouseLocationShelfId?: string | null;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDto = {
   id?: string;
@@ -4368,26 +4390,6 @@ export type DomainEntitiesProductionSchedulesPackingFinalPackingDto = {
   percentageVarianceDescription?: string | null;
 };
 export type DomainEntitiesMaterialsMaterialReturnStatus = 0 | 1;
-export type DomainEntitiesWarehousesWareHouseLocationDto = {
-  id?: string;
-  name?: string | null;
-  floorName?: string | null;
-  description?: string | null;
-  warehouse?: SharedCollectionItemDto;
-};
-export type DomainEntitiesWarehousesWareHouseLocationRackDto = {
-  id?: string;
-  warehouseLocation?: DomainEntitiesWarehousesWareHouseLocationDto;
-  name?: string | null;
-  description?: string | null;
-};
-export type DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto = {
-  id?: string;
-  warehouseLocationRack?: DomainEntitiesWarehousesWareHouseLocationRackDto;
-  code?: string | null;
-  name?: string | null;
-  description?: string | null;
-};
 export type DomainEntitiesMaterialsBatchMaterialBatchReducedDto = {
   id?: string;
   material?: DomainEntitiesMaterialsMaterialDto;
