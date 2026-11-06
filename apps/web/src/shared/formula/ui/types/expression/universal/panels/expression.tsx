@@ -41,10 +41,17 @@ import {
 import NamedExpressionEditor from "../named-expression-editor";
 import { buildInputVariables } from "@/shared/formula/compute/formula-compute-helpers";
 import {
+  CONCENTRATION_INPUT_KEY,
+  concentrationAliasesFor,
+  isConcentrationAliasKey,
+  sampleExpansionInputKeys,
   sampleInputTemplateVariableKey,
   standardInputVariableKey,
   UniversalVariableKeyFormat,
+  usesConcentrationTokens,
+  type ConcentrationUnit,
 } from "@/shared/formula/builder/universal-variable-keys";
+import { ConcentrationUnitField } from "./concentration-unit-field";
 import type {
   VarMapWithLabels,
   FirstColumnPurpose,
@@ -296,14 +303,36 @@ const ExpressionPanel: React.FC<Props> = ({
     [headers, insertAtCursor, snapshot.settings.standardInTable],
   );
 
+  // The configuration as it will be saved, for the concentration aliases (:standardConc, :sampleConc).
+  const aliasConfig = useMemo(
+    () => ({
+      ...snapshot.settings,
+      standardInputs: snapshot.standardInputs,
+      sampleInputs: snapshot.sampleInputs,
+      expression,
+    }),
+    [snapshot, expression],
+  );
   // Inputs as variables derived from frozen snapshot
   const inputVariables = useMemo(() => {
     return buildInputVariables(
-      snapshot.settings,
+      aliasConfig,
       snapshot.standardInputs,
       snapshot.sampleInputs,
     );
-  }, [snapshot]);
+  }, [aliasConfig, snapshot.standardInputs, snapshot.sampleInputs]);
+
+  const concentrationAliases = concentrationAliasesFor(aliasConfig);
+  const showConcentrationUnit =
+    concentrationAliases !== null && usesConcentrationTokens(aliasConfig);
+  const handleConcentrationUnitChange = useCallback(
+    (unit: ConcentrationUnit) =>
+      onUpdateSnapshot({
+        ...snapshot,
+        settings: { ...snapshot.settings, concentrationUnit: unit },
+      }),
+    [onUpdateSnapshot, snapshot],
+  );
 
   // Variable extraction for manual variable labels
   const { vars, varKeys, handleLabelChange } = useVariableExtraction(
@@ -337,6 +366,7 @@ const ExpressionPanel: React.FC<Props> = ({
         return false;
       if (key in tableVars || key in constants) return false;
       if (canonicalInputKeys.has(key)) return false;
+      if (isConcentrationAliasKey(key, aliasConfig)) return false;
       if (namedKeys.has(key)) return false;
       if (/^R\d+[A-Za-z0-9]+$/.test(key)) return false; // cell token pattern
       return true;
@@ -348,6 +378,7 @@ const ExpressionPanel: React.FC<Props> = ({
     snapshot.settings.namedExpressions,
     snapshot.sampleInputs,
     snapshot.standardInputs,
+    aliasConfig,
   ]);
 
   // Number formatting using FROZEN settings
@@ -410,7 +441,7 @@ const ExpressionPanel: React.FC<Props> = ({
         expr = expandAutoSampleTemplates(
           expr,
           sampleNumber,
-          (snapshot.sampleInputs[sampleNumber - 1] ?? []).map(({ key }) => key),
+          sampleExpansionInputKeys(aliasConfig, sampleNumber),
         );
 
         const displayExpr = expr.replace(
@@ -520,7 +551,7 @@ const ExpressionPanel: React.FC<Props> = ({
     constants,
     inputVariables,
     snapshot.settings,
-    snapshot.sampleInputs,
+    aliasConfig,
     tableVars,
   ]);
 
@@ -562,8 +593,16 @@ const ExpressionPanel: React.FC<Props> = ({
         headers.length - (snapshot.settings.standardInTable ? 1 : 0),
       numberOfReadings: data.length,
       firstColumnPurpose: snapshot.settings.firstColumnPurpose,
+      // Saved only when the formula uses an alias, so other formulas' saved configuration is unchanged.
+      concentrationUnit: usesConcentrationTokens({
+        ...aliasConfig,
+        expression: nextExpression,
+      })
+        ? concentrationAliasesFor(aliasConfig)?.unit
+        : undefined,
     }),
     [
+      aliasConfig,
       snapshot,
       constants,
       headers,
@@ -1022,6 +1061,13 @@ const ExpressionPanel: React.FC<Props> = ({
             <h3 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3 pb-2 border-b border-border/60">
               Available Variables
             </h3>
+            {showConcentrationUnit && concentrationAliases ? (
+              <ConcentrationUnitField
+                disabled={disabled}
+                value={concentrationAliases.unit}
+                onChange={handleConcentrationUnitChange}
+              />
+            ) : null}
             <div className="space-y-1.5 max-h-[500px] overflow-y-auto">
               {headers.length === 0 ? (
                 <div className="text-xs text-muted-foreground italic py-2 text-center">
@@ -1079,6 +1125,15 @@ const ExpressionPanel: React.FC<Props> = ({
                         isTemplate: true,
                       });
                     });
+                    if (concentrationAliases?.sampleWeightKey)
+                      items.push({
+                        key: sampleInputTemplateVariableKey(
+                          CONCENTRATION_INPUT_KEY,
+                        ),
+                        label: `Sample Concentration (${concentrationAliases.unit}) (auto)`,
+                        value: null,
+                        isTemplate: true,
+                      });
                   }
 
                   // Standard inputs
@@ -1098,6 +1153,22 @@ const ExpressionPanel: React.FC<Props> = ({
                         isTemplate: false,
                       });
                     });
+                    const standardWeight = concentrationAliases?.standardWeightKey
+                      ? snapshot.standardInputs.find(
+                          (input) =>
+                            input.key === concentrationAliases.standardWeightKey,
+                        )
+                      : undefined;
+                    if (concentrationAliases && standardWeight)
+                      items.push({
+                        key: standardInputVariableKey(CONCENTRATION_INPUT_KEY),
+                        label: `${PURPOSE_LABEL[snapshot.settings.firstColumnPurpose]} Concentration (${concentrationAliases.unit})`,
+                        value:
+                          standardWeight.value === ""
+                            ? ""
+                            : Number(standardWeight.value),
+                        isTemplate: false,
+                      });
                   }
 
                   // Standard stats

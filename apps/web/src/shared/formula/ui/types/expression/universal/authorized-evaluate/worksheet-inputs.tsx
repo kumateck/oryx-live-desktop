@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { Input } from "@/components/ui/input";
+import { weightInputPresentation } from "@/shared/formula/builder/universal-variable-keys";
 import type {
   ExpressionExtract,
   LabeledInputField,
@@ -28,18 +29,18 @@ const InputRow = ({
 }) => {
   const prefix = useId();
   return (
-  <label htmlFor={`${prefix}-${id}`} className="flex flex-col gap-1 @xl/worksheet:flex-row @xl/worksheet:gap-2">
-    <span className="text-sm text-foreground">{label}:</span>
-    <Input
-      id={`${prefix}-${id}`}
-      type="text"
-      inputMode="decimal"
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className={INPUT_CLASS}
-      aria-label={label}
-    />
-  </label>
+    <label htmlFor={`${prefix}-${id}`} className="flex flex-col gap-1 @xl/worksheet:flex-row @xl/worksheet:gap-2">
+      <span className="text-sm text-foreground">{label}:</span>
+      <Input
+        id={`${prefix}-${id}`}
+        type="text"
+        inputMode="decimal"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={INPUT_CLASS}
+        aria-label={label}
+      />
+    </label>
   );
 };
 
@@ -112,30 +113,44 @@ export const WorksheetInputs = ({
                 : "Standard"}{" "}
           Inputs
         </Heading>
-        {standardInputs.map((input, index) => (
-          <InputRow
-            key={input.key}
-            id={`standard-${input.key}`}
-            label={`${input.label} (${input.key})`}
-            value={input.value}
-            onChange={(value) => onStandardInputChange(index, value)}
-          />
-        ))}
+        {standardInputs.map((input, index) => {
+          const shown = weightInputPresentation(
+            parsed,
+            "standard",
+            input,
+          );
+          return (
+            <InputRow
+              key={input.key}
+              id={`standard-${input.key}`}
+              label={`${shown.label} (${shown.key})`}
+              value={input.value}
+              onChange={(value) => onStandardInputChange(index, value)}
+            />
+          );
+        })}
       </section> : null}
       {sampleInputs.some((sample) => sample.length > 0) ? <section className="min-w-0 space-y-3">
         <Heading>Sample Inputs</Heading>
         {sampleInputs.flatMap((sample, sampleIndex) =>
-          sample.map((input, inputIndex) => (
-            <InputRow
-              key={`${sampleIndex}-${input.key}`}
-              id={`sample-${sampleIndex}-${input.key}`}
-              label={`${headers[sampleIndex + (parsed.standardInTable ? 1 : 0)] || `Sample ${sampleIndex + 1}`} ${input.label} (${input.key})`}
-              value={input.value}
-              onChange={(value) =>
-                onSampleInputChange(sampleIndex, inputIndex, value)
-              }
-            />
-          )),
+          sample.map((input, inputIndex) => {
+            const shown = weightInputPresentation(
+              parsed,
+              "sample",
+              input,
+            );
+            return (
+              <InputRow
+                key={`${sampleIndex}-${input.key}`}
+                id={`sample-${sampleIndex}-${input.key}`}
+                label={`${headers[sampleIndex + (parsed.standardInTable ? 1 : 0)] || `Sample ${sampleIndex + 1}`} ${shown.label} (${shown.key})`}
+                value={input.value}
+                onChange={(value) =>
+                  onSampleInputChange(sampleIndex, inputIndex, value)
+                }
+              />
+            );
+          }),
         )}
       </section> : null}
     </div> : null}

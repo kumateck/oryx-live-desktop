@@ -1,6 +1,7 @@
 import {
   canonicalizeUniversalInputTokens,
   expandCanonicalSampleInputTokens,
+  resolveConcentrationAliases,
   sampleInputVariableKey,
   UniversalVariableKeyFormat,
   variableKeyFormatFor,
@@ -40,7 +41,10 @@ export const expandUniversalSampleExpression = (
           },
         )
       : [];
-    const canonical = canonicalizeUniversalInputTokens(expression);
+    const canonical = resolveConcentrationAliases(
+      canonicalizeUniversalInputTokens(expression),
+      config,
+    );
     const expanded = expandCanonicalSampleInputTokens(
       canonical
         .replace(/:sampleAvg\b/gi, `:sample${sample}Avg`)
