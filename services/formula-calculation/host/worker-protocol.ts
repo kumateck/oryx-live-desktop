@@ -19,4 +19,6 @@ export interface FormulaWorkerResponse {
   id: number;
   response?: FormulaServiceResponseV1;
   failed?: true;
+  /** Sent once (id 0) after the worker has built its calculation service. */
+  ready?: true;
 }

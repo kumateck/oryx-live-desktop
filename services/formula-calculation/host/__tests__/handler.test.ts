@@ -76,6 +76,18 @@ const handler = (
   });
 
 describe("formula host handler", () => {
+  it("counts time spent before execution toward the deadline", async () => {
+    let aborted = false;
+    const run = handler(
+      executor(async (_operation, _input, signal) => {
+        aborted = signal.aborted;
+        return serviceResponse();
+      }),
+    );
+    await run(request({ startedAt: performance.now() - 50 }));
+    expect(aborted).toBe(true);
+  });
+
   it("keeps liveness available and readiness closed while disabled", async () => {
     expect(
       (
