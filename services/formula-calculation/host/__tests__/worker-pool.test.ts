@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type {
   FormulaWorkerRequest,
@@ -23,6 +23,14 @@ import {
 class FakeWorker extends EventEmitter {
   request: FormulaWorkerRequest | null = null;
   terminated = false;
+
+  constructor(reportReady = true) {
+    super();
+    if (reportReady)
+      queueMicrotask(() =>
+        this.emit("message", { id: 0, ready: true } satisfies FormulaWorkerResponse),
+      );
+  }
 
   postMessage(value: FormulaWorkerRequest): void {
     this.request = value;
@@ -147,6 +155,35 @@ describe("formula worker pool", () => {
     expect(workers).toHaveLength(2);
     expect(pool.isReady()).toBe(true);
     await pool.close();
+  });
+
+  it("is not ready until a worker reports its service started", async () => {
+    const pool = new FormulaWorkerPool(1, () => new FakeWorker(false));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(pool.isReady()).toBe(false);
+    await pool.close();
+  });
+
+  it("backs off instead of respawning a worker that keeps crashing", async () => {
+    vi.useFakeTimers();
+    try {
+      const workers: FakeWorker[] = [];
+      const pool = new FormulaWorkerPool(1, () => {
+        const worker = new FakeWorker(false);
+        workers.push(worker);
+        queueMicrotask(() => worker.emit("error", new Error("start-up crash")));
+        return worker;
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      const afterImmediate = workers.length;
+      expect(afterImmediate).toBeLessThanOrEqual(3);
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(workers.length).toBeLessThan(10);
+      expect(pool.isReady()).toBe(false);
+      await pool.close();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

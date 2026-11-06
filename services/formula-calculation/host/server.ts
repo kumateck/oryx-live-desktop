@@ -1,4 +1,7 @@
 import { createServer, type ServerResponse } from "node:http";
+import { performance } from "node:perf_hooks";
+
+import { hasValidWorkloadToken } from "./auth";
 
 import type { FormulaHostConfig } from "./config";
 import type { FormulaHostExecutor, FormulaHostResponse } from "./contracts";
@@ -29,13 +32,21 @@ export const createFormulaHttpServer = (
   const server = createServer(
     { maxHeaderSize: 16 * 1024, requestTimeout: config.deadlineMs + 2_000 },
     async (request, response) => {
+      const startedAt = performance.now();
       try {
         const path = new URL(request.url ?? "/", "http://formula.internal")
           .pathname;
-        const body = await readBoundedRequestBody(
-          request,
-          config.maxRequestBytes,
-        );
+        // Only an authorized POST to a ready service may make the server buffer a body;
+        // everything else is answered by the handler from headers alone (401/503/404/health).
+        const accepted =
+          request.method === "POST" &&
+          config.enabled &&
+          Boolean(executor?.isReady()) &&
+          hasValidWorkloadToken(request.headers.authorization, config.workloadToken);
+        let body: Uint8Array = new Uint8Array();
+        if (accepted)
+          body = await readBoundedRequestBody(request, config.maxRequestBytes);
+        else request.resume();
         send(
           response,
           await handle({
@@ -44,6 +55,7 @@ export const createFormulaHttpServer = (
             authorization: request.headers.authorization,
             contentType: request.headers["content-type"],
             body,
+            startedAt,
           }),
         );
       } catch (error) {

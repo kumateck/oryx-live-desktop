@@ -27,6 +27,7 @@ import {
   hasFormulaResponseValues,
 } from "./formula-print-utils";
 import FormulaPrintWorksheet from "./formula-print-worksheet";
+import { weightInputPresentation } from "@/shared/formula/builder/universal-variable-keys";
 
 interface FormulaPrintPreviewProps {
   settings: string;
@@ -84,24 +85,38 @@ const FormulaPrintPreview = ({
 
   const standardInputs = useMemo(() => {
     return (parsed?.standardInputs || []).map((input: LabeledInputField) => ({
-      label: resolveFormulaLabel(input.label, input.key),
+      label: resolveFormulaLabel(
+        weightInputPresentation(
+          parsed,
+          "standard",
+          input,
+        ).label,
+        input.key,
+      ),
       key: sanitizeString(input.key),
       value: sanitizeString(parsedResponse?.standardInputs?.[input.key]),
     }));
-  }, [parsed?.standardInputs, parsedResponse?.standardInputs]);
+  }, [parsed, parsedResponse?.standardInputs]);
 
   const sampleInputs = useMemo(() => {
     return (parsed?.sampleInputs || []).map((inputs, sampleIndex) => {
       return inputs.map((input: LabeledInputField) => ({
         sampleIndex,
-        label: resolveFormulaLabel(input.label, input.key),
+        label: resolveFormulaLabel(
+          weightInputPresentation(
+            parsed,
+            "sample",
+            input,
+          ).label,
+          input.key,
+        ),
         key: sanitizeString(input.key),
         value: sanitizeString(
           parsedResponse?.sampleInputs?.[sampleIndex]?.[input.key],
         ),
       }));
     });
-  }, [parsed?.sampleInputs, parsedResponse?.sampleInputs]);
+  }, [parsed, parsedResponse?.sampleInputs]);
 
   const manualVars = useMemo<ManualVarsMap>(
     () => coerceManualVars(parsedResponse?.manualVars ?? parsed?.manualVars),
