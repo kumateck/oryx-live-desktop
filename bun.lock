@@ -15,7 +15,7 @@
     },
     "apps/desktop": {
       "name": "@oryx/desktop",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "devDependencies": {
         "@electron-forge/cli": "7.11.2",
         "@electron-forge/maker-zip": "7.11.2",
@@ -92,6 +92,15 @@
         "shadcn": "^4.21.0",
         "tailwindcss": "^4.3.3",
         "vite": "^8.3.1",
+        "vitest": "^5.0.3",
+      },
+    },
+    "services/formula-calculation": {
+      "name": "@oryx/formula-calculation",
+      "dependencies": {
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
         "vitest": "^5.0.3",
       },
     },
@@ -347,6 +356,8 @@
     "@oazapfts/runtime": ["@oazapfts/runtime@1.2.0", "https://registry.npmmirror.com/@oazapfts/runtime/-/runtime-1.2.0.tgz", {}, "sha512-fi7dp7dNayyh/vzqhf0ZdoPfC7tJvYfjaE8MBL1yR+iIsH7cFoqHt+DV70VU49OMCqLc7wQa+yVJcSmIRnV4wA=="],
 
     "@oryx/desktop": ["@oryx/desktop@workspace:apps/desktop"],
+
+    "@oryx/formula-calculation": ["@oryx/formula-calculation@workspace:services/formula-calculation"],
 
     "@oryx/gateway": ["@oryx/gateway@workspace:apps/gateway"],
 

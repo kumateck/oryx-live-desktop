@@ -1,5 +1,5 @@
 import type { DomainEntitiesReportsPurchaseOrderPurchaseOrderReportDtoRead, DomainEntitiesReportsPurchaseOrderPurchasedPoReportDtoRead, DomainEntitiesReportsShipmentsShipmentReportDto } from "@/shared/api/generated/reports";
-import { reportSheet, reportDate, reportEnum } from "@/shared/reports/report-data";
+import { reportSheet, reportDate, reportEnum, reportQuantity } from "@/shared/reports/report-data";
 
 export const purchaseOrdersSheet = (name: string, rows: readonly DomainEntitiesReportsPurchaseOrderPurchaseOrderReportDtoRead[]) => reportSheet(name, rows, [
   { label: "No.", read: (row) => row.no },
@@ -7,8 +7,7 @@ export const purchaseOrdersSheet = (name: string, rows: readonly DomainEntitiesR
   { label: "Proforma invoice number", read: (row) => row.proformaInvoiceNumber },
   { label: "Purchase order number", read: (row) => row.purchaseOrderNumber },
   { label: "Material name", read: (row) => row.materialName },
-  { label: "Order quantity", read: (row) => row.orderQuantity },
-  { label: "Unit", read: (row) => row.uomName },
+  { label: "Order quantity", read: (row) => reportQuantity(row.orderQuantity, row.uomName, "entered") },
   { label: "Unit price", read: (row) => row.unitPrice },
   { label: "Price unit", read: (row) => row.priceUoM },
   { label: "Currency symbol", read: (row) => row.currencySymbol },
@@ -24,10 +23,8 @@ export const purchasedOrdersSheet = (name: string, rows: readonly DomainEntities
   { label: "PO number", read: (row) => row.poNumber },
   { label: "Invoice number", read: (row) => row.invoiceNumber },
   { label: "Material name", read: (row) => row.materialName },
-  { label: "Ordered quantity", read: (row) => row.orderedQuantity },
-  { label: "Ordered uom", read: (row) => row.orderedUom },
-  { label: "Quantity received", read: (row) => row.quantityReceived },
-  { label: "Received uom", read: (row) => row.receivedUom },
+  { label: "Ordered quantity", read: (row) => reportQuantity(row.orderedQuantity, row.orderedUom, "entered") },
+  { label: "Quantity received", read: (row) => reportQuantity(row.quantityReceived, row.receivedUom, "entered") },
   { label: "Unit cost", read: (row) => row.unitCost },
   { label: "Price unit", read: (row) => row.priceUoM },
   { label: "Currency symbol", read: (row) => row.currencySymbol },

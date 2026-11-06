@@ -17,7 +17,7 @@ function Ready() { return useCurrentUser() ? <p>Report session ready</p> : null;
 
 it("prints grouped BMR fields on two lines and exports all nine fields from the same snapshot", async () => {
   exports.csv.mockReset(); exports.csv.mockResolvedValue(undefined);
-  const backend = stubBackend({ permissions: ["CanViewQcAndQaReport"] });
+  const backend = stubBackend({ permissions: ["CanViewQcAndQaReport"], departmentType: 1 });
   const session = backend.fetcher.getMockImplementation(); rememberSession();
   let reads = 0;
   backend.fetcher.mockImplementation(async (input, init) => {
@@ -83,7 +83,7 @@ it("keeps filters in the dialog, generates submitted details, and opens the syst
 
 it("generates the combined matrix once and uses the same complete snapshot for print and the export menu", async () => {
   exports.csv.mockReset(); exports.csv.mockResolvedValue(undefined);
-  const backend = stubBackend({ permissions: ["CanViewQcAndQaReport"] });
+  const backend = stubBackend({ permissions: ["CanViewQcAndQaReport"], departmentType: 1 });
   const session = backend.fetcher.getMockImplementation(); rememberSession();
   let reportReads = 0;
   backend.fetcher.mockImplementation(async (input, init) => {
@@ -138,5 +138,50 @@ it("locks stock reports to the account department and keeps the same lock after 
   expect(department.textContent).toContain("Quality");
   fireEvent.click(screen.getByRole("button", { name: "Generate report" }));
   await screen.findByRole("heading", { name: "Current stock · Quality" });
+  expect(requested).toBe("558da105-a506-44a9-8ff5-8d005a54f294");
+});
+
+it("lets a non-production user choose any department or all departments for stock reports", async () => {
+  const backend = stubBackend({ permissions: ["CanViewWarehouseReport"], departmentType: 1 });
+  const session = backend.fetcher.getMockImplementation(); rememberSession();
+  let requested: string | null = "unset";
+  backend.fetcher.mockImplementation(async (input, init) => {
+    if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
+    if (new URL(input.url).pathname.endsWith("material/batches/stock-report")) {
+      requested = new URL(input.url).searchParams.get("departmentId");
+      return Response.json({ generatedAt: "2026-11-04T12:00:00Z", departmentId: null, departmentName: null, materialKind: null, expiredOnly: false, rows: [] });
+    }
+    return new Response(null, { status: 404 });
+  });
+  render(<SessionProvider><ApiProvider><MemoryRouter><Ready /><ReportWorkbench group="warehouse" initialKey={ReportKey.CurrentStock} /></MemoryRouter></ApiProvider></SessionProvider>);
+  await screen.findByText("Report session ready");
+  fireEvent.click(screen.getByRole("button", { name: "Choose filters" }));
+  const department = await screen.findByRole("combobox", { name: "Department" });
+  expect(department.getAttribute("aria-disabled") === "true" || department.hasAttribute("disabled")).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Generate report" }));
+  await screen.findByRole("heading", { name: "Current stock · All departments" });
+  expect(requested).toBeNull();
+});
+
+it("fixes a production user's multi-department report to their own department", async () => {
+  const backend = stubBackend({ permissions: ["CanViewWarehouseReport"], departmentType: 0 });
+  const session = backend.fetcher.getMockImplementation(); rememberSession();
+  let requested: string | null = null;
+  backend.fetcher.mockImplementation(async (input, init) => {
+    if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
+    if (new URL(input.url).pathname.endsWith("warehouse/materials-stock-summary")) {
+      requested = new URL(input.url).searchParams.get("departmentId");
+      return Response.json([]);
+    }
+    return new Response(null, { status: 404 });
+  });
+  render(<SessionProvider><ApiProvider><MemoryRouter><Ready /><ReportWorkbench group="warehouse" initialKey={ReportKey.MaterialStockSummary} /></MemoryRouter></ApiProvider></SessionProvider>);
+  await screen.findByText("Report session ready");
+  fireEvent.click(screen.getByRole("button", { name: "Choose filters" }));
+  const department = await screen.findByLabelText("Department", { selector: "button" });
+  expect(department.hasAttribute("disabled")).toBe(true);
+  expect(department.textContent).toContain("Quality");
+  fireEvent.click(screen.getByRole("button", { name: "Generate report" }));
+  await screen.findByRole("button", { name: "Edit filters" });
   expect(requested).toBe("558da105-a506-44a9-8ff5-8d005a54f294");
 });

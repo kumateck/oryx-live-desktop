@@ -1,7 +1,9 @@
 import type { ReportBook, ReportCell, ReportSheet } from "./report-data";
 import { worksheetName } from "./worksheet-name";
+import { isReportQuantity, reportQuantityText } from "./report-quantity";
 function csvCell(value: ReportCell): string {
-  const text = value === null ? "" : String(value);
+  // A quantity is written as the screen shows it, in its largest unit ("100 kg").
+  const text = value === null ? "" : isReportQuantity(value) ? reportQuantityText(value) : String(value);
   // Quoting alone does not stop spreadsheet formula interpretation in CSV text cells.
   const literal = typeof value === "string" && /^[\s]*[=+@-]/.test(text) ? `'${text}` : text;
   return `"${literal.replaceAll('"', '""')}"`;
