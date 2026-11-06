@@ -21,7 +21,7 @@ const name = "Gelatin Capsule Shells - Zinvite";
 function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = false }: {
   symbol?: string; quantity?: number; unitResponse?: () => Response; failSave?: boolean;
 } = {}) {
-  const backend = stubBackend({ permissions: ["CanEditProductionPlan"] });
+  const backend = stubBackend({ permissions: ["CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure"] });
   rememberSession();
   const writes: { path: string; body: string }[] = [];
   const reads: string[] = [];

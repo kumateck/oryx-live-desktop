@@ -10,13 +10,15 @@ export function useTransferDecision() {
   const departmentId = useCurrentUser()?.departmentId ?? null;
   const currentDepartment = useRef(departmentId);
   currentDepartment.current = departmentId;
-  const permission = usePermissionAction({ kind: "all", permissions: [transferPermissions.incoming, transferPermissions.decide] });
+  const approvePermission = usePermissionAction({ kind: "all", permissions: [transferPermissions.incoming, transferPermissions.decide] });
+  const rejectPermission = usePermissionAction({ kind: "all", permissions: [transferPermissions.incoming, transferPermissions.reject] });
   const [read] = productionTransfersApi.useLazyGetApiV1ProductionScheduleStockTransferByStockTransferIdQuery();
   const [approve] = productionTransfersApi.usePutApiV1ProductionScheduleStockTransferApproveByStockTransferIdMutation();
   const [reject] = productionTransfersApi.usePutApiV1ProductionScheduleStockTransferRejectByStockTransferIdMutation();
   const running = useRef(false);
   const decide = async (transfer: Transfer, decision: "approve" | "reject"): Promise<string | null> => {
     if (running.current) return "A decision is already being sent.";
+    const permission = decision === "approve" ? approvePermission : rejectPermission;
     const denied = permission.check() ?? decisionProblem(transfer, currentDepartment.current);
     if (denied) return denied;
     running.current = true;
@@ -41,5 +43,5 @@ export function useTransferDecision() {
       return null;
     } finally { running.current = false; }
   };
-  return { decide, departmentId, allowed: permission.allowed };
+  return { decide, departmentId, allowed: approvePermission.allowed || rejectPermission.allowed };
 }

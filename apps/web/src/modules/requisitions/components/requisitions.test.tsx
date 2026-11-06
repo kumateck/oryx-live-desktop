@@ -72,7 +72,7 @@ const rowOf = async (text: string) => { const row = (await screen.findByText(tex
 
 it("raises a purchase requisition for the ticked materials, with quantities stored in the material's unit", async () => {
   const user = userEvent.setup();
-  const { calls, router } = open("/production/requisition/create", ["CanViewRawMaterialRequisitionsForCreation", "CanCreateRawMaterialRequisitions", "CanViewRawMaterialRequisitions"]);
+  const { calls, router } = open("/production/requisition/create", ["CanViewRawMaterialRequisitionsForCreation", "CanCreateRawMaterialRequisitions", "CanViewProductionRawMaterialRequisitions"]);
   const starch = await rowOf("Maize starch");
   expect(within(starch).getByText("At or under reorder level")).toBeTruthy();
   expect(within(starch).getByText("5 kg")).toBeTruthy();
@@ -110,13 +110,13 @@ it("shows stock but offers no way to raise a requisition without the create perm
 
 it("lists requisitions with what each is waiting on, filters by type, and opens one", async () => {
   const user = userEvent.setup();
-  const { calls } = open("/production/requisition/general", ["CanViewRawMaterialRequisitions"]);
+  const { calls } = open("/production/requisition/general", ["CanViewProductionRawMaterialRequisitions"]);
   expect(within(await rowOf("PR-0007")).getByText("Awaiting sourcing")).toBeTruthy();
   expect(within(await rowOf("PR-0008")).getByText("Awaiting approval")).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Purchase" }));
   await waitFor(() => expect(calls.some((call) => call.path === "/api/v1/requisition" && new URLSearchParams(call.search).get("type") === "1")).toBe(true));
   cleanup();
-  open("/production/requisition/r1/details", ["CanViewRawMaterialRequisitions"]);
+  open("/production/requisition/r1/details", ["CanViewProductionRawMaterialRequisitions"]);
   expect(await screen.findByText("Needed for the March campaign")).toBeTruthy();
   expect(within(await rowOf("Material c")).getByText("Sourced")).toBeTruthy();
   expect(within(await rowOf("Material a")).getByText("2.5 kg")).toBeTruthy();

@@ -2375,6 +2375,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   suppliers?: DomainEntitiesProcurementSuppliersSupplierListDto[] | null;
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
+  isWhitePlacebo?: boolean;
 };
 export type DomainEntitiesBasePackageStyleDto = {
   id?: string;
@@ -2720,6 +2721,7 @@ export type DomainEntitiesRequisitionsRequisitionDto = {
   comments?: string | null;
   signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
   contentRevision?: number;
+  whitePlaceboPreparationId?: string | null;
 };
 export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   id?: string;
@@ -2736,6 +2738,7 @@ export type DomainEntitiesRequisitionsRequisitionDtoRead = {
   comments?: string | null;
   signatories?: DomainEntitiesRequisitionsStockIssueSignatoriesDto;
   contentRevision?: number;
+  whitePlaceboPreparationId?: string | null;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesRequisitionsRequisitionDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {

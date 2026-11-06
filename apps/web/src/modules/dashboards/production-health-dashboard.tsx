@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ArrowRightLeft, BadgeCheck, CalendarCheck2, ChartNoAxesColumnIncreasing, ClipboardList, FileClock, FlaskConical, ListChecks, PackageCheck, TriangleAlert, Truck, Undo2 } from "lucide-react";
 import { z } from "zod";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableFilterSelect } from "@/shared/forms/searchable-filter-select";
 import { identityApi } from "@/shared/api/generated/identity";
 import { reportsApi } from "@/shared/api/generated/reports";
 import { BarList, Breakdown, DashboardCard, DashboardHeading, DashboardState, MetricGrid, MetricTile, type ReportQuery } from "@/shared/dashboard/dashboard-kit";
@@ -13,7 +13,6 @@ import { adherenceSchema, atrSchema, averageAdherence, averageReturnRate, bmrRel
 
 const api = reportsApi;
 const context = { module: "Production", subModule: "Dashboard" };
-const ALL = "all";
 const departmentsSchema = z.object({ data: z.array(z.object({ id: z.string().nullish(), name: z.string().nullish() })).nullish() });
 const quantity = (value: number, uom: string | null) => { const shown = toLargestUnit(value, uom, "calculated"); return shown ? `${compactNumber(shown.value)} ${shown.unit}`.trim() : compactNumber(value); };
 const tile = (query: ReportQuery) => ({ loading: query.isLoading, failed: Boolean(query.error) });
@@ -24,10 +23,8 @@ function DepartmentFilter({ value, onChange }: { value: string | undefined; onCh
   const query = identityApi.useGetApiV1DepartmentQuery({ page: 1, pageSize: 100, type: 0, ...context });
   const parsed = departmentsSchema.safeParse(query.data ?? {});
   const departments = (parsed.success ? parsed.data.data ?? [] : []).filter((item) => item.id);
-  return <Select value={value ?? ALL} onValueChange={(next) => onChange(next === ALL ? undefined : next)}>
-    <SelectTrigger aria-label="Department" size="sm" className="w-full sm:w-52"><SelectValue placeholder="All departments" /></SelectTrigger>
-    <SelectContent position="popper"><SelectItem value={ALL}>All departments</SelectItem>{departments.map((item) => <SelectItem key={item.id!} value={item.id!}>{item.name?.trim() || "Unnamed"}</SelectItem>)}</SelectContent>
-  </Select>;
+  return <SearchableFilterSelect label="Department" className="w-full sm:w-52" all="All departments" value={value} loading={query.isLoading}
+    options={departments.map((item) => ({ value: item.id!, label: item.name?.trim() || "Unnamed" }))} onChange={onChange} />;
 }
 
 /** Production health: schedules, output, yield, testing backlog, returns and what is waiting to move. */

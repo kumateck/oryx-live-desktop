@@ -98,13 +98,18 @@ it("adds a line from what the supplier supplies, saved with the revision", async
   expect(writes(calls)[0]?.body).toEqual([{ type: 2, materialId: "m9", uoMId: "u-kg", quantity: 50, price: 3, priceUoM: "kg", currencyId: "c-usd" }]);
 }, 20_000);
 
-it("cancels an order only with the revise permission for its kind, after saying what cancelling does", async () => {
+it("cancels an order only with the cancel permission for its kind, after saying what cancelling does", async () => {
   const user = userEvent.setup();
   open("/procurement/purchase-orders/po1?type=0", ["CanViewForeignPurchaseOrder"]);
   expect(await screen.findByText("Revision 1")).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Cancel order" })).toBeNull();
   cleanup();
-  const { calls } = open("/procurement/purchase-orders/po1?type=0", ["CanViewForeignPurchaseOrder", "CanReviseForeignPurchaseOrder"]);
+  // Revising no longer grants cancelling: cancel has its own key.
+  open("/procurement/purchase-orders/po1?type=0", ["CanViewForeignPurchaseOrder", "CanReviseForeignPurchaseOrder"]);
+  expect(await screen.findByRole("heading", { level: 1 })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Cancel order" })).toBeNull();
+  cleanup();
+  const { calls } = open("/procurement/purchase-orders/po1?type=0", ["CanViewForeignPurchaseOrder", "CanCancelForeignPurchaseOrder"]);
   await user.click(await screen.findByRole("button", { name: "Cancel order" }));
   const dialog = await screen.findByRole("dialog");
   expect(dialog.textContent).toContain("already gone to Acme Chemicals");

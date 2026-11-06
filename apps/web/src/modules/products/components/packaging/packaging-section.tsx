@@ -9,12 +9,15 @@ import { usePackingStyles } from "../../hooks/use-packing-styles";
 import type { PackagingLine } from "../../lib/packaging";
 import { PackagingItemDialog } from "./packaging-item-dialog";
 import { PackagingLinesTable } from "./packaging-table";
+import { PermissionGuard } from "@/shared/auth/permission-guard";
+import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { randomId } from "@/shared/ids/random-id";
 
 type Open = { mode: "add" } | { mode: "edit"; line: PackagingLine } | { mode: "remove"; line: PackagingLine } | null;
 
 export function PackagingSection({ productId }: { productId: string }) {
   const packaging = usePackaging(productId);
+  const { task, keys } = useProductWorkspace();
   const packing = usePackingStyles(productId);
   const [open, setOpen] = useState<Open>(null);
   const onEdit = useCallback((line: PackagingLine) => setOpen({ mode: "edit", line }), []);
@@ -30,7 +33,7 @@ export function PackagingSection({ productId }: { productId: string }) {
           : "The materials the product is packed in, for all packing styles or for one."}</p></div>
       <div className="flex flex-wrap gap-2">
         {packaging.dirty ? <Button type="button" size="sm" variant="ghost" disabled={packaging.saving} onClick={packaging.discard}>Discard changes</Button> : null}
-        <Button type="button" size="sm" variant="outline" disabled={packaging.saving || packaging.loading} onClick={() => setOpen({ mode: "add" })}><Plus />Add material</Button>
+        <PermissionGuard require={task(keys.sections.packaging.add ?? keys.sections.packaging.edit)}><Button type="button" size="sm" variant="outline" disabled={packaging.saving || packaging.loading} onClick={() => setOpen({ mode: "add" })}><Plus />Add material</Button></PermissionGuard>
         <Button type="button" size="sm" disabled={!packaging.dirty || packaging.saving} onClick={() => void packaging.saveAll()}>
           {packaging.saving ? <><Spinner />Saving…</> : "Save packing materials"}</Button>
       </div>

@@ -11,7 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { ConfirmActionDialog } from "@/shared/actions";
 import { formsApi } from "@/shared/api/generated/forms";
 import ArdTemplateBody from "@/shared/ard-view/templates/body";
-import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
@@ -51,7 +51,7 @@ function AssignPanel({ trackId, formId, fieldIds }: { trackId: string; formId: s
   return <section aria-label="Assign" className="space-y-3 rounded-lg border bg-card p-4"><h2 className="font-semibold">Assign the worksheet</h2>
     <p className="text-sm text-muted-foreground">All {fieldIds.length} fields go to one analyst for this analysis.</p>
     <PermissionGuard require={routinePermissions.create} fallback={<p className="text-sm text-muted-foreground">A supervisor assigns this worksheet before results can be entered.</p>}>
-      <div className="flex flex-wrap items-end gap-2"><div className="min-w-64 flex-1"><AsyncOptionPicker label="Analyst" value={analyst} onChange={setAnalyst} loadOptions={loadAnalysts} placeholder="Choose an analyst" /></div>
+      <div className="flex flex-wrap items-end gap-2"><div className="min-w-64 flex-1"><SearchableSelect clearable={false} label="Analyst" value={analyst} onChange={(option) => { if (option) setAnalyst(option); }} loadOptions={loadAnalysts} placeholder="Choose an analyst" /></div>
         <Button disabled={busy || fieldIds.length === 0} onClick={() => void submit()}>{busy ? <><Spinner />Assigning…</> : "Assign"}</Button></div>
       {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
     </PermissionGuard>

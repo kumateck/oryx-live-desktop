@@ -12,3 +12,8 @@ if (typeof globalThis.ResizeObserver === "undefined") {
     disconnect(): void {}
   };
 }
+
+// jsdom has no layout, so it does not provide scrollIntoView; the command list calls it to keep the highlighted option in view.
+if (typeof Element !== "undefined" && typeof Element.prototype.scrollIntoView !== "function") {
+  Element.prototype.scrollIntoView = function scrollIntoView(): void {};
+}

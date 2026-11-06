@@ -12,7 +12,7 @@ afterEach(() => { cleanup(); forgetSession(); });
 const id = "658da105-a506-44a9-8ff5-8d005a54f294";
 
 function open(product: object | null) {
-  const backend = stubBackend({ permissions: ["CanEditProductionPlan"] });
+  const backend = stubBackend({ permissions: ["CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure"] });
   rememberSession();
   const calls: string[] = [];
   const session = backend.fetcher.getMockImplementation();

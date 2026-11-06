@@ -13,7 +13,7 @@ import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { DetailGroup, DetailItem } from "@/shared/detail/detail-list";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import type { WizardField } from "@/shared/forms/form-wizard";
 import type { SelectLoader, SelectOption } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
@@ -103,7 +103,7 @@ export function DesignationsPage() {
   ]), []);
   return <section className="page-fill">
     <Header title="Designation management" description="Job titles, the departments they exist in, and their paid leave.">
-      <div className="w-full sm:w-56"><AsyncOptionPicker label="Filter by department" value={department} onChange={setDepartment} loadOptions={filterOptions} /></div>
+      <div className="w-full sm:w-56"><SearchableSelect clearable={false} label="Filter by department" value={department} onChange={(option) => { if (option) setDepartment(option); }} loadOptions={filterOptions} /></div>
       <PermissionGuard require={designationPermissions.add}><Button type="button" size="sm" onClick={() => setEditing("new")}><Plus />Add designation</Button></PermissionGuard>
     </Header>
     <ServerDataTable label="Designations" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}

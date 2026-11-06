@@ -21,7 +21,7 @@ interface Unit { id: string; symbol: string }
 function open({ symbol = "mg", quantity = 2_500_000, allowance = 125_000, unitResponse, failSave = false }: {
   symbol?: string; quantity?: number; allowance?: number; unitResponse?: () => Response; failSave?: boolean;
 } = {}) {
-  const backend = stubBackend({ permissions: ["CanEditProductionPlan"] });
+  const backend = stubBackend({ permissions: ["CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure"] });
   rememberSession();
   const writes: { path: string; body: string }[] = [];
   const reads: string[] = [];

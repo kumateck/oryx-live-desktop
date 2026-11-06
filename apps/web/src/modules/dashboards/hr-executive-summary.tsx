@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ArrowRightLeft, CalendarCheck, CalendarClock, CalendarRange, ChartNoAxesColumnIncreasing, Clock3, ShieldAlert, UserPlus, UserRoundSearch, Users, VenusAndMars } from "lucide-react";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableFilterSelect } from "@/shared/forms/searchable-filter-select";
 import { identityApi } from "@/shared/api/generated/identity";
 import { reportsApi } from "@/shared/api/generated/reports";
 import { BarList, DashboardCard, DashboardHeading, DashboardState, MetricGrid, MetricTile, type ReportQuery } from "@/shared/dashboard/dashboard-kit";
@@ -65,7 +66,7 @@ export function HrExecutiveSummaryPage() {
 
   return <article className="min-w-0 space-y-4">
     <DashboardHeading eyebrow="HUMAN RESOURCES" title="HR executive summary" description="Headcount, hiring, turnover, leave, attendance and discipline across departments." queries={queries} period={period} periods={periods} onPeriod={setPeriod}
-      actions={<><Choice label="Department" all="All departments" value={departmentId} options={departments} onChange={setDepartmentId} />
+      actions={<><SearchableFilterSelect label="Department" className="w-full sm:w-40" all="All departments" value={departmentId} loading={departmentQuery.isLoading} options={departments} onChange={setDepartmentId} />
         <Choice label="Employee type" all="All employee types" value={employeeType?.toString()} options={[{ value: "0", label: "Permanent" }, { value: "1", label: "Casual" }]} onChange={(value) => setEmployeeType(value === undefined ? undefined : Number(value) as 0 | 1)} />
         <Choice label="Leave year" value={leaveYear.toString()} options={[thisYear, thisYear - 1].map((year) => ({ value: String(year), label: `Leave year ${year}` }))} onChange={(value) => setLeaveYear(Number(value ?? thisYear))} /></>} />
     <DashboardState queries={queries}>

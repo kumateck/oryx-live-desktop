@@ -8,25 +8,27 @@ import { UnsavedChangesGuard } from "@/shared/navigation/unsaved-changes";
 import { useProcedure } from "../../hooks/use-procedure";
 import { useProcedureOptions } from "../../hooks/use-procedure-options";
 import { stepFromForm, type ProcedureStep } from "../../lib/procedure";
-import { productPermissions } from "../../lib/product-access";
 import { CopyProcedureDialog, type CopyProcedureAction } from "./copy-procedure-dialog";
 import { ProcedureTable } from "./procedure-table";
 import { StepDialog } from "./step-dialog";
+import { PermissionGuard } from "@/shared/auth/permission-guard";
+import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { randomId } from "@/shared/ids/random-id";
 
 type Open = { mode: "add" } | { mode: "edit"; step: ProcedureStep } | { mode: "remove"; step: ProcedureStep } | { mode: "copy"; action: CopyProcedureAction } | null;
 
 export function ProcedureSection({ productId, departmentId }: { productId: string; departmentId: string | null }) {
   const procedure = useProcedure(productId);
+  const { task, keys, save: saveRequirement } = useProductWorkspace();
   const options = useProcedureOptions(productId, departmentId);
   const [open, setOpen] = useState<Open>(null);
   const onEdit = useCallback((step: ProcedureStep) => setOpen({ mode: "edit", step }), []);
   const onRemove = useCallback((step: ProcedureStep) => setOpen({ mode: "remove", step }), []);
   const copyActions = [
-    { id: "copy-to-products", label: "Copy to products", description: "Apply this product’s saved procedure to products in the same department.", require: productPermissions.edit, disabled: procedure.saved.length === 0, disabledReason: "Save a procedure before copying it.", onSelect: () => setOpen({ mode: "copy", action: "to-products" }) },
-    { id: "copy-from-product", label: "Copy from product", description: "Replace this product’s procedure with one from the same department.", require: productPermissions.edit, onSelect: () => setOpen({ mode: "copy", action: "from-product" }) },
-    { id: "copy-to-other-department", label: "Copy to another department", description: "Apply this product’s saved procedure to products in a different department.", require: productPermissions.edit, disabled: procedure.saved.length === 0, disabledReason: "Save a procedure before copying it.", onSelect: () => setOpen({ mode: "copy", action: "to-other-department" }) },
-    { id: "copy-from-other-department", label: "Copy from another department", description: "Replace this product’s procedure with one from another department.", require: productPermissions.edit, onSelect: () => setOpen({ mode: "copy", action: "from-other-department" }) },
+    { id: "copy-to-products", label: "Copy to products", description: "Apply this product’s saved procedure to products in the same department.", require: saveRequirement("procedure"), disabled: procedure.saved.length === 0, disabledReason: "Save a procedure before copying it.", onSelect: () => setOpen({ mode: "copy", action: "to-products" }) },
+    { id: "copy-from-product", label: "Copy from product", description: "Replace this product’s procedure with one from the same department.", require: saveRequirement("procedure"), onSelect: () => setOpen({ mode: "copy", action: "from-product" }) },
+    { id: "copy-to-other-department", label: "Copy to another department", description: "Apply this product’s saved procedure to products in a different department.", require: saveRequirement("procedure"), disabled: procedure.saved.length === 0, disabledReason: "Save a procedure before copying it.", onSelect: () => setOpen({ mode: "copy", action: "to-other-department" }) },
+    { id: "copy-from-other-department", label: "Copy from another department", description: "Replace this product’s procedure with one from another department.", require: saveRequirement("procedure"), onSelect: () => setOpen({ mode: "copy", action: "from-other-department" }) },
   ] as const;
 
   return <section className="min-w-0 space-y-3 rounded-lg border bg-card p-4">
@@ -38,7 +40,7 @@ export function ProcedureSection({ productId, departmentId }: { productId: strin
       <div className="flex flex-wrap gap-2">
         {procedure.dirty ? <Button type="button" size="sm" variant="ghost" disabled={procedure.saving} onClick={procedure.discard}>Discard changes</Button> : null}
         {!procedure.dirty ? <DropdownButton label="Copy procedure" icon={Copy} items={copyActions} /> : null}
-        <Button type="button" size="sm" variant="outline" disabled={procedure.saving || procedure.loading} onClick={() => setOpen({ mode: "add" })}><Plus />Add step</Button>
+        <PermissionGuard require={task(keys.sections.procedure.add ?? keys.sections.procedure.edit)}><Button type="button" size="sm" variant="outline" disabled={procedure.saving || procedure.loading} onClick={() => setOpen({ mode: "add" })}><Plus />Add step</Button></PermissionGuard>
         <Button type="button" size="sm" disabled={!procedure.dirty || procedure.saving} onClick={() => void procedure.saveAll()}>
           {procedure.saving ? <><Spinner />Saving…</> : "Save procedure"}</Button>
       </div>
