@@ -16,7 +16,8 @@ const metadata = jsonObject(parseJson(original));
 if (typeof metadata.version !== "string") throw new Error("No desktop version");
 const version = metadata.version; const parts = versionParts(version); const targetVersion = `${parts[0]}.${parts[1]}.${(parts[2] ?? 0) + 1}`;
 const keys = generateKeyPairSync("ed25519", { privateKeyEncoding: { type: "pkcs8", format: "pem" }, publicKeyEncoding: { type: "spki", format: "pem" } });
-const env = { ...process.env, ORYX_DESKTOP_UPDATE_PUBLIC_KEY: keys.publicKey, ORYX_DESKTOP_UPDATE_PRIVATE_KEY: keys.privateKey };
+// Test installers take their releases from this script's loopback server, never the public update source.
+const env = { ...process.env, ORYX_DESKTOP_UPDATE_PUBLIC_KEY: keys.publicKey, ORYX_DESKTOP_UPDATE_PRIVATE_KEY: keys.privateKey, ORYX_DESKTOP_UPDATE_ORIGIN: "http://127.0.0.1:3001" };
 async function command(executable: string, args: string[], capture = false): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(executable, args, { env, shell: false, stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit" });

@@ -4,18 +4,25 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { DesktopUpdateState } from "../../../../shared/desktop-updates";
 import { DesktopUpdater } from "./controller";
+import { resolveUpdateSource } from "./source";
 
 declare const UPDATE_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const UPDATE_WINDOW_VITE_NAME: string;
 declare const ORYX_DESKTOP_UPDATE_PUBLIC_KEY: string;
+declare const ORYX_DESKTOP_UPDATE_ORIGIN: string;
 interface Callbacks { site: () => string; connection: () => string; beforeInstall: () => Promise<boolean>; quit: () => void }
 export class DesktopUpdateRuntime {
   readonly updater: DesktopUpdater;
+  /** The release source this install checks first (default https://oryx.kumateck.com). */
+  readonly updateOrigin: string;
   private panel: BrowserWindow | null = null;
   private panelUrl = "";
   private timer: ReturnType<typeof setInterval>;
   constructor(private owner: BrowserWindow, private directory: string, private callbacks: Callbacks) {
-    this.updater = new DesktopUpdater({ version: app.getVersion(), arch: process.arch === "ia32" ? "ia32" : "x64", publicKey: ORYX_DESKTOP_UPDATE_PUBLIC_KEY, cache: join(app.getPath("userData"), "desktop-updates"),
+    const source = resolveUpdateSource(ORYX_DESKTOP_UPDATE_ORIGIN, process.env.ORYX_UPDATE_ORIGIN);
+    if (source.warning) console.warn(source.warning);
+    this.updateOrigin = source.origin;
+    this.updater = new DesktopUpdater({ version: app.getVersion(), updateOrigin: source.origin, arch: process.arch === "ia32" ? "ia32" : "x64", publicKey: ORYX_DESKTOP_UPDATE_PUBLIC_KEY, cache: join(app.getPath("userData"), "desktop-updates"),
       supported: process.platform === "win32" && ["ia32", "x64"].includes(process.arch), changed: (state) => this.changed(state), prompt: () => { void this.open().catch((error: Error) => console.error(error.message)); },
       beforeInstall: () => this.callbacks.beforeInstall(),
       install: async (file) => {
