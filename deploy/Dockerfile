@@ -20,6 +20,7 @@ COPY package.json bun.lock ./
 COPY apps/web/package.json apps/web/
 COPY apps/desktop/package.json apps/desktop/
 COPY apps/gateway/package.json apps/gateway/
+COPY services/formula-calculation/package.json services/formula-calculation/
 RUN bun install --frozen-lockfile
 
 FROM deps AS web-build
@@ -69,6 +70,7 @@ COPY package.json bun.lock ./
 COPY apps/web/package.json apps/web/
 COPY apps/desktop/package.json apps/desktop/
 COPY apps/gateway/package.json apps/gateway/
+COPY services/formula-calculation/package.json services/formula-calculation/
 RUN bun install --frozen-lockfile --production --filter @oryx/gateway
 
 FROM ${NODE_IMAGE} AS gateway

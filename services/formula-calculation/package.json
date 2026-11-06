@@ -1,0 +1,11 @@
+{
+  "name": "@oryx/formula-calculation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": { "zod": "^4.6.5" },
+  "devDependencies": { "vitest": "^5.0.3" }
+}

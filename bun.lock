@@ -95,6 +95,15 @@
         "vitest": "^5.0.3",
       },
     },
+    "services/formula-calculation": {
+      "name": "@oryx/formula-calculation",
+      "dependencies": {
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "vitest": "^5.0.3",
+      },
+    },
   },
   "overrides": {
     "@electron/node-gyp": "10.2.0-electron.2",
@@ -347,6 +356,8 @@
     "@oazapfts/runtime": ["@oazapfts/runtime@1.2.0", "https://registry.npmmirror.com/@oazapfts/runtime/-/runtime-1.2.0.tgz", {}, "sha512-fi7dp7dNayyh/vzqhf0ZdoPfC7tJvYfjaE8MBL1yR+iIsH7cFoqHt+DV70VU49OMCqLc7wQa+yVJcSmIRnV4wA=="],
 
     "@oryx/desktop": ["@oryx/desktop@workspace:apps/desktop"],
+
+    "@oryx/formula-calculation": ["@oryx/formula-calculation@workspace:services/formula-calculation"],
 
     "@oryx/gateway": ["@oryx/gateway@workspace:apps/gateway"],
 
