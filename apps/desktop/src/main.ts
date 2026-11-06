@@ -52,7 +52,7 @@ function assertConnectionPage(senderUrl: string): void {
 }
 
 function status(): SiteStatus {
-  return { siteUrl, error: connectionError };
+  return { siteUrl, defaultSiteUrl: updates?.updateOrigin ?? "", error: connectionError };
 }
 
 async function showConnectionPage(): Promise<void> {
@@ -75,8 +75,9 @@ async function isOryxSite(): Promise<boolean> {
 }
 
 async function openSite(): Promise<void> {
-  if (!siteUrl) { await showConnectionPage(); return; }
+  // Desktop releases are checked against the update source even before a server is connected.
   updates?.connect(siteUrl);
+  if (!siteUrl) { await showConnectionPage(); return; }
   const minimum = await updates?.minimumForSite();
   if (minimum) {
     connectionError = `This web release needs desktop ${minimum} or newer. Update Oryx before opening it.`;

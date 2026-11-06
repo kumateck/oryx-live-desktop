@@ -1,11 +1,29 @@
 // Quantities are stored in the smallest unit of their family (mg for mass, ml for volume) and
 // shown in the largest unit that keeps the number at 1 or more, as in Oryx Next.
 
-interface UnitStep { symbol: string; factor: number }
+// `names` lets a unit sent by name ("Milligram", as some reports do) be read as its symbol.
+interface UnitStep { symbol: string; factor: number; names: readonly string[] }
 
-const mass: readonly UnitStep[] = [{ symbol: "mg", factor: 1 }, { symbol: "g", factor: 1_000 }, { symbol: "kg", factor: 1_000_000 }];
-const volume: readonly UnitStep[] = [{ symbol: "ml", factor: 1 }, { symbol: "L", factor: 1_000 }];
+const mass: readonly UnitStep[] = [
+  { symbol: "mg", factor: 1, names: ["milligram", "milligrams"] },
+  { symbol: "g", factor: 1_000, names: ["gram", "grams"] },
+  { symbol: "kg", factor: 1_000_000, names: ["kilogram", "kilograms"] },
+];
+const volume: readonly UnitStep[] = [
+  { symbol: "ml", factor: 1, names: ["milliliter", "milliliters", "millilitre", "millilitres"] },
+  { symbol: "L", factor: 1_000, names: ["liter", "liters", "litre", "litres"] },
+];
 const families = [mass, volume];
+
+function stepOf(symbol: string | null | undefined): { family: readonly UnitStep[]; step: UnitStep } | null {
+  const wanted = symbol?.trim().toLowerCase() ?? "";
+  if (!wanted) return null;
+  for (const family of families) {
+    const step = family.find((item) => item.symbol.toLowerCase() === wanted || item.names.includes(wanted));
+    if (step) return { family, step };
+  }
+  return null;
+}
 
 export interface DisplayQuantity { value: number; unit: string; text: string }
 
@@ -35,14 +53,14 @@ export function formatQuantityNumber(value: number, origin: QuantityOrigin): str
 
 /**
  * `value` is in `baseSymbol`. A unit outside the mass and volume families (pieces, tablets) is
- * shown unchanged. Symbols match regardless of case, so "ML" and "ml" are the same unit.
+ * shown unchanged. Symbols and names match regardless of case, so "ML", "ml" and "Milliliter" are the same unit.
  * Converting between units only moves the decimal point, so an entered value keeps all its digits.
  */
 export function toLargestUnit(value: number | null | undefined, baseSymbol: string | null | undefined, origin: QuantityOrigin = "entered"): DisplayQuantity | null {
   if (value === null || value === undefined || !Number.isFinite(value)) return null;
   const symbol = baseSymbol?.trim() ?? "";
-  const family = families.find((steps) => steps.some((step) => step.symbol.toLowerCase() === symbol.toLowerCase()));
-  const base = family?.find((step) => step.symbol.toLowerCase() === symbol.toLowerCase());
+  const found = stepOf(symbol);
+  const family = found?.family; const base = found?.step;
   const show = (amount: number, unit: string): DisplayQuantity => {
     const number = formatQuantityNumber(amount, origin);
     return { value: clean(amount), unit, text: unit ? `${number} ${unit}` : number };
@@ -54,8 +72,7 @@ export function toLargestUnit(value: number | null | undefined, baseSymbol: stri
 }
 
 function familyOf(symbol: string | null | undefined) {
-  const wanted = symbol?.trim().toLowerCase() ?? "";
-  return families.find((steps) => steps.some((step) => step.symbol.toLowerCase() === wanted)) ?? null;
+  return stepOf(symbol)?.family ?? null;
 }
 
 /** The units a quantity in `symbol` can be entered in: its whole family (mg, g, kg), or just itself for a counted unit. */
@@ -66,14 +83,19 @@ export function relatedUnits(symbol: string | null | undefined): string[] {
 
 /** A quantity entered in `symbol`, in the smallest unit of its family, which is how quantities are stored. A counted unit is unchanged. */
 export function toSmallestUnit(value: number, symbol: string | null | undefined): number {
-  const step = familyOf(symbol)?.find((item) => item.symbol.toLowerCase() === symbol?.trim().toLowerCase());
+  const step = stepOf(symbol)?.step;
   return step ? clean(value * step.factor) : value;
 }
 
 /** A stored quantity (smallest unit of its family) expressed in `symbol`. A counted unit is unchanged. */
 export function fromSmallestUnit(value: number, symbol: string | null | undefined): number {
-  const step = familyOf(symbol)?.find((item) => item.symbol.toLowerCase() === symbol?.trim().toLowerCase());
+  const step = stepOf(symbol)?.step;
   return step ? clean(value / step.factor) : value;
+}
+
+/** The unit a quantity in `symbol` is stored in: the smallest of its family (kg → mg), or itself for a counted unit. */
+export function smallestUnit(symbol: string | null | undefined): string {
+  return familyOf(symbol)?.[0]?.symbol ?? symbol?.trim() ?? "";
 }
 
 /** Whether a unit is counted (pcs, pack) rather than measured in a family stored in its smallest unit (mg, ml). */
