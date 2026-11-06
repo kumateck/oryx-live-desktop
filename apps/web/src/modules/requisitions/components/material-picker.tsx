@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAccess } from "@/shared/auth/use-access";
+import { SearchableFilterSelect } from "@/shared/forms/searchable-filter-select";
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 import { useMaterialPicker } from "../hooks/use-material-picker";
 import { newOrderLine } from "../lib/order-lines";
@@ -12,8 +12,6 @@ import { MaterialPickerTable } from "./material-picker-table";
 import { StockAvailabilityDialog } from "@/shared/stock/stock-availability-dialog";
 import { StockTransferDialog } from "./stock-transfer-dialog";
 import { PurchaseRequisitionDialog } from "./purchase-requisition-dialog";
-
-const everyCategory = "all";
 
 /** Choose the materials of one kind that need ordering, then raise one purchase requisition for them. */
 export function MaterialPicker({ kind }: { kind: MaterialKind }) {
@@ -27,11 +25,8 @@ export function MaterialPicker({ kind }: { kind: MaterialKind }) {
   const count = picker.chosen.length;
   return <>
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <Select value={picker.category ?? everyCategory} onValueChange={(value) => picker.setCategory(value === everyCategory ? null : value)}>
-        <SelectTrigger aria-label="Category" className="w-56"><SelectValue placeholder="All categories" /></SelectTrigger>
-        <SelectContent><SelectItem value={everyCategory}>All categories</SelectItem>
-          {picker.categories.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
-      </Select>
+      <SearchableFilterSelect label="Category" all="All categories" size="default" className="w-56" value={picker.category ?? undefined}
+        options={picker.categories} onChange={(value) => picker.setCategory(value ?? null)} />
       {mayCreate ? <div className="flex flex-wrap items-center gap-2">
         <span role="status" className="text-sm text-muted-foreground">{count === 0 ? "Tick the materials to order" : `${count} ${count === 1 ? "material" : "materials"} chosen`}</span>
         {count > 0 ? <Button type="button" size="sm" variant="outline" onClick={picker.clear}>Clear</Button> : null}

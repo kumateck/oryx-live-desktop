@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { departmentApi, departmentAudit } from "@/modules/departments/departments";
-import { AsyncOptionPicker } from "@/shared/forms/async-option-picker";
+import { SearchableSelect } from "@/shared/forms/searchable-select";
 import type { SelectLoader, SelectOption } from "@/shared/forms/form-wizard-types";
 import { userApi } from "../api/user-api";
 import { audit } from "../lib/user-access";
@@ -43,8 +43,8 @@ export function UserFilters({ role, department, onRoleChange, onDepartmentChange
 
   const filtered = Boolean(role.value || department.value);
   return <div className="flex flex-wrap items-center gap-2">
-    <div className="w-full sm:w-52"><AsyncOptionPicker label="Filter by role" value={role} onChange={onRoleChange} loadOptions={roles} /></div>
-    <div className="w-full sm:w-60"><AsyncOptionPicker label="Filter by department" value={department} onChange={onDepartmentChange} loadOptions={departments} /></div>
+    <div className="w-full sm:w-52"><SearchableSelect clearable={false} label="Filter by role" value={role} onChange={(option) => { if (option) onRoleChange(option); }} loadOptions={roles} /></div>
+    <div className="w-full sm:w-60"><SearchableSelect clearable={false} label="Filter by department" value={department} onChange={(option) => { if (option) onDepartmentChange(option); }} loadOptions={departments} /></div>
     {filtered ? <Button type="button" size="sm" variant="ghost" onClick={() => { onRoleChange(allRoles); onDepartmentChange(allDepartments); }}><X />Clear filters</Button> : null}
   </div>;
 }
