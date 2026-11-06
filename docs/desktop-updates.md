@@ -14,7 +14,7 @@ Web/API compatibility floors remain independent of this release number.
 
 ## What users see
 
-- The desktop checks its connected server at launch and every 30 minutes. A newer verified desktop release opens an update dialog with **Download update** and **Remind me later**. Closing the dialog also defers it. Deferral lasts for that app session; launching Oryx again prompts again, including when the companion kept the original process alive.
+- The desktop checks `https://oryx.kumateck.com` at launch and every 30 minutes, falling back to its connected server (see [update server](update-server.md)). A newer verified desktop release opens an update dialog with **Download update** and **Remind me later**. Closing the dialog also defers it. Deferral lasts for that app session; launching Oryx again prompts again, including when the companion kept the original process alive.
 - The header update icon opens the same dialog. Download progress appears in the dialog and header. A cancelled or failed download can be retried. Completed downloads are verified before **Install and restart** becomes available and checked again before execution.
 - Installation is explicit. Oryx refuses to install while a form's unload guard reports unsaved work, flushes its encrypted session vault, starts the verified per-user NSIS update and restarts afterwards. Server settings, companion preferences and the saved encrypted session remain in the existing user-data directory.
 - A signed cached release is checked again on launch. Its downloaded installer can still be offered during a server outage. Interrupted partial downloads are discarded; an unverified file is never installed.
@@ -120,7 +120,7 @@ install -m 0644 desktop/windows/0.2.0/OryxLiveDesktop-Setup.exe "$PUBLIC/OryxLiv
 mv "$PUBLIC/OryxLiveDesktop-Setup.exe.tmp" "$PUBLIC/OryxLiveDesktop-Setup.exe"
 ```
 
-Use a new version directory on later releases; never replace a published version with different bytes. Retain previous installers for recovery. The feed and installer are requested from the saved frontend origin, e.g. `http://CUSTOMER_SERVER:3001/downloads/desktop/windows/latest.json`. Downloads send no ERP credentials, refuse redirects, enforce signed target/size/SHA-512, and verify metadata with the embedded key. TLS verification remains enabled for HTTPS origins. HTTP intranet origins retain cryptographic release verification.
+Use a new version directory on later releases; never replace a published version with different bytes. Retain previous installers for recovery. Installs ask `https://oryx.kumateck.com` first; a customer server's copy, e.g. `http://CUSTOMER_SERVER:3001/downloads/desktop/windows/latest.json`, is the fallback when that is unreachable. See [update server](update-server.md). Downloads send no ERP credentials, refuse redirects, enforce signed target/size/SHA-512, and verify metadata with the embedded key. TLS verification remains enabled for HTTPS origins. HTTP intranet origins retain cryptographic release verification.
 
 Only raise `deploy/customer-docker/requirements.json`'s `minimumShellVersion` when a web release truly needs a new native capability. Publish the desktop release and verify client rollout first, then update the administrator's existing `ORYX_SHELL_FLOOR` baseline and deploy the web release. The server-side minimum-shell guard remains enforced.
 

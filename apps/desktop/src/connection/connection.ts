@@ -7,7 +7,7 @@ if (!form || !input || !message) throw new Error("Connection form is incomplete"
 
 const bridge: ConnectionBridge = window.oryxConnection;
 void bridge.getStatus().then((status) => {
-  input.value = status.siteUrl;
+  input.value = status.siteUrl || status.defaultSiteUrl;
   message.textContent = status.error;
 }).catch(() => { message.textContent = "The desktop connection service is unavailable."; });
 
