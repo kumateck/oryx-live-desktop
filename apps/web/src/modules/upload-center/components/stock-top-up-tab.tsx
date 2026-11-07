@@ -71,7 +71,7 @@ export function StockTopUpTab() {
 
   return <div className="min-w-0 space-y-4">
     <div><h2 className="font-semibold">Migration stock top-up</h2>
-      <p className="text-sm text-muted-foreground">Add stock discovered after migration. Save one list as a draft for approval. Approval adds separate lots and preserves existing stock.</p></div>
+      <p className="text-sm text-muted-foreground">Add stock discovered after migration. Save one list as a draft for approval. Approval preserves existing stock. A batch already in stock with the same AR number, manufacturing and expiry dates gets the new quantity; anything else is added as a separate lot.</p></div>
     <form noValidate onSubmit={submit} className="space-y-4">
       <fieldset disabled={busy} className="min-w-0 space-y-3">
         {departments.own ? <p className="text-sm">Production department: {departments.own.label}</p> : null}
