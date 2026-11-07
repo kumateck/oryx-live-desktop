@@ -33,7 +33,12 @@ interface WorkerSlot {
   worker: WorkerLike;
   active: ActiveRequest | null;
   recycling: boolean;
+  /** True once the worker reported its calculation service ready. */
+  started: boolean;
 }
+
+const BACKOFF_BASE_MS = 250;
+const BACKOFF_MAX_MS = 30_000;
 
 export type FormulaWorkerFactory = () => WorkerLike;
 
@@ -46,6 +51,8 @@ export class FormulaWorkerPool implements FormulaHostExecutor {
   private readonly slots: WorkerSlot[] = [];
   private nextId = 1;
   private closed = false;
+  /** Crashes since a worker last reported ready; drives restart backoff. */
+  private consecutiveCrashes = 0;
 
   constructor(
     capacity: number,
@@ -60,6 +67,7 @@ export class FormulaWorkerPool implements FormulaHostExecutor {
       worker: this.createWorker(),
       active: null,
       recycling: false,
+      started: false,
     };
     this.slots[index] = slot;
     slot.worker.on("message", (message) => this.complete(slot, message));
@@ -70,6 +78,11 @@ export class FormulaWorkerPool implements FormulaHostExecutor {
   }
 
   private complete(slot: WorkerSlot, message: FormulaWorkerResponse): void {
+    if (message.ready) {
+      slot.started = true;
+      this.consecutiveCrashes = 0;
+      return;
+    }
     const active = slot.active;
     if (!active || active.id !== message.id) return;
     slot.active = null;
@@ -82,7 +95,8 @@ export class FormulaWorkerPool implements FormulaHostExecutor {
   }
 
   private fail(slot: WorkerSlot): void {
-    if (this.slots.indexOf(slot) < 0) return;
+    if (this.slots.indexOf(slot) < 0 || slot.recycling) return;
+    this.consecutiveCrashes += 1;
     const active = slot.active;
     slot.active = null;
     active?.removeAbort();
@@ -95,7 +109,24 @@ export class FormulaWorkerPool implements FormulaHostExecutor {
     if (index < 0 || slot.recycling) return;
     slot.recycling = true;
     await slot.worker.terminate().catch(() => 0);
-    if (!this.closed && this.slots[index] === slot) this.replace(index);
+    if (this.closed || this.slots[index] !== slot) return;
+    // The first crash is replaced at once; repeated crashes (a worker that cannot start)
+    // back off exponentially instead of respawning in a tight loop.
+    const delay =
+      this.consecutiveCrashes <= 1
+        ? 0
+        : Math.min(
+            BACKOFF_MAX_MS,
+            BACKOFF_BASE_MS * 2 ** (this.consecutiveCrashes - 2),
+          );
+    if (delay === 0) {
+      this.replace(index);
+      return;
+    }
+    const timer = setTimeout(() => {
+      if (!this.closed && this.slots[index] === slot) this.replace(index);
+    }, delay);
+    timer.unref?.();
   }
 
   execute(
@@ -140,7 +171,10 @@ export class FormulaWorkerPool implements FormulaHostExecutor {
   }
 
   isReady(): boolean {
-    return !this.closed && this.slots.some(({ recycling }) => !recycling);
+    return (
+      !this.closed &&
+      this.slots.some(({ recycling, started }) => started && !recycling)
+    );
   }
 
   metrics() {

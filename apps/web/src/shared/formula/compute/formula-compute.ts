@@ -16,6 +16,7 @@ import {
   inlineUniversalNamedExpressions,
   parseUniversalNamedExpressions,
 } from "@/shared/formula/builder/universal-named-expressions";
+import { sampleExpansionInputKeys } from "@/shared/formula/builder/universal-variable-keys";
 
 export * from "./formula-compute-helpers";
 
@@ -99,7 +100,10 @@ export const computeFormulaResults = (args: {
     expr = expandAutoSampleTemplates(
       expr,
       sampleNumber,
-      (parsed.sampleInputs?.[sampleNumber - 1] ?? []).map(({ key }) => key),
+      sampleExpansionInputKeys(
+        parsed,
+        sampleNumber,
+      ),
     );
 
     const displayExpr = expr.replace(
