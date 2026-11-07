@@ -34,6 +34,12 @@ manufacturing months and expiry month end. Top-ups do not reconcile conflicting
 dates silently. Different GRN/AR references keep separate lots even when their
 supplier batch number matches.
 
+When a row's batch number is already on the department's shelves (an available
+or fully used lot) and its AR number, manufacturing date, expiry date and unit
+all match that lot, approval adds the quantity to the existing lot instead of
+creating a new one. Month-precision sheet dates match by month. If any of those
+differ, the row stays a separate lot and its warning names what differs.
+
 The existing opening-balance keys apply, with department restrictions enforced
 on the server:
 
