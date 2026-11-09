@@ -1,5 +1,48 @@
 # In-app web and Windows desktop updates
 
+## Keep an intranet customer's native feed current
+
+The web deployer updates site assets, not the Windows installer. A client on
+0.2.1 checks its connected LAN server; if that server still advertises 0.2.1,
+**Check for updates** correctly reports current even when the official feed is
+newer. LAN and offline clients need a current local copy.
+
+`deploy/customer-docker/sync-desktop.sh` mirrors only signed native updates from
+`https://oryx.kumateck.com`. It reuses the Electron manifest verifier and streaming
+installer downloader. Both architectures, version, Ed25519 signature, signed
+size and SHA-512 must pass. Downgrades, symlink destinations and immutable
+version collisions are refused; a failed fetch leaves the old feed intact.
+The installer is published before the local feed is atomically replaced. Old
+version directories remain available. The manual installer and SHA-256 sidecar
+are also refreshed.
+
+The server needs outbound trusted HTTPS, Docker and flock; client PCs can keep
+using LAN HTTP and do not need internet. Formula calculation remains local.
+The job runs as the deployment user inside a bounded, read-only, capability-free
+Node container. It mounts only required source files, the downloads directory and
+the public verification key. Do not copy a private signing key or customer
+configuration into the mirror.
+
+Install the public key matching the existing desktop release's trusted key at
+`$HOME/.config/oryx-live/desktop-update-public.pem` (mode 0600). Obtain it from the
+reviewed `ORYX_DESKTOP_UPDATE_PUBLIC_KEY` repository variable; never from the feed.
+Run `bash deploy/customer-docker/sync-desktop.sh` from the reviewed checkout.
+
+Overrides: `ORYX_DEPLOY_STATE` (default `$HOME/.local/state/oryx-live`) and
+`ORYX_DESKTOP_UPDATE_KEY_FILE` (default key path above). A separate
+`desktop-sync.lock` prevents overlapping copies without blocking frontend
+activation. Schedule the command every 15 minutes as the deployment user,
+retaining existing frontend/backend/backup jobs. Keep logs under the state
+directory. Installation remains explicit on each PC, with unsaved-work safeguards.
+
+Customer recovery on 2026-11-09 installed a reviewed copy under
+`/home/entrance/.local/share/oryx-desktop-sync/tool` and scheduled that fixed path
+independently of frontend tooling upgrades. Signed version 0.2.4 (196,944,550
+bytes) was verified and published at both local installer URLs. The LAN feed
+reported 0.2.4 for ia32/x64, and the previous 0.2.1 installer was retained.
+Existing cron jobs and web/backend services were preserved. Check an actual
+client upgrade with **Check for updates**; the recovery ran no client installer.
+
 Web releases and native shell releases are independent. A frontend change does not require a new installer. The main **OryxLiveDesktop-Setup.exe** is one offline NSIS installer containing both Windows x86 (32-bit) and x64 (64-bit) applications; it selects the appropriate payload for the operating system. Icons, per-user installation, desktop/Start-menu shortcuts, the companion and server connection screen are retained.
 
 ## Native release 0.2.1 (2026-10-31)
