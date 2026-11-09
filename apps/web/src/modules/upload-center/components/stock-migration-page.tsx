@@ -18,6 +18,7 @@ import { approvalBlocker, comparisonChange, isDraft, massUnits, openingBalancePe
 import { uploadCenterPath } from "../lib/upload-center";
 import { StockMigrationComparison } from "./stock-migration-comparison";
 import { StockMigrationLines } from "./stock-migration-lines";
+import { MigrationMaterialLinks } from "./migration-material-links";
 
 type Confirm = "approve" | "discard" | null;
 
@@ -86,6 +87,7 @@ export function StockMigrationPage({ home = uploadCenterHome }: { home?: Migrati
         <p className="text-sm text-muted-foreground">Uploaded {formatDateTime(migration.createdAt)} by {migration.createdBy}
           {migration.approvedAt ? ` · approved ${formatDateTime(migration.approvedAt)} by ${migration.approvedBy ?? ""}` : ""}</p></div>
       {draft ? <div className="flex flex-wrap gap-2">
+        <MigrationMaterialLinks migration={migration} />
         <PermissionGuard require={openingBalancePermissions.correct}>
         <Button type="button" size="sm" variant="outline" disabled={recheckState.isLoading} onClick={() => void checkAgain()}>
           {recheckState.isLoading ? <Spinner /> : <RefreshCw />}Check again</Button>

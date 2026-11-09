@@ -117224,6 +117224,188 @@
           }
         }
       }
+    },
+    "/api/v1/stock-migrations/{id}/material-links/{kind}": {
+      "get": {
+        "tags": [
+          "StockMigration"
+        ],
+        "summary": "Preview missing links and storage defaults for one material kind in a draft.",
+        "operationId": "PreviewStockMigrationMaterialLinks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialKind"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Materials.StockMigrations.StockMigrationMaterialLinkDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Materials.StockMigrations.StockMigrationMaterialLinkDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Materials.StockMigrations.StockMigrationMaterialLinkDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "StockMigration"
+        ],
+        "summary": "Create only still-missing draft links, preserving existing links, then recheck rows. No stock is posted.",
+        "operationId": "CreateStockMigrationMaterialLinks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialKind"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.StockMigrations.CreateStockMigrationMaterialLinksRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.StockMigrations.CreateStockMigrationMaterialLinksRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.StockMigrations.CreateStockMigrationMaterialLinksRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.StockMigrations.StockMigrationMaterialLinksResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.StockMigrations.StockMigrationMaterialLinksResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Materials.StockMigrations.StockMigrationMaterialLinksResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -180592,6 +180774,87 @@
             "maxLength": 2000,
             "minLength": 0,
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.StockMigrations.StockMigrationMaterialLinkDto": {
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialKind"
+          },
+          "uoMId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "unitName": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitSymbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "minimumStockLevel": {
+            "type": "number",
+            "format": "double"
+          },
+          "reOrderLevel": {
+            "type": "number",
+            "format": "double"
+          },
+          "maximumStockLevel": {
+            "type": "number",
+            "format": "double"
+          },
+          "issue": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.StockMigrations.CreateStockMigrationMaterialLinksRequest": {
+        "required": [
+          "materials"
+        ],
+        "type": "object",
+        "properties": {
+          "materials": {
+            "maxItems": 1000,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.StockMigrations.StockMigrationMaterialLinkDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.StockMigrations.StockMigrationMaterialLinksResult": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alreadyLinked": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false

@@ -65,8 +65,29 @@ function stripStockLocations(schemas: ObjectValue) {
   }
 }
 
+function stripMigrationMaterialLinks(document: ObjectValue) {
+  delete object(document.paths ?? null)["/api/v1/stock-migrations/{id}/material-links/{kind}"];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of ["StockMigrationMaterialLinkDto", "CreateStockMigrationMaterialLinksRequest", "StockMigrationMaterialLinksResult"])
+    delete schemas[`DOMAIN.Entities.Materials.StockMigrations.${name}`];
+}
+
+test("draft material linking adds only typed preview/create operations and preserves the approved predecessor", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "bca17eb640a0223896ecc0fe8cee0e29d33ebd2d76221c369bda34b54e6a9b58");
+  const path = object(object(current.paths ?? null)["/api/v1/stock-migrations/{id}/material-links/{kind}"] ?? null);
+  assert.deepEqual(Object.keys(path).sort(), ["get", "post"]);
+  assert.equal(object(path.get ?? null).operationId, "PreviewStockMigrationMaterialLinks");
+  assert.equal(object(path.post ?? null).operationId, "CreateStockMigrationMaterialLinks");
+  checkCompatibility(hostConfig, policy, digest);
+  stripMigrationMaterialLinks(current);
+  assert.equal(contractDigest(current), "4cd376b6624dfe633457cb79f7bf8592cd283590d7a6bc855ccb7afa196bd64c");
+});
+
 test("stock picking adds only seven optional read fields and preserves the approved contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripMigrationMaterialLinks(current);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   const digest = contractDigest(current);
   assert.equal(digest, "4cd376b6624dfe633457cb79f7bf8592cd283590d7a6bc855ccb7afa196bd64c");
@@ -173,9 +194,11 @@ test("historical reporting adds optional read parameters without changing existi
     // Production material forecast (2026-11-05): read-only, separately permissioned warehouse report; additive only.
     "/api/v1/report/production-material-forecast",
     // White Placebo preparation (2026-11-06): one key per task, additive only.
+    "/api/v1/stock-migrations/{id}/material-links/{kind}",
     "/api/v1/white-placebo/workspace", "/api/v1/white-placebo/recipe", "/api/v1/white-placebo",
     "/api/v1/white-placebo/{id}", "/api/v1/white-placebo/{id}/issue", "/api/v1/white-placebo/{id}/output"].sort());
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  stripMigrationMaterialLinks(current);
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Reports.ProductionMaterialForecast")) delete schemas[name];
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ReservationRepair")) delete schemas[name];
   stripStockLocations(schemas);
@@ -299,6 +322,7 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
 test("the merged forecast and migration contracts preserve the approved predecessor and pass release validation", () => {
   const head = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   const publishedDigest = contractDigest(head);
+  stripMigrationMaterialLinks(head);
   // Keep this historical predecessor review independent of the later stock-location fields.
   stripStockLocations(object(object(head.components ?? null).schemas ?? null));
   assert.equal(contractDigest(head), "5211b900a46aff5d1ece7c3e4f73c8ef9ae3127969ffb0945bfca034d3aefe35");

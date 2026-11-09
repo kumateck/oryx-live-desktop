@@ -1,5 +1,10 @@
 # Update server: https://oryx.kumateck.com
 
+LAN servers can use the [signed native update mirror](desktop-updates.md#keep-an-intranet-customers-native-feed-current)
+to keep their local feed and installers current. The frontend poller does not
+copy Windows installers. This mirror does not move formula calculations or ERP
+data off-site; clients keep using their existing LAN HTTP server.
+
 Every installed desktop app checks `https://oryx.kumateck.com` for new desktop releases. This page says how an install finds updates, and what that server must serve.
 
 ## Where each install looks
