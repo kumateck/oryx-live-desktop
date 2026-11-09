@@ -1206,6 +1206,34 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    previewStockMigrationMaterialLinks: build.query<
+      PreviewStockMigrationMaterialLinksApiResponse,
+      PreviewStockMigrationMaterialLinksApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stock-migration", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}/material-links/${queryArg.kind}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    createStockMigrationMaterialLinks: build.mutation<
+      CreateStockMigrationMaterialLinksApiResponse,
+      CreateStockMigrationMaterialLinksApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stock-migration", id: "LIST" }, { type: "stock-migration", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stock-migrations/${queryArg.id}/material-links/${queryArg.kind}`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsStockMigrationsCreateStockMigrationMaterialLinksRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2055,6 +2083,27 @@ export type RecordWhitePlaceboOutputApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesMaterialsWhitePlaceboRecordWhitePlaceboOutput: DomainEntitiesMaterialsWhitePlaceboRecordWhitePlaceboOutput;
+};
+export type PreviewStockMigrationMaterialLinksApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsStockMigrationsStockMigrationMaterialLinkDto[];
+export type PreviewStockMigrationMaterialLinksApiArg = {
+  id: string;
+  kind: DomainEntitiesMaterialsMaterialKind;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type CreateStockMigrationMaterialLinksApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsStockMigrationsStockMigrationMaterialLinksResult;
+export type CreateStockMigrationMaterialLinksApiArg = {
+  id: string;
+  kind: DomainEntitiesMaterialsMaterialKind;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsStockMigrationsCreateStockMigrationMaterialLinksRequest: DomainEntitiesMaterialsStockMigrationsCreateStockMigrationMaterialLinksRequest;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -3494,6 +3543,29 @@ export type DomainEntitiesMaterialsWhitePlaceboRecordWhitePlaceboOutput = {
   preparedAt?: string;
   notes: string;
 };
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationMaterialLinkDto =
+  {
+    materialId?: string;
+    code?: string | null;
+    name?: string | null;
+    kind?: DomainEntitiesMaterialsMaterialKind;
+    uoMId?: string | null;
+    unitName?: string | null;
+    unitSymbol?: string | null;
+    minimumStockLevel?: number;
+    reOrderLevel?: number;
+    maximumStockLevel?: number;
+    issue?: string | null;
+  };
+export type DomainEntitiesMaterialsStockMigrationsStockMigrationMaterialLinksResult =
+  {
+    created?: number;
+    alreadyLinked?: number;
+  };
+export type DomainEntitiesMaterialsStockMigrationsCreateStockMigrationMaterialLinksRequest =
+  {
+    materials: DomainEntitiesMaterialsStockMigrationsStockMigrationMaterialLinkDto[];
+  };
 export const {
   usePostApiV1BomMutation,
   usePutApiV1BomByBillOfMaterialIdMutation,
@@ -3614,4 +3686,7 @@ export const {
   useLazyGetWhitePlaceboPreparationQuery,
   useIssueWhitePlaceboIngredientsMutation,
   useRecordWhitePlaceboOutputMutation,
+  usePreviewStockMigrationMaterialLinksQuery,
+  useLazyPreviewStockMigrationMaterialLinksQuery,
+  useCreateStockMigrationMaterialLinksMutation,
 } = injectedRtkApi;

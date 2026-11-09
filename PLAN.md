@@ -1,5 +1,17 @@
 # Oryx Live Desktop plan
 
+## Draft migration material linking (2026-11-09)
+
+Upload Center drafts offer a grouped material-link preview with selection for
+bulk, subset or individual linking. Infer UOM from the working Excel rows;
+require correction when unit families disagree or no unique storage unit exists.
+Use Piece for PCS, mg for mass and ml for liquid, with the requested equivalent
+100 / 1,000 / 10,000 piece, kg or L defaults. The companion backend uses a
+create-only transaction tied to the draft, revalidates absence, department and
+per-kind link/correction grants, preserves existing links and rechecks rows.
+No stock posting, approval, new permission or schema migration is included.
+See `docs/migration-material-links.md`.
+
 ## Formula concentration names (2026-11-06)
 
 Universal formula questions offer `:standardConc` and `:sampleConc` as the two

@@ -8,11 +8,15 @@ import type {
   DomainEntitiesMaterialsStockMigrationsStockMigrationLineStatus as LineStatus,
   DomainEntitiesMaterialsStockMigrationsStockMigrationWarehouseDto as WarehouseDto,
   DomainEntitiesMaterialsStockMigrationsUpdateStockMigrationLineRequest as LineUpdate,
+  DomainEntitiesMaterialsStockMigrationsStockMigrationMaterialLinkDto as MaterialLinkDto,
 } from "@/shared/api/generated/materials";
 
-export type { ComparisonDto, LineDto, LineStatus, LineUpdate, MigrationDto, WarehouseDto };
+export type { ComparisonDto, LineDto, LineStatus, LineUpdate, MigrationDto, WarehouseDto, MaterialLinkDto };
 
 const reviewedApi = materialsApi.enhanceEndpoints({ endpoints: {
+  createStockMigrationMaterialLinks: (definition) => {
+    definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [{ type: "material", id: "LIST" }]);
+  },
   postApiV1StockMigrationsByIdApprove: (definition) => {
     definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [{ type: "StockOnShelves", id: "all" }]);
   },
@@ -44,6 +48,8 @@ const uploadApi = api.injectEndpoints({ endpoints: (build) => ({
 }) });
 
 export const stockMigrationApi = {
+  useMaterialLinksQuery: materialsApi.usePreviewStockMigrationMaterialLinksQuery,
+  useCreateMaterialLinksMutation: reviewedApi.useCreateStockMigrationMaterialLinksMutation,
   useUploadMutation: uploadApi.useUploadStockMigrationMutation,
   useUploadTopUpMutation: uploadApi.useUploadStockTopUpMutation,
   useCreateTopUpMutation: materialsApi.usePostApiV1StockMigrationsTopUpsMutation,
