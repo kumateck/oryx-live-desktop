@@ -1,3 +1,14 @@
+Draft migration material linking (2026-11-09) adds typed GET/POST at
+`/api/v1/stock-migrations/{id}/material-links/{kind}` and three owned
+`DOMAIN.Entities.Materials.StockMigrations.*MaterialLink*` DTOs. Import only these
+from the companion backend metadata export using
+`bun scripts/import-migration-material-links.ts EXPORT.json`, then regenerate and
+run `bun run api:check`. Typed digest
+`bca17eb640a0223896ecc0fe8cee0e29d33ebd2d76221c369bda34b54e6a9b58`;
+removing only these additions reproduces `4cd376b6…64c`. The contract regression
+retains prior approved contracts. Deploy the backend first; no database migration
+is needed. See [draft linking](migration-material-links.md).
+
 White Placebo preparation (2026-11-06) adds seven typed operations across six
 `/api/v1/white-placebo` paths in the materials domain, their owned
 `DOMAIN.Entities.Materials.WhitePlacebo.*` schemas, optional `isWhitePlacebo` on
