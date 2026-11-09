@@ -975,3 +975,16 @@ pull or runtime dependency on the obsolete Next application. Preserve the
 backend service contract, permissions, regulated workflow and audit behavior.
 Keep service updates separate from UI activation; retain matching image/hash
 and previous release artifacts for rollback. No real server changes.
+
+## Customer LAN desktop update mirror (2026-11-09)
+
+Keep the signed Windows installer and update feed current on the customer's
+LAN server independently of site releases. Mirror only the official desktop
+update origin over trusted HTTPS, verify Ed25519 signatures for both Windows
+architectures, enforce the signed size/hash and reject downgrades or immutable
+version collisions. Publish installer bytes before atomically replacing the
+local feed; retain prior versions. A bounded non-root Docker job mounts only
+code, the public verification key and downloads, and runs under a separate lock.
+Clients may use HTTP to the LAN server and still verify release signatures.
+Native installation remains an explicit user action with unsaved-work checks.
+No ERP page, permission, authentication or backend/data behavior changes.
