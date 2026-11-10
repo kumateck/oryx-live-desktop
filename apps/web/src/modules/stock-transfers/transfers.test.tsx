@@ -40,7 +40,7 @@ function open(address: string, permissions: string[]) {
     const text = input.method === "GET" ? "" : await input.clone().text();
     calls.push({ method: input.method, path: url.pathname, body: text ? JSON.parse(text) as unknown : null, search: url.search });
     if (url.pathname.endsWith("/stock-transfer/in-bound") || url.pathname.endsWith("/stock-transfer/out-bound")) return Response.json({ data: [transfer("t1", 0), transfer("t2", 1)], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
-    if (url.pathname.endsWith("/stock-transfer/batch/t1")) return Response.json([{ quantityToTake: 10, batch: { id: "b1", batchNumber: "B-1", expiryDate: "2099-01-01T00:00:00Z" } }]);
+    if (url.pathname.endsWith("/stock-transfer/batch/t1")) return Response.json([{ quantityToTake: 10, batch: { id: "b1", batchNumber: "B-1", expiryDate: "2020-01-01T00:00:00Z", effectiveExpiryDate: "2099-01-01T00:00:00Z", expired: false } }]);
     if (url.pathname.endsWith("/stock-transfer/t1")) return Response.json(transfer("t1", 0));
     if (url.pathname === "/api/v1/material/holding") return Response.json({ data: [{ id: "h1", batches: [{ quantity: 5, sourceWarehouse: { name: "Beta raw store" }, materialBatch: { id: "b1", batchNumber: "B-1", uoM: { id: "u", symbol: "kg" }, material: { name: "Lactose" } } }] }], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
     if (url.pathname.includes("/warehouse/rack")) return Response.json([]);
