@@ -130,7 +130,7 @@ it("transfers approval rights only after both people are chosen and the conseque
   expect(await screen.findByText("Choose who the approvals are taken from")).toBeTruthy();
   await user.click(screen.getByRole("combobox", { name: /Take approvals from/ }));
   await user.click(await screen.findByRole("option", { name: "Ama Owusu" }));
-  await user.click(screen.getByRole("combobox", { name: /Give them to/ }));
+  await user.click(await screen.findByRole("combobox", { name: /Give them to/ }));
   // The person giving up their approvals is not offered as the one taking them.
   const offered = await screen.findAllByRole("option");
   expect(offered.map((item) => item.textContent)).toEqual(["Kofi Boateng"]);
