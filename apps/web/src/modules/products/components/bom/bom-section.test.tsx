@@ -53,7 +53,7 @@ it("shows the formula scaled to a batch and saves the remaining lines as the nex
   fireEvent.click(screen.getByRole("button", { name: "Save bill of materials" }));
   await waitFor(() => expect(calls.some((call) => call.path === "/api/v1/bom")).toBe(true));
   expect(JSON.parse(calls.find((call) => call.path === "/api/v1/bom")?.body ?? "{}")).toEqual({ productId: id, items: [
-    { materialId: "m-sugar", baseUoMId: "u-g", baseQuantity: 2, grade: null, order: 1, prescribedQuantity: 600_000, isSubstitutable: false, substituteMaterialIds: [] },
+    { materialId: "m-sugar", baseUoMId: "u-g", baseQuantity: 2, grade: null, order: 1, prescribedQuantity: 600_000, isSubstitutable: false, useDensityConversion: false, substituteMaterialIds: [] },
   ] });
 });
 

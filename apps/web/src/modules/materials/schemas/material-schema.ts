@@ -41,6 +41,7 @@ const level = (message: string) => z.number({ message }).refine((value) => value
 /** Stock levels in the order they have to stand: minimum, then re-order, then maximum. */
 export const linkFormSchema = z.object({
   unit: option.nullable().refine((value): boolean => Boolean(value), "Choose the unit the stock is counted in"),
+  density: z.union([z.number().finite().positive("Density must be greater than zero"), z.nan()]).optional(),
   minimum: level("Enter a minimum level above zero"), reorder: level("Enter a re-order level above zero"), maximum: level("Enter a maximum level above zero"),
 }).superRefine((values, context) => {
   if (!(values.minimum > 0 && values.reorder > 0 && values.maximum > 0)) return;

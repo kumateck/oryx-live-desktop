@@ -31,6 +31,7 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
   const options = useMemo(() => (units.data?.UnitOfMeasure ?? []).flatMap((item) => item.id && (item.symbol || item.name) ? [{ value: item.id, label: item.symbol?.trim() || item.name?.trim() || "Unit" }] : []), [units.data]);
   const start = link ? { minimum: enteredLevel(link.minimum, link.unit), reorder: enteredLevel(link.reorder, link.unit), maximum: enteredLevel(link.maximum, link.unit) } : null;
   const form = useForm<LinkFormValues>({ resolver: zodResolver(linkFormSchema), defaultValues: { unit: link?.unitId && link.unit ? { value: link.unitId, label: link.unit } : null,
+    density: link && link.density > 0 ? link.density : Number.NaN,
     minimum: start && start.minimum > 0 ? start.minimum : Number.NaN, reorder: start && start.reorder > 0 ? start.reorder : Number.NaN, maximum: start && start.maximum > 0 ? start.maximum : Number.NaN } });
   // Read here so the dialog re-renders, and its fields show their messages, when validation fails.
   void form.formState.errors;
@@ -39,6 +40,7 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
   const suffix = shown ? ` (${shown})` : "";
   const fields = useMemo((): WizardField<LinkFormValues>[] => [
     { type: InputTypes.SELECT, name: "unit", label: "Counted in", mode: "single", source: "sync", options, required: true, placeholder: units.isLoading || units.isUninitialized ? "Loading…" : "Select a unit", className: "md:col-span-3" },
+    { type: InputTypes.NUMBER, name: "density", label: "Density (g/mL)", min: 0, step: 0.01, description: "Measured material density. Required only when a BOM line uses density conversion." },
     { type: InputTypes.NUMBER, name: "minimum", label: `Minimum level${suffix}`, min: 0, required: true },
     { type: InputTypes.NUMBER, name: "reorder", label: `Re-order level${suffix}`, min: 0, required: true },
     { type: InputTypes.NUMBER, name: "maximum", label: `Maximum level${suffix}`, min: 0, required: true },
@@ -53,7 +55,7 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
     // A level that was not touched is sent exactly as it was stored, so converting there and back cannot shift it.
     const keep = (entered: number, before: number | undefined, stored: number | undefined) => link && link.unitId === values.unit?.value && before !== undefined && stored !== undefined && entered === before ? stored : storedLevel(entered, label);
     const result = await save({ ...audit, body: [{ materialId: material.id, uoMId: values.unit.value, minimumStockLevel: keep(values.minimum, start?.minimum, link?.minimum), reOrderLevel: keep(values.reorder, start?.reorder, link?.reorder),
-      maximumStockLevel: keep(values.maximum, start?.maximum, link?.maximum), density: link?.density ?? 0, densityUoMId: link?.densityUnitId ?? null }] });
+      maximumStockLevel: keep(values.maximum, start?.maximum, link?.maximum), density: typeof values.density === "number" && Number.isFinite(values.density) ? values.density : 0, densityUoMId: null }] });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success(link ? "Stock levels updated" : "Material linked", { description: material.name });
     onClose();

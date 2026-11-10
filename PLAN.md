@@ -1,5 +1,20 @@
 # Oryx Live Desktop plan
 
+## BOM density conversion (2026-11-10)
+
+An explicitly enabled raw-material BOM line may be authored in a mass unit and
+converted to the department's linked stock volume unit using that material's
+configured department density in g/mL. The conversion is `mg / (g/mL * 1000)`
+to mL, with equivalent scaling for g/kg and L. The BOM stores the source unit
+and conversion flag; each production batch snapshots the resolved density,
+source and stock units, and converted requirement so later master edits cannot
+change an adopted batch. Production requisitions and warehouse issues use the
+stock unit; the BOM remains in its authored unit. A missing, nonpositive or
+incompatible density blocks enabling/saving the conversion. Existing BOMs
+default to conversion off. Existing stock, approvals, reservation and audit
+rules remain authoritative. No automatic production quantity adjustment or
+stock movement is introduced by conversion.
+
 ## Draft migration material linking (2026-11-09)
 
 Upload Center drafts offer a grouped material-link preview with selection for

@@ -26398,7 +26398,7 @@
           "Job Requests"
         ],
         "summary": "Assigns a job request to an internal employee",
-        "description": "Assigns a job request to an internal employee for execution. This operation:\r\n- Creates a new `JobExecution` record\r\n- Updates the job request status to `Assigned` (2)\r\n- Sets the handling type to `Internal` (1)\r\n- Records assignment timestamp and assigner information\r\n\r\n**Prerequisites:**\r\n- Job request must exist and not be deleted\r\n- Job request status must be `Pending` (0) or `Acknowledged` (1)\r\n- Job request must not already be assigned (HandlingType = `NotAssigned`)\r\n- Employee (`assignedToEmployeeId`) must exist and be active\r\n- Assigner (`assignedById`) must exist and be a valid user\r\n\r\n**Request Fields:**\r\n- `jobRequestId` (required, Guid): The job request to assign\r\n- `assignedToEmployeeId` (required, Guid): Employee who will execute the work\r\n- `assignedById` (required, Guid): User assigning the request (typically current user)\r\n- `notes` (optional, string): Additional notes or instructions for the employee\r\n\r\n**What Happens After Assignment:**\r\n1. Employee receives the assignment (status: `Assigned`)\r\n2. Employee can acknowledge via JobExecution API → Status: `Acknowledged`\r\n3. Employee can start work via JobExecution API → Status: `JobStarted`\r\n4. Employee can record activities and consumed items\r\n5. Employee can complete work via JobExecution API → Status: `Completed`\r\n6. Supervisor can verify via JobExecution API\r\n7. Requester can approve via JobExecution API → Status: `Approved`\r\n\r\n**Related Endpoints:**\r\n- POST `/api/v{version}/job-executions/acknowledge` - Employee acknowledges assignment\r\n- POST `/api/v{version}/job-executions/start` - Employee starts work\r\n- POST `/api/v{version}/job-executions/complete` - Employee completes work\r\n- POST `/api/v{version}/job-executions/verify` - Supervisor verifies completion\r\n- POST `/api/v{version}/job-executions/approve` - Requester approves completion\r\n\r\n**Example Request:**\r\n```json\r\n{\r\n  \"jobRequestId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\r\n  \"assignedToEmployeeId\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\",\r\n  \"assignedById\": \"8d9e6679-7425-40de-944b-e07fc1f90ae8\",\r\n  \"notes\": \"Priority: High. Please complete by end of week. Contact supervisor if issues arise.\"\r\n}\r\n```\r\n\r\n**Example Response (200 OK):**\r\n```\r\n\"7c9e6679-7425-40de-944b-e07fc1f90ae7\"\r\n```\r\nReturns the GUID of the created JobExecution record.",
+        "description": "Assigns a job request to an internal employee for execution. This operation:\r\n- Creates a new `JobExecution` record\r\n- Updates the job request status to `Assigned` (2)\r\n- Sets the handling type to `Internal` (1)\r\n- Records assignment timestamp and assigner information\r\n\r\n**Prerequisites:**\r\n- Job request must exist and not be deleted\r\n- Job request status must be `Pending` (0) or `Acknowledged` (1)\r\n- Job request must not already be assigned (HandlingType = `NotAssigned`)\r\n- Employee (`assignedToEmployeeId`) must exist and be active\r\n- Assigner (`assignedById`) must exist and be a valid user\r\n\r\n**Request Fields:**\r\n- `jobRequestId` (required, Guid): The job request to assign\r\n- `assignedToEmployeeId` (required, Guid): Employee who will execute the work\r\n- `assignedById` (required, Guid): User assigning the request (typically current user)\r\n- `notes` (optional, string): Additional notes or instructions for the employee\r\n\r\n**What Happens After Assignment:**\r\n1. Employee receives the assignment (status: `Assigned`)\r\n2. Employee can acknowledge via JobExecution API \u2192 Status: `Acknowledged`\r\n3. Employee can start work via JobExecution API \u2192 Status: `JobStarted`\r\n4. Employee can record activities and consumed items\r\n5. Employee can complete work via JobExecution API \u2192 Status: `Completed`\r\n6. Supervisor can verify via JobExecution API\r\n7. Requester can approve via JobExecution API \u2192 Status: `Approved`\r\n\r\n**Related Endpoints:**\r\n- POST `/api/v{version}/job-executions/acknowledge` - Employee acknowledges assignment\r\n- POST `/api/v{version}/job-executions/start` - Employee starts work\r\n- POST `/api/v{version}/job-executions/complete` - Employee completes work\r\n- POST `/api/v{version}/job-executions/verify` - Supervisor verifies completion\r\n- POST `/api/v{version}/job-executions/approve` - Requester approves completion\r\n\r\n**Example Request:**\r\n```json\r\n{\r\n  \"jobRequestId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\r\n  \"assignedToEmployeeId\": \"7c9e6679-7425-40de-944b-e07fc1f90ae7\",\r\n  \"assignedById\": \"8d9e6679-7425-40de-944b-e07fc1f90ae8\",\r\n  \"notes\": \"Priority: High. Please complete by end of week. Contact supervisor if issues arise.\"\r\n}\r\n```\r\n\r\n**Example Response (200 OK):**\r\n```\r\n\"7c9e6679-7425-40de-944b-e07fc1f90ae7\"\r\n```\r\nReturns the GUID of the created JobExecution record.",
         "parameters": [
           {
             "name": "Module",
@@ -65374,7 +65374,7 @@
         "tags": [
           "QcAiExtractionSettings"
         ],
-        "summary": "Saves (or rotates) a provider's model and key. An empty/whitespace `apiKey` keeps\r\nthe provider's current key and updates only the model — a key is write-only, so the\r\nSettings screen's key field is always blank; leaving it blank on an existing provider\r\nchanges only the model. Rejects an empty/whitespace key when that provider has none yet.",
+        "summary": "Saves (or rotates) a provider's model and key. An empty/whitespace `apiKey` keeps\r\nthe provider's current key and updates only the model \u2014 a key is write-only, so the\r\nSettings screen's key field is always blank; leaving it blank on an existing provider\r\nchanges only the model. Rejects an empty/whitespace key when that provider has none yet.",
         "parameters": [
           {
             "name": "provider",
@@ -65471,7 +65471,7 @@
         "tags": [
           "QcAiExtractionSettings"
         ],
-        "summary": "Activates a provider. Refused with `AiExtractionUnavailable` when that provider has\r\nno key saved yet — you can't activate a provider you haven't configured.",
+        "summary": "Activates a provider. Refused with `AiExtractionUnavailable` when that provider has\r\nno key saved yet \u2014 you can't activate a provider you haven't configured.",
         "parameters": [
           {
             "name": "Module",
@@ -65665,7 +65665,7 @@
         "tags": [
           "QcCoa"
         ],
-        "summary": "The full certificate: the shape's own header block — a Monitoring Report genuinely has no\r\nmanufacturing or expiry date field, rather than blank ones — and the rows grouped by\r\nsubject and section, in print order.\r\n\n\r\nEvery value returned was snapshotted when the certificate was generated. Nothing is\r\nre-derived from the Specification or the worksheets, so an issued certificate reads\r\nidentically however long afterwards it is opened.\r\n",
+        "summary": "The full certificate: the shape's own header block \u2014 a Monitoring Report genuinely has no\r\nmanufacturing or expiry date field, rather than blank ones \u2014 and the rows grouped by\r\nsubject and section, in print order.\r\n\n\r\nEvery value returned was snapshotted when the certificate was generated. Nothing is\r\nre-derived from the Specification or the worksheets, so an issued certificate reads\r\nidentically however long afterwards it is opened.\r\n",
         "parameters": [
           {
             "name": "id",
@@ -65823,7 +65823,7 @@
         "tags": [
           "QcCoa"
         ],
-        "summary": "Reissues a certificate with its rows recomputed from current data, under a mandatory\r\nreason.\r\n\n\r\nAn electronic signature: requires the caller's own password in addition to a valid session,\r\nrecorded in the same centralized QcApproval table as every other QC signature. Issuance is\r\nthe deliberate exception to that rule; this is not. Withdrawing a certificate that is\r\nalready in circulation is a fresh decision by a named person, and it is signed for as one.\r\n\n\r\nThe original is never overwritten or deleted. It stays fully retrievable, and only moves to\r\nSuperseded once this replacement is itself issued — and a refused signature leaves it\r\nuntouched.\r\n",
+        "summary": "Reissues a certificate with its rows recomputed from current data, under a mandatory\r\nreason.\r\n\n\r\nAn electronic signature: requires the caller's own password in addition to a valid session,\r\nrecorded in the same centralized QcApproval table as every other QC signature. Issuance is\r\nthe deliberate exception to that rule; this is not. Withdrawing a certificate that is\r\nalready in circulation is a fresh decision by a named person, and it is signed for as one.\r\n\n\r\nThe original is never overwritten or deleted. It stays fully retrievable, and only moves to\r\nSuperseded once this replacement is itself issued \u2014 and a refused signature leaves it\r\nuntouched.\r\n",
         "parameters": [
           {
             "name": "id",
@@ -66926,7 +66926,7 @@
         "tags": [
           "QcMonitoringProgram"
         ],
-        "summary": "Lists monitoring programs ordered by due date, each carrying the calendar bucket it falls\r\nin — Overdue, Due Today, Due This Week, Scheduled or Paused. Unpaginated on purpose: the\r\ncalendar view exists to surface overdue points, which pagination would bury.",
+        "summary": "Lists monitoring programs ordered by due date, each carrying the calendar bucket it falls\r\nin \u2014 Overdue, Due Today, Due This Week, Scheduled or Paused. Unpaginated on purpose: the\r\ncalendar view exists to surface overdue points, which pagination would bury.",
         "parameters": [
           {
             "name": "searchQuery",
@@ -67012,7 +67012,7 @@
         "tags": [
           "QcMonitoringProgram"
         ],
-        "summary": "Creates a monitoring program, pinned to the exact Specification version named — which must\r\nbe Effective and must apply to the sampling point's own discipline.",
+        "summary": "Creates a monitoring program, pinned to the exact Specification version named \u2014 which must\r\nbe Effective and must apply to the sampling point's own discipline.",
         "parameters": [
           {
             "name": "Module",
@@ -67198,7 +67198,7 @@
         "tags": [
           "QcMonitoringProgram"
         ],
-        "summary": "Updates a monitoring program, including repointing it at a newer Specification version —\r\nthe deliberate act hard version pinning requires when the document is revised, since\r\nnothing in this module resolves a Specification forward on its own.",
+        "summary": "Updates a monitoring program, including repointing it at a newer Specification version \u2014\r\nthe deliberate act hard version pinning requires when the document is revised, since\r\nnothing in this module resolves a Specification forward on its own.",
         "parameters": [
           {
             "name": "id",
@@ -67415,7 +67415,7 @@
         "tags": [
           "QcMonitoringProgram"
         ],
-        "summary": "Resumes a paused schedule, leaving its due date where it was — a program paused past\r\nseveral occurrences comes back overdue rather than silently rolled forward.",
+        "summary": "Resumes a paused schedule, leaving its due date where it was \u2014 a program paused past\r\nseveral occurrences comes back overdue rather than silently rolled forward.",
         "parameters": [
           {
             "name": "id",
@@ -67514,7 +67514,7 @@
         "tags": [
           "QcMonitoringProgram"
         ],
-        "summary": "Runs the daily due-date scan on demand, as of now.\r\n\n\r\nThe scan normally runs unattended once a day; this is the manual trigger for the morning\r\nafter a failed pass, and it is idempotent for the same reason the job is — every program\r\nincluded in a generated round has its due date advanced in the same transaction, so a\r\nsecond run finds nothing left due.\r\n\n\r\nBehind APP.Utils.QcWorksheetPermissionKeys.CanCreateScheduledQcTestRequest, not a\r\nmonitoring-program key: what this actually does is raise scheduled test requests, and that\r\nkey exists precisely for the manual override of a system-raised round.\r\n",
+        "summary": "Runs the daily due-date scan on demand, as of now.\r\n\n\r\nThe scan normally runs unattended once a day; this is the manual trigger for the morning\r\nafter a failed pass, and it is idempotent for the same reason the job is \u2014 every program\r\nincluded in a generated round has its due date advanced in the same transaction, so a\r\nsecond run finds nothing left due.\r\n\n\r\nBehind APP.Utils.QcWorksheetPermissionKeys.CanCreateScheduledQcTestRequest, not a\r\nmonitoring-program key: what this actually does is raise scheduled test requests, and that\r\nkey exists precisely for the manual override of a system-raised round.\r\n",
         "parameters": [
           {
             "name": "Module",
@@ -67646,7 +67646,7 @@
         "tags": [
           "QcOosCase"
         ],
-        "summary": "The full case: the submitted value against the pinned Specification limit that triggered\r\nit, the investigation, and — once a retest exists — both worksheets side by side.",
+        "summary": "The full case: the submitted value against the pinned Specification limit that triggered\r\nit, the investigation, and \u2014 once a retest exists \u2014 both worksheets side by side.",
         "parameters": [
           {
             "name": "id",
@@ -67725,7 +67725,7 @@
         "tags": [
           "QcOosCase"
         ],
-        "summary": "Opens Phase 1 — and this is where the batch is actually quarantined, not at the case's\r\nautomatic creation. Locking a batch out of use across Warehouse and Production is a\r\ndecision someone makes, so it waits for this call.",
+        "summary": "Opens Phase 1 \u2014 and this is where the batch is actually quarantined, not at the case's\r\nautomatic creation. Locking a batch out of use across Warehouse and Production is a\r\ndecision someone makes, so it waits for this call.",
         "parameters": [
           {
             "name": "id",
@@ -67902,7 +67902,7 @@
         "tags": [
           "QcOosCase"
         ],
-        "summary": "Authorizes a retest, creating a new linked worksheet. The original result is never\r\noverwritten — both stay visible, and the Specification's retest policy decides whether\r\nthe retest runs on the same sample or a fresh one.",
+        "summary": "Authorizes a retest, creating a new linked worksheet. The original result is never\r\noverwritten \u2014 both stay visible, and the Specification's retest policy decides whether\r\nthe retest runs on the same sample or a fresh one.",
         "parameters": [
           {
             "name": "id",
@@ -69152,7 +69152,7 @@
         "tags": [
           "QcSpecification"
         ],
-        "summary": "Updates a Draft or UnderReview specification. Editing while UnderReview resets it to\r\nDraft. An Effective document is rejected here — use create-new-version.",
+        "summary": "Updates a Draft or UnderReview specification. Editing while UnderReview resets it to\r\nDraft. An Effective document is rejected here \u2014 use create-new-version.",
         "parameters": [
           {
             "name": "id",
@@ -69270,7 +69270,7 @@
         "tags": [
           "QcSpecification"
         ],
-        "summary": "Every field on the pinned version of each linked worksheet template, which is what the\r\nSourceFieldKey dropdown is populated from. All field types are returned; the client\r\nfilters to the realistic candidates. A newer Effective template version deliberately\r\ndoes not appear here — adopting it means re-pointing the link.",
+        "summary": "Every field on the pinned version of each linked worksheet template, which is what the\r\nSourceFieldKey dropdown is populated from. All field types are returned; the client\r\nfilters to the realistic candidates. A newer Effective template version deliberately\r\ndoes not appear here \u2014 adopting it means re-pointing the link.",
         "parameters": [
           {
             "name": "id",
@@ -70830,7 +70830,7 @@
         "tags": [
           "QcStandardTestProcedure"
         ],
-        "summary": "Updates a Draft or UnderReview standard test procedure. Editing while UnderReview\r\nresets it to Draft. An Effective document is rejected here — use create-new-version.",
+        "summary": "Updates a Draft or UnderReview standard test procedure. Editing while UnderReview\r\nresets it to Draft. An Effective document is rejected here \u2014 use create-new-version.",
         "parameters": [
           {
             "name": "id",
@@ -71701,7 +71701,7 @@
         "tags": [
           "QcTestRequest"
         ],
-        "summary": "Creates a round and, in the same transaction, every worksheet it implies — one per\r\nsubject per worksheet link on the specification version it pins to.\r\n\n\r\nThe permission key required depends on the body: raising a round outside the schedule is\r\na different authority from overriding a scheduled one, so the two are checked separately\r\nrather than sharing one key.\r\n",
+        "summary": "Creates a round and, in the same transaction, every worksheet it implies \u2014 one per\r\nsubject per worksheet link on the specification version it pins to.\r\n\n\r\nThe permission key required depends on the body: raising a round outside the schedule is\r\na different authority from overriding a scheduled one, so the two are checked separately\r\nrather than sharing one key.\r\n",
         "parameters": [
           {
             "name": "Module",
@@ -71889,7 +71889,7 @@
         "tags": [
           "QcTestRequest"
         ],
-        "summary": "Adds subjects to a round that has not started testing — the Water/EM case where points\r\nare added incrementally. Rejected once the round is past Sampled.",
+        "summary": "Adds subjects to a round that has not started testing \u2014 the Water/EM case where points\r\nare added incrementally. Rejected once the round is past Sampled.",
         "parameters": [
           {
             "name": "id",
@@ -72199,7 +72199,7 @@
         "tags": [
           "QcWaterQuality"
         ],
-        "summary": "One window with its full use log. Held records stay in the log and are distinguishable by\r\ntheir own status — a flagged use is never removed, since what it flags is exactly what a\r\nQuality Impact Assessment needs to see.",
+        "summary": "One window with its full use log. Held records stay in the log and are distinguishable by\r\ntheir own status \u2014 a flagged use is never removed, since what it flags is exactly what a\r\nQuality Impact Assessment needs to see.",
         "parameters": [
           {
             "name": "id",
@@ -72278,7 +72278,7 @@
         "tags": [
           "QcWaterQuality"
         ],
-        "summary": "PendingActivation to Active.\r\n\n\r\nRequires a retrospective reason, and sets `ValidUntil` to the sampling point's next\r\nscheduled test as it stands at this moment — dynamic, not a fixed offset from\r\n`ValidFrom`. A point with no active monitoring program has no next test to bound the\r\nwindow against, and is refused rather than given an open-ended window.\r\n",
+        "summary": "PendingActivation to Active.\r\n\n\r\nRequires a retrospective reason, and sets `ValidUntil` to the sampling point's next\r\nscheduled test as it stands at this moment \u2014 dynamic, not a fixed offset from\r\n`ValidFrom`. A point with no active monitoring program has no next test to bound the\r\nwindow against, and is refused rather than given an open-ended window.\r\n",
         "parameters": [
           {
             "name": "id",
@@ -72396,7 +72396,7 @@
         "tags": [
           "QcWaterQuality"
         ],
-        "summary": "Active to Held, cascading to every water use recorded under the window — each moves to\r\nHeld, which is the Quality Impact Assessment flag. The QIA investigation itself is a QA\r\nprocess and is deliberately not modelled here.",
+        "summary": "Active to Held, cascading to every water use recorded under the window \u2014 each moves to\r\nHeld, which is the Quality Impact Assessment flag. The QIA investigation itself is a QA\r\nprocess and is deliberately not modelled here.",
         "parameters": [
           {
             "name": "id",
@@ -72514,7 +72514,7 @@
         "tags": [
           "QcWaterQuality"
         ],
-        "summary": "Records one water use against an Active window.\r\n\n\r\nManual entry. Automatic capture from production consumption was explicitly deferred and\r\nstays deferred — nothing in the production path calls this.\r\n\n\r\nRefused against a PendingActivation or Held window: booking a use against a window that\r\ncovers nothing would assert coverage that was never granted.\r\n",
+        "summary": "Records one water use against an Active window.\r\n\n\r\nManual entry. Automatic capture from production consumption was explicitly deferred and\r\nstays deferred \u2014 nothing in the production path calls this.\r\n\n\r\nRefused against a PendingActivation or Held window: booking a use against a window that\r\ncovers nothing would assert coverage that was never granted.\r\n",
         "parameters": [
           {
             "name": "Module",
@@ -72953,7 +72953,7 @@
         "tags": [
           "QcWorksheetInstance"
         ],
-        "summary": "\"My Work\" — only the worksheets assigned to the caller, which is what makes the Test\r\nRoom a work queue rather than a record browser.",
+        "summary": "\"My Work\" \u2014 only the worksheets assigned to the caller, which is what makes the Test\r\nRoom a work queue rather than a record browser.",
         "parameters": [
           {
             "name": "analysisType",
@@ -73010,7 +73010,7 @@
         "tags": [
           "QcWorksheetInstance"
         ],
-        "summary": "\"Awaiting My Review\" — every submitted worksheet on the given track.",
+        "summary": "\"Awaiting My Review\" \u2014 every submitted worksheet on the given track.",
         "parameters": [
           {
             "name": "analysisType",
@@ -73263,7 +73263,7 @@
         "tags": [
           "QcWorksheetInstance"
         ],
-        "summary": "Starts a worksheet. The caller must be its assignee — rejected otherwise, even when they\r\nhold the permission key.",
+        "summary": "Starts a worksheet. The caller must be its assignee \u2014 rejected otherwise, even when they\r\nhold the permission key.",
         "parameters": [
           {
             "name": "id",
@@ -74041,7 +74041,7 @@
         "tags": [
           "QcWorksheetTemplate"
         ],
-        "summary": "Updates a Draft or UnderReview template. Editing while UnderReview resets it to\r\nDraft. An Effective template is rejected here — use create-new-version.",
+        "summary": "Updates a Draft or UnderReview template. Editing while UnderReview resets it to\r\nDraft. An Effective template is rejected here \u2014 use create-new-version.",
         "parameters": [
           {
             "name": "id",
@@ -74730,7 +74730,7 @@
         "tags": [
           "QcWorksheetTemplate"
         ],
-        "summary": "Proposes worksheet templates from one or more ARD .docx worksheets (multipart). Returns\r\none proposal per file — a Draft template shape, SamplingPoint and Specification\r\nproposals, equipment/reagent matches, flags and per-field confidence — and <b>writes\r\nnothing</b>. Refused or unreadable files come back as a proposal carrying an\r\n`InvalidFile` flag, so one bad file never fails the batch.",
+        "summary": "Proposes worksheet templates from one or more ARD .docx worksheets (multipart). Returns\r\none proposal per file \u2014 a Draft template shape, SamplingPoint and Specification\r\nproposals, equipment/reagent matches, flags and per-field confidence \u2014 and <b>writes\r\nnothing</b>. Refused or unreadable files come back as a proposal carrying an\r\n`InvalidFile` flag, so one bad file never fails the batch.",
         "parameters": [
           {
             "name": "Module",
@@ -80680,7 +80680,7 @@
         "tags": [
           "Report"
         ],
-        "summary": "Gets warehouse capacity utilization — percentage of occupied vs total shelf slots.",
+        "summary": "Gets warehouse capacity utilization \u2014 percentage of occupied vs total shelf slots.",
         "parameters": [
           {
             "name": "warehouseId",
@@ -80781,7 +80781,7 @@
         "tags": [
           "Report"
         ],
-        "summary": "Gets dock-to-stock time — average and median hours between material arrival and GRN generation.",
+        "summary": "Gets dock-to-stock time \u2014 average and median hours between material arrival and GRN generation.",
         "parameters": [
           {
             "name": "warehouseId",
@@ -80905,7 +80905,7 @@
         "tags": [
           "Report"
         ],
-        "summary": "Gets stock transfer fulfilment rate — percentage of transfers that have reached Issued status.",
+        "summary": "Gets stock transfer fulfilment rate \u2014 percentage of transfers that have reached Issued status.",
         "parameters": [
           {
             "name": "datePreset",
@@ -81023,7 +81023,7 @@
         "tags": [
           "Report"
         ],
-        "summary": "Gets receiving pipeline snapshot — count of inbound materials grouped by processing stage.",
+        "summary": "Gets receiving pipeline snapshot \u2014 count of inbound materials grouped by processing stage.",
         "parameters": [
           {
             "name": "warehouseId",
@@ -81124,7 +81124,7 @@
         "tags": [
           "Report"
         ],
-        "summary": "Gets expiry risk index — material batches grouped by days until expiry.",
+        "summary": "Gets expiry risk index \u2014 material batches grouped by days until expiry.",
         "parameters": [
           {
             "name": "warehouseId",
@@ -81232,7 +81232,7 @@
         "tags": [
           "Report"
         ],
-        "summary": "Gets reorder alert count — materials whose stock is at or below reorder level.",
+        "summary": "Gets reorder alert count \u2014 materials whose stock is at or below reorder level.",
         "parameters": [
           {
             "name": "materialKind",
@@ -81318,7 +81318,7 @@
         "tags": [
           "Report"
         ],
-        "summary": "Gets swap request activity — count of swap requests by approval status for a period.",
+        "summary": "Gets swap request activity \u2014 count of swap requests by approval status for a period.",
         "parameters": [
           {
             "name": "warehouseId",
@@ -125343,6 +125343,9 @@
               "$ref": "#/components/schemas/DOMAIN.Entities.BillOfMaterials.BillOfMaterialItemSubstituteDto"
             },
             "nullable": true
+          },
+          "useDensityConversion": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -125486,6 +125489,9 @@
               "format": "uuid"
             },
             "nullable": true
+          },
+          "useDensityConversion": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
