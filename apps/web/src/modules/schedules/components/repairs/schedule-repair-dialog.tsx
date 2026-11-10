@@ -23,7 +23,7 @@ export default function ScheduleRepairDialog({ scheduleId, kind, products, initi
   return <Dialog open onOpenChange={(open) => { if (!open) close(); }}>
     <DialogContent className="sm:max-w-4xl" showCloseButton={!state.busy}>
       <DialogHeader><DialogTitle>{scheduleRepairTitles[kind]} · Product batches</DialogTitle>
-        <DialogDescription>Save the corrected product master first. Review every matching batch in this schedule, including different sizes and packing styles.</DialogDescription></DialogHeader>
+        <DialogDescription>Save the corrected product master first. Review every matching batch in this schedule, including different sizes and packing styles.{kind === 1 ? " A batch with a missing saved style will use the first active style alphabetically; the preview names it before you apply." : ""}</DialogDescription></DialogHeader>
       <form noValidate onSubmit={(event) => { event.stopPropagation(); void state.submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         <DialogBody className="space-y-4">
           <fieldset disabled={state.busy || state.uncertain || Boolean(state.receipt)}><FormWizard form={state.form} fields={fields} className="md:grid-cols-2" /></fieldset>

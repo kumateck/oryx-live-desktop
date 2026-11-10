@@ -988,3 +988,28 @@ code, the public verification key and downloads, and runs under a separate lock.
 Clients may use HTTP to the LAN server and still verify release signatures.
 Native installation remains an explicit user action with unsaved-work checks.
 No ERP page, permission, authentication or backend/data behavior changes.
+
+## Customer top-up months and batch locations (2026-11-09)
+
+The user confirms manufacturing, expiry and retest are month/year values for
+migration top-ups; supplier batch numbers remain optional. Use month pickers in
+warehouse entry and draft correction, normalize legacy exact-day drafts on the
+backend, and compare all three date months when adding to an existing lot.
+Preserve original import evidence and existing approved lot dates. Blank batch
+numbers warn but approve as separate lots. Do not merge historical record IDs.
+
+Batch validity details show shelf quantities and production reservations
+separately. Add the existing shelf reassignment workflow through a narrow public
+module contract, with the stored material kind's permission and a pre-write
+permission check. Exclude deleted/empty shelf stock from stock-by-batch before
+backend pagination. No new permission, schema or regulated workflow is added.
+## Packing style references in production schedules (2026-11-10)
+
+Product packing edits must retain any style referenced by a production schedule,
+even before a packaging record exists. Schedule create/add requires an active
+style that belongs to each selected product. For an existing
+running batch whose style is missing or invalid, packaging repair proposes the
+first active style by name (ID breaks ties), shows that choice in the preview,
+and includes it in the evidence hash. Applying the reviewed repair updates the
+batch style and packaging allocations atomically under the existing permission,
+stock, approval and audit rules. No new permission or database migration.
