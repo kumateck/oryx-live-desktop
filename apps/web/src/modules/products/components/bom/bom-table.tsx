@@ -35,9 +35,9 @@ export function BomLinesTable({ lines, compositionSize, batchSize, loading, erro
     </div> }),
     column.accessor((line) => line.specification || dash, { id: "spec", header: "Spec ref" }),
     column.accessor("baseQuantity", { id: "unit", header: "Unit qty", cell: ({ row }) => <MaterialQuantity materialId={row.original.material.value}
-      known={row.original.linkedUnit ?? null} audit={bomAudit} value={row.original.baseQuantity} origin="entered" /> }),
+      known={row.original.useDensityConversion ? { id: "mg", symbol: "mg" } : row.original.linkedUnit ?? null} audit={bomAudit} value={row.original.baseQuantity} origin="entered" /> }),
     column.display({ id: "batch", header: "Batch qty", cell: ({ row }) => <MaterialQuantity materialId={row.original.material.value}
-      known={row.original.linkedUnit ?? null} audit={bomAudit} value={batchQuantity(row.original.baseQuantity, compositionSize, batchSize)} origin="calculated" /> }),
+      known={row.original.useDensityConversion ? { id: "mg", symbol: "mg" } : row.original.linkedUnit ?? null} audit={bomAudit} value={batchQuantity(row.original.baseQuantity, compositionSize, batchSize)} origin="calculated" /> }),
     column.accessor((line) => line.category || dash, { id: "function", header: "Function" }),
     column.accessor((line) => line.grade || dash, { id: "grade", header: "Grade", size: 90 }),
     column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.material.label}`} items={[

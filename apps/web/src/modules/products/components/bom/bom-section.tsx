@@ -44,7 +44,9 @@ export function BomSection({ productId, compositionSize, batchSize }: { productI
       lines={bom.lines} compositionSize={compositionSize} batchSize={batchSize} onClose={() => setOpen(null)}
       onSubmit={(values, facts) => {
         const line: BomLine = { key: open.mode === "edit" ? open.line.key : `new-${randomId()}`, material: values.material, baseQuantity: values.baseQuantity,
-          grade: values.grade ?? "", substitutes: values.substitutes ?? [], ...facts, linkedUnit: facts.unit };
+          grade: values.grade ?? "", substitutes: values.substitutes ?? [], ...facts,
+          useDensityConversion: values.useDensityConversion, unit: values.useDensityConversion ? { id: "", symbol: "mg" } : facts.unit,
+          linkedUnit: facts.unit };
         bom.setLines(open.mode === "edit" ? bom.lines.map((item) => item.key === line.key ? line : item) : [...bom.lines, line]);
         setOpen(null);
       }} /> : null}

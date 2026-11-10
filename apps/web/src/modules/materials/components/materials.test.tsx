@@ -50,11 +50,11 @@ function open(address: string, permissions: string[]) {
     calls.push({ method: input.method, path: url.pathname, body: text ? JSON.parse(text) as unknown : null, search: url.search });
     if (url.pathname === "/api/v1/material" && input.method === "GET") return Response.json({ data: [material("m1", "Maize starch"), material("m2", "Lactose", { totalStock: 500 })], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
     if (url.pathname === "/api/v1/material/department" && input.method === "GET") return Response.json({ data: [
-      { material: material("m1", "Maize starch"), uoM: { id: "u-kg", symbol: "kg" }, density: 1.2, minimumStockLevel: 10_000_000, reOrderLevel: 20_000_000, maximumStockLevel: 100_000_000, warehouseStock: 15_000_000, reservedQuantity: 10_000_000 },
+      { material: material("m1", "Maize starch"), uoM: { id: "u-kg", symbol: "kg" }, density: 1450, densityUoM: { id: "u-legacy", symbol: "kg/m³" }, minimumStockLevel: 10_000_000, reOrderLevel: 20_000_000, maximumStockLevel: 100_000_000, warehouseStock: 15_000_000, reservedQuantity: 10_000_000 },
       { material: material("m2", "Lactose"), uoM: { id: "u-kg", symbol: "kg" }, minimumStockLevel: 1_000_000, reOrderLevel: 2_000_000, maximumStockLevel: 9_000_000, warehouseStock: 0 }], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
     if (url.pathname === "/api/v1/collection/uom/paginated") return Response.json({ data: [{ id: "u-kg", name: "Kilogram", symbol: "kg", type: 0, category: 0 }], totalRecordCount: 1 });
     if (url.pathname === "/api/v1/material/department/not-linked") return Response.json({ data: [material("m3", "Sorbitol"), material("m4", "Mannitol")], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
-    if (url.pathname === "/api/v1/collection") return Response.json({ UnitOfMeasure: [{ id: "u-kg", symbol: "kg" }, { id: "u-l", symbol: "L" }] });
+    if (url.pathname === "/api/v1/collection") return Response.json({ UnitOfMeasure: [{ id: "u-kg", symbol: "kg" }, { id: "u-l", symbol: "L" }, { id: "u-density", symbol: "g/mL" }] });
     if (url.pathname === "/api/v1/collection/MaterialCategory") return Response.json([{ id: "c1", name: "Excipient" }]);
     if (url.pathname.startsWith("/api/v1/configuration/by-model-type/")) return Response.json({ prefix: "RM-", namingType: 0, minimumNameLength: 3, maximumNameLength: 5 });
     if (url.pathname.startsWith("/api/v1/configuration/")) return Response.json(7);
@@ -92,7 +92,7 @@ it("adds a material with a suggested code that follows its name, sending the kin
   expect(writes(calls)[0]).toMatchObject({ method: "POST", path: "/api/v1/material", body: { name: "Sorbitol", code: "RM-S008", materialCategoryId: "c1", kind: 0 } });
 }, 30_000);
 
-it("shows where stock stands against its levels, and changes one level without shifting the others", async () => {
+it("shows stock levels, updates a measured density and saves only the changed stock level", async () => {
   const user = userEvent.setup();
   const { calls } = open("/warehouse/materials/linked", ["CanViewLinkedRawMaterials", "CanEditLinkedRawMaterials", "CanUnlinkRawMaterials"]);
   await screen.findByText("Maize starch");
@@ -105,12 +105,31 @@ it("shows where stock stands against its levels, and changes one level without s
   const dialog = await screen.findByRole("dialog");
   const maximum = await within(dialog).findByRole("spinbutton", { name: /Maximum level \(kg\)/ });
   expect((within(dialog).getByRole("spinbutton", { name: /Minimum level/ }) as HTMLInputElement).value).toBe("10");
+  const density = within(dialog).getByRole("spinbutton", { name: "Density (g/mL)" });
+  expect(density).toHaveProperty("value", "");
+  expect(within(dialog).getByText(/Saved density: 1450 kg/)).toBeTruthy();
+  await user.clear(density);
+  await user.type(density, "1.47");
   await user.clear(maximum);
   await user.type(maximum, "150");
   await user.click(within(dialog).getByRole("button", { name: "Save levels" }));
   await waitFor(() => expect(writes(calls)).toHaveLength(1));
-  expect(writes(calls)[0]).toMatchObject({ method: "POST", path: "/api/v1/material/department", body: [{ materialId: "m1", uoMId: "u-kg", minimumStockLevel: 10_000_000, reOrderLevel: 20_000_000, maximumStockLevel: 150_000_000, density: 1.2 }] });
+  expect(writes(calls)[0]).toMatchObject({ method: "POST", path: "/api/v1/material/department", body: [{ materialId: "m1", uoMId: "u-kg", minimumStockLevel: 10_000_000, reOrderLevel: 20_000_000, maximumStockLevel: 150_000_000, density: 1.47, densityUoMId: "u-density" }] });
 }, 30_000);
+
+it("omits the saved density and its unit when only stock levels change", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/warehouse/materials/linked", ["CanViewLinkedRawMaterials", "CanEditLinkedRawMaterials"]);
+  await chooseAction("Actions for Maize starch", "Change stock levels");
+  const dialog = await screen.findByRole("dialog");
+  const maximum = await within(dialog).findByRole("spinbutton", { name: /Maximum level/ });
+  await user.clear(maximum);
+  await user.type(maximum, "150");
+  await user.click(within(dialog).getByRole("button", { name: "Save levels" }));
+  await waitFor(() => expect(writes(calls)).toHaveLength(1));
+  expect(writes(calls)[0]?.body).toEqual([{ materialId: "m1", uoMId: "u-kg",
+    minimumStockLevel: 10_000_000, reOrderLevel: 20_000_000, maximumStockLevel: 150_000_000 }]);
+});
 
 it("links an unlinked material only with a unit and levels in order", async () => {
   const user = userEvent.setup();
