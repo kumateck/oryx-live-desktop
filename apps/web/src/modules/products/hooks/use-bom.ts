@@ -53,7 +53,8 @@ export function useBom(productId: string, compositionSize: number | null, batchS
       const changed = checked.filter(({ line, unit }) => line.linkedUnit && unit
         && (line.linkedUnit.id !== unit.id || line.linkedUnit.symbol.toLowerCase() !== unit.symbol.toLowerCase()));
       if (changed.length) { setMessage("A department-linked unit changed while this BOM was being edited. Reload and review the quantities before saving."); return; }
-      const verified = checked.flatMap(({ line, unit }) => unit ? [{ ...line, unit, linkedUnit: unit }] : []);
+      const verified = checked.flatMap(({ line, unit }) => unit ? [{ ...line,
+        unit: line.useDensityConversion ? { id: "", symbol: "mg" } : unit, linkedUnit: unit }] : []);
       const revoked = permission.check();
       if (revoked) { setMessage(revoked); return; }
       const result = await save({ ...bomAudit, ...context, domainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest: toBomRequest(productId, verified, compositionSize, batchSize) });

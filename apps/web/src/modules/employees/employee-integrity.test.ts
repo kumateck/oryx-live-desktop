@@ -24,4 +24,10 @@ describe("employee profile integrity", () => {
     expect(employeeSchema.safeParse({ ...employeeFormValues(employee), employmentHistory: [{ companyName: "Employer", position: "Staff", startDate: new Date(2020, 0, 1), endDate: new Date(2019, 0, 1) }] }).success).toBe(false);
     expect(employeeSchema.safeParse(employeeFormValues(employee)).success).toBe(true);
   });
+  it("serializes year-one dates with a four-digit ISO year", () => {
+    const legacy = { ...employee, dateOfBirth: "0001-01-01T00:00:00Z", dateEmployed: "0001-01-01T00:00:00Z" };
+    const payload = employeePayload(employeeFormValues(legacy), EmployeeType.Casual);
+    expect(payload).toMatchObject({ dateOfBirth: "0001-01-01T00:00:00Z", dateEmployed: "0001-01-01T00:00:00Z" });
+  });
+
 });

@@ -11,7 +11,7 @@ const binary = (value: { value: "0" | "1" } | null): 0 | 1 | undefined => value?
 const religion = (value: EmployeeValues["religion"]) => {
   switch (value?.value) { case "0": return 0; case "1": return 1; case "2": return 2; case "3": return 3; case "4": return 4; case "5": return 5; case "6": return 6; case "7": return 7; case "8": return 8; default: return undefined; }
 };
-const day = (date: Date | null) => date ? { value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}T00:00:00Z` } : null;
+const day = (date: Date | null) => date ? { value: `${String(date.getFullYear()).padStart(4, "0")}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}T00:00:00Z` } : null;
 const family = (value: EmployeeValues["father"]) => { const lifeStatus = binary(value.lifeStatus); return { fullName: value.fullName || null, phoneNumber: value.phoneNumber || null, occupation: value.occupation || null, ...(lifeStatus === undefined ? {} : { lifeStatus }) }; };
 export function employeePayload(v: EmployeeValues, type: EmployeeType): Request {
   const gender = binary(v.gender); const maritalStatus = binary(v.maritalStatus); const faith = religion(v.religion); const birth = day(v.dateOfBirth); const employed = day(v.dateEmployed);
@@ -25,7 +25,15 @@ export function employeePayload(v: EmployeeValues, type: EmployeeType): Request 
     employmentHistory: v.employmentHistory.map((row) => { const start = day(row.startDate); const end = day(row.endDate); return { companyName: row.companyName || null, position: row.position || null, ...(start ? { startDate: start.value } : {}), ...(end ? { endDate: end.value } : {}) }; }),
   };
 }
-const date = (value: string | undefined) => value && Number.isFinite(Date.parse(value)) ? new Date(value) : null;
+const date = (value: string | undefined) => {
+  const match = value?.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return value && Number.isFinite(Date.parse(value)) ? new Date(value) : null;
+  const year = Number(match[1]); const month = Number(match[2]); const day = Number(match[3]);
+  const result = new Date(0);
+  result.setFullYear(year, month - 1, day);
+  result.setHours(0, 0, 0, 0);
+  return result.getFullYear() === year && result.getMonth() === month - 1 && result.getDate() === day ? result : null;
+};
 const pickBinary = (value: number | undefined, options: readonly { value: "0" | "1"; label: string }[]) => options.find((option) => Number(option.value) === value) ?? null;
 export function employeeFormValues(e: Employee): EmployeeValues {
   const blank = emptyEmployee();
