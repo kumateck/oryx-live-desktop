@@ -8,7 +8,7 @@ import { InputTypes } from "@/shared/forms/input-types";
 import { toLargestUnit } from "@/shared/units/quantity";
 import { Skeleton } from "@/shared/skeleton/skeleton";
 import { bomAudit } from "../../hooks/use-bom";
-import { materialKind, useMaterialOptions } from "../../hooks/use-material-options";
+import { materialKind, useBomDensity, useMaterialOptions } from "../../hooks/use-material-options";
 import { useMaterialUnit } from "../../hooks/use-material-unit";
 import { hasMaterial, type BomLine, type MaterialFacts } from "../../lib/bom";
 import { batchQuantity } from "../../lib/product-detail";
@@ -30,17 +30,14 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
 }) {
   const materials = useMaterialOptions(materialKind.raw, bomAudit);
   const materialFacts = materials.facts;
-  const lookupMaterialFacts = materials.lookupFacts;
   const form = useForm<BomItemFormValues>({ resolver: zodResolver(bomItemFormSchema), defaultValues: editing
     ? { material: editing.material, baseQuantity: editing.baseQuantity, useDensityConversion: editing.useDensityConversion, grade: editing.grade, substitutes: editing.substitutes }
     : { useDensityConversion: false, grade: "", substitutes: [] } });
   const [material, quantity, useDensityConversion] = useWatch({ control: form.control, name: ["material", "baseQuantity", "useDensityConversion"] });
-  useEffect(() => {
-    if (editing && !materialFacts(editing.material.value)) void lookupMaterialFacts(editing.material.value, editing.code);
-  }, [editing, materialFacts, lookupMaterialFacts]);
   // The chosen material's details: looked up from the picker, or kept from the line being edited.
   const facts: MaterialFacts | null = materialFacts(material?.value)
-    ?? (editing && editing.material.value === material?.value ? { code: editing.code, category: editing.category, specification: editing.specification, unit: editing.linkedUnit ?? editing.unit, density: editing.density } : null);
+    ?? (editing && editing.material.value === material?.value ? { code: editing.code, category: editing.category, specification: editing.specification, unit: editing.linkedUnit ?? editing.unit } : null);
+  const density = useBomDensity(useDensityConversion ? material?.value : undefined, facts?.code || material?.label || "", bomAudit);
   const knownUnit = editing?.material.value === material?.value ? null : materialFacts(material?.value)?.unit ?? null;
   const linked = useMaterialUnit(material?.value, knownUnit, bomAudit);
   const used = useMemo(() => lines.filter((line) => line.key !== editing?.key).map((line) => line.material.value), [lines, editing]);
@@ -70,8 +67,10 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
   const submit = form.handleSubmit((values) => {
     if (hasMaterial(lines, values.material.value, editing?.key ?? null)) { form.setError("material", { message: "This material is already in the formula" }); return; }
     if (!facts || !linked.unit) { form.setError("material", { message: "Set a unit on the department material linkage before entering quantities." }); return; }
-    if (values.useDensityConversion && !(facts.density > 0)) {
-      form.setError("useDensityConversion", { message: "Set a positive measured density in g/mL on the department material link first." });
+    if (values.useDensityConversion && (density.loading || density.failed)) return;
+    if (values.useDensityConversion && (density.density === null
+      || massVolumeConversion(1, "mg", linked.unit.symbol, density.density) === null)) {
+      form.setError("useDensityConversion", { message: "Set a positive measured density with an active g/mL unit and a liquid stock unit on the department material link." });
       return;
     }
     onSubmit(values, { ...facts, unit: linked.unit });
@@ -79,8 +78,8 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
   const sourceUnit = useDensityConversion ? { id: "mg", symbol: "mg" } : linked.unit;
   const perBatchQuantity = batchQuantity(typeof quantity === "number" && Number.isFinite(quantity) ? quantity : null, compositionSize, batchSize);
   const perBatch = sourceUnit ? toLargestUnit(perBatchQuantity, sourceUnit.symbol, "calculated") : null;
-  const convertedPerBatch = useDensityConversion && linked.unit && facts && perBatchQuantity !== null && facts.density > 0
-    ? massVolumeConversion(perBatchQuantity, "mg", linked.unit.symbol, facts.density) : null;
+  const convertedPerBatch = useDensityConversion && linked.unit && !density.loading && !density.failed && perBatchQuantity !== null && density.density !== null
+    ? massVolumeConversion(perBatchQuantity, "mg", linked.unit.symbol, density.density) : null;
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
     <DialogContent className="sm:max-w-2xl">
@@ -95,17 +94,21 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
               {linked.status === "error" ? "The material unit could not be loaded." : "No unit is set on the department material linkage."}
               <Button type="button" size="sm" variant="outline" onClick={linked.retry}>Retry unit</Button>
             </p> : null}
+          {useDensityConversion && density.failed ? <p role="alert" className="flex items-center gap-2 text-sm text-destructive">
+            The material density could not be loaded.
+            <Button type="button" size="sm" variant="outline" onClick={() => { void density.retry(); }}>Retry density</Button>
+          </p> : null}
           {facts ? <dl className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-md bg-muted/50 p-3 text-sm">
             <dt className="text-muted-foreground">Stock unit</dt><dd>{linked.unit?.symbol ?? "–"}</dd>
-            {useDensityConversion ? <><dt className="text-muted-foreground">Density</dt><dd>{facts.density > 0 ? `${facts.density} g/mL` : "Set on the department material link"}</dd></> : null}
+            {useDensityConversion ? <><dt className="text-muted-foreground">Density</dt><dd>{density.loading ? "Loading…" : density.failed ? "Unavailable" : density.density && density.density > 0 ? `${density.density} g/mL` : "Set on the department material link"}</dd></> : null}
             <dt className="text-muted-foreground">Function</dt><dd className="break-words">{facts.category || "–"}</dd>
             <dt className="text-muted-foreground">Specification</dt><dd className="break-words">{facts.specification || "–"}</dd>
-            <dt className="text-muted-foreground">Per full batch</dt><dd>{perBatch?.text ?? "–"}{useDensityConversion && convertedPerBatch !== null && linked.unit ? ` → ${toLargestUnit(convertedPerBatch, linked.unit.symbol, "calculated")?.text ?? convertedPerBatch} ${linked.unit.symbol}` : ""}</dd>
+            <dt className="text-muted-foreground">Per full batch</dt><dd>{perBatch?.text ?? "–"}{useDensityConversion && convertedPerBatch !== null && linked.unit ? ` → ${toLargestUnit(convertedPerBatch, linked.unit.symbol, "calculated")?.text ?? `${convertedPerBatch} ${linked.unit.symbol}`}` : ""}</dd>
           </dl> : null}
         </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={Boolean(material?.value) && linked.status !== "ready"}>{editing ? "Update material" : "Add material"}</Button>
+          <Button type="submit" disabled={Boolean(material?.value) && (linked.status !== "ready" || (useDensityConversion && (density.loading || density.failed)))}>{editing ? "Update material" : "Add material"}</Button>
         </DialogFooter>
       </form>
     </DialogContent>

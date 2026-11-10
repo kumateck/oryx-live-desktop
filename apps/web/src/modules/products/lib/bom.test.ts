@@ -39,7 +39,7 @@ it("numbers steps by position and sends each line's full-batch quantity and subs
 });
 
 it("sends density conversion without reusing the storage-unit ID as the BOM unit", () => {
-  const line = { ...lines[0]!, useDensityConversion: true, unit: { id: "", symbol: "mg" }, linkedUnit: { id: "u-ml", symbol: "ml" }, density: 1.45 };
+  const line = { ...lines[0]!, useDensityConversion: true, unit: { id: "", symbol: "mg" }, linkedUnit: { id: "u-ml", symbol: "ml" } };
   expect(toBomRequest("p1", [line], 1, 1_000).items?.[0]).toMatchObject({
     baseUoMId: null, useDensityConversion: true, baseQuantity: 100, prescribedQuantity: 100_000,
   });

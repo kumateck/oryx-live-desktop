@@ -23,7 +23,7 @@ const unit = z.object({ id: z.string().nullish(), symbol: text, name: text }).nu
 /** A material the department keeps, with the stock levels it has set for it. Quantities are in the smallest unit of the unit's family. */
 export const linkRowsSchema = z.array(z.object({ material, uoM: unit, density: amount, densityUoM: unit, reOrderLevel: amount, minimumStockLevel: amount, maximumStockLevel: amount, warehouseStock: amount, reservedQuantity: amount, expiredQuantity: amount,
   pendingStockTransferQuantity: amount })).nullish().transform((value) => (value ?? []).flatMap((entry) => { const item = read(entry.material);
-    return item ? [{ id: item.id, material: item, unit: entry.uoM?.symbol ?? entry.uoM?.name ?? null, unitId: entry.uoM?.id ?? null, density: entry.density, densityUnitId: entry.densityUoM?.id ?? null, reorder: entry.reOrderLevel,
+    return item ? [{ id: item.id, material: item, unit: entry.uoM?.symbol ?? entry.uoM?.name ?? null, unitId: entry.uoM?.id ?? null, density: entry.density, densityUnitId: entry.densityUoM?.id ?? null, densityUnitSymbol: entry.densityUoM?.symbol ?? null, reorder: entry.reOrderLevel,
       minimum: entry.minimumStockLevel, maximum: entry.maximumStockLevel, stock: entry.warehouseStock, reserved: entry.reservedQuantity, expired: entry.expiredQuantity, incoming: entry.pendingStockTransferQuantity }] : []; }));
 export type MaterialLink = z.infer<typeof linkRowsSchema>[number];
 

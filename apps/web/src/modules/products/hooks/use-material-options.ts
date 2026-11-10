@@ -2,7 +2,7 @@ import { useProductWorkspace } from "./use-product-workspace";
 import { useCallback, useRef } from "react";
 import type { SelectLoader } from "@/shared/forms/form-wizard-types";
 import type { DomainEntitiesMaterialsMaterialDepartmentWithWarehouseStockDto } from "@/shared/api/generated/materials";
-import { useLazyGetApiV1MaterialDepartmentQuery } from "../api/product-api";
+import { useGetApiV1MaterialDepartmentQuery, useLazyGetApiV1MaterialDepartmentQuery } from "../api/product-api";
 import type { MaterialFacts } from "../lib/bom";
 import { departmentMaterialSchema } from "../schemas/bom-schema";
 
@@ -20,9 +20,9 @@ export function useMaterialOptions(kind: 0 | 1, audit: { module: string; subModu
   const remember = useCallback((item: DomainEntitiesMaterialsMaterialDepartmentWithWarehouseStockDto) => {
     const parsed = departmentMaterialSchema.safeParse(item);
     if (!parsed.success) return null;
-    const { material, uoM, density } = parsed.data;
+    const { material, uoM } = parsed.data;
     const facts = { code: material.code, category: material.materialCategory, specification: material.specification,
-      unit: { id: uoM?.id ?? "", symbol: uoM?.symbol?.trim() ?? "" }, density: density ?? 0 };
+      unit: { id: uoM?.id ?? "", symbol: uoM?.symbol?.trim() ?? "" } };
     seen.current.set(material.id, facts);
     return { material, facts };
   }, []);
@@ -45,12 +45,16 @@ export function useMaterialOptions(kind: 0 | 1, audit: { module: string; subModu
   }, [load, kind, audit, lookupProductId, remember]);
 
   const facts = useCallback((id: string | undefined) => id ? seen.current.get(id) ?? null : null, []);
-  const lookupFacts = useCallback(async (id: string, search: string) => {
-    const result = await load({ ...audit, searchQuery: search, page: 1, pageSize: 20, kind,
-      ...(lookupProductId ? { productId: lookupProductId } : {}) }).unwrap();
-    for (const item of result.data ?? []) remember(item);
-    return facts(id);
-  }, [load, audit, kind, lookupProductId, remember, facts]);
+  return { loader, facts };
+}
 
-  return { loader, facts, lookupFacts };
+export function useBomDensity(materialId: string | undefined, search: string, audit: { module: string; subModule: string }) {
+  const { lookupProductId } = useProductWorkspace();
+  const query = useGetApiV1MaterialDepartmentQuery({ ...audit, searchQuery: search, page: 1, pageSize: 20,
+    kind: materialKind.raw, ...(lookupProductId ? { productId: lookupProductId } : {}) }, { skip: !materialId });
+  const parsed = departmentMaterialSchema.safeParse(query.currentData?.data?.find((item) => item.material?.id === materialId));
+  const unit = parsed.success ? parsed.data.densityUoM : null;
+  const density = parsed.success && unit?.id && unit.symbol?.trim().toLowerCase() === "g/ml" ? parsed.data.density : null;
+  return { density, loading: query.isFetching || (Boolean(materialId) && query.isUninitialized),
+    failed: query.isError, retry: query.refetch };
 }

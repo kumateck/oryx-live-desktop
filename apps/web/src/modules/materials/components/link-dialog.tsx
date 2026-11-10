@@ -29,22 +29,29 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
   const [save, saving] = usePostApiV1MaterialDepartmentMutation();
   const [message, setMessage] = useState("");
   const options = useMemo(() => (units.data?.UnitOfMeasure ?? []).flatMap((item) => item.id && (item.symbol || item.name) ? [{ value: item.id, label: item.symbol?.trim() || item.name?.trim() || "Unit" }] : []), [units.data]);
+  const densityOptions = options.filter(({ label }) => label.toLowerCase() === "g/ml");
+  const densityUnit = densityOptions.find(({ value }) => value === link?.densityUnitId)
+    ?? (densityOptions.length === 1 ? densityOptions[0] : undefined);
+  const savedDensity = link?.densityUnitSymbol?.trim().toLowerCase() === "g/ml" && link.densityUnitId
+    ? link.density : undefined;
   const start = link ? { minimum: enteredLevel(link.minimum, link.unit), reorder: enteredLevel(link.reorder, link.unit), maximum: enteredLevel(link.maximum, link.unit) } : null;
   const form = useForm<LinkFormValues>({ resolver: zodResolver(linkFormSchema), defaultValues: { unit: link?.unitId && link.unit ? { value: link.unitId, label: link.unit } : null,
-    density: link && link.density > 0 ? link.density : Number.NaN,
+    density: savedDensity && savedDensity > 0 ? savedDensity : Number.NaN,
     minimum: start && start.minimum > 0 ? start.minimum : Number.NaN, reorder: start && start.reorder > 0 ? start.reorder : Number.NaN, maximum: start && start.maximum > 0 ? start.maximum : Number.NaN } });
   // Read here so the dialog re-renders, and its fields show their messages, when validation fails.
   void form.formState.errors;
   const unit = useWatch({ control: form.control, name: "unit" });
   const shown = unit ? levelUnit(unit.label) : "";
   const suffix = shown ? ` (${shown})` : "";
+  const canSetDensity = Boolean(densityUnit);
   const fields = useMemo((): WizardField<LinkFormValues>[] => [
     { type: InputTypes.SELECT, name: "unit", label: "Counted in", mode: "single", source: "sync", options, required: true, placeholder: units.isLoading || units.isUninitialized ? "Loading…" : "Select a unit", className: "md:col-span-3" },
-    { type: InputTypes.NUMBER, name: "density", label: "Density (g/mL)", min: 0, step: 0.01, description: "Measured material density. Required only when a BOM line uses density conversion." },
+    ...(canSetDensity ? [{ type: InputTypes.NUMBER, name: "density", label: "Density (g/mL)", min: 0,
+      description: "Enter a verified measurement in g/mL to update the density used for BOM conversion." } satisfies WizardField<LinkFormValues>] : []),
     { type: InputTypes.NUMBER, name: "minimum", label: `Minimum level${suffix}`, min: 0, required: true },
     { type: InputTypes.NUMBER, name: "reorder", label: `Re-order level${suffix}`, min: 0, required: true },
     { type: InputTypes.NUMBER, name: "maximum", label: `Maximum level${suffix}`, min: 0, required: true },
-  ], [options, units.isLoading, units.isUninitialized, suffix]);
+  ], [options, units.isLoading, units.isUninitialized, suffix, canSetDensity]);
 
   const submit = form.handleSubmit(async (values) => {
     const denied = permission.check();
@@ -54,8 +61,11 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
     const label = values.unit.label;
     // A level that was not touched is sent exactly as it was stored, so converting there and back cannot shift it.
     const keep = (entered: number, before: number | undefined, stored: number | undefined) => link && link.unitId === values.unit?.value && before !== undefined && stored !== undefined && entered === before ? stored : storedLevel(entered, label);
+    const density = values.density;
+    const densityChange = densityUnit && typeof density === "number" && Number.isFinite(density) && density !== savedDensity
+      ? { density, densityUoMId: densityUnit.value } : {};
     const result = await save({ ...audit, body: [{ materialId: material.id, uoMId: values.unit.value, minimumStockLevel: keep(values.minimum, start?.minimum, link?.minimum), reOrderLevel: keep(values.reorder, start?.reorder, link?.reorder),
-      maximumStockLevel: keep(values.maximum, start?.maximum, link?.maximum), density: typeof values.density === "number" && Number.isFinite(values.density) ? values.density : 0, densityUoMId: null }] });
+      maximumStockLevel: keep(values.maximum, start?.maximum, link?.maximum), ...densityChange }] });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success(link ? "Stock levels updated" : "Material linked", { description: material.name });
     onClose();
@@ -69,6 +79,12 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
       <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         <DialogBody className="space-y-3">
           {units.error ? <p role="alert" className="text-sm text-destructive">{apiErrorMessage(units.error)}</p> : null}
+          {link && link.density > 0 && savedDensity === undefined ? <p className="text-sm text-muted-foreground">
+            Saved density: {link.density} {link.densityUnitSymbol ?? "(unit not recorded)"}.
+          </p> : null}
+          {units.isSuccess && !canSetDensity ? <p className="text-sm text-muted-foreground">
+            To record a density for BOM conversion, configure one active unit with the symbol g/mL.
+          </p> : null}
           <FormWizard form={form} fields={fields} className="md:grid-cols-3" />
           <p className="text-xs text-muted-foreground">Stock at or below the re-order level should be bought again; it should not fall below the minimum or rise above the maximum.</p>
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}

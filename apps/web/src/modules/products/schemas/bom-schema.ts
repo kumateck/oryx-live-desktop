@@ -37,4 +37,4 @@ export const savedBomSchema = z.object({
 export type SavedBom = z.infer<typeof savedBomSchema>;
 
 /** A raw material the department can use, with the unit it is measured in. */
-export const departmentMaterialSchema = z.object({ material: bomMaterialSchema, uoM: unit, density: num });
+export const departmentMaterialSchema = z.object({ material: bomMaterialSchema, uoM: unit, density: num, densityUoM: unit });

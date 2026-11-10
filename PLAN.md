@@ -4,7 +4,7 @@
 
 An explicitly enabled raw-material BOM line may be authored in a mass unit and
 converted to the department's linked stock volume unit using that material's
-configured department density in g/mL. The conversion is `mg / (g/mL * 1000)`
+configured department density explicitly linked to an active g/mL unit. The conversion is `mg / (g/mL * 1000)`
 to mL, with equivalent scaling for g/kg and L. The BOM stores the source unit
 and conversion flag; each production batch snapshots the resolved density,
 source and stock units, and converted requirement so later master edits cannot

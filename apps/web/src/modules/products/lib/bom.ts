@@ -17,14 +17,13 @@ export interface BomLine {
   /** Only picker or linkage lookups can establish this; a saved BOM unit may be stale. */
   linkedUnit?: MaterialUnit;
   useDensityConversion: boolean;
-  density: number;
   baseQuantity: number;
   grade: string;
   substitutes: Option[];
 }
 
 /** Details of a material that a line copies when the material is chosen. */
-export interface MaterialFacts { code: string; category: string; specification: string; unit: { id: string; symbol: string }; density: number }
+export interface MaterialFacts { code: string; category: string; specification: string; unit: { id: string; symbol: string } }
 
 export function fromSavedBom(saved: SavedBom): BomLine[] {
   const items = saved?.billOfMaterial?.items ?? [];
@@ -33,7 +32,7 @@ export function fromSavedBom(saved: SavedBom): BomLine[] {
     material: { value: item.material.id, label: item.material.name },
     code: item.material.code, category: item.material.materialCategory, specification: item.material.specification,
     unit: { id: item.baseUoM?.id ?? "", symbol: item.baseUoM?.symbol?.trim() ?? "" },
-    useDensityConversion: item.useDensityConversion === true, density: 0,
+    useDensityConversion: item.useDensityConversion === true,
     baseQuantity: item.baseQuantity ?? 0, grade: item.grade,
     substitutes: item.substitutes.flatMap((entry) => entry.substituteMaterial
       ? [{ value: entry.substituteMaterial.id, label: entry.substituteMaterial.name }] : []),

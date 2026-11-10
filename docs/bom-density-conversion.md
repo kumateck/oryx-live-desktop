@@ -1,13 +1,15 @@
 # BOM density conversion
 
 For a liquid raw material whose stock is counted in mL or L, first set that
-department link's measured density in g/mL under Materials. Use the value
-measured for that material; the reported 1.35–1.56 g/mL range is not a value to
-apply to every material.
+department link's measured density under Materials. The unit catalog must
+contain an active unit with the symbol `g/mL`. Enter the verified value for
+that material in the **Density (g/mL)** field. A legacy value with a missing or
+different unit is shown separately and stays intact during stock level edits.
 
 On the product's BOM, enable **Convert BOM mg to stock volume using density**
 for the relevant line and enter the BOM quantity in mg. The dialog previews the
-converted full-batch volume. Production requirements and stock requisitions use
+converted full batch volume. Editing a saved line reloads the verified density
+and lets you retry if the lookup fails. Production requirements and stock requisitions use
 the department stock unit, while the BOM keeps mg and warehouse stock stays in
 its linked volume unit.
 
