@@ -50,13 +50,13 @@ export function TopUpLineDialog({ editing, lines, onSave, onClose }: {
     { type: InputTypes.SELECT, name: "material", label: "Material", mode: "single", source: "async", loadOptions: materials.loadOptions, required: true,
       placeholder: `Select a ${materialKindLabels[kind].toLowerCase()} material`, searchPlaceholder: "Search by name or code", className: "md:col-span-2",
       description: "Only materials linked to your department are listed." },
-    { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number", description: "As printed on the label. Leave empty if there is none; the line is kept as its own lot." },
+    { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number (optional)", description: "As printed on the label. Leave empty if there is none; the line is kept as its own lot." },
     { type: InputTypes.TEXT, name: "arNumber", label: "AR number", description: "The QC analytical report number, if there is one." },
     { type: InputTypes.SELECT, name: "shelf", label: "Shelf", mode: "single", source: "sync", options: shelves.options, required: true,
       placeholder: shelves.loading ? "Loading shelves…" : "Select the shelf", searchPlaceholder: "Search shelves", className: "md:col-span-2" },
-    { type: InputTypes.DATE, name: "manufactured", label: "Manufacturing date", maxDate: new Date() },
-    { type: InputTypes.DATE, name: "expiry", label: "Expiry date", description: "Leave empty when the material does not expire." },
-    { type: InputTypes.DATE, name: "retest", label: "Retest date", description: "Only if the label or certificate gives one." },
+    { type: InputTypes.MONTH, name: "manufactured", label: "Manufacturing month" },
+    { type: InputTypes.MONTH, name: "expiry", label: "Expiry month", description: "Leave empty when the material does not expire." },
+    { type: InputTypes.MONTH, name: "retest", label: "Retest month", description: "Only if the label or certificate gives one." },
     { type: InputTypes.TEXT, name: "grn", label: "GRN / waybill reference" },
   ], [kind, materials.loadOptions, shelves.loading, shelves.options]);
 

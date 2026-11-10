@@ -61,7 +61,7 @@ export function TopUpEntryPage() {
     const denied = permission.check();
     if (denied) { setMessage(denied); setOpen(null); return; }
     const result = await create({ ...migrationAudit, domainEntitiesMaterialsStockMigrationsCreateStockTopUpRequest: {
-      departmentId: user.departmentId ?? "", reason: form.getValues("reason").trim(), ...topUpUnits, exactDates: true, lines: lines.map(topUpLineRequest) } });
+      departmentId: user.departmentId ?? "", reason: form.getValues("reason").trim(), ...topUpUnits, exactDates: false, lines: lines.map(topUpLineRequest) } });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); setOpen(null); return; }
     setSaved(true);
     toast.success("Top-up submitted for checking and approval");
@@ -74,7 +74,7 @@ export function TopUpEntryPage() {
     <UnsavedChangesGuard when={!saved && (lines.length > 0 || Boolean(form.formState.dirtyFields.reason))} />
     <p className="text-sm text-muted-foreground">
       Enter stock that was in {user.department ?? "your department"}'s stores at go-live but is missing from the opening balances, such as an order received before the system was in use.
-      Materials and shelves come from the system. Existing stock is not changed: each line is added as a new lot when the top-up is approved.
+      Materials and shelves come from the system. Approval adds matching material, batch, AR and date months to the existing lot. A blank batch number stays a separate lot. Dates use month and year only.
     </p>
     <form noValidate onSubmit={(event) => void review(event)} className="space-y-4">
       <fieldset disabled={busy || !permission.allowed} className="min-w-0 space-y-4">

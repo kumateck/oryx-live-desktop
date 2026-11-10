@@ -150,3 +150,19 @@ existing DTO schemas, with no path, operation, request or existing property
 changes. The host-deployment compatibility policy retains prior fingerprints
 and also includes the reviewed stock-location contract fingerprint
 `4cd376b6624dfe633457cb79f7bf8592cd283590d7a6bc855ccb7afa196bd64c`.
+
+## Batch validity: stock locations
+
+The expiry and about-to-expire batch detail pages show each occupied shelf with
+its quantity, and reserved quantities with their production warehouse. Empty or
+deleted shelves are not current stock locations. The batch total stays labelled
+as a total; a fully reserved batch can have no stock left on shelves.
+
+**Update shelf location** uses the existing shelf movement dialog and the stored
+material kind's `CanReassignRawMaterialStock` or
+`CanReassignPackagingMaterialStock`. Multiple occupied shelves require choosing
+the source allocation; each quantity keeps its source unit. The action is absent
+for reserved-only stock and incomplete source metadata. The dialog rechecks
+permission immediately before sending the existing movement request, preserves
+server errors and refreshes batch locations after success. Destination racks
+continue to use the existing Location Chart view permissions.

@@ -68,6 +68,19 @@ async function addLine(batch: string, quantity = "2.5") {
 }
 
 describe("warehouse migration stock top-up", () => {
+  it("uses month and year pickers for manufacturing, expiry and retest", async () => {
+    const user = userEvent.setup();
+    open("/warehouse/migration-top-ups/new");
+    await user.click(await screen.findByRole("button", { name: "Add stock line" }));
+    for (const name of ["Manufacturing month", "Expiry month", "Retest month"]) {
+      await user.click(await screen.findByRole("button", { name }));
+      expect(screen.getByRole("combobox", { name: "Year" })).toBeTruthy();
+      expect(screen.getByRole("combobox", { name: "Month" })).toBeTruthy();
+      expect(screen.queryByRole("grid")).toBeNull();
+      await user.click(screen.getByRole("button", { name: "Apply" }));
+    }
+  });
+
   it("adds lots picked from the system and submits them only after the irreversible warning is acknowledged", async () => {
     const user = userEvent.setup();
     const calls = open("/warehouse/migration-top-ups/new");
@@ -86,7 +99,7 @@ describe("warehouse migration stock top-up", () => {
     expect(await screen.findByText("Top-up review page")).toBeTruthy();
     expect(calls).toHaveLength(1);
     expect(calls[0]?.path).toBe("/api/v1/stock-migrations/top-ups");
-    expect(calls[0]?.body).toMatchObject({ departmentId: "558da105-a506-44a9-8ff5-8d005a54f294", exactDates: true, massUnit: "mg", volumeUnit: "ml",
+    expect(calls[0]?.body).toMatchObject({ departmentId: "558da105-a506-44a9-8ff5-8d005a54f294", exactDates: false, massUnit: "mg", volumeUnit: "ml",
       reason: "Order received in August, missed by the opening count",
       lines: [{ materialId: "m-amaranth", materialCode: "RMA016", shelfId: "s-b2", batchNumber: "LOT-0825", arNumber: "AR/RM/0912",
         unitSymbol: "mg", quantityInSheet: 2_500_000, expiryDate: null, retestDate: null }] });
@@ -181,11 +194,11 @@ describe("warehouse migration stock top-up", () => {
 
 describe("top-up line rules", () => {
   const line: TopUpLine = { key: "a", kind: 0, material: { id: "m", code: "RM", name: "Raw" }, unit: "mg", quantity: 1500, shelf: { id: "s", label: "S" },
-    batchNumber: "B1", arNumber: "", grn: "GRN-5", manufactured: new Date(2026, 7, 3), expiry: new Date(2029, 6, 14), retest: new Date(2027, 7, 2) };
+    batchNumber: "B1", arNumber: "", grn: "GRN-5", manufactured: "2026-08", expiry: "2029-07", retest: "2027-08" };
 
-  it("sends full calendar dates, the retest date and counted units unchanged", () => {
+  it("sends month boundaries, the retest month and counted units unchanged", () => {
     expect(topUpLineRequest(line)).toMatchObject({ quantityInSheet: 1500, arNumber: null, grn: "GRN-5",
-      manufacturingDate: "2026-08-03T00:00:00.000Z", expiryDate: "2029-07-14T00:00:00.000Z", retestDate: "2027-08-02T00:00:00.000Z" });
+      manufacturingDate: "2026-08-01T00:00:00.000Z", expiryDate: "2029-07-31T00:00:00.000Z", retestDate: "2027-08-31T00:00:00.000Z" });
     expect(topUpLineRequest({ ...line, unit: "pcs", quantity: 120 }).quantityInSheet).toBe(120);
     expect(topUpLineRequest({ ...line, unit: "L", quantity: 2 }).quantityInSheet).toBe(2000);
   });
@@ -199,10 +212,11 @@ describe("top-up line rules", () => {
   it("keeps the retest date within the lot's life", () => {
     const base = { kind: "0", material: { value: "m", label: "RM" }, shelf: { value: "s", label: "S" }, batchNumber: "B1", arNumber: "", grn: "", quantity: 1 } as const;
     const issues = (values: object) => topUpLineFormSchema.safeParse({ ...base, manufactured: null, expiry: null, retest: null, ...values }).error?.issues.map((issue) => issue.message) ?? [];
-    expect(issues({ expiry: new Date(2028, 0, 31), retest: new Date(2028, 1, 1) })).toContain("The retest date cannot be after the expiry date");
-    expect(issues({ manufactured: new Date(2026, 4, 1), retest: new Date(2026, 3, 30) })).toContain("The retest date cannot be before the manufacturing date");
-    expect(issues({ manufactured: new Date(2026, 4, 1), expiry: new Date(2026, 3, 1) })).toContain("The expiry date cannot be before the manufacturing date");
-    expect(issues({ manufactured: new Date(2999, 0, 1) })).toContain("The manufacturing date cannot be in the future");
-    expect(issues({ expiry: new Date(2029, 0, 1), retest: new Date(2027, 0, 1) })).toEqual([]);
+    expect(issues({ expiry: "2028-01", retest: "2028-02" })).toContain("The retest date cannot be after the expiry date");
+    expect(issues({ manufactured: "2026-05", retest: "2026-04" })).toContain("The retest date cannot be before the manufacturing date");
+    expect(issues({ manufactured: "2026-05", expiry: "2026-04" })).toContain("The expiry date cannot be before the manufacturing date");
+    expect(issues({ manufactured: "2999-01" })).toContain("The manufacturing date cannot be in the future");
+    expect(issues({ expiry: "2029-01", retest: "2027-01" })).toEqual([]);
+    expect(issues({ manufactured: "2026-02", expiry: "2026-02", retest: "2026-02" })).toEqual([]);
   });
 });

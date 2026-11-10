@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 const option = z.object({ value: z.string().min(1), label: z.string() });
-const startOfToday = () => { const now = new Date(); return new Date(now.getFullYear(), now.getMonth(), now.getDate()); };
+const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Choose a valid month").nullable();
+const currentMonth = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`; };
 
 /** One lot in the add/edit dialog. The quantity is held in the material's department unit. */
 export const topUpLineFormSchema = z.object({
@@ -13,12 +14,12 @@ export const topUpLineFormSchema = z.object({
   grn: z.string().trim().max(500, "At most 500 characters"),
   quantity: z.number({ message: "Enter the quantity in stock" }).finite("Enter the quantity in stock").positive("The quantity must be greater than 0").nullable()
     .refine((value) => value !== null, "Enter the quantity in stock"),
-  manufactured: z.date().nullable(),
-  expiry: z.date().nullable(),
-  retest: z.date().nullable(),
+  manufactured: month,
+  expiry: month,
+  retest: month,
 }).superRefine((values, context) => {
   const { manufactured, expiry, retest } = values;
-  if (manufactured && manufactured > startOfToday())
+  if (manufactured && manufactured > currentMonth())
     context.addIssue({ code: "custom", path: ["manufactured"], message: "The manufacturing date cannot be in the future" });
   if (manufactured && expiry && expiry < manufactured)
     context.addIssue({ code: "custom", path: ["expiry"], message: "The expiry date cannot be before the manufacturing date" });

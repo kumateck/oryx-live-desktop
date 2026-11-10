@@ -14,10 +14,7 @@ export const lineFormSchema = z.object({
   quantityInSheet: z.number().nullable().refine((value) => value === null || Number.isNaN(value) || value >= 0, "The quantity cannot be below zero"),
   manufactured: z.string().nullable(),
   expiry: z.string().nullable(),
-  /** Full dates, used instead of the months for rows entered by hand with exact dates. */
-  manufacturedDay: z.date().nullable(),
-  expiryDay: z.date().nullable(),
-  retest: z.date().nullable(),
+  retest: z.string().nullable(),
   excluded: z.boolean(),
 });
 export type LineFormValues = z.infer<typeof lineFormSchema>;
