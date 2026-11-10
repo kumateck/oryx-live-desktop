@@ -11,12 +11,16 @@ it("preserves required flags and exact delay, ordering stages and sending only o
   ] });
   expect(approvalPayload({ ...values, stages: [...values.stages].reverse() }).approvalStages?.[0]).toEqual({ roleId: "role-one", required: true, order: 1 });
 });
-it("requires one role for regulated routing and rejects missing or ambiguous stages", () => {
+it("allows either test-results role to be optional and rejects all-optional workflows", () => {
   const base = approvalDefaults();
-  const document = { value: "ResponseMaterial", label: "Material ATR" };
+  const document = { value: "Response", label: "Test results (Response)" };
   const stage = { ...newApprovalStage(), role: { value: role.id, label: role.name } };
-  expect(approvalFormSchema.safeParse({ ...base, document, stages: [stage] }).success).toBe(true);
-  expect(approvalFormSchema.safeParse({ ...base, document, stages: [stage, stage] }).success).toBe(false);
+  const other = { ...stage, role: { value: "qc-head", label: "QC Head" } };
+  for (const requiredFirst of [true, false]) {
+    const values = { ...base, document, stages: [{ ...stage, required: requiredFirst }, { ...other, required: !requiredFirst }] };
+    expect(approvalPayload(values).approvalStages?.map((item) => item.required)).toEqual([requiredFirst, !requiredFirst]);
+  }
+  expect(approvalFormSchema.safeParse({ ...base, document, stages: [{ ...stage, required: false }] }).success).toBe(false);
   expect(approvalFormSchema.safeParse({ ...base, document, stages: [] }).success).toBe(false);
   expect(approvalRecordSchema.safeParse({ ...sampleApproval, approvalStages: [{ ...sampleApproval.approvalStages[0], user: role }] }).success).toBe(false);
 });

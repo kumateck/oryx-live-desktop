@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { DomainEntitiesApprovalsCreateApprovalRequest } from "@/shared/api/generated/approvals";
 import { delaySchema, optionSchema, referenceSchema, settingsPageSchema, timeSpanSchema } from "@/modules/settings-support/forms";
 import { readDelay, writeDelay } from "@/modules/settings-support/forms";
-import { approvalDocumentLabel, protectedApprovalDocument } from "../lib/documents";
+import { approvalDocumentLabel } from "../lib/documents";
 
 const stageRecord = z.object({ role: referenceSchema.nullish(), user: referenceSchema.nullish(), required: z.boolean(), order: z.number().int().positive() })
   .refine((value) => Boolean(value.role) !== Boolean(value.user), "Each stage must have one role or one user");
@@ -39,8 +39,8 @@ const stageSchema = z.object({ type: z.enum(["Role", "User"]), role: optionSchem
 export const approvalFormSchema = z.object({ document: optionSchema.nullable(), delay: delaySchema, stages: z.array(stageSchema).min(1, "Add at least one approval stage") })
   .superRefine((value, context) => {
     if (!value.document) context.addIssue({ code: "custom", path: ["document"], message: "Choose an approval document" });
-    if (value.document && protectedApprovalDocument(value.document.value) && (value.stages.length !== 1 || value.stages[0]?.type !== "Role" || !value.stages[0]?.role)) {
-      context.addIssue({ code: "custom", path: ["stages"], message: "This regulated routing policy requires exactly one approver role." });
+    if (value.stages.length > 0 && !value.stages.some((stage) => stage.required)) {
+      context.addIssue({ code: "custom", path: ["stages"], message: "Mark at least one approval stage as required." });
     }
   });
 export type ApprovalValues = z.infer<typeof approvalFormSchema>;
