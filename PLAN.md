@@ -988,3 +988,14 @@ code, the public verification key and downloads, and runs under a separate lock.
 Clients may use HTTP to the LAN server and still verify release signatures.
 Native installation remains an explicit user action with unsaved-work checks.
 No ERP page, permission, authentication or backend/data behavior changes.
+
+## Packing style references in production schedules (2026-11-10)
+
+Product packing edits must retain any style referenced by a production schedule,
+even before a packaging record exists. Schedule create/add requires an active
+style that belongs to each selected product. For an existing
+running batch whose style is missing or invalid, packaging repair proposes the
+first active style by name (ID breaks ties), shows that choice in the preview,
+and includes it in the evidence hash. Applying the reviewed repair updates the
+batch style and packaging allocations atomically under the existing permission,
+stock, approval and audit rules. No new permission or database migration.
