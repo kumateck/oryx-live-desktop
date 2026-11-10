@@ -9,6 +9,7 @@ export function topUpLineRequest(line: TopUpLineValues): LineUpdate {
     warehouseName: line.warehouseName || null, shelfName: line.shelfName || null,
     manufacturingDate: line.manufactured ? monthValue(line.manufactured) : null,
     expiryDate: line.expiry ? monthValue(line.expiry) : null,
+    retestDate: line.retest ? monthValue(line.retest) : null,
     grn: line.grn || null, arNumber: line.arNumber || null,
   };
 }

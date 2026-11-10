@@ -15,6 +15,7 @@ const fields = [
   { type: InputTypes.TEXT, name: "shelfName", label: "Shelf name or code", description: "Leave blank to use the first shelf; review it in the draft." },
   { type: InputTypes.MONTH, name: "manufactured", label: "Manufactured" },
   { type: InputTypes.MONTH, name: "expiry", label: "Expiry" },
+  { type: InputTypes.MONTH, name: "retest", label: "Retest month" },
   { type: InputTypes.TEXT, name: "grn", label: "GRN reference" },
   { type: InputTypes.TEXT, name: "arNumber", label: "AR number" },
 ] as const satisfies readonly WizardField<TopUpLineValues>[];

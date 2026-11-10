@@ -88,3 +88,14 @@ Removing only the reviewed additions reproduces prior approved digest
 exactly. Release validation still rejects unreviewed fingerprints. Activating the
 feature still requires the matching backend and bulk audit migration; this source
 review does not deploy either app or apply a customer database migration.
+
+## Invalid saved packing styles
+
+Product packing edits retain any style referenced by a production schedule,
+even before packaging records exist. New schedule rows must choose an active
+style that belongs to their product. For a running batch with a missing or
+invalid saved style, the packaging repair preview proposes the first active
+style alphabetically (ID breaks ties) and names it on the batch row. Applying
+the reviewed repair assigns that style and rebuilds packaging allocations in
+the same atomic, audited repair. Changed requisitions still require fresh
+approval; issued stock is not rewritten.

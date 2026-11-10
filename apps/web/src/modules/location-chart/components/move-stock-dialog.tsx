@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import type { SelectLoader } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
@@ -14,6 +15,7 @@ import { formatQuantityNumber } from "@/shared/units/quantity";
 import { useMoveShelfStockMutation } from "../api/location-api";
 import { useRacks } from "../hooks/use-racks";
 import { availableToMove, moveProblems, moveRequest, moveUnit, type MoveSource } from "../lib/move-stock";
+import { moveStockPermissions } from "../lib/location-access";
 import { moveStockFormSchema, type MoveStockFormValues, type RackSummary } from "../schemas/rack-schema";
 
 type Form = UseFormReturn<MoveStockFormValues>;
@@ -49,6 +51,7 @@ export function MoveLine({ form, index, racks, unit, onRemove }: { form: Form; i
 
 /** Moves stock of one batch from the shelf it is on to one or more other shelves. */
 export function MoveStockDialog({ source, onClose }: { source: MoveSource; onClose: () => void }) {
+  const permission = usePermissionAction(moveStockPermissions[source.kind]);
   const racks = useRacks(source.kind);
   const [move, mutation] = useMoveShelfStockMutation();
   const [message, setMessage] = useState("");
@@ -66,6 +69,8 @@ export function MoveStockDialog({ source, onClose }: { source: MoveSource; onClo
     const general = problems.find((problem) => problem.index === null);
     if (general) setMessage(general.message);
     if (problems.length > 0) return;
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return; }
     const result = await move(moveRequest(source, values.moves));
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success("Stock moved");
@@ -91,7 +96,7 @@ export function MoveStockDialog({ source, onClose }: { source: MoveSource; onClo
         </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" disabled={mutation.isLoading} onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={mutation.isLoading || racks.loading}>{mutation.isLoading ? <><Spinner />Moving…</> : "Move stock"}</Button>
+          <Button type="submit" disabled={mutation.isLoading || racks.loading || !permission.allowed}>{mutation.isLoading ? <><Spinner />Moving…</> : "Move stock"}</Button>
         </DialogFooter>
       </form>
     </DialogContent>
