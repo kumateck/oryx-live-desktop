@@ -19,7 +19,7 @@ function QuantityInput<T extends FieldValues>({ form, field: definition, unit, e
 }) {
   const id = useId();
   const { field, fieldState } = useController({ control: form.control, name: definition.name });
-  const [text, setText] = useState(() => typeof field.value === "number" ? String(convertUnit(field.value, unit.symbol, entryUnit) ?? "") : "");
+  const [text, setText] = useState(() => typeof field.value === "number" && Number.isFinite(field.value) ? String(convertUnit(field.value, unit.symbol, entryUnit) ?? "") : "");
   const { label, required, description } = definition;
   const error = fieldState.error?.message;
   return <FieldFrame id={id} label={`${label} (${entryUnit})`} required={required} description={description} error={error}>

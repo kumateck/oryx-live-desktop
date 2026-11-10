@@ -57,6 +57,13 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+BOM density conversion adds the optional `useDensityConversion` boolean to
+`CreateBoMItemsRequest` and `BillOfMaterialItemDto`. Its typed contract digest
+is `4eabf615f3d9c244ca4086698d4a4845a96c64edeb1e69bf649863f76494f726`; the
+customer deployment release policy approves this additive contract. The
+matching backend defaults old BOM rows to conversion off and requires its
+database migration before the desktop flow is enabled.
+
 Migration batch-number corrections (2026-11-05) add optional `batchNumber` and
 `expectedBatchNumber` to `DOMAIN.Entities.Materials.Batch.UpdateMigrationRetestDate`
 (backend kumateck/oryx-backend#1719). Reviewed typed digest

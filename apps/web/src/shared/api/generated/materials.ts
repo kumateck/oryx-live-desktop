@@ -2125,6 +2125,7 @@ export type DomainEntitiesBillOfMaterialsRequestCreateBoMItemsRequest = {
   order?: number;
   prescribedQuantity?: number;
   substituteMaterialIds?: string[] | null;
+  useDensityConversion?: boolean;
 };
 export type DomainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest = {
   productId?: string;

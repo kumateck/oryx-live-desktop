@@ -18,8 +18,8 @@ afterEach(() => { cleanup(); forgetSession(); });
 const id = "658da105-a506-44a9-8ff5-8d005a54f294";
 const name = "Gelatin Capsule Shells - Zinvite";
 
-function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = false }: {
-  symbol?: string; quantity?: number; unitResponse?: () => Response; failSave?: boolean;
+function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = false, densityResponse }: {
+  symbol?: string; quantity?: number; unitResponse?: () => Response; failSave?: boolean; densityResponse?: () => Response | Promise<Response>;
 } = {}) {
   const backend = stubBackend({ permissions: ["CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure"] });
   rememberSession();
@@ -33,10 +33,11 @@ function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = f
     if (input.method === "GET") reads.push(path);
     else writes.push({ path, body: await input.clone().text() });
     if (path === `/api/v1/product/${id}/bom`) return Response.json({ version: 2, isActive: true, billOfMaterial: { items: [
-      { id: "line-shells", order: 1, baseQuantity: quantity, baseUoM: { id: "old-mg", symbol: "mg" },
+      { id: "line-shells", order: 1, baseQuantity: quantity, useDensityConversion: Boolean(densityResponse), baseUoM: { id: "old-mg", symbol: "mg" },
         material: { id: "shells", name, code: "RMG033" } },
     ] } });
     if (path === "/api/v1/material/shells/uom") return unitResponse ? unitResponse() : Response.json(unit);
+    if (path === "/api/v1/material/department" && densityResponse) return densityResponse();
     if (path === "/api/v1/material/department") return Response.json({ data: [
       { material: { id: "shells", name, code: "RMG033" }, uoM: unit },
       { material: { id: "liquid", name: "Liquid", code: "RM-L" }, uoM: { id: "linked-ml", symbol: "ml" } },
@@ -150,4 +151,25 @@ it("refuses to reinterpret an edited quantity if the linkage changes before save
   await updateAndSave(dialog);
   expect(await screen.findByText(/A department-linked unit changed/)).toBeTruthy();
   expect(writes).toEqual([]);
+});
+
+it("loads and retries verified density when editing a persisted conversion", async () => {
+  let recover = false;
+  const { writes } = open({ symbol: "ml", densityResponse: () => recover
+    ? Response.json({ data: [{ material: { id: "shells", name, code: "RMG033" },
+      uoM: { id: "linked-ml", symbol: "ml" }, density: 1.5, densityUoM: { id: "density", symbol: "g/mL" } }] })
+    : new Response(null, { status: 503 }) });
+  const dialog = await edit("mg");
+  const update = within(dialog).getByRole("button", { name: "Update material" });
+  expect(await within(dialog).findByText("The material density could not be loaded.")).toBeTruthy();
+  expect(update).toHaveProperty("disabled", true);
+  recover = true;
+  fireEvent.click(within(dialog).getByRole("button", { name: "Retry density" }));
+  expect(await within(dialog).findByText("1.5 g/mL")).toBeTruthy();
+  expect(within(dialog).getByText("1 kg → 666.6667 ml")).toBeTruthy();
+  await updateAndSave(dialog);
+  await waitFor(() => expect(writes).toHaveLength(1));
+  expect(JSON.parse(writes[0]?.body ?? "{}").items[0]).toMatchObject({
+    useDensityConversion: true, baseUoMId: null, baseQuantity: 500_000, prescribedQuantity: 1_000_000,
+  });
 });
