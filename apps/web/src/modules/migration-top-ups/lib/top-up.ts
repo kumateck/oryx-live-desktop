@@ -1,6 +1,7 @@
 import type { LineUpdate } from "@/modules/upload-center/api/stock-migration-api";
 import { openingBalancePermissions } from "@/modules/upload-center/lib/stock-migration";
-import { utcBoundary } from "@/shared/format/date-boundary";
+import { monthStartIso, monthEndIso } from "@/shared/batch-dates/batch-dates";
+import { formatMonthYear } from "@/shared/format/dates";
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 import { convertUnit, isCountedUnit, isVolumeUnit } from "@/shared/units/quantity";
 
@@ -22,12 +23,13 @@ export interface TopUpLine {
   batchNumber: string;
   arNumber: string;
   grn: string;
-  manufactured: Date | null;
-  expiry: Date | null;
-  retest: Date | null;
+  manufactured: string | null;
+  expiry: string | null;
+  retest: string | null;
 }
 
-const day = (date: Date | null) => date ? utcBoundary(date) : null;
+const start = (month: string | null) => month ? monthStartIso(month) : null;
+const end = (month: string | null) => month ? monthEndIso(month) : null;
 
 /**
  * The server reads every weight in one unit and every liquid in one unit for a whole top-up, so each
@@ -42,7 +44,7 @@ export function topUpLineRequest(line: TopUpLine): LineUpdate {
     materialId: line.material.id, materialCode: line.material.code, shelfId: line.shelf.id,
     batchNumber: line.batchNumber, unitSymbol: line.unit, quantityInSheet: sent,
     arNumber: line.arNumber || null, grn: line.grn || null,
-    manufacturingDate: day(line.manufactured), expiryDate: day(line.expiry), retestDate: day(line.retest),
+    manufacturingDate: start(line.manufactured), expiryDate: end(line.expiry), retestDate: end(line.retest),
     excluded: false,
   };
 }
@@ -56,5 +58,4 @@ export function sameLot(a: Pick<TopUpLine, "material" | "batchNumber">, b: Pick<
   return batch !== "" && a.material.id === b.material.id && batch === b.batchNumber.trim().toUpperCase();
 }
 
-const calendar = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
-export const showDay = (date: Date | null) => date ? calendar.format(date) : "–";
+export const showMonth = (month: string | null) => month ? formatMonthYear(monthStartIso(month)) ?? "–" : "–";

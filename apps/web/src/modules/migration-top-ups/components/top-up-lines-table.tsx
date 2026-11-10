@@ -3,7 +3,7 @@ import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
 import { materialKindLabels } from "@/shared/reference-data/kind-tabs";
 import { toLargestUnit } from "@/shared/units/quantity";
-import { showDay, topUpPermissions, type TopUpLine } from "../lib/top-up";
+import { showMonth, topUpPermissions, type TopUpLine } from "../lib/top-up";
 
 const column = dataTableColumns<TopUpLine>();
 
@@ -18,8 +18,8 @@ export function TopUpLinesTable({ lines, disabled, onEdit, onRemove }: {
       <div className="text-xs text-muted-foreground">{row.original.arNumber || "No AR number"}</div></div> }),
     column.accessor("quantity", { header: "Quantity", size: 130, cell: ({ row }) => toLargestUnit(row.original.quantity, row.original.unit, "entered")?.text ?? `${row.original.quantity} ${row.original.unit}` }),
     column.accessor((row) => row.shelf.label, { id: "shelf", header: "Shelf", cell: ({ row }) => <span className="break-words">{row.original.shelf.label}</span> }),
-    column.accessor((row) => row.expiry?.getTime() ?? 0, { id: "dates", header: "Mfg / expiry / retest", size: 170, cell: ({ row }) => <div className="text-xs">
-      <div>Mfg {showDay(row.original.manufactured)}</div><div>Exp {showDay(row.original.expiry)}</div><div>Retest {showDay(row.original.retest)}</div></div> }),
+    column.accessor((row) => row.expiry ?? "", { id: "dates", header: "Mfg / expiry / retest", size: 170, cell: ({ row }) => <div className="text-xs">
+      <div>Mfg {showMonth(row.original.manufactured)}</div><div>Exp {showMonth(row.original.expiry)}</div><div>Retest {showMonth(row.original.retest)}</div></div> }),
     column.display({ id: "actions", header: () => <TableMenuHeader />, size: 48, cell: ({ row }) => <TableMenu
       label={`Actions for ${row.original.material.code} batch ${row.original.batchNumber}`} disabled={disabled} items={[
         { id: "edit", label: "Edit line", require: topUpPermissions.upload, onSelect: () => onEdit(row.original) },

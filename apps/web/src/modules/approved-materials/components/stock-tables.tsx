@@ -26,14 +26,14 @@ const batchColumns = batchColumn.columns([
   batchColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => quantity(row.original.quantity, row.original.unit) }),
   batchColumn.accessor((row) => formatMonthYear(row.manufacturingDate) ?? "", { id: "made", header: "Manufactured", size: 150, cell: ({ row }) => formatMonthYear(row.original.manufacturingDate) ?? dash }),
   batchColumn.accessor((row) => row.effectiveExpiryDate ?? "", { id: "expiry", header: "Valid until", size: 190, cell: ({ row }) => <div><ExpiryCell date={row.original.effectiveExpiryDate} />{row.original.effectiveExpiryDate !== row.original.expiryDate ? <span className="text-xs text-muted-foreground">Retest extension · expiry {formatMonthYear(row.original.expiryDate) ?? "not recorded"}</span> : null}</div> }),
-  batchColumn.accessor((row) => formatDate(row.retestDate) ?? "", { id: "retest", header: "Retest", size: 150, cell: ({ row }) => formatDate(row.original.retestDate) ?? dash }),
+  batchColumn.accessor((row) => formatMonthYear(row.retestDate) ?? "", { id: "retest", header: "Retest", size: 150, cell: ({ row }) => formatMonthYear(row.original.retestDate) ?? dash }),
 ]);
 
 /** Where the material's approved stock sits: one row per batch per shelf. */
 export function StockByBatchTable({ materialId, departmentId }: Props) {
   const table = useServerTable({ pageSize: 20, resetKey: materialId });
   const query = useGetApiV1MaterialByMaterialIdBatchesV2AndDepartmentIdQuery({ ...audit, materialId, departmentId, page: table.page, pageSize: table.pageSize });
-  const rows = useMemo(() => { const parsed = shelfBatchRowsSchema.safeParse(query.data?.data ?? null); return parsed.success ? parsed.data : []; }, [query.data]);
+  const rows = useMemo(() => { const parsed = shelfBatchRowsSchema.safeParse(query.data?.data ?? null); return parsed.success ? parsed.data.filter((row) => row.quantity > 0) : []; }, [query.data]);
   const meta = pageMeta(query.data, table, rows.length);
   return <ServerDataTable label="Stock by batch" columns={batchColumns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows}
     onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange} loading={query.isLoading} refreshing={query.isFetching && !query.isLoading}
