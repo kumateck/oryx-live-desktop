@@ -1018,6 +1018,7 @@ export type DomainEntitiesBillOfMaterialsBillOfMaterialItemDto = {
   prescribedQuantity?: number;
   substitutes?:
     DomainEntitiesBillOfMaterialsBillOfMaterialItemSubstituteDto[] | null;
+  useDensityConversion?: boolean;
 };
 export type DomainEntitiesBillOfMaterialsBillOfMaterialDto = {
   product?: SharedCollectionItemDto;

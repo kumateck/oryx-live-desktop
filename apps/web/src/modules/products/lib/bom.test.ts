@@ -31,17 +31,24 @@ it("numbers steps by position and sends each line's full-batch quantity and subs
   const request = toBomRequest("p1", [lines[1]!, lines[0]!], 5, 1_500_000);
   expect(request.productId).toBe("p1");
   expect(request.items).toEqual([
-    { materialId: "m-sugar", baseUoMId: "u-g", baseQuantity: 2, grade: "BP", order: 1, prescribedQuantity: 600_000, isSubstitutable: false, substituteMaterialIds: [] },
-    { materialId: "m-api", baseUoMId: "u-mg", baseQuantity: 100, grade: null, order: 2, prescribedQuantity: 30_000_000, isSubstitutable: true, substituteMaterialIds: ["m-alt"] },
+    { materialId: "m-sugar", baseUoMId: "u-g", baseQuantity: 2, grade: "BP", order: 1, prescribedQuantity: 600_000, isSubstitutable: false, useDensityConversion: false, substituteMaterialIds: [] },
+    { materialId: "m-api", baseUoMId: "u-mg", baseQuantity: 100, grade: null, order: 2, prescribedQuantity: 30_000_000, isSubstitutable: true, useDensityConversion: false, substituteMaterialIds: ["m-alt"] },
   ]);
   // Without the product's sizes the batch quantity is unknown, not infinite.
   expect(toBomRequest("p1", [lines[0]!], 0, 1_500_000).items?.[0]?.prescribedQuantity).toBe(0);
 });
 
+it("sends density conversion without reusing the storage-unit ID as the BOM unit", () => {
+  const line = { ...lines[0]!, useDensityConversion: true, unit: { id: "", symbol: "mg" }, linkedUnit: { id: "u-ml", symbol: "ml" } };
+  expect(toBomRequest("p1", [line], 1, 1_000).items?.[0]).toMatchObject({
+    baseUoMId: null, useDensityConversion: true, baseQuantity: 100, prescribedQuantity: 100_000,
+  });
+});
+
 it("validates a line: material, positive quantity, and no self-substitution", () => {
   const material = { value: "m-api", label: "Albendazole" };
-  expect(bomItemFormSchema.safeParse({ material, baseQuantity: 1 }).success).toBe(true);
-  expect(bomItemFormSchema.safeParse({ material, baseQuantity: 0 }).success).toBe(false);
-  const self = bomItemFormSchema.safeParse({ material, baseQuantity: 1, substitutes: [material] });
+  expect(bomItemFormSchema.safeParse({ material, baseQuantity: 1, useDensityConversion: false }).success).toBe(true);
+  expect(bomItemFormSchema.safeParse({ material, baseQuantity: 0, useDensityConversion: false }).success).toBe(false);
+  const self = bomItemFormSchema.safeParse({ material, baseQuantity: 1, useDensityConversion: false, substitutes: [material] });
   expect(self.success ? "" : self.error.issues[0]?.message).toBe("A material cannot substitute for itself");
 });

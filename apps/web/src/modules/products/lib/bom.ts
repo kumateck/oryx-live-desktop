@@ -16,6 +16,7 @@ export interface BomLine {
   unit: { id: string; symbol: string };
   /** Only picker or linkage lookups can establish this; a saved BOM unit may be stale. */
   linkedUnit?: MaterialUnit;
+  useDensityConversion: boolean;
   baseQuantity: number;
   grade: string;
   substitutes: Option[];
@@ -31,6 +32,7 @@ export function fromSavedBom(saved: SavedBom): BomLine[] {
     material: { value: item.material.id, label: item.material.name },
     code: item.material.code, category: item.material.materialCategory, specification: item.material.specification,
     unit: { id: item.baseUoM?.id ?? "", symbol: item.baseUoM?.symbol?.trim() ?? "" },
+    useDensityConversion: item.useDensityConversion === true,
     baseQuantity: item.baseQuantity ?? 0, grade: item.grade,
     substitutes: item.substitutes.flatMap((entry) => entry.substituteMaterial
       ? [{ value: entry.substituteMaterial.id, label: entry.substituteMaterial.name }] : []),
@@ -46,7 +48,7 @@ export function hasMaterial(lines: readonly BomLine[], materialId: string, excep
 export function bomProblems(lines: readonly BomLine[]): string[] {
   const problems: string[] = [];
   if (lines.length === 0) problems.push("Add at least one material.");
-  const noUnit = lines.filter((line) => !line.unit.id).map((line) => line.material.label);
+  const noUnit = lines.filter((line) => !line.useDensityConversion && !line.unit.id).map((line) => line.material.label);
   if (noUnit.length) problems.push(`No unit of measure is set for: ${noUnit.join(", ")}. Set it on the material, then choose the material again.`);
   return problems;
 }
@@ -59,7 +61,8 @@ export function toBomRequest(productId: string, lines: readonly BomLine[], compo
 ): DomainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest {
   return { productId, items: lines.map((line, index) => ({
     materialId: line.material.value,
-    baseUoMId: line.unit.id,
+    baseUoMId: line.useDensityConversion ? null : line.unit.id,
+    useDensityConversion: line.useDensityConversion,
     baseQuantity: line.baseQuantity,
     grade: line.grade.trim() || null,
     order: index + 1,

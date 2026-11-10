@@ -65,6 +65,11 @@ function stripStockLocations(schemas: ObjectValue) {
   }
 }
 
+function stripBomDensityConversion(schemas: ObjectValue) {
+  for (const name of ["BillOfMaterialItemDto", "Request.CreateBoMItemsRequest"])
+    delete object(object(schemas[`DOMAIN.Entities.BillOfMaterials.${name}`] ?? null).properties ?? null).useDensityConversion;
+}
+
 function stripMigrationMaterialLinks(document: ObjectValue) {
   delete object(document.paths ?? null)["/api/v1/stock-migrations/{id}/material-links/{kind}"];
   const schemas = object(object(document.components ?? null).schemas ?? null);
@@ -74,6 +79,7 @@ function stripMigrationMaterialLinks(document: ObjectValue) {
 
 test("draft material linking adds only typed preview/create operations and preserves the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripBomDensityConversion(object(object(current.components ?? null).schemas ?? null));
   const digest = contractDigest(current);
   assert.equal(digest, "bca17eb640a0223896ecc0fe8cee0e29d33ebd2d76221c369bda34b54e6a9b58");
   const path = object(object(current.paths ?? null)["/api/v1/stock-migrations/{id}/material-links/{kind}"] ?? null);
@@ -89,6 +95,7 @@ test("stock picking adds only seven optional read fields and preserves the appro
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripMigrationMaterialLinks(current);
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  stripBomDensityConversion(schemas);
   const digest = contractDigest(current);
   assert.equal(digest, "4cd376b6624dfe633457cb79f7bf8592cd283590d7a6bc855ccb7afa196bd64c");
   for (const [name, fields] of Object.entries(stockLocationFields)) {
@@ -112,6 +119,20 @@ test("the preserved customer export matches the reported digest and retains both
   assert.equal(contractDigest(reviewedImport()), approvedFingerprint);
   assert.ok(policy.backendContracts.includes(approvedFingerprint));
   assert.ok(policy.backendContracts.includes(customerFingerprint));
+});
+
+test("BOM density conversion is an optional additive marker on the request and saved item", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "4eabf615f3d9c244ca4086698d4a4845a96c64edeb1e69bf649863f76494f726");
+  assert.ok(policy.backendContracts.includes(digest));
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const name of ["DOMAIN.Entities.BillOfMaterials.Request.CreateBoMItemsRequest", "DOMAIN.Entities.BillOfMaterials.BillOfMaterialItemDto"]) {
+    const schema = object(schemas[name] ?? null);
+    const property = object(object(schema.properties ?? null).useDensityConversion ?? null);
+    assert.equal(property.type, "boolean");
+    assert.equal(Array.isArray(schema.required) && schema.required.includes("useDensityConversion"), false);
+  }
 });
 
 test("all 1,358 operations and schemas match after only 2,716 audit-header schema additions", () => {
@@ -258,6 +279,7 @@ test("historical reporting adds optional read parameters without changing existi
     const reviewed = object(object(object(object(before.components ?? null).schemas ?? null)[`DOMAIN.Entities.Products.${name}`] ?? null).properties ?? null);
     properties.price = reviewed.price ?? null;
   }
+  stripBomDensityConversion(schemas);
   assert.deepEqual(current.components, before.components);
   assert.deepEqual(current.security, before.security);
 });
@@ -325,6 +347,8 @@ test("the merged forecast and migration contracts preserve the approved predeces
   stripMigrationMaterialLinks(head);
   // Keep this historical predecessor review independent of the later stock-location fields.
   stripStockLocations(object(object(head.components ?? null).schemas ?? null));
+  // BOM density conversion adds optional source/response markers without changing existing operations.
+  stripBomDensityConversion(object(object(head.components ?? null).schemas ?? null));
   assert.equal(contractDigest(head), "5211b900a46aff5d1ece7c3e4f73c8ef9ae3127969ffb0945bfca034d3aefe35");
   // White Placebo preparation (2026-11-06) adds six paths, their owned schemas and three optional markers.
   const placeboPredecessor = structuredClone(head);

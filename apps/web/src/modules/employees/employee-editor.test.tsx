@@ -8,9 +8,9 @@ import { SessionProvider } from "@/shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
 import { EmployeeEditorPage } from "./components/employee-editor-page";
 import type { Employee } from "./api/employee-api";
-function open() {
+function open(dateOfBirth = "1990-01-01", dateEmployed = "2020-01-01") {
   const backend = stubBackend({ permissions: ["CanUpdateEmployeeInfo", "CanViewEmployeeDetails"] }); const auth = backend.fetcher.getMockImplementation();
-  const employee: Employee = { id: "employee1", firstName: "Ama", lastName: "Test", gender: 0, type: 0, status: 1, inactiveStatus: 3, level: 0, dateOfBirth: "1990-01-01", dateEmployed: "2020-01-01", staffNumber: "TEST001", children: [{ fullName: "Child", gender: 0 }] };
+  const employee: Employee = { id: "employee1", firstName: "Ama", lastName: "Test", gender: 0, type: 0, status: 1, inactiveStatus: 3, level: 0, dateOfBirth, dateEmployed, staffNumber: "TEST001", children: [{ fullName: "Child", gender: 0 }] };
   const state = { employee, photoFails: true }; const calls: { method: string; path: string; body: string; audit: string | null }[] = [];
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return auth ? auth(input, init) : new Response(null, { status: 500 });
@@ -46,4 +46,17 @@ it("retries only a failed photograph after the profile write succeeds", async ()
   page.state.photoFails = false; await user.click(screen.getByRole("button", { name: "Retry photograph upload" }));
   await screen.findByText("Saved profile detail"); expect(page.writes()).toHaveLength(1);
   await waitFor(() => expect(page.calls.filter((call) => call.path.startsWith("/api/v1/file/")).length).toBe(2));
+});
+
+it("submits an existing year-one employee date through the profile editor", async () => {
+  const user = userEvent.setup();
+  const page = open("0001-01-01T00:00:00Z", "0001-01-01T00:00:00Z");
+  await screen.findByLabelText(/^First name/);
+  await user.click(screen.getByRole("button", { name: "Save employee" }));
+  await screen.findByText("Saved profile detail");
+  expect(page.writes()).toHaveLength(1);
+  expect(JSON.parse(page.writes()[0]?.body ?? "{}")).toMatchObject({
+    dateOfBirth: "0001-01-01T00:00:00Z",
+    dateEmployed: "0001-01-01T00:00:00Z",
+  });
 });
