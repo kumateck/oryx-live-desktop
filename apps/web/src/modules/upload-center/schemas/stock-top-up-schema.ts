@@ -12,6 +12,7 @@ export const topUpLineSchema = z.object({
   quantity: z.string().trim().refine((value) => /^\d+(\.\d+)?$/.test(value) && Number.isFinite(Number(value)) && Number(value) > 0, "Enter a quantity above zero"),
   manufactured: month,
   expiry: month,
+  retest: month.optional(),
   grn: z.string().trim().max(500),
   arNumber: z.string().trim().max(500),
 }).refine((line) => !line.manufactured || !line.expiry || line.manufactured <= line.expiry,
@@ -29,5 +30,5 @@ export type TopUpLineValues = z.infer<typeof topUpLineSchema>;
 export type TopUpHeaderValues = z.infer<typeof topUpHeaderSchema>;
 export const emptyTopUpLine: TopUpLineValues = {
   materialCode: "", warehouseName: "", shelfName: "", batchNumber: "", unitSymbol: "",
-  quantity: "", manufactured: null, expiry: null, grn: "", arNumber: "",
+  quantity: "", manufactured: null, expiry: null, retest: null, grn: "", arNumber: "",
 };

@@ -35,9 +35,9 @@ dates silently. Different GRN/AR references keep separate lots even when their
 supplier batch number matches.
 
 When a row's batch number is already on the department's shelves (an available
-or fully used lot) and its AR number, manufacturing date, expiry date and unit
+or fully used lot) and its AR number, manufacturing, expiry and retest months, and unit
 all match that lot, approval adds the quantity to the existing lot instead of
-creating a new one. Month-precision sheet dates match by month. If any of those
+creating a new one. All migration dates match by month and year, including legacy manual drafts. If any of those
 differ, the row stays a separate lot and its warning names what differs.
 
 The existing opening-balance keys apply, with department restrictions enforced
@@ -94,3 +94,9 @@ The line dialog retained its footer at the smallest size. This is split browser
 fixture and PostgreSQL repository coverage, not a deployed customer acceptance
 test. Existing build warnings include the shared attachment chunk boundary and
 large chunks; the backend also reports existing package/documentation warnings.
+
+The warehouse entry page and Upload Center corrections both use month/year for
+manufacturing, expiry and retest. Posted expiry/retest use the last day of the
+month. The backend normalizes older `exactDates` drafts too. Original import
+values remain evidence; existing approved lots and their references are not
+rewritten. See [warehouse top-ups](warehouse-migration-top-ups.md).
