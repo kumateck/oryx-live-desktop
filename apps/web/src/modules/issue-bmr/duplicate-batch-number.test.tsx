@@ -11,7 +11,9 @@ import { IssueBmrDetailPage } from "./components/issue-bmr-detail";
 
 afterEach(() => { cleanup(); forgetSession(); });
 
-it("shows the duplicate-number save error, retains entered details and never issues until a different number saves", async () => {
+it.each([null, "LJK"])("retains a duplicate number for editing and issues a different number (stem %s)", async (stem) => {
+  const original = stem ? "LJK097" : "BATCH-1";
+  const replacement = stem ? "LJK098" : "BATCH-2";
   const backend = stubBackend({ permissions: ["CanViewIssuedBmrBprs", "CanIssueBmr"] });
   rememberSession();
   const writes: { path: string; body: string }[] = [];
@@ -24,13 +26,13 @@ it("shows the duplicate-number save error, retains entered details and never iss
     if (input.method !== "GET") {
       const body = await input.clone().text();
       writes.push({ path, body });
-      if (path === "/api/v1/production-schedule/manufacturing/bmr-1" && body.includes("BATCH-1"))
-        return Response.json({ errors: [{ code: "Bmr.DuplicateBatchNumber", description: "Batch number 'BATCH-1' already exists. Use a different number." }] }, { status: 409 });
+      if (path === "/api/v1/production-schedule/manufacturing/bmr-1" && body.includes(original))
+        return Response.json({ errors: [{ code: "Bmr.DuplicateBatchNumber", description: `Batch number '${original}' already exists. Use a different number.` }] }, { status: 409 });
       return new Response(null, { status: 204 });
     }
-    if (path === "/api/v1/production-schedule/manufacturing/bmr-1") return Response.json({ id: "bmr-1", batchNumber: "BATCH-1",
+    if (path === "/api/v1/production-schedule/manufacturing/bmr-1") return Response.json({ id: "bmr-1", batchNumber: original,
       manufacturingDate: `${month}-01T00:00:00Z`, expiryDate: `${expiry}-01T00:00:00Z`, batchQuantity: 100,
-      productionScheduleProduct: { id: "batch-1", product: { name: "Zinvite", code: "P001", baseUoM: { symbol: "piece" } } } });
+      productionScheduleProduct: { id: "batch-1", product: { name: "Zinvite", code: "P001", batchStem: stem, baseUoM: { symbol: "piece" } } } });
     if (path.includes("material-stock")) return Response.json([]);
     return new Response(null, { status: 404 });
   });
@@ -40,19 +42,28 @@ it("shows the duplicate-number save error, retains entered details and never iss
   fireEvent.click(await screen.findByRole("button", { name: "Issue BMR and BPR" }));
   const dialog = await screen.findByRole("dialog");
   fireEvent.click(within(dialog).getByRole("button", { name: "Issue" }));
-  expect(await within(dialog).findByRole("alert")).toHaveProperty("textContent", "Batch number 'BATCH-1' already exists. Use a different number.");
+  expect(await within(dialog).findByRole("alert")).toHaveProperty("textContent", `Batch number '${original}' already exists. Use a different number.`);
   expect(writes).toHaveLength(1);
   expect(writes.some(write => write.path.includes("/issue/"))).toBe(false);
   const user = userEvent.setup();
   await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  expect(screen.getByRole("textbox", { name: "Batch number" })).toHaveProperty("value", "BATCH-1");
-  await user.clear(screen.getByRole("textbox", { name: "Batch number" }));
-  await user.type(screen.getByRole("textbox", { name: "Batch number" }), "BATCH-2");
+  const number = screen.getByRole("textbox", { name: stem ? "Batch number · LJK" : "Batch number" });
+  expect(number).toHaveProperty("value", stem ? "097" : original);
+  await user.clear(number);
+  if (stem) {
+    await user.type(number, "A");
+    await user.click(screen.getByRole("button", { name: "Issue BMR and BPR" }));
+    expect(await screen.findByText(/Enter up to .* digits after the batch stem/)).toBeTruthy();
+    expect(writes).toHaveLength(1);
+    await user.clear(number);
+  }
+  await user.type(number, stem ? "098" : replacement);
   await user.click(screen.getByRole("button", { name: "Issue BMR and BPR" }));
-  fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Issue" }));
+  const confirm = await screen.findByRole("dialog", { name: `Issue batch ${replacement}?` });
+  fireEvent.click(within(confirm).getByRole("button", { name: "Issue" }));
   await waitFor(() => expect(writes).toHaveLength(3));
-  expect(writes[1]?.body).toContain("BATCH-2");
+  expect(writes[1]?.body).toContain(replacement);
   expect(writes[2]?.path).toContain("/issue/");
   expect(await screen.findByText("Requests")).toBeTruthy();
 });

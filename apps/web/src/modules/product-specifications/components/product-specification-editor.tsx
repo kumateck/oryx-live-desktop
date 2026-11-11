@@ -90,7 +90,7 @@ function Editor({ saved, linked }: { saved: Specification | null; linked: readon
   }, [loadProducts]);
 
   const fields = useMemo(() => [
-    { type: InputTypes.SELECT, mode: "multiple", source: "async", name: "products", label: "Products", required: true, loadOptions, placeholder: "Select products", searchPlaceholder: "Search products",
+    { type: InputTypes.SELECT, mode: "multiple", source: "async", name: "products", label: "Products", required: true, loadOptions, placeholder: "Select products", searchPlaceholder: "Search products", wrapSelectedLabels: true,
       description: "Only products without a specification are offered. The first product's division sets the number series.", className: "md:col-span-2" },
     { type: InputTypes.SELECT, mode: "single", source: "sync", name: "testStage", label: "Test stage", required: true, options: testStages, placeholder: "Select a stage" },
     { type: InputTypes.TEXT, name: "specificationNumber", label: "Specification number", required: true },

@@ -18,6 +18,7 @@ export function toProductRequest(values: ProductFormValues): DomainEntitiesProdu
     name: values.name.trim(),
     code: values.code.trim(),
     genericName: blankToNull(values.genericName),
+    ...(values.batchStem === undefined ? {} : { batchStem: values.batchStem.trim() }),
     description: values.description?.trim() ? values.description : null,
     filledWeight: blankToNull(values.filledWeight),
     storageCondition: blankToNull(values.storageCondition),
@@ -43,7 +44,7 @@ export function toFormValues(product: ProductFormSource): Partial<ProductFormVal
   const division = divisionOptions.find((item) => item.value === String(product.division));
   const positive = (value: number | null | undefined) => typeof value === "number" && value > 0 ? value : undefined;
   const values: Partial<ProductFormValues> = {
-    name: product.name, code: product.code, genericName: product.genericName, description: product.description,
+    name: product.name, code: product.code, genericName: product.genericName, batchStem: product.batchStem, description: product.description,
     filledWeight: product.filledWeight, storageCondition: product.storageCondition, shelfLife: product.shelfLife,
     actionUse: product.actionUse, fdaRegistrationNumber: product.fdaRegistrationNumber,
     masterFormulaNumber: product.masterFormulaNumber, documentNumber: product.documentNumber,

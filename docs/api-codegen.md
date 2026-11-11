@@ -57,6 +57,19 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+Migrated batch details add the typed `PUT /api/v1/material/batch/{batchId}/migration-details`
+operation and optional GRN fields on `MaterialBatchDto` and `MaterialStockReportRow`.
+Import the metadata with `bun scripts/import-migration-batch-details.ts EXPORT.json`.
+The reviewed contract digest is `474090995ed29dc1fccf7f204706e9127181e120b1ee0014fb6e6e852f5d2d23`.
+Apply `AddMigrationBatchDetailsCorrections` and deploy the backend before the desktop.
+
+Product batch stems add the optional `batchStem` field to the product create
+request and product list DTO, inherited by update and detail contracts. Import the
+metadata with `bun scripts/import-product-batch-stem.ts EXPORT.json`. The reviewed
+digest including migrated batch details is
+`7fbbda4c84600f4344f97f286f092d2635854986928fac39f61bf9376e75a2cc`.
+Apply `AddProductBatchStem` and deploy the backend before the desktop.
+
 BOM density conversion adds the optional `useDensityConversion` boolean to
 `CreateBoMItemsRequest` and `BillOfMaterialItemDto`. Its typed contract digest
 is `4eabf615f3d9c244ca4086698d4a4845a96c64edeb1e69bf649863f76494f726`; the
