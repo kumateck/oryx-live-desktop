@@ -70,6 +70,19 @@ function stripBomDensityConversion(schemas: ObjectValue) {
     delete object(object(schemas[`DOMAIN.Entities.BillOfMaterials.${name}`] ?? null).properties ?? null).useDensityConversion;
 }
 
+function stripMigrationBatchDetails(document: ObjectValue) {
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete object(document.paths ?? null)["/api/v1/material/batch/{batchId}/migration-details"];
+  delete schemas["DOMAIN.Entities.Materials.Batch.UpdateMigrationBatchDetails"];
+  delete object(object(schemas["DOMAIN.Entities.Materials.Batch.MaterialBatchDto"] ?? null).properties ?? null).migrationGrnNumber;
+  delete object(object(schemas["DOMAIN.Entities.Materials.Batch.MaterialStockReportRow"] ?? null).properties ?? null).grnNumber;
+}
+
+function stripProductBatchStem(schemas: ObjectValue) {
+  for (const dto of ["Product", "ProductDto", "ProductListDto", "CreateProductRequest", "UpdateProductRequest"])
+    delete object(object(schemas[`DOMAIN.Entities.Products.${dto}`] ?? null).properties ?? null).batchStem;
+}
+
 function stripMigrationMaterialLinks(document: ObjectValue) {
   delete object(document.paths ?? null)["/api/v1/stock-migrations/{id}/material-links/{kind}"];
   const schemas = object(object(document.components ?? null).schemas ?? null);
@@ -79,6 +92,8 @@ function stripMigrationMaterialLinks(document: ObjectValue) {
 
 test("draft material linking adds only typed preview/create operations and preserves the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripProductBatchStem(object(object(current.components ?? null).schemas ?? null));
+  stripMigrationBatchDetails(current);
   stripBomDensityConversion(object(object(current.components ?? null).schemas ?? null));
   const digest = contractDigest(current);
   assert.equal(digest, "bca17eb640a0223896ecc0fe8cee0e29d33ebd2d76221c369bda34b54e6a9b58");
@@ -93,6 +108,8 @@ test("draft material linking adds only typed preview/create operations and prese
 
 test("stock picking adds only seven optional read fields and preserves the approved contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripProductBatchStem(object(object(current.components ?? null).schemas ?? null));
+  stripMigrationBatchDetails(current);
   stripMigrationMaterialLinks(current);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   stripBomDensityConversion(schemas);
@@ -123,6 +140,8 @@ test("the preserved customer export matches the reported digest and retains both
 
 test("BOM density conversion is an optional additive marker on the request and saved item", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripProductBatchStem(object(object(current.components ?? null).schemas ?? null));
+  stripMigrationBatchDetails(current);
   const digest = contractDigest(current);
   assert.equal(digest, "4eabf615f3d9c244ca4086698d4a4845a96c64edeb1e69bf649863f76494f726");
   assert.ok(policy.backendContracts.includes(digest));
@@ -198,6 +217,7 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/production-schedule/activity/{activityId}/repair-bom/preview", "/api/v1/production-schedule/activity/{activityId}/repair-bom",
     "/api/v1/production-schedule/activity/{activityId}/repair-packaging/preview", "/api/v1/production-schedule/activity/{activityId}/repair-packaging",
     // Migration validity correction and additive stock top-up drafts (2026-11-03).
+    "/api/v1/material/batch/{batchId}/migration-details",
     "/api/v1/material/batch/{batchId}/migration-retest-date",
     "/api/v1/material/batches/stock-report",
     "/api/v1/stock-migrations/top-ups/upload", "/api/v1/stock-migrations/top-ups",
@@ -219,6 +239,9 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/white-placebo/workspace", "/api/v1/white-placebo/recipe", "/api/v1/white-placebo",
     "/api/v1/white-placebo/{id}", "/api/v1/white-placebo/{id}/issue", "/api/v1/white-placebo/{id}/output"].sort());
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  delete schemas["DOMAIN.Entities.Materials.Batch.UpdateMigrationBatchDetails"];
+  stripProductBatchStem(schemas);
+  delete object(object(schemas["DOMAIN.Entities.Materials.Batch.MaterialBatchDto"] ?? null).properties ?? null).migrationGrnNumber;
   stripMigrationMaterialLinks(current);
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Reports.ProductionMaterialForecast")) delete schemas[name];
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Products.Production.ReservationRepair")) delete schemas[name];
@@ -344,6 +367,10 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
 test("the merged forecast and migration contracts preserve the approved predecessor and pass release validation", () => {
   const head = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   const publishedDigest = contractDigest(head);
+  stripProductBatchStem(object(object(head.components ?? null).schemas ?? null));
+  assert.equal(contractDigest(head), "474090995ed29dc1fccf7f204706e9127181e120b1ee0014fb6e6e852f5d2d23");
+  stripMigrationBatchDetails(head);
+  assert.equal(contractDigest(head), "4eabf615f3d9c244ca4086698d4a4845a96c64edeb1e69bf649863f76494f726");
   stripMigrationMaterialLinks(head);
   // Keep this historical predecessor review independent of the later stock-location fields.
   stripStockLocations(object(object(head.components ?? null).schemas ?? null));

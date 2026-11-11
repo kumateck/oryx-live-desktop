@@ -2433,6 +2433,7 @@ export type DomainEntitiesProductsProductListDto = {
   isVerified?: boolean;
   documentNumber?: string | null;
   revisionNumber?: number;
+  batchStem?: string | null;
 };
 export type DomainEntitiesProductionSchedulesBatchSize = 0 | 1;
 export type DomainEntitiesBaseTermsOfPaymentDto = {
@@ -3548,6 +3549,7 @@ export type DomainEntitiesProductsProductDto = {
   routes?: DomainEntitiesRoutesRouteDto[] | null;
   packings?: DomainEntitiesProductsProductPackingDto[] | null;
   createdBy?: SharedCollectionItemDto;
+  batchStem?: string | null;
 };
 export type DomainEntitiesProductsProductDtoRead = {
   id?: string;
@@ -3588,6 +3590,7 @@ export type DomainEntitiesProductsProductDtoRead = {
   routes?: DomainEntitiesRoutesRouteDtoRead[] | null;
   packings?: DomainEntitiesProductsProductPackingDto[] | null;
   createdBy?: SharedCollectionItemDto;
+  batchStem?: string | null;
 };
 export type DomainEntitiesFormsResponseDto = {
   id?: string;

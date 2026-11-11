@@ -9,6 +9,7 @@ export const productFormSchema = z.object({
   code: z.string({ message: "Enter the product code" }).trim().min(1, "Enter the product code")
     .refine((value) => value !== "undefined" && value !== "null", "Enter a valid product code"),
   genericName: optionalText,
+  batchStem: z.string().trim().max(99, "The batch stem cannot exceed 99 characters").optional(),
   category: option("Choose a category"),
   department: option("Choose a department"),
   division: option("Choose a division"),
@@ -36,7 +37,7 @@ const ref = z.object({ id: z.string().nullish(), name: z.string().nullish() }).n
 
 /** The parts of a saved product the edit form starts from. */
 export const productFormSourceSchema = z.object({
-  id: z.uuid(), name: text, code: text, genericName: text, description: text, filledWeight: text, storageCondition: text,
+  id: z.uuid(), name: text, code: text, genericName: text, batchStem: text, description: text, filledWeight: text, storageCondition: text,
   shelfLife: text, actionUse: text, fdaRegistrationNumber: text, masterFormulaNumber: text, documentNumber: text,
   revisionNumber: z.number().nullish(), baseQuantity: z.number().nullish(), fullBatchSize: z.number().nullish(),
   division: z.number().nullish(), category: ref, department: ref, equipment: ref,

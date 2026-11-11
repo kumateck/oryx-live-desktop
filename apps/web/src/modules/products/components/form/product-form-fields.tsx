@@ -82,6 +82,13 @@ export function ProductFormFields({
         required: true,
         placeholder: "Select division",
       },
+      {
+        type: InputTypes.TEXT,
+        name: "batchStem",
+        label: "Batch stem",
+        placeholder: "e.g. LJK",
+        description: "Optional prefix for new batch numbers when issuing a BMR.",
+      },
     ],
     [categories, departments]
   );
