@@ -9,3 +9,16 @@ it("reads the type and expression of stored formula definitions", () => {
   expect(formulaPreview(":a + 1")).toEqual({ type: 0, expression: ":a + 1" });
   expect(JSON.parse(normalizeFormulaSettings(JSON.stringify({ mode: "capsule" })))).toEqual({ mode: "capsule", type: 2 });
 });
+
+it("shows the same percentage multiplier as the approved formula editor", () => {
+  for (const config of [
+    { percentageResults: true },
+    { percent: true },
+  ]) {
+    expect(formulaPreview(JSON.stringify({ type: 3, expression: ":sampleAvg/:standardAvg", ...config })).expression)
+      .toBe("(:sampleAvg/:standardAvg) * 100");
+  }
+  expect(formulaPreview(JSON.stringify({ type: 0, expression: ":a/:b", percent: true })).expression).toBe("(:a/:b) * 100");
+  expect(formulaPreview(JSON.stringify({ type: 3, expression: ":a/:b", percentageResults: false, percent: true })).expression).toBe(":a/:b");
+  expect(formulaPreview(JSON.stringify({ settings: { type: 3, expression: ":a/:b", percentageResults: true } })).expression).toBe("(:a/:b) * 100");
+});

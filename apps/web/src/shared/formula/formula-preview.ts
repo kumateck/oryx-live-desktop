@@ -60,7 +60,9 @@ export function formulaPreview(rawOption: string | null | undefined): FormulaPre
   }
   const type = typeOf(candidates);
   const expression = unwrapExpression(text(candidates.find((candidate) => typeof candidate.expression === "string")?.expression)) || unwrapExpression(fieldFromRaw(raw, "expression"));
-  return { type, expression };
+  const settings = candidates.find((candidate) => candidate.percentageResults !== undefined || candidate.percent !== undefined);
+  const percentage = Boolean(settings?.percentageResults ?? settings?.percent);
+  return { type, expression: expression && percentage && type !== FormulaType.Uniformity ? `(${expression}) * 100` : expression };
 }
 
 /** A definition with its type written explicitly, so every reader agrees on it. */
