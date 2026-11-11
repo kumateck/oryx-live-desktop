@@ -1,6 +1,6 @@
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 const standard = ["CustomerQuotation", "SupplierPricingAgreement", "Payment", "StaffRequisition", "PayrollRun", "PerformanceReview", "JobRequest", "ProductionOrder", "TrialRequisition", "PurchaseRequisition", "StockRequisition", "PurchaseOrder", "BillingSheet", "LeaveRequest", "OvertimeRequest", "AllocateProductionOrder", "ShipmentDocument", "ProformaInvoice", "FinishedGoodsTransferNote", "StockAdjustment", "StockDiscrepancy", "ShipmentDiscrepancy", "RndProject", "RndFormulation", "RndTechnologyTransfer", "QcStandardTestProcedure", "QcWorksheetTemplate", "QcSpecification", "QcWorksheetInstance", "QcOosCase", "QcMaterialRetest"];
-const protectedOptions: readonly SelectOption[] = [
+const legacyOptions: readonly SelectOption[] = [
   { value: "ResponseProductFinished", label: "Product ATR · Finished → QA GM" },
   { value: "ResponseMaterial", label: "Material ATR · Raw or Packaging → QA GM" },
   { value: "ResponseProductIntermediateGeneral", label: "Intermediate / Bulk · Tablet, Syrup, Ointment → QA Manager" },
@@ -12,10 +12,13 @@ export const approvalDocuments: readonly SelectOption[] = [
   ...standard.map((value) => ({ value, label: humanize(value) })),
   { value: "ProductionExtraPacking", label: "Production extra material" },
   // Its approver signs the stock requisition voucher as "Checked by".
-  { value: "StockRequisitionIssue", label: "Stock requisition issue check" }, ...protectedOptions,
+  { value: "StockRequisitionIssue", label: "Stock requisition issue check" }, { value: "Response", label: "Test results (Response)" },
 ];
-export const protectedApprovalDocument = (value: string) => protectedOptions.some((option) => option.value === value);
-export const approvalDocumentLabel = (value: string) => approvalDocuments.find((option) => option.value === value)?.label ?? humanize(value);
+export const isLegacyApprovalDocument = (value: string) => legacyOptions.some((option) => option.value === value);
+export const approvalDocumentLabel = (value: string) => {
+  const legacy = legacyOptions.find((option) => option.value === value);
+  return legacy ? `${legacy.label} (legacy)` : approvalDocuments.find((option) => option.value === value)?.label ?? humanize(value);
+};
 export function documentOptions(current?: string): readonly SelectOption[] {
   return current && !approvalDocuments.some((option) => option.value === current) ? [...approvalDocuments, { value: current, label: approvalDocumentLabel(current) }] : approvalDocuments;
 }

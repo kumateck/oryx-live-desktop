@@ -88,7 +88,8 @@ function Detail({ id }: { id: string }) {
     <div className="flex justify-center gap-2"><Button size="sm" variant="outline" onClick={() => void query.refetch()}>Retry</Button><Button asChild size="sm"><Link to={transfersPath}>Stock transfers</Link></Button></div></div>;
   if (!has(viewPermissions[transfer.kind]) && !has(issuePermissions[transfer.kind])) return <NoAccess />;
   const block = batchQuery.error ? `The stock picked for this transfer could not be read: ${apiErrorMessage(batchQuery.error)}` : transferIssueBlock(transfer, batches);
-  const open = transfer.status !== transferStatus.issued && transfer.status !== transferStatus.rejected;
+  const issued = transfer.status === transferStatus.issued;
+  const open = !issued && transfer.status !== transferStatus.rejected;
   return <article className="min-w-0 space-y-4">
     <PageHeader title={`Transfer of ${transfer.materialName}`} crumbs={[{ label: "Stock transfers", to: transfersPath }, { label: transfer.materialName }]}
       actions={open && has(issuePermissions[transfer.kind]) ? <Button type="button" disabled={block !== null} onClick={() => setConfirming(true)}><PackageCheck />Issue stock</Button> : null} />
@@ -102,7 +103,14 @@ function Detail({ id }: { id: string }) {
       <KeyFact label="Approved" value={formatDateTime(transfer.approvedAt) ?? "Not yet"} note={transfer.issuedAt ? `Issued ${formatDateTime(transfer.issuedAt) ?? ""}` : undefined} />
     </KeyFacts>
     {transfer.reason ? <section className="space-y-1 rounded-lg border bg-card p-4"><h2 className="text-sm font-semibold">Reason</h2><RichTextView html={transfer.reason} className="text-sm" /></section> : null}
-    <section className="space-y-2 rounded-lg border bg-card p-4"><h2 className="text-sm font-semibold">Issued from</h2><BatchBreakdown line={{ unit: transfer.unit, batches }} /></section>
+    {transfer.status !== transferStatus.rejected ? <section className="space-y-2 rounded-lg border bg-card p-4">
+      <h2 className="text-sm font-semibold">{issued ? "Issued batches" : "Proposed batches"}</h2>
+      {issued && batchQuery.error ? <div className="flex flex-wrap items-center gap-2 text-sm" role="alert">
+        <p>{apiErrorMessage(batchQuery.error)}</p>
+        <Button type="button" size="sm" variant="outline" onClick={() => void batchQuery.refetch()}>Retry</Button>
+      </div> : issued && batches.length === 0 ? <p className="text-sm text-muted-foreground">Issued batch history is unavailable for this transfer.</p>
+        : <BatchBreakdown line={{ unit: transfer.unit, batches }} />}
+    </section> : null}
     {confirming ? <ConfirmActionDialog require={issuePermissions[transfer.kind]} destructive={false} title={`Issue ${amount(transfer.quantity, transfer.unit)} of ${transfer.materialName}?`}
       description={`The batches shown leave your store for ${transfer.to ?? "the other department"}, where they wait to be put on shelves. This cannot be undone.`} confirmLabel="Issue stock" busyLabel="Issuing…" onClose={() => setConfirming(false)}
       onConfirm={async () => { const result = await issue({ ...audit, stockTransferId: transfer.id, body: batches.flatMap((batch) => batch.id ? [{ batchId: batch.id, quantity: batch.quantity }] : []) });

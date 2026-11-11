@@ -29,7 +29,7 @@ it("issues a transfer only when approved, covered, and not from expired stock", 
 
 const transfer = (id: string, kind: number, status = 1) => ({ id, status, quantity: 10, uoM: { symbol: "kg" }, material: { name: kind ? "Bottle caps" : "Lactose", code: "M-1", kind }, toDepartment: { name: "Beta Production" }, fromDepartment: { name: "General Production" }, createdAt: "2026-10-01T09:00:00Z", reason: "<p>Short for batch 12</p>" });
 interface Call { method: string; path: string; body: unknown; search: string }
-function open(address: string, permissions: string[]) {
+function open(address: string, permissions: string[], issued?: { history: boolean }) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: Call[] = [];
@@ -40,8 +40,11 @@ function open(address: string, permissions: string[]) {
     const text = input.method === "GET" ? "" : await input.clone().text();
     calls.push({ method: input.method, path: url.pathname, body: text ? JSON.parse(text) as unknown : null, search: url.search });
     if (url.pathname.endsWith("/stock-transfer/in-bound") || url.pathname.endsWith("/stock-transfer/out-bound")) return Response.json({ data: [transfer("t1", 0), transfer("t2", 1)], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
-    if (url.pathname.endsWith("/stock-transfer/batch/t1")) return Response.json([{ quantityToTake: 10, batch: { id: "b1", batchNumber: "B-1", expiryDate: "2099-01-01T00:00:00Z" } }]);
-    if (url.pathname.endsWith("/stock-transfer/t1")) return Response.json(transfer("t1", 0));
+    if (url.pathname.endsWith("/stock-transfer/batch/t1")) {
+      if (issued) return Response.json(issued.history ? [{ quantityToTake: 10, batch: { id: "b2", batchNumber: "ISSUED-LOT" } }] : []);
+      return Response.json([{ quantityToTake: 10, batch: { id: "b1", batchNumber: "B-1", expiryDate: "2020-01-01T00:00:00Z", effectiveExpiryDate: "2099-01-01T00:00:00Z", expired: false } }]);
+    }
+    if (url.pathname.endsWith("/stock-transfer/t1")) return Response.json({ ...transfer("t1", 0), ...(issued ? { issuedAt: "2026-10-01T10:00:00Z" } : {}) });
     if (url.pathname === "/api/v1/material/holding") return Response.json({ data: [{ id: "h1", batches: [{ quantity: 5, sourceWarehouse: { name: "Beta raw store" }, materialBatch: { id: "b1", batchNumber: "B-1", uoM: { id: "u", symbol: "kg" }, material: { name: "Lactose" } } }] }], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
     if (url.pathname.includes("/warehouse/rack")) return Response.json([]);
     return new Response(null, { status: 204 });
@@ -77,6 +80,14 @@ it("issues the picked batches after a confirmation, to someone who may issue tha
   expect(writes()[0]).toMatchObject({ method: "PUT", path: "/api/v1/production-schedule/stock-transfer/issue/t1", body: [{ batchId: "b1", quantity: 10 }] });
   await waitFor(() => expect(router.state.location.pathname).toBe("/warehouse/stock-transfer-requests"));
 }, 20_000);
+
+it.each([true, false])("shows issued transfer history or its empty state without an issue action (%s)", async (history) => {
+  const { calls } = open("/warehouse/stock-transfer-requests/t1/details", ["CanIssueRawMaterialStockTransfers"], { history });
+  expect(await screen.findByRole("heading", { name: "Issued batches" })).toBeTruthy();
+  expect(screen.getByText(history ? "ISSUED-LOT" : "Issued batch history is unavailable for this transfer.")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Issue stock" })).toBeNull();
+  expect(calls.every((call) => call.method === "GET")).toBe(true);
+});
 
 it("offers shelving of transferred stock only to those who may assign stock to shelves", async () => {
   open("/warehouse/stock-transfer-requests/allocation", ["CanViewRawMaterialTransferList"]);
