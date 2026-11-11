@@ -22,7 +22,7 @@ const transfer = z.object({ id: z.string().nullish(), createdAt: z.string().null
   material: z.object({ name: text, code: text, kind: z.number().nullish() }).nullish(), fromDepartment: z.object({ name: text }).nullish(), toDepartment: z.object({ name: text }).nullish() });
 function read(entry: z.infer<typeof transfer>) {
   if (!entry.id) return null;
-  return { id: entry.id, createdAt: entry.createdAt ?? null, approvedAt: entry.approvedAt, issuedAt: entry.issuedAt, status: entry.status ?? 0, quantity: entry.quantity, reason: entry.reason, unit: entry.uoM?.symbol ?? null,
+  return { id: entry.id, createdAt: entry.createdAt ?? null, approvedAt: entry.approvedAt, issuedAt: entry.issuedAt, status: entry.issuedAt ? transferStatus.issued : entry.status ?? transferStatus.inProgress, quantity: entry.quantity, reason: entry.reason, unit: entry.uoM?.symbol ?? null,
     materialName: entry.material?.name ?? "Unnamed material", materialCode: entry.material?.code ?? null, kind: (entry.material?.kind === 1 ? 1 : 0) as MaterialKind, from: entry.fromDepartment?.name ?? null, to: entry.toDepartment?.name ?? null };
 }
 /** One department's share of a stock transfer: a quantity of a material moving from one department's store to another's. */
@@ -30,7 +30,7 @@ export const transferSchema = transfer.transform(read);
 export const transferRowsSchema = z.array(transfer).nullish().transform((value) => (value ?? []).flatMap((entry) => { const row = read(entry); return row ? [row] : []; }));
 export type Transfer = z.infer<typeof transferRowsSchema>[number];
 
-/** The batches the server has picked to meet a transfer. */
+/** Proposed batches before issue, recorded batches after issue. */
 export const transferBatchesSchema = z.array(z.object({ warehouseLocationShelf: stockShelfSchema, quantityToTake: amount, batch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, expired: z.boolean().nullish(), isReturn: z.boolean().nullish() }).nullish() })).nullish()
   .transform((value) => (value ?? []).map((item, index) => ({ key: `${item.batch?.id ?? "batch"}-${index}`, id: item.batch?.id ?? null, number: item.batch?.batchNumber ?? null, quantity: item.quantityToTake, expires: item.batch?.effectiveExpiryDate ?? item.batch?.expiryDate ?? null, ...(typeof item.batch?.expired === "boolean" ? { expired: item.batch.expired } : {}), returned: item.batch?.isReturn === true, location: stockShelfLocation(item.warehouseLocationShelf) })));
 export type TransferBatch = z.infer<typeof transferBatchesSchema>[number];
