@@ -4366,6 +4366,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDto = {
   effectiveExpiryDate?: string | null;
   isOpeningBalanceBatch?: boolean;
   stockDepartments?: SharedCollectionItemDto[] | null;
+  migrationGrnNumber?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   id?: string;
@@ -4413,6 +4414,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   effectiveExpiryDate?: string | null;
   isOpeningBalanceBatch?: boolean;
   stockDepartments?: SharedCollectionItemDto[] | null;
+  migrationGrnNumber?: string | null;
 };
 export type DomainEntitiesReportsQaDashboardDto = {
   numberOfBmrRequests?: number;

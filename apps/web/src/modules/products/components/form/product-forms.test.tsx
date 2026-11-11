@@ -12,7 +12,7 @@ import { forgetSession, rememberSession, stubBackend } from "../../../../test/ba
 afterEach(() => { cleanup(); forgetSession(); });
 
 const id = "658da105-a506-44a9-8ff5-8d005a54f294";
-const saved = { id, name: "Wormee", code: "NL-047", division: 1, baseQuantity: 5, fullBatchSize: 1_500_000, price: 12,
+const saved = { id, name: "Wormee", code: "NL-047", batchStem: "LJ", division: 1, baseQuantity: 5, fullBatchSize: 1_500_000, price: 12,
   category: { id: "c1", name: "Syrup" }, department: { id: "d1", name: "Oral liquids" }, equipment: null,
   baseUoM: { id: "u1", name: "Millilitre", symbol: "ml", type: 0 }, description: "<p>Claims</p>" };
 
@@ -50,6 +50,7 @@ function open(address: string) {
 it("suggests the next product code and explains what is missing before anything is sent", async () => {
   const { calls } = open("/production/products/create");
   const code = await screen.findByRole("textbox", { name: /Product code/ });
+  expect(await screen.findByRole("textbox", { name: "Batch stem" })).toHaveProperty("value", "");
   await waitFor(() => expect((code as HTMLInputElement).value).toBe("NL-048"));
   fireEvent.click(screen.getByRole("button", { name: "Create product" }));
   expect(await screen.findByText("Enter the product name")).toBeTruthy();
@@ -69,11 +70,14 @@ it("edits a product's information from its saved values and saves only when aske
   expect(screen.getByRole("link", { name: "Specification" }).getAttribute("href")).toContain("/edit/spec");
   expect(screen.getByRole("status").textContent).toContain("Full batch: 1,500 L");
   fireEvent.change(name, { target: { value: "Wormee 4 Suspension" } });
+  const stem = screen.getByRole("textbox", { name: "Batch stem" });
+  expect(stem).toHaveProperty("value", "LJ");
+  fireEvent.change(stem, { target: { value: " LJK " } });
   fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
   await waitFor(() => expect(calls.some((call) => call.method === "PUT")).toBe(true));
   const body = JSON.parse(calls.find((call) => call.method === "PUT")?.body ?? "{}");
   expect(body).toMatchObject({ name: "Wormee 4 Suspension", code: "NL-047", categoryId: "c1", departmentId: "d1", baseUomId: "u1",
-    division: 1, baseQuantity: 5, fullBatchSize: 1_500_000, equipmentId: null });
+    division: 1, baseQuantity: 5, fullBatchSize: 1_500_000, equipmentId: null, batchStem: "LJK" });
   // The list price is set in Finance → Costing, not here.
   expect(body).not.toHaveProperty("price");
   expect(screen.queryByRole("spinbutton", { name: /^Price/ })).toBeNull();

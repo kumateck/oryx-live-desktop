@@ -2,7 +2,7 @@ import { reportQuantity, reportSheet, type ReportSheet } from "@/shared/reports/
 import { formatMonthYear } from "@/shared/format/dates";
 import type { StockCountReport } from "../schemas/stock-count-report";
 import type { ReportOutput } from "./report-model";
-const widths = ["18%", "12%", "20%", "22%", "8%", "9%", "11%"];
+const widths = ["8%", "17%", "8%", "9%", "9%", "7%", "7%", "13%", "13%", "9%"];
 const value = (text: string | null | undefined) => text || "–";
 const month = (text: string | null | undefined) => formatMonthYear(text) ?? "–";
 export function stockCountOutput(report: StockCountReport): ReportOutput {
@@ -20,12 +20,16 @@ export function stockCountOutput(report: StockCountReport): ReportOutput {
   if (!groups.size) groups.set(report.departmentId ?? "unassigned", { name: report.departmentName || "All departments", rows: [] });
   const sheets: ReportSheet[] = [...groups].map(([id, group]) => {
     const sheet = reportSheet(`${report.expiredOnly ? "Expired stock" : "Current stock"} · ${group.name}`, group.rows, [
-      { label: "Material", read: (row) => `${value(row.materialName)}\n${value(row.materialCode)}` },
-      { label: "Batch", read: (row) => `${value(row.batchNumber)}\nAR: ${value(row.arNumber)}` },
-      { label: "Source", read: (row) => `${value(row.manufacturerName)}\n${value(row.supplierName)}` },
-      { label: "Dates", read: (row) => `Mfg: ${month(row.manufacturingDate)}\nExp: ${month(row.expiryDate)} – Retest: ${month(row.retestDate)}` },
+      { label: "Item Code", read: (row) => value(row.materialCode) },
+      { label: "Material", read: (row) => value(row.materialName) },
+      { label: "GRN No", read: (row) => value(row.grnNumber) },
+      { label: "Batch", read: (row) => value(row.batchNumber) },
+      { label: "AR Number", read: (row) => value(row.arNumber) },
+      { label: "MFG", read: (row) => month(row.manufacturingDate) },
+      { label: "EXP", read: (row) => month(row.expiryDate) },
+      { label: "Manufacturer", read: (row) => value(row.manufacturerName) },
+      { label: "Supplier", read: (row) => value(row.supplierName) },
       { label: "Quantity", read: (row) => reportQuantity(row.quantity, row.uoM) },
-      { label: "Physical count", read: () => "" }, { label: "Remarks", read: () => "" },
     ]);
     return { ...sheet, id, printColumns: sheet.columns.map((label, column) => ({ label, fields: [{ column }], width: widths[column] ?? "" })),
       printLayout: { orientation: "landscape", rowHeightMm: 14, signatures: ["Counted by", "Count date", "Checked by"] } };
@@ -33,5 +37,5 @@ export function stockCountOutput(report: StockCountReport): ReportOutput {
   return { sheets, generatedAt: report.generatedAt, filters: [
     { label: "Department", value: report.departmentName || (report.departmentId ? "Assigned department" : "All departments") },
     { label: "Material kind", value: report.materialKind === 0 ? "Raw material" : report.materialKind === 1 ? "Packaging material" : "All" },
-  ], warnings: ["Source: manufacturer above supplier. Dates: manufacture above expiry and retest. Record the physical count in the quantity's unit; use Remarks for differences."] };
+  ] };
 }

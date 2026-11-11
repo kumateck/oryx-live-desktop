@@ -6469,6 +6469,7 @@ export type DomainEntitiesProductsProduct = {
   verifiedById?: string | null;
   documentNumber?: string | null;
   revisionNumber?: number;
+  batchStem?: string | null;
 };
 export type DomainEntitiesProductsProductRead = {
   id?: string;
@@ -6521,6 +6522,7 @@ export type DomainEntitiesProductsProductRead = {
   verifiedById?: string | null;
   documentNumber?: string | null;
   revisionNumber?: number;
+  batchStem?: string | null;
 };
 export type DomainEntitiesProductionSchedulesBatchSize = 0 | 1;
 export type DomainEntitiesBaseTermsOfPayment = {
