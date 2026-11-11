@@ -85,7 +85,7 @@ export const governanceApi = api.enhanceEndpoints({ addTagTypes: ["FormulaRevisi
     }),
     approveFormulaRevision: build.mutation<FormulaRevision, Transition>({
       query: ({ revisionId, body, questionId: _questionId, ...audit }) => ({ url: `/api/v1/formula-definitions/revisions/${revisionId}/approve`, method: "POST", body, headers: headers(audit) }),
-      transformResponse: parsed(formulaRevisionSchema), invalidatesTags: (_result, error, arg) => error ? [] : [revisionsTag(arg.questionId), "FormulaQueues"],
+      transformResponse: parsed(formulaRevisionSchema), invalidatesTags: (_result, error, arg) => error ? [] : [revisionsTag(arg.questionId), "FormulaQueues", { type: "form/question", id: "LIST" }],
     }),
     // Reviewers and approvers read revisions and queues through their own permissions, not the question editor's.
     getFormulaReviewRevisions: build.query<FormulaRevision[], Audit & { questionId: string }>({
