@@ -2656,6 +2656,7 @@ export type DomainEntitiesProductsProductListDto = {
   isVerified?: boolean;
   documentNumber?: string | null;
   revisionNumber?: number;
+  batchStem?: string | null;
 };
 export type DomainEntitiesProductionSchedulesBatchSize = 0 | 1;
 export type DomainEntitiesBaseTermsOfPaymentDto = {
@@ -3799,6 +3800,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDto = {
   effectiveExpiryDate?: string | null;
   isOpeningBalanceBatch?: boolean;
   stockDepartments?: SharedCollectionItemDto[] | null;
+  migrationGrnNumber?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   id?: string;
@@ -3846,6 +3848,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   effectiveExpiryDate?: string | null;
   isOpeningBalanceBatch?: boolean;
   stockDepartments?: SharedCollectionItemDto[] | null;
+  migrationGrnNumber?: string | null;
 };
 export type DomainEntitiesWarehousesWarehouseArrivalLocationDto = {
   id?: string;

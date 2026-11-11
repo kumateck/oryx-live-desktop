@@ -3403,6 +3403,7 @@ export type DomainEntitiesProductsProductListDto = {
   isVerified?: boolean;
   documentNumber?: string | null;
   revisionNumber?: number;
+  batchStem?: string | null;
 };
 export type DomainEntitiesProductionOrdersProductionOrderProductQuantityDto = {
   quantity?: number;

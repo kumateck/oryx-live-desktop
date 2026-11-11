@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { useController, useFormContext, type FieldValues } from "react-hook-form";
 import { ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
+import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,7 +30,7 @@ interface OptionsProps extends SelectionProps {
 function MultiSelectOptions({ field, selected, onChange, open, search }: OptionsProps) {
   if (field.source === "async") return <AsyncOptions field={field} selected={selected} onChange={onChange} open={open} search={search} />;
   const options = field.options.filter((option) => option.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
-  return <OptionList options={options} selected={selected} onChange={onChange} />;
+  return <OptionList options={options} selected={selected} onChange={onChange} wrapLabels={field.wrapSelectedLabels} />;
 }
 
 function AsyncOptions({ field, selected, onChange, open, search }: OptionsProps & { field: MultiSelectField<FieldValues> & { source: "async" } }) {
@@ -43,15 +44,16 @@ function AsyncOptions({ field, selected, onChange, open, search }: OptionsProps 
     {result.error ? <div className="flex items-center justify-between gap-2 px-2 py-2 text-destructive">Could not load options
       <Button type="button" size="xs" variant="ghost" onClick={() => setRevision((value) => value + 1)}>Retry</Button>
     </div> : result.loading && !result.stale ? null
-      : <div className={result.stale ? "opacity-60" : undefined} aria-busy={result.loading}><OptionList options={result.options} selected={selected} onChange={onChange} /></div>}
+      : <div className={result.stale ? "opacity-60" : undefined} aria-busy={result.loading}><OptionList options={result.options} selected={selected} onChange={onChange} wrapLabels={field.wrapSelectedLabels} /></div>}
     <OptionPager page={page} hasPrevious={result.hasPrevious} hasNext={result.hasNext} loading={result.loading} onPageChange={setPage} />
   </>;
 }
 
-function OptionList({ options, selected, onChange }: {
+function OptionList({ options, selected, onChange, wrapLabels }: {
   options: readonly SelectOption[];
   selected: readonly SelectOption[];
   onChange: (options: readonly SelectOption[]) => void;
+  wrapLabels?: boolean | undefined;
 }) {
   const enabled = options.filter((option) => !option.disabled);
   const selectedValues = new Set(selected.map((option) => option.value));
@@ -65,8 +67,8 @@ function OptionList({ options, selected, onChange }: {
     {allSelected ? "Unselect All" : "Select All"}</Button></div>
     <div className="max-h-56 overflow-y-auto" role="group" aria-label="Options">
       {options.length ? options.map((option) => <label key={option.value} className="flex min-h-8 cursor-pointer items-center gap-2 rounded-md px-2 hover:bg-accent has-disabled:cursor-not-allowed has-disabled:opacity-50">
-        <Checkbox checked={selectedValues.has(option.value)} onCheckedChange={() => toggle(option)} disabled={option.disabled ?? false} />
-        <span className="truncate">{option.label}</span>
+        <Checkbox className="shrink-0" checked={selectedValues.has(option.value)} onCheckedChange={() => toggle(option)} disabled={option.disabled ?? false} />
+        <span className={wrapLabels ? "min-w-0 py-1 wrap-anywhere" : "truncate"}>{option.label}</span>
       </label>) : <p className="px-2 py-3 text-muted-foreground">No records found</p>}
     </div></>;
 }
@@ -79,25 +81,29 @@ export default function MultiSelectInputField({ field }: { field: MultiSelectFie
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const { triggerRef, measureRef, visibleCount } = useVisibleSelectLabels(selected);
-  const hidden = selected.length - visibleCount;
+  const wrap = field.wrapSelectedLabels === true;
+  const shown = wrap ? selected : selected.slice(0, visibleCount);
+  const hidden = selected.length - shown.length;
   const error = fieldState.error?.message;
   const change = (options: readonly SelectOption[]) => control.onChange(options);
   return <FieldFrame id={id} label={field.label} description={field.description} required={field.required} error={error} className={field.className}>
     <Popover open={open} onOpenChange={(next) => { setOpen(next); if (!next) control.onBlur(); }}>
-      <InputGroup data-disabled={field.disabled} className="min-w-0">
+      <InputGroup data-disabled={field.disabled} className={wrap ? "h-auto min-h-8" : "min-w-0"}>
         <PopoverTrigger asChild><button id={id} ref={triggerRef} type="button" disabled={field.disabled} aria-invalid={Boolean(error)}
           aria-describedby={fieldDescription(id, field.description, error)}
-          className="flex h-full min-w-0 flex-1 items-center gap-1 overflow-hidden pl-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
-          {selected.length ? <>{selected.slice(0, visibleCount).map((option) => <Badge key={option.value} variant="secondary" className="max-w-36 shrink-0 truncate">{option.label}</Badge>)}
+          className={cn("flex min-w-0 flex-1 items-center gap-1 pl-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+            wrap ? "min-h-8 flex-wrap py-1" : "h-full overflow-hidden")}>
+          {selected.length ? <>{shown.map((option) => <Badge key={option.value} variant="secondary"
+            className={wrap ? "h-auto min-h-5 max-w-full whitespace-normal wrap-anywhere" : "max-w-36 shrink-0 truncate"}>{option.label}</Badge>)}
             {hidden > 0 ? <Badge variant="secondary" className="shrink-0">+{hidden}</Badge> : null}</>
             : <span className="truncate text-muted-foreground">{field.placeholder ?? "Select options"}</span>}
         </button></PopoverTrigger>
         {selected.length ? <InputGroupAddon align="inline-end"><InputGroupButton size="icon-xs" aria-label={`Clear ${field.label}`} disabled={field.disabled}
           onClick={() => change([])}><XIcon /></InputGroupButton></InputGroupAddon> : null}
         <InputGroupAddon align="inline-end" className="pl-0"><ChevronDownIcon aria-hidden="true" /></InputGroupAddon>
-        <div ref={measureRef} className="pointer-events-none invisible absolute flex gap-1 whitespace-nowrap" aria-hidden="true">
+        {!wrap ? <div ref={measureRef} className="pointer-events-none invisible absolute flex gap-1 whitespace-nowrap" aria-hidden="true">
           {selected.map((option) => <Badge key={option.value} variant="secondary" className="max-w-36 shrink-0 truncate">{option.label}</Badge>)}
-        </div>
+        </div> : null}
       </InputGroup>
       <PopoverContent align="start" className="w-(--radix-popover-trigger-width) min-w-56 gap-2 p-2">
         <div className="relative"><SearchIcon className="pointer-events-none absolute left-2 top-2.5 size-4 text-muted-foreground" />

@@ -117406,6 +117406,107 @@
           }
         }
       }
+    },
+    "/api/v1/material/batch/{batchId}/migration-details": {
+      "put": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "Corrects the manufacture date, expiry date, and receipt reference of approved opening stock.",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.UpdateMigrationBatchDetails"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.UpdateMigrationBatchDetails"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.UpdateMigrationBatchDetails"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -140982,6 +141083,10 @@
               "$ref": "#/components/schemas/SHARED.CollectionItemDto"
             },
             "nullable": true
+          },
+          "migrationGrnNumber": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -149737,6 +149842,12 @@
           "revisionNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "batchStem": {
+            "maxLength": 99,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -150603,6 +150714,12 @@
           "revisionNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "batchStem": {
+            "maxLength": 99,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -150926,6 +151043,10 @@
           },
           "createdBy": {
             "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          },
+          "batchStem": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -151047,6 +151168,10 @@
           "revisionNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "batchStem": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -152908,6 +153033,12 @@
           "revisionNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "batchStem": {
+            "maxLength": 99,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -179336,6 +179467,10 @@
           "uoM": {
             "type": "string",
             "nullable": true
+          },
+          "grnNumber": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -180861,6 +180996,56 @@
           "alreadyLinked": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.Batch.UpdateMigrationBatchDetails": {
+        "required": [
+          "manufacturingDate",
+          "expiryDate",
+          "grnNumber",
+          "expectedManufacturingDate",
+          "expectedExpiryDate",
+          "expectedGrnNumber",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "manufacturingDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expiryDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "grnNumber": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "expectedManufacturingDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expectedExpiryDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expectedGrnNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "type": "string"
           }
         },
         "additionalProperties": false

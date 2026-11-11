@@ -4,7 +4,7 @@ import { toLargestUnit } from "@/shared/units/quantity";
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const amount = z.number().nullish().transform((value) => typeof value === "number" && Number.isFinite(value) ? value : 0);
-const product = z.object({ id: z.string().nullish(), code: text, name: text, department: z.object({ name: text }).nullish(), baseUoM: z.object({ symbol: text }).nullish() }).nullish();
+const product = z.object({ id: z.string().nullish(), code: text, name: text, batchStem: text, department: z.object({ name: text }).nullish(), baseUoM: z.object({ symbol: text }).nullish() }).nullish();
 
 /** A batch manufacturing record production has asked QA to issue. Issued once the server records an issue date. */
 export const bmrSchema = z.object({
@@ -17,6 +17,7 @@ export const bmrSchema = z.object({
   quantity: item.batchQuantity, unit: item.productionScheduleProduct?.product?.baseUoM?.symbol ?? null, issuedAt: item.issuedDate ?? null,
   scheduleProductId: item.productionScheduleProduct?.id ?? null, schedule: item.productionScheduleProduct?.productionSchedule?.code ?? null,
   productCode: item.productionScheduleProduct?.product?.code ?? null, productName: item.productionScheduleProduct?.product?.name ?? null,
+  batchStem: item.productionScheduleProduct?.product?.batchStem ?? null,
   department: item.productionScheduleProduct?.product?.department?.name ?? null,
   packingId: item.productionScheduleProduct?.productPacking?.id ?? null, packing: item.productionScheduleProduct?.productPacking?.name ?? null,
 }));

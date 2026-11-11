@@ -1234,6 +1234,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    putApiV1MaterialBatchByBatchIdMigrationDetails: build.mutation<
+      PutApiV1MaterialBatchByBatchIdMigrationDetailsApiResponse,
+      PutApiV1MaterialBatchByBatchIdMigrationDetailsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material/batch", id: "LIST" }, { type: "material", id: "LIST" }, { type: "material/batch", id: queryArg.batchId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/material/batch/${queryArg.batchId}/migration-details`,
+        method: "PUT",
+        body: queryArg.domainEntitiesMaterialsBatchUpdateMigrationBatchDetails,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2105,6 +2120,15 @@ export type CreateStockMigrationMaterialLinksApiArg = {
   subModule?: string;
   domainEntitiesMaterialsStockMigrationsCreateStockMigrationMaterialLinksRequest: DomainEntitiesMaterialsStockMigrationsCreateStockMigrationMaterialLinksRequest;
 };
+export type PutApiV1MaterialBatchByBatchIdMigrationDetailsApiResponse = void;
+export type PutApiV1MaterialBatchByBatchIdMigrationDetailsApiArg = {
+  batchId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsBatchUpdateMigrationBatchDetails: DomainEntitiesMaterialsBatchUpdateMigrationBatchDetails;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -2819,6 +2843,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDto = {
   effectiveExpiryDate?: string | null;
   isOpeningBalanceBatch?: boolean;
   stockDepartments?: SharedCollectionItemDto[] | null;
+  migrationGrnNumber?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   id?: string;
@@ -2866,6 +2891,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchDtoRead = {
   effectiveExpiryDate?: string | null;
   isOpeningBalanceBatch?: boolean;
   stockDepartments?: SharedCollectionItemDto[] | null;
+  migrationGrnNumber?: string | null;
 };
 export type DomainEntitiesMaterialsBatchCreateSrRequest = {
   srNumber?: string | null;
@@ -3410,6 +3436,7 @@ export type DomainEntitiesMaterialsBatchMaterialStockReportRow = {
   retestDate?: string | null;
   quantity?: number;
   uoM?: string | null;
+  grnNumber?: string | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialStockReportDto = {
   generatedAt?: string;
@@ -3567,6 +3594,15 @@ export type DomainEntitiesMaterialsStockMigrationsCreateStockMigrationMaterialLi
   {
     materials: DomainEntitiesMaterialsStockMigrationsStockMigrationMaterialLinkDto[];
   };
+export type DomainEntitiesMaterialsBatchUpdateMigrationBatchDetails = {
+  manufacturingDate: string | null;
+  expiryDate: string | null;
+  grnNumber: string | null;
+  expectedManufacturingDate: string | null;
+  expectedExpiryDate: string | null;
+  expectedGrnNumber: string | null;
+  reason: string;
+};
 export const {
   usePostApiV1BomMutation,
   usePutApiV1BomByBillOfMaterialIdMutation,
@@ -3690,4 +3726,5 @@ export const {
   usePreviewStockMigrationMaterialLinksQuery,
   useLazyPreviewStockMigrationMaterialLinksQuery,
   useCreateStockMigrationMaterialLinksMutation,
+  usePutApiV1MaterialBatchByBatchIdMigrationDetailsMutation,
 } = injectedRtkApi;

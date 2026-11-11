@@ -22,7 +22,7 @@ function useSuggestedBatchNumber(bmr: Bmr | null) {
   const [loadCount] = settingsApi.useLazyGetApiV1ConfigurationByModelTypeCountQuery();
   const [suggestion, setSuggestion] = useState<{ value: string | null; note: string | null } | null>(null);
   useEffect(() => {
-    if (!bmr || bmr.issuedAt || bmr.batchNumber) { setSuggestion({ value: bmr?.batchNumber ?? null, note: null }); return; }
+    if (!bmr || bmr.issuedAt || bmr.batchStem || bmr.batchNumber) { setSuggestion({ value: bmr?.batchNumber ?? null, note: null }); return; }
     const year = new Date().getFullYear();
     const code = bmr.productCode ?? "";
     const prefix = batchPrefix(code, year);
@@ -50,7 +50,7 @@ export function useIssueBmr(id: string) {
   const [update, updating] = usePutApiV1ProductionScheduleManufacturingByIdMutation();
   const [issue, issuing] = usePutApiV1ProductionScheduleManufacturingIssueByIdMutation();
   const permission = usePermissionAction(issueBmrPermissions.issue);
-  const [saved, setSaved] = useState(false);
+  const [savedDetails, setSavedDetails] = useState("");
   const [message, setMessage] = useState("");
 
   /** Saves the details, then issues. If the details save but the issue fails, a retry only repeats the issue. */
@@ -60,12 +60,13 @@ export function useIssueBmr(id: string) {
     if (!bmr || !values.made || !values.expires || !values.unit) return "Complete the batch details first.";
     if (bmr.issuedAt) return "This record has already been issued.";
     setMessage("");
-    if (!saved) {
-      const body = { batchNumber: values.batchNumber.trim(), manufacturingDate: monthStartIso(values.made), expiryDate: monthEndIso(values.expires),
-        batchQuantity: toSmallestUnit(values.quantity, values.unit.value), productPackingId: bmr.packingId };
+    const body = { batchNumber: values.batchNumber.trim(), manufacturingDate: monthStartIso(values.made), expiryDate: monthEndIso(values.expires),
+      batchQuantity: toSmallestUnit(values.quantity, values.unit.value), productPackingId: bmr.packingId };
+    const details = JSON.stringify(body);
+    if (details !== savedDetails) {
       const result = await update({ ...issueBmrAudit, id: bmr.id, domainEntitiesProductsProductionUpdateBatchManufacturingRecord: body });
       if ("error" in result) return apiErrorMessage(result.error);
-      setSaved(true);
+      setSavedDetails(details);
     }
     const again = permission.check();
     if (again) return again;
@@ -77,7 +78,7 @@ export function useIssueBmr(id: string) {
 
   const materialsError = (result: typeof rawRows, error: typeof raw.error) => error ? apiErrorMessage(error) : result.success ? null : "The server returned materials the app could not read.";
   return {
-    query, bmr, suggestion, submit, saving: updating.isLoading || issuing.isLoading, saved, message,
+    query, bmr, suggestion, submit, saving: updating.isLoading || issuing.isLoading, saved: Boolean(savedDetails), message,
     raw: { rows: rawRows.success ? rawRows.data : [], loading: raw.isLoading || !scheduleProductId && query.isLoading, error: materialsError(rawRows, raw.error), retry: () => void raw.refetch() },
     packaging: { rows: packagingRows.success ? packagingRows.data : [], loading: packaging.isLoading, error: materialsError(packagingRows, packaging.error), retry: () => void packaging.refetch() },
   };

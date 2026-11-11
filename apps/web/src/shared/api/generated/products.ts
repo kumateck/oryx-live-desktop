@@ -823,6 +823,7 @@ export type DomainEntitiesProductsCreateProductRequest = {
   expectedYield?: number;
   documentNumber?: string | null;
   revisionNumber?: number;
+  batchStem?: string | null;
 };
 export type SharedCollectionItemDto = {
   id?: string | null;
@@ -914,6 +915,7 @@ export type DomainEntitiesProductsProductListDto = {
   isVerified?: boolean;
   documentNumber?: string | null;
   revisionNumber?: number;
+  batchStem?: string | null;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesProductsProductListDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -1293,6 +1295,7 @@ export type DomainEntitiesProductsProductDto = {
   routes?: DomainEntitiesRoutesRouteDto[] | null;
   packings?: DomainEntitiesProductsProductPackingDto[] | null;
   createdBy?: SharedCollectionItemDto;
+  batchStem?: string | null;
 };
 export type DomainEntitiesProductsProductDtoRead = {
   id?: string;
@@ -1333,6 +1336,7 @@ export type DomainEntitiesProductsProductDtoRead = {
   routes?: DomainEntitiesRoutesRouteDtoRead[] | null;
   packings?: DomainEntitiesProductsProductPackingDto[] | null;
   createdBy?: SharedCollectionItemDto;
+  batchStem?: string | null;
 };
 export type DomainEntitiesProductsUpdateProductRequest = {
   code?: string | null;
@@ -1366,6 +1370,7 @@ export type DomainEntitiesProductsUpdateProductRequest = {
   expectedYield?: number;
   documentNumber?: string | null;
   revisionNumber?: number;
+  batchStem?: string | null;
 };
 export type DomainEntitiesMaterialsMaterialCategory = {
   id?: string;
@@ -4808,6 +4813,7 @@ export type DomainEntitiesProductsProduct = {
   verifiedById?: string | null;
   documentNumber?: string | null;
   revisionNumber?: number;
+  batchStem?: string | null;
 };
 export type DomainEntitiesProductsProductRead = {
   id?: string;
@@ -4860,6 +4866,7 @@ export type DomainEntitiesProductsProductRead = {
   verifiedById?: string | null;
   documentNumber?: string | null;
   revisionNumber?: number;
+  batchStem?: string | null;
 };
 export type DomainEntitiesProductionSchedulesBatchSize = 0 | 1;
 export type DomainEntitiesBaseTermsOfPayment = {

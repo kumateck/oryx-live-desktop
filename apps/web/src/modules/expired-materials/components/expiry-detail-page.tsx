@@ -1,3 +1,4 @@
+import { MigrationBatchDetailsDialog, migrationBatchDetailsPermission } from "./migration-batch-details-dialog";
 import { BatchStockLocations } from "./batch-stock-locations";
 import { StockBatchLocation } from "@/shared/warehouse/stock-batch-location";
 import { stockShelfLocation } from "@/shared/warehouse/stock-location";
@@ -21,6 +22,7 @@ export function ExpiryDetailPage() {
   const label = aboutToExpire ? "Expiring materials" : "Expired materials";
   const root = aboutToExpire ? "/warehouse/about-to-expire-materials" : "/warehouse/expired-materials";
   const query = materialsApi.useGetApiV1MaterialBatchByBatchIdQuery({ batchId: id, module: "Warehouse", subModule: "Expired Materials" });
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [request, setRequest] = useState(false);
   const [correction, setCorrection] = useState<MigrationCorrectionMode | null>(null);
   return <article className="min-w-0 space-y-4"><PageHeader title="Material batch expiry" crumbs={[{ label, to: root }, { label: "Batch" }]} />
@@ -38,7 +40,7 @@ export function ExpiryDetailPage() {
               .map((allocation) => `Reserved · ${allocation.warehouse?.name ?? "Warehouse not recorded"}`),
           ]} />
         </>} />
-        <DetailItem label="AR number" value={record.arNumber} />
+        <DetailItem label="AR number" value={record.arNumber} />{record.isOpeningBalanceBatch ? <DetailItem label="GRN No" value={record.migrationGrnNumber} /> : null}
         <DetailItem label="Manufactured" value={formatMonthYear(record.manufacturingDate)} />
         <DetailItem label="Expiry" value={formatMonthYear(record.expiryDate)} />
         <DetailItem label="Retest date" value={formatMonthYear(record.retestDate)} />
@@ -50,10 +52,14 @@ export function ExpiryDetailPage() {
         <Button variant="outline" onClick={() => setCorrection("retest")}>Update migration retest date</Button>
         <Button variant="outline" onClick={() => setCorrection("ar-number")}>Update migration AR number</Button>
         <Button variant="outline" onClick={() => setCorrection("batch-number")}>Update migration batch number</Button>
-      </PermissionGuard> : null}{!record.retestDate && (record.status === 3 || record.status === 4 || record.status === 8) ? <PermissionGuard require={retestPermissions.request}><Button onClick={() => setRequest(true)}>Request governed retest</Button></PermissionGuard> : null}
+      </PermissionGuard> : null}
+        {record.isOpeningBalanceBatch && record.status === 3 ? <PermissionGuard require={migrationBatchDetailsPermission}>
+          <Button variant="outline" onClick={() => setDetailsOpen(true)}>Correct migrated batch details</Button>
+        </PermissionGuard> : null}{!record.retestDate && (record.status === 3 || record.status === 4 || record.status === 8) ? <PermissionGuard require={retestPermissions.request}><Button onClick={() => setRequest(true)}>Request governed retest</Button></PermissionGuard> : null}
         <PermissionGuard require={retestPermissions.view}><Button asChild variant="outline"><Link to={`/qc/material-retests?batchId=${encodeURIComponent(id)}`}>View batch retests</Link></Button></PermissionGuard></div>
       {record.retestDate ? <p className="text-muted-foreground">Expiry applies while active. After expiry, an active retest date extends raw-material usability. Quality and stock restrictions still apply.</p> : null}
       {correction ? <MigrationRetestDialog record={record} mode={correction} onClose={() => setCorrection(null)} onDone={() => { setCorrection(null); void query.refetch(); }} /> : null}
+      {detailsOpen ? <MigrationBatchDetailsDialog record={record} onClose={() => setDetailsOpen(false)} onDone={() => { setDetailsOpen(false); void query.refetch(); }} /> : null}
       {request ? <RequestMaterialRetestDialog batchId={id} onClose={() => { setRequest(false); void query.refetch(); }} /> : null}
     </>}</RecordState>
   </article>;
