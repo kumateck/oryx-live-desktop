@@ -104,7 +104,7 @@ interface AsyncSelect {
 
 export type SelectField<TValues extends FieldValues> =
   (SelectBase<TValues, FieldPathByValue<TValues, SelectOption | null | undefined>> & { mode: "single" } & (SyncSelect | AsyncSelect))
-  | (SelectBase<TValues, FieldPathByValue<TValues, readonly SelectOption[] | undefined>> & { mode: "multiple" } & (SyncSelect | AsyncSelect));
+  | (SelectBase<TValues, FieldPathByValue<TValues, readonly SelectOption[] | undefined>> & { mode: "multiple"; wrapSelectedLabels?: boolean } & (SyncSelect | AsyncSelect));
 
 export type SingleSelectField<TValues extends FieldValues> = Extract<SelectField<TValues>, { mode: "single" }>;
 export type MultiSelectField<TValues extends FieldValues> = Extract<SelectField<TValues>, { mode: "multiple" }>;

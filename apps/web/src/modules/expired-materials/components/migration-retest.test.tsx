@@ -48,6 +48,23 @@ it("hides migration corrections without their separate permission", async () => 
   expect(screen.queryByRole("button", { name: "Update migration retest date" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Update migration AR number" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Update migration batch number" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Correct migrated batch details" })).toBeNull();
+});
+
+it("saves the original GRN reference while preserving exact unchanged batch dates", async () => {
+  const user = userEvent.setup();
+  const writes = open(["CanViewExpiredMaterials", "CanUpdateMigrationBatchDetails"]);
+  await user.click(await screen.findByRole("button", { name: "Correct migrated batch details" }));
+  expect((await screen.findByRole("button", { name: "Expiry date" })).textContent).toContain("January 2026");
+  await user.type(await screen.findByLabelText(/GRN number/), "GRN-MIG-42");
+  await user.type(screen.getByLabelText(/Correction reason/), "Verified from the original receipt");
+  await user.click(screen.getByRole("button", { name: "Save changes" }));
+  await waitFor(() => expect(writes).toHaveLength(1));
+  expect(JSON.parse(writes[0] ?? "{}")).toEqual({
+    manufacturingDate: null, expiryDate: "2026-01-01T00:00:00Z", grnNumber: "GRN-MIG-42",
+    expectedManufacturingDate: null, expectedExpiryDate: "2026-01-01T00:00:00Z", expectedGrnNumber: null,
+    reason: "Verified from the original receipt",
+  });
 });
 
 it("requires a reason, sends expected dates and preserves the correction after a stale-record refusal", async () => {

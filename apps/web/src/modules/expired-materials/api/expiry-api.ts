@@ -6,6 +6,11 @@ export const expiryApi = materialsApi.enhanceEndpoints({
     getApiV1MaterialBatchByBatchId: (definition) => {
       definition.providesTags = addTags(definition.providesTags, [{ type: "StockOnShelves", id: "all" }]);
     },
+    putApiV1MaterialBatchByBatchIdMigrationDetails: (definition) => {
+      definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [
+        "StockOnShelves", "Requisition", "RequisitionList", "SwapRequests",
+      ]);
+    },
     putApiV1MaterialBatchByBatchIdMigrationRetestDate: (definition) => {
       definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [
         "StockOnShelves", "Requisition", "RequisitionList", "SwapRequests",

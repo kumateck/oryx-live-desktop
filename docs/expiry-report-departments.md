@@ -43,19 +43,28 @@ positions are excluded. Quantities with different unit IDs remain separate rows;
 there is no unsafe addition across units. The expired report uses existing
 effective-validity rules while preserving original expiry and retest dates.
 
-Both reports use **Material | Batch | Source | Dates | Quantity | Physical count |
-Remarks**. Related values stack as requested: name/code; batch/AR; manufacturer/
-supplier; manufacture above expiry–retest. The last two columns stay blank for
-handwriting. A4 landscape print includes the full snapshot, repeated department
-and column headers, unsplit rows with at least 14mm writing space, and count/check
-signature lines. Long names wrap rather than being truncated. Screen pagination
-does not limit print/export. Printing does not post inventory adjustments.
+Both reports use the same columns in preview, print and export.
+
+**Item Code | Material | GRN No | Batch | AR Number | MFG | EXP | Manufacturer | Supplier | Quantity**
+
+Item Code is the material code. GRN No comes from the receipt or the reference
+recorded against migrated stock. A4 landscape print includes the full snapshot,
+repeated headers, unsplit rows and count/check signature lines. Screen pagination
+does not limit print or export.
 
 The additive `GET /api/v1/material/batches/stock-report` and its typed read models
 are imported by the same scoped importer. Existing reports and historical queries
 keep their contracts. The exact reviewed source contract is
 `f38dceee6e53dc16783197bce0ceb9d36b902f2d1d0b5185a77a1698adec5e9f`;
 previous compatibility approvals are retained. Deploy the companion backend first.
+
+## Correcting a migrated batch
+
+On the batch expiry detail, choose **Correct migrated batch details**. Enter the
+manufacturing and expiry months, GRN reference and a reason for the correction.
+The action requires `CanUpdateMigrationBatchDetails`. The server checks the
+original values before saving and records the correction in the batch audit.
+Deploy the backend with `AddMigrationBatchDetailsCorrections` before this UI.
 
 ## Schedule batch search
 
