@@ -78,6 +78,14 @@ function stripMigrationBatchDetails(document: ObjectValue) {
   delete object(object(schemas["DOMAIN.Entities.Materials.Batch.MaterialStockReportRow"] ?? null).properties ?? null).grnNumber;
 }
 
+const worksheetFields = ["worksheetResponseId", "worksheetFormId"] as const;
+const worksheetSchema = "DOMAIN.Entities.MaterialARD.MaterialBatchArd";
+
+function stripWorksheetFields(schemas: ObjectValue) {
+  const properties = object(object(schemas[worksheetSchema] ?? null).properties ?? null);
+  for (const field of worksheetFields) delete properties[field];
+}
+
 function stripProductBatchStem(schemas: ObjectValue) {
   for (const dto of ["Product", "ProductDto", "ProductListDto", "CreateProductRequest", "UpdateProductRequest"])
     delete object(object(schemas[`DOMAIN.Entities.Products.${dto}`] ?? null).properties ?? null).batchStem;
@@ -90,8 +98,26 @@ function stripMigrationMaterialLinks(document: ObjectValue) {
     delete schemas[`DOMAIN.Entities.Materials.StockMigrations.${name}`];
 }
 
+test("material worksheet details add only two optional response identifiers", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  const schema = object(schemas[worksheetSchema] ?? null);
+  const properties = object(schema.properties ?? null);
+  for (const field of worksheetFields) {
+    assert.deepEqual(properties[field], { type: "string", format: "uuid", nullable: true });
+    assert.ok(!Array.isArray(schema.required) || !schema.required.includes(field));
+  }
+  const digest = contractDigest(current);
+  assert.equal(digest, "607760d98226801bff574edf1f8009307a230d2237f85a9126c8043e3af5511f");
+  checkCompatibility(hostConfig, policy, digest);
+  stripWorksheetFields(schemas);
+  assert.equal(contractDigest(current), "7fbbda4c84600f4344f97f286f092d2635854986928fac39f61bf9376e75a2cc");
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+});
+
 test("draft material linking adds only typed preview/create operations and preserves the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripWorksheetFields(object(object(current.components ?? null).schemas ?? null));
   stripProductBatchStem(object(object(current.components ?? null).schemas ?? null));
   stripMigrationBatchDetails(current);
   stripBomDensityConversion(object(object(current.components ?? null).schemas ?? null));
@@ -108,6 +134,7 @@ test("draft material linking adds only typed preview/create operations and prese
 
 test("stock picking adds only seven optional read fields and preserves the approved contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripWorksheetFields(object(object(current.components ?? null).schemas ?? null));
   stripProductBatchStem(object(object(current.components ?? null).schemas ?? null));
   stripMigrationBatchDetails(current);
   stripMigrationMaterialLinks(current);
@@ -140,6 +167,7 @@ test("the preserved customer export matches the reported digest and retains both
 
 test("BOM density conversion is an optional additive marker on the request and saved item", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripWorksheetFields(object(object(current.components ?? null).schemas ?? null));
   stripProductBatchStem(object(object(current.components ?? null).schemas ?? null));
   stripMigrationBatchDetails(current);
   const digest = contractDigest(current);
@@ -240,6 +268,7 @@ test("historical reporting adds optional read parameters without changing existi
     "/api/v1/white-placebo/{id}", "/api/v1/white-placebo/{id}/issue", "/api/v1/white-placebo/{id}/output"].sort());
   const schemas = object(object(current.components ?? null).schemas ?? null);
   delete schemas["DOMAIN.Entities.Materials.Batch.UpdateMigrationBatchDetails"];
+  stripWorksheetFields(schemas);
   stripProductBatchStem(schemas);
   delete object(object(schemas["DOMAIN.Entities.Materials.Batch.MaterialBatchDto"] ?? null).properties ?? null).migrationGrnNumber;
   stripMigrationMaterialLinks(current);
@@ -367,6 +396,7 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
 test("the merged forecast and migration contracts preserve the approved predecessor and pass release validation", () => {
   const head = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   const publishedDigest = contractDigest(head);
+  stripWorksheetFields(object(object(head.components ?? null).schemas ?? null));
   stripProductBatchStem(object(object(head.components ?? null).schemas ?? null));
   assert.equal(contractDigest(head), "474090995ed29dc1fccf7f204706e9127181e120b1ee0014fb6e6e852f5d2d23");
   stripMigrationBatchDetails(head);
