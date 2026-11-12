@@ -7,5 +7,5 @@ export function useBatchRoute() {
   const { id = "", batchId = "" } = useParams();
   const { kind } = useKindTabs(qcPermissions.view);
   const k = kind ?? 0;
-  return { grnId: id, batchId, kind: k, ready: Boolean(id && batchId && kind !== null), notePath: grnDetailPath(id, k), path: (step: "" | "assign" | "reassign" | "test" = "") => batchPath(id, batchId, k, step) };
+  return { grnId: id, batchId, kind: k, ready: Boolean(id && batchId && kind !== null), notePath: grnDetailPath(id, k), path: (step: "" | "assign" | "reassign" | "test" | "progress" = "") => batchPath(id, batchId, k, step) };
 }

@@ -55,6 +55,9 @@ export const routes: RouteObject[] = [
           { path: "assign", Component: Outlet, children: [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/atr/[id]/assign/page")).default }) }
           ] },
+          { path: "progress", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/atr/[id]/progress/page")).default }) }
+          ] },
           { path: "reassign", Component: Outlet, children: [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/atr/[id]/reassign/page")).default }) }
           ] },
@@ -783,6 +786,9 @@ export const routes: RouteObject[] = [
                 { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/goods-receipt-note/[id]/batches/[batchId]/page")).default }) },
                 { path: "assign", Component: Outlet, children: [
                   { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/goods-receipt-note/[id]/batches/[batchId]/assign/page")).default }) }
+                ] },
+                { path: "progress", Component: Outlet, children: [
+                  { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/goods-receipt-note/[id]/batches/[batchId]/progress/page")).default }) }
                 ] },
                 { path: "reassign", Component: Outlet, children: [
                   { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/goods-receipt-note/[id]/batches/[batchId]/reassign/page")).default }) }
