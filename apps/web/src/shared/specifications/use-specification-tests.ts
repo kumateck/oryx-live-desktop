@@ -15,14 +15,15 @@ export function useSpecificationTests(specification: Specification | null, by: "
   const formId = specification?.form?.id ?? null;
   const template = specificationValuesApi.useGetApiV1FormByFormIdQuery(formId ? { ...audit, formId } : skipToken);
   const saved = specificationValuesApi.useGetApiV1FormSectionQuery(number ? { ...audit, pageSize: 500, [by]: number } : skipToken);
-  const parsedTemplate = useMemo(() => template.data ? templateSectionsSchema.safeParse(template.data) : null, [template.data]);
-  const parsedSaved = useMemo(() => saved.data ? sectionPageSchema.safeParse(saved.data) : null, [saved.data]);
+  const parsedTemplate = useMemo(() => template.currentData ? templateSectionsSchema.safeParse(template.currentData) : null, [template.currentData]);
+  const parsedSaved = useMemo(() => saved.currentData ? sectionPageSchema.safeParse(saved.currentData) : null, [saved.currentData]);
   const sections = useMemo(() => parsedTemplate?.success ? withSavedValues(parsedTemplate.data.sections, parsedSaved?.success ? parsedSaved.data : []) : [], [parsedTemplate, parsedSaved]);
   const error = template.error ? apiErrorMessage(template.error) : saved.error ? apiErrorMessage(saved.error)
     : (parsedTemplate && !parsedTemplate.success) || (parsedSaved && !parsedSaved.success) ? "The server returned tests the app could not read." : null;
   return {
     sections, error,
-    loading: Boolean(formId && template.isLoading) || Boolean(number && saved.isLoading),
+    loading: (template.isFetching && !template.currentData) || (saved.isFetching && !saved.currentData),
+    refreshing: template.isFetching || saved.isFetching,
     /** No template: nothing to show or complete. */ noTemplate: specification !== null && !formId,
     retry: () => { if (formId) void template.refetch(); if (number) void saved.refetch(); },
   };
