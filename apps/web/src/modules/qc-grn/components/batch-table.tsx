@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ClipboardCheck, Eye, FlaskConical, Pipette, Play, Printer, Target, UserCog } from "lucide-react";
+import { ClipboardCheck, ClipboardList, Eye, FlaskConical, Pipette, Play, Printer, Target, UserCog } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmActionDialog, TableMenu, TableMenuHeader } from "@/shared/actions";
@@ -12,13 +12,13 @@ import { formAssigneeSchema } from "@/shared/qc/assignments";
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 import { toLargestUnit } from "@/shared/units/quantity";
 import { qcGrnAnalyticalApi, qcGrnFormsApi } from "../api/qc-grn-api";
-import { batchActions, batchPath, batchStatusLabels, printsFilled, qcGrnAudit, qcPermissions } from "../lib/qc-grn";
+import { batchActions, batchPath, batchStatusLabels, qcGrnAudit, qcPermissions, qcWorksheetAccess } from "../lib/qc-grn";
 import type { QcBatch } from "../schemas/grn-schema";
 import { RequestMaterialRetestDialog, retestPermissions } from "@/modules/material-retests/public";
 import { SampleDialog } from "./batch-dialogs";
 import { BatchWorksheetPrint } from "./batch-worksheet";
 
-type Open = { kind: "sample" | "requestRetest" | "assignments" | "print" | "start"; batch: QcBatch } | null;
+type Open = { kind: "sample" | "requestRetest" | "assignments" | "start"; batch: QcBatch } | { kind: "print"; batch: QcBatch; filled: boolean } | null;
 const shown = (value: number | null, unit: string | null) => value === null ? "–" : toLargestUnit(value, unit, "calculated")?.text ?? "–";
 const column = dataTableColumns<QcBatch>();
 
@@ -43,7 +43,7 @@ export function BatchTable({ grnId, kind, batches }: { grnId: string; kind: Mate
     column.display({ id: "references", header: "References", size: 180, cell: ({ row }) => <div className="text-xs"><div>AR {row.original.arNumber ?? "–"}</div><div>Issue {row.original.issueNumber ?? "–"}</div>
       <div className="text-muted-foreground">Invoice {row.original.invoice ?? "–"}</div></div> }),
     column.display({ id: "sampling", header: "Sampling", size: 180, cell: ({ row }) => <div className="text-xs"><div>{row.original.sampledBy ?? "Not sampled"}</div><div className="text-muted-foreground">{formatDate(row.original.sampledOn) ?? ""}</div>
-      {row.original.analysts.length ? <div className="text-muted-foreground">Analysed by {row.original.analysts.join(", ")}</div> : null}</div> }),
+      {row.original.analysts.length ? <div className="text-muted-foreground">Assigned to {row.original.analysts.join(", ")}</div> : null}</div> }),
     column.display({ id: "dates", header: "Dates", size: 150, cell: ({ row }) => <div className="text-xs"><div>Made {formatMonthYear(row.original.made) ?? "–"}</div><div>Expires {formatMonthYear(row.original.expires) ?? "–"}</div>
       <div className="text-muted-foreground">Retest {formatDate(row.original.retest) ?? "–"}</div></div> }),
     column.accessor((row) => row.status ?? -1, { id: "status", header: "Status", size: 130, cell: ({ row }) => <Badge variant="outline">{row.original.status === null ? "–" : batchStatusLabels[row.original.status] ?? "Unknown"}</Badge> }),
@@ -58,7 +58,9 @@ export function BatchTable({ grnId, kind, batches }: { grnId: string; kind: Mate
         actions.has("check") && { id: "check", label: "Check results", icon: ClipboardCheck, require: qcPermissions.check[kind], to: batchPath(grnId, batch.id, kind) },
         actions.has("requestRetest") && { id: "requestRetest", label: "Request retest", icon: FlaskConical, require: retestPermissions.request, separated: true, onSelect: () => setOpen({ kind: "requestRetest", batch }) },
         batch.status === 5 && { id: "retests", label: "Open governed retests", icon: FlaskConical, require: retestPermissions.view, to: `/qc/material-retests?batchId=${encodeURIComponent(batch.id)}` },
-        actions.has("print") && { id: "print", label: printsFilled(batch.status) ? "Print worksheet with results" : "Print blank worksheet", icon: Printer, require: qcPermissions.test[kind], separated: true, onSelect: () => setOpen({ kind: "print", batch }) },
+        actions.has("progress") && { id: "progress", label: "Test progress", icon: ClipboardList, require: qcWorksheetAccess(kind), to: batchPath(grnId, batch.id, kind, "progress") },
+        actions.has("print") && { id: "print-blank", label: "Print blank worksheet", icon: Printer, require: qcWorksheetAccess(kind), separated: true, onSelect: () => setOpen({ kind: "print", batch, filled: false }) },
+        actions.has("print") && { id: "print-filled", label: "Print filled worksheet", icon: Printer, require: qcWorksheetAccess(kind), onSelect: () => setOpen({ kind: "print", batch, filled: true }) },
       ]} />; } }),
   ]), [grnId, kind]);
   const start = async (batch: QcBatch): Promise<string | null> => {
@@ -77,7 +79,7 @@ export function BatchTable({ grnId, kind, batches }: { grnId: string; kind: Mate
     {open?.kind === "sample" ? <SampleDialog grnId={grnId} batch={open.batch} kind={kind} onClose={() => setOpen(null)} /> : null}
     {open?.kind === "requestRetest" ? <RequestMaterialRetestDialog batchId={open.batch.id} onClose={() => setOpen(null)} /> : null}
     {open?.kind === "assignments" ? <Assignments batch={open.batch} onClose={() => setOpen(null)} /> : null}
-    {open?.kind === "print" ? <BatchWorksheetPrint batchId={open.batch.id} filled={printsFilled(open.batch.status)} onClose={() => setOpen(null)} /> : null}
+    {open?.kind === "print" ? <BatchWorksheetPrint batchId={open.batch.id} filled={open.filled} onClose={() => setOpen(null)} /> : null}
     {open?.kind === "start" ? <ConfirmActionDialog require={qcPermissions.test[kind]} destructive={false} title={`Start the test of batch ${open.batch.number ?? open.batch.material}?`}
       description="The batch moves to testing and its assigned analysts can enter results." confirmLabel="Start test" busyLabel="Starting…" onClose={() => setOpen(null)} onConfirm={() => start(open.batch)} /> : null}
   </>;

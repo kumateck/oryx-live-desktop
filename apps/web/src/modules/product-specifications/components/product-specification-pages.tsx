@@ -43,6 +43,13 @@ export function ProductSpecificationDetailPage() {
   return <>
     <SpecificationDetail specification={specification} sections={tests.sections} item={specification.item?.name ?? null}
       crumbs={[{ label: "Product specifications", to: listPath }, { label: specification.number }]}
+      printTitle="Product specification"
+      printFacts={[
+        { label: "Product", value: specification.item?.name ?? null },
+        { label: "Product code", value: specification.item?.code ?? null },
+        { label: "Stage", value: testStageLabel(specification.testStage) },
+        { label: "Generic name", value: specification.item?.genericName ?? null },
+      ]}
       facts={<><KeyFact label="Product" value={specification.item?.name ?? "–"} note={specification.item?.code ?? undefined} />
         <KeyFact label="Stage" value={testStageLabel(specification.testStage)} note={specification.item?.genericName ?? undefined} /></>}
       actions={<>

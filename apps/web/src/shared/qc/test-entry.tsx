@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useWatch } from "react-hook-form";
+import { Link } from "react-router";
 import { ClipboardX, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,10 @@ export function TestEntryEmpty({ kind, details, onBack }: { kind: "not-assigned"
 /**
  * An analyst saves each assigned answer as a draft before submitting the completed response.
  */
-export function TestEntry({ form, mine, stored, context, audit, require, summary, onReload, onDone, formulaActions }: {
+export function TestEntry({ form, mine, stored, context, audit, require, summary, onReload, onDone, progressTo, formulaActions }: {
   form: AnswerForm; mine: ReadonlySet<string>; stored: StoredAnswers; context: ResponseContext; audit: { module: string; subModule: string }; require: PermissionRequirement;
   summary: ReactNode; onReload: () => void; onDone: () => void;
+  progressTo?: string;
   formulaActions?: (hasUnsavedWork: boolean) => ReactNode;
 }) {
   const loadEquipment = useEquipmentOptions();
@@ -62,6 +64,11 @@ export function TestEntry({ form, mine, stored, context, audit, require, summary
   });
   return <div className="min-w-0 space-y-4">
     {summary}
+    {progressTo ? <div className="flex justify-end">
+      {hasUnsavedWork
+        ? <Button type="button" size="sm" variant="outline" disabled title="Save your changes before opening test progress.">Test progress</Button>
+        : <Button size="sm" variant="outline" asChild><Link to={progressTo}>Test progress</Link></Button>}
+    </div> : null}
     {formulaActions?.(hasUnsavedWork)}
     <form noValidate className="space-y-4" onSubmit={(event) => void submit(event)}>
       <AnswerSheet form={answers} sections={sections} loadEquipment={loadEquipment} disabled={writer.busy}

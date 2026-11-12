@@ -15,14 +15,15 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { AssignmentSheet, type FieldAssignment } from "@/shared/qc/assignment-sheet";
 import { ReassignPanel } from "@/shared/qc/assignment-views";
+import { WorksheetProgress } from "@/shared/qc/worksheet-progress";
 import { assignedFieldIds } from "@/shared/qc/assignments";
 import { issueNumber, useNextSerial } from "@/shared/qc/qc-numbers";
 import { TestEntry, TestEntryEmpty } from "@/shared/qc/test-entry";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { atrFormsApi } from "../api/atr-api";
 import { useAtrWorksheet } from "../hooks/use-atr-worksheet";
-import { atrAudit, atrListPath, atrPermissions, atrStepPath, stageLabels } from "../lib/atr";
-import { AtrWorksheet } from "./atr-worksheet";
+import { atrAudit, atrListPath, atrPermissions, atrPrintsFilled, atrStepPath, stageLabels } from "../lib/atr";
+import { AtrWorksheet, AtrWorksheetPreview } from "./atr-worksheet";
 import { AtrFormulaActions } from "./atr-formula-actions";
 import { formFields } from "@/shared/form-response/form-model";
 
@@ -88,9 +89,20 @@ export function AtrTestPage() {
   return <Frame sheet={sheet} title="Enter results">
     {!sheet.form || !sheet.context ? <TestEntryEmpty kind="no-form" details={details} onBack={() => void navigate(back(sheet))} />
       : mine.size === 0 ? <>{summary(sheet)}<TestEntryEmpty kind="not-assigned" details={details} onBack={() => void navigate(back(sheet))} /></>
-      : <TestEntry form={sheet.form} mine={mine} stored={sheet.stored} context={sheet.context} audit={atrAudit} require={atrPermissions.start} summary={summary(sheet)} onReload={noReload} onDone={() => void navigate(back(sheet))}
+      : <TestEntry progressTo={atrStepPath(sheet.atr?.id ?? "", "progress")} form={sheet.form} mine={mine} stored={sheet.stored} context={sheet.context} audit={atrAudit} require={atrPermissions.start} summary={summary(sheet)} onReload={noReload} onDone={() => void navigate(back(sheet))}
         formulaActions={disabled => <AtrFormulaActions atrId={sheet.atr?.id ?? ""} fields={sheet.form ? formFields(sheet.form).filter(field => mine.has(field.id)) : []}
           responses={sheet.responses} disabled={disabled} onReload={sheet.reload} />} />}
+  </Frame>;
+}
+
+export function AtrProgressPage() {
+  const id = useAtrId();
+  const sheet = useAtrWorksheet(id, { fresh: true });
+  return <Frame sheet={sheet} title="Test progress">
+    {summary(sheet)}
+    <WorksheetProgress form={sheet.form} stored={sheet.stored} responses={sheet.responses}
+      assignments={sheet.assignees} submitted={atrPrintsFilled(sheet.atr?.status ?? null)}
+      preview={(close) => <AtrWorksheetPreview sheet={sheet} filled onClose={close} />} />
   </Frame>;
 }
 

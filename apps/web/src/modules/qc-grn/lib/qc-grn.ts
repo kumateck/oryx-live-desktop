@@ -5,7 +5,7 @@ import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 export const qcGrnPath = "/qc/goods-receipt-note";
 const kindQuery = (kind: MaterialKind) => `?type=${String(kind)}`;
 export const grnDetailPath = (id: string, kind: MaterialKind) => `${qcGrnPath}/${id}${kindQuery(kind)}`;
-export const batchPath = (grnId: string, batchId: string, kind: MaterialKind, step: "" | "assign" | "reassign" | "test" = "") => `${qcGrnPath}/${grnId}/batches/${batchId}${step ? `/${step}` : ""}${kindQuery(kind)}`;
+export const batchPath = (grnId: string, batchId: string, kind: MaterialKind, step: "" | "assign" | "reassign" | "test" | "progress" = "") => `${qcGrnPath}/${grnId}/batches/${batchId}${step ? `/${step}` : ""}${kindQuery(kind)}`;
 export const qcGrnAudit = { module: "Quality Assurance", subModule: "Analytical Raw Data" } as const;
 export const grnListAudit = { module: "Warehouse", subModule: "QA GRN" } as const;
 
@@ -21,7 +21,7 @@ export const qcPermissions = {
 
 export const grnStatusLabels: Record<number, string> = { 0: "Pending", 1: "Partly done", 2: "Completed" };
 
-export type BatchAction = "sample" | "assign" | "start" | "continue" | "reassign" | "assignments" | "check" | "requestRetest" | "viewRetest" | "print";
+export type BatchAction = "sample" | "assign" | "start" | "continue" | "reassign" | "assignments" | "progress" | "check" | "requestRetest" | "viewRetest" | "print";
 /** What can be done with a batch in its status, in the order QC does it. */
 export function batchActions(status: number | null): ReadonlySet<BatchAction> {
   const S = BatchStatus;
@@ -34,8 +34,16 @@ export function batchActions(status: number | null): ReadonlySet<BatchAction> {
   if (status === S.TestTaken) actions.add("check");
   if (status === S.Available || status === S.Approved || status === S.Rejected) actions.add("requestRetest");
   if (status === S.Retest) actions.add("viewRetest");
-  if (status === S.TestAssigned || status === S.Testing || status === S.TestTaken || status === S.Checked || status === S.Approved) actions.add("print");
+  if (status === S.TestAssigned || status === S.Testing || printsFilled(status)) {
+    actions.add("progress");
+    actions.add("print");
+  }
   return actions;
 }
-/** Once results are in, the worksheet prints with them; before that it prints blank for the bench. */
-export const printsFilled = (status: number | null) => status === BatchStatus.TestTaken || status === BatchStatus.Checked || status === BatchStatus.Approved;
+export const qcWorksheetAccess = (kind: MaterialKind) => ({
+  kind: "some" as const,
+  permissions: [qcPermissions.test[kind], qcPermissions.check[kind]],
+});
+
+/** These statuses indicate a submitted worksheet. */
+export const printsFilled = (status: number | null) => status === BatchStatus.TestTaken || status === BatchStatus.Checked || status === BatchStatus.Approved || status === BatchStatus.Available || status === BatchStatus.Rejected;

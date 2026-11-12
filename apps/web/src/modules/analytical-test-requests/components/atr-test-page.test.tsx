@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, expect, it, vi } from "vitest";
 import { ApiProvider } from "@/shared/api/api-provider";
 import { SessionProvider } from "@/shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend, testUserId } from "@/test/backend";
 import { SessionReady } from "@/test/session-ready";
-import { AtrTestPage } from "./atr-pages";
+import { AtrProgressPage, AtrTestPage } from "./atr-pages";
 
 vi.setConfig({ testTimeout: 30_000 });
 const me = { id: testUserId, firstName: "Ada", lastName: "Mensah" };
@@ -41,7 +41,10 @@ function open() {
   });
   rememberSession();
   render(<SessionProvider><SessionReady><ApiProvider><MemoryRouter initialEntries={["/atr/atr-1/test"]}>
-    <Routes><Route path="/atr/:id/test" element={<AtrTestPage />} /></Routes>
+    <Routes>
+      <Route path="/atr/:id/test" element={<AtrTestPage />} />
+      <Route path="/atr/:id/progress" element={<AtrProgressPage />} />
+    </Routes>
   </MemoryRouter></ApiProvider></SessionReady></SessionProvider>);
   return requests;
 }
@@ -65,6 +68,26 @@ it("saves the first draft without reloading the page or clearing other unsaved a
   expect((colour as HTMLInputElement).value).toBe("Off-white, not yet saved");
   expect((screen.getByRole("textbox", { name: "Appearance" }) as HTMLInputElement).value).toBe("White tablet");
   expect(screen.getByRole("button", { name: "Save this answer as a draft: Colour" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Test progress" })).toHaveProperty("disabled", true);
   // Saving an answer does not change who was assigned, so assignments are not fetched again.
   expect(requests.filter((request) => request === "GET /api/v1/form/assignees/bmr/bmr-1")).toHaveLength(1);
+});
+
+it("shows test progress and prints only saved worksheet answers", async () => {
+  open();
+  const appearance = await screen.findByRole("textbox", { name: "Appearance" });
+  fireEvent.change(appearance, { target: { value: "White tablet" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save this answer as a draft: Appearance" }));
+  await screen.findByRole("button", { name: "Draft saved: Appearance" });
+  fireEvent.click(screen.getByRole("link", { name: "Test progress" }));
+
+  expect(await screen.findByText("Worksheet in progress · shows saved answers")).toBeTruthy();
+  expect(within(screen.getByRole("row", { name: /Appearance/ })).getByText("Completed")).toBeTruthy();
+  expect(within(screen.getByRole("row", { name: /Colour/ })).getByText("Outstanding")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Print filled worksheet" }));
+
+  const preview = within(await screen.findByRole("dialog"));
+  expect(preview.getByText("Finished product test")).toBeTruthy();
+  expect(preview.getByText("Worksheet in progress · saved responses")).toBeTruthy();
+  expect(preview.getAllByText("White tablet").length).toBeGreaterThan(0);
 });

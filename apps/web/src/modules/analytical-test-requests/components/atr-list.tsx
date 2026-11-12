@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CircleCheck, ClipboardCheck, Eye, FlaskConical, HandHelping, Pipette, Play, Printer, Target, UserCog } from "lucide-react";
+import { CircleCheck, ClipboardCheck, ClipboardList, Eye, FlaskConical, HandHelping, Pipette, Play, Printer, Target, UserCog } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,12 @@ import { formatDate, formatDateTime, formatMonthYear } from "@/shared/format/dat
 import { arNumber, arNumberPrefix, useNextSerial } from "@/shared/qc/qc-numbers";
 import { usePageSearch } from "@/shared/search/page-search";
 import { atrApi } from "../api/atr-api";
-import { AtrStatus, atrActions, atrAudit, atrPermissions, atrPrintsFilled, atrStatusLabels, atrStepPath, qcQueues, stageCode, stageLabels } from "../lib/atr";
+import { AtrStatus, atrActions, atrAudit, atrPermissions, atrStatusLabels, atrWorksheetAccess, atrStepPath, qcQueues, stageCode, stageLabels } from "../lib/atr";
 import { atrRowsSchema, type Atr } from "../schemas/atr-schema";
 import { AtrAssignmentsDialog, CompleteAtrRetestDialog, TakeSampleDialog } from "./atr-dialogs";
 import { AtrWorksheetPrint } from "./atr-worksheet";
 
-type Open = { kind: "sample" | "acknowledge" | "start" | "requestRetest" | "completeRetest" | "assignments" | "print"; atr: Atr } | null;
+type Open = { kind: "sample" | "acknowledge" | "start" | "requestRetest" | "completeRetest" | "assignments"; atr: Atr } | { kind: "print"; atr: Atr; filled: boolean } | null;
 const column = dataTableColumns<Atr>();
 
 /** Analytical test requests: QA's new requests to sample, or QC's queues from sample received to result released. */
@@ -64,7 +64,9 @@ export function AtrListPage() {
         actions.has("check") && { id: "check", label: "Check results", icon: ClipboardCheck, require: atrPermissions.check, to: atrStepPath(atr.id) },
         actions.has("requestRetest") && { id: "requestRetest", label: "Request retest", icon: FlaskConical, require: atrPermissions.requestRetest, separated: true, onSelect: () => setOpen({ kind: "requestRetest", atr }) },
         actions.has("completeRetest") && { id: "completeRetest", label: "Complete retest", icon: CircleCheck, require: atrPermissions.completeRetest, onSelect: () => setOpen({ kind: "completeRetest", atr }) },
-        actions.has("print") && { id: "print", label: atrPrintsFilled(atr.status) ? "Print worksheet with results" : "Print blank worksheet", icon: Printer, require: atrPermissions.start, separated: true, onSelect: () => setOpen({ kind: "print", atr }) },
+        actions.has("progress") && { id: "progress", label: "Test progress", icon: ClipboardList, require: atrWorksheetAccess, to: atrStepPath(atr.id, "progress") },
+        actions.has("print") && { id: "print-blank", label: "Print blank worksheet", icon: Printer, require: atrWorksheetAccess, separated: true, onSelect: () => setOpen({ kind: "print", atr, filled: false }) },
+        actions.has("print") && { id: "print-filled", label: "Print filled worksheet", icon: Printer, require: atrWorksheetAccess, onSelect: () => setOpen({ kind: "print", atr, filled: true }) },
       ]} />; } }),
   ]), []);
   const acknowledge = async (atr: Atr): Promise<string | null> => {
@@ -102,7 +104,7 @@ export function AtrListPage() {
     {open?.kind === "sample" ? <TakeSampleDialog atr={open.atr} onClose={close} /> : null}
     {open?.kind === "completeRetest" ? <CompleteAtrRetestDialog atr={open.atr} onClose={close} /> : null}
     {open?.kind === "assignments" ? <AtrAssignmentsDialog atr={open.atr} onClose={close} /> : null}
-    {open?.kind === "print" ? <AtrWorksheetPrint id={open.atr.id} filled={atrPrintsFilled(open.atr.status)} onClose={close} /> : null}
+    {open?.kind === "print" ? <AtrWorksheetPrint id={open.atr.id} filled={open.filled} onClose={close} /> : null}
     {open?.kind === "acknowledge" ? <ConfirmActionDialog require={atrPermissions.acknowledge} destructive={false} title={`Receive the sample of ${open.atr.batchNumber ?? open.atr.product}?`}
       description="The sample is logged as received by QC and given its AR number." confirmLabel="Receive sample" busyLabel="Receiving…" onClose={close} onConfirm={() => acknowledge(open.atr)} /> : null}
     {open?.kind === "start" ? <ConfirmActionDialog require={atrPermissions.start} destructive={false} title={`Start the test of ${open.atr.batchNumber ?? open.atr.product}?`}

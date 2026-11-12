@@ -14,6 +14,7 @@ export const manifest = {
     { pattern: "/qc/goods-receipt-note/:id/batches/:batchId", access: either("CanCheckRawMaterialTestResult", "CanCheckPackagingMaterialTestResult") },
     { pattern: "/qc/goods-receipt-note/:id/batches/:batchId/assign", access: either("CanStartRawMaterialTest", "CanStartPackagingMaterialTest") },
     { pattern: "/qc/goods-receipt-note/:id/batches/:batchId/reassign", access: either("CanReassignRawMaterialTest", "CanReassignPackagingMaterialTest") },
+    { pattern: "/qc/goods-receipt-note/:id/batches/:batchId/progress", access: { kind: "some", permissions: ["CanStartRawMaterialTest", "CanStartPackagingMaterialTest", "CanCheckRawMaterialTestResult", "CanCheckPackagingMaterialTestResult"] } },
     { pattern: "/qc/goods-receipt-note/:id/batches/:batchId/test", access: either("CanStartRawMaterialTest", "CanStartPackagingMaterialTest") },
   ],
 } satisfies ModuleManifest<"qc-grn", "/qc/goods-receipt-note">;
