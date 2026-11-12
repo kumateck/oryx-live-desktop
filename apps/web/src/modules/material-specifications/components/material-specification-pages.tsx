@@ -43,6 +43,12 @@ export function MaterialSpecificationDetailPage() {
   return <>
     <SpecificationDetail specification={specification} sections={tests.sections} item={specification.item?.name ?? null}
       crumbs={[{ label: "Material specifications", to: listOf(kind) }, { label: specification.number }]}
+      printTitle="Material specification"
+      printFacts={[
+        { label: "Material", value: specification.item?.name ?? null },
+        { label: "Material code", value: specification.item?.code ?? null },
+        { label: "Pharmacopoeia", value: specification.item?.pharmacopoeia ?? null },
+      ]}
       facts={<><KeyFact label="Material" value={specification.item?.name ?? "–"} note={specification.item?.code ?? undefined} />
         <KeyFact label="Pharmacopoeia" value={specification.item?.pharmacopoeia ?? "–"} /></>}
       actions={<>
