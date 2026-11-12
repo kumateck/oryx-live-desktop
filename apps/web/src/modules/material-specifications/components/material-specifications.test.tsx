@@ -18,18 +18,28 @@ const spec = { id: "s1", specificationNumber: "QCD/SPC/PM/003", revisionNumber: 
   form: { id: "f1", name: "Bottle template" }, isVerified: false, material: { id: "m1", name: "Amber bottle", code: "PM-9", kind: 1 } };
 const template = { name: "Bottle template", sections: [{ id: "b", name: "<p>Leak test</p>", description: "<p>No leaks</p>", order: 2 }, { id: "a", name: "<p>Dimensions</p>", description: "<p>40 mm</p>", order: 1 }] };
 
-function open(path: string, permissions: string[]) {
+function open(path: string, permissions: string[], waitForSavedReferences?: Promise<void>) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: { method: string; path: string; search: string; body: string }[] = [];
+  let savedReferences = [{ id: "a", value: "0" }];
   const session = backend.fetcher.getMockImplementation();
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const url = new URL(input.url);
-    if (input.method !== "GET") { calls.push({ method: input.method, path: url.pathname, search: url.search, body: await input.clone().text() }); return new Response(null, { status: 200 }); }
+    if (input.method !== "GET") {
+      calls.push({ method: input.method, path: url.pathname, search: url.search, body: await input.clone().text() });
+      if (url.pathname === "/api/v1/form/responses/section") {
+        savedReferences = [{ id: "a", value: "0" }, { id: "b", value: "1" }];
+      }
+      return new Response(null, { status: 204 });
+    }
     if (url.pathname === "/api/v1/material-specifications/s1") return Response.json(spec);
     if (url.pathname === "/api/v1/form/f1") return Response.json(template);
-    if (url.pathname === "/api/v1/form/section") return Response.json({ data: [{ id: "a", value: "0" }] });
+    if (url.pathname === "/api/v1/form/section") {
+      if (savedReferences.length > 1) await waitForSavedReferences;
+      return Response.json({ data: savedReferences });
+    }
     return new Response(null, { status: 404 });
   });
   const router = createMemoryRouter([
@@ -42,7 +52,9 @@ function open(path: string, permissions: string[]) {
 
 it("sends every test's reference only once each test has one", async () => {
   const user = userEvent.setup();
-  const { calls, router } = open("/qc/material-specification/s1/complete", ["CanEditPackagingMaterialSpecification"]);
+  let releaseRefresh = () => {};
+  const refresh = new Promise<void>((resolve) => { releaseRefresh = resolve; });
+  const { calls, router } = open("/qc/material-specification/s1/complete", ["CanEditPackagingMaterialSpecification"], refresh);
   const first = await screen.findByRole("combobox", { name: "Reference for test 1" });
   // Tests follow the template's order, with the saved reference already chosen.
   expect(first.textContent).toBe("BP");
@@ -56,6 +68,10 @@ it("sends every test's reference only once each test has one", async () => {
   expect(calls[0]).toMatchObject({ method: "POST", path: "/api/v1/form/responses/section", search: "?materialSpecificationId=s1" });
   expect(JSON.parse(calls[0]?.body ?? "")).toEqual([{ formSectionId: "a", value: "0" }, { formSectionId: "b", value: "1" }]);
   await waitFor(() => expect(router.state.location.pathname).toBe("/qc/material-specification/s1/details"));
+  expect(screen.getByRole("status", { name: "Loading specification" })).toBeTruthy();
+  expect(screen.queryByText("Not set")).toBeNull();
+  releaseRefresh();
+  expect(await screen.findByText("USP")).toBeTruthy();
 }, 30_000);
 
 it("approves a packaging specification with the packaging permission, after confirming", async () => {

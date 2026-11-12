@@ -12,8 +12,17 @@ export const productSpecificationsApi = analyticalApi.enhanceEndpoints({ addTagT
   getApiV1ProductSpecifications: (definition) => { definition.providesTags = addTags(definition.providesTags, [all]); },
   getApiV1ProductSpecificationsById: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [one(arg.id)]); },
   getApiV1ProductSpecificationsProducts: (definition) => { definition.providesTags = addTags(definition.providesTags, [all]); },
+  postApiV1ProductSpecifications: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, after([all, byProduct])); },
+  putApiV1ProductSpecificationsById: (definition) => {
+    definition.invalidatesTags = addTags(definition.invalidatesTags, (result, error, arg) => {
+      if (error) return [];
+      // The server updates every product record that shares the specification number.
+      const linked = result?.flatMap(({ specificationId }) => specificationId && specificationId !== arg.id ? [one(specificationId)] : []) ?? [];
+      return [all, byProduct, one(arg.id), ...linked];
+    });
+  },
   deleteApiV1ProductSpecificationsById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, after([all, byProduct])); },
   postApiV1ProductSpecificationsAddRemoveProducts: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, after([all, byProduct])); },
 } });
-// Create and update are already tagged by the products module for its own list; these add this module's tags as an action after a save.
-export const productSpecificationChanged = (id: string | null) => productSpecificationsApi.util.invalidateTags([all, byProduct, ...(id ? [one(id)] : [])]);
+/** After an approval, which uses a shared endpoint. */
+export const productSpecificationChanged = (id: string) => productSpecificationsApi.util.invalidateTags([all, byProduct, one(id)]);

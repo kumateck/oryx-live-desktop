@@ -11,7 +11,14 @@ export const materialSpecificationsApi = analyticalApi.enhanceEndpoints({ addTag
   getApiV1MaterialSpecificationsById: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [one(arg.id)]); },
   getApiV1MaterialSpecificationsMaterials: (definition) => { definition.providesTags = addTags(definition.providesTags, [all]); },
   postApiV1MaterialSpecifications: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, after([all])); },
-  putApiV1MaterialSpecificationsById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => after([all, one(arg.id)])(_result, error)); },
+  putApiV1MaterialSpecificationsById: (definition) => {
+    definition.invalidatesTags = addTags(definition.invalidatesTags, (result, error, arg) => {
+      if (error) return [];
+      // The server updates every material record that shares the specification number.
+      const linked = result?.flatMap(({ specificationId }) => specificationId && specificationId !== arg.id ? [one(specificationId)] : []) ?? [];
+      return [all, one(arg.id), ...linked];
+    });
+  },
   deleteApiV1MaterialSpecificationsById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, after([all])); },
   postApiV1MaterialSpecificationsAddRemoveMaterials: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, after([all])); },
 } });
