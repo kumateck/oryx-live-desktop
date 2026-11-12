@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useForm, useWatch } from "react-hook-form";
-import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -24,7 +23,7 @@ import {
 import { specificationRowsSchema, specificationSchema, type Specification } from "@/shared/specifications/specification-schema";
 import { SpecificationUnavailable } from "@/shared/specifications/specification-views";
 import { useTemplateLoader } from "@/shared/specifications/use-template-loader";
-import { productSpecificationChanged, productSpecificationsApi } from "../api/product-specifications-api";
+import { productSpecificationsApi } from "../api/product-specifications-api";
 import { audit, completePath, detailPath, listPath, specPermissions } from "../lib/product-specifications";
 
 const option = z.object({ value: z.string(), label: z.string() });
@@ -39,7 +38,6 @@ const productLabel = (item: { name?: string | null; code?: string | null }) => `
 
 function Editor({ saved, linked }: { saved: Specification | null; linked: readonly SelectOption[] }) {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { state } = useSession();
   const userId = state.status === "authenticated" ? state.session.user.id : null;
   const require = saved ? specPermissions.edit : specPermissions.create;
@@ -117,7 +115,6 @@ function Editor({ saved, linked }: { saved: Specification | null; linked: readon
         if (!userId) { setMessage("Your session could not be identified. Sign in again and retry."); return; }
         const result = await create({ ...audit, domainEntitiesProductSpecificationsCreateProductSpecificationRequest: { ...specificationBody(values), testStage, userId, productIds } });
         if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-        dispatch(productSpecificationChanged(null));
         toast.success("Specification created");
         // Specifications are kept per product, so the record to complete is found by its number.
         const found = await findByNumber({ ...audit, specificationNumber: values.specificationNumber }).unwrap().catch(() => null);
@@ -127,7 +124,6 @@ function Editor({ saved, linked }: { saved: Specification | null; linked: readon
       }
       const updated = await update({ ...audit, id: saved.id, domainEntitiesProductSpecificationsUpdateProductSpecificationRequest: { ...specificationBody(values, saved.dueDate), testStage } });
       if ("error" in updated) { setMessage(apiErrorMessage(updated.error)); return; }
-      dispatch(productSpecificationChanged(saved.id));
       const delta = linkDelta(linkedIds, productIds);
       if (delta.add.length > 0 || delta.remove.length > 0) {
         const denied = permission.check();

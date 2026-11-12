@@ -23,22 +23,22 @@ import { asKind, audit, completePath, completePermission, detailPath, editPath, 
 function useSpecification() {
   const { id } = useParams();
   const query = materialSpecificationsApi.useGetApiV1MaterialSpecificationsByIdQuery(id ? { ...audit, id } : skipToken);
-  const parsed = useMemo(() => query.data ? specificationSchema.safeParse(query.data) : null, [query.data]);
+  const parsed = useMemo(() => query.currentData ? specificationSchema.safeParse(query.currentData) : null, [query.currentData]);
   const specification = parsed?.success ? parsed.data : null;
   const tests = useSpecificationTests(specification, "materialSpecificationNumber");
   const kind = asKind(specification?.item?.kind) ?? 0;
-  const unavailable = !specification ? <SpecificationUnavailable message={query.error ? apiErrorMessage(query.error) : "The server returned a specification the app could not read."}
+  const unavailable = query.error || !specification ? <SpecificationUnavailable message={query.error ? apiErrorMessage(query.error) : "The server returned a specification the app could not read."}
     onRetry={() => void query.refetch()} back={{ label: "Material specifications", to: listOf(0) }} />
     : tests.error ? <SpecificationUnavailable message={tests.error} onRetry={tests.retry} back={{ label: "Material specifications", to: listOf(kind) }} /> : null;
-  return { specification, tests, kind, loading: query.isLoading || tests.loading, unavailable };
+  return { specification, tests, kind, loading: (query.isFetching && !query.currentData) || tests.loading, refreshing: query.isFetching || tests.refreshing, unavailable };
 }
 const itemName = (specification: Specification) => specification.item ? `${specification.item.name}${specification.item.code ? ` (${specification.item.code})` : ""}` : null;
 
 export function MaterialSpecificationDetailPage() {
-  const { specification, tests, kind, loading, unavailable } = useSpecification();
+  const { specification, tests, kind, refreshing, unavailable } = useSpecification();
   const [approving, setApproving] = useState(false);
   const approval = useApproveSpecification(VerifiableSpecification.Material, specificationApproved, audit);
-  if (loading) return <DetailPageSkeleton label="Loading specification" />;
+  if (refreshing) return <DetailPageSkeleton label="Loading specification" />;
   if (!specification || unavailable) return unavailable;
   return <>
     <SpecificationDetail specification={specification} sections={tests.sections} item={specification.item?.name ?? null}
