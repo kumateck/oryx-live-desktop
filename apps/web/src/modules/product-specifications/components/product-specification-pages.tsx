@@ -24,21 +24,21 @@ import { audit, completePath, completePermission, detailPath, editPath, listPath
 function useSpecification() {
   const { id } = useParams();
   const query = productSpecificationsApi.useGetApiV1ProductSpecificationsByIdQuery(id ? { ...audit, id } : skipToken);
-  const parsed = useMemo(() => query.data ? specificationSchema.safeParse(query.data) : null, [query.data]);
+  const parsed = useMemo(() => query.currentData ? specificationSchema.safeParse(query.currentData) : null, [query.currentData]);
   const specification = parsed?.success ? parsed.data : null;
   const tests = useSpecificationTests(specification, "productSpecificationNumber");
-  const unavailable = !specification ? <SpecificationUnavailable message={query.error ? apiErrorMessage(query.error) : "The server returned a specification the app could not read."}
+  const unavailable = query.error || !specification ? <SpecificationUnavailable message={query.error ? apiErrorMessage(query.error) : "The server returned a specification the app could not read."}
     onRetry={() => void query.refetch()} back={{ label: "Product specifications", to: listPath }} />
     : tests.error ? <SpecificationUnavailable message={tests.error} onRetry={tests.retry} back={{ label: "Product specifications", to: listPath }} /> : null;
-  return { specification, tests, loading: query.isLoading || tests.loading, unavailable };
+  return { specification, tests, loading: (query.isFetching && !query.currentData) || tests.loading, refreshing: query.isFetching || tests.refreshing, unavailable };
 }
 const itemName = (specification: Specification) => specification.item ? `${specification.item.name}${specification.item.code ? ` (${specification.item.code})` : ""}` : null;
 
 export function ProductSpecificationDetailPage() {
-  const { specification, tests, loading, unavailable } = useSpecification();
+  const { specification, tests, refreshing, unavailable } = useSpecification();
   const [approving, setApproving] = useState(false);
   const approval = useApproveSpecification(VerifiableSpecification.Product, productSpecificationChanged, audit);
-  if (loading) return <DetailPageSkeleton label="Loading specification" />;
+  if (refreshing) return <DetailPageSkeleton label="Loading specification" />;
   if (!specification || unavailable) return unavailable;
   return <>
     <SpecificationDetail specification={specification} sections={tests.sections} item={specification.item?.name ?? null}
