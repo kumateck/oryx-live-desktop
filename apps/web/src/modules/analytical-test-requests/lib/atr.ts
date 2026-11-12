@@ -1,6 +1,6 @@
 export const atrPath = "/atr";
 export const atrListPath = (status: number) => `${atrPath}?type=${String(status)}`;
-export const atrStepPath = (id: string, step: "" | "assign" | "reassign" | "test" = "") => `${atrPath}/${id}${step ? `/${step}` : ""}`;
+export const atrStepPath = (id: string, step: "" | "assign" | "reassign" | "test" | "progress" = "") => `${atrPath}/${id}${step ? `/${step}` : ""}`;
 export const atrAudit = { module: "Quality Assurance", subModule: "Analytical Raw Data" } as const;
 export const atrPermissions = {
   sample: "CanTakeSamples", acknowledge: "CanAcknowledgeSampleTaken", assign: "CanAssignProductTest", start: "CanStartProductTest", reassign: "CanReassignProductTest",
@@ -16,7 +16,7 @@ export const stageLabels: Record<number, string> = { 0: "Intermediate", 1: "Bulk
 /** The AR number's type for a production stage: intermediate, bulk or finished product. */
 export const stageCode = (stage: number | null): "IP" | "BP" | "FP" => stage === 0 ? "IP" : stage === 1 ? "BP" : "FP";
 
-export type AtrAction = "sample" | "acknowledge" | "assign" | "start" | "continue" | "reassign" | "assignments" | "check" | "requestRetest" | "completeRetest" | "print";
+export type AtrAction = "sample" | "acknowledge" | "assign" | "start" | "continue" | "reassign" | "assignments" | "progress" | "check" | "requestRetest" | "completeRetest" | "print";
 export function atrActions(status: number | null, isRetest: boolean, hasAssignees: boolean): ReadonlySet<AtrAction> {
   const S = AtrStatus;
   const actions = new Set<AtrAction>();
@@ -30,7 +30,11 @@ export function atrActions(status: number | null, isRetest: boolean, hasAssignee
   if (status === S.TestTaken) actions.add("check");
   if (status === S.Released) actions.add("requestRetest");
   if (status === S.Testing && isRetest) actions.add("completeRetest");
-  if (status === S.Testing || status === S.TestTaken || status === S.Released) actions.add("print");
+  if (status === S.Assigned || status === S.Testing || status === S.TestTaken || status === S.Released) {
+    actions.add("progress");
+    actions.add("print");
+  }
   return actions;
 }
+export const atrWorksheetAccess = { kind: "some", permissions: [atrPermissions.start, atrPermissions.check] } as const;
 export const atrPrintsFilled = (status: number | null) => status === AtrStatus.TestTaken || status === AtrStatus.Released;

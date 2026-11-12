@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, expect, it } from "vitest";
@@ -72,3 +72,16 @@ it("approves a packaging specification with the packaging permission, after conf
   await waitFor(() => expect(calls.some((call) => call.path === "/api/v1/verification")).toBe(true));
   expect(JSON.parse(calls.find((call) => call.path === "/api/v1/verification")?.body ?? "")).toEqual({ modelType: 1, modelId: "s1" });
 }, 30_000);
+
+it("prints the saved specification and its test limits with view permission", async () => {
+  const { calls } = open("/qc/material-specification/s1/details", ["CanViewPackagingMaterialSpecifications"]);
+  await userEvent.click(await screen.findByRole("button", { name: "Print specification" }));
+  const preview = within(await screen.findByRole("dialog"));
+  expect(preview.getByRole("heading", { name: "Material specification" })).toBeTruthy();
+  expect(preview.getByText("Amber bottle")).toBeTruthy();
+  expect(preview.getByText("40 mm")).toBeTruthy();
+  expect(preview.getByText("No leaks")).toBeTruthy();
+  expect(preview.getByText("BP")).toBeTruthy();
+  expect(preview.getByRole("button", { name: "Print" })).toHaveProperty("disabled", false);
+  expect(calls).toEqual([]);
+});

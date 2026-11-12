@@ -138958,6 +138958,16 @@
       "DOMAIN.Entities.MaterialARD.MaterialBatchArd": {
         "type": "object",
         "properties": {
+          "worksheetResponseId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "worksheetFormId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "materialBatch": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialBatchReducedDto"
           },

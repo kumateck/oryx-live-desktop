@@ -11,6 +11,7 @@ export const manifest = {
     { pattern: "/atr/:id", access: { kind: "all", permissions: ["CanCheckProductTest"] } },
     { pattern: "/atr/:id/assign", access: { kind: "all", permissions: ["CanAssignProductTest"] } },
     { pattern: "/atr/:id/reassign", access: { kind: "all", permissions: ["CanReassignProductTest"] } },
+    { pattern: "/atr/:id/progress", access: { kind: "some", permissions: ["CanStartProductTest", "CanCheckProductTest"] } },
     { pattern: "/atr/:id/test", access: { kind: "all", permissions: ["CanStartProductTest"] } },
   ],
 } satisfies ModuleManifest<"analytical-test-requests", "/atr">;

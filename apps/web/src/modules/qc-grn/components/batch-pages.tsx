@@ -1,22 +1,28 @@
+import { skipToken } from "@reduxjs/toolkit/query";
 import { useMemo, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { qcGrnFormsApi } from "../api/qc-grn-api";
+import { qcGrnAnalyticalApi, qcGrnFormsApi, qcGrnWarehouseApi } from "../api/qc-grn-api";
 import { MaterialSummary } from "@/shared/ard-view/templates/sumary/material";
+import { PermissionGuard } from "@/shared/auth/permission-guard";
+import { useAccess } from "@/shared/auth/use-access";
 import { useCurrentUser } from "@/shared/auth/session-provider";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorCode, apiErrorMessage } from "@/shared/errors/api-error-message";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { AssignmentSheet, type FieldAssignment } from "@/shared/qc/assignment-sheet";
 import { ReassignPanel } from "@/shared/qc/assignment-views";
+import { WorksheetProgress } from "@/shared/qc/worksheet-progress";
 import { assignedFieldIds } from "@/shared/qc/assignments";
 import { issueNumber, useNextSerial } from "@/shared/qc/qc-numbers";
 import { TestEntry, TestEntryEmpty } from "@/shared/qc/test-entry";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useBatchRoute } from "../hooks/use-batch-route";
 import { useBatchWorksheet } from "../hooks/use-batch-worksheet";
-import { qcGrnAudit, qcGrnPath, qcPermissions } from "../lib/qc-grn";
+import { grnListAudit, printsFilled, qcGrnAudit, qcGrnPath, qcPermissions, qcWorksheetAccess } from "../lib/qc-grn";
+
+import { BatchWorksheetPreview } from "./batch-worksheet";
 
 type Sheet = ReturnType<typeof useBatchWorksheet>;
 const material = (sheet: Sheet) => { const batch = sheet.details?.materialBatch; return { name: batch?.material?.name ?? "Material", code: batch?.material?.code ?? null, number: batch?.batchNumber ?? null }; };
@@ -87,7 +93,42 @@ export function BatchTestPage() {
   return <Frame sheet={sheet} title="Enter results" crumb="Enter results">
     {!sheet.form ? <TestEntryEmpty kind="no-form" details={details} onBack={() => void navigate(route.notePath)} />
       : mine.size === 0 ? <>{summary(sheet, route.kind)}<TestEntryEmpty kind="not-assigned" details={details} onBack={() => void navigate(route.notePath)} /></>
-      : <TestEntry form={sheet.form} mine={mine} stored={sheet.stored} context={context} audit={qcGrnAudit} require={qcPermissions.test[route.kind]} summary={summary(sheet, route.kind)} onReload={sheet.reload} onDone={() => void navigate(route.notePath)} />}
+      : <TestEntry progressTo={route.path("progress")} form={sheet.form} mine={mine} stored={sheet.stored} context={context} audit={qcGrnAudit} require={qcPermissions.test[route.kind]} summary={summary(sheet, route.kind)} onReload={sheet.reload} onDone={() => void navigate(route.notePath)} />}
   </Frame>;
 }
+/** Check note membership and the stored kind before reading any worksheet answers. */
+export function BatchProgressPage() {
+  const route = useBatchRoute();
+  const access = useAccess();
+  const note = qcGrnWarehouseApi.useGetApiV1WarehouseGrnByIdQuery(
+    route.ready && access.allows(qcWorksheetAccess(route.kind))
+      ? { ...grnListAudit, id: route.grnId }
+      : skipToken,
+  );
+  const onNote = note.currentData?.materialBatches?.some((batch) => batch.id === route.batchId);
+  const batch = qcGrnAnalyticalApi.useGetApiV1MaterialArdMaterialBatchDetailsByMaterialBatchIdQuery(
+    onNote ? { ...qcGrnAudit, materialBatchId: route.batchId } : skipToken,
+  );
+  const kind = batch.currentData?.materialBatch?.material?.kind;
+  if (note.isLoading || batch.isLoading || note.isFetching && !note.currentData)
+    return <DetailPageSkeleton label="Loading batch test" />;
+  const error = note.error ?? batch.error;
+  if (error || !onNote || kind !== route.kind || !route.ready) return <p role="alert" className="text-sm text-muted-foreground">
+    {error ? apiErrorMessage(error) : "This batch is unavailable on this goods receipt note."}
+  </p>;
+  return <PermissionGuard require={qcWorksheetAccess(kind)}>
+    <BatchProgressSheet batchId={route.batchId} kind={kind} />
+  </PermissionGuard>;
+}
+
+function BatchProgressSheet({ batchId, kind }: { batchId: string; kind: 0 | 1 }) {
+  const sheet = useBatchWorksheet(batchId, { fresh: true });
+  return <Frame sheet={sheet} title="Test progress" crumb="Test progress">
+    {summary(sheet, kind)}
+    <WorksheetProgress form={sheet.form} stored={sheet.stored} responses={sheet.responses}
+      assignments={sheet.assignees} submitted={printsFilled(sheet.details?.materialBatch?.status ?? null)}
+      preview={(close) => <BatchWorksheetPreview sheet={sheet} filled onClose={close} />} />
+  </Frame>;
+}
+
 export { Frame as BatchFrame, summary as batchSummary };

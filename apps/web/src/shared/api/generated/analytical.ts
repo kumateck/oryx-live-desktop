@@ -2973,6 +2973,8 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead = {
   effectiveExpiryDate?: string | null;
 };
 export type DomainEntitiesMaterialArdMaterialBatchArd = {
+  worksheetResponseId?: string | null;
+  worksheetFormId?: string | null;
   materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchReducedDto;
   arNumber?: string | null;
   grnNumber?: string | null;
@@ -2986,6 +2988,8 @@ export type DomainEntitiesMaterialArdMaterialBatchArd = {
   quantitySampled?: number;
 };
 export type DomainEntitiesMaterialArdMaterialBatchArdRead = {
+  worksheetResponseId?: string | null;
+  worksheetFormId?: string | null;
   materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchReducedDtoRead;
   arNumber?: string | null;
   grnNumber?: string | null;

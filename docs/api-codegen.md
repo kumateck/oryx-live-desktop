@@ -1,3 +1,10 @@
+QC worksheet progress (2026-11-12) adds the optional nullable UUID fields
+`worksheetResponseId` and `worksheetFormId` to the existing material batch
+worksheet details response. These identify the worksheet for the current sample.
+The reviewed typed contract has digest `607760d98226801bff574edf1f8009307a230d2237f85a9126c8043e3af5511f`.
+Removing only those two fields reproduces `7fbbda4c84600f4344f97f286f092d2635854986928fac39f61bf9376e75a2cc`.
+The legacy release policy retains its prior fingerprints and includes this source contract.
+
 Draft migration material linking (2026-11-09) adds typed GET/POST at
 `/api/v1/stock-migrations/{id}/material-links/{kind}` and three owned
 `DOMAIN.Entities.Materials.StockMigrations.*MaterialLink*` DTOs. Import only these
