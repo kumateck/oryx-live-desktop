@@ -4,6 +4,7 @@ import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "Atrs" as const, id: "all" };
 const one = (id: string) => ({ type: "Atrs" as const, id });
+const assignment = (id: string) => ({ type: "AtrAssignments" as const, id });
 const work = (bmrId: string) => ({ type: "AtrWork" as const, id: bmrId });
 const responseRows = (responseId: string) => ({ type: "AtrWork" as const, id: `response:${responseId}` });
 
@@ -14,12 +15,21 @@ export const atrApi = analyticalApi.enhanceEndpoints({ addTagTypes: ["Atrs", "At
   postApiV1QaAnalyticalTestsRequestRetestById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [list, one(arg.id)]); },
   postApiV1QaAnalyticalTestsCompleteRetestById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [list, one(arg.id)]); },
 } });
-export const atrFormsApi = formsApi.enhanceEndpoints({ addTagTypes: ["Atrs", "AtrWork"], endpoints: {
+export const atrFormsApi = formsApi.enhanceEndpoints({ addTagTypes: ["Atrs", "AtrWork", "AtrAssignments"], endpoints: {
   getApiV1FormResponse: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [work(arg.batchManufacturingRecordId ?? "")]); },
   getApiV1FormResponsesByFormResponseId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [responseRows(arg.formResponseId)]); },
   // A saved draft returns the response it was saved in: refetch that response's answers only, not the whole test page.
   postApiV1FormResponsesDraft: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (result, error) => error || !result ? [] : [responseRows(result)]); },
-  getApiV1FormAssigneesBmrByBmrId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [work(arg.bmrId)]); },
+  postApiV1FormResponsesFinalizeByResponseId: (definition) => {
+    definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : ["Atrs", responseRows(arg.responseId)]);
+  },
+  getApiV1FormAssigneesBmrByBmrId: (definition) => { definition.providesTags = addTags(definition.providesTags, (result, _error, arg) => [work(arg.bmrId), ...(result?.id ? [assignment(result.id)] : [])]); },
+  postApiV1FormAssigneesReassign: (definition) => {
+    definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => {
+      const id = arg.domainEntitiesFormsRequestReassignFormAssigneeRequest.formAssigneeId;
+      return error || !id ? [] : ["Atrs", assignment(id)];
+    });
+  },
   postApiV1FormAssignees: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list, "AtrWork"]); },
   postApiV1FormGenerateCertificateProductByBatchManufacturingRecordIdAndProductionActivityStepId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list, "AtrWork"]); },
 } });
