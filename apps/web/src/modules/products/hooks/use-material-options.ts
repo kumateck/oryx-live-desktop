@@ -1,8 +1,8 @@
 import { useProductWorkspace } from "./use-product-workspace";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { SelectLoader } from "@/shared/forms/form-wizard-types";
 import type { DomainEntitiesMaterialsMaterialDepartmentWithWarehouseStockDto } from "@/shared/api/generated/materials";
-import { useGetApiV1MaterialDepartmentQuery, useLazyGetApiV1MaterialDepartmentQuery } from "../api/product-api";
+import { useLazyGetApiV1MaterialDepartmentQuery } from "../api/product-api";
 import type { MaterialFacts } from "../lib/bom";
 import { departmentMaterialSchema } from "../schemas/bom-schema";
 
@@ -48,13 +48,50 @@ export function useMaterialOptions(kind: 0 | 1, audit: { module: string; subModu
   return { loader, facts };
 }
 
+/** Read every matching page afresh: a picker cache or its first page is not density authority. */
 export function useBomDensity(materialId: string | undefined, search: string, audit: { module: string; subModule: string }) {
   const { lookupProductId } = useProductWorkspace();
-  const query = useGetApiV1MaterialDepartmentQuery({ ...audit, searchQuery: search, page: 1, pageSize: 20,
-    kind: materialKind.raw, ...(lookupProductId ? { productId: lookupProductId } : {}) }, { skip: !materialId });
-  const parsed = departmentMaterialSchema.safeParse(query.currentData?.data?.find((item) => item.material?.id === materialId));
-  const unit = parsed.success ? parsed.data.densityUoM : null;
-  const density = parsed.success && unit?.id && unit.symbol?.trim().toLowerCase() === "g/ml" ? parsed.data.density : null;
-  return { density, loading: query.isFetching || (Boolean(materialId) && query.isUninitialized),
-    failed: query.isError, retry: query.refetch };
+  const [load] = useLazyGetApiV1MaterialDepartmentQuery();
+  const [attempt, setAttempt] = useState(0);
+  const [result, setResult] = useState<{ key: string; density: number | null; problem: string | null; failed: boolean } | null>(null);
+  const key = JSON.stringify([materialId, search, lookupProductId, attempt]);
+  const { module, subModule } = audit;
+  useEffect(() => {
+    if (!materialId) return;
+    let active = true;
+    let cancel = () => {};
+    const read = async () => {
+      try {
+        for (let page = 1; active; page += 1) {
+          const request = load({ module, subModule, searchQuery: search, page, pageSize: 20,
+            kind: materialKind.raw, ...(lookupProductId ? { productId: lookupProductId } : {}) }, false);
+          cancel = request.abort;
+          const response = await request.unwrap();
+          if (!active) return;
+          const entry = response.data?.find((item) => item.material?.id === materialId);
+          if (entry) {
+            const parsed = departmentMaterialSchema.safeParse(entry);
+            const value = parsed.success ? parsed.data.density : null;
+            const unit = parsed.success ? parsed.data.densityUoM : null;
+            const problem = !parsed.success ? "The saved department density could not be read."
+              : !(value !== null && value > 0) ? "Set a positive measured density on this department's material link."
+              : !unit?.id || unit.symbol?.trim().toLowerCase() !== "g/ml"
+                ? `Saved density: ${value} ${unit?.symbol || "(unit not recorded)"}. Record its measured unit as g/mL on this department's material link.` : null;
+            setResult({ key, density: problem ? null : value, problem, failed: false });
+            return;
+          }
+          if (page >= (response.pageCount ?? page)) break;
+        }
+        if (active) setResult({ key, density: null, problem: "This material was not found in the product department's linked materials.", failed: false });
+      } catch {
+        if (active) setResult({ key, density: null, problem: null, failed: true });
+      }
+    };
+    void read();
+    return () => { active = false; cancel(); };
+  }, [key, materialId, search, lookupProductId, module, subModule, load]);
+  const current = result?.key === key ? result : null;
+  return { density: current?.density ?? null, problem: current?.problem ?? null,
+    loading: Boolean(materialId) && !current, failed: current?.failed ?? false,
+    retry: () => setAttempt((value) => value + 1) };
 }
