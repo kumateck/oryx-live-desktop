@@ -12,6 +12,7 @@ import { DetailPageSkeleton, FormPageSkeleton } from "@/shared/skeleton/page-ske
 import { specificationValuesApi, specificationValuesTag } from "@/shared/specifications/specification-api";
 import { specificationSchema, type Specification } from "@/shared/specifications/specification-schema";
 import { SpecificationCompletion } from "@/shared/specifications/specification-completion";
+import { SpecificationPrintAction } from "@/shared/specifications/specification-print-action";
 import { SpecificationDetail, SpecificationUnavailable } from "@/shared/specifications/specification-views";
 import { useApproveSpecification, VerifiableSpecification } from "@/shared/specifications/use-approve-specification";
 import { useSpecificationTests } from "@/shared/specifications/use-specification-tests";
@@ -43,15 +44,16 @@ export function MaterialSpecificationDetailPage() {
   return <>
     <SpecificationDetail specification={specification} sections={tests.sections} item={specification.item?.name ?? null}
       crumbs={[{ label: "Material specifications", to: listOf(kind) }, { label: specification.number }]}
-      printTitle="Material specification"
-      printFacts={[
-        { label: "Material", value: specification.item?.name ?? null },
-        { label: "Material code", value: specification.item?.code ?? null },
-        { label: "Pharmacopoeia", value: specification.item?.pharmacopoeia ?? null },
-      ]}
       facts={<><KeyFact label="Material" value={specification.item?.name ?? "–"} note={specification.item?.code ?? undefined} />
         <KeyFact label="Pharmacopoeia" value={specification.item?.pharmacopoeia ?? "–"} /></>}
       actions={<>
+        {asKind(specification.item?.kind) !== null ? <SpecificationPrintAction
+          kind={kind === 1 ? "packaging" : "raw"} title="Material specification" specification={specification} sections={tests.sections}
+          subjectFacts={[
+            { label: "Material", value: specification.item?.name ?? null },
+            { label: "Material code", value: specification.item?.code ?? null },
+            { label: "Pharmacopoeia", value: specification.item?.pharmacopoeia ?? null },
+          ]} /> : null}
         {!specification.isVerified ? <PermissionGuard require={specPermissions.verify[kind]}><Button variant="outline" onClick={() => setApproving(true)}><BadgeCheck />Approve</Button></PermissionGuard> : null}
         <PermissionGuard require={completePermission(kind)}><Button asChild variant="outline"><Link to={completePath(specification.id)}><ClipboardCheck />Set test references</Link></Button></PermissionGuard>
         <PermissionGuard require={specPermissions.edit[kind]}><Button asChild><Link to={editPath(specification.id)}><Pencil />Edit</Link></Button></PermissionGuard>

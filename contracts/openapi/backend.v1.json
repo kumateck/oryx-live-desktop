@@ -117507,6 +117507,183 @@
           }
         }
       }
+    },
+    "/api/v1/specification-print/raw-material/{id}": {
+      "get": {
+        "tags": [
+          "SpecificationPrint"
+        ],
+        "operationId": "GetRawMaterialSpecificationPrintHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Specifications.SpecificationPrintHistory"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Specifications.SpecificationPrintHistory"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Specifications.SpecificationPrintHistory"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/specification-print/packaging-material/{id}": {
+      "get": {
+        "tags": [
+          "SpecificationPrint"
+        ],
+        "operationId": "GetPackagingMaterialSpecificationPrintHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Specifications.SpecificationPrintHistory"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Specifications.SpecificationPrintHistory"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Specifications.SpecificationPrintHistory"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/specification-print/product/{id}": {
+      "get": {
+        "tags": [
+          "SpecificationPrint"
+        ],
+        "operationId": "GetProductSpecificationPrintHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Specifications.SpecificationPrintHistory"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Specifications.SpecificationPrintHistory"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Specifications.SpecificationPrintHistory"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -179655,7 +179832,8 @@
           },
           "responseId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "formFieldId": {
             "type": "string",
@@ -181056,6 +181234,64 @@
             "maxLength": 1000,
             "minLength": 3,
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Specifications.SpecificationPrintHistory": {
+        "type": "object",
+        "properties": {
+          "revisedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "historyAvailableFrom": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Specifications.SpecificationPrintRevision"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Specifications.SpecificationPrintRevision": {
+        "type": "object",
+        "properties": {
+          "specificationNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisionNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "supersedesNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "recordedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "event": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
