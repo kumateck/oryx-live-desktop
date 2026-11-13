@@ -58,7 +58,8 @@ export function useAtrWorksheet(id: string, options: { fresh?: boolean; assignee
         : formQuery.error && !response.data?.effectiveForm ? apiErrorMessage(formQuery.error) : null;
   return {
     atr, rawAtr: atrQuery.data ?? null, ard, form, rawForm, loading, error, formMissing: !loading && !form, stored, responses: response.data?.formResponses ?? [], assignees: assigned,
-    certificate: response.data?.formResponses?.some(row => row.formulaRepairPending) ? { canGenerate: false, label: "Repaired formulas need recalculation" } : certificateState(parsedResponse), context,
+    certificate: response.data?.formResponses?.some(row => row.formulaRepairPending) ? { canGenerate: false, label: "Repaired formulas need recalculation" } : certificateState(parsedResponse),
+    context: context ? { ...context, ...(currentResponseId && response.data && stored.size === 0 ? { responseId: currentResponseId } : {}) } : null,
     reload: () => { if (context) void responseId.refetch(); if (currentResponseId) void response.refetch(); if (options.assignees !== false && atr?.bmrId) void assignees.refetch(); },
     retry: () => { void atrQuery.refetch(); if (atr?.productId) void ards.refetch(); if (context) void responseId.refetch(); if (currentResponseId) void response.refetch(); if (options.assignees !== false && atr?.bmrId) void assignees.refetch(); if (formId) void formQuery.refetch(); },
   };

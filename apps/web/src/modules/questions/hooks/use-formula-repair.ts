@@ -26,7 +26,8 @@ export function repairProblem(error: FetchBaseQueryError | SerializedError | und
   return { kind: "unconfirmed", message: `${message} The repair may not have been saved. Retry the same reviewed request; it will not be applied twice.` };
 }
 
-export function useFormulaRepair(context: RepairContext, atr: string | null, field: string | null, refresh: () => void) {
+export function useFormulaRepair(context: RepairContext, atr: string | null, field: string | null, refresh: () => void,
+  onBack?: () => void, onApplied?: (definition: string) => void) {
   const initial = useMemo(() => formulaRepairDefaults(context.definition), [context.definition]);
   const form = useForm<FormulaRepairValues>({ resolver: zodResolver(formulaRepairValuesSchema), defaultValues: {
     ...initial, updateQuestion: !atr && context.canRepairQuestion, selectedTests: context.tests.filter(t => t.eligible && t.atrId === atr && t.formFieldId === field).map(repairTestKey), reason: "",
@@ -87,12 +88,14 @@ export function useFormulaRepair(context: RepairContext, atr: string | null, fie
       const parsed = repairReceiptSchema.safeParse(result.data);
       if (!parsed.success) { setProblem({ kind: "unconfirmed", message: "The repair receipt could not be read. Retry this same reviewed request." }); return; }
       setReceipt(parsed.data); form.reset(input); toast.success(parsed.data.alreadyApplied ? "Formula repair was already saved" : "Formula repair saved");
+      if (candidate.targets.some(target => target.atrId === atr && target.formFieldId === field))
+        onApplied?.(candidate.definition);
     } catch (error) {
       setProblem({ kind: "unconfirmed", message: error instanceof Error ? error.message : "The repair could not be confirmed. Retry the same reviewed request." });
     } finally { pending.current = false; }
   });
   return { form, manualKeys: manualRepairVariables(context.definition, expression), preview: current, problem, receipt, submit,
     busy: previewing.isLoading || applying.isLoading, applying: applying.isLoading,
-    back: () => void navigate(atr ? `/atr/${encodeURIComponent(atr)}/test` : "/settings/questions"),
+    back: onBack ?? (() => void navigate(atr ? `/atr/${encodeURIComponent(atr)}/test` : "/settings/questions")),
     canApply: Boolean(current && !current.blockers.length && !receipt) };
 }
