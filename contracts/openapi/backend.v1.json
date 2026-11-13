@@ -179832,7 +179832,8 @@
           },
           "responseId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "formFieldId": {
             "type": "string",

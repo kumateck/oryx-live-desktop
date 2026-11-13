@@ -1638,7 +1638,7 @@ export type AppServicesFormulasFormulaEvaluationRequest = {
 };
 export type AppServicesFormulasFormulaRepairTestDto = {
   atrId?: string;
-  responseId?: string;
+  responseId?: string | null;
   formFieldId?: string;
   label?: string | null;
   eligible?: boolean;
