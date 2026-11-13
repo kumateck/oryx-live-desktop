@@ -37,7 +37,7 @@ export const apiDomains: readonly ApiDomain[] = [
   { id: "analytical", exportName: "analyticalApi", tags: [
     "AnalyticalTestRequest", "MaterialAnalyticalRawData", "MaterialSampling", "MaterialSpecification",
     "MaterialStandardTestProcedure", "OosInvestigation", "ProductAnalyticalRawData", "ProductSampling",
-    "ProductSpecification", "ProductStandardTestProcedure", "StpDocument",
+    "ProductSpecification", "ProductStandardTestProcedure", "SpecificationPrint", "StpDocument",
   ] },
   { id: "qa", exportName: "qaApi", tags: ["QualityAudit"] },
   { id: "forms", exportName: "formsApi", tags: ["Form", "FormRevision", "FormulaDefinition", "FormulaQuestion", "FormulaRuntime", "FormulaRepair"] },

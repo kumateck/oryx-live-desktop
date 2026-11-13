@@ -1411,6 +1411,45 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getRawMaterialSpecificationPrintHistory: build.query<
+      GetRawMaterialSpecificationPrintHistoryApiResponse,
+      GetRawMaterialSpecificationPrintHistoryApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "specification-print/raw-material", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/specification-print/raw-material/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getPackagingMaterialSpecificationPrintHistory: build.query<
+      GetPackagingMaterialSpecificationPrintHistoryApiResponse,
+      GetPackagingMaterialSpecificationPrintHistoryApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "specification-print/packaging-material", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/specification-print/packaging-material/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getProductSpecificationPrintHistory: build.query<
+      GetProductSpecificationPrintHistoryApiResponse,
+      GetProductSpecificationPrintHistoryApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "specification-print/product", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/specification-print/product/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2312,6 +2351,33 @@ export type PostApiV1StpDocumentsDocumentsByDocumentIdRejectApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesStpDocumentsSubmitStpDocumentVersionRequest: DomainEntitiesStpDocumentsSubmitStpDocumentVersionRequest;
+};
+export type GetRawMaterialSpecificationPrintHistoryApiResponse =
+  /** status 200 OK */ DomainEntitiesSpecificationsSpecificationPrintHistory;
+export type GetRawMaterialSpecificationPrintHistoryApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetPackagingMaterialSpecificationPrintHistoryApiResponse =
+  /** status 200 OK */ DomainEntitiesSpecificationsSpecificationPrintHistory;
+export type GetPackagingMaterialSpecificationPrintHistoryApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetProductSpecificationPrintHistoryApiResponse =
+  /** status 200 OK */ DomainEntitiesSpecificationsSpecificationPrintHistory;
+export type GetProductSpecificationPrintHistoryApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -3795,6 +3861,20 @@ export type DomainEntitiesStpDocumentsSubmitStpDocumentVersionRequest = {
   password?: string | null;
   meaning?: string | null;
 };
+export type DomainEntitiesSpecificationsSpecificationPrintRevision = {
+  specificationNumber?: string | null;
+  revisionNumber?: string | null;
+  supersedesNumber?: string | null;
+  recordedBy?: string | null;
+  occurredAt?: string | null;
+  event?: string | null;
+};
+export type DomainEntitiesSpecificationsSpecificationPrintHistory = {
+  revisedBy?: string | null;
+  revisedAt?: string | null;
+  historyAvailableFrom?: string | null;
+  revisions?: DomainEntitiesSpecificationsSpecificationPrintRevision[] | null;
+};
 export const {
   usePostApiV1QaAnalyticalTestsMutation,
   useGetApiV1QaAnalyticalTestsQuery,
@@ -3933,4 +4013,10 @@ export const {
   usePostApiV1StpDocumentsDocumentsByDocumentIdSubmitReviewMutation,
   usePostApiV1StpDocumentsDocumentsByDocumentIdApproveMutation,
   usePostApiV1StpDocumentsDocumentsByDocumentIdRejectMutation,
+  useGetRawMaterialSpecificationPrintHistoryQuery,
+  useLazyGetRawMaterialSpecificationPrintHistoryQuery,
+  useGetPackagingMaterialSpecificationPrintHistoryQuery,
+  useLazyGetPackagingMaterialSpecificationPrintHistoryQuery,
+  useGetProductSpecificationPrintHistoryQuery,
+  useLazyGetProductSpecificationPrintHistoryQuery,
 } = injectedRtkApi;

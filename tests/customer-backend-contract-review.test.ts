@@ -86,6 +86,33 @@ function stripWorksheetFields(schemas: ObjectValue) {
   for (const field of worksheetFields) delete properties[field];
 }
 
+const specificationPrintOperations = {
+  "raw-material": "GetRawMaterialSpecificationPrintHistory",
+  "packaging-material": "GetPackagingMaterialSpecificationPrintHistory",
+  product: "GetProductSpecificationPrintHistory",
+} as const;
+
+function stripSpecificationPrint(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  for (const category of Object.keys(specificationPrintOperations)) delete paths[`/api/v1/specification-print/${category}/{id}`];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete schemas["DOMAIN.Entities.Specifications.SpecificationPrintHistory"];
+  delete schemas["DOMAIN.Entities.Specifications.SpecificationPrintRevision"];
+}
+
+test("specification printing adds three typed reads and preserves the prior release contract", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const paths = object(current.paths ?? null);
+  for (const [category, operationId] of Object.entries(specificationPrintOperations)) {
+    const path = object(paths[`/api/v1/specification-print/${category}/{id}`] ?? null);
+    assert.deepEqual(Object.keys(path), ["get"]);
+    assert.equal(object(path.get ?? null).operationId, operationId);
+  }
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+  stripSpecificationPrint(current);
+  assert.equal(contractDigest(current), "607760d98226801bff574edf1f8009307a230d2237f85a9126c8043e3af5511f");
+});
+
 function stripProductBatchStem(schemas: ObjectValue) {
   for (const dto of ["Product", "ProductDto", "ProductListDto", "CreateProductRequest", "UpdateProductRequest"])
     delete object(object(schemas[`DOMAIN.Entities.Products.${dto}`] ?? null).properties ?? null).batchStem;
@@ -100,6 +127,7 @@ function stripMigrationMaterialLinks(document: ObjectValue) {
 
 test("material worksheet details add only two optional response identifiers", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripSpecificationPrint(current);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   const schema = object(schemas[worksheetSchema] ?? null);
   const properties = object(schema.properties ?? null);
@@ -117,6 +145,7 @@ test("material worksheet details add only two optional response identifiers", ()
 
 test("draft material linking adds only typed preview/create operations and preserves the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripSpecificationPrint(current);
   stripWorksheetFields(object(object(current.components ?? null).schemas ?? null));
   stripProductBatchStem(object(object(current.components ?? null).schemas ?? null));
   stripMigrationBatchDetails(current);
@@ -134,6 +163,7 @@ test("draft material linking adds only typed preview/create operations and prese
 
 test("stock picking adds only seven optional read fields and preserves the approved contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripSpecificationPrint(current);
   stripWorksheetFields(object(object(current.components ?? null).schemas ?? null));
   stripProductBatchStem(object(object(current.components ?? null).schemas ?? null));
   stripMigrationBatchDetails(current);
@@ -167,6 +197,7 @@ test("the preserved customer export matches the reported digest and retains both
 
 test("BOM density conversion is an optional additive marker on the request and saved item", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripSpecificationPrint(current);
   stripWorksheetFields(object(object(current.components ?? null).schemas ?? null));
   stripProductBatchStem(object(object(current.components ?? null).schemas ?? null));
   stripMigrationBatchDetails(current);
@@ -191,6 +222,7 @@ test("all 1,358 operations and schemas match after only 2,716 audit-header schem
 
 test("historical reporting adds optional read parameters without changing existing contracts or security", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripSpecificationPrint(current);
   const before = reviewedImport();
   const paths = object(current.paths ?? null);
   for (const [path, item] of Object.entries(object(before.paths ?? null))) {
@@ -396,6 +428,7 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
 test("the merged forecast and migration contracts preserve the approved predecessor and pass release validation", () => {
   const head = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   const publishedDigest = contractDigest(head);
+  stripSpecificationPrint(head);
   stripWorksheetFields(object(object(head.components ?? null).schemas ?? null));
   stripProductBatchStem(object(object(head.components ?? null).schemas ?? null));
   assert.equal(contractDigest(head), "474090995ed29dc1fccf7f204706e9127181e120b1ee0014fb6e6e852f5d2d23");
