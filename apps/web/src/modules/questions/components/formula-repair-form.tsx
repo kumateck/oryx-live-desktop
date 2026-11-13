@@ -20,8 +20,11 @@ const problemTitles: Record<RepairProblem["kind"], string> = {
   denied: "Not allowed", stale: "Preview again", invalid: "Repair not possible yet", unconfirmed: "Repair not confirmed",
 };
 
-export function FormulaRepairForm({ context, atr, field, refresh }: { context: RepairContext; atr: string | null; field: string | null; refresh: () => void }) {
-  const page = useFormulaRepair(context, atr, field, refresh);
+export function FormulaRepairForm({ context, atr, field, refresh, onBack, onApplied }: {
+  context: RepairContext; atr: string | null; field: string | null; refresh: () => void;
+  onBack?: (() => void) | undefined; onApplied?: ((definition: string) => void) | undefined;
+}) {
+  const page = useFormulaRepair(context, atr, field, refresh, onBack, onApplied);
   const { form, preview, problem } = page;
   if (page.receipt) return <FormulaRepairReceipt receipt={page.receipt} questionId={context.questionId} fromTest={Boolean(atr)} onBack={page.back} />;
   return <form noValidate onSubmit={page.submit("preview")} className="min-w-0 space-y-4">
@@ -42,7 +45,7 @@ export function FormulaRepairForm({ context, atr, field, refresh }: { context: R
         <Checkbox checked={input.value} disabled={!context.canRepairQuestion || page.busy} onCheckedChange={checked => input.onChange(checked === true)} />
         <span>Repair the shared question for templates and future tests{context.canRepairQuestion ? null : <span className="block text-muted-foreground">Requires the repair question formula permission.</span>}</span></label>} />
       <Controller control={form.control} name="selectedTests" render={({ field: input }) => <fieldset className="space-y-2"><legend className="text-sm font-medium">Open tests you are assigned to</legend>
-        {context.tests.length === 0 ? <p className="text-sm text-muted-foreground">No saved test responses are accessible to you for this question. Save a draft first if a test has not started.</p> : null}
+        {context.tests.length === 0 ? <p className="text-sm text-muted-foreground">No assigned tests are accessible to you for this question.</p> : null}
         {context.tests.map(test => { const key = repairTestKey(test); return <label key={key} className="flex items-start gap-2 text-sm">
           <Checkbox checked={input.value.includes(key)} disabled={!context.canRepairTests || !test.eligible || page.busy}
             onCheckedChange={checked => input.onChange(checked === true ? [...input.value, key] : input.value.filter(value => value !== key))} />

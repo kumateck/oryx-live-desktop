@@ -90,8 +90,8 @@ export function AtrTestPage() {
     {!sheet.form || !sheet.context ? <TestEntryEmpty kind="no-form" details={details} onBack={() => void navigate(back(sheet))} />
       : mine.size === 0 ? <>{summary(sheet)}<TestEntryEmpty kind="not-assigned" details={details} onBack={() => void navigate(back(sheet))} /></>
       : <TestEntry progressTo={atrStepPath(sheet.atr?.id ?? "", "progress")} form={sheet.form} mine={mine} stored={sheet.stored} context={sheet.context} audit={atrAudit} require={atrPermissions.start} summary={summary(sheet)} onReload={noReload} onDone={() => void navigate(back(sheet))}
-        formulaActions={disabled => <AtrFormulaActions atrId={sheet.atr?.id ?? ""} fields={sheet.form ? formFields(sheet.form).filter(field => mine.has(field.id)) : []}
-          responses={sheet.responses} disabled={disabled} onReload={sheet.reload} />} />}
+        formulaActions={(disabled, onRepaired) => <AtrFormulaActions atrId={sheet.atr?.id ?? ""} fields={sheet.form ? formFields(sheet.form).filter(field => mine.has(field.id)) : []}
+          responses={sheet.responses} disabled={disabled} onRepaired={onRepaired} onReload={sheet.reload} />} />}
   </Frame>;
 }
 

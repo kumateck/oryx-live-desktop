@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CircleCheck, ClipboardCheck, ClipboardList, Eye, FlaskConical, HandHelping, Pipette, Play, Printer, Target, UserCog } from "lucide-react";
+import { CircleCheck, ClipboardCheck, ClipboardList, Eye, FlaskConical, HandHelping, Pipette, Play, Printer, Target, UserCog, Wrench } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,9 @@ import { AtrStatus, atrActions, atrAudit, atrPermissions, atrStatusLabels, atrWo
 import { atrRowsSchema, type Atr } from "../schemas/atr-schema";
 import { AtrAssignmentsDialog, CompleteAtrRetestDialog, TakeSampleDialog } from "./atr-dialogs";
 import { AtrWorksheetPrint } from "./atr-worksheet";
+import { AtrRepairDialog } from "./atr-repair-dialog";
 
-type Open = { kind: "sample" | "acknowledge" | "start" | "requestRetest" | "completeRetest" | "assignments"; atr: Atr } | { kind: "print"; atr: Atr; filled: boolean } | null;
+type Open = { kind: "sample" | "acknowledge" | "start" | "repair" | "requestRetest" | "completeRetest" | "assignments"; atr: Atr } | { kind: "print"; atr: Atr; filled: boolean } | null;
 const column = dataTableColumns<Atr>();
 
 /** Analytical test requests: QA's new requests to sample, or QC's queues from sample received to result released. */
@@ -59,6 +60,8 @@ export function AtrListPage() {
         actions.has("assign") && { id: "assign", label: "Assign test", icon: Target, require: atrPermissions.assign, to: atrStepPath(atr.id, "assign") },
         actions.has("start") && { id: "start", label: "Start test", icon: Play, require: atrPermissions.start, onSelect: () => setOpen({ kind: "start", atr }) },
         actions.has("continue") && { id: "continue", label: "Enter results", icon: FlaskConical, require: atrPermissions.start, to: atrStepPath(atr.id, "test") },
+        actions.has("repair") && { id: "repair", label: "Repair test", icon: Wrench,
+          require: { kind: "all", permissions: ["CanViewQuestions", "CanRepairTestFormula", atrPermissions.start] }, onSelect: () => setOpen({ kind: "repair", atr }) },
         actions.has("reassign") && { id: "reassign", label: "Reassign analysts", icon: UserCog, require: atrPermissions.reassign, to: atrStepPath(atr.id, "reassign") },
         actions.has("assignments") && { id: "assignments", label: "View assignments", icon: Eye, onSelect: () => setOpen({ kind: "assignments", atr }) },
         actions.has("check") && { id: "check", label: "Check results", icon: ClipboardCheck, require: atrPermissions.check, to: atrStepPath(atr.id) },
@@ -102,6 +105,7 @@ export function AtrListPage() {
       error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned requests the app could not read." : null}
       emptyTitle={search.trim() ? "No requests match this search" : `No ${(atrStatusLabels[status] ?? "").toLowerCase()} requests`} emptyDescription={qa ? "Requests appear when a batch reaches a testing step in production." : "Nothing is waiting in this queue."} />
     {open?.kind === "sample" ? <TakeSampleDialog atr={open.atr} onClose={close} /> : null}
+    {open?.kind === "repair" ? <AtrRepairDialog atrId={open.atr.id} onClose={close} /> : null}
     {open?.kind === "completeRetest" ? <CompleteAtrRetestDialog atr={open.atr} onClose={close} /> : null}
     {open?.kind === "assignments" ? <AtrAssignmentsDialog atr={open.atr} onClose={close} /> : null}
     {open?.kind === "print" ? <AtrWorksheetPrint id={open.atr.id} filled={open.filled} onClose={close} /> : null}

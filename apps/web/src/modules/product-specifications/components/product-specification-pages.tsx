@@ -12,6 +12,7 @@ import { DetailPageSkeleton, FormPageSkeleton } from "@/shared/skeleton/page-ske
 import { specificationValuesApi, specificationValuesTag } from "@/shared/specifications/specification-api";
 import { specificationSchema, type Specification } from "@/shared/specifications/specification-schema";
 import { SpecificationCompletion } from "@/shared/specifications/specification-completion";
+import { SpecificationPrintAction } from "@/shared/specifications/specification-print-action";
 import { SpecificationDetail, SpecificationUnavailable } from "@/shared/specifications/specification-views";
 import { useApproveSpecification, VerifiableSpecification } from "@/shared/specifications/use-approve-specification";
 import { useSpecificationTests } from "@/shared/specifications/use-specification-tests";
@@ -43,16 +44,16 @@ export function ProductSpecificationDetailPage() {
   return <>
     <SpecificationDetail specification={specification} sections={tests.sections} item={specification.item?.name ?? null}
       crumbs={[{ label: "Product specifications", to: listPath }, { label: specification.number }]}
-      printTitle="Product specification"
-      printFacts={[
-        { label: "Product", value: specification.item?.name ?? null },
-        { label: "Product code", value: specification.item?.code ?? null },
-        { label: "Stage", value: testStageLabel(specification.testStage) },
-        { label: "Generic name", value: specification.item?.genericName ?? null },
-      ]}
       facts={<><KeyFact label="Product" value={specification.item?.name ?? "–"} note={specification.item?.code ?? undefined} />
         <KeyFact label="Stage" value={testStageLabel(specification.testStage)} note={specification.item?.genericName ?? undefined} /></>}
       actions={<>
+        <SpecificationPrintAction kind="product" title="Product specification" specification={specification} sections={tests.sections}
+          subjectFacts={[
+            { label: "Product", value: specification.item?.name ?? null },
+            { label: "Product code", value: specification.item?.code ?? null },
+            { label: "Stage", value: testStageLabel(specification.testStage) },
+            { label: "Generic name", value: specification.item?.genericName ?? null },
+          ]} />
         {!specification.isVerified ? <PermissionGuard require={specPermissions.verify}><Button variant="outline" onClick={() => setApproving(true)}><BadgeCheck />Approve</Button></PermissionGuard> : null}
         <PermissionGuard require={completePermission}><Button asChild variant="outline"><Link to={completePath(specification.id)}><ClipboardCheck />Set test references</Link></Button></PermissionGuard>
         <PermissionGuard require={specPermissions.edit}><Button asChild><Link to={editPath(specification.id)}><Pencil />Edit</Link></Button></PermissionGuard>

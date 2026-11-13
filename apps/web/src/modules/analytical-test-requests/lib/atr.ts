@@ -16,7 +16,7 @@ export const stageLabels: Record<number, string> = { 0: "Intermediate", 1: "Bulk
 /** The AR number's type for a production stage: intermediate, bulk or finished product. */
 export const stageCode = (stage: number | null): "IP" | "BP" | "FP" => stage === 0 ? "IP" : stage === 1 ? "BP" : "FP";
 
-export type AtrAction = "sample" | "acknowledge" | "assign" | "start" | "continue" | "reassign" | "assignments" | "progress" | "check" | "requestRetest" | "completeRetest" | "print";
+export type AtrAction = "sample" | "acknowledge" | "assign" | "start" | "continue" | "repair" | "reassign" | "assignments" | "progress" | "check" | "requestRetest" | "completeRetest" | "print";
 export function atrActions(status: number | null, isRetest: boolean, hasAssignees: boolean): ReadonlySet<AtrAction> {
   const S = AtrStatus;
   const actions = new Set<AtrAction>();
@@ -24,6 +24,7 @@ export function atrActions(status: number | null, isRetest: boolean, hasAssignee
   if (status === S.Sampled) actions.add("acknowledge");
   if (status === S.Acknowledged || status === S.Testing) actions.add("assign");
   if (status === S.Assigned) actions.add("start");
+  if (status === S.Assigned || status === S.Testing) actions.add("repair");
   if (status === S.Testing && !isRetest) actions.add("continue");
   if ((status === S.Assigned || status === S.Testing) && hasAssignees) actions.add("reassign");
   if (status !== null && status !== S.New && status !== S.Sampled && status !== S.Acknowledged) actions.add("assignments");
