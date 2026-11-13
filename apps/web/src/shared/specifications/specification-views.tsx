@@ -7,12 +7,9 @@ import { DetailGroup, DetailItem } from "@/shared/detail/detail-list";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { formatDate, formatDateTime } from "@/shared/format/dates";
 import type { PageCrumb } from "@/shared/navigation/page-breadcrumbs";
-import { PrintButton } from "@/shared/print/print-button";
-import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { specificationReferenceLabel } from "@/shared/questions/question-types";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
-import { SpecificationPrint } from "./specification-print";
 import { groupSections, type Specification, type SpecificationSection } from "./specification-schema";
 
 const cell = "border-b px-3 py-2 align-top text-sm";
@@ -39,20 +36,12 @@ export function SpecificationTests({ sections }: { sections: readonly Specificat
 }
 
 /** A specification's record page: header and facts, its dates and notes, its tests, and who created it. */
-export function SpecificationDetail({ specification, sections, crumbs, actions, facts, item, printTitle, printFacts }: {
+export function SpecificationDetail({ specification, sections, crumbs, actions, facts, item }: {
   specification: Specification; sections: readonly SpecificationSection[]; crumbs: readonly PageCrumb[]; actions?: ReactNode;
-  printTitle: string; printFacts: readonly { label: string; value: string | null }[];
   /** Extra facts at the top, such as the item's code. */ facts: ReactNode; /** What the specification is for, under the title. */ item: string | null;
 }) {
   return <article className="min-w-0 space-y-4">
-    <PageHeader title={`${specification.number}${item ? ` · ${item}` : ""}`} crumbs={crumbs} actions={<>
-      <PrintButton label="Print specification" size="default" preview={(close) => (
-        <PrintPreviewDialog title={`${printTitle} · ${specification.number}`} onClose={close}>
-          <SpecificationPrint title={printTitle} specification={specification} sections={sections} subjectFacts={printFacts} />
-        </PrintPreviewDialog>
-      )} />
-      {actions}
-    </>} />
+    <PageHeader title={`${specification.number}${item ? ` · ${item}` : ""}`} crumbs={crumbs} actions={actions} />
     <KeyFacts>
       {facts}
       <KeyFact label="Revision" value={specification.revisionNumber ?? "–"} note={specification.supersedesNumber ? `Supersedes ${specification.supersedesNumber}` : undefined} />

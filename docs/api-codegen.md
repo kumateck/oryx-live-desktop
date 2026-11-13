@@ -1,3 +1,10 @@
+Specification printing adds three read operations under `/api/v1/specification-print`
+for raw material, packaging material, and product specifications. The print preview
+uses the recorded specification revisions and requires the corresponding export
+permission. Deploy the backend and its `GrantSpecificationPrintPermissions` data
+migration before the frontend. The typed contract digest is
+`b25205abc57a22c778b7d1d54adde27e529a30a149a9d2c2c287a53e6af7d755`.
+
 QC worksheet progress (2026-11-12) adds the optional nullable UUID fields
 `worksheetResponseId` and `worksheetFormId` to the existing material batch
 worksheet details response. These identify the worksheet for the current sample.

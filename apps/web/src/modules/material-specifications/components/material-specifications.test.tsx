@@ -3,6 +3,7 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, expect, it } from "vitest";
+import { formatDateTime } from "../../../shared/format/dates";
 import { ApiProvider } from "../../../shared/api/api-provider";
 import { SessionProvider } from "../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../test/backend";
@@ -35,6 +36,11 @@ function open(path: string, permissions: string[], waitForSavedReferences?: Prom
       return new Response(null, { status: 204 });
     }
     if (url.pathname === "/api/v1/material-specifications/s1") return Response.json(spec);
+    if (url.pathname === "/api/v1/specification-print/packaging-material/s1") return Response.json({
+      revisedBy: "Kofi Mensah", revisedAt: "2026-11-12T15:10:00Z", historyAvailableFrom: "2026-10-27T09:00:00Z",
+      revisions: [{ specificationNumber: "QCD/SPC/PM/003", revisionNumber: "01", supersedesNumber: "None",
+        recordedBy: "Ama Owusu", occurredAt: "2026-10-27T09:00:00Z", event: "History baseline" }],
+    });
     if (url.pathname === "/api/v1/form/f1") return Response.json(template);
     if (url.pathname === "/api/v1/form/section") {
       if (savedReferences.length > 1) await waitForSavedReferences;
@@ -89,15 +95,27 @@ it("approves a packaging specification with the packaging permission, after conf
   expect(JSON.parse(calls.find((call) => call.path === "/api/v1/verification")?.body ?? "")).toEqual({ modelType: 1, modelId: "s1" });
 }, 30_000);
 
-it("prints the saved specification and its test limits with view permission", async () => {
-  const { calls } = open("/qc/material-specification/s1/details", ["CanViewPackagingMaterialSpecifications"]);
+it("requires the packaging export permission to print", async () => {
+  open("/qc/material-specification/s1/details", ["CanViewPackagingMaterialSpecifications", "CanExportRawMaterialSpecification"]);
+  expect(await screen.findByText("Leak test")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Print specification" })).toBeNull();
+});
+
+it("prints the saved specification with revision author, date and history", async () => {
+  const { calls } = open("/qc/material-specification/s1/details", ["CanViewPackagingMaterialSpecifications", "CanExportPackagingMaterialSpecification"]);
   await userEvent.click(await screen.findByRole("button", { name: "Print specification" }));
   const preview = within(await screen.findByRole("dialog"));
-  expect(preview.getByRole("heading", { name: "Material specification" })).toBeTruthy();
+  expect(await preview.findByRole("heading", { name: "Material specification" })).toBeTruthy();
   expect(preview.getByText("Amber bottle")).toBeTruthy();
   expect(preview.getByText("40 mm")).toBeTruthy();
   expect(preview.getByText("No leaks")).toBeTruthy();
   expect(preview.getByText("BP")).toBeTruthy();
+  expect(preview.getByText("Revision By")).toBeTruthy();
+  expect(preview.getByText("Kofi Mensah")).toBeTruthy();
+  expect(preview.getByText(formatDateTime("2026-11-12T15:10:00Z") ?? "missing date")).toBeTruthy();
+  const history = within(preview.getByRole("table", { name: "Specification history" }));
+  expect(history.getByText("History baseline")).toBeTruthy();
+  expect(history.getByText("Ama Owusu")).toBeTruthy();
   expect(preview.getByRole("button", { name: "Print" })).toHaveProperty("disabled", false);
   expect(calls).toEqual([]);
 });
