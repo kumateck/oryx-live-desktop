@@ -34,14 +34,14 @@ export function TestEntry({ form, mine, stored, context, audit, require, summary
   form: AnswerForm; mine: ReadonlySet<string>; stored: StoredAnswers; context: ResponseContext; audit: { module: string; subModule: string }; require: PermissionRequirement;
   summary: ReactNode; onReload: () => void; onDone: () => void;
   progressTo?: string;
-  formulaActions?: (hasUnsavedWork: boolean) => ReactNode;
+  formulaActions?: (hasUnsavedWork: boolean, onRepaired: (fieldId: string, configurationHash: string) => void) => ReactNode;
 }) {
   const loadEquipment = useEquipmentOptions();
   const sections = useMemo(() => assignedSections(form, mine), [form, mine]);
   const myFields = useMemo(() => sections.flatMap((section) => section.fields), [sections]);
   const everyField = useMemo(() => formFields(form), [form]);
   // Keep the configuration the analyst opened, even if another user's repair refreshes the cache.
-  const [originalConfigurations] = useState<ReadonlyMap<string, string>>(() => new Map(everyField
+  const [originalConfigurations, setOriginalConfigurations] = useState<ReadonlyMap<string, string>>(() => new Map(everyField
     .flatMap(field => field.formulaConfigurationHash ? [[field.id, field.formulaConfigurationHash] as const] : [])));
   const fieldForSave = (field: FormField) => ({ ...field, formulaConfigurationHash: originalConfigurations.get(field.id) ?? "" });
   const answers = useAnswerForm(myFields, stored);
@@ -69,7 +69,9 @@ export function TestEntry({ form, mine, stored, context, audit, require, summary
         ? <Button type="button" size="sm" variant="outline" disabled title="Save your changes before opening test progress.">Test progress</Button>
         : <Button size="sm" variant="outline" asChild><Link to={progressTo}>Test progress</Link></Button>}
     </div> : null}
-    {formulaActions?.(hasUnsavedWork)}
+    {formulaActions?.(hasUnsavedWork, (fieldId, hash) => {
+      setOriginalConfigurations(current => new Map(current).set(fieldId, hash));
+    })}
     <form noValidate className="space-y-4" onSubmit={(event) => void submit(event)}>
       <AnswerSheet form={answers} sections={sections} loadEquipment={loadEquipment} disabled={writer.busy}
         drafts={{ acknowledged: (id) => writer.acknowledged.get(id) ?? null, attachments: (id) => stored.get(id)?.attachments ?? [], stored: (id) => stored.get(id)?.value ?? null, saving: writer.saving, failed: writer.failed, save: (field, value) => void writer.saveOne(fieldForSave(field), value) }} />

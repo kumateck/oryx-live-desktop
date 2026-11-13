@@ -4,6 +4,24 @@ Status: implemented locally, 5 November 2026; not committed, migrated or deploye
 No permissions have been granted. Scope is legacy formula questions and open ATR
 test responses. Other question types need their own validation and migration rules.
 
+## Repair before saving results (13 November 2026)
+
+The ATR row menu offers **Repair test** for assigned and testing requests. Its
+formula choices use the existing question and test repair permissions. Formula
+repair also remains available from result entry while readings are unsaved.
+The repair workspace opens in a dialog, keeping the worksheet mounted and its
+entered readings available. Applying a selected repair refreshes that field's
+configuration and the hash used when saving those readings.
+
+A shared formula definition or approval leaves legacy worksheets on their existing
+configuration until an explicit governed placement exists in a form revision.
+
+The backend includes eligible assigned tests with no saved response. Preview
+writes nothing. Apply creates the empty response and its configuration pins in
+one transaction. A repaired empty response is returned through the existing
+response lookup, so the first reading can be saved into it. Recalculation uses
+saved readings and retains its save requirement.
+
 ## Implementation (5 November 2026)
 
 - Backend: `FormulaRepairController` (`/api/v1/formula-repairs`) and
@@ -73,9 +91,7 @@ retained readings, missing inputs, mapping conflicts and blocked records.
 
 Explicitly select each affected test; never silently select every open test.
 Show **Preview repair**, then **Apply repair** against that exact preview. Return
-an audit reference and reload the affected configuration after success. Unsaved
-worksheet edits must be saved or deliberately discarded before applying; a
-repair must not overwrite an analyst's in-memory work.
+an audit reference and reload the affected configuration after success. Unsaved worksheet readings stay in the mounted worksheet while its repair dialog is open.
 
 ## Permissions and record access
 

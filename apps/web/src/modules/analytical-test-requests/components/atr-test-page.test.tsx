@@ -13,11 +13,11 @@ const me = { id: testUserId, firstName: "Ada", lastName: "Mensah" };
 const field = (id: string, label: string, rank: number) => ({ id, rank, required: true, question: { type: 0, label } });
 
 /** A fresh request whose test has no response yet, like the first draft of a new ATR. */
-function open() {
+function open(existingEmptyResponse = false) {
   const backend = stubBackend({ permissions: ["CanStartProductTest", "CanExecuteFormulaResponse"] });
   const auth = backend.fetcher.getMockImplementation();
   const requests: string[] = [];
-  let responseId: string | null = null;
+  let responseId: string | null = existingEmptyResponse ? "response-1" : null;
   const saved = new Map<string, string>();
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return auth ? auth(input, init) : new Response(null, { status: 500 });
@@ -31,7 +31,8 @@ function open() {
       { formField: { id: "appearance", question: { label: "Appearance" } }, assignee: me }, { formField: { id: "colour", question: { label: "Colour" } }, assignee: me }] });
     if (path === "/api/v1/form/response") return responseId ? Response.json(responseId) : new Response(null, { status: 404 });
     if (path === "/api/v1/form/responses/draft") {
-      const body = await input.clone().json() as { formFieldId: string; value: string };
+      const body = await input.clone().json() as { formFieldId: string; value: string; responseId?: string };
+      if (existingEmptyResponse) expect(body.responseId).toBe("response-1");
       saved.set(body.formFieldId, body.value);
       responseId = "response-1";
       return Response.json(responseId);
@@ -49,6 +50,15 @@ function open() {
   return requests;
 }
 afterEach(() => { cleanup(); forgetSession(); });
+
+it("saves the first reading into an empty response created by formula repair", async () => {
+  open(true);
+  const appearance = await screen.findByRole("textbox", { name: "Appearance" });
+  fireEvent.change(appearance, { target: { value: "White tablet" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save this answer as a draft: Appearance" }));
+  await screen.findByRole("button", { name: "Draft saved: Appearance" });
+  expect((screen.getByRole("textbox", { name: "Appearance" }) as HTMLInputElement).value).toBe("White tablet");
+});
 
 it("saves the first draft without reloading the page or clearing other unsaved answers", async () => {
   const requests = open();
