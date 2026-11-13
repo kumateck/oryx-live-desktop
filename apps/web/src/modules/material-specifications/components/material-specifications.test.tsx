@@ -68,7 +68,7 @@ it("sends every test's reference only once each test has one", async () => {
   expect(calls[0]).toMatchObject({ method: "POST", path: "/api/v1/form/responses/section", search: "?materialSpecificationId=s1" });
   expect(JSON.parse(calls[0]?.body ?? "")).toEqual([{ formSectionId: "a", value: "0" }, { formSectionId: "b", value: "1" }]);
   await waitFor(() => expect(router.state.location.pathname).toBe("/qc/material-specification/s1/details"));
-  expect(screen.getByRole("status", { name: "Loading specification" })).toBeTruthy();
+  expect(await screen.findByRole("status", { name: "Loading specification" })).toBeTruthy();
   expect(screen.queryByText("Not set")).toBeNull();
   releaseRefresh();
   expect(await screen.findByText("USP")).toBeTruthy();
