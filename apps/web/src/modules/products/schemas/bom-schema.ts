@@ -8,9 +8,16 @@ export const bomItemFormSchema = z.object({
   useDensityConversion: z.boolean(),
   grade: z.string().trim().optional(),
   substitutes: z.array(option).optional(),
+  /** Each substitute's own quantity per composition unit, by material id: a substitute may differ in strength or water content. */
+  substituteQuantities: z.record(z.string(), z.number()).optional(),
 }).superRefine((values, context) => {
   if (values.substitutes?.some((item) => item.value === values.material.value)) {
     context.addIssue({ code: "custom", path: ["substitutes"], message: "A material cannot substitute for itself" });
+  }
+  for (const substitute of values.substitutes ?? []) {
+    const quantity = values.substituteQuantities?.[substitute.value];
+    if (typeof quantity !== "number" || !Number.isFinite(quantity) || quantity <= 0)
+      context.addIssue({ code: "custom", path: ["substituteQuantities", substitute.value], message: `Enter the quantity of ${substitute.label} that replaces this material` });
   }
 });
 export type BomItemFormValues = z.infer<typeof bomItemFormSchema>;
@@ -31,7 +38,8 @@ export const savedBomSchema = z.object({
   version: num, effectiveDate: z.string().nullish(), isActive: z.boolean().nullish(),
   billOfMaterial: z.object({ items: z.array(z.object({
     id: z.string().nullish(), order: num, baseQuantity: num, grade: text, baseUoM: unit, useDensityConversion: z.boolean().nullish(), material: bomMaterialSchema.nullish(),
-    substitutes: z.array(z.object({ substituteMaterial: bomMaterialSchema.nullish() })).nullish().transform((value) => value ?? []),
+    substitutes: z.array(z.object({ substituteMaterial: bomMaterialSchema.nullish(), baseQuantity: num, baseUoM: unit }))
+      .nullish().transform((value) => value ?? []),
   })).nullish().transform((value) => value ?? []) }).nullish(),
 }).nullish();
 export type SavedBom = z.infer<typeof savedBomSchema>;

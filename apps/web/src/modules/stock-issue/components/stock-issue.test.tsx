@@ -202,3 +202,41 @@ it("names the checker once the issue check is approved", async () => {
   expect(within(preview).getByRole("img", { name: "Signature of Kofi Mensah" })).toBeTruthy();
   expect(within(preview).queryByText("Awaiting the warehouse check")).toBeNull();
 });
+
+const options = [{ requisitionItemId: "l1", sourceMaterial: { id: "m-wet", name: "Maize starch", code: "RM-1" }, currentMaterialId: "m-wet", revision: 2, canChange: true,
+  options: [
+    { material: { id: "m-wet", name: "Maize starch", code: "RM-1" }, isMain: true, isCurrent: true, quantity: 50_000_000, unit: { symbol: "mg" }, available: 80_000_000, covers: true,
+      earliestExpiry: "2099-01-01T00:00:00Z", batches: [{ materialBatchId: "b1", batchNumber: "B-1", quantity: 50_000_000, expiry: "2099-01-01T00:00:00Z" }] },
+    { material: { id: "m-dry", name: "Maize starch, dried", code: "RM-9" }, isMain: false, isCurrent: false, quantity: 42_000_000, unit: { symbol: "mg" }, available: 60_000_000, covers: true,
+      earliestExpiry: "2027-03-01T00:00:00Z", batches: [{ materialBatchId: "b9", batchNumber: "D-9", quantity: 42_000_000, expiry: "2027-03-01T00:00:00Z" }] },
+  ] }];
+const withOptions = (path: string, method: string) => path === "/api/v1/requisition/sr-1/material-options"
+  ? method === "POST" ? new Response(null, { status: 204 }) : Response.json(options) : null;
+
+it("shows a substitute's own quantity, stock and expiry, and lets only a permitted store issue it instead", async () => {
+  const user = userEvent.setup();
+  const denied = open("/warehouse/stock-requisition/sr-1", ["CanViewRawMaterialRequisitions", "CanIssueRawMaterialRequisitions"], requisition("sr-1"), withOptions);
+  const panel = await screen.findByRole("region", { name: "Material to issue" });
+  expect(await within(panel).findByText("Maize starch, dried")).toBeTruthy();
+  expect(within(panel).getByText("42 kg")).toBeTruthy();
+  expect(within(panel).getByText("Expires first")).toBeTruthy();
+  expect(within(panel).queryByRole("button", { name: /instead/ })).toBeNull();
+  expect(writes(denied.calls)).toEqual([]);
+  cleanup();
+
+  const allowed = open("/warehouse/stock-requisition/sr-1", ["CanViewRawMaterialRequisitions", "CanChooseRawMaterialRequisitionSubstitute"], requisition("sr-1"), withOptions);
+  await user.click(await screen.findByRole("button", { name: "Issue Maize starch, dried instead" }));
+  const dialog = await screen.findByRole("dialog");
+  await user.click(within(dialog).getByRole("button", { name: "Issue Maize starch, dried" }));
+  expect(within(dialog).getByRole("alert").textContent).toContain("Give the reason");
+  expect(writes(allowed.calls)).toEqual([]);
+  await user.type(within(dialog).getByLabelText("Reason"), "Dried lot expires first");
+  await user.click(within(dialog).getByRole("button", { name: "Issue Maize starch, dried" }));
+  await waitFor(() => expect(writes(allowed.calls)).toEqual([{ method: "POST", path: "/api/v1/requisition/sr-1/material-options" }]));
+}, 20_000);
+
+it("labels a line issued as a substitute on the requisition", async () => {
+  open("/warehouse/stock-requisition/sr-1", ["CanViewRawMaterialRequisitions"], requisition("sr-1", { status: 3,
+    items: [{ id: "l1", quantity: 42_000_000, material: { name: "Maize starch, dried", code: "RM-9", kind: 0 }, uoM: { symbol: "mg" }, substituteFor: { name: "Maize starch" }, batches: [] }] }));
+  expect(await screen.findByText("Substitute for Maize starch")).toBeTruthy();
+});

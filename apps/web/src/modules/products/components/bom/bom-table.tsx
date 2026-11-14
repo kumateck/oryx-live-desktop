@@ -4,11 +4,19 @@ import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { DraggableDataTable, dataTableColumns } from "@/shared/datatable";
 import { bomAudit } from "../../hooks/use-bom";
 import { MaterialQuantity } from "../material-quantity";
-import type { BomLine } from "../../lib/bom";
+import type { BomLine, BomSubstitute } from "../../lib/bom";
+import { toLargestUnit } from "@/shared/units/quantity";
 import { useProductWorkspace } from "../../hooks/use-product-workspace";
 import { batchQuantity } from "../../lib/product-detail";
 
 const column = dataTableColumns<BomLine>();
+
+/** A substitute's own unit quantity, or that it still needs one. */
+function substituteAmount(substitute: BomSubstitute, density: boolean): string {
+  const unit = density ? "mg" : substitute.unit?.symbol;
+  if (substitute.baseQuantity === null || !unit) return "quantity not set";
+  return toLargestUnit(substitute.baseQuantity, unit, "entered")?.text ?? `${substitute.baseQuantity} ${unit}`;
+}
 const dash = "–";
 
 /** The formula's materials in step order. Dragging a row changes its step. */
@@ -31,7 +39,7 @@ export function BomLinesTable({ lines, compositionSize, batchSize, loading, erro
     column.accessor((line) => line.material.label, { id: "material", header: "Material", cell: ({ row }) => <div className="min-w-0">
       <div className="break-words">{row.original.material.label}</div>
       {row.original.substitutes.length ? <div className="break-words text-xs text-muted-foreground">
-        Substitutes: {row.original.substitutes.map((item) => item.label).join(", ")}</div> : null}
+        Substitutes: {row.original.substitutes.map((item) => `${item.label} (${substituteAmount(item, row.original.useDensityConversion)})`).join(", ")}</div> : null}
     </div> }),
     column.accessor((line) => line.specification || dash, { id: "spec", header: "Spec ref" }),
     column.accessor("baseQuantity", { id: "unit", header: "Unit qty", cell: ({ row }) => <MaterialQuantity materialId={row.original.material.value}
