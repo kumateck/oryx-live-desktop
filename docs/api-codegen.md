@@ -71,6 +71,16 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+BOM substitute quantities (2026-11-14) add typed `GET`/`POST`
+`/api/v1/requisition/{requisitionId}/material-options` (warehouse domain), five owned
+schemas, and optional substitute quantity fields on BOM substitute DTOs/requests plus
+`substituteFor` on `RequisitionItemDto`. Import only these with
+`bun scripts/import-bom-substitute-quantities.ts EXPORT.json`, then regenerate/check.
+Typed digest `6c84e6f93d57882923dc0cc61a6e7df1649371ab08a8b34ccd287150105b9806`;
+removing exactly these additions reproduces `3e3337d5…3b33`. Apply
+`AddBomSubstituteQuantities` and `GrantChooseRawMaterialRequisitionSubstitute` and deploy
+the backend first. See [BOM substitute quantities](bom-substitute-quantities.md).
+
 Migrated batch details add the typed `PUT /api/v1/material/batch/{batchId}/migration-details`
 operation and optional GRN fields on `MaterialBatchDto` and `MaterialStockReportRow`.
 Import the metadata with `bun scripts/import-migration-batch-details.ts EXPORT.json`.

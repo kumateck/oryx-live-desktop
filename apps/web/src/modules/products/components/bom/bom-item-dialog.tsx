@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,13 @@ import { Skeleton } from "@/shared/skeleton/skeleton";
 import { bomAudit } from "../../hooks/use-bom";
 import { materialKind, useBomDensity, useMaterialOptions } from "../../hooks/use-material-options";
 import { useMaterialUnit } from "../../hooks/use-material-unit";
-import { hasMaterial, type BomLine, type MaterialFacts } from "../../lib/bom";
+import { hasMaterial, type BomLine, type BomSubstitute, type MaterialFacts } from "../../lib/bom";
+import type { MaterialUnit } from "../../lib/material-unit";
 import { batchQuantity } from "../../lib/product-detail";
 import { bomItemFormSchema, type BomItemFormValues } from "../../schemas/bom-schema";
 import { MaterialQuantityFields, type MaterialQuantityField } from "../material-quantity-fields";
 import { massVolumeConversion } from "../../lib/density-conversion";
+import { SubstituteQuantity } from "./substitute-quantity";
 
 const quantityFields: readonly MaterialQuantityField<BomItemFormValues>[] = [
   { name: "baseQuantity", label: "Unit quantity", required: true, description: "Quantity in one composition unit of the product." },
@@ -25,15 +27,22 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
   lines: readonly BomLine[];
   compositionSize: number | null;
   batchSize: number | null;
-  onSubmit: (values: BomItemFormValues, facts: MaterialFacts) => void;
+  onSubmit: (values: BomItemFormValues, facts: MaterialFacts, substitutes: BomSubstitute[]) => void;
   onClose: () => void;
 }) {
   const materials = useMaterialOptions(materialKind.raw, bomAudit);
   const materialFacts = materials.facts;
   const form = useForm<BomItemFormValues>({ resolver: zodResolver(bomItemFormSchema), defaultValues: editing
-    ? { material: editing.material, baseQuantity: editing.baseQuantity, useDensityConversion: editing.useDensityConversion, grade: editing.grade, substitutes: editing.substitutes }
-    : { useDensityConversion: false, grade: "", substitutes: [] } });
-  const [material, quantity, useDensityConversion] = useWatch({ control: form.control, name: ["material", "baseQuantity", "useDensityConversion"] });
+    ? { material: editing.material, baseQuantity: editing.baseQuantity, useDensityConversion: editing.useDensityConversion, grade: editing.grade,
+      substitutes: editing.substitutes.map(({ value, label }) => ({ value, label })),
+      substituteQuantities: Object.fromEntries(editing.substitutes.flatMap((item) => item.baseQuantity === null ? [] : [[item.value, item.baseQuantity]])) }
+    : { useDensityConversion: false, grade: "", substitutes: [], substituteQuantities: {} } });
+  const [material, quantity, useDensityConversion, substitutes] = useWatch({ control: form.control, name: ["material", "baseQuantity", "useDensityConversion", "substitutes"] });
+  // Each substitute's stock unit, reported by its quantity row once the department linkage is read.
+  const [substituteUnits, setSubstituteUnits] = useState<Readonly<Record<string, MaterialUnit | null>>>({});
+  const onSubstituteUnit = useCallback((id: string, unit: MaterialUnit | null) =>
+    setSubstituteUnits((current) => current[id]?.id === unit?.id && current[id]?.symbol === unit?.symbol ? current : { ...current, [id]: unit }), []);
+  const savedUnit = (id: string) => editing?.substitutes.find((item) => item.value === id)?.unit ?? null;
   // The chosen material's details: looked up from the picker, or kept from the line being edited.
   const facts: MaterialFacts | null = materialFacts(material?.value)
     ?? (editing && editing.material.value === material?.value ? { code: editing.code, category: editing.category, specification: editing.specification, unit: editing.linkedUnit ?? editing.unit } : null);
@@ -61,7 +70,7 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
     { type: InputTypes.TEXT, name: "grade", label: "Grade", placeholder: "For example BP, USP" },
     { type: InputTypes.SELECT, name: "substitutes", label: "Substitute materials", mode: "multiple", source: "async",
       loadOptions: loadSubstitutes, placeholder: "None", searchPlaceholder: "Search by name or code", className: "md:col-span-2",
-      description: "Materials that may be used instead of this one." },
+      description: "Materials that may be used instead of this one. The store issues either this material or one substitute, never both." },
   ] as const satisfies readonly WizardField<BomItemFormValues>[], [loadMaterials, loadSubstitutes]);
 
   const submit = form.handleSubmit((values) => {
@@ -73,7 +82,12 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
       form.setError("useDensityConversion", { message: "Set a positive measured density with an active g/mL unit and a liquid stock unit on the department material link." });
       return;
     }
-    onSubmit(values, { ...facts, unit: linked.unit });
+    const chosen = values.substitutes ?? [];
+    const missingUnit = values.useDensityConversion ? [] : chosen.filter((item) => !substituteUnits[item.value]);
+    if (missingUnit.length) { form.setError("substitutes", { message: `Set a unit on the department material linkage of: ${missingUnit.map((item) => item.label).join(", ")}.` }); return; }
+    onSubmit(values, { ...facts, unit: linked.unit }, chosen.map((item) => ({ value: item.value, label: item.label,
+      baseQuantity: values.substituteQuantities?.[item.value] ?? null,
+      unit: values.useDensityConversion ? { id: "", symbol: "mg" } : substituteUnits[item.value] ?? null })));
   });
   const sourceUnit = useDensityConversion ? { id: "mg", symbol: "mg" } : linked.unit;
   const perBatchQuantity = batchQuantity(typeof quantity === "number" && Number.isFinite(quantity) ? quantity : null, compositionSize, batchSize);
@@ -94,6 +108,13 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
               {linked.status === "error" ? "The material unit could not be loaded." : "No unit is set on the department material linkage."}
               <Button type="button" size="sm" variant="outline" onClick={linked.retry}>Retry unit</Button>
             </p> : null}
+          {(substitutes ?? []).length ? <section aria-label="Substitute quantities" className="space-y-2">
+            <h3 className="text-sm font-semibold">Substitute quantities</h3>
+            <p className="text-xs text-muted-foreground">A substitute can differ in strength or water content, so enter how much of each replaces this material.</p>
+            {(substitutes ?? []).map((item) => <SubstituteQuantity key={`${item.value}-${useDensityConversion ? "mg" : "stock"}`} form={form} substitute={item}
+              known={useDensityConversion ? null : savedUnit(item.value)} density={useDensityConversion === true}
+              compositionSize={compositionSize} batchSize={batchSize} onUnit={onSubstituteUnit} />)}
+          </section> : null}
           {useDensityConversion && density.failed ? <p role="alert" className="flex items-center gap-2 text-sm text-destructive">
             The material density could not be loaded.
             <Button type="button" size="sm" variant="outline" onClick={() => { void density.retry(); }}>Retry density</Button>

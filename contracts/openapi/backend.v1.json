@@ -117684,6 +117684,213 @@
           }
         }
       }
+    },
+    "/api/v1/requisition/{requisitionId}/material-options": {
+      "get": {
+        "tags": [
+          "Requisition"
+        ],
+        "summary": "The BOM lines on a raw-material stock requisition that can be issued as another material (the main material or a\r\nsubstitute with its own quantity), with each option's usable stock, earliest expiry and the batches it would use.",
+        "parameters": [
+          {
+            "name": "requisitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionsDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionsDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionsDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Requisition"
+        ],
+        "summary": "Issues a BOM line as another option the BOM allows. Before issue only: the batch's reservation moves to the chosen\r\nmaterial at its own quantity and the requisition line changes with it. The reason is recorded.",
+        "parameters": [
+          {
+            "name": "requisitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.ChooseStockRequisitionMaterialRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.ChooseStockRequisitionMaterialRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.ChooseStockRequisitionMaterialRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -125686,6 +125893,24 @@
           },
           "substituteMaterial": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Material"
+          },
+          "baseQuantity": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "baseUoMId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "baseUoM": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasure"
+          },
+          "prescribedQuantity": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -125699,6 +125924,19 @@
           },
           "substituteMaterial": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialDto"
+          },
+          "baseQuantity": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "baseUoM": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
+          },
+          "prescribedQuantity": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -125770,6 +126008,13 @@
           },
           "useDensityConversion": {
             "type": "boolean"
+          },
+          "substitutes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.BillOfMaterials.Request.CreateBoMSubstituteRequest"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -168090,6 +168335,9 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "substituteFor": {
+            "$ref": "#/components/schemas/SHARED.CollectionItemDto"
           }
         },
         "additionalProperties": false
@@ -181290,6 +181538,152 @@
             "nullable": true
           },
           "event": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.BillOfMaterials.Request.CreateBoMSubstituteRequest": {
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "baseQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "baseUoMId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "prescribedQuantity": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionsDto": {
+        "type": "object",
+        "properties": {
+          "requisitionItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceMaterial": {
+            "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          },
+          "currentMaterialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "canChange": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionDto": {
+        "type": "object",
+        "properties": {
+          "material": {
+            "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          },
+          "isMain": {
+            "type": "boolean"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
+          },
+          "available": {
+            "type": "number",
+            "format": "double"
+          },
+          "covers": {
+            "type": "boolean"
+          },
+          "earliestExpiry": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "batches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionBatchDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionBatchDto": {
+        "type": "object",
+        "properties": {
+          "materialBatchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "expiry": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Requisitions.ChooseStockRequisitionMaterialRequest": {
+        "type": "object",
+        "properties": {
+          "sourceMaterialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 0,
             "type": "string",
             "nullable": true
           }

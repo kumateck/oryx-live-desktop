@@ -5,6 +5,14 @@ import type { MaterialUnit } from "./material-unit";
 
 interface Option { value: string; label: string }
 
+/** A material that may replace the line's material, with its own quantity per composition unit. */
+export interface BomSubstitute extends Option {
+  /** Null on substitutes saved before they had their own quantity; such a BOM cannot be saved until it is set. */
+  baseQuantity: number | null;
+  /** The substitute's department stock unit (mg when the line uses density conversion); null until known. */
+  unit: { id: string; symbol: string } | null;
+}
+
 /** One material of a bill of materials being edited. `key` identifies the row on the page. */
 export interface BomLine {
   key: string;
@@ -19,7 +27,7 @@ export interface BomLine {
   useDensityConversion: boolean;
   baseQuantity: number;
   grade: string;
-  substitutes: Option[];
+  substitutes: BomSubstitute[];
 }
 
 /** Details of a material that a line copies when the material is chosen. */
@@ -35,7 +43,8 @@ export function fromSavedBom(saved: SavedBom): BomLine[] {
     useDensityConversion: item.useDensityConversion === true,
     baseQuantity: item.baseQuantity ?? 0, grade: item.grade,
     substitutes: item.substitutes.flatMap((entry) => entry.substituteMaterial
-      ? [{ value: entry.substituteMaterial.id, label: entry.substituteMaterial.name }] : []),
+      ? [{ value: entry.substituteMaterial.id, label: entry.substituteMaterial.name, baseQuantity: entry.baseQuantity,
+        unit: entry.baseUoM?.id ? { id: entry.baseUoM.id, symbol: entry.baseUoM.symbol?.trim() ?? "" } : null }] : []),
   }] : []);
 }
 
@@ -50,6 +59,10 @@ export function bomProblems(lines: readonly BomLine[]): string[] {
   if (lines.length === 0) problems.push("Add at least one material.");
   const noUnit = lines.filter((line) => !line.useDensityConversion && !line.unit.id).map((line) => line.material.label);
   if (noUnit.length) problems.push(`No unit of measure is set for: ${noUnit.join(", ")}. Set it on the material, then choose the material again.`);
+  const unquantified = lines.flatMap((line) => line.substitutes
+    .filter((substitute) => substitute.baseQuantity === null || (!line.useDensityConversion && !substitute.unit?.id))
+    .map((substitute) => `${substitute.label} (for ${line.material.label})`));
+  if (unquantified.length) problems.push(`Set the quantity of each substitute: ${unquantified.join(", ")}. Edit the material and enter how much of the substitute replaces it.`);
   return problems;
 }
 
@@ -69,5 +82,12 @@ export function toBomRequest(productId: string, lines: readonly BomLine[], compo
     prescribedQuantity: batchQuantity(line.baseQuantity, compositionSize, batchSize) ?? 0,
     isSubstitutable: line.substitutes.length > 0,
     substituteMaterialIds: line.substitutes.map((item) => item.value),
+    // Each substitute is saved with its own quantity; the store then issues either it or the main material, never both.
+    substitutes: line.substitutes.map((item) => ({
+      materialId: item.value,
+      baseUoMId: line.useDensityConversion ? null : item.unit?.id ?? null,
+      baseQuantity: item.baseQuantity ?? 0,
+      prescribedQuantity: batchQuantity(item.baseQuantity ?? 0, compositionSize, batchSize) ?? 0,
+    })),
   })) };
 }
