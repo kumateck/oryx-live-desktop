@@ -2138,6 +2138,12 @@ export type MicrosoftAspNetCoreMvcProblemDetails = {
   instance?: string | null;
   [key: string]: JsonValue | undefined;
 };
+export type DomainEntitiesBillOfMaterialsRequestCreateBoMSubstituteRequest = {
+  materialId?: string;
+  baseQuantity?: number;
+  baseUoMId?: string | null;
+  prescribedQuantity?: number;
+};
 export type DomainEntitiesBillOfMaterialsRequestCreateBoMItemsRequest = {
   materialId?: string;
   uoMId?: string | null;
@@ -2150,6 +2156,8 @@ export type DomainEntitiesBillOfMaterialsRequestCreateBoMItemsRequest = {
   prescribedQuantity?: number;
   substituteMaterialIds?: string[] | null;
   useDensityConversion?: boolean;
+  substitutes?:
+    DomainEntitiesBillOfMaterialsRequestCreateBoMSubstituteRequest[] | null;
 };
 export type DomainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest = {
   productId?: string;
