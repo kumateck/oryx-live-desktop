@@ -27,6 +27,7 @@ import { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStoc
 import { audit, batchNumber, checkNote, issueBlock, issuePermissions, issueRequisitionPath, shortfall, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
 import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockLine, type StockRequisition } from "../schemas/stock-issue-schema";
 import { AlternativeBatches } from "./alternative-batches";
+import { MaterialChoices } from "./material-choices";
 import { BatchBreakdown, amount } from "./batch-breakdown";
 
 function Standing({ requisition }: { requisition: Pick<StockRequisition, "approved" | "status"> }) {
@@ -73,7 +74,8 @@ export function StockIssueListPage() {
 
 const lineColumn = dataTableColumns<StockLine>();
 const lineColumns = lineColumn.columns([
-  lineColumn.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div></div> }),
+  lineColumn.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div>
+    {row.original.substituteFor ? <div className="break-words text-xs text-muted-foreground">Substitute for {row.original.substituteFor}</div> : null}</div> }),
   lineColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => { const short = shortfall(row.original);
     return <div><div>{amount(row.original.quantity, row.original.unit)}</div>
       {row.original.approvedQuantity !== null ? <div className="text-xs text-muted-foreground">Originally approved: {amount(row.original.approvedQuantity, row.original.unit)} · repaired after issue</div> : null}
@@ -82,7 +84,7 @@ const lineColumns = lineColumn.columns([
 ]);
 const printColumns: PrintColumn<StockLine>[] = [
   { id: "n", header: "#", cell: (_row, index) => index + 1, width: "6%" },
-  { id: "material", header: "Material", cell: (row) => <>{row.materialName}<small>{row.materialCode ?? "No code"}</small></> },
+  { id: "material", header: "Material", cell: (row) => <>{row.materialName}<small>{row.materialCode ?? "No code"}</small>{row.substituteFor ? <small>Substitute for {row.substituteFor}</small> : null}</> },
   { id: "quantity", header: "Quantity", align: "right", cell: (row) => <>{amount(row.quantity, row.unit)}
     {row.approvedQuantity !== null ? <small>Originally approved: {amount(row.approvedQuantity, row.unit)}; repaired after issue</small> : null}</> },
   { id: "batches", header: "Batch · location · quantity · expiry", cell: (row) => row.batches.length ? row.batches.map((batch) => <div key={batch.key}>{batchNumber(batch.number)} · {amount(batch.quantity, row.unit)} · {formatMonthYear(batch.expires) ?? "no expiry"}<small>{batch.location ?? missingStockLocation}</small></div>) : "None set aside" },
@@ -129,6 +131,8 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
         note={requisition.signatories.checkedBy ? formatDateTime(requisition.signatories.checkedBy.signedAt) ?? undefined : checkNote(requisition.signatories.checkStatus) ?? undefined} /> : null}
     </KeyFacts>
     {requisition.comments ? <section className="space-y-1 rounded-lg border bg-card p-4"><h2 className="text-sm font-semibold">Justification</h2><RichTextView html={requisition.comments} className="text-sm" /></section> : null}
+    {/* The material, like its batches, can change only while the stock has not left the store. Substitutes are on raw-material BOMs only. */}
+    {kind === 0 && requisition.status !== 3 && requisition.status !== 4 ? <MaterialChoices requisitionId={requisition.id} /> : null}
     {/* Batches can only be swapped while the stock has not left the store. */}
     {requisition.status !== 3 && requisition.status !== 4 ? <AlternativeBatches requisitionId={requisition.id} mayAsk={has(issuePermissions[kind])} /> : null}
     <ClientDataTable label="Materials and the batches set aside" columns={lineColumns} rows={requisition.items} getRowId={(row) => row.id} fill={false} emptyTitle="No materials on this requisition" />

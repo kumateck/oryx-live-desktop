@@ -4278,6 +4278,7 @@ export type DomainEntitiesRequisitionsRequisitionItemDto = {
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
   approvedQuantity?: number | null;
+  substituteFor?: SharedCollectionItemDto;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   id?: string;
@@ -4288,6 +4289,7 @@ export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
   approvedQuantity?: number | null;
+  substituteFor?: SharedCollectionItemDto;
 };
 export type DomainEntitiesRequisitionsVoucherSignatoryDto = {
   userId?: string | null;
