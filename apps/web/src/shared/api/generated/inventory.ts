@@ -3364,6 +3364,10 @@ export type DomainEntitiesBillOfMaterialsBillOfMaterialItemSubstitute = {
   billOfMaterialItem?: DomainEntitiesBillOfMaterialsBillOfMaterialItem;
   substituteMaterialId?: string;
   substituteMaterial?: DomainEntitiesMaterialsMaterial;
+  baseQuantity?: number | null;
+  baseUoMId?: string | null;
+  baseUoM?: DomainEntitiesBaseUnitOfMeasure;
+  prescribedQuantity?: number | null;
 };
 export type DomainEntitiesBillOfMaterialsBillOfMaterialItemSubstituteRead = {
   id?: string;
@@ -3380,6 +3384,10 @@ export type DomainEntitiesBillOfMaterialsBillOfMaterialItemSubstituteRead = {
   billOfMaterialItem?: DomainEntitiesBillOfMaterialsBillOfMaterialItem;
   substituteMaterialId?: string;
   substituteMaterial?: DomainEntitiesMaterialsMaterialRead;
+  baseQuantity?: number | null;
+  baseUoMId?: string | null;
+  baseUoM?: DomainEntitiesBaseUnitOfMeasureRead;
+  prescribedQuantity?: number | null;
 };
 export type DomainEntitiesBillOfMaterialsBillOfMaterialItem = {
   id?: string;

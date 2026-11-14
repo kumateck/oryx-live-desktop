@@ -3492,6 +3492,9 @@ export type DomainEntitiesProductSpecificationsCreateProductSpecificationRequest
 export type DomainEntitiesBillOfMaterialsBillOfMaterialItemSubstituteDto = {
   id?: string;
   substituteMaterial?: DomainEntitiesMaterialsMaterialDto;
+  baseQuantity?: number | null;
+  baseUoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  prescribedQuantity?: number | null;
 };
 export type DomainEntitiesBillOfMaterialsBillOfMaterialItemDto = {
   id?: string;

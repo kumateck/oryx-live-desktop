@@ -1287,6 +1287,34 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1RequisitionByRequisitionIdMaterialOptions: build.query<
+      GetApiV1RequisitionByRequisitionIdMaterialOptionsApiResponse,
+      GetApiV1RequisitionByRequisitionIdMaterialOptionsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "requisition", id: queryArg.requisitionId }],
+      query: (queryArg) => ({
+        url: `/api/v1/requisition/${queryArg.requisitionId}/material-options`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1RequisitionByRequisitionIdMaterialOptions: build.mutation<
+      PostApiV1RequisitionByRequisitionIdMaterialOptionsApiResponse,
+      PostApiV1RequisitionByRequisitionIdMaterialOptionsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "requisition", id: "LIST" }, { type: "requisition", id: queryArg.requisitionId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/requisition/${queryArg.requisitionId}/material-options`,
+        method: "POST",
+        body: queryArg.domainEntitiesRequisitionsChooseStockRequisitionMaterialRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2170,6 +2198,24 @@ export type GetApiV1RequisitionIssueByIssueIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetApiV1RequisitionByRequisitionIdMaterialOptionsApiResponse =
+  /** status 200 OK */ DomainEntitiesRequisitionsStockRequisitionMaterialOptionsDto[];
+export type GetApiV1RequisitionByRequisitionIdMaterialOptionsApiArg = {
+  requisitionId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1RequisitionByRequisitionIdMaterialOptionsApiResponse = void;
+export type PostApiV1RequisitionByRequisitionIdMaterialOptionsApiArg = {
+  requisitionId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesRequisitionsChooseStockRequisitionMaterialRequest: DomainEntitiesRequisitionsChooseStockRequisitionMaterialRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -2599,6 +2645,7 @@ export type DomainEntitiesRequisitionsRequisitionItemDto = {
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
   approvedQuantity?: number | null;
+  substituteFor?: SharedCollectionItemDto;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   id?: string;
@@ -2609,6 +2656,7 @@ export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   status?: DomainEntitiesRequisitionsRequestStatus;
   batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
   approvedQuantity?: number | null;
+  substituteFor?: SharedCollectionItemDto;
 };
 export type DomainEntitiesProductsEquipmentsEquipmentDto = {
   id?: string;
@@ -4261,6 +4309,40 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
   };
 export type DomainEntitiesWarehousesRequestSwapRequestDirection = 0 | 1;
 export type SharedSortDirection = 0 | 1 | 2;
+export type DomainEntitiesRequisitionsStockRequisitionMaterialOptionBatchDto = {
+  materialBatchId?: string;
+  batchNumber?: string | null;
+  quantity?: number;
+  expiry?: string | null;
+};
+export type DomainEntitiesRequisitionsStockRequisitionMaterialOptionDto = {
+  material?: SharedCollectionItemDto;
+  isMain?: boolean;
+  isCurrent?: boolean;
+  quantity?: number;
+  unit?: DomainEntitiesBaseUnitOfMeasureDto;
+  available?: number;
+  covers?: boolean;
+  earliestExpiry?: string | null;
+  batches?:
+    DomainEntitiesRequisitionsStockRequisitionMaterialOptionBatchDto[] | null;
+};
+export type DomainEntitiesRequisitionsStockRequisitionMaterialOptionsDto = {
+  requisitionItemId?: string;
+  sourceMaterial?: SharedCollectionItemDto;
+  currentMaterialId?: string;
+  revision?: number;
+  canChange?: boolean;
+  reason?: string | null;
+  options?:
+    DomainEntitiesRequisitionsStockRequisitionMaterialOptionDto[] | null;
+};
+export type DomainEntitiesRequisitionsChooseStockRequisitionMaterialRequest = {
+  sourceMaterialId?: string;
+  materialId?: string;
+  revision?: number;
+  reason?: string | null;
+};
 export const {
   usePostApiV1DamagedGoodsMutation,
   useGetApiV1DamagedGoodsQuery,
@@ -4396,4 +4478,7 @@ export const {
   usePutApiV1WarehouseSwapByIdApproveMutation,
   useGetApiV1RequisitionIssueByIssueIdQuery,
   useLazyGetApiV1RequisitionIssueByIssueIdQuery,
+  useGetApiV1RequisitionByRequisitionIdMaterialOptionsQuery,
+  useLazyGetApiV1RequisitionByRequisitionIdMaterialOptionsQuery,
+  usePostApiV1RequisitionByRequisitionIdMaterialOptionsMutation,
 } = injectedRtkApi;

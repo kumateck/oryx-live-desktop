@@ -41,6 +41,32 @@ function auditHeaderReview(document: ObjectValue) {
   return { normalized, paths: Object.keys(paths).length, operations, headers };
 }
 
+/** BOM substitute quantities and the store's material choice (2026-11-14): one path, five owned schemas, eight optional fields. */
+const bomSubstituteFields: Record<string, readonly string[]> = {
+  "DOMAIN.Entities.BillOfMaterials.BillOfMaterialItemSubstitute": ["baseQuantity", "baseUoMId", "baseUoM", "prescribedQuantity"],
+  "DOMAIN.Entities.BillOfMaterials.BillOfMaterialItemSubstituteDto": ["baseQuantity", "baseUoM", "prescribedQuantity"],
+  "DOMAIN.Entities.BillOfMaterials.Request.CreateBoMItemsRequest": ["substitutes"],
+  "DOMAIN.Entities.Requisitions.RequisitionItemDto": ["substituteFor"],
+};
+const bomSubstituteSchemas = ["DOMAIN.Entities.BillOfMaterials.Request.CreateBoMSubstituteRequest", "DOMAIN.Entities.Requisitions.ChooseStockRequisitionMaterialRequest",
+  "DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionBatchDto", "DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionDto",
+  "DOMAIN.Entities.Requisitions.StockRequisitionMaterialOptionsDto"];
+function stripBomSubstituteQuantities(document: ObjectValue) {
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete object(document.paths ?? null)["/api/v1/requisition/{requisitionId}/material-options"];
+  for (const name of bomSubstituteSchemas) delete schemas[name];
+  for (const [name, fields] of Object.entries(bomSubstituteFields)) {
+    const properties = object(object(schemas[name] ?? null).properties ?? null);
+    for (const field of fields) delete properties[field];
+  }
+}
+/** The current contract without the latest addition, which the earlier reviews below compare against. */
+function reviewedHead() {
+  const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripBomSubstituteQuantities(document);
+  return document;
+}
+
 /** White Placebo preparation (2026-11-06): its owned schemas and the optional material/requisition markers. */
 function stripWhitePlacebo(schemas: ObjectValue) {
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Materials.WhitePlacebo.")) delete schemas[name];
@@ -99,7 +125,7 @@ function stripFormulaRepairResponseId(document: ObjectValue) {
 }
 
 test("unsaved formula repair allows a null response ID and preserves the reviewed predecessor", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   const schemas = object(object(current.components ?? null).schemas ?? null);
   const properties = object(object(schemas["APP.Services.Formulas.FormulaRepairTestDto"] ?? null).properties ?? null);
   assert.deepEqual(properties.responseId, { type: "string", format: "uuid", nullable: true });
@@ -117,7 +143,7 @@ function stripSpecificationPrint(document: ObjectValue) {
 }
 
 test("specification printing adds three typed reads and preserves the prior release contract", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   const paths = object(current.paths ?? null);
   for (const [category, operationId] of Object.entries(specificationPrintOperations)) {
     const path = object(paths[`/api/v1/specification-print/${category}/{id}`] ?? null);
@@ -143,7 +169,7 @@ function stripMigrationMaterialLinks(document: ObjectValue) {
 }
 
 test("material worksheet details add only two optional response identifiers", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   stripFormulaRepairResponseId(current);
   stripSpecificationPrint(current);
   const schemas = object(object(current.components ?? null).schemas ?? null);
@@ -162,7 +188,7 @@ test("material worksheet details add only two optional response identifiers", ()
 });
 
 test("draft material linking adds only typed preview/create operations and preserves the approved predecessor", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   stripFormulaRepairResponseId(current);
   stripSpecificationPrint(current);
   stripWorksheetFields(object(object(current.components ?? null).schemas ?? null));
@@ -181,7 +207,7 @@ test("draft material linking adds only typed preview/create operations and prese
 });
 
 test("stock picking adds only seven optional read fields and preserves the approved contract", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   stripFormulaRepairResponseId(current);
   stripSpecificationPrint(current);
   stripWorksheetFields(object(object(current.components ?? null).schemas ?? null));
@@ -216,7 +242,7 @@ test("the preserved customer export matches the reported digest and retains both
 });
 
 test("BOM density conversion is an optional additive marker on the request and saved item", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   stripFormulaRepairResponseId(current);
   stripSpecificationPrint(current);
   stripWorksheetFields(object(object(current.components ?? null).schemas ?? null));
@@ -242,7 +268,7 @@ test("all 1,358 operations and schemas match after only 2,716 audit-header schem
 });
 
 test("historical reporting adds optional read parameters without changing existing contracts or security", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   stripFormulaRepairResponseId(current);
   stripSpecificationPrint(current);
   const before = reviewedImport();
@@ -391,7 +417,7 @@ test("historical reporting adds optional read parameters without changing existi
 });
 
 test("department switching requires an explicit nullable assignment and keeps the legacy URL", () => {
-  const contract = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const contract = reviewedHead();
   const paths = object(contract.paths ?? null);
   const operation = object(object(paths["/api/v1/user/switch-department"] ?? null).post ?? null);
   assert.ok(object(operation.responses ?? null)["204"]);
@@ -404,7 +430,7 @@ test("department switching requires an explicit nullable assignment and keeps th
 });
 
 test("alert recipients have their own endpoint that takes only roles and users", () => {
-  const contract = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const contract = reviewedHead();
   const operation = object(object(object(contract.paths ?? null)["/api/v1/alert/{alertId}/recipients"] ?? null).put ?? null);
   assert.ok(object(operation.responses ?? null)["204"]);
   const schema = object(object(object(contract.components ?? null).schemas ?? null)["DOMAIN.Entities.Alerts.UpdateAlertRecipientsRequest"] ?? null);
@@ -412,7 +438,7 @@ test("alert recipients have their own endpoint that takes only roles and users",
 });
 
 test("production readiness adds one typed, authenticated, parameterized operation", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   const operation = object(object(object(current.paths ?? null)["/api/v1/report/production-readiness"] ?? null).get ?? null);
   assert.equal(operation.operationId, "GetProductionReadinessReport");
   assert.deepEqual(operation.tags, ["Report"]);
@@ -429,7 +455,7 @@ test("production readiness adds one typed, authenticated, parameterized operatio
 });
 
 test("issued BMR reporting adds only a typed date-range query under the existing security contract", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   const operation = object(object(object(current.paths ?? null)["/api/v1/report/bmr-issued"] ?? null).get ?? null);
   assert.equal(operation.operationId, "GetIssuedBmrReport");
   assert.deepEqual(operation.tags, ["Report"]);
@@ -448,8 +474,9 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
 });
 
 test("the merged forecast and migration contracts preserve the approved predecessor and pass release validation", () => {
-  const head = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
-  const publishedDigest = contractDigest(head);
+  const head = reviewedHead();
+  // The release check reports the published file, including the latest addition stripped above.
+  const publishedDigest = contractDigest(object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8"))));
   stripFormulaRepairResponseId(head);
   stripSpecificationPrint(head);
   stripWorksheetFields(object(object(head.components ?? null).schemas ?? null));
@@ -542,7 +569,7 @@ test("the merged forecast and migration contracts preserve the approved predeces
 });
 
 test("expiry department metadata is an optional read addition, with no client-controlled department parameter", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   const batch = object(object(object(current.components ?? null).schemas ?? null)["DOMAIN.Entities.Materials.Batch.MaterialBatchDto"] ?? null);
   const field = object(object(batch.properties ?? null).stockDepartments ?? null);
   assert.equal(field.type, "array");
@@ -573,7 +600,7 @@ test("the separate legacy host-Nginx verifier still blocks unreviewed document c
 });
 
 test("stock count reporting adds only a typed read with department, kind and expiry filters", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = reviewedHead();
   const path = object(object(current.paths ?? null)["/api/v1/material/batches/stock-report"] ?? null);
   assert.deepEqual(Object.keys(path), ["get"]);
   const operation = object(path.get ?? null);
@@ -582,4 +609,23 @@ test("stock count reporting adds only a typed read with department, kind and exp
   const response = object(object(operation.responses ?? null)["200"] ?? null);
   assert.deepEqual(object(object(response.content ?? null)["application/json"] ?? null).schema, { $ref: "#/components/schemas/DOMAIN.Entities.Materials.Batch.MaterialStockReportDto" });
   assert.deepEqual(current.security, reviewedImport().security);
+});
+
+test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "6c84e6f93d57882923dc0cc61a6e7df1649371ab08a8b34ccd287150105b9806");
+  checkCompatibility(hostConfig, policy, digest);
+  const path = object(object(current.paths ?? null)["/api/v1/requisition/{requisitionId}/material-options"] ?? null);
+  assert.deepEqual(Object.keys(path).sort(), ["get", "post"]);
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const [name, fields] of Object.entries(bomSubstituteFields)) {
+    const schema = object(schemas[name] ?? null);
+    for (const field of fields) {
+      assert.ok(object(schema.properties ?? null)[field] !== undefined, `${name}.${field}`);
+      assert.ok(!Array.isArray(schema.required) || !schema.required.includes(field));
+    }
+  }
+  stripBomSubstituteQuantities(current);
+  assert.equal(contractDigest(current), "3e3337d5f86a3b62669a337aeb6a6fff29ad802a10fc82a86ccede6389143b33");
 });
