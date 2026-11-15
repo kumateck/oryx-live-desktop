@@ -58,3 +58,14 @@ it("shows only the view the user holds when a report has two", async () => {
   expect(await screen.findByRole("button", { name: /Choose filters/ })).toBeTruthy();
   expect(screen.queryByRole("tab", { name: "Summary" })).toBeNull();
 });
+
+it("shows the BMR issued by product tab only to holders of its own key", async () => {
+  renderAt("/reports/bmr-issued?view=by-product", ["CanViewBmrIssuedByProductReport"]);
+  await screen.findByText("Session ready");
+  expect(await screen.findByRole("button", { name: /Choose filters/ })).toBeTruthy();
+  expect(screen.queryByRole("tab", { name: "By date" })).toBeNull();
+  cleanup(); forgetSession();
+  renderAt("/reports/bmr-issued", ["CanViewBmrIssuedReport", "CanViewBmrIssuedByProductReport"]);
+  await screen.findByText("Session ready");
+  expect(await screen.findByRole("tab", { name: "By product" })).toBeTruthy();
+});

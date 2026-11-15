@@ -41,6 +41,7 @@ export const reportViewKeys = {
   34: "CanViewStockCountSheetReport", // CurrentStock
   35: "CanViewExpiredStockReport", // ExpiredStock
   36: "CanViewApprovedManufacturerListReport", // ApprovedManufacturers
+  37: "CanViewBmrIssuedByProductReport", // IssuedBmrByProduct
 } as const;
 
 /** Every report key: opening the hub, or an old report address that redirects into it, needs one of these. */

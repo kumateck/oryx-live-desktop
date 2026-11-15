@@ -79,3 +79,39 @@ it("reports unavailable backends and propagates access denial without falling ba
   await expect(loadQualityReport(redux.dispatch, ReportKey.IssuedBmr, filters(), new AbortController().signal)).rejects.toMatchObject({ status: 403 });
   expect(fetcher).toHaveBeenCalledTimes(2); redux.dispatch(api.util.resetApiState());
 });
+
+const productId = "44444444-4444-4444-8444-444444444444";
+function byProductFixture(dates: { startDate: string; endDate: string } | null) {
+  const { rows, generatedAt, departmentId, departmentName } = issuedBmrFixture();
+  return { productId, productCode: "P-001", productName: "Example tablet", startDate: dates?.startDate ?? null, endDate: dates?.endDate ?? null,
+    departmentId, departmentName, generatedAt, totalIssued: rows.length, rows };
+}
+const productFilters = () => ({ ...emptyReportFilters(), product: { value: productId, label: "P-001 · Example tablet" } });
+
+it("lists every batch issued for one product so far when no dates are chosen", async () => {
+  const fetcher = vi.fn<typeof fetch>(async () => Response.json(byProductFixture(null))); vi.stubGlobal("fetch", fetcher);
+  const redux = store();
+  const output = await loadQualityReport(redux.dispatch, ReportKey.IssuedBmrByProduct, productFilters(), new AbortController().signal);
+  const request = fetcher.mock.calls[0]?.[0]; if (!(request instanceof Request)) throw new Error("Missing API request");
+  const url = new URL(request.url);
+  expect(url.pathname).toBe("/api/v1/report/bmr-issued/by-product");
+  expect(Object.fromEntries(url.searchParams)).toEqual({ productId });
+  expect(output.title).toBe("BMR issued · P-001 · Example tablet");
+  expect(output.sheets[0]?.rows.map((row) => row.cells[2])).toEqual(["BMR-2026-001", "BMR-2026-002"]);
+  expect(output.warnings?.[0]).toBe("2 BMRs issued for P-001 · Example tablet so far.");
+  redux.dispatch(api.util.resetApiState());
+});
+
+it("limits a product's batches to the chosen issue dates and refuses half a range or another product", async () => {
+  const fetcher = vi.fn<typeof fetch>(async () => Response.json(byProductFixture({ startDate: "2026-11-01", endDate: "2026-11-02" }))); vi.stubGlobal("fetch", fetcher);
+  const redux = store();
+  await loadQualityReport(redux.dispatch, ReportKey.IssuedBmrByProduct, { ...productFilters(), startDate: new Date(2026, 10, 1), endDate: new Date(2026, 10, 2) }, new AbortController().signal);
+  const request = fetcher.mock.calls[0]?.[0]; if (!(request instanceof Request)) throw new Error("Missing API request");
+  expect(Object.fromEntries(new URL(request.url).searchParams)).toEqual({ productId, startDate: "2026-11-01", endDate: "2026-11-02" });
+  await expect(loadQualityReport(redux.dispatch, ReportKey.IssuedBmrByProduct, { ...productFilters(), startDate: new Date(2026, 10, 1) }, new AbortController().signal))
+    .rejects.toThrow("Choose both issue dates");
+  await expect(loadQualityReport(redux.dispatch, ReportKey.IssuedBmrByProduct, emptyReportFilters(), new AbortController().signal)).rejects.toThrow("Choose a product");
+  fetcher.mockImplementation(async () => Response.json({ ...byProductFixture(null), productId: "66666666-6666-4666-8666-666666666666" }));
+  await expect(loadQualityReport(redux.dispatch, ReportKey.IssuedBmrByProduct, productFilters(), new AbortController().signal)).rejects.toThrow();
+  redux.dispatch(api.util.resetApiState());
+});

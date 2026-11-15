@@ -23,7 +23,8 @@ Products and finished goods, General stores, and People. The sidebar has a singl
 
 `/reports/approved-manufacturer-list` is built from the supplier–manufacturer–material mappings
 (`GET report/supplier-materials`, guarded by `CanViewApprovedManufacturerListReport` or either supplier mapping report key). It shows one row per material, manufacturer
-and supplier, ordered by item code, with approval and validity as month and year. Status is Valid, Expiring (within
+and supplier, ordered by item code, with approval and validity as month and year. The date of approval is when the
+supplier's status was changed to Approved (recorded on the supplier); a supplier that is not approved shows none. Status is Valid, Expiring (within
 six months), Expired, or No validity date.
 
 The print is the controlled copy: landscape, "Page X of Y", the document reference / revision / supersedes line
@@ -35,3 +36,11 @@ The print is the controlled copy: landscape, "Page X of Y", the document referen
   configurable checker step (like approval workflows) exists and the person has confirmed in the system.
 
 Landscape prints across the app now carry page numbers (`@page oryx-landscape` in `shared/theme/document.css`).
+
+## BMR issued
+
+`/reports/bmr-issued` has two views, each with its own key:
+
+- **By date** (`CanViewBmrIssuedReport`): BMRs issued in a date range, for one production department or all.
+- **By product** (`CanViewBmrIssuedByProductReport`): every BMR issued for one product so far, or within issue dates
+  when both are chosen (`GET report/bmr-issued/by-product`). Production users see only their own department's products.
