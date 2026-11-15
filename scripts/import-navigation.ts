@@ -86,16 +86,18 @@ const settingsRoot = settings?.items.find((item) => item.id === "system-settings
 if (settingsRoot?.permissions) settingsRoot.permissions = settingsRoot.permissions.filter((permission) => !directoryPermissions.has(permission));
 const procurement = catalog.find((group) => group.id === "procurement");
 if (!procurement) throw new Error("Procurement navigation group is missing.");
-procurement.items.unshift(
-  { id: "procurement.suppliers", label: "Suppliers", path: "/settings/suppliers", permissions: ["CanViewVendors"] },
-  { ...manufacturers, id: "procurement.manufacturers" },
-);
-
 // The compliance page calls certificate endpoints; the source sidebar's broader group
 // also includes performance/spend viewers, who would see a link they cannot open.
-const compliance = procurement.items.find((item) => item.id === "procurement.supplier-compliance");
+const complianceIndex = procurement.items.findIndex((item) => item.id === "procurement.supplier-compliance");
+const [compliance] = complianceIndex < 0 ? [] : procurement.items.splice(complianceIndex, 1);
 if (!compliance) throw new Error("Supplier compliance navigation entry is missing.");
-compliance.permissions = ["CanViewSupplierCertifications"];
+// Quality Assurance approves vendors, so suppliers, manufacturers and their compliance live in its group.
+// Procurement keeps using the same records; only the menu moved.
+const vendorApproval: CatalogItem[] = [
+  { id: "quality-assurance.suppliers", label: "Suppliers", path: "/settings/suppliers", permissions: ["CanViewVendors"] },
+  { ...manufacturers, id: "quality-assurance.manufacturers" },
+  { ...compliance, id: "quality-assurance.supplier-compliance", permissions: ["CanViewSupplierCertifications"] },
+];
 
 // Every supported collection is independently accessible, including units, sites,
 // and shifts. Keep the catalog and module guard on the same permission contract.
@@ -129,6 +131,14 @@ const qualityAssurance = catalog.find(group => group.id === "quality-assurance")
 if (!qualityAssurance) throw new Error("Quality Assurance navigation group is missing.");
 qualityAssurance.items.unshift({ id: "quality-assurance.products", label: "Products", path: "/qa/products", permissions: ["CanViewQaProducts"] });
 qualityAssurance.items.push({ id: "quality-assurance.issued-bmr-records", label: "Issued BMR records", path: "/qa/issued-bmrs", permissions: ["CanViewIssuedBmrRecords"] });
+qualityAssurance.items.push(...vendorApproval);
+
+// One Reports entry opens the hub, which groups every report by subject and shows only those the user may run.
+const reportsGroup = catalog.find((group) => group.id === "reports");
+if (!reportsGroup) throw new Error("Reports navigation group is missing.");
+reportsGroup.items = [{ id: "reports.all-reports", label: "All reports", path: "/reports", permissions: [...new Set(reportsGroup.items.flatMap((item) => item.permissions ?? []))]
+  // The hub's reports are guarded by the six report keys; the old inventory key opens none of them.
+  .filter((key) => key !== "CanViewInventoryReport") }];
 
 // Oryx Next names some keys the backend never defined, so no role could open those entries. Use the backend's names.
 const backendKeys: Readonly<Record<string, string>> = {

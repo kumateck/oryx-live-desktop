@@ -907,6 +907,9 @@ export const routes: RouteObject[] = [
       ] },
       { path: "reports", Component: Outlet, children: [
         { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/page")).default }) },
+        { path: ":report", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/[report]/page")).default }) }
+        ] },
         { path: "finish-goods-transfernote-report", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/reports/finish-goods-transfernote-report/page")).default }) }
         ] },

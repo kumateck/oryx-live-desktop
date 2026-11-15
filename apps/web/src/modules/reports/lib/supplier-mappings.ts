@@ -1,5 +1,10 @@
 import { reportSheet, reportDate, reportEnum } from "@/shared/reports/report-data";
 import type { SupplierMapping } from "../api/contract-adapters";
+type PackOption = NonNullable<SupplierMapping["materials"]>[number]["quantityPerPackOption"];
+/** A pack option as "25", "20 to 25" or "10, 25". */
+export function packText(pack: PackOption): string | number | null {
+  return pack?.min != null && pack.max != null ? `${pack.min} to ${pack.max}` : pack?.min ?? pack?.max ?? pack?.values?.join(", ") ?? null;
+}
 export function supplierMappingSheets(mappings: readonly SupplierMapping[], summary: boolean) {
   const rows = mappings.flatMap((mapping) => (mapping.materials ?? []).map((entry) => ({ mapping, entry })));
   const detail = reportSheet("Supplier and manufacturer mappings", rows, [
@@ -7,7 +12,7 @@ export function supplierMappingSheets(mappings: readonly SupplierMapping[], summ
     { label: "Material type", read: ({ entry }) => reportEnum(entry.material?.kind, ["Raw material", "Packaging material"]) },
     { label: "Manufacturer", read: ({ mapping }) => mapping.manufacturers?.name }, { label: "Manufacturer address", read: ({ mapping }) => mapping.manufacturers?.address },
     { label: "Supplier", read: ({ mapping }) => mapping.supplier?.name }, { label: "Supplier address", read: ({ mapping }) => mapping.supplier?.address },
-    { label: "Quantity per pack", read: ({ entry }) => { const pack = entry.quantityPerPackOption; return pack?.min != null && pack.max != null ? `${pack.min} to ${pack.max}` : pack?.min ?? pack?.max ?? pack?.values?.join(", ") ?? null; } },
+    { label: "Quantity per pack", read: ({ entry }) => packText(entry.quantityPerPackOption) },
     { label: "Unit", read: ({ mapping }) => mapping.uom?.symbol ?? mapping.uom?.name },
     { label: "Date of approval", read: ({ mapping }) => reportDate(mapping.manufacturers?.approvedAt) }, { label: "Validity date", read: ({ mapping }) => reportDate(mapping.manufacturers?.validityDate) },
   ]);
