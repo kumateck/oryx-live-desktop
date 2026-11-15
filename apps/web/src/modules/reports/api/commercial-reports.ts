@@ -11,6 +11,7 @@ import { purchaseOrdersSheet, purchasedOrdersSheet, shipmentsSheet } from "../li
 import { productMasterSheet } from "../lib/master-data-adapters";
 import { filterSupplierMappings } from "./lookup-choices";
 import { supplierMappingSheets } from "../lib/supplier-mappings";
+import { approvedManufacturerSheet, approvedManufacturerTitle } from "../lib/approved-manufacturers";
 import { reportContractApi } from "./contract-adapters";
 import { allReportPages } from "./all-pages";
 import { reportRequest } from "./request";
@@ -35,14 +36,16 @@ export async function loadCommercialReport(dispatch: ApiDispatch, key: ReportKey
       const division = binaryChoice(f.division?.value);
       return { sheets: [invoicedProductsSheet("Invoiced products", productRows(await request(dispatch(reportsApi.endpoints.getApiV1ReportInvoicedProductsSummary.initiate({ ...reportsAudit, ...historyParams(filters), ...periodParams(f), ...(f.product ? { productId: f.product.value } : {}), ...(f.customer ? { customerId: f.customer.value } : {}), ...(division === undefined ? {} : { warehouseDivision: division }) }, options)), signal)))] };
     }
-    case ReportKey.SupplierDetail: case ReportKey.SupplierSummary: {
+    case ReportKey.SupplierDetail: case ReportKey.SupplierSummary: case ReportKey.ApprovedManufacturers: {
       const materialType = binaryChoice(f.materialKind?.value);
       const mappings = await request(dispatch(reportContractApi.endpoints.readReportSupplierMappings.initiate({ ...reportsAudit, ...historyParams(filters),
         ...(f.materialName ? { materialName: f.materialName } : {}), ...(materialType === undefined ? {} : { materialType }),
         ...(f.supplier ? { supplierId: f.supplier.value } : {}), ...(f.manufacturer ? { manufacturerId: f.manufacturer.value } : {}),
         ...(f.validityDateFrom ? { validityDateFrom: reportBoundary(f.validityDateFrom) } : {}), ...(f.validityDateTo ? { validityDateTo: reportBoundary(f.validityDateTo, true) } : {}),
       }, options)), signal);
-      return supplierMappingSheets(filterSupplierMappings(mappings,filters), key === ReportKey.SupplierSummary);
+      const matching = filterSupplierMappings(mappings, filters);
+      if (key === ReportKey.ApprovedManufacturers) return { title: approvedManufacturerTitle(filters), sheets: [approvedManufacturerSheet(matching, new Date())] };
+      return supplierMappingSheets(matching, key === ReportKey.SupplierSummary);
     }
     case ReportKey.ProductList: case ReportKey.QualityProducts: {
       const division = binaryChoice(f.division?.value);

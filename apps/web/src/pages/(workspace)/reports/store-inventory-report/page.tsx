@@ -1,2 +1,3 @@
-import { ReportWorkbench } from "@/modules/reports/components/report-workbench";
-export default function Page() { return <ReportWorkbench group="stores" />; }
+import { LegacyReportRedirect } from "@/modules/reports/components/legacy-report-redirect";
+
+export default function Page() { return <LegacyReportRedirect section="stores" />; }

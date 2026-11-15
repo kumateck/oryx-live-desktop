@@ -42,7 +42,7 @@ it("shows an explicitly supplied list parent once on create, detail, and edit pa
   for (const suffix of ["create", "record", "record/edit"]) {
     const view = open(`/settings/manufacturers/${suffix}`, <PageHeader title="Manufacturer"
       crumbs={[{ label: "Manufacturers", to: "/settings/manufacturers" }, { label: "Manufacturer" }]} />);
-    expect(crumbs()).toEqual(["Procurement", "Manufacturers", "Manufacturer"]);
+    expect(crumbs()).toEqual(["Quality Assurance", "Manufacturers", "Manufacturer"]);
     expect(within(screen.getByRole("navigation", { name: "breadcrumb" })).getAllByRole("link")
       .map((link) => link.getAttribute("href")).filter(Boolean)).toEqual(["/settings/manufacturers"]);
     view.unmount();
@@ -52,7 +52,7 @@ it("shows an explicitly supplied list parent once on create, detail, and edit pa
 it("keeps record names that happen to match the list parent", () => {
   open("/settings/suppliers/record", <PageHeader title="Suppliers"
     crumbs={[{ label: "Suppliers", to: "/settings/suppliers" }, { label: "Suppliers" }]} />);
-  expect(crumbs()).toEqual(["Procurement", "Suppliers", "Suppliers"]);
+  expect(crumbs()).toEqual(["Quality Assurance", "Suppliers", "Suppliers"]);
   expect(within(screen.getByRole("navigation", { name: "breadcrumb" })).getAllByRole("listitem")[2]
     ?.querySelector("[aria-current='page']")).toBeTruthy();
 });
