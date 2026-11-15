@@ -11,11 +11,12 @@ import { loadWarehouseReport } from "../api/warehouse-reports";
 import { loadStoreReport } from "../api/store-reports";
 import { loadPeopleReport } from "../api/people-reports";
 import { loadQualityReport } from "../api/quality-reports";
-import { ReportKey, reportPermissions, type ReportDefinition } from "../lib/report-model";
+import { viewRequirement } from "../lib/report-directory";
+import { ReportKey, type ReportDefinition } from "../lib/report-model";
 import { reportSelection } from "../lib/selections";
 import { appliedReportFilters } from "../lib/applied-filters";
 import type { ReportFilters } from "../schemas/report-filters";
-export function useReportRunner(definition: ReportDefinition, requirement = reportPermissions[definition.group]) {
+export function useReportRunner(definition: ReportDefinition, requirement = viewRequirement(definition.key)) {
   const dispatch = useApiDispatch(); const access = usePermissionAction(requirement);
   const active = useRef<AbortController | null>(null);
   const [result, setResult] = useState<{ book: ReportBook; readiness: ReadinessView | undefined } | null>(null);

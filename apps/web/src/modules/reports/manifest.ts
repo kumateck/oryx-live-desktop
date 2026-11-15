@@ -1,19 +1,14 @@
 import type { ModuleManifest } from "../contract";
+import { anyReportKey } from "./lib/report-keys";
+
 export const manifest = {
   id: "reports", label: "Reports", root: "/reports", order: 95,
-  access: { kind: "some", permissions: ["CanViewWarehouseReport", "CanViewProcurementReport", "CanViewFgtnReport", "CanViewStoreAndInventoryReport", "CanViewHumanResourcesReport", "CanViewQcAndQaReport"] },
+  // The hub serves many reports, each with its own key: any one report key opens it, and the hub lists only
+  // the reports the user holds. Old department pages only redirect into the hub, so they follow the same rule.
+  access: { kind: "some", permissions: [...anyReportKey] },
   routes: [
-    { pattern: "/reports/warehouse-report", access: { kind: "all", permissions: ["CanViewWarehouseReport"] } },
-    { pattern: "/reports/procurement-report", access: { kind: "all", permissions: ["CanViewProcurementReport"] } },
-    { pattern: "/reports/procument-reports", access: { kind: "all", permissions: ["CanViewProcurementReport"] } },
-    { pattern: "/reports/finish-goods-transfernote-report", access: { kind: "all", permissions: ["CanViewFgtnReport"] } },
-    { pattern: "/reports/store-inventory-report", access: { kind: "all", permissions: ["CanViewStoreAndInventoryReport"] } },
-    { pattern: "/reports/human-resources-report", access: { kind: "all", permissions: ["CanViewHumanResourcesReport"] } },
-    { pattern: "/reports/human-resources-report/:report", access: { kind: "all", permissions: ["CanViewHumanResourcesReport"] } },
-    { pattern: "/reports/qc-qa-reports", access: { kind: "all", permissions: ["CanViewQcAndQaReport"] } },
-    { pattern: "/reports/qc-qa-reports/:report", access: { kind: "all", permissions: ["CanViewQcAndQaReport"] } },
-    // One page serves every report in the hub. Opening it needs a report key; the page then checks the
-    // chosen report's own key before anything loads, and each Summary/Detail view is checked separately.
-    { pattern: "/reports/:report", access: { kind: "some", permissions: ["CanViewWarehouseReport", "CanViewProcurementReport", "CanViewFgtnReport", "CanViewStoreAndInventoryReport", "CanViewHumanResourcesReport", "CanViewQcAndQaReport"] } },
+    // One page serves every report. Opening it needs a report key; the page then checks the chosen report's
+    // own key before anything loads, and each Summary/Detail view is checked separately.
+    { pattern: "/reports/:report", access: { kind: "some", permissions: [...anyReportKey] } },
   ],
 } satisfies ModuleManifest<"reports", "/reports">;

@@ -7,11 +7,13 @@ Products and finished goods, General stores, and People. The sidebar has a singl
 - **Directory**: `modules/reports/lib/report-directory.ts` lists every report once (`reportEntries`) with its group,
   address (`/reports/<slug>`) and views. A report that has a summary and a detailed form is one entry with
   **Summary | Detail** tabs (`?view=summary|detail`). A test fails if a catalog report is missing or listed twice.
-- **Access**: the hub shows only reports the user may run. Each view is checked with its own requirement
-  (`viewRequirement`) before anything loads. Today that is the backend's group key for the report
-  (`CanViewWarehouseReport`, `CanViewProcurementReport`, …). Per-report keys need a backend change: new keys,
-  endpoint guards, filter-lookup guards and a grant migration. When they exist, only `viewRequirement` and the
-  manifest change.
+- **Access**: every report has its own backend key (`modules/reports/lib/report-keys.ts`, for example
+  `CanViewApprovedManufacturerListReport`). A Summary | Detail report has one key per view. The hub, the sidebar
+  entry and each report page show only what the user's keys allow, and each view is checked (`viewRequirement`)
+  before anything loads. The old group keys (`CanViewWarehouseReport`, `CanViewProcurementReport`, …) no longer open
+  hub reports; on the server they still guard the register reports outside the hub. Filter lookups (departments,
+  materials, products, suppliers and the like) open for any one report key. Roles keep their reports through the
+  backend grant migration `GrantPerReportViewKeys`, which gives each role the keys of the reports its group key covered.
 - **Old addresses**: the former department pages (`/reports/warehouse-report`, `/reports/qc-qa-reports/...`,
   `/hr/human-resources-report/...`, including `?report=<key>`) redirect to the matching report or group
   (`LegacyReportRedirect`).
@@ -20,7 +22,7 @@ Products and finished goods, General stores, and People. The sidebar has a singl
 ## Approved manufacturer list
 
 `/reports/approved-manufacturer-list` is built from the supplier–manufacturer–material mappings
-(`GET report/supplier-materials`, guarded by `CanViewProcurementReport`). It shows one row per material, manufacturer
+(`GET report/supplier-materials`, guarded by `CanViewApprovedManufacturerListReport` or either supplier mapping report key). It shows one row per material, manufacturer
 and supplier, ordered by item code, with approval and validity as month and year. Status is Valid, Expiring (within
 six months), Expired, or No validity date.
 

@@ -6,5 +6,4 @@ export type ReportGroup = "warehouse" | "procurement" | "finished-goods" | "stor
 export interface ReportDefinition { key: ReportKey; title: string; group: ReportGroup; fields: readonly ReportFieldName[]; required?: readonly ReportFieldName[]; single?: readonly ReportFieldName[]; description: string }
 export interface ReportOutput { title?: string; sheets: readonly ReportSheet[]; warnings?: readonly string[]; generatedAt?: string; filters?: readonly { label: string; value: string }[]; readiness?: ReadinessView }
 export type ReportLoader = (key: ReportKey, filters: ReportFilters, signal: AbortSignal) => Promise<ReportOutput>;
-export const reportPermissions: Record<ReportGroup, string> = { warehouse: "CanViewWarehouseReport", procurement: "CanViewProcurementReport", "finished-goods": "CanViewFgtnReport", stores: "CanViewStoreAndInventoryReport", hr: "CanViewHumanResourcesReport", quality: "CanViewQcAndQaReport" };
 export const reportsAudit = { module: "Reports", subModule: "Report generation" } as const;

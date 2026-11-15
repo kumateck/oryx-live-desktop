@@ -1,6 +1,7 @@
 import type { AccessRule } from "@/shared/auth/access";
 import { reportDefinition } from "./catalog";
-import { ReportKey as K, reportPermissions } from "./report-model";
+import { reportViewKeys as keysByReport } from "./report-keys";
+import { ReportKey as K } from "./report-model";
 
 /** Reports are grouped by what they are about, not by the department that owns them. */
 export type ReportSectionId = "suppliers" | "purchasing" | "materials" | "production" | "products" | "stores" | "people";
@@ -66,9 +67,12 @@ export function reportEntry(slug: string | undefined): ReportEntry | null {
   return reportEntries.find((entry) => entry.slug === slug) ?? null;
 }
 
-/** The permission that opens one view of a report. */
+/** Fails to compile when a report has no key. */
+const reportViewKeys: Record<K, string> = keysByReport;
+
+/** The permission that opens one view of a report: that report's own backend key. */
 export function viewRequirement(key: K): string {
-  return reportPermissions[reportDefinition(key).group];
+  return reportViewKeys[key];
 }
 
 /** A report entry opens when the user may run at least one of its views. Each view keeps its own check. */
