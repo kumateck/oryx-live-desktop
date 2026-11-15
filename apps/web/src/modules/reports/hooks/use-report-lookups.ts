@@ -30,7 +30,7 @@ export function useReportLookups(definition: ReportDefinition, selections: Repor
     const historical = await prepareReportHistory(dispatch, selections, signal, false);
     const args = { ...reportsAudit, ...historyParams(historical), page, pageSize: 30, searchQuery }; const options = { subscribe: false, forceRefetch: true };
     const request = reportRequest;
-    if ([ReportKey.SupplierDetail,ReportKey.SupplierSummary].includes(definition.key) && (entity==="supplier"||entity==="manufacturer"||entity==="material")) return procurementChoices(dispatch,selections,entity,searchQuery,page,signal);
+    if ([ReportKey.SupplierDetail,ReportKey.SupplierSummary,ReportKey.ApprovedManufacturers].includes(definition.key) && (entity==="supplier"||entity==="manufacturer"||entity==="material")) return procurementChoices(dispatch,selections,entity,searchQuery,page,signal);
     switch (entity) {
       case "department": return reportDepartmentChoices(dispatch,definition,historical,searchQuery,page,signal);
       case "material": {

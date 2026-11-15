@@ -65,21 +65,31 @@ test("the imported Oryx Next catalog is well formed", () => {
   assert.equal(activeNavigation(navigationCatalog, "/access-management/roles/create")?.groupId, "it-support");
 });
 
-test("supplier and manufacturer directories belong to Procurement with their own permissions", () => {
+test("supplier and manufacturer directories belong to Quality Assurance with their own permissions", () => {
   for (const [path, permission, itemId] of [
-    ["/settings/suppliers", "CanViewVendors", "procurement.suppliers"],
-    ["/settings/manufacturers", "CanViewManufacturers", "procurement.manufacturers"],
-    ["/procurement/supplier-compliance", "CanViewSupplierCertifications", "procurement.supplier-compliance"],
+    ["/settings/suppliers", "CanViewVendors", "quality-assurance.suppliers"],
+    ["/settings/manufacturers", "CanViewManufacturers", "quality-assurance.manufacturers"],
+    ["/procurement/supplier-compliance", "CanViewSupplierCertifications", "quality-assurance.supplier-compliance"],
   ] as const) {
     const visible = visibleNavigation(navigationCatalog, user(permission));
-    assert.equal(activeNavigation(visible, path)?.groupId, "procurement");
+    assert.equal(activeNavigation(visible, path)?.groupId, "quality-assurance");
     assert.equal(activeNavigation(visible, `${path}/record/edit`)?.itemId, itemId);
     assert.equal(visible.some((group) => group.id === "system-settings"), false);
     assert.equal(navigationPages(visible).filter((page) => page.path === path).length, 1);
   }
   const supplierOnly = visibleNavigation(navigationCatalog, user("CanViewVendors"));
   assert.equal(activeNavigation(supplierOnly, "/settings/manufacturers"), null);
-  assert.deepEqual(navigationTrail(navigationCatalog, "/settings/suppliers/record/relationship").map((crumb) => crumb.label), ["Procurement", "Suppliers"]);
+  assert.deepEqual(navigationTrail(navigationCatalog, "/settings/suppliers/record/relationship").map((crumb) => crumb.label), ["Quality Assurance", "Suppliers"]);
+});
+
+test("one Reports entry opens the hub for anyone holding a report key", () => {
+  for (const permission of ["CanViewWarehouseReport", "CanViewProcurementReport", "CanViewFgtnReport", "CanViewStoreAndInventoryReport", "CanViewHumanResourcesReport", "CanViewQcAndQaReport"]) {
+    const visible = visibleNavigation(navigationCatalog, user(permission));
+    const reports = visible.find((group) => group.id === "reports");
+    assert.deepEqual(reports?.items.map((item) => item.path), ["/reports"], permission);
+    assert.equal(activeNavigation(visible, "/reports/approved-manufacturer-list")?.itemId, "reports.all-reports", permission);
+  }
+  assert.equal(visibleNavigation(navigationCatalog, user("CanViewInventoryReport")).some((group) => group.id === "reports"), false);
 });
 
 test("gives a page's place in the navigation, linking only the entry that is a page", () => {
