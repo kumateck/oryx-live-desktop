@@ -1,1 +1,1 @@
-export { ReportIndex as default } from "@/modules/reports/components/report-index";
+export { ReportHub as default } from "@/modules/reports/components/report-hub";
