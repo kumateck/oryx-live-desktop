@@ -15,8 +15,10 @@ import { useReportLookups } from "../hooks/use-report-lookups";
 import { useReportRunner } from "../hooks/use-report-runner";
 import { ReportKey, type ReportDefinition, type ReportGroup } from "../lib/report-model";
 import { ReportSnapshot } from "./report-snapshot";
+import { AppliedFilterChips } from "./applied-filter-chips";
+import { SlidersHorizontal } from "lucide-react";
 import { lockedDepartmentHint, lockedReportDepartment, withReportDepartment } from "../lib/department-scope";
-function SelectedReport({ definition, requirement, initialFilters }: { definition: ReportDefinition; requirement?: string | undefined; initialFilters?: Partial<ReportFilters> | undefined }) {
+export function SelectedReport({ definition, requirement, initialFilters }: { definition: ReportDefinition; requirement?: string | undefined; initialFilters?: Partial<ReportFilters> | undefined }) {
   const user = useCurrentUser();
   const department = useMemo(() => lockedReportDepartment(definition, user ? { departmentId: user.departmentId, department: user.department, departmentType: user.departmentType } : null),
     [definition, user?.departmentId, user?.department, user?.departmentType]);
@@ -35,16 +37,16 @@ function SelectedReport({ definition, requirement, initialFilters }: { definitio
   const closeFilters = (open: boolean) => { if (!open) resetFilters(structuredClone(applied.current)); setFiltersOpen(open); };
   const runner = useReportRunner(definition, requirement);
   const production = [ReportKey.MonthlySchedule, ReportKey.DailySchedule, ReportKey.ProductReadiness].includes(definition.key);
-  const filterButton = <Button disabled={runner.busy} onClick={() => setFiltersOpen(true)}>{runner.book ? "Edit filters" : "Choose filters"}</Button>;
-  return <div className={production ? "space-y-3" : "space-y-5"}>{!runner.readiness ? <p className="text-sm text-muted-foreground">{definition.description}</p> : null}
+  const filterButton = <Button disabled={runner.busy} variant={runner.book ? "outline" : "default"} onClick={() => setFiltersOpen(true)}><SlidersHorizontal />{runner.book ? "Edit filters" : "Choose filters"}</Button>;
+  return <div className={production ? "space-y-3" : "space-y-4"}>
     {!runner.readiness || runner.busy ? <div className="flex flex-wrap items-center gap-2">{filterButton}
       {runner.busy ? <Button variant="outline" onClick={runner.cancel}>Cancel generation</Button> : null}
-      <span className="text-sm text-muted-foreground">{runner.book ? "The report shows the last submitted filters." : "Set filters, then generate the complete report."}</span>
+      {runner.book ? <AppliedFilterChips filters={runner.book.filters} /> : <span className="text-sm text-muted-foreground">Set filters, then generate the complete report.</span>}
     </div> : null}
     <ReportFilterDialog title={definition.title} open={filtersOpen} onOpenChange={closeFilters} form={form} fields={fields}
       submit={(values) => { setFiltersOpen(false); void runner.run(withReportDepartment(values, department)).then((success) => { if (success) applied.current = structuredClone(values); }); }} reset={() => resetFilters(defaults)} />
     {runner.error ? <p role="alert" className="text-destructive">{runner.error}</p> : null}
-    <ReportSnapshot book={runner.book} readiness={runner.readiness} busy={runner.busy} production={production} actions={filterButton} />
+    <ReportSnapshot reportKey={definition.key} book={runner.book} readiness={runner.readiness} busy={runner.busy} production={production} actions={filterButton} />
   </div>;
 }
 export function ReportWorkbench({ group, initialKey, allowedKeys, requirement, initialFilters }: { group: ReportGroup; initialKey?: ReportKey; allowedKeys?: readonly ReportKey[]; requirement?: string; initialFilters?: Partial<ReportFilters> }) {
@@ -54,6 +56,7 @@ export function ReportWorkbench({ group, initialKey, allowedKeys, requirement, i
   if (!selected) return <p role="alert">This report is not configured.</p>;
   return <article className="space-y-5"><PageHeader title={selected.title} crumbs={[{ label: "Reports" }, { label: selected.title }]} />
     <nav aria-label="Report type" className="flex flex-wrap gap-2">{definitions.map((definition) => <Button key={definition.key} variant={selected.key === definition.key ? "default" : "outline"} size="sm" aria-pressed={selected.key === definition.key} onClick={() => setParams({ report: String(definition.key) })}>{definition.title}</Button>)}</nav>
+    <p className="text-sm text-muted-foreground">{selected.description}</p>
     <SelectedReport key={`${selected.key}:${user?.id}:${user?.departmentId}`} definition={selected} requirement={requirement} initialFilters={initialFilters} />
   </article>;
 }

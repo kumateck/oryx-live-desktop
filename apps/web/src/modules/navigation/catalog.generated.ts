@@ -184,30 +184,6 @@ export const navigationCatalog = [
     "label": "Procurement",
     "items": [
       {
-        "id": "procurement.suppliers",
-        "label": "Suppliers",
-        "path": "/settings/suppliers",
-        "permissions": [
-          "CanViewVendors"
-        ]
-      },
-      {
-        "id": "procurement.manufacturers",
-        "label": "Manufacturers",
-        "path": "/settings/manufacturers",
-        "permissions": [
-          "CanViewManufacturers"
-        ]
-      },
-      {
-        "id": "procurement.supplier-compliance",
-        "label": "Supplier compliance",
-        "path": "/procurement/supplier-compliance",
-        "permissions": [
-          "CanViewSupplierCertifications"
-        ]
-      },
-      {
         "id": "procurement.requests",
         "label": "Requests",
         "permissions": [
@@ -1241,6 +1217,30 @@ export const navigationCatalog = [
         "path": "/qa/issued-bmrs",
         "permissions": [
           "CanViewIssuedBmrRecords"
+        ]
+      },
+      {
+        "id": "quality-assurance.suppliers",
+        "label": "Suppliers",
+        "path": "/settings/suppliers",
+        "permissions": [
+          "CanViewVendors"
+        ]
+      },
+      {
+        "id": "quality-assurance.manufacturers",
+        "label": "Manufacturers",
+        "path": "/settings/manufacturers",
+        "permissions": [
+          "CanViewManufacturers"
+        ]
+      },
+      {
+        "id": "quality-assurance.supplier-compliance",
+        "label": "Supplier compliance",
+        "path": "/procurement/supplier-compliance",
+        "permissions": [
+          "CanViewSupplierCertifications"
         ]
       }
     ]
@@ -2280,51 +2280,15 @@ export const navigationCatalog = [
     "label": "Reports",
     "items": [
       {
-        "id": "reports.human-resources-report",
-        "label": "Human Resources Report",
-        "path": "/reports/human-resources-report",
+        "id": "reports.all-reports",
+        "label": "All reports",
+        "path": "/reports",
         "permissions": [
-          "CanViewHumanResourcesReport"
-        ]
-      },
-      {
-        "id": "reports.qc-and-qa-report",
-        "label": "QC and QA Report",
-        "path": "/reports/qc-qa-reports",
-        "permissions": [
-          "CanViewQcAndQaReport"
-        ]
-      },
-      {
-        "id": "reports.warehouse-report",
-        "label": "Warehouse Report",
-        "path": "/reports/warehouse-report",
-        "permissions": [
-          "CanViewWarehouseReport"
-        ]
-      },
-      {
-        "id": "reports.store-and-inventory-report",
-        "label": "Store & Inventory Report",
-        "path": "/reports/store-inventory-report",
-        "permissions": [
+          "CanViewHumanResourcesReport",
+          "CanViewQcAndQaReport",
+          "CanViewWarehouseReport",
           "CanViewStoreAndInventoryReport",
-          "CanViewInventoryReport"
-        ]
-      },
-      {
-        "id": "reports.procurement-report",
-        "label": "Procurement Report",
-        "path": "/reports/procurement-report",
-        "permissions": [
-          "CanViewProcurementReport"
-        ]
-      },
-      {
-        "id": "reports.fgtn-report",
-        "label": "FGTN Report",
-        "path": "/reports/finish-goods-transfernote-report",
-        "permissions": [
+          "CanViewProcurementReport",
           "CanViewFgtnReport"
         ]
       }

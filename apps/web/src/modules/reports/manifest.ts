@@ -12,5 +12,8 @@ export const manifest = {
     { pattern: "/reports/human-resources-report/:report", access: { kind: "all", permissions: ["CanViewHumanResourcesReport"] } },
     { pattern: "/reports/qc-qa-reports", access: { kind: "all", permissions: ["CanViewQcAndQaReport"] } },
     { pattern: "/reports/qc-qa-reports/:report", access: { kind: "all", permissions: ["CanViewQcAndQaReport"] } },
+    // One page serves every report in the hub. Opening it needs a report key; the page then checks the
+    // chosen report's own key before anything loads, and each Summary/Detail view is checked separately.
+    { pattern: "/reports/:report", access: { kind: "some", permissions: ["CanViewWarehouseReport", "CanViewProcurementReport", "CanViewFgtnReport", "CanViewStoreAndInventoryReport", "CanViewHumanResourcesReport", "CanViewQcAndQaReport"] } },
   ],
 } satisfies ModuleManifest<"reports", "/reports">;

@@ -1,2 +1,4 @@
-import { ReportWorkbench } from "@/modules/reports/components/report-workbench";
-export default function Page() { return <ReportWorkbench group="hr" initialKey={25} />; }
+import { LegacyReportRedirect } from "@/modules/reports/components/legacy-report-redirect";
+import { ReportKey } from "@/modules/reports/lib/report-model";
+
+export default function Page() { return <LegacyReportRedirect report={ReportKey.StaffTurnover} />; }

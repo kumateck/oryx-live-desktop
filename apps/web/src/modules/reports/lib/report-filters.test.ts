@@ -26,7 +26,7 @@ describe("report selection contracts", () => {
     expect(expiryParams(emptyReportFilters())).toEqual({});
   });
   it("preserves optional multiselects and explicit stock department single selectors", () => {
-    expect(reportCatalog).toHaveLength(36);
+    expect(reportCatalog).toHaveLength(37);
     for (const definition of reportCatalog) {
       const fields = reportFilterFields(definition, load);
       expect(fields).toHaveLength(definition.fields.length);
