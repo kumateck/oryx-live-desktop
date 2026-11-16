@@ -44,6 +44,12 @@ describe("formula draft completeness", () => {
     expect(complete({ ...answer, manualVars: { ...answer.manualVars, unused: { raw: "", evaluated: null } } })).toBe(true);
   });
 
+  it("needs no readings table when the formula has no sample or standard columns, as for a pH reading", () => {
+    const manualOnly = JSON.stringify({ type: 3, expression: ":ph", numberOfReadings: 3, numberOfSamples: 0, manualVarLabels: { ph: "pH" } });
+    expect(formulaAnswerComplete(JSON.stringify({ manualVars: { ph: { raw: "6.8", evaluated: 6.8 } }, tableData: [] }), manualOnly)).toBe(true);
+    expect(formulaAnswerComplete(JSON.stringify({ manualVars: { ph: { raw: "", evaluated: null } }, tableData: [] }), manualOnly)).toBe(false);
+  });
+
   it("checks simple formula variables and permits configured constants", () => {
     const simple = JSON.stringify({ type: 0, expression: ":a + :b + :constant", constants: { constant: 2 } });
     expect(formulaAnswerComplete('{"a":0,"b":null}', simple)).toBe(false);
