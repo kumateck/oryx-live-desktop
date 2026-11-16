@@ -79,7 +79,7 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
     if (values.useDensityConversion && (density.loading || density.failed)) return;
     if (values.useDensityConversion && (density.density === null
       || massVolumeConversion(1, "mg", linked.unit.symbol, density.density) === null)) {
-      form.setError("useDensityConversion", { message: "Set a positive measured density with an active g/mL unit and a liquid stock unit on the department material link." });
+      form.setError("useDensityConversion", { message: density.problem ?? "Density conversion requires a liquid stock unit (mL or L) on this department’s material link." });
       return;
     }
     const chosen = values.substitutes ?? [];
@@ -115,8 +115,8 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
               known={useDensityConversion ? null : savedUnit(item.value)} density={useDensityConversion === true}
               compositionSize={compositionSize} batchSize={batchSize} onUnit={onSubstituteUnit} />)}
           </section> : null}
-          {useDensityConversion && density.failed ? <p role="alert" className="flex items-center gap-2 text-sm text-destructive">
-            The material density could not be loaded.
+          {useDensityConversion && (density.failed || density.problem) ? <p role="alert" className="flex items-center gap-2 text-sm text-destructive">
+            {density.problem ?? "The material density could not be loaded."}
             <Button type="button" size="sm" variant="outline" onClick={() => { void density.retry(); }}>Retry density</Button>
           </p> : null}
           {facts ? <dl className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-md bg-muted/50 p-3 text-sm">
