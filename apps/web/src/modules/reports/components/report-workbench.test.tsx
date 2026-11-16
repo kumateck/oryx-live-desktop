@@ -17,7 +17,7 @@ function Ready() { return useCurrentUser() ? <p>Report session ready</p> : null;
 
 it("prints grouped BMR fields on two lines and exports all nine fields from the same snapshot", async () => {
   exports.csv.mockReset(); exports.csv.mockResolvedValue(undefined);
-  const backend = stubBackend({ permissions: ["CanViewQcAndQaReport"], departmentType: 1 });
+  const backend = stubBackend({ permissions: ["CanViewBmrIssuedReport"], departmentType: 1 });
   const session = backend.fetcher.getMockImplementation(); rememberSession();
   let reads = 0;
   backend.fetcher.mockImplementation(async (input, init) => {
@@ -52,7 +52,7 @@ it("prints grouped BMR fields on two lines and exports all nine fields from the 
 });
 
 it("keeps filters in the dialog, generates submitted details, and opens the system print preview", async () => {
-  const backend = stubBackend({ permissions: ["CanViewStoreAndInventoryReport"] });
+  const backend = stubBackend({ permissions: ["CanViewStoreItemsReport"] });
   const session = backend.fetcher.getMockImplementation(); rememberSession();
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
@@ -83,7 +83,7 @@ it("keeps filters in the dialog, generates submitted details, and opens the syst
 
 it("generates the combined matrix once and uses the same complete snapshot for print and the export menu", async () => {
   exports.csv.mockReset(); exports.csv.mockResolvedValue(undefined);
-  const backend = stubBackend({ permissions: ["CanViewQcAndQaReport"], departmentType: 1 });
+  const backend = stubBackend({ permissions: ["CanViewDailyProductionScheduleReport"], departmentType: 1 });
   const session = backend.fetcher.getMockImplementation(); rememberSession();
   let reportReads = 0;
   backend.fetcher.mockImplementation(async (input, init) => {
@@ -118,7 +118,7 @@ it("generates the combined matrix once and uses the same complete snapshot for p
 });
 
 it("locks stock reports to the account department and keeps the same lock after resetting filters", async () => {
-  const backend = stubBackend({ permissions: ["CanViewWarehouseReport"] });
+  const backend = stubBackend({ permissions: ["CanViewStockCountSheetReport"] });
   const session = backend.fetcher.getMockImplementation(); rememberSession();
   let requested = "";
   backend.fetcher.mockImplementation(async (input, init) => {
@@ -142,7 +142,7 @@ it("locks stock reports to the account department and keeps the same lock after 
 });
 
 it("lets a non-production user choose any department or all departments for stock reports", async () => {
-  const backend = stubBackend({ permissions: ["CanViewWarehouseReport"], departmentType: 1 });
+  const backend = stubBackend({ permissions: ["CanViewStockCountSheetReport"], departmentType: 1 });
   const session = backend.fetcher.getMockImplementation(); rememberSession();
   let requested: string | null = "unset";
   backend.fetcher.mockImplementation(async (input, init) => {
@@ -164,7 +164,7 @@ it("lets a non-production user choose any department or all departments for stoc
 });
 
 it("fixes a production user's multi-department report to their own department", async () => {
-  const backend = stubBackend({ permissions: ["CanViewWarehouseReport"], departmentType: 0 });
+  const backend = stubBackend({ permissions: ["CanViewMaterialStockSummaryReport"], departmentType: 0 });
   const session = backend.fetcher.getMockImplementation(); rememberSession();
   let requested: string | null = null;
   backend.fetcher.mockImplementation(async (input, init) => {

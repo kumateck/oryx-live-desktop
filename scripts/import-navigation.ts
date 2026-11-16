@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { collectionViewPermissions } from "../apps/web/src/modules/collection-configurations/lib/collections.ts";
 import { passwordAdminEmail } from "../apps/web/src/shared/auth/password-admin.ts";
 import { userPasswordsPath } from "../apps/web/src/modules/user-passwords/lib/user-password.ts";
+import { anyReportKey } from "../apps/web/src/modules/reports/lib/report-keys.ts";
 
 interface SourceItem {
   title: string;
@@ -133,12 +134,21 @@ qualityAssurance.items.unshift({ id: "quality-assurance.products", label: "Produ
 qualityAssurance.items.push({ id: "quality-assurance.issued-bmr-records", label: "Issued BMR records", path: "/qa/issued-bmrs", permissions: ["CanViewIssuedBmrRecords"] });
 qualityAssurance.items.push(...vendorApproval);
 
+// Document review: records waiting for the caller's review sit next to their pending approvals; who reviews each
+// document type is set next to the approval workflows.
+const main = catalog.find((group) => group.id === "main");
+const pendingIndex = main?.items.findIndex((item) => item.path === "/qa/pending-approvals") ?? -1;
+if (!main || pendingIndex < 0) throw new Error("My Pending Approvals navigation entry is missing.");
+main.items.splice(pendingIndex + 1, 0, { id: "main.my-pending-reviews", label: "My Pending Reviews", path: "/qa/pending-reviews", permissions: ["CanViewPendingReviews"] });
+const approvalsIndex = settings?.items.findIndex((item) => item.path === "/settings/approvals") ?? -1;
+if (!settings || approvalsIndex < 0) throw new Error("Approvals navigation entry is missing.");
+settings.items.splice(approvalsIndex + 1, 0, { id: "system-settings.document-reviews", label: "Document Reviews", path: "/settings/reviews", permissions: ["CanViewDocumentReviewSettings"] });
+
 // One Reports entry opens the hub, which groups every report by subject and shows only those the user may run.
 const reportsGroup = catalog.find((group) => group.id === "reports");
 if (!reportsGroup) throw new Error("Reports navigation group is missing.");
-reportsGroup.items = [{ id: "reports.all-reports", label: "All reports", path: "/reports", permissions: [...new Set(reportsGroup.items.flatMap((item) => item.permissions ?? []))]
-  // The hub's reports are guarded by the six report keys; the old inventory key opens none of them.
-  .filter((key) => key !== "CanViewInventoryReport") }];
+// Each report has its own key; any one of them shows the entry.
+reportsGroup.items = [{ id: "reports.all-reports", label: "All reports", path: "/reports", permissions: [...anyReportKey] }];
 
 // Oryx Next names some keys the backend never defined, so no role could open those entries. Use the backend's names.
 const backendKeys: Readonly<Record<string, string>> = {

@@ -38,6 +38,17 @@ export function approvalStatus(validity: string | null | undefined, today: Date)
 
 const byText = (a: string | null | undefined, b: string | null | undefined) => (a ?? "").localeCompare(b ?? "", undefined, { numeric: true, sensitivity: "base" });
 
+/** Supplier status Approved (`SupplierStatus.Approved` in oryx-backend). */
+const supplierApproved = 1;
+
+/**
+ * The date of approval is when the supplier's status was changed to Approved; the server records it on the supplier
+ * at that moment. A supplier that is not (or no longer) approved has no approval date on the list.
+ */
+export function approvalDate(mapping: SupplierMapping): string | null {
+  return mapping.supplier?.status === supplierApproved ? mapping.supplier.approvedAt ?? null : null;
+}
+
 /** One row per approved material, manufacturer and supplier, ordered by item code as on the controlled list. */
 export function approvedManufacturerSheet(mappings: readonly SupplierMapping[], today: Date): ReportSheet {
   const pairs = mappings.flatMap((mapping) => (mapping.materials ?? []).map((entry) => ({ mapping, entry })));
@@ -49,7 +60,7 @@ export function approvedManufacturerSheet(mappings: readonly SupplierMapping[], 
       index + 1, entry.material?.code ?? null, entry.material?.name ?? null, reportEnum(entry.material?.kind, ["Raw material", "Packaging material"]),
       mapping.manufacturers?.name ?? null, mapping.manufacturers?.address ?? null, mapping.supplier?.name ?? null, mapping.supplier?.address ?? null,
       packText(entry.quantityPerPackOption), mapping.uom?.symbol ?? mapping.uom?.name ?? null,
-      formatMonthYear(mapping.manufacturers?.approvedAt), formatMonthYear(mapping.manufacturers?.validityDate),
+      formatMonthYear(approvalDate(mapping)), formatMonthYear(mapping.manufacturers?.validityDate),
       approvalStatus(mapping.manufacturers?.validityDate, today),
     ],
   }));

@@ -131,6 +131,14 @@ export const navigationCatalog = [
         ]
       },
       {
+        "id": "main.my-pending-reviews",
+        "label": "My Pending Reviews",
+        "path": "/qa/pending-reviews",
+        "permissions": [
+          "CanViewPendingReviews"
+        ]
+      },
+      {
         "id": "main.transfer-approval-rights",
         "label": "Transfer Approval Rights",
         "path": "/qa/approval-rights-transfer",
@@ -2242,6 +2250,14 @@ export const navigationCatalog = [
         ]
       },
       {
+        "id": "system-settings.document-reviews",
+        "label": "Document Reviews",
+        "path": "/settings/reviews",
+        "permissions": [
+          "CanViewDocumentReviewSettings"
+        ]
+      },
+      {
         "id": "system-settings.signature-settings",
         "label": "Signature Settings",
         "path": "/settings/signature",
@@ -2284,12 +2300,43 @@ export const navigationCatalog = [
         "label": "All reports",
         "path": "/reports",
         "permissions": [
-          "CanViewHumanResourcesReport",
-          "CanViewQcAndQaReport",
-          "CanViewWarehouseReport",
-          "CanViewStoreAndInventoryReport",
-          "CanViewProcurementReport",
-          "CanViewFgtnReport"
+          "CanViewMaterialsPerDepartmentReport",
+          "CanViewMaterialStockSummaryReport",
+          "CanViewMaterialStockDetailReport",
+          "CanViewInventoryValuationReport",
+          "CanViewSupplierMappingDetailReport",
+          "CanViewSupplierMappingSummaryReport",
+          "CanViewPurchaseOrdersReport",
+          "CanViewInvoicedPurchaseOrdersReport",
+          "CanViewShipmentsReport",
+          "CanViewFinishedGoodsTransferSummaryReport",
+          "CanViewFinishedGoodsTransferDetailReport",
+          "CanViewProductStockSummaryReport",
+          "CanViewProductStockDetailReport",
+          "CanViewProductListReport",
+          "CanViewInvoicedProductsReport",
+          "CanViewStoreItemsReport",
+          "CanViewStoreStockReport",
+          "CanViewVendorItemMappingDetailReport",
+          "CanViewVendorItemMappingSummaryReport",
+          "CanViewEmployeeMasterListReport",
+          "CanViewStaffGradeReport",
+          "CanViewNewHiresAndExitsReport",
+          "CanViewStaffTotalReport",
+          "CanViewStaffGenderRatioReport",
+          "CanViewLeaveOverviewReport",
+          "CanViewStaffTurnoverReport",
+          "CanViewDailyAttendanceReport",
+          "CanViewDepartmentAttendanceReport",
+          "CanViewMonthlyProductionScheduleReport",
+          "CanViewDailyProductionScheduleReport",
+          "CanViewProductReadinessReport",
+          "CanViewDepartmentProductListReport",
+          "CanViewMaterialListReport",
+          "CanViewBmrIssuedReport",
+          "CanViewStockCountSheetReport",
+          "CanViewExpiredStockReport",
+          "CanViewApprovedManufacturerListReport"
         ]
       }
     ]

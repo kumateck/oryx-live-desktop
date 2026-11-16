@@ -2,7 +2,7 @@ import { reportDate, reportSheet } from "@/shared/reports/report-data";
 import { formatQuantityNumber, toLargestUnit } from "@/shared/units/quantity";
 import type { IssuedBmrReport } from "../schemas/issued-bmr";
 
-export function issuedBmrSheets(report: IssuedBmrReport) {
+export function issuedBmrSheets(report: Pick<IssuedBmrReport, "rows">) {
   const sheet = reportSheet("BMRs issued", report.rows, [
     { label: "Issued date", read: (item) => reportDate(item.issuedAt) },
     { label: "Issued by", read: (item) => item.issuedByName ?? "Not recorded" },
