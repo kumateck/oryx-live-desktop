@@ -20,3 +20,5 @@ A record of a reviewed document type is checked before it goes for approval. The
   - Billing sheets: Edit is unblocked while the sheet is in review (it stays blocked while it waits
     for approval), and the sheet and charges prints carry the signatures.
   - Staff requisitions, overtime requests and leave requests: the page's own Edit action corrects them.
+  - Job requests and packing lists: their Edit actions correct them while they wait. A packing list edited
+    after its check goes back to review as a new submission.

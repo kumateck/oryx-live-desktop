@@ -135,6 +135,8 @@ describe("review contracts", () => {
     expect(reviewDocumentPath({ modelType: "RawStockRequisition", modelId: "r1", variant: null })).toBe("/production/requisition/r1/details");
     expect(reviewDocumentPath({ modelType: "BillingSheet", modelId: "b1", variant: null })).toBe("/logistics/billing-sheets/b1");
     expect(reviewDocumentPath({ modelType: "LeaveRequest", modelId: "l1", variant: null })).toBe("/hr/leave-management/l1/details");
+    expect(reviewDocumentPath({ modelType: "AllocateProductionOrder", modelId: "a1", variant: null })).toBe("/crm/allocations/a1");
+    expect(reviewDocumentPath({ modelType: "JobRequest", modelId: "j1", variant: null })).toBe("/extrals/job-requests/j1/details");
     expect(reviewDocumentPath({ modelType: "Unknown", modelId: "x", variant: null })).toBeNull();
     expect(reviewersPayload("PurchaseRequisition", { roles: [{ value: "role1", label: "QA" }], users: [{ value: "u1", label: "Ama" }] }))
       .toEqual({ itemType: "PurchaseRequisition", assignees: [{ roleId: "role1" }, { userId: "u1" }] });
