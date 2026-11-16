@@ -718,6 +718,9 @@ export const routes: RouteObject[] = [
             ] }
           ] }
         ] },
+        { path: "pending-reviews", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/pending-reviews/page")).default }) }
+        ] },
         { path: "products", lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/layout")).default }), children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/page")).default }) },
           { path: ":id", lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/products/[id]/layout")).default }), children: [
@@ -1081,6 +1084,9 @@ export const routes: RouteObject[] = [
         ] },
         { path: "racks", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/racks/page")).default }) }
+        ] },
+        { path: "reviews", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/reviews/page")).default }) }
         ] },
         { path: "shelves", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/shelves/page")).default }) }

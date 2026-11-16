@@ -131,6 +131,14 @@ export const navigationCatalog = [
         ]
       },
       {
+        "id": "main.my-pending-reviews",
+        "label": "My Pending Reviews",
+        "path": "/qa/pending-reviews",
+        "permissions": [
+          "CanViewPendingReviews"
+        ]
+      },
+      {
         "id": "main.transfer-approval-rights",
         "label": "Transfer Approval Rights",
         "path": "/qa/approval-rights-transfer",
@@ -2239,6 +2247,14 @@ export const navigationCatalog = [
         "path": "/settings/approvals",
         "permissions": [
           "CanViewApprovals"
+        ]
+      },
+      {
+        "id": "system-settings.document-reviews",
+        "label": "Document Reviews",
+        "path": "/settings/reviews",
+        "permissions": [
+          "CanViewDocumentReviewSettings"
         ]
       },
       {
