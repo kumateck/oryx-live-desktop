@@ -55,7 +55,9 @@ export function formulaAnswerComplete(raw: string, definition: string): boolean 
   const rows = Number(config.numberOfReadings ?? config.noOfReadings ?? array(config.rowHeaders).length);
   const columns = array(config.headers).length || Number(config.numberOfSamples ?? config.noOfSamples ?? 0) + (config.standardInTable ? 1 : 0);
   const table = array(value.tableData);
-  if (table.length < rows || !table.every(row => numbers(row, columns))) return false;
+  // A formula without sample or standard columns has no readings table (the worksheet shows none), however
+  // many readings its settings default to; only its manual and input values are required. Mirrors the server.
+  if (columns > 0 && (table.length < rows || !table.every(row => numbers(row, columns)))) return false;
   return Object.keys(standard).length > 0 || samples.some(sample => Object.keys(object(sample)).length > 0) || manualKeys.size > 0 || table.some(row => array(row).length > 0);
 }
 
