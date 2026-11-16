@@ -38,3 +38,12 @@ it("drops executable links from imported HTML", () => {
   expect(html).not.toContain("javascript:");
   expect(html).toContain('href="https://example.com"');
 });
+
+it("keeps superscript and subscript, as in 10² cfu/ml and H₂O, and toggles them", () => {
+  editor = new Editor({ extensions: editorExtensions(""), content: "<p>10<sup>2</sup> cfu/ml in H<sub>2</sub>O</p>" });
+  expect(editor.getHTML()).toBe("<p>10<sup>2</sup> cfu/ml in H<sub>2</sub>O</p>");
+  editor.commands.setContent("<p>101 cfu/ml</p>");
+  // Select the trailing "1" of "101" and raise it.
+  editor.chain().setTextSelection({ from: 3, to: 4 }).toggleSuperscript().run();
+  expect(editor.getHTML()).toBe("<p>10<sup>1</sup> cfu/ml</p>");
+});

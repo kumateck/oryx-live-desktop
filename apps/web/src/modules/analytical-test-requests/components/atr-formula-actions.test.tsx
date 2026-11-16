@@ -36,10 +36,11 @@ function open(disabled: boolean, fields = [assay], pendingFields = ["field-1"]) 
   });
   rememberSession();
   const onReload = vi.fn();
-  render(<SessionProvider><SessionReady><ApiProvider><MemoryRouter>
-    <AtrFormulaActions atrId="atr-1" fields={fields} responses={pendingFields.map(id => ({ formField: { id }, formulaRepairPending: true }))} disabled={disabled} onReload={onReload} />
-  </MemoryRouter></ApiProvider></SessionReady></SessionProvider>);
-  return { evaluations, onReload };
+  const page = (unsaved: boolean) => <SessionProvider><SessionReady><ApiProvider><MemoryRouter>
+    <AtrFormulaActions atrId="atr-1" fields={fields} responses={pendingFields.map(id => ({ formField: { id }, formulaRepairPending: true }))} disabled={unsaved} onReload={onReload} />
+  </MemoryRouter></ApiProvider></SessionReady></SessionProvider>;
+  const { rerender } = render(page(disabled));
+  return { evaluations, onReload, setUnsaved: (unsaved: boolean) => rerender(page(unsaved)) };
 }
 
 it("shows pending recalculation and recalculates against the configuration the worksheet opened with", async () => {
@@ -130,4 +131,16 @@ it("shows one menu for a formula that appears twice and recalculates both fields
   await user.click(await screen.findByRole("menuitem", { name: "Recalculate saved readings" }));
   await waitFor(() => expect(onReload).toHaveBeenCalledOnce());
   expect(evaluations).toEqual([JSON.stringify({ expectedConfigurationHash: hash }), `field-2:${JSON.stringify({ expectedConfigurationHash: hash })}`]);
+});
+
+it("recalculates every repaired field automatically once the worksheet is saved", async () => {
+  const second = fieldSchema.parse({ id: "field-2", formulaConfigurationHash: hash, question: { id: "question-2", type: QuestionType.Formula, label: "Weight per mL", options: [] } });
+  const { evaluations, onReload, setUnsaved } = open(true, [assay, second], ["field-1", "field-2"]);
+  await screen.findByText("Repaired formulas need recalculation");
+  expect(evaluations).toEqual([]);
+  // The analyst saves the readings they entered: the unsaved state clears.
+  setUnsaved(false);
+  await waitFor(() => expect(evaluations).toHaveLength(2));
+  // The worksheet reloads once, with the recalculated results.
+  await waitFor(() => expect(onReload).toHaveBeenCalledOnce());
 });

@@ -5,17 +5,22 @@ export function usableStock(item: Pick<ForecastMaterial, "onHand" | "expired">):
   return Math.max(item.onHand - item.expired, 0);
 }
 
-/**
- * Whether there is enough usable stock. The server's answer is used when it gives one; its rule is
- * that usable stock must be more than what is needed, so the same rule is applied when it does not.
- */
-export function isCovered(item: ForecastMaterial): boolean {
-  return item.available ?? usableStock(item) > item.needed;
+/** Usable stock not reserved for other batches: what new production could actually be issued. */
+export function freeStock(item: Pick<ForecastMaterial, "onHand" | "expired" | "reserved">): number {
+  return Math.max(usableStock(item) - item.reserved, 0);
 }
 
-/** How much more usable stock is needed, or 0 when there is enough. */
+/**
+ * Whether the free stock covers the need, the rule production applies when a batch starts. The server's answer is
+ * used when it gives one (it applies the same rule); otherwise the rule is applied here.
+ */
+export function isCovered(item: ForecastMaterial): boolean {
+  return item.available ?? freeStock(item) >= item.needed;
+}
+
+/** How much more free stock is needed, or 0 when there is enough. */
 export function shortfall(item: ForecastMaterial): number {
-  return isCovered(item) ? 0 : Math.max(item.needed - usableStock(item), 0);
+  return isCovered(item) ? 0 : Math.max(item.needed - freeStock(item), 0);
 }
 
 const raw = 0;
