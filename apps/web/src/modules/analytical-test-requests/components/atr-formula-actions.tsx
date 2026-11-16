@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Calculator, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { DropdownButton } from "@/shared/actions";
@@ -24,19 +24,41 @@ export function AtrFormulaActions({ atrId, fields, responses, disabled, onReload
   const [message, setMessage] = useState("");
   const [repairing, setRepairing] = useState<FormField | null>(null);
   const isPending = (field: FormField) => responses.some(row => row.formField?.id === field.id && row.formulaRepairPending);
-  /** Recalculates every pending field of one formula on this test, one request per field, rechecking access before each. */
-  const recalculate = async (group: readonly FormField[]) => {
+  const running = useRef(false);
+  /**
+   * Recalculates the given pending fields on the server from their saved readings, one request per field, rechecking access
+   * before each. Every field is tried; the ones that cannot be calculated say which readings they still need.
+   */
+  const recalculate = async (group: readonly FormField[], automatic = false) => {
     const targets = group.filter(field => isPending(field) && field.formulaConfigurationHash);
-    if (disabled || mutation.isLoading || !targets.length) return;
+    if (disabled || running.current || !targets.length) return;
+    running.current = true;
     setMessage("");
-    for (const field of targets) {
-      const denied = permission.check(); if (denied) { setMessage(denied); return; }
-      const result = await evaluate({ ...atrAudit, atrId, formFieldId: field.id,
-        apiControllersEvaluateRepairedFormulaRequest: { expectedConfigurationHash: field.formulaConfigurationHash ?? "" } });
-      if ("error" in result) { setMessage(apiErrorMessage(result.error)); onReload(); return; }
-    }
-    toast.success(targets.length === 1 ? "Saved readings recalculated on the server" : `Saved readings recalculated for ${String(targets.length)} fields`); onReload();
+    const problems: string[] = [];
+    let done = 0;
+    try {
+      for (const field of targets) {
+        const denied = permission.check();
+        // An automatic run after a save stays quiet for someone without the recalculation permission.
+        if (denied) { if (!automatic) setMessage(denied); return; }
+        const result = await evaluate({ ...atrAudit, atrId, formFieldId: field.id,
+          apiControllersEvaluateRepairedFormulaRequest: { expectedConfigurationHash: field.formulaConfigurationHash ?? "" } });
+        if ("error" in result) problems.push(`${field.question.label}: ${apiErrorMessage(result.error)}`); else done++;
+      }
+    } finally { running.current = false; }
+    if (problems.length) setMessage(problems.join(" "));
+    if (done) toast.success(done === 1 ? "Saved readings recalculated on the server" : `Saved readings recalculated for ${String(done)} fields`);
+    onReload();
   };
+  // Saving the worksheet recalculates every repaired field that still needs it: no separate step after entering readings.
+  const hadUnsavedWork = useRef(disabled);
+  useEffect(() => {
+    const justSaved = hadUnsavedWork.current && !disabled;
+    hadUnsavedWork.current = disabled;
+    if (justSaved) void recalculate(fields.filter(isPending), true);
+    // Runs on the save transition only; the fields and responses are read as they are at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [disabled]);
   const formulas = fields.filter(field => field.question.type === QuestionType.Formula && field.question.id);
   // The same formula can appear more than once on a worksheet; one repair or recalculation covers every field of it.
   const groups = [...formulas.reduce((byQuestion, field) => {
@@ -49,7 +71,7 @@ export function AtrFormulaActions({ atrId, fields, responses, disabled, onReload
   return <div className="space-y-2">
     {pending.length ? <div role="status" className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
       <p className="font-medium">Repaired {pending.length === 1 ? "formula needs" : "formulas need"} recalculation</p>
-      <p>{pending.map(field => field.question.label).join(", ")}: the saved readings are kept, but results stay pending until the server recalculates them. Save any changed readings, then choose <strong>Recalculate saved readings</strong> from the field's menu. Submission and certificates wait until then.</p>
+      <p>{pending.map(field => field.question.label).join(", ")}: results stay pending until the server recalculates them from the saved readings. Enter or correct the readings and save: saving recalculates them. <strong>Recalculate saved readings</strong> in the field's menu does it again. Submission and certificates wait until then.</p>
     </div> : null}
     <div className="flex flex-wrap justify-end gap-2">{groups.map(group => { const [field] = group; if (!field) return null;
       const label = group.length > 1 ? `${field.question.label} (${String(group.length)} fields)` : field.question.label;
