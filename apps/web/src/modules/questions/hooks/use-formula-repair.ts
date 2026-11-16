@@ -26,11 +26,25 @@ export function repairProblem(error: FetchBaseQueryError | SerializedError | und
   return { kind: "unconfirmed", message: `${message} The repair may not have been saved. Retry the same reviewed request; it will not be applied twice.` };
 }
 
+/** The formula the opened test calculates with now, falling back to the question's stored formula. */
+function currentDefinition(context: RepairContext, atr: string | null, field: string | null) {
+  const test = context.tests.find(t => t.atrId === atr && t.formFieldId === field) ?? context.tests.find(t => t.atrId === atr);
+  return test?.currentDefinition ?? context.definition;
+}
+
 export function useFormulaRepair(context: RepairContext, atr: string | null, field: string | null, refresh: () => void,
-  onBack?: () => void, onApplied?: (definition: string) => void) {
-  const initial = useMemo(() => formulaRepairDefaults(context.definition), [context.definition]);
+  onBack?: () => void, onApplied?: (definition: string, fieldIds: readonly string[]) => void) {
+  // An approved revision is applied as approved; only a question without one is corrected by hand.
+  const approved = useMemo(() => context.approvedDefinition ? formulaRepairDefaults(context.approvedDefinition) : null, [context.approvedDefinition]);
+  const currentExpression = useMemo(() => {
+    try { return formulaRepairDefaults(currentDefinition(context, atr, field)).expression; }
+    catch { return formulaRepairDefaults(context.definition).expression; }
+  }, [context, atr, field]);
+  const initial = useMemo(() => approved ?? formulaRepairDefaults(context.definition), [approved, context.definition]);
   const form = useForm<FormulaRepairValues>({ resolver: zodResolver(formulaRepairValuesSchema), defaultValues: {
-    ...initial, updateQuestion: !atr && context.canRepairQuestion, selectedTests: context.tests.filter(t => t.eligible && t.atrId === atr && t.formFieldId === field).map(repairTestKey), reason: "",
+    ...initial, updateQuestion: !atr && context.canRepairQuestion,
+    // Opened from a test, every field of this formula on that test is repaired together.
+    selectedTests: context.tests.filter(t => t.eligible && t.atrId === atr).map(repairTestKey), reason: "",
   } });
   const [expression, labels, updateQuestion, selectedTests] = useWatch({ control: form.control, name: ["expression", "labels", "updateQuestion", "selectedTests"] });
   // The reason is entered after reviewing, so it is not part of what the preview covers.
@@ -59,7 +73,7 @@ export function useFormulaRepair(context: RepairContext, atr: string | null, fie
     if (!input.updateQuestion && selected.length === 0) { setProblem({ kind: "invalid", message: "Choose the shared question or at least one open test." }); return; }
     const check = () => input.updateQuestion && question.check() || selected.length > 0 && tests.check() || null;
     const denied = check(); if (denied) { fail({ kind: "denied", message: denied }); return; }
-    const candidate = { definition: repairedFormulaDefinition(context.definition, input.expression, input.labels), updateQuestion: input.updateQuestion,
+    const candidate = { definition: context.approvedDefinition ?? repairedFormulaDefinition(context.definition, input.expression, input.labels), updateQuestion: input.updateQuestion,
       targets: selected.map(t => ({ atrId: t.atrId, formFieldId: t.formFieldId })) };
     if (mode === "apply") {
       if (!current || current.blockers.length) { setProblem({ kind: "stale", message: "Review a current, successful preview before applying." }); return; }
@@ -88,13 +102,13 @@ export function useFormulaRepair(context: RepairContext, atr: string | null, fie
       const parsed = repairReceiptSchema.safeParse(result.data);
       if (!parsed.success) { setProblem({ kind: "unconfirmed", message: "The repair receipt could not be read. Retry this same reviewed request." }); return; }
       setReceipt(parsed.data); form.reset(input); toast.success(parsed.data.alreadyApplied ? "Formula repair was already saved" : "Formula repair saved");
-      if (candidate.targets.some(target => target.atrId === atr && target.formFieldId === field))
-        onApplied?.(candidate.definition);
+      const repaired = candidate.targets.filter(target => target.atrId === atr).map(target => target.formFieldId);
+      if (repaired.length) onApplied?.(candidate.definition, repaired);
     } catch (error) {
       setProblem({ kind: "unconfirmed", message: error instanceof Error ? error.message : "The repair could not be confirmed. Retry the same reviewed request." });
     } finally { pending.current = false; }
   });
-  return { form, manualKeys: manualRepairVariables(context.definition, expression), preview: current, problem, receipt, submit,
+  return { form, approved, current: currentExpression, manualKeys: manualRepairVariables(context.approvedDefinition ?? context.definition, approved?.expression ?? expression), preview: current, problem, receipt, submit,
     busy: previewing.isLoading || applying.isLoading, applying: applying.isLoading,
     back: onBack ?? (() => void navigate(atr ? `/atr/${encodeURIComponent(atr)}/test` : "/settings/questions")),
     canApply: Boolean(current && !current.blockers.length && !receipt) };

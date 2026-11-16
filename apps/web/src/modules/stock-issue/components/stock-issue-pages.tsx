@@ -14,6 +14,7 @@ import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDateTime, formatMonthYear } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
+import { ReviewPanel } from "@/shared/reviews/review-panel";
 import { PrintButton } from "@/shared/print/print-button";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { PrintFacts, PrintHeader, PrintSignatures, PrintTable, type PrintColumn, type PrintSigner } from "@/shared/print/print-sheet";
@@ -24,7 +25,7 @@ import { usePageSearch } from "@/shared/search/page-search";
 import { whitePlaceboPreparationPath } from "@/shared/production/white-placebo-path";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation } from "../api/stock-issue-api";
-import { audit, batchNumber, checkNote, issueBlock, issuePermissions, issueRequisitionPath, shortfall, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
+import { audit, batchNumber, checkNote, issueBlock, issueCheckKeys, issuePermissions, issueRequisitionPath, shortfall, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
 import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockLine, type StockRequisition } from "../schemas/stock-issue-schema";
 import { AlternativeBatches } from "./alternative-batches";
 import { MaterialChoices } from "./material-choices";
@@ -87,7 +88,7 @@ const printColumns: PrintColumn<StockLine>[] = [
   { id: "material", header: "Material", cell: (row) => <>{row.materialName}<small>{row.materialCode ?? "No code"}</small>{row.substituteFor ? <small>Substitute for {row.substituteFor}</small> : null}</> },
   { id: "quantity", header: "Quantity", align: "right", cell: (row) => <>{amount(row.quantity, row.unit)}
     {row.approvedQuantity !== null ? <small>Originally approved: {amount(row.approvedQuantity, row.unit)}; repaired after issue</small> : null}</> },
-  { id: "batches", header: "Batch · location · quantity · expiry", cell: (row) => row.batches.length ? row.batches.map((batch) => <div key={batch.key}>{batchNumber(batch.number)} · {amount(batch.quantity, row.unit)} · {formatMonthYear(batch.expires) ?? "no expiry"}<small>{batch.location ?? missingStockLocation}</small></div>) : "None set aside" },
+  { id: "batches", header: "Batch · AR No. · location · quantity · expiry", cell: (row) => row.batches.length ? row.batches.map((batch) => <div key={batch.key}>{batchNumber(batch.number)} · {amount(batch.quantity, row.unit)} · {formatMonthYear(batch.expires) ?? "no expiry"}<small>AR No.: {batch.arNumber ?? "Not recorded"}</small><small>{batch.location ?? missingStockLocation}</small></div>) : "None set aside" },
 ];
 
 /** The voucher's signature lines: the store user who issued it, the approver who checked the issue, and the requester who receives it. */
@@ -130,6 +131,8 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
       {requisition.signatories.issuedBy ? <KeyFact label="Checked by" value={requisition.signatories.checkedBy?.name ?? "Not checked yet"}
         note={requisition.signatories.checkedBy ? formatDateTime(requisition.signatories.checkedBy.signedAt) ?? undefined : checkNote(requisition.signatories.checkStatus) ?? undefined} /> : null}
     </KeyFacts>
+    {/* The warehouse check of the issue is its review. A returned issue is corrected through the issued-material repair. */}
+    {requisition.signatories.issueId ? <ReviewPanel record={{ modelType: "StockRequisitionIssue", modelId: requisition.signatories.issueId }} keys={issueCheckKeys[kind]} label="issue" /> : null}
     {requisition.comments ? <section className="space-y-1 rounded-lg border bg-card p-4"><h2 className="text-sm font-semibold">Justification</h2><RichTextView html={requisition.comments} className="text-sm" /></section> : null}
     {/* The material, like its batches, can change only while the stock has not left the store. Substitutes are on raw-material BOMs only. */}
     {kind === 0 && requisition.status !== 3 && requisition.status !== 4 ? <MaterialChoices requisitionId={requisition.id} /> : null}

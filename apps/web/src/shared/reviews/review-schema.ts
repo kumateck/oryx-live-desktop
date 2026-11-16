@@ -29,7 +29,7 @@ export type DocumentReviewState = z.infer<typeof documentReviewStateSchema>;
 
 export const pendingReviewsSchema = z.object({
   data: z.array(z.object({
-    reviewId: z.string(), modelType: z.string(), documentLabel: text, modelId: z.string(), code: text, variant: z.number().int().nullish(), status,
+    reviewId: z.string(), modelType: z.string(), documentLabel: text, modelId: z.string(), code: text, variant: z.number().int().nullish(), parentId: z.string().nullish(), status,
     preparedBy: reviewPersonSchema.nullish(), submittedAt: z.string(), comments: text,
   })),
   pageIndex: z.number().int(), pageCount: z.number().int(), totalRecordCount: z.number().int(),
