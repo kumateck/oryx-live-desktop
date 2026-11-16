@@ -13,6 +13,7 @@ import { leaveAudit, leaveRoot, employeeName } from "../lib/leave";
 import { LeaveRecord, leaveFacts, leaveFiles } from "./leave-record";
 import { LeaveActions } from "./leave-actions";
 import { ModelApprovalHistory } from "@/shared/approvals/model-history";
+import { ReviewPanel } from "@/shared/reviews/review-panel";
 function Detail({ id }: { id: string }) {
   const query = leaveApi.useGetApiV1LeaveRequestByIdQuery({ ...leaveAudit, id }, { refetchOnMountOrArgChange: true });
   if (query.isLoading) return <DetailPageSkeleton label="Loading leave request" groups={4} />;
@@ -59,6 +60,9 @@ function Detail({ id }: { id: string }) {
       />
       <LeaveRecord row={row} />
       <AttachmentList title="Supporting attachments" files={leaveFiles(row)} />
+      {/* Its review (the "Checked by" step before approval). Corrections use the page's own Edit action. */}
+      <ReviewPanel record={{ modelType: "LeaveRequest", modelId: id }} label="leave request"
+        keys={{ confirm: "CanReviewLeaveRequest", return: "CanReturnLeaveRequest", resubmit: "CanEditLeaveRequest" }} />
       <ModelApprovalHistory id={id} model="LeaveRequest" audit={leaveAudit} />
     </article>
   );

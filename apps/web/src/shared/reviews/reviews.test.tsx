@@ -133,6 +133,9 @@ describe("review contracts", () => {
     expect(reviewDocumentPath({ modelType: "PurchaseOrder", modelId: "po1", variant: 1 })).toBe("/procurement/purchase-orders/po1?type=1");
     expect(reviewDocumentPath({ modelType: "PurchaseOrder", modelId: "po1", variant: null })).toBeNull();
     expect(reviewDocumentPath({ modelType: "RawStockRequisition", modelId: "r1", variant: null })).toBe("/production/requisition/r1/details");
+    expect(reviewDocumentPath({ modelType: "BillingSheet", modelId: "b1", variant: null })).toBe("/logistics/billing-sheets/b1");
+    expect(reviewDocumentPath({ modelType: "LeaveRequest", modelId: "l1", variant: null })).toBe("/hr/leave-management/l1/details");
+    expect(reviewDocumentPath({ modelType: "Unknown", modelId: "x", variant: null })).toBeNull();
     expect(reviewersPayload("PurchaseRequisition", { roles: [{ value: "role1", label: "QA" }], users: [{ value: "u1", label: "Ama" }] }))
       .toEqual({ itemType: "PurchaseRequisition", assignees: [{ roleId: "role1" }, { userId: "u1" }] });
     expect(() => reviewersPayload("PurchaseRequisition", { roles: [], users: [] })).toThrow();
