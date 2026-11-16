@@ -65,7 +65,7 @@ export function FormulaRepairForm({ context, atr, field, refresh, onBack, onAppl
           <span className="min-w-0 break-words">{test.label}{test.blocker ? <span className="block text-muted-foreground">{test.blocker}</span> : null}</span>
         </label>; })}</fieldset>} />
     </section>
-    {preview ? <FormulaRepairReview preview={preview} form={form} updateQuestion={form.getValues("updateQuestion")} /> : null}
+    {preview ? <FormulaRepairReview preview={preview} form={form} updateQuestion={form.getValues("updateQuestion")} replacesReadings={Boolean(page.approved)} /> : null}
     {problem ? <div role="alert" className="space-y-1 rounded-lg border border-destructive/40 p-3 text-sm">
       <p className="font-medium text-destructive">{problemTitles[problem.kind]}</p><p className="break-words">{problem.message}</p></div> : null}
     <div className="flex flex-wrap justify-end gap-2">
