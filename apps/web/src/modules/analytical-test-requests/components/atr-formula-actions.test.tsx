@@ -21,14 +21,15 @@ afterEach(() => { cleanup(); forgetSession(); });
 const hash = "c".repeat(64);
 const assay = fieldSchema.parse({ id: "field-1", formulaConfigurationHash: hash, question: { id: "question-1", type: QuestionType.Formula, label: "Assay", options: [] } });
 
-function open(disabled: boolean) {
+function open(disabled: boolean, fields = [assay], pendingFields = ["field-1"]) {
   const backend = stubBackend({ permissions: ["CanExecuteFormulaResponse", "CanViewQuestions", "CanRepairTestFormula"] });
   const auth = backend.fetcher.getMockImplementation();
   const evaluations: string[] = [];
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return auth ? auth(input, init) : new Response(null, { status: 500 });
-    if (new URL(input.url).pathname === "/api/v1/formula-repairs/tests/atr-1/fields/field-1/evaluate") {
-      evaluations.push(await input.text());
+    const evaluate = /^\/api\/v1\/formula-repairs\/tests\/atr-1\/fields\/([^/]+)\/evaluate$/.exec(new URL(input.url).pathname);
+    if (evaluate) {
+      evaluations.push(evaluate[1] === "field-1" ? await input.text() : `${evaluate[1] ?? ""}:${await input.text()}`);
       return Response.json("01a1a8ad-8c32-7cd6-9862-456570ca67e1");
     }
     return new Response(null, { status: 404 });
@@ -36,7 +37,7 @@ function open(disabled: boolean) {
   rememberSession();
   const onReload = vi.fn();
   render(<SessionProvider><SessionReady><ApiProvider><MemoryRouter>
-    <AtrFormulaActions atrId="atr-1" fields={[assay]} responses={[{ formField: { id: "field-1" }, formulaRepairPending: true }]} disabled={disabled} onReload={onReload} />
+    <AtrFormulaActions atrId="atr-1" fields={fields} responses={pendingFields.map(id => ({ formField: { id }, formulaRepairPending: true }))} disabled={disabled} onReload={onReload} />
   </MemoryRouter></ApiProvider></SessionReady></SessionProvider>);
   return { evaluations, onReload };
 }
@@ -118,4 +119,15 @@ it("repairs a test with no saved response in a dialog while keeping the workshee
   expect(writes[0]?.candidate.targets).toEqual([{ atrId, formFieldId: fieldId }]);
   expect(onRepaired).toHaveBeenCalledWith(fieldId, sha256Hex(writes[0]?.candidate.definition ?? ""));
   expect(drafts).toEqual([]);
+});
+
+it("shows one menu for a formula that appears twice and recalculates both fields together", async () => {
+  const second = fieldSchema.parse({ id: "field-2", formulaConfigurationHash: hash, question: { id: "question-1", type: QuestionType.Formula, label: "Assay", options: [] } });
+  const { evaluations, onReload } = open(false, [assay, second], ["field-1", "field-2"]);
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Assay (2 fields)" }));
+  expect(screen.queryByRole("button", { name: "Assay" })).toBeNull();
+  await user.click(await screen.findByRole("menuitem", { name: "Recalculate saved readings" }));
+  await waitFor(() => expect(onReload).toHaveBeenCalledOnce());
+  expect(evaluations).toEqual([JSON.stringify({ expectedConfigurationHash: hash }), `field-2:${JSON.stringify({ expectedConfigurationHash: hash })}`]);
 });

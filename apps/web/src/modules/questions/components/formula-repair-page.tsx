@@ -3,27 +3,29 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { FormPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { useGetFormulaRepairContextQuery } from "@/shared/formula/repairs/api";
+import { useReadFormulaRepairContextQuery } from "@/shared/formula/repairs/api";
 import { repairContextSchema, type RepairContext } from "../schemas/formula-repair-schema";
 import { questionsAudit } from "../lib/questions";
 import { FormulaRepairForm } from "./formula-repair-form";
 
 function LoadedRepair({ context, atr, field, refresh, onBack, onApplied }: {
   context: RepairContext; atr: string | null; field: string | null; refresh: () => void;
-  onBack?: (() => void) | undefined; onApplied?: ((definition: string) => void) | undefined;
+  onBack?: (() => void) | undefined; onApplied?: ((definition: string, fieldIds: readonly string[]) => void) | undefined;
 }) {
   return <article className="min-w-0 space-y-4">
     <PageHeader title={`Repair ${context.label}`} crumbs={[{ label: "Questions", to: "/settings/questions" }, { label: "Repair formula" }]} />
-    <p className="text-sm text-muted-foreground">Correct the expression and manual-input labels, preview the impact, then give a reason and apply. Table layout, weights, constants, units and precision stay as configured. Submitted and governed tests require their own revision workflow.</p>
+    <p className="text-sm text-muted-foreground">{context.approvedDefinition
+      ? "Apply the approved formula revision to the tests that still calculate with the old formula: preview the impact, then give a reason and apply. Submitted and governed tests require their own revision workflow."
+      : "Correct the expression and manual-input labels, preview the impact, then give a reason and apply. Table layout, weights, constants, units and precision stay as configured. Submitted and governed tests require their own revision workflow."}</p>
     <FormulaRepairForm context={context} atr={atr} field={field} refresh={refresh} onBack={onBack} onApplied={onApplied} />
   </article>;
 }
 
 export function FormulaRepairPanel({ questionId, atr = null, field = null, onBack, onApplied }: {
   questionId: string; atr?: string | null; field?: string | null; onBack?: (() => void) | undefined;
-  onApplied?: ((definition: string) => void) | undefined;
+  onApplied?: ((definition: string, fieldIds: readonly string[]) => void) | undefined;
 }) {
-  const query = useGetFormulaRepairContextQuery({ ...questionsAudit, questionId }, { refetchOnMountOrArgChange: true });
+  const query = useReadFormulaRepairContextQuery({ ...questionsAudit, questionId, atrId: atr }, { refetchOnMountOrArgChange: true });
   const parsed = repairContextSchema.safeParse(query.currentData);
   if (query.isLoading) return <FormPageSkeleton label="Loading formula repair" />;
   if (query.error || !parsed.success || parsed.data.questionId !== questionId) return <section role="alert" className="space-y-3">
