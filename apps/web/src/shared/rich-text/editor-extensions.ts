@@ -1,6 +1,8 @@
 import Link from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extensions";
 import Highlight from "@tiptap/extension-highlight";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
 import { TableKit } from "@tiptap/extension-table";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyleKit } from "@tiptap/extension-text-style";
@@ -21,6 +23,9 @@ export function editorExtensions(placeholder: string) {
     Placeholder.configure({ placeholder }),
     TextStyleKit,
     Highlight.configure({ multicolor: true }),
+    // Scientific notation in specifications: 10² cfu/ml, H₂O. Shortcuts Mod-. and Mod-, come with the extensions.
+    Superscript,
+    Subscript,
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     TableKit.configure({ table: { resizable: false } }),
     LegacyMention,
