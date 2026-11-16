@@ -139852,6 +139852,10 @@
             "type": "string",
             "nullable": true
           },
+          "revisionReason": {
+            "type": "string",
+            "nullable": true
+          },
           "supersedesNumber": {
             "type": "string",
             "nullable": true
@@ -139939,11 +139943,17 @@
           "formId",
           "reviewDate",
           "revisionNumber",
+          "revisionReason",
           "specificationNumber",
           "supersedesNumber"
         ],
         "type": "object",
         "properties": {
+          "revisionReason": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string"
+          },
           "specificationNumber": {
             "minLength": 1,
             "type": "string"
@@ -147507,6 +147517,10 @@
             "type": "string",
             "nullable": true
           },
+          "revisionReason": {
+            "type": "string",
+            "nullable": true
+          },
           "supersedesNumber": {
             "type": "string",
             "nullable": true
@@ -147599,12 +147613,18 @@
           "formId",
           "reviewDate",
           "revisionNumber",
+          "revisionReason",
           "specificationNumber",
           "supersedesNumber",
           "testStage"
         ],
         "type": "object",
         "properties": {
+          "revisionReason": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string"
+          },
           "specificationNumber": {
             "minLength": 1,
             "type": "string"
@@ -181539,6 +181559,15 @@
           },
           "event": {
             "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         },

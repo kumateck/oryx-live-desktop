@@ -72,6 +72,12 @@
 .print-table tfoot td { font-weight: 700; }
 .print-table small { display: block; color: #555; font-size: var(--document-font-10px); }
 .print-empty { color: #555; text-align: center; }
+/* A specification's bordered document header: department and title rows, then number | subject | dates. */
+.print-spec-header { width: 100%; margin: var(--document-space-14px) 0; border-collapse: collapse; table-layout: fixed; }
+.print-spec-header td { padding: var(--document-space-4px) var(--document-space-8px); border: 1px solid #111; vertical-align: middle; overflow-wrap: anywhere; }
+.print-spec-header .print-spec-banner { font-weight: 700; letter-spacing: .03em; text-align: center; text-transform: uppercase; }
+.print-spec-header .print-spec-subject { font-weight: 700; text-align: center; text-transform: uppercase; }
+.print-spec-header .print-spec-subject span { display: block; }
 .print-note { margin: var(--document-space-12px) 0 0; color: #333; }
 .print-section { margin: var(--document-space-16px) 0 0; font-size: var(--document-font-12px); font-weight: 700; }
 .print-blank { display: block; height: 16px; border-bottom: 1px solid #111; }
