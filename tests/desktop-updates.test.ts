@@ -15,9 +15,15 @@ const metadata = { version: "0.3.0", platform: "win32", arch: "universal", archi
 function envelope(value = metadata): string { const payload = JSON.stringify(value); return JSON.stringify({ payload, signature: sign(null, Buffer.from(payload), keys.privateKey).toString("base64") }); }
 const release = verifyRelease(envelope(), keys.publicKey, "x64");
 const temp = () => mkdtemp(join(tmpdir(), "oryx-desktop-update-"));
-async function settled(updater: DesktopUpdater): Promise<void> {
-  for (let attempt = 0; attempt < 100; attempt++) { if (!["idle", "checking", "downloading"].includes(updater.state.phase)) return; await new Promise((resolve) => setTimeout(resolve, 5)); }
-  throw new Error(`Updater did not settle: ${updater.state.phase}`);
+/**
+ * Waits until the updater finishes checking or downloading. The limit is generous because release builds run these tests
+ * on slow customer servers (a 0.5 s limit failed there while signature checks were still running); a passing test
+ * returns as soon as the updater settles.
+ */
+async function settled(updater: DesktopUpdater, limitMs = 10_000): Promise<void> {
+  const deadline = Date.now() + limitMs;
+  while (Date.now() < deadline) { if (!["idle", "checking", "downloading"].includes(updater.state.phase)) return; await new Promise((resolve) => setTimeout(resolve, 5)); }
+  throw new Error(`Updater did not settle within ${String(limitMs)} ms: ${updater.state.phase}`);
 }
 
 test("versions are compared numerically and malformed metadata is rejected", () => {

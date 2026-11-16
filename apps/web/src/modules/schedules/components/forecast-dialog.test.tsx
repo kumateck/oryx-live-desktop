@@ -38,7 +38,9 @@ it("asks for the chosen batches and shows what is short, by how much", async () 
   expect(screen.getByText("1 material is short. They are listed first.")).toBeTruthy();
   expect(screen.getByText("by 1.3 kg")).toBeTruthy();
   expect(screen.getByText("400 g expired")).toBeTruthy();
-  expect(screen.getByText("50 g reserved for other batches")).toBeTruthy();
+  // Free stock is shown, with the reserved amount it leaves out.
+  expect(screen.getByText("800 g usable, less 50 g reserved for other batches")).toBeTruthy();
+  expect(screen.getByText(/What these batches need, against free warehouse stock/)).toBeTruthy();
   expect(screen.getByText("3 × half")).toBeTruthy();
   expect(screen.getByText("No packaging materials needed")).toBeTruthy();
 });
