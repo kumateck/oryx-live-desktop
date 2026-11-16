@@ -23,28 +23,41 @@ export function AtrFormulaActions({ atrId, fields, responses, disabled, onReload
   const permission = usePermissionAction("CanExecuteFormulaResponse");
   const [message, setMessage] = useState("");
   const [repairing, setRepairing] = useState<FormField | null>(null);
-  const recalculate = async (field: FormField) => {
-    if (disabled || mutation.isLoading || !field.formulaConfigurationHash) return;
-    const denied = permission.check(); if (denied) { setMessage(denied); return; }
+  const isPending = (field: FormField) => responses.some(row => row.formField?.id === field.id && row.formulaRepairPending);
+  /** Recalculates every pending field of one formula on this test, one request per field, rechecking access before each. */
+  const recalculate = async (group: readonly FormField[]) => {
+    const targets = group.filter(field => isPending(field) && field.formulaConfigurationHash);
+    if (disabled || mutation.isLoading || !targets.length) return;
     setMessage("");
-    const result = await evaluate({ ...atrAudit, atrId, formFieldId: field.id,
-      apiControllersEvaluateRepairedFormulaRequest: { expectedConfigurationHash: field.formulaConfigurationHash } });
-    if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    toast.success("Saved readings recalculated on the server"); onReload();
+    for (const field of targets) {
+      const denied = permission.check(); if (denied) { setMessage(denied); return; }
+      const result = await evaluate({ ...atrAudit, atrId, formFieldId: field.id,
+        apiControllersEvaluateRepairedFormulaRequest: { expectedConfigurationHash: field.formulaConfigurationHash ?? "" } });
+      if ("error" in result) { setMessage(apiErrorMessage(result.error)); onReload(); return; }
+    }
+    toast.success(targets.length === 1 ? "Saved readings recalculated on the server" : `Saved readings recalculated for ${String(targets.length)} fields`); onReload();
   };
   const formulas = fields.filter(field => field.question.type === QuestionType.Formula && field.question.id);
-  const pending = formulas.filter(field => responses.some(row => row.formField?.id === field.id && row.formulaRepairPending));
+  // The same formula can appear more than once on a worksheet; one repair or recalculation covers every field of it.
+  const groups = [...formulas.reduce((byQuestion, field) => {
+    const key = field.question.id ?? field.id;
+    byQuestion.set(key, [...(byQuestion.get(key) ?? []), field]);
+    return byQuestion;
+  }, new Map<string, FormField[]>()).values()];
+  const pending = formulas.filter(isPending);
   if (!formulas.length) return null;
   return <div className="space-y-2">
     {pending.length ? <div role="status" className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
       <p className="font-medium">Repaired {pending.length === 1 ? "formula needs" : "formulas need"} recalculation</p>
       <p>{pending.map(field => field.question.label).join(", ")}: the saved readings are kept, but results stay pending until the server recalculates them. Save any changed readings, then choose <strong>Recalculate saved readings</strong> from the field's menu. Submission and certificates wait until then.</p>
     </div> : null}
-    <div className="flex flex-wrap justify-end gap-2">{formulas.map(field => <DropdownButton key={field.id} label={field.question.label} disabled={mutation.isLoading} items={[
-      ...(field.question.id ? [{ id: "repair", label: "Repair formula", icon: Wrench, require: anyFormulaRepairPermission, onSelect: () => setRepairing(field) }] : []),
-      ...(responses.some(row => row.formField?.id === field.id && row.formulaRepairPending) ? [{ id: "recalculate", label: "Recalculate saved readings", icon: Calculator,
-        require: "CanExecuteFormulaResponse", disabled, disabledReason: "Save changed readings before recalculating.", onSelect: () => void recalculate(field) }] : []),
-    ]} />)}</div>
+    <div className="flex flex-wrap justify-end gap-2">{groups.map(group => { const [field] = group; if (!field) return null;
+      const label = group.length > 1 ? `${field.question.label} (${String(group.length)} fields)` : field.question.label;
+      return <DropdownButton key={field.id} label={label} disabled={mutation.isLoading} items={[
+        ...(field.question.id ? [{ id: "repair", label: "Repair formula", icon: Wrench, require: anyFormulaRepairPermission, onSelect: () => setRepairing(field) }] : []),
+        ...(group.some(isPending) ? [{ id: "recalculate", label: "Recalculate saved readings", icon: Calculator,
+          require: "CanExecuteFormulaResponse", disabled, disabledReason: "Save changed readings before recalculating.", onSelect: () => void recalculate(group) }] : []),
+      ]} />; })}</div>
     {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
     {repairing?.question.id ? <Dialog open onOpenChange={open => { if (!open) setRepairing(null); }}>
       <DialogContent className="sm:max-w-5xl">
@@ -52,7 +65,7 @@ export function AtrFormulaActions({ atrId, fields, responses, disabled, onReload
           <DialogDescription>Repair this test's formula before saving results. Readings entered in the worksheet stay available.</DialogDescription></DialogHeader>
         <DialogBody><Suspense fallback={<p role="status">Loading formula repair…</p>}>
           <RepairPanel questionId={repairing.question.id} atr={atrId} field={repairing.id} onBack={() => setRepairing(null)}
-            onApplied={definition => { onRepaired?.(repairing.id, sha256Hex(definition)); onReload(); }} />
+            onApplied={(definition, fieldIds) => { const hash = sha256Hex(definition); for (const id of fieldIds) onRepaired?.(id, hash); onReload(); }} />
         </Suspense></DialogBody>
       </DialogContent>
     </Dialog> : null}

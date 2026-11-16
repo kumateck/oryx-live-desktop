@@ -20,3 +20,8 @@ quantity on each production batch. Older BOMs leave conversion off.
 The feature requires the matching backend migration and API. See
 `oryx-backend/docs/bom-density-conversion.md` for rollout and rollback
 instructions.
+
+Density lookups refresh each time the BOM editor opens and search all matching
+pages for the selected material. A missing density unit displays the saved value
+and identifies the missing g/mL measurement unit. Retry density reloads the
+department link after a correction without discarding the draft quantity.

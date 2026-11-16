@@ -37,7 +37,7 @@ it("labels an issued batch with no batch number", () => {
 const requisition = (id: string, extra: object = {}) => ({ id, code: id.toUpperCase(), status: 1, approved: true, createdAt: "2026-10-01T09:00:00Z", requestedBy: { firstName: "Ama", lastName: "Owusu" }, department: { name: "Production" },
   productionScheduleProduct: { batchNumber: "T081K004", product: { name: "Paracetamol syrup", code: "FP-1" }, productionSchedule: { code: "PS026" } },
   items: [{ id: "l1", quantity: 50_000_000, material: { name: "Maize starch", code: "RM-1", kind: 0 }, uoM: { symbol: "mg" },
-    batches: [{ quantityToTake: 30_000_000, batch: { id: "b1", batchNumber: "B-1", expiryDate: "2099-01-01T00:00:00Z" } }, { quantityToTake: 20_000_000, batch: { id: "b2", batchNumber: "B-2", expiryDate: "2099-06-01T00:00:00Z", isReturn: true } }] }], ...extra });
+    batches: [{ quantityToTake: 30_000_000, batch: { id: "b1", batchNumber: "B-1", arNumber: "QCD/RM/26/314", expiryDate: "2099-01-01T00:00:00Z" } }, { quantityToTake: 20_000_000, batch: { id: "b2", batchNumber: "B-2", expiryDate: "2099-06-01T00:00:00Z", isReturn: true } }] }], ...extra });
 interface Call { method: string; path: string; body?: unknown }
 function open(address: string, permissions: string[], record: object = requisition("sr-1"), extra: (path: string, method: string) => Response | null = () => null) {
   const backend = stubBackend({ permissions });
@@ -108,7 +108,7 @@ it("will not issue from an expired batch, or before approval", async () => {
   expect((screen.getByRole("button", { name: "Issue stock" }) as HTMLButtonElement).disabled).toBe(true);
 });
 
-const lot = (id: string, expiryDate: string) => ({ id, batchNumber: id.toUpperCase(), expiryDate, uoM: { id: "u-mg", symbol: "mg" } });
+const lot = (id: string, expiryDate: string) => ({ id, batchNumber: id.toUpperCase(), arNumber: `AR-${id.toUpperCase()}`, expiryDate, uoM: { id: "u-mg", symbol: "mg" } });
 const alternatives = [{ material: { id: "m1", name: "Maize starch", code: "RM-1" },
   currentReservedBatches: [{ batch: lot("b1", "2099-01-01T00:00:00Z"), quantityToTake: 30_000_000, warehouseLocationShelfId: "s1" }, { batch: lot("b2", "2099-06-01T00:00:00Z"), quantityToTake: 20_000_000, warehouseLocationShelfId: "s1" }],
   alternativeBatches: [{ batch: lot("a2", "2098-09-01T00:00:00Z"), quantityAvailable: 100_000_000, warehouse: { id: "w2", name: "Beta raw store" }, warehouseLocationShelfId: "s8" },
@@ -120,6 +120,8 @@ const shelves = [shelf("r1", "b1", "s1", 30_000_000, "w1"), shelf("r2", "b2", "s
 it("pairs each batch set aside with earlier batches, soonest first, and never offers stock twice", () => {
   expect([expiresEarlier("2026-01-01", "2026-01-02"), expiresEarlier("2026-01-02T08:00:00", "2026-01-02T20:00:00"), expiresEarlier(null, "2026-01-02"), expiresEarlier("2026-01-01", null)]).toEqual([true, false, false, false]);
   const rows = swapSuggestions(alternativesSchema.parse(alternatives));
+  expect(rows[0]?.current.arNumber).toBe("AR-B1");
+  expect(rows[0]?.alternative.arNumber).toBe("AR-A1");
   // b1 takes all of the soonest batch (a1) and the rest from a2; b2 is covered by what a2 has left, so a3 is not needed.
   expect(rows.map((row) => [row.current.number, row.alternative.number, row.quantity, row.partial])).toEqual([["B1", "A1", 10_000_000, true], ["B1", "A2", 20_000_000, true], ["B2", "A2", 20_000_000, false]]);
   // 25 of b1 already waits in another swap: only the remaining 5 is offered.
@@ -239,4 +241,14 @@ it("labels a line issued as a substitute on the requisition", async () => {
   open("/warehouse/stock-requisition/sr-1", ["CanViewRawMaterialRequisitions"], requisition("sr-1", { status: 3,
     items: [{ id: "l1", quantity: 42_000_000, material: { name: "Maize starch, dried", code: "RM-9", kind: 0 }, uoM: { symbol: "mg" }, substituteFor: { name: "Maize starch" }, batches: [] }] }));
   expect(await screen.findByText("Substitute for Maize starch")).toBeTruthy();
+});
+
+it("shows each batch's AR number on the issue screen and printed voucher", async () => {
+  open("/warehouse/stock-requisition/sr-1", ["CanViewRawMaterialRequisitions"]);
+  expect(await screen.findByText("AR No.: QCD/RM/26/314")).toBeTruthy();
+  expect(screen.getByText("AR No.: Not recorded")).toBeTruthy();
+  await userEvent.click(screen.getByRole("button", { name: "Print" }));
+  const preview = within(await screen.findByRole("dialog"));
+  expect(preview.getByText("AR No.: QCD/RM/26/314")).toBeTruthy();
+  expect(preview.getByText("AR No.: Not recorded")).toBeTruthy();
 });
