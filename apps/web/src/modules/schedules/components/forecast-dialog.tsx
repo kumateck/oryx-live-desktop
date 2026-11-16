@@ -25,7 +25,7 @@ export function ForecastDialog({ request, onClose }: { request: ForecastRequest;
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
     <DialogContent className="sm:max-w-[min(96vw,1600px)]">
       <DialogHeader><DialogTitle>Material forecast for {request.product.label}</DialogTitle>
-        <DialogDescription>What these batches need, against usable warehouse stock. Stock already reserved for other batches is shown but not deducted.</DialogDescription></DialogHeader>
+        <DialogDescription>What these batches need, against free warehouse stock: usable stock less what is reserved for other batches, as when production starts.</DialogDescription></DialogHeader>
       <DialogBody className="space-y-4">
         <dl className="flex flex-wrap gap-x-8 gap-y-2 rounded-md bg-muted/50 p-3 text-sm">{facts.map(([label, value]) =>
           <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="font-medium">{value}</dd></div>)}</dl>
