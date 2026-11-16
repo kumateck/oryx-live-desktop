@@ -48,17 +48,18 @@ it.each([null, "LJK"])("retains a duplicate number for editing and issues a diff
   const user = userEvent.setup();
   await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  const number = screen.getByRole("textbox", { name: stem ? "Batch number · LJK" : "Batch number" });
-  expect(number).toHaveProperty("value", stem ? "097" : original);
+  const number = screen.getByRole("textbox", { name: "Batch number" });
+  // The stem is part of the input, so QA continues typing after it.
+  expect(number).toHaveProperty("value", stem ? "LJK097" : original);
   await user.clear(number);
   if (stem) {
-    await user.type(number, "A");
+    await user.type(number, "098");
     await user.click(screen.getByRole("button", { name: "Issue BMR and BPR" }));
-    expect(await screen.findByText(/Enter up to .* digits after the batch stem/)).toBeTruthy();
+    expect(await screen.findByText(/Keep the batch stem LJK and enter up to .* digits after it/)).toBeTruthy();
     expect(writes).toHaveLength(1);
     await user.clear(number);
   }
-  await user.type(number, stem ? "098" : replacement);
+  await user.type(number, stem ? "LJK098" : replacement);
   await user.click(screen.getByRole("button", { name: "Issue BMR and BPR" }));
   const confirm = await screen.findByRole("dialog", { name: `Issue batch ${replacement}?` });
   fireEvent.click(within(confirm).getByRole("button", { name: "Issue" }));
