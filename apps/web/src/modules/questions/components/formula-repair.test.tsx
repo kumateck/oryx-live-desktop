@@ -134,6 +134,8 @@ it("applies the approved revision to every field of the formula on the opened te
   expect(screen.getByText(/one repair fixes them all/)).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Preview repair" }));
   await screen.findByRole("region", { name: "Repair preview" });
+  // The approved formula replaces the readings too; they are entered again.
+  expect(screen.getByText(/take the approved formula in full/)).toBeTruthy();
   fireEvent.change(await screen.findByRole("textbox", { name: /Reason for repair/ }), { target: { value: "Apply the approved assay formula" } });
   fireEvent.click(screen.getByRole("button", { name: "Apply repair" }));
   await waitFor(() => expect(writes).toHaveLength(1));

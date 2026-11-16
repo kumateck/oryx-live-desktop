@@ -3,7 +3,7 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, expect, it } from "vitest";
-import { formatDateTime } from "../../../shared/format/dates";
+import { formatDate } from "../../../shared/format/dates";
 import { ApiProvider } from "../../../shared/api/api-provider";
 import { SessionProvider } from "../../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../../test/backend";
@@ -39,7 +39,9 @@ function open(path: string, permissions: string[], waitForSavedReferences?: Prom
     if (url.pathname === "/api/v1/specification-print/packaging-material/s1") return Response.json({
       revisedBy: "Kofi Mensah", revisedAt: "2026-11-12T15:10:00Z", historyAvailableFrom: "2026-10-27T09:00:00Z",
       revisions: [{ specificationNumber: "QCD/SPC/PM/003", revisionNumber: "01", supersedesNumber: "None",
-        recordedBy: "Ama Owusu", occurredAt: "2026-10-27T09:00:00Z", event: "History baseline" }],
+        recordedBy: "Ama Owusu", occurredAt: "2026-10-27T09:00:00Z", event: "History baseline", effectiveDate: "2026-10-01T00:00:00Z" },
+      { specificationNumber: "QCD/SPC/PM/003", revisionNumber: "02", supersedesNumber: "01",
+        recordedBy: "Esi Boateng", occurredAt: "2026-11-10T08:30:00Z", event: "Revised", reason: "Closure torque limit tightened.", effectiveDate: "2026-11-10T00:00:00Z" }],
     });
     if (url.pathname === "/api/v1/form/f1") return Response.json(template);
     if (url.pathname === "/api/v1/form/section") {
@@ -110,12 +112,19 @@ it("prints the saved specification with revision author, date and history", asyn
   expect(preview.getByText("40 mm")).toBeTruthy();
   expect(preview.getByText("No leaks")).toBeTruthy();
   expect(preview.getByText("BP")).toBeTruthy();
-  expect(preview.getByText("Revision By")).toBeTruthy();
-  expect(preview.getByText("Kofi Mensah")).toBeTruthy();
-  expect(preview.getByText(formatDateTime("2026-11-12T15:10:00Z") ?? "missing date")).toBeTruthy();
-  const history = within(preview.getByRole("table", { name: "Specification history" }));
-  expect(history.getByText("History baseline")).toBeTruthy();
-  expect(history.getByText("Ama Owusu")).toBeTruthy();
+  // The header: spec number, revision, supersedes, material name and code, effective and review dates.
+  // The history carries who revised it and when, so the header does not repeat it, nor the status, reference or template.
+  const header = preview.getAllByRole("table", { name: "Specification header" })[0];
+  expect(header?.querySelectorAll("tr")).toHaveLength(5);
+  expect(header?.textContent).toContain("Packaging Material Specification");
+  expect(header?.querySelector("td[rowspan='3']")?.textContent).toBe("Amber bottle(PM-9)");
+  for (const label of ["Revision By", "Status", "Template", "Pharmacopoeia"]) expect(header?.textContent).not.toContain(label);
+  expect(preview.queryByText("Kofi Mensah")).toBeNull();
+  const history = within(preview.getByRole("table", { name: "Revision History" }));
+  expect(history.getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(["Sr. No.", "Revision No.", "Effective Date", "Reason for Change"]);
+  // One row per revision, earliest on top to the latest, with its effective date and reason.
+  const rows = history.getAllByRole("row").slice(1).map((row) => within(row).getAllByRole("cell").map((cell) => cell.textContent));
+  expect(rows).toEqual([["1", "01", formatDate("2026-10-01T00:00:00Z"), "—"], ["2", "02", formatDate("2026-11-10T00:00:00Z"), "Closure torque limit tightened."]]);
   expect(preview.getByRole("button", { name: "Print" })).toHaveProperty("disabled", false);
   expect(calls).toEqual([]);
 });

@@ -13,6 +13,7 @@ const body = {
   effectiveDate: "2026-01-01",
   reviewDate: "2027-01-01",
   formId: "template",
+  revisionReason: "Assay limit corrected.",
 };
 
 afterEach(forgetSession);

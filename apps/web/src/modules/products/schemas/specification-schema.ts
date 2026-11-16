@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { requireRevisionReason } from "@/shared/specifications/specification-rules";
 import { earliestRevisionDate } from "../lib/specification";
 
 const required = (message: string) => z.string({ message }).trim().min(1, message);
@@ -11,12 +12,15 @@ export const specificationFormSchema = z.object({
   reviewDate: z.date({ message: "Choose the revision date" }),
   form: z.object({ value: z.string().min(1, "Choose a template"), label: z.string() }, { message: "Choose a template" }),
   description: z.string().nullish(),
+  revisionReason: z.string().max(1000, "Keep the reason to 1000 characters.").optional(),
 }).superRefine((values, context) => {
   if (values.reviewDate < earliestRevisionDate(values.effectiveDate)) {
     context.addIssue({ code: "custom", path: ["reviewDate"], message: "The revision date must be after the effective date and after today" });
   }
 });
 export type SpecificationFormValues = z.infer<typeof specificationFormSchema>;
+/** Editing a saved specification is a revision, which needs its reason. */
+export const specificationEditSchema = specificationFormSchema.superRefine(requireRevisionReason);
 
 const text = z.string().nullish().transform((value) => value?.trim() ?? "");
 

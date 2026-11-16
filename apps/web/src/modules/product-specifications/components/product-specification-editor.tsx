@@ -18,7 +18,7 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { useNextSerial } from "@/shared/qc/qc-numbers";
 import { FormPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import {
-  checkRevisionDate, documentReferences, earliestRevisionDate, linkDelta, productSpecificationPrefix, serialNumber, specificationBaseSchema, specificationBody, specificationDefaults, testStages,
+  checkRevisionDate, requireRevisionReason, revisionReasonField, documentReferences, earliestRevisionDate, linkDelta, productSpecificationPrefix, serialNumber, specificationBaseSchema, specificationBody, specificationDefaults, testStages,
 } from "@/shared/specifications/specification-rules";
 import { specificationRowsSchema, specificationSchema, type Specification } from "@/shared/specifications/specification-schema";
 import { SpecificationUnavailable } from "@/shared/specifications/specification-views";
@@ -27,11 +27,13 @@ import { productSpecificationsApi } from "../api/product-specifications-api";
 import { audit, completePath, detailPath, listPath, specPermissions } from "../lib/product-specifications";
 
 const option = z.object({ value: z.string(), label: z.string() });
-const schema = specificationBaseSchema.extend({
+const base = specificationBaseSchema.extend({
   products: z.array(option).min(1, "Choose at least one product."),
   testStage: option.nullable().refine((value): boolean => value !== null, "Choose the test stage."),
 }).superRefine(checkRevisionDate);
-type Values = z.input<typeof schema>;
+/** Editing a saved specification is a revision, which needs its reason. */
+const schemaFor = (editing: boolean) => editing ? base.superRefine(requireRevisionReason) : base;
+type Values = z.input<typeof base>;
 const years = { fromYear: 2000, toYear: 2100 } as const;
 const stageOf = (value: string | undefined) => value === "1" ? 1 : value === "2" ? 2 : 0;
 const productLabel = (item: { name?: string | null; code?: string | null }) => `${item.name?.trim() || "Unnamed"}${item.code ? ` (${item.code})` : ""}`;
@@ -43,6 +45,7 @@ function Editor({ saved, linked }: { saved: Specification | null; linked: readon
   const require = saved ? specPermissions.edit : specPermissions.create;
   const permission = usePermissionAction(require);
   const savedStage = saved ? testStages.find((stage) => stage.value === String(saved.testStage)) ?? null : null;
+  const schema = useMemo(() => schemaFor(saved !== null), [saved]);
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: saved ? { ...specificationDefaults(saved), products: [...linked], testStage: savedStage }
     : { specificationNumber: "", revisionNumber: "", supersedesNumber: "", reference: null, description: "", products: [], testStage: null } });
   const effectiveDate = useWatch({ control: form.control, name: "effectiveDate" });
@@ -100,7 +103,8 @@ function Editor({ saved, linked }: { saved: Specification | null; linked: readon
     { type: InputTypes.SELECT, mode: "single", source: "async", name: "form", label: "Template", required: true, loadOptions: loadTemplates, placeholder: "Select a template", searchPlaceholder: "Search templates",
       description: "The tests of the specification come from this template." },
     { type: InputTypes.RICHTEXT, name: "description", label: "Notes", rows: 4, className: "md:col-span-2" },
-  ] as const satisfies readonly WizardField<Values>[], [earliest, loadOptions, loadTemplates]);
+    ...(saved ? [revisionReasonField] : []),
+  ] as const satisfies readonly WizardField<Values>[], [earliest, loadOptions, loadTemplates, saved]);
 
   const submit = form.handleSubmit(async (raw) => {
     const values = schema.parse(raw);
@@ -122,7 +126,7 @@ function Editor({ saved, linked }: { saved: Specification | null; linked: readon
         void navigate(id ? completePath(id) : listPath);
         return;
       }
-      const updated = await update({ ...audit, id: saved.id, domainEntitiesProductSpecificationsUpdateProductSpecificationRequest: { ...specificationBody(values, saved.dueDate), testStage } });
+      const updated = await update({ ...audit, id: saved.id, domainEntitiesProductSpecificationsUpdateProductSpecificationRequest: { ...specificationBody(values, saved.dueDate), testStage, revisionReason: (values.revisionReason ?? "").trim() } });
       if ("error" in updated) { setMessage(apiErrorMessage(updated.error)); return; }
       const delta = linkDelta(linkedIds, productIds);
       if (delta.add.length > 0 || delta.remove.length > 0) {
