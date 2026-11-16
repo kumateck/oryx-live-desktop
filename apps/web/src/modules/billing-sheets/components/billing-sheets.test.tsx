@@ -39,6 +39,8 @@ it("works out free time from the arrival date, and what a sheet allows from its 
   expect([isPayable(charge(false, null)), isPayable(charge(false, 2)), isPayable(charge(false, 0)), isPayable(charge(false, null, 0)), isPayable(charge(false, null, 5, null))]).toEqual([true, true, false, false, false]);
   expect(changeBlock({ approved: false, status: 0, charges: [] })).toContain("waiting for approval");
   expect(changeBlock({ approved: true, status: 0, charges: [] })).toBeNull();
+  // While its review is open, an unapproved sheet may be corrected.
+  expect(changeBlock({ approved: false, status: 0, charges: [] }, true)).toBeNull();
   expect(paymentBlock({ approved: false, status: 0, charges: [charge(false, null)] })).toContain("approved");
   expect(paymentBlock({ approved: true, status: 0, charges: [charge(true, 1)] })).toBe("No charge is waiting for a payment.");
   expect(deleteBlock({ approved: true, status: 0, charges: [charge(false, 0)] })).toContain("cannot be deleted");
@@ -57,7 +59,7 @@ const sheet = (extra: object = {}) => ({ id: "bs-1", code: "BS-1", billOfLading:
     { id: "c-3", charge: { name: "Scanning" }, currency: { id: "usd", symbol: "$" }, amount: 80, paid: true, paymentStatus: 1 }], ...extra });
 interface Call { method: string; path: string; body: unknown }
 
-function open(address: string, permissions: string[], record: object = sheet()) {
+function open(address: string, permissions: string[], record: object = sheet(), review: object | null = null) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: Call[] = [];
@@ -74,6 +76,7 @@ function open(address: string, permissions: string[], record: object = sheet()) 
     if (path.startsWith("/api/v1/configuration/")) return Response.json(4);
     if (path === "/api/v1/procurement/billing-sheet") return input.method === "GET"
       ? Response.json({ data: [], pageIndex: 1, pageCount: 1, totalRecordCount: 4 }) : Response.json("bs-9", { status: 201 });
+    if (path.startsWith("/api/v1/document-review/") && review) return Response.json(review);
     if (path === "/api/v1/procurement/billing-sheet/charge") return Response.json({ paidChargeIds: [], pendingChargeIds: ["c-1"] });
     if (path.startsWith("/api/v1/procurement/billing-sheet/")) return input.method === "GET" ? Response.json(record) : new Response(null, { status: 204 });
     return new Response(null, { status: 404 });
@@ -204,4 +207,14 @@ it("adds a batch of charges with one currency and no repeated selection", async 
   await waitFor(() => expect(writes(calls)).toHaveLength(1));
   expect(writes(calls)[0]).toMatchObject({ method: "POST", path: "/api/v1/procurement/billing-sheet/charge/bs-1",
     body: [{ chargeId: "ch-1", currencyId: "usd", amount: 12 }, { chargeId: "ch-2", currencyId: "usd", amount: 30 }] });
+});
+
+it("lets a sheet in review be corrected before approval, and shows its review", async () => {
+  const review = { modelType: "BillingSheet", modelId: "bs-1", code: "BS-1", reviewRequired: true, canConfirm: false, canReturn: false, canResubmit: false,
+    review: { id: "v1", submission: 1, version: 1, status: 0, preparedBy: { id: "u1", name: "Ama Owusu" }, submittedAt: "2026-11-16T08:00:00Z", events: [] },
+    signatures: { preparedBy: { id: "u1", name: "Ama Owusu" } } };
+  open("/logistics/billing-sheets/bs-1", ["CanViewBillingSheet", "CanEditBillingSheet"], sheet({ approved: false }), review);
+  expect(await screen.findByText("Awaiting review")).toBeTruthy();
+  expect(screen.queryByText(/waiting for approval. Until it is approved/)).toBeNull();
+  expect(screen.getByRole("link", { name: "Edit" })).toBeTruthy();
 });

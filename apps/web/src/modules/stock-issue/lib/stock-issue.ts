@@ -53,11 +53,19 @@ export function issueBlock(requisition: { approved: boolean; status: number; ite
 }
 
 /** What the voucher says about the warehouse check of an issue, or null when there is nothing to say. */
-export function checkNote(status: "Pending" | "Checked" | "Rejected" | "NotAssigned" | null): string | null {
+export function checkNote(status: "Pending" | "Checked" | "Returned" | "Rejected" | "NotAssigned" | null): string | null {
   switch (status) {
     case "Pending": return "Awaiting the warehouse check";
+    case "Returned": return "Returned to the store for correction";
     case "Rejected": return "The warehouse check was rejected";
-    case "NotAssigned": return "No issue check is set up. Add a \"Stock requisition issue\" approval workflow.";
+    // Issued before the check moved onto reviews, with no check set up then; it can still be checked.
+    case "NotAssigned": return "Not checked yet";
     default: return null;
   }
 }
+
+/** An issue's check is its document review: the keys for each task, by the requisition's material kind. */
+export const issueCheckKeys: Record<MaterialKind, { confirm: string; return: string; resubmit: string }> = {
+  0: { confirm: "CanCheckRawMaterialIssue", return: "CanReturnRawMaterialIssue", resubmit: "CanRepairIssuedBom" },
+  1: { confirm: "CanCheckPackagingMaterialIssue", return: "CanReturnPackagingMaterialIssue", resubmit: "CanRepairIssuedPackaging" },
+};

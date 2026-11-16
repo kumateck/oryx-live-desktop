@@ -8,6 +8,7 @@ import { formatDate, formatDateTime } from "@/shared/format/dates";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { ModelApprovalHistory } from "@/shared/approvals/model-history";
+import { ReviewPanel } from "@/shared/reviews/review-panel";
 import { staffAudit, staffRoot, appointments, budgets, statuses } from "../lib/staff";
 import { StaffActions } from "./staff-actions";
 function Detail({ id }: { id: string }) {
@@ -79,6 +80,9 @@ function Detail({ id }: { id: string }) {
           {field.value ? <RichTextView html={field.value} /> : <p className="text-muted-foreground">Not recorded.</p>}
         </section>
       ))}
+      {/* Its review (the "Checked by" step before approval). Corrections use the page's own Edit action. */}
+      <ReviewPanel record={{ modelType: "StaffRequisition", modelId: id }} label="staff requisition"
+        keys={{ confirm: "CanReviewStaffRequisition", return: "CanReturnStaffRequisition", resubmit: "CanEditStaffRequisition" }} />
       <ModelApprovalHistory id={id} model="StaffRequisition" audit={staffAudit} />
     </article>
   );

@@ -16,8 +16,10 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { PrintButton } from "@/shared/print/print-button";
 import { formatMoney } from "@/shared/procurement/price";
 import { SupplierSummary } from "@/shared/procurement/supplier-summary";
+import { ReviewPanel } from "@/shared/reviews/review-panel";
+import { useReviewOpen } from "@/shared/reviews/use-document-signatures";
 import { useDeleteApiV1ProcurementBillingSheetByBillingSheetIdMutation } from "../api/billing-api";
-import { audit, billingPermissions, billingSheetsPath, editBillingSheetPath } from "../lib/billing-access";
+import { audit, billingPermissions, billingReview, billingSheetsPath, editBillingSheetPath } from "../lib/billing-access";
 import { changeBlock, chargeTotals, deleteBlock, grandTotal, paymentBlock } from "../lib/billing-rules";
 import type { BillingCharge, BillingSheet } from "../schemas/billing-schema";
 import { AddChargesDialog } from "./add-charges-dialog";
@@ -40,7 +42,9 @@ export function BillingSheetDetail({ sheet }: { sheet: BillingSheet }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState<Open>(null);
   const [remove] = useDeleteApiV1ProcurementBillingSheetByBillingSheetIdMutation();
-  const change = changeBlock(sheet);
+  const review = billingReview(sheet.id);
+  const inReview = useReviewOpen(review.record);
+  const change = changeBlock(sheet, inReview);
   const payment = paymentBlock(sheet);
   const removal = deleteBlock(sheet);
   const totals = chargeTotals(sheet.charges);
@@ -54,7 +58,8 @@ export function BillingSheetDetail({ sheet }: { sheet: BillingSheet }) {
       {has(billingPermissions.pay) ? <Button type="button" size="sm" disabled={payment !== null} title={payment ?? undefined} onClick={() => setOpen("pay")}><Banknote />Record payment</Button> : null}
     </>} />
     <BillingSheetStatus sheet={sheet} />
-    {!sheet.approved ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">This billing sheet is waiting for approval. Until it is approved it cannot be changed, its charges cannot be paid, and its shipment cannot be cleared.</p> : null}
+    <ReviewPanel record={review.record} keys={review.keys} label="billing sheet" />
+    {!sheet.approved && !inReview ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">This billing sheet is waiting for approval. Until it is approved it cannot be changed, its charges cannot be paid, and its shipment cannot be cleared.</p> : null}
     <KeyFacts>
       <KeyFact label="Total amount" value={grand ? formatMoney(grand.total, grand.currency) : "–"} note={grand ? "Invoice and charges" : "Invoice and charges are in different currencies"} />
       <KeyFact label="Invoice amount" value={sheet.invoice?.total === null || !sheet.invoice ? "Not available" : formatMoney(sheet.invoice.total, sheet.invoice.currency)} note={sheet.invoice ? `${sheet.invoice.items.length} ${sheet.invoice.items.length === 1 ? "item" : "items"}` : undefined} />

@@ -19,8 +19,9 @@ interface SheetLike { approved: boolean; status: number; charges: readonly Charg
 const paidStatus = 2;
 
 /** Why a sheet cannot be changed or added to, or null when it can. The server holds a sheet until it is approved. */
-export function changeBlock(sheet: SheetLike): string | null {
-  return sheet.approved || sheet.status === paidStatus ? null : "The billing sheet is waiting for approval; it can be changed once it is approved.";
+export function changeBlock(sheet: SheetLike, inReview = false): string | null {
+  // While its review is open the sheet may be corrected; once it waits for approval it may not.
+  return sheet.approved || sheet.status === paidStatus || inReview ? null : "The billing sheet is waiting for approval; it can be changed once it is approved.";
 }
 /** Why no payment can be recorded, or null when one can. */
 export function paymentBlock(sheet: SheetLike): string | null {
