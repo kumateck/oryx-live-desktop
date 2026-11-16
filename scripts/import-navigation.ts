@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { collectionViewPermissions } from "../apps/web/src/modules/collection-configurations/lib/collections.ts";
 import { passwordAdminEmail } from "../apps/web/src/shared/auth/password-admin.ts";
 import { userPasswordsPath } from "../apps/web/src/modules/user-passwords/lib/user-password.ts";
+import { anyReportKey } from "../apps/web/src/modules/reports/lib/report-keys.ts";
 
 interface SourceItem {
   title: string;
@@ -136,9 +137,8 @@ qualityAssurance.items.push(...vendorApproval);
 // One Reports entry opens the hub, which groups every report by subject and shows only those the user may run.
 const reportsGroup = catalog.find((group) => group.id === "reports");
 if (!reportsGroup) throw new Error("Reports navigation group is missing.");
-reportsGroup.items = [{ id: "reports.all-reports", label: "All reports", path: "/reports", permissions: [...new Set(reportsGroup.items.flatMap((item) => item.permissions ?? []))]
-  // The hub's reports are guarded by the six report keys; the old inventory key opens none of them.
-  .filter((key) => key !== "CanViewInventoryReport") }];
+// Each report has its own key; any one of them shows the entry.
+reportsGroup.items = [{ id: "reports.all-reports", label: "All reports", path: "/reports", permissions: [...anyReportKey] }];
 
 // Oryx Next names some keys the backend never defined, so no role could open those entries. Use the backend's names.
 const backendKeys: Readonly<Record<string, string>> = {

@@ -3,7 +3,7 @@ import { z } from "zod";
 const text = z.string().nullable();
 const day = z.iso.date();
 const instant = z.iso.datetime({ offset: true });
-const row = z.object({
+export const issuedBmrRowSchema = z.object({
   id: z.uuid(), scheduleProductId: z.uuid(), productId: z.uuid(),
   productCode: text, productName: text, departmentId: z.uuid().nullable(), departmentName: text,
   scheduleCode: text, batchNumber: text, batchQuantity: z.number().finite(), batchUnit: text,
@@ -15,7 +15,7 @@ const row = z.object({
 /** Refuse partial, duplicate or out-of-scope snapshots before preview, print or export. */
 export const issuedBmrReportSchema = z.object({
   startDate: day, endDate: day, departmentId: z.uuid().nullable(), departmentName: text,
-  generatedAt: instant, totalIssued: z.number().int().nonnegative(), rows: z.array(row),
+  generatedAt: instant, totalIssued: z.number().int().nonnegative(), rows: z.array(issuedBmrRowSchema),
 }).superRefine((report, context) => {
   const start = Date.parse(`${report.startDate}T00:00:00Z`);
   const end = Date.parse(`${report.endDate}T00:00:00Z`) + 86400000;
@@ -25,3 +25,18 @@ export const issuedBmrReportSchema = z.object({
     context.addIssue({ code: "custom", message: "The issued-BMR snapshot is incomplete or inconsistent." });
 });
 export type IssuedBmrReport = z.infer<typeof issuedBmrReportSchema>;
+
+/** Every BMR issued for one product. Dates are present only when the report was limited to them. */
+export const issuedBmrByProductSchema = z.object({
+  productId: z.uuid(), productCode: text, productName: text, startDate: day.nullable(), endDate: day.nullable(),
+  departmentId: z.uuid().nullable(), departmentName: text, generatedAt: instant,
+  totalIssued: z.number().int().nonnegative(), rows: z.array(issuedBmrRowSchema),
+}).superRefine((report, context) => {
+  const start = report.startDate ? Date.parse(`${report.startDate}T00:00:00Z`) : -Infinity;
+  const end = report.endDate ? Date.parse(`${report.endDate}T00:00:00Z`) + 86400000 : Infinity;
+  if ((report.startDate === null) !== (report.endDate === null) || start >= end || report.totalIssued !== report.rows.length
+    || new Set(report.rows.map((item) => item.id)).size !== report.rows.length
+    || report.rows.some((item) => item.productId !== report.productId || Date.parse(item.issuedAt) < start || Date.parse(item.issuedAt) >= end))
+    context.addIssue({ code: "custom", message: "The BMR-by-product snapshot is incomplete or inconsistent." });
+});
+export type IssuedBmrByProductReport = z.infer<typeof issuedBmrByProductSchema>;
