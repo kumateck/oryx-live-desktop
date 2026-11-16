@@ -83,13 +83,16 @@ test("supplier and manufacturer directories belong to Quality Assurance with the
 });
 
 test("one Reports entry opens the hub for anyone holding a report key", () => {
-  for (const permission of ["CanViewWarehouseReport", "CanViewProcurementReport", "CanViewFgtnReport", "CanViewStoreAndInventoryReport", "CanViewHumanResourcesReport", "CanViewQcAndQaReport"]) {
+  for (const permission of ["CanViewApprovedManufacturerListReport", "CanViewMaterialStockSummaryReport", "CanViewBmrIssuedReport", "CanViewStoreStockReport", "CanViewStaffTurnoverReport"]) {
     const visible = visibleNavigation(navigationCatalog, user(permission));
     const reports = visible.find((group) => group.id === "reports");
     assert.deepEqual(reports?.items.map((item) => item.path), ["/reports"], permission);
     assert.equal(activeNavigation(visible, "/reports/approved-manufacturer-list")?.itemId, "reports.all-reports", permission);
   }
-  assert.equal(visibleNavigation(navigationCatalog, user("CanViewInventoryReport")).some((group) => group.id === "reports"), false);
+  // The old group keys no longer open the hub: each report needs its own key.
+  for (const permission of ["CanViewInventoryReport", "CanViewWarehouseReport", "CanViewProcurementReport"]) {
+    assert.equal(visibleNavigation(navigationCatalog, user(permission)).some((group) => group.id === "reports"), false, permission);
+  }
 });
 
 test("gives a page's place in the navigation, linking only the entry that is a page", () => {

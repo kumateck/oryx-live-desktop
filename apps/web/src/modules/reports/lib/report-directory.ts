@@ -1,15 +1,17 @@
 import type { AccessRule } from "@/shared/auth/access";
 import { reportDefinition } from "./catalog";
-import { ReportKey as K, reportPermissions } from "./report-model";
+import { reportViewKeys as keysByReport } from "./report-keys";
+import { ReportKey as K } from "./report-model";
 
 /** Reports are grouped by what they are about, not by the department that owns them. */
-export type ReportSectionId = "suppliers" | "purchasing" | "materials" | "production" | "products" | "stores" | "people";
+export type ReportSectionId = "suppliers" | "purchasing" | "materials" | "production" | "products" | "specifications" | "stores" | "people";
 export const reportSections: readonly { id: ReportSectionId; title: string; description: string }[] = [
   { id: "suppliers", title: "Suppliers and manufacturers", description: "Approved sources for every material" },
   { id: "purchasing", title: "Purchasing and shipments", description: "Orders, invoices and inbound shipments" },
   { id: "materials", title: "Materials", description: "Material lists, stock, expiry and valuation" },
   { id: "production", title: "Production and batch records", description: "Schedules, readiness and issued BMRs" },
   { id: "products", title: "Products and finished goods", description: "Products, stock, transfers and invoices" },
+  { id: "specifications", title: "Specifications", description: "Product and material specifications, ready to print" },
   { id: "stores", title: "General stores", description: "Store items, stock and vendor mappings" },
   { id: "people", title: "People", description: "Headcount, movement, leave and attendance" },
 ];
@@ -42,7 +44,15 @@ export const reportEntries: readonly ReportEntry[] = [
   single("monthly-production-schedule", "production", K.MonthlySchedule),
   single("daily-production-schedule", "production", K.DailySchedule),
   single("product-readiness", "production", K.ProductReadiness),
-  single("bmr-issued", "production", K.IssuedBmr, "BMR issued"),
+  { slug: "bmr-issued", section: "production", title: "BMR issued", description: "Issued BMRs with batch numbers, manufacture and expiry dates and batch sizes, by issue date or for one product.",
+    views: [{ id: "by-date", label: "By date", key: K.IssuedBmr }, { id: "by-product", label: "By product", key: K.IssuedBmrByProduct }] },
+  single("stock-issued", "production", K.StockIssued, "Stock issued"),
+  single("production-monthly-report", "production", K.ProductionMonthly),
+  single("production-schedule-summary", "production", K.ScheduleSummary),
+  single("batch-value", "production", K.BatchValue),
+  { slug: "specifications", section: "specifications", title: "Specifications", description: "Choose a product or material specification to preview and print it, as on the specification page.",
+    views: [{ id: "product", label: "Product", key: K.ProductSpecification }, { id: "raw-material", label: "Raw material", key: K.RawMaterialSpecification },
+      { id: "packaging-material", label: "Packaging material", key: K.PackagingMaterialSpecification }] },
   single("product-list", "products", K.ProductList),
   single("department-product-list", "products", K.QualityProducts, "Department product list"),
   paired("product-stock", "products", "Product stock", "Finished product quantities by warehouse and department, down to batch and expiry.", K.ProductStockSummary, K.ProductStockDetail),
@@ -66,9 +76,12 @@ export function reportEntry(slug: string | undefined): ReportEntry | null {
   return reportEntries.find((entry) => entry.slug === slug) ?? null;
 }
 
-/** The permission that opens one view of a report. */
+/** Fails to compile when a report has no key. */
+const reportViewKeys: Record<K, string> = keysByReport;
+
+/** The permission that opens one view of a report: that report's own backend key. */
 export function viewRequirement(key: K): string {
-  return reportPermissions[reportDefinition(key).group];
+  return reportViewKeys[key];
 }
 
 /** A report entry opens when the user may run at least one of its views. Each view keeps its own check. */

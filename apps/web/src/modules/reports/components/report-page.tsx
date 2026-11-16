@@ -9,6 +9,13 @@ import { reportDefinition } from "../lib/catalog";
 import { reportEntry, reportSections, viewRequirement } from "../lib/report-directory";
 import { ReportSectionIcon } from "./report-section-icon";
 import { SelectedReport } from "./report-workbench";
+import { SpecificationReport, type SpecificationKind } from "./specification-report";
+import { ReportKey } from "../lib/report-model";
+
+/** Specifications are chosen and printed one at a time instead of generated as a table. */
+const specificationKinds: Partial<Record<ReportKey, SpecificationKind>> = {
+  [ReportKey.ProductSpecification]: "product", [ReportKey.RawMaterialSpecification]: "raw", [ReportKey.PackagingMaterialSpecification]: "packaging",
+};
 
 /** One report from the hub. A report with a summary and a detailed form shows them as two tabs, each with its own permission. */
 export function ReportPage({ slug }: { slug: string | undefined }) {
@@ -34,6 +41,7 @@ export function ReportPage({ slug }: { slug: string | undefined }) {
     {views.length > 1 ? <Tabs value={view.id} onValueChange={(value) => setParams({ view: String(value) }, { replace: true })}>
       <TabsList aria-label={`${entry.title} views`}>{views.map((candidate) => <TabsTrigger key={candidate.id} value={candidate.id}>{candidate.label}</TabsTrigger>)}</TabsList>
     </Tabs> : null}
-    <SelectedReport key={`${view.key}:${user?.id}:${user?.departmentId}`} definition={definition} requirement={viewRequirement(view.key)} />
+    {specificationKinds[view.key] ? <SpecificationReport key={view.key} kind={specificationKinds[view.key] ?? "product"} />
+      : <SelectedReport key={`${view.key}:${user?.id}:${user?.departmentId}`} definition={definition} requirement={viewRequirement(view.key)} />}
   </article>;
 }
