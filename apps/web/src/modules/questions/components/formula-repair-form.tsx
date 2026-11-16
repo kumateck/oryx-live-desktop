@@ -6,7 +6,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
 import { ExpressionView } from "@/shared/formula/ui/math/expression-view";
-import { formulaRepairDefaults } from "../lib/formula-repair";
 import { useFormulaRepair } from "../hooks/use-formula-repair";
 import { repairTestKey, type FormulaRepairValues, type RepairContext, type RepairProblem } from "../schemas/formula-repair-schema";
 import { FormulaRepairHistory } from "./formula-repair-history";
@@ -20,24 +19,36 @@ const problemTitles: Record<RepairProblem["kind"], string> = {
   denied: "Not allowed", stale: "Preview again", invalid: "Repair not possible yet", unconfirmed: "Repair not confirmed",
 };
 
+function FormulaShown({ title, expression }: { title: string; expression: string }) {
+  return <div className="space-y-1"><p className="text-sm font-medium">{title}</p>
+    <div className="max-w-full overflow-x-auto">{expression ? <ExpressionView expression={expression} print /> : <p className="text-sm text-muted-foreground">No expression.</p>}</div></div>;
+}
+
 export function FormulaRepairForm({ context, atr, field, refresh, onBack, onApplied }: {
   context: RepairContext; atr: string | null; field: string | null; refresh: () => void;
-  onBack?: (() => void) | undefined; onApplied?: ((definition: string) => void) | undefined;
+  onBack?: (() => void) | undefined; onApplied?: ((definition: string, fieldIds: readonly string[]) => void) | undefined;
 }) {
   const page = useFormulaRepair(context, atr, field, refresh, onBack, onApplied);
   const { form, preview, problem } = page;
   if (page.receipt) return <FormulaRepairReceipt receipt={page.receipt} questionId={context.questionId} fromTest={Boolean(atr)} onBack={page.back} />;
   return <form noValidate onSubmit={page.submit("preview")} className="min-w-0 space-y-4">
     <section className="space-y-3 rounded-lg border bg-card p-4">
-      <h2 className="font-semibold">1. Correct the configuration</h2>
-      <div className="max-w-full overflow-x-auto"><ExpressionView expression={formulaRepairDefaults(context.definition).expression} print /></div>
+      <h2 className="font-semibold">1. {page.approved ? "Formula to apply" : "Correct the configuration"}</h2>
+      <FormulaShown title={atr ? "Current formula on this test" : "Current formula"} expression={page.current} />
+      {page.approved ? <FormulaShown title={`Approved revision ${context.approvedRevision ?? ""}`.trim()} expression={page.approved.expression} /> : null}
       <p className="text-sm text-muted-foreground">Used by {context.formsUsingQuestion} forms · {context.responsesAffected} existing responses. Existing tests keep their configuration unless selected below.</p>
       {context.blockers.map(text => <p key={text} role="alert" className="text-sm text-destructive">{text}</p>)}
-      <FormWizard form={form} fields={fields} />
-      {page.manualKeys.length ? <fieldset className="space-y-2"><legend className="text-sm font-medium">Manual inputs required by this expression</legend>
-        <div className="grid gap-3 sm:grid-cols-2">{page.manualKeys.map(key => <label key={key} className="space-y-1 text-sm">
-          <span>:{key} — input label</span><Input {...form.register(`labels.${key}`)} placeholder={key} disabled={page.busy} maxLength={200} />
-        </label>)}</div></fieldset> : null}
+      {page.approved ? <>
+        {page.manualKeys.length ? <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">{page.manualKeys.map(key => <div key={key} className="flex gap-2">
+          <dt className="text-muted-foreground">:{key}</dt><dd className="min-w-0 break-words">{page.approved?.labels[key] ?? key}</dd></div>)}</dl> : null}
+        <p className="text-sm text-muted-foreground">This is the reviewed and approved formula. To change it, create a new revision of the question.</p>
+      </> : <>
+        <FormWizard form={form} fields={fields} />
+        {page.manualKeys.length ? <fieldset className="space-y-2"><legend className="text-sm font-medium">Manual inputs required by this expression</legend>
+          <div className="grid gap-3 sm:grid-cols-2">{page.manualKeys.map(key => <label key={key} className="space-y-1 text-sm">
+            <span>:{key} — input label</span><Input {...form.register(`labels.${key}`)} placeholder={key} disabled={page.busy} maxLength={200} />
+          </label>)}</div></fieldset> : null}
+      </>}
     </section>
     <section className="space-y-3 rounded-lg border bg-card p-4">
       <h2 className="font-semibold">2. Choose what to repair</h2>
@@ -46,6 +57,8 @@ export function FormulaRepairForm({ context, atr, field, refresh, onBack, onAppl
         <span>Repair the shared question for templates and future tests{context.canRepairQuestion ? null : <span className="block text-muted-foreground">Requires the repair question formula permission.</span>}</span></label>} />
       <Controller control={form.control} name="selectedTests" render={({ field: input }) => <fieldset className="space-y-2"><legend className="text-sm font-medium">Open tests you are assigned to</legend>
         {context.tests.length === 0 ? <p className="text-sm text-muted-foreground">No assigned tests are accessible to you for this question.</p> : null}
+        {atr && context.tests.filter(test => test.atrId === atr && test.eligible).length > 1
+          ? <p className="text-sm text-muted-foreground">Every field of this formula on this test is selected, so one repair fixes them all.</p> : null}
         {context.tests.map(test => { const key = repairTestKey(test); return <label key={key} className="flex items-start gap-2 text-sm">
           <Checkbox checked={input.value.includes(key)} disabled={!context.canRepairTests || !test.eligible || page.busy}
             onCheckedChange={checked => input.onChange(checked === true ? [...input.value, key] : input.value.filter(value => value !== key))} />

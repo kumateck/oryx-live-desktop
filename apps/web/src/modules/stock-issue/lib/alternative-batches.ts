@@ -4,7 +4,7 @@ import { z } from "zod";
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const amount = z.number().nullish().transform((value) => typeof value === "number" && Number.isFinite(value) ? value : 0);
 const date = z.string().nullish().transform((value) => value && new Date(value).getFullYear() >= 1900 ? value : null);
-const batch = z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish() }).nullish();
+const batch = z.object({ id: z.string().nullish(), batchNumber: text, arNumber: text, expiryDate: date, effectiveExpiryDate: date, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish() }).nullish();
 const material = z.object({ material: z.object({ id: z.string().nullish(), name: text, code: text }).nullish(),
   currentReservedBatches: z.array(z.object({ warehouseLocationShelf: stockShelfSchema, batch, quantityToTake: amount, warehouseLocationShelfId: z.string().nullish() })).nullish(),
   alternativeBatches: z.array(z.object({ warehouseLocationShelf: stockShelfSchema, batch, quantityAvailable: amount, warehouse: z.object({ id: z.string().nullish(), name: text }).nullish(), warehouseLocationShelfId: z.string().nullish() })).nullish() });
@@ -15,9 +15,9 @@ export const alternativesSchema = z.array(material).nullish().transform((value) 
   if (!id) return [];
   return [{ materialId: id, materialName: entry.material?.name ?? "Unnamed material", materialCode: entry.material?.code ?? null,
     reserved: (entry.currentReservedBatches ?? []).flatMap((item) => item.batch?.id && item.warehouseLocationShelfId && item.quantityToTake > 0
-      ? [{ location: stockShelfLocation(item.warehouseLocationShelf), batchId: item.batch.id, shelfId: item.warehouseLocationShelfId, number: item.batch.batchNumber, expires: item.batch.effectiveExpiryDate ?? item.batch.expiryDate, quantity: item.quantityToTake, unitId: item.batch.uoM?.id ?? null, unit: item.batch.uoM?.symbol ?? null }] : []),
+      ? [{ location: stockShelfLocation(item.warehouseLocationShelf), batchId: item.batch.id, shelfId: item.warehouseLocationShelfId, number: item.batch.batchNumber, arNumber: item.batch.arNumber, expires: item.batch.effectiveExpiryDate ?? item.batch.expiryDate, quantity: item.quantityToTake, unitId: item.batch.uoM?.id ?? null, unit: item.batch.uoM?.symbol ?? null }] : []),
     alternatives: (entry.alternativeBatches ?? []).flatMap((item) => item.batch?.id && item.warehouseLocationShelfId && item.warehouse?.id && item.quantityAvailable > 0
-      ? [{ location: stockShelfLocation(item.warehouseLocationShelf), batchId: item.batch.id, shelfId: item.warehouseLocationShelfId, number: item.batch.batchNumber, expires: item.batch.effectiveExpiryDate ?? item.batch.expiryDate, available: item.quantityAvailable, storeId: item.warehouse.id, store: item.warehouse.name ?? "Unnamed store" }] : []) }];
+      ? [{ location: stockShelfLocation(item.warehouseLocationShelf), batchId: item.batch.id, shelfId: item.warehouseLocationShelfId, number: item.batch.batchNumber, arNumber: item.batch.arNumber, expires: item.batch.effectiveExpiryDate ?? item.batch.expiryDate, available: item.quantityAvailable, storeId: item.warehouse.id, store: item.warehouse.name ?? "Unnamed store" }] : []) }];
 }));
 export type MaterialAlternatives = z.infer<typeof alternativesSchema>[number];
 
@@ -29,8 +29,8 @@ export interface SwapSuggestion {
   materialCode: string | null;
   unitId: string | null;
   unit: string | null;
-  current: { location?: string | null; batchId: string; shelfId: string; number: string | null; expires: string | null; reserved: number };
-  alternative: { location?: string | null; batchId: string; shelfId: string; number: string | null; expires: string | null; available: number; storeId: string; store: string };
+  current: { location?: string | null; batchId: string; shelfId: string; number: string | null; arNumber?: string | null; expires: string | null; reserved: number };
+  alternative: { location?: string | null; batchId: string; shelfId: string; number: string | null; arNumber?: string | null; expires: string | null; available: number; storeId: string; store: string };
   quantity: number;
   /** Less than the whole of the batch set aside is covered by this alternative. */
   partial: boolean;
@@ -67,8 +67,8 @@ export function swapSuggestions(materials: readonly MaterialAlternatives[], comm
         if (free <= tiny || !expiresEarlier(alternative.expires, current.expires)) continue;
         const quantity = Math.min(remaining, free);
         rows.push({ key: `${material.materialId}|${current.batchId}|${current.shelfId}|${alternative.batchId}|${alternative.shelfId}`, materialId: material.materialId, materialName: material.materialName, materialCode: material.materialCode,
-          unitId: current.unitId, unit: current.unit, current: { location: current.location, batchId: current.batchId, shelfId: current.shelfId, number: current.number, expires: current.expires, reserved: current.quantity },
-          alternative: { location: alternative.location, batchId: alternative.batchId, shelfId: alternative.shelfId, number: alternative.number, expires: alternative.expires, available: alternative.available, storeId: alternative.storeId, store: alternative.store },
+          unitId: current.unitId, unit: current.unit, current: { location: current.location, batchId: current.batchId, shelfId: current.shelfId, number: current.number, arNumber: current.arNumber, expires: current.expires, reserved: current.quantity },
+          alternative: { location: alternative.location, batchId: alternative.batchId, shelfId: alternative.shelfId, number: alternative.number, arNumber: alternative.arNumber, expires: alternative.expires, available: alternative.available, storeId: alternative.storeId, store: alternative.store },
           quantity, partial: quantity < current.quantity - tiny });
         remaining -= quantity;
         left[index] = free - quantity;

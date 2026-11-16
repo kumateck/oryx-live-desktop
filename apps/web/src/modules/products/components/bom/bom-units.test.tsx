@@ -19,7 +19,7 @@ const id = "658da105-a506-44a9-8ff5-8d005a54f294";
 const name = "Gelatin Capsule Shells - Zinvite";
 
 function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = false, densityResponse }: {
-  symbol?: string; quantity?: number; unitResponse?: () => Response; failSave?: boolean; densityResponse?: () => Response | Promise<Response>;
+  symbol?: string; quantity?: number; unitResponse?: () => Response; failSave?: boolean; densityResponse?: (page: number) => Response | Promise<Response>;
 } = {}) {
   const backend = stubBackend({ permissions: ["CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure"] });
   rememberSession();
@@ -37,7 +37,7 @@ function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = f
         material: { id: "shells", name, code: "RMG033" } },
     ] } });
     if (path === "/api/v1/material/shells/uom") return unitResponse ? unitResponse() : Response.json(unit);
-    if (path === "/api/v1/material/department" && densityResponse) return densityResponse();
+    if (path === "/api/v1/material/department" && densityResponse) return densityResponse(Number(new URL(input.url).searchParams.get("page") ?? 1));
     if (path === "/api/v1/material/department") return Response.json({ data: [
       { material: { id: "shells", name, code: "RMG033" }, uoM: unit },
       { material: { id: "liquid", name: "Liquid", code: "RM-L" }, uoM: { id: "linked-ml", symbol: "ml" } },
@@ -105,7 +105,7 @@ it("preloads a newly selected material's linkage and uses the same unit controls
   const user = userEvent.setup();
   await screen.findByText(name);
   fireEvent.click(await screen.findByRole("button", { name: "Add material" }));
-  await user.click(within(await screen.findByRole("dialog")).getByRole("combobox", { name: "Material" }));
+  await user.click(await within(await screen.findByRole("dialog")).findByRole("combobox", { name: "Material" }));
   await user.click(await screen.findByRole("option", { name: /Liquid/ }));
   const dialog = screen.getByRole("dialog");
   await within(dialog).findByRole("spinbutton", { name: "Unit quantity (ml)" });
@@ -172,4 +172,53 @@ it("loads and retries verified density when editing a persisted conversion", asy
   expect(JSON.parse(writes[0]?.body ?? "{}").items[0]).toMatchObject({
     useDensityConversion: true, baseUoMId: null, baseQuantity: 500_000, prescribedQuantity: 1_000_000,
   });
+});
+
+it("finds a saved density beyond the first matching search page", async () => {
+  const pages: number[] = [];
+  const { writes } = open({ symbol: "ml", densityResponse: (page) => {
+    pages.push(page);
+    return Response.json({ pageCount: 2, data: page === 1 ? [] : [{
+      material: { id: "shells", name, code: "RMG033" }, uoM: { id: "linked-ml", symbol: "ml" },
+      density: 1.05, densityUoM: { id: "density", symbol: "g/mL" },
+    }] });
+  } });
+  const dialog = await edit("mg");
+  expect(await within(dialog).findByText("1.05 g/mL")).toBeTruthy();
+  expect(pages).toEqual([1, 2]);
+  await updateAndSave(dialog);
+  await waitFor(() => expect(writes).toHaveLength(1));
+});
+
+it("shows the stored density when its unit is missing and reloads after it is corrected", async () => {
+  let corrected = false;
+  const { writes } = open({ symbol: "ml", densityResponse: () => Response.json({ data: [{
+    material: { id: "shells", name, code: "RMG033" }, uoM: { id: "linked-ml", symbol: "ml" }, density: 1.05,
+    densityUoM: corrected ? { id: "density", symbol: "g/mL" } : null,
+  }] }) });
+  const dialog = await edit("mg");
+  expect(await within(dialog).findByText(/Saved density: 1.05 \(unit not recorded\)/)).toBeTruthy();
+  fireEvent.click(within(dialog).getByRole("button", { name: "Update material" }));
+  expect(writes).toHaveLength(0);
+  corrected = true;
+  fireEvent.click(within(dialog).getByRole("button", { name: "Retry density" }));
+  expect(await within(dialog).findByText("1.05 g/mL")).toBeTruthy();
+  await updateAndSave(dialog);
+  await waitFor(() => expect(writes).toHaveLength(1));
+});
+
+it("refreshes a cached invalid density when the editor is reopened", async () => {
+  let corrected = false;
+  open({ symbol: "ml", densityResponse: () => Response.json({ data: [{
+    material: { id: "shells", name, code: "RMG033" }, uoM: { id: "linked-ml", symbol: "ml" }, density: 1.05,
+    densityUoM: corrected ? { id: "density", symbol: "g/mL" } : null,
+  }] }) });
+  const first = await edit("mg");
+  expect(await within(first).findByText(/Saved density: 1.05/)).toBeTruthy();
+  fireEvent.click(within(first).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  corrected = true;
+  const second = await edit("mg");
+  expect(await within(second).findByText("1.05 g/mL")).toBeTruthy();
+  expect(within(second).queryByText(/Saved density: 1.05/)).toBeNull();
 });

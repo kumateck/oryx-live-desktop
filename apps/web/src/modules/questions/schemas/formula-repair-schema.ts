@@ -13,7 +13,10 @@ export const repairTestKey = (test: { atrId: string; formFieldId: string }) => `
 
 export const repairContextSchema = z.object({ questionId: z.string().uuid(), label: z.string(), definition: z.string(), definitionHash: z.string().length(64),
   canRepairQuestion: z.boolean(), canRepairTests: z.boolean(), formsUsingQuestion: z.number(), responsesAffected: z.number(), blockers: z.array(z.string()),
-  tests: z.array(z.object({ atrId: z.string().uuid(), responseId: z.string().uuid().nullable(), formFieldId: z.string().uuid(), label: z.string(), eligible: z.boolean(), blocker: z.string().nullable() })) });
+  /** The approved, effective revision's formula. When present, the repair applies exactly this. */
+  approvedDefinition: z.string().nullish(), approvedRevision: z.number().nullish(),
+  tests: z.array(z.object({ atrId: z.string().uuid(), responseId: z.string().uuid().nullable(), formFieldId: z.string().uuid(), label: z.string(), eligible: z.boolean(),
+    blocker: z.string().nullable(), currentDefinition: z.string().nullish() })) });
 export type RepairContext = z.infer<typeof repairContextSchema>;
 
 const previewTestSchema = z.object({ atrId: z.string().uuid(), formFieldId: z.string().uuid(), label: z.string(),
