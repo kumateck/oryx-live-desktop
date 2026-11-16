@@ -4,6 +4,7 @@ import { SupplierPrintBlock } from "@/shared/procurement/supplier-print";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { PrintFacts, PrintHeader, PrintSignatures, PrintTable, type PrintColumn } from "@/shared/print/print-sheet";
 import type { SupplierType } from "@/shared/procurement/supplier-type";
+import { useDocumentSigners } from "@/shared/reviews/use-document-signatures";
 import { toLargestUnit } from "@/shared/units/quantity";
 import type { PurchaseOrder, PurchaseOrderLine } from "../schemas/purchase-order-schema";
 
@@ -13,6 +14,8 @@ import type { PurchaseOrder, PurchaseOrderLine } from "../schemas/purchase-order
  */
 export function PurchaseOrderPrint({ order, title, type, onClose }: { order: PurchaseOrder; title: string; type?: SupplierType; onClose: () => void }) {
   const currency = order.supplier.currency;
+  // Prepared by is whoever raised the order, Checked by whoever checked it, Approved by its final approver.
+  const signers = useDocumentSigners(type !== undefined ? { modelType: "PurchaseOrder", modelId: order.id } : null);
   const columns: PrintColumn<PurchaseOrderLine>[] = [
     { id: "number", header: "#", cell: (_row, index) => index + 1, width: "6%" },
     { id: "material", header: "Material", cell: (row) => <>{row.materialName}<small>{row.materialCode ?? "No code"}</small></> },
@@ -34,6 +37,6 @@ export function PurchaseOrderPrint({ order, title, type, onClose }: { order: Pur
         {type !== undefined && order.recorded.grandTotal !== null ? <tr><td colSpan={4} style={{ textAlign: "right" }}>{type === 0 ? "Total CIF value" : "Grand total"}</td><td style={{ textAlign: "right" }}>{formatMoney(order.recorded.grandTotal, currency)}</td></tr> : null}
       </>} />
     {type !== undefined && order.recorded.inWords ? <p className="print-note"><strong>Amount in words:</strong> {order.recorded.inWords}</p> : null}
-    {type !== undefined ? <PrintSignatures roles={["Prepared by", "Checked by", "Approved by"]} /> : null}
+    {type !== undefined ? <PrintSignatures signers={signers} /> : null}
   </PrintPreviewDialog>;
 }

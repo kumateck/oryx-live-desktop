@@ -9,7 +9,7 @@ const named = z.object({ id: z.string().nullish(), name: text }).nullish();
 
 const item = z.object({
   id: z.string().nullish(), quantity: amount, status,
-  material: z.object({ id: z.string().nullish(), code: text, name: text }).nullish(),
+  material: z.object({ id: z.string().nullish(), code: text, name: text, kind: z.number().int().nullish() }).nullish(),
   uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(),
 });
 const requisition = z.object({
@@ -27,6 +27,7 @@ function read(value: z.infer<typeof requisition>) {
     whitePlaceboPreparationId: value.whitePlaceboPreparationId ?? null,
     items: (value.items ?? []).map((line, index) => ({
       id: line.id ?? `line-${index}`, materialId: line.material?.id ?? null, materialName: line.material?.name ?? "Unnamed material", materialCode: line.material?.code ?? null,
+      materialKind: line.material?.kind === 0 || line.material?.kind === 1 ? line.material.kind : null,
       quantity: line.quantity, unit: line.uoM?.symbol ?? null, unitId: line.uoM?.id ?? null, status: line.status,
     })),
   };

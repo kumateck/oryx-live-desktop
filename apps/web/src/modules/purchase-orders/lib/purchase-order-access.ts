@@ -6,6 +6,13 @@ export const viewApprovedPermissions: Record<SupplierType, string> = { 0: "CanVi
 export const finaliseOrderPermissions: Record<SupplierType, string> = { 0: "CanCreateForeignPurchaseOrder", 1: "CanCreateLocalPurchaseOrder" };
 /** Marking a finalised order as checked, which sends it for approval. */
 export const checkOrderPermissions: Record<SupplierType, string> = { 0: "CanCheckForeignPurchaseOrder", 1: "CanCheckLocalPurchaseOrder" };
+/** Returning an order awaiting check to whoever finalised it, to correct before approval. */
+export const returnOrderCheckPermissions: Record<SupplierType, string> = { 0: "CanReturnForeignPurchaseOrderCheck", 1: "CanReturnLocalPurchaseOrderCheck" };
+/** An order's check is its review: the keys for its review tasks, by the order's stored supplier type. */
+export const orderReview = (id: string, type: SupplierType) => ({
+  record: { modelType: "PurchaseOrder", modelId: id },
+  keys: { confirm: checkOrderPermissions[type], return: returnOrderCheckPermissions[type], resubmit: finaliseOrderPermissions[type] },
+});
 /** Emailing an approved order to its supplier. */
 export const sendOrderPermissions: Record<SupplierType, string> = { 0: "CanSendApprovedForeignPurchaseOrder", 1: "CanSendApprovedLocalPurchaseOrder" };
 
