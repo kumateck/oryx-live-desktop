@@ -69,3 +69,24 @@ it("shows the BMR issued by product tab only to holders of its own key", async (
   await screen.findByText("Session ready");
   expect(await screen.findByRole("tab", { name: "By product" })).toBeTruthy();
 });
+
+it("opens a production report with its own key and not with a neighbouring production key", async () => {
+  renderAt("/reports/production-monthly-report", ["CanViewProductionMonthlyReport"]);
+  await screen.findByText("Session ready");
+  expect(await screen.findByRole("button", { name: /Choose filters/ })).toBeTruthy();
+  cleanup(); forgetSession();
+  renderAt("/reports/batch-value", ["CanViewProductionMonthlyReport"]);
+  await screen.findByText("Session ready");
+  expect(await screen.findByText("You don't have access to this page")).toBeTruthy();
+});
+
+it("shows each specification kind only to holders of that kind's print key", async () => {
+  renderAt("/reports/specifications", ["CanExportRawMaterialSpecification"]);
+  await screen.findByText("Session ready");
+  expect(await screen.findByRole("searchbox", { name: "Search raw material specifications" })).toBeTruthy();
+  expect(screen.queryByRole("tab", { name: "Product" })).toBeNull();
+  cleanup(); forgetSession();
+  renderAt("/reports/specifications", ["CanViewProductionMonthlyReport"]);
+  await screen.findByText("Session ready");
+  expect(await screen.findByText("You don't have access to this page")).toBeTruthy();
+});

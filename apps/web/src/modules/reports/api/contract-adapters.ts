@@ -2,6 +2,7 @@ import { z } from "zod";
 import { api } from "@/shared/api/base-api";
 import type { GetApiV1ReportSupplierMaterialsApiArg, GetApiV1ReportEmployeeMovementApiArg } from "@/shared/api/generated/reports";
 import { issuedBmrByProductSchema, type IssuedBmrByProductReport } from "../schemas/issued-bmr";
+import { productionMonthlySchema, stockIssuedSchema, type ProductionMonthly, type StockIssued } from "../schemas/production-monthly";
 const text = z.string().nullish();
 const party = z.object({ id: text, name: text, address: text, approvedAt: text, validityDate: text, status: z.number().int().nullish() }).nullish();
 const pack = z.object({ min: z.number().nullish(), max: z.number().nullish(), values: z.array(z.number()).nullish() }).nullish();
@@ -29,5 +30,15 @@ export const reportContractApi = api.injectEndpoints({ endpoints: (build) => ({
   readIssuedBmrByProduct: build.query<IssuedBmrByProductReport, { productId: string; startDate?: string; endDate?: string; departmentId?: string; module?: string; subModule?: string }>({
     query: ({ module, subModule, ...params }) => ({ url: "/api/v1/report/bmr-issued/by-product", params, headers: { Module: module ?? "Reports", SubModule: subModule ?? "BMR issued by product" } }),
     transformResponse: (response) => issuedBmrByProductSchema.parse(response), providesTags: [{ type: "report", id: "LIST" }],
+  }),
+  /** `GET report/production-monthly`: the production monthly, schedule summary and batch value reports read it. */
+  readProductionMonthly: build.query<ProductionMonthly, { year: number; month: number; departmentId?: string; module?: string; subModule?: string }>({
+    query: ({ module, subModule, ...params }) => ({ url: "/api/v1/report/production-monthly", params, headers: { Module: module ?? "Reports", SubModule: subModule ?? "Production monthly" } }),
+    transformResponse: (response) => productionMonthlySchema.parse(response), providesTags: [{ type: "report", id: "LIST" }],
+  }),
+  /** `GET report/stock-issued` (CanViewStockIssuedReport). */
+  readStockIssued: build.query<StockIssued, { departmentId?: string; productId?: string; batchNumber?: string; startDate?: string; endDate?: string; module?: string; subModule?: string }>({
+    query: ({ module, subModule, ...params }) => ({ url: "/api/v1/report/stock-issued", params, headers: { Module: module ?? "Reports", SubModule: subModule ?? "Stock issued" } }),
+    transformResponse: (response) => stockIssuedSchema.parse(response), providesTags: [{ type: "report", id: "LIST" }],
   }),
 }) });

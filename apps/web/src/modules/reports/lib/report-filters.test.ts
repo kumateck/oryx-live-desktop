@@ -25,12 +25,16 @@ describe("report selection contracts", () => {
     expect(reportFiltersSchema.safeParse({ ...filters, expiryDateTo: "2028-13" }).success).toBe(false);
     expect(expiryParams(emptyReportFilters())).toEqual({});
   });
+  // The server takes one department or product for these reports; every other optional choice is a multiselect.
+  const singleOptional = new Set([`${ReportKey.CurrentStock}:department`, `${ReportKey.ExpiredStock}:department`,
+    `${ReportKey.StockIssued}:department`, `${ReportKey.StockIssued}:product`, `${ReportKey.ProductionMonthly}:department`,
+    `${ReportKey.ScheduleSummary}:department`, `${ReportKey.BatchValue}:department`]);
   it("preserves optional multiselects and explicit stock department single selectors", () => {
-    expect(reportCatalog).toHaveLength(38);
+    expect(reportCatalog).toHaveLength(45);
     for (const definition of reportCatalog) {
       const fields = reportFilterFields(definition, load);
       expect(fields).toHaveLength(definition.fields.length);
-      for (const field of fields) if (field.type === InputTypes.SELECT && !field.required) expect(field.mode).toBe("name" in field && field.name === "department" && (definition.key === ReportKey.CurrentStock || definition.key === ReportKey.ExpiredStock) ? "single" : "multiple");
+      for (const field of fields) if (field.type === InputTypes.SELECT && !field.required) expect(field.mode).toBe("name" in field && singleOptional.has(`${definition.key}:${field.name}`) ? "single" : "multiple");
     }
   });
   it("preserves zero, identities and codes through validation; required single selects still work", () => {

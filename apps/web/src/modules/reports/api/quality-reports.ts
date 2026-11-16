@@ -12,11 +12,14 @@ import { reportRequest } from "./request";
 import { loadCommercialReport } from "./commercial-reports";
 import { loadProductionReadiness } from "./production-readiness";
 import { loadIssuedBmrByProductReport, loadIssuedBmrReport } from "./issued-bmr";
+import { loadProductionMonth, loadStockIssued } from "./production-monthly";
 const options = { subscribe: false, forceRefetch: true };
 export async function loadQualityReport(dispatch: ApiDispatch, key: ReportKey, filters: ReportFilters, signal: AbortSignal): Promise<ReportOutput> {
   const f = singleReportFilters(filters);
   if (key === ReportKey.IssuedBmr) return loadIssuedBmrReport(dispatch, filters, signal);
   if (key === ReportKey.IssuedBmrByProduct) return loadIssuedBmrByProductReport(dispatch, filters, signal);
+  if (key === ReportKey.StockIssued) return loadStockIssued(dispatch, filters, signal);
+  if (key === ReportKey.ProductionMonthly || key === ReportKey.ScheduleSummary || key === ReportKey.BatchValue) return loadProductionMonth(dispatch, key, filters, signal);
   if (key === ReportKey.QualityProducts) return loadCommercialReport(dispatch, key, f, signal);
   if (key === ReportKey.QualityMaterials) {
     const kind = binaryChoice(f.materialKind?.value); const kinds: (0 | 1)[] = kind === undefined ? [0, 1] : [kind];

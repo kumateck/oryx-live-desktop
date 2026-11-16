@@ -42,6 +42,14 @@ export const reportViewKeys = {
   35: "CanViewExpiredStockReport", // ExpiredStock
   36: "CanViewApprovedManufacturerListReport", // ApprovedManufacturers
   37: "CanViewBmrIssuedByProductReport", // IssuedBmrByProduct
+  38: "CanViewStockIssuedReport", // StockIssued
+  39: "CanViewProductionMonthlyReport", // ProductionMonthly
+  40: "CanViewProductionScheduleSummaryReport", // ScheduleSummary
+  41: "CanViewProductionBatchValueReport", // BatchValue
+  // Printing a specification is the export task the specification pages already guard with these keys.
+  42: "CanExportProductSpecification", // ProductSpecification
+  43: "CanExportRawMaterialSpecification", // RawMaterialSpecification
+  44: "CanExportPackagingMaterialSpecification", // PackagingMaterialSpecification
 } as const;
 
 /** Every report key: opening the hub, or an old report address that redirects into it, needs one of these. */

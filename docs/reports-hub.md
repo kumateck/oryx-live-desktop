@@ -44,3 +44,30 @@ Landscape prints across the app now carry page numbers (`@page oryx-landscape` i
 - **By date** (`CanViewBmrIssuedReport`): BMRs issued in a date range, for one production department or all.
 - **By product** (`CanViewBmrIssuedByProductReport`): every BMR issued for one product so far, or within issue dates
   when both are chosen (`GET report/bmr-issued/by-product`). Production users see only their own department's products.
+
+## Production reports
+
+Three reports read one month of batches (`GET report/production-monthly`, any one of their keys), for schedules that
+start in the chosen month:
+
+- **Production monthly report** (`CanViewProductionMonthlyReport`): each batch on its own row with quantity expected,
+  quantity transferred to the warehouse (its finished goods transfer notes), QA retained samples, total yield and
+  quantity per shipper (from final packing).
+- **Production schedule summary** (`CanViewProductionScheduleSummaryReport`): by market, product and packing style:
+  expected yield per batch, total batches (half batches count half), total expected yield and actual yield so far.
+- **Batch value report** (`CanViewProductionBatchValueReport`): packing style, the unit price in force when the
+  schedule started, and expected and actual quantity. No value column: the price unit can differ from the yield unit.
+
+Expected yield is the packing style's expected yield for the batch size. A batch without final packing shows blank
+packed figures, not zero.
+
+**Stock issued** (`CanViewStockIssuedReport`, `GET report/stock-issued`): every material batch issued to a production
+batch against a stock requisition (the bin card lines, with AR number), and extra packing issues. Filters: department,
+product, batch number and optional issue dates.
+
+## Specifications
+
+`/reports/specifications` has Product, Raw material and Packaging material tabs, each shown with that kind's existing
+print key (`CanExportProductSpecification`, `CanExportRawMaterialSpecification`,
+`CanExportPackagingMaterialSpecification`). Choose a specification to preview and print it as on its own page. Reading
+the specification also needs that kind's view key.
