@@ -9,7 +9,8 @@ import { InputTypes } from "@/shared/forms/input-types";
 import type { ProductSpecificationsState, SpecificationTarget } from "../../hooks/use-product-specifications";
 import { ardStageLabel } from "../../lib/ard";
 import { earliestRevisionDate } from "../../lib/specification";
-import { specificationFormSchema, type SpecificationFormValues } from "../../schemas/specification-schema";
+import { revisionReasonField } from "@/shared/specifications/specification-rules";
+import { specificationEditSchema, specificationFormSchema, type SpecificationFormValues } from "../../schemas/specification-schema";
 
 /** A saved date under its form field name, or nothing when the saved value is missing or unreadable. */
 function savedDate<TName extends "effectiveDate" | "reviewDate">(name: TName, value: string | null | undefined): Partial<Record<TName, Date>> {
@@ -21,7 +22,7 @@ const years = { fromYear: 2000, toYear: 2100 } as const;
 export function SpecificationDialog({ target, state, onClose }: { target: SpecificationTarget; state: ProductSpecificationsState; onClose: () => void }) {
   const saved = "saved" in target ? target.saved : null;
   const stage = "saved" in target ? target.saved.testStage : target.stage;
-  const form = useForm<SpecificationFormValues>({ resolver: zodResolver(specificationFormSchema), defaultValues: saved ? {
+  const form = useForm<SpecificationFormValues>({ resolver: zodResolver(saved ? specificationEditSchema : specificationFormSchema), defaultValues: saved ? {
     specificationNumber: saved.specificationNumber, revisionNumber: saved.revisionNumber, supersedesNumber: saved.supersedesNumber, description: saved.description,
     ...savedDate("effectiveDate", saved.effectiveDate), ...savedDate("reviewDate", saved.reviewDate), ...(saved.form?.id ? { form: { value: saved.form.id, label: saved.form.name } } : {}),
   } : { specificationNumber: "", revisionNumber: "", supersedesNumber: "", description: "" } });
@@ -48,7 +49,8 @@ export function SpecificationDialog({ target, state, onClose }: { target: Specif
     { type: InputTypes.SELECT, name: "form", label: "Template", mode: "single", source: "async", loadOptions: loadTemplates, required: true,
       placeholder: "Select a template", searchPlaceholder: "Search templates", description: "The form the tests for this stage are recorded on." },
     { type: InputTypes.RICHTEXT, name: "description", label: "Notes", rows: 4, className: "md:col-span-2" },
-  ] as const satisfies readonly WizardField<SpecificationFormValues>[], [earliest, loadTemplates]);
+    ...(saved ? [revisionReasonField] : []),
+  ] as const satisfies readonly WizardField<SpecificationFormValues>[], [earliest, loadTemplates, saved]);
 
   const submit = form.handleSubmit(async (values) => { if (await state.save(values, target)) onClose(); });
 

@@ -20,23 +20,25 @@ export function IssueForm({ bmr, suggestion, saving, saved, onIssue, onDone }: {
   const stem = bmr.batchStem;
   const storedNumber = bmr.batchNumber ?? suggestion.value ?? "";
   const suffix = stem && storedNumber.startsWith(stem) ? storedNumber.slice(stem.length) : "";
+  // The stem is already in the input, so QA carries on typing the digits after it.
   const form = useForm<IssueValues>({ resolver: zodResolver(issueSchema), defaultValues: {
-    batchNumber: stem ? (/^[0-9]+$/.test(suffix) ? suffix : "") : storedNumber,
+    batchNumber: stem ? stem + (/^[0-9]+$/.test(suffix) ? suffix : "") : storedNumber,
     made: bmr.made, expires: bmr.expires, quantity: size.value, unit: size.unit ? { value: size.unit, label: size.unit } : null,
   } });
   const [pending, setPending] = useState<IssueValues | null>(null);
   const fields: WizardField<IssueValues>[] = [
-    { type: InputTypes.TEXT, name: "batchNumber", label: stem ? `Batch number · ${stem}` : "Batch number", required: true, className: "md:col-span-2",
-      ...(stem ? { inputMode: "numeric", description: `Enter the digits after ${stem}.` } : suggestion.note ? { description: suggestion.note } : {}) },
+    { type: InputTypes.TEXT, name: "batchNumber", label: "Batch number", required: true, className: "md:col-span-2",
+      ...(stem ? { description: `Starts with the batch stem ${stem}. Continue with the digits after it.` } : suggestion.note ? { description: suggestion.note } : {}) },
     { type: InputTypes.MONTH, name: "made", label: "Manufacturing month", required: true, minMonth: bounds.made.minMonth, maxMonth: bounds.made.maxMonth },
     { type: InputTypes.MONTH, name: "expires", label: "Expiry month", required: true, minMonth: bounds.expires.minMonth, maxMonth: bounds.expires.maxMonth },
   ];
   const submit = form.handleSubmit((values) => {
-    if (stem && (!/^[0-9]+$/.test(values.batchNumber) || stem.length + values.batchNumber.length > 100)) {
-      form.setError("batchNumber", { message: `Enter up to ${100 - stem.length} digits after the batch stem.` });
+    const number = values.batchNumber.trim();
+    if (stem && (!number.startsWith(stem) || !/^[0-9]+$/.test(number.slice(stem.length)) || number.length > 100)) {
+      form.setError("batchNumber", { message: `Keep the batch stem ${stem} and enter up to ${String(100 - stem.length)} digits after it.` });
       return;
     }
-    setPending({ ...values, batchNumber: (stem ?? "") + values.batchNumber });
+    setPending({ ...values, batchNumber: number });
   });
   return <form noValidate className="space-y-4" onSubmit={submit}>
     <FormWizard form={form} fields={fields} className="md:grid-cols-2" />

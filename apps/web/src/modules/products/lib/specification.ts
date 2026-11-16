@@ -41,5 +41,5 @@ export function newSpecificationRequest(values: SpecificationFormValues, context
 
 /** The update keeps the saved due date and reference, which this page does not edit. */
 export function updatedSpecificationRequest(values: SpecificationFormValues, saved: SavedSpecification): UpdateRequest {
-  return { ...shared(values), testStage: saved.testStage as ArdStage, ...(saved.dueDate ? { dueDate: saved.dueDate } : {}), ...(saved.reference ? { reference: saved.reference } : {}) };
+  return { ...shared(values), revisionReason: (values.revisionReason ?? "").trim(), testStage: saved.testStage as ArdStage, ...(saved.dueDate ? { dueDate: saved.dueDate } : {}), ...(saved.reference ? { reference: saved.reference } : {}) };
 }

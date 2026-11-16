@@ -45,7 +45,7 @@ function ChosenSpecification({ kind, id }: { kind: SpecificationKind; id: string
   return <section aria-label={`Specification ${specification.number}`} className="space-y-4 rounded-lg border p-4">
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div><h2 className="text-base font-semibold">{specification.number}</h2><p className="text-sm text-muted-foreground">{specification.item?.name ?? "–"}</p></div>
-      <SpecificationPrintAction kind={kind} title={titles[kind]} specification={specification} sections={tests.sections} subjectFacts={subjectFacts(kind, specification)} />
+      <SpecificationPrintAction kind={kind} title={titles[kind]} specification={specification} sections={tests.sections} />
     </div>
     <div className="grid gap-3 sm:grid-cols-4">
       <KeyFact label="Code" value={specification.item?.code ?? "–"} />
@@ -56,15 +56,6 @@ function ChosenSpecification({ kind, id }: { kind: SpecificationKind; id: string
   </section>;
 }
 
-function subjectFacts(kind: SpecificationKind, specification: Specification) {
-  return kind === "product" ? [
-    { label: "Product", value: specification.item?.name ?? null }, { label: "Product code", value: specification.item?.code ?? null },
-    { label: "Stage", value: testStageLabel(specification.testStage) }, { label: "Generic name", value: specification.item?.genericName ?? null },
-  ] : [
-    { label: "Material", value: specification.item?.name ?? null }, { label: "Material code", value: specification.item?.code ?? null },
-    { label: "Pharmacopoeia", value: specification.item?.pharmacopoeia ?? null },
-  ];
-}
 
 /** Specification report: choose one specification of this kind, then preview and print it. */
 export function SpecificationReport({ kind }: { kind: SpecificationKind }) {

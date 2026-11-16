@@ -15,7 +15,11 @@ function Expression({ title, raw }: { title: string; raw: string }) {
 }
 
 /** The reviewed impact of a repair. Changing the configuration or scope hides it until previewed again. */
-export function FormulaRepairReview({ preview, form, updateQuestion }: { preview: RepairPreview; form: UseFormReturn<FormulaRepairValues>; updateQuestion: boolean }) {
+export function FormulaRepairReview({ preview, form, updateQuestion, replacesReadings = false }: {
+  preview: RepairPreview; form: UseFormReturn<FormulaRepairValues>; updateQuestion: boolean;
+  /** An approved revision replaces each selected field's formula and readings; they are entered again. */
+  replacesReadings?: boolean;
+}) {
   const ready = preview.blockers.length === 0;
   return <section aria-label="Repair preview" className="space-y-3 rounded-lg border bg-muted/20 p-4">
     <h2 className="font-semibold">Review repair</h2>
@@ -23,18 +27,20 @@ export function FormulaRepairReview({ preview, form, updateQuestion }: { preview
     <ul className="list-disc space-y-1 pl-5 text-sm">
       {updateQuestion ? <li>The shared question changes for templates and tests started after this repair.</li> : <li>The shared question is not changed.</li>}
       <li>{preview.captures} existing test placements keep their current configuration as recorded history.</li>
-      <li>{preview.selectedTests} selected test fields use the corrected formula. Entered readings are kept exactly as typed; their results are cleared until the server recalculates them.</li>
+      <li>{replacesReadings
+        ? `${String(preview.selectedTests)} selected test fields take the approved formula in full. Their saved readings and results are cleared (the repair record keeps them); enter the readings again, save, then recalculate.`
+        : `${String(preview.selectedTests)} selected test fields use the corrected formula. Entered readings are kept exactly as typed; their results are cleared until the server recalculates them.`}</li>
     </ul>
     {preview.tests.length ? <table className="w-full table-fixed text-left text-sm">
       <caption className="sr-only">Selected tests</caption>
       <thead className="text-muted-foreground"><tr><th className="w-1/2 font-medium">Test</th><th className="font-medium">Readings</th><th className="font-medium">After repair</th></tr></thead>
       <tbody>{preview.tests.map(test => <tr key={`${test.atrId}/${test.formFieldId}`} className="border-t align-top">
         <td className="break-words py-1 pr-2">{test.label}</td>
-        <td className="py-1 pr-2">{test.hasReadings ? "Kept" : "None saved yet"}</td>
-        <td className="py-1">{test.missingInputs ? "Needs inputs, then recalculation" : test.configurationChanges ? "Needs recalculation" : "Unchanged"}</td>
+        <td className="py-1 pr-2">{test.hasReadings ? replacesReadings ? "Cleared" : "Kept" : "None saved yet"}</td>
+        <td className="py-1">{replacesReadings ? "Enter readings, then recalculate" : test.missingInputs ? "Needs inputs, then recalculation" : test.configurationChanges ? "Needs recalculation" : "Unchanged"}</td>
       </tr>)}</tbody>
     </table> : null}
-    {preview.missingInputs.length ? <div className="space-y-1"><h3 className="text-sm font-medium">Missing inputs</h3>
+    {preview.missingInputs.length ? <div className="space-y-1"><h3 className="text-sm font-medium">{replacesReadings ? "Readings to enter again" : "Missing inputs"}</h3>
       {preview.missingInputs.map(text => <p key={text} className="break-words text-sm text-muted-foreground">{text}</p>)}</div> : null}
     {preview.blockers.map(text => <p role="alert" key={text} className="text-sm text-destructive">{text}</p>)}
     {ready ? <FormWizard form={form} fields={reasonFields} /> : <p className="text-sm">Resolve the issues above, then preview again.</p>}
