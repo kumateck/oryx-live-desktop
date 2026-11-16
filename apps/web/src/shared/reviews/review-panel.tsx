@@ -23,7 +23,11 @@ const tone: Record<number, "secondary" | "destructive" | "default"> = { 0: "seco
  * The Review panel on a document's page: whether it waits for review, who prepared and checked it, its history,
  * and the review actions the server says the caller may take. Nothing shows for a type with no review step.
  */
-export function ReviewPanel({ record, keys, correction, label = "record" }: { record: ReviewRecord; keys: ReviewKeys; correction?: ReviewCorrection | undefined; label?: string }) {
+export function ReviewPanel({ record, keys, correction, label = "record", onChanged }: {
+  record: ReviewRecord; keys: ReviewKeys; correction?: ReviewCorrection | undefined; label?: string;
+  /** Called after a review action succeeds, for pages whose own data the action changes. */
+  onChanged?: (() => void) | undefined;
+}) {
   const query = useReadDocumentReviewQuery(record);
   const [acting, setActing] = useState<Acting>(null);
   if (query.isLoading) return <Skeleton className="h-24 w-full" />;
@@ -40,7 +44,7 @@ export function ReviewPanel({ record, keys, correction, label = "record" }: { re
         <span className="font-medium">{reviewActionLabels[event.action] ?? "Changed"}</span>
         {event.actor?.name ? ` by ${event.actor.name}` : ""}<span className="text-muted-foreground"> · {formatDateTime(event.at) ?? ""}</span>
         {event.comments ? <span className="block text-muted-foreground">“{event.comments}”</span> : null}</li>)}</ol></details> : null}
-    <ReviewDialogs state={state} record={record} keys={keys} correction={correction} acting={acting} label={label} onClose={() => setActing(null)} />
+    <ReviewDialogs state={state} record={record} keys={keys} correction={correction} acting={acting} label={label} onClose={() => setActing(null)} onChanged={onChanged} />
   </section>;
 }
 
@@ -74,8 +78,9 @@ function ReviewButtons({ state, correction, onAct }: { state: DocumentReviewStat
   </div>;
 }
 
-function ReviewDialogs({ state, record, keys, correction, acting, label, onClose }: {
+function ReviewDialogs({ state, record, keys, correction, acting, label, onClose, onChanged }: {
   state: DocumentReviewState; record: ReviewRecord; keys: ReviewKeys; correction?: ReviewCorrection | undefined; acting: Acting; label: string; onClose: () => void;
+  onChanged?: (() => void) | undefined;
 }) {
   const [confirm] = useConfirmDocumentReviewMutation();
   const [send] = useReturnDocumentReviewMutation();
@@ -86,6 +91,7 @@ function ReviewDialogs({ state, record, keys, correction, acting, label, onClose
     const result = await mutate({ ...record, comments, version });
     if ("error" in result) return apiErrorMessage(result.error);
     toast.success(done, { description: code });
+    onChanged?.();
     return null;
   };
   if (acting === "correct" && correction) return <>{correction.dialog(onClose)}</>;

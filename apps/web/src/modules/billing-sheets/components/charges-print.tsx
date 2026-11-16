@@ -1,6 +1,7 @@
 import { formatDate } from "@/shared/format/dates";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { PrintFacts, PrintHeader, PrintSignatures, PrintTable, type PrintColumn } from "@/shared/print/print-sheet";
+import { useDocumentSigners } from "@/shared/reviews/use-document-signatures";
 import { formatMoney } from "@/shared/procurement/price";
 import { chargeState, chargeStateLabels, paidTotals } from "../lib/billing-rules";
 import type { BillingCharge, BillingSheet } from "../schemas/billing-schema";
@@ -19,6 +20,8 @@ const columns: PrintColumn<BillingCharge>[] = [
 export function ChargesPrint({ sheet, shipment, onClose }: { sheet: BillingSheet;
   shipment: { code: string; arrivedAt: string | null; supplier: string | null; invoiceCode: string | null; invoiceTotal: number | null; invoiceCurrency: string | null; products: readonly string[] }; onClose: () => void }) {
   const totals = paidTotals(sheet.charges);
+  // Prepared by is whoever raised the sheet, Checked by its reviewer, Approved by its final approver.
+  const signers = useDocumentSigners({ modelType: "BillingSheet", modelId: sheet.id });
   const outstanding = totals.filter((item) => item.outstanding > 0).map((item) => formatMoney(item.outstanding, item.currency)).join(" + ");
   return <PrintPreviewDialog title={`Shipment charges · ${shipment.code}`} onClose={onClose}>
     <PrintHeader title="Shipment charges" reference={shipment.code} />
@@ -30,6 +33,6 @@ export function ChargesPrint({ sheet, shipment, onClose }: { sheet: BillingSheet
         <td style={{ textAlign: "right" }}>{formatMoney(item.total, item.currency)}</td></tr>)} />
     <p className="print-note"><strong>NB:</strong> Container arrived on {formatDate(shipment.arrivedAt) ?? "a date not yet recorded"}. Free time ended on {formatDate(sheet.freeTimeExpiry) ?? "–"}. Demurrage started from {formatDate(sheet.demurrageStart) ?? "–"}.
       {" "}{outstanding ? <>Total amount to be paid now is <strong>{outstanding}</strong>.</> : "Every charge is paid."}</p>
-    <PrintSignatures roles={["Prepared by", "Checked by", "Approved by"]} />
+    <PrintSignatures signers={signers} />
   </PrintPreviewDialog>;
 }

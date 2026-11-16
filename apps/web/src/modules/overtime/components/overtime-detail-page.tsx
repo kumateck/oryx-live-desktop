@@ -9,6 +9,7 @@ import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import { ModelApprovalHistory } from "@/shared/approvals/model-history";
+import { ReviewPanel } from "@/shared/reviews/review-panel";
 import { overtimeAudit, overtimeRoot, overtimeDuration, statuses } from "../lib/overtime";
 import type { DomainEntitiesEmployeesEmployeeDto as Employee } from "@/shared/api/generated/hr";
 import { OvertimeActions } from "./overtime-actions";
@@ -81,6 +82,9 @@ function Detail({ id }: { id: string }) {
           emptyDescription="Refresh this request to verify its employee selection."
         />
       </section>
+      {/* Its review (the "Checked by" step before approval). Corrections use the page's own Edit action. */}
+      <ReviewPanel record={{ modelType: "OvertimeRequest", modelId: id }} label="overtime request"
+        keys={{ confirm: "CanReviewOvertimeRequest", return: "CanReturnOvertimeRequest", resubmit: "CanEditOvertimeManagement" }} />
       <ModelApprovalHistory id={id} model="OvertimeRequest" audit={overtimeAudit} />
     </article>
   );

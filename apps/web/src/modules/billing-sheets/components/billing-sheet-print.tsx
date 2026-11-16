@@ -3,6 +3,7 @@ import { formatMoney } from "@/shared/procurement/price";
 import { SupplierPrintBlock } from "@/shared/procurement/supplier-print";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { PrintFacts, PrintHeader, PrintSignatures, PrintTable, type PrintColumn } from "@/shared/print/print-sheet";
+import { useDocumentSigners } from "@/shared/reviews/use-document-signatures";
 import { invoiceLinePrintColumns } from "@/modules/shipment-invoices/components/invoice-lines-table";
 import { chargeState, chargeStateLabels, chargeTotals, grandTotal } from "../lib/billing-rules";
 import type { BillingCharge, BillingSheet } from "../schemas/billing-schema";
@@ -16,6 +17,8 @@ const chargeColumns: PrintColumn<BillingCharge>[] = [
 /** A billing sheet as a document: the container, its free time, the charges and what the invoice carries. */
 export function BillingSheetPrint({ sheet, onClose }: { sheet: BillingSheet; onClose: () => void }) {
   const grand = grandTotal(sheet.invoice?.total ?? null, sheet.invoice?.currency ?? null, sheet.charges);
+  // Prepared by is whoever raised the sheet, Checked by its reviewer, Approved by its final approver.
+  const signers = useDocumentSigners({ modelType: "BillingSheet", modelId: sheet.id });
   return <PrintPreviewDialog title={`Billing sheet · ${sheet.code}`} onClose={onClose}>
     <PrintHeader title="Billing sheet" reference={sheet.code} />
     {sheet.supplier ? <SupplierPrintBlock supplier={sheet.supplier} /> : null}
@@ -28,6 +31,6 @@ export function BillingSheetPrint({ sheet, onClose }: { sheet: BillingSheet; onC
       footer={<tr><td colSpan={6} style={{ textAlign: "right" }}>Invoice total</td><td style={{ textAlign: "right" }}>{sheet.invoice.total === null ? "–" : formatMoney(sheet.invoice.total, sheet.invoice.currency)}</td></tr>} /> : null}
     <p className="print-note"><strong>Grand total (invoice and charges): </strong>{grand ? formatMoney(grand.total, grand.currency) : "not added, because the invoice and the charges are not in one currency"}</p>
     {sheet.preparedBy ? <p className="print-note">Prepared by <strong>{sheet.preparedBy}</strong>{sheet.preparedByDepartment ? `, ${sheet.preparedByDepartment}` : ""}</p> : null}
-    <PrintSignatures roles={["Prepared by", "Checked by", "Approved by"]} />
+    <PrintSignatures signers={signers} />
   </PrintPreviewDialog>;
 }

@@ -21,6 +21,8 @@ import { formatDate, formatDateTime } from "@/shared/format/dates";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
 import { PageHeader } from "@/shared/navigation/page-header";
+import { ReviewPanel } from "@/shared/reviews/review-panel";
+import { useReviewOpen } from "@/shared/reviews/use-document-signatures";
 import { PrintButton } from "@/shared/print/print-button";
 import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
@@ -143,6 +145,9 @@ function Detail({ allocation }: { allocation: Allocation }) {
   const step = nextStep(allocation);
   const totals = packingTotals(packingRows(allocation.products.map((product) => ({ name: product.name, sources: product.sources }))));
   const back = `${allocationsPath}?type=${kind}`;
+  // Its review (the "Checked by" step before approval); "Edit packing list" corrects it while it is in review.
+  const review = { modelType: "AllocateProductionOrder", modelId: allocation.id };
+  const inReview = useReviewOpen(review);
   return <article className="min-w-0 space-y-4">
     <PageHeader title={`Packing list · ${allocation.orderCode ?? "order"}`} crumbs={[{ label: allocationKinds[kind].title, to: back }, { label: allocation.orderCode ?? "Packing list" }]} actions={<>
       <PrintButton preview={(close) => <PackingListPrint allocation={allocation} onClose={close} />} />
@@ -152,7 +157,8 @@ function Detail({ allocation }: { allocation: Allocation }) {
     </>} />
     <div className="flex flex-wrap items-center gap-2"><Badge variant={allocation.approved ? "default" : "outline"}>{allocation.approved ? "Approved" : "Awaiting approval"}</Badge>
       <Badge variant={allocation.hasInvoice ? "secondary" : "outline"}>Invoice {allocation.hasInvoice ? allocation.invoiceCode ?? "raised" : "missing"}</Badge><Badge variant={allocation.hasWaybill ? "secondary" : "outline"}>Waybill {allocation.hasWaybill ? "raised" : "missing"}</Badge></div>
-    {!allocation.approved ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">This packing list is waiting for approval. It can be invoiced, loaded and shipped once it is approved.</p> : null}
+    <ReviewPanel record={review} label="packing list" keys={{ confirm: "CanReviewPackingList", return: "CanReturnPackingList", resubmit: orderPermissions.generatePackingList }} />
+    {!allocation.approved && !inReview ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">This packing list is waiting for approval. It can be invoiced, loaded and shipped once it is approved.</p> : null}
     <KeyFacts>
       <KeyFact label="Shippers and loose" value={formatShippers(totals)} note={`${totals.packs.toLocaleString()} packs`} />
       <KeyFact label="Products" value={allocation.products.length} />

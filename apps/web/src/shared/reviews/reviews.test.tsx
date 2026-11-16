@@ -8,6 +8,7 @@ import ReviewSettingsRoute from "../../pages/(workspace)/settings/reviews/page";
 import { reviewDocumentPath } from "../../modules/pending-reviews/lib/review-documents";
 import { requisitionReview } from "../../modules/requisitions/lib/requisition-review";
 import { reviewersPayload } from "../../modules/review-settings/schemas/reviewers-schema";
+import { checkNote, issueCheckKeys } from "../../modules/stock-issue/lib/stock-issue";
 import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
 import { ApiProvider } from "../api/api-provider";
 import { SessionProvider } from "../auth/session-provider";
@@ -133,6 +134,17 @@ describe("review contracts", () => {
     expect(reviewDocumentPath({ modelType: "PurchaseOrder", modelId: "po1", variant: 1 })).toBe("/procurement/purchase-orders/po1?type=1");
     expect(reviewDocumentPath({ modelType: "PurchaseOrder", modelId: "po1", variant: null })).toBeNull();
     expect(reviewDocumentPath({ modelType: "RawStockRequisition", modelId: "r1", variant: null })).toBe("/production/requisition/r1/details");
+    expect(reviewDocumentPath({ modelType: "BillingSheet", modelId: "b1", variant: null })).toBe("/logistics/billing-sheets/b1");
+    expect(reviewDocumentPath({ modelType: "LeaveRequest", modelId: "l1", variant: null })).toBe("/hr/leave-management/l1/details");
+    expect(reviewDocumentPath({ modelType: "AllocateProductionOrder", modelId: "a1", variant: null })).toBe("/crm/allocations/a1");
+    expect(reviewDocumentPath({ modelType: "JobRequest", modelId: "j1", variant: null })).toBe("/extrals/job-requests/j1/details");
+    expect(reviewDocumentPath({ modelType: "StockRequisitionIssue", modelId: "i1", variant: 0, parentId: "r9" })).toBe("/warehouse/stock-requisition/r9");
+    expect(reviewDocumentPath({ modelType: "FormulaRevision", modelId: "f1", variant: null, parentId: "q1" })).toBe("/qa/formula-reviews/q1?revisionId=f1");
+    expect(reviewDocumentPath({ modelType: "FormulaRevision", modelId: "f1", variant: null })).toBeNull();
+    expect(reviewDocumentPath({ modelType: "Unknown", modelId: "x", variant: null })).toBeNull();
+    // A stock issue's check is its review: keys by material kind; a returned issue says so on the voucher.
+    expect(issueCheckKeys[1]).toEqual({ confirm: "CanCheckPackagingMaterialIssue", return: "CanReturnPackagingMaterialIssue", resubmit: "CanRepairIssuedPackaging" });
+    expect(checkNote("Returned")).toBe("Returned to the store for correction");
     expect(reviewersPayload("PurchaseRequisition", { roles: [{ value: "role1", label: "QA" }], users: [{ value: "u1", label: "Ama" }] }))
       .toEqual({ itemType: "PurchaseRequisition", assignees: [{ roleId: "role1" }, { userId: "u1" }] });
     expect(() => reviewersPayload("PurchaseRequisition", { roles: [], users: [] })).toThrow();

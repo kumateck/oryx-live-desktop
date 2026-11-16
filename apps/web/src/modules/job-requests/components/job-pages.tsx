@@ -12,6 +12,7 @@ import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/s
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDate } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
+import { ReviewPanel } from "@/shared/reviews/review-panel";
 import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { Handling, JobStatus, handlingLabel, jobActions, jobAudit, jobKeys, jobOrderRoot, jobRequestPageSchema, jobRequestRoot, jobRequestSchema, jobStatusLabel, type JobRequest } from "../lib/job-requests";
@@ -157,6 +158,8 @@ export function JobRequestDetailPage() {
       <div><p className="text-xs text-muted-foreground">Description of work</p><p className="whitespace-pre-wrap text-sm">{job.description ?? "No description provided."}</p></div>
       {!job.approved ? <p className="text-sm text-muted-foreground">It must be approved before it can be acknowledged, assigned or sent out.</p> : null}
     </section>
+    {/* Its review (the "Checked by" step before approval); the Edit action corrects it while it is in review. */}
+    <ReviewPanel record={{ modelType: "JobRequest", modelId: job.id }} label="job request" keys={{ confirm: "CanReviewJobRequest", return: "CanReturnJobRequest", resubmit: jobKeys.edit }} />
     {orderList.length ? <section aria-label="Job orders" className="space-y-2 rounded-lg border bg-card p-4"><h2 className="font-semibold">Job orders</h2>
       <ul className="text-sm">{orderList.map((o) => <li key={o.id}><Link className="underline-offset-4 hover:underline" to={`${jobOrderRoot}/${o.id}/details`}>{o.code}</Link></li>)}</ul></section> : null}
     <JobDialogs dialog={dialog} close={() => setDialog(null)} onChanged={() => void query.refetch()} />

@@ -8,10 +8,12 @@ const date = z.string().nullish().transform((value) => value && new Date(value).
 const person = z.object({ name: text, firstName: text, lastName: text }).nullish().transform((value) => value?.name ?? ([value?.firstName, value?.lastName].filter(Boolean).join(" ") || null));
 
 const signatory = z.object({ name: text, signature: text, signedAt: date }).nullish().transform((value) => value?.name ? { name: value.name, signature: value.signature, signedAt: value.signedAt } : null);
-const checkStatuses = ["Pending", "Checked", "Rejected", "NotAssigned"] as const;
-const signatories = z.object({ issuedBy: signatory, checkedBy: signatory, receivedBy: signatory, checkStatus: z.string().nullish() }).nullish()
+const checkStatuses = ["Pending", "Checked", "Returned", "Rejected", "NotAssigned"] as const;
+const signatories = z.object({ issuedBy: signatory, checkedBy: signatory, receivedBy: signatory, checkStatus: z.string().nullish(), issueId: z.string().nullish() }).nullish()
   .transform((value) => ({ issuedBy: value?.issuedBy ?? null, checkedBy: value?.checkedBy ?? null, receivedBy: value?.receivedBy ?? null,
-    checkStatus: (checkStatuses as readonly string[]).includes(value?.checkStatus ?? "") ? value?.checkStatus as (typeof checkStatuses)[number] : null }));
+    checkStatus: (checkStatuses as readonly string[]).includes(value?.checkStatus ?? "") ? value?.checkStatus as (typeof checkStatuses)[number] : null,
+    // The issue whose check is its document review.
+    issueId: value?.issueId ?? null }));
 
 const line = z.object({ id: z.string().nullish(), quantity: amount, approvedQuantity: z.number().finite().nullish(), status: z.number().nullish(),
   substituteFor: z.object({ name: text, code: text }).nullish(), material: z.object({ id: z.string().nullish(), code: text, name: text, kind: z.number().nullish() }).nullish(), uoM: z.object({ symbol: text }).nullish(),

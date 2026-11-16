@@ -11,3 +11,8 @@ export const paymentMethods = [{ value: "0", label: "Bank transfer" }, { value: 
 
 export const billingFileTypes = ".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.xlsx";
 export const billingFileLimit = 10 * 1024 * 1024;
+/** A billing sheet's review (its "Checked by" step before approval): the record and the keys for each task. */
+export const billingReview = (id: string) => ({
+  record: { modelType: "BillingSheet", modelId: id },
+  keys: { confirm: "CanReviewBillingSheet", return: "CanReturnBillingSheet", resubmit: billingPermissions.edit },
+});

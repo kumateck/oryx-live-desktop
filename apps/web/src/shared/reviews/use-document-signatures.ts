@@ -18,3 +18,10 @@ export function useDocumentSigners(record: ReviewRecord | null): PrintSigner[] {
   const query = useReadDocumentReviewQuery(record ?? skipToken);
   return documentSigners(query.data);
 }
+
+/** True while the record's review is open (awaiting review or returned): it may be corrected before approval. */
+export function useReviewOpen(record: ReviewRecord | null): boolean {
+  const query = useReadDocumentReviewQuery(record ?? skipToken);
+  const status = query.data?.review?.status;
+  return status === 0 || status === 1;
+}
