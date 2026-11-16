@@ -30,7 +30,7 @@ function SpecificationPrintPreview({ kind, title, specification, sections, onClo
   const query = { raw, packaging, product }[kind];
   const history = query.isSuccess && !query.isFetching ? query.currentData : undefined;
   return <PrintPreviewDialog title={`${title} · ${specification.number}`} onClose={onClose} ready={Boolean(history)}>
-    {history ? <SpecificationPrint title={title} subject={kind === "product" ? "Product" : "Material"} specification={specification} sections={sections} history={history} />
+    {history ? <SpecificationPrint title={title} kind={kind} specification={specification} sections={sections} history={history} />
       : query.isError && !query.isFetching ? <div role="alert" className="space-y-2 p-4">
         <p>{apiErrorMessage(query.error)}</p><Button variant="outline" onClick={() => void query.refetch()}>Retry</Button>
       </div> : <p role="status" className="p-4">Loading specification history…</p>}
