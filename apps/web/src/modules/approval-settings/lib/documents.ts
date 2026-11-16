@@ -11,8 +11,8 @@ const humanize = (value: string) => value.replace(/([a-z])([A-Z])/g, "$1 $2").re
 export const approvalDocuments: readonly SelectOption[] = [
   ...standard.map((value) => ({ value, label: humanize(value) })),
   { value: "ProductionExtraPacking", label: "Production extra material" },
-  // Its approver signs the stock requisition voucher as "Checked by".
-  { value: "StockRequisitionIssue", label: "Stock requisition issue check" }, { value: "Response", label: "Test results (Response)" },
+  // The stock issue check is its document review now (Settings → Document reviews), not an approval workflow.
+  { value: "Response", label: "Test results (Response)" },
 ];
 export const isLegacyApprovalDocument = (value: string) => legacyOptions.some((option) => option.value === value);
 export const approvalDocumentLabel = (value: string) => {

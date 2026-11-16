@@ -12,6 +12,7 @@ import { UnsavedChangesGuard } from "@/shared/navigation/unsaved-changes";
 import { usePutApiV1ProcurementBillingSheetByBillingSheetIdMutation } from "../api/billing-api";
 import { useBillingCollections } from "../hooks/use-billing-collections";
 import { audit, billingSheetPath, billingSheetsPath } from "../lib/billing-access";
+import { useReviewOpen } from "@/shared/reviews/use-document-signatures";
 import { changeBlock, daysBetween, detailsRequest, freeDays } from "../lib/billing-rules";
 import { editSheetSchema, type BillingSheet, type EditSheetValues } from "../schemas/billing-schema";
 import { SheetDetailsFields } from "./sheet-details-fields";
@@ -31,7 +32,7 @@ export function EditBillingSheetForm({ sheet }: { sheet: BillingSheet }) {
     packageStyle: sheet.packageStyle ? { value: sheet.packageStyle.id, label: sheet.packageStyle.name } : null, packageDescription: sheet.packageDescription ?? "" } });
   // Read here so the form re-renders, and its fields show their messages, when validation fails.
   void form.formState.errors;
-  const block = changeBlock(sheet);
+  const block = changeBlock(sheet, useReviewOpen({ modelType: "BillingSheet", modelId: sheet.id }));
   const back = billingSheetPath(sheet.id);
 
   const submit = form.handleSubmit(async (values) => {
