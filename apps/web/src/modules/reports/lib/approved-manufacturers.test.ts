@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { SupplierMapping } from "../api/contract-adapters";
 import { emptyReportFilters } from "../schemas/report-filters";
-import { amlColumn, approvalStatus, approvedManufacturerSheet, approvedManufacturerSummary, approvedManufacturerTitle } from "./approved-manufacturers";
+import { amlColumn, approvalDate, approvalStatus, approvedManufacturerSheet, approvedManufacturerSummary, approvedManufacturerTitle } from "./approved-manufacturers";
 import { reportCatalog } from "./catalog";
 import { reportEntries, reportLink } from "./report-directory";
 
 const today = new Date(2026, 10, 15);
 const mapping = (code: string, name: string, manufacturer: string, validityDate: string | null, kind = 0): SupplierMapping => ({
-  manufacturers: { id: `m-${manufacturer}`, name: manufacturer, address: "Ankleshwar, Gujarat, India", approvedAt: "2024-06-01T00:00:00Z", validityDate },
-  supplier: { id: "s-1", name: "Indosol Export", address: null, approvedAt: null, validityDate: null },
+  manufacturers: { id: `m-${manufacturer}`, name: manufacturer, address: "Ankleshwar, Gujarat, India", approvedAt: null, validityDate },
+  supplier: { id: "s-1", name: "Indosol Export", address: null, approvedAt: "2024-06-01T00:00:00Z", validityDate: null, status: 1 },
   uom: { id: "u", name: "Kilogram", symbol: "kg" },
   materials: [{ material: { id: `x-${code}`, name, code, kind }, quantityPerPackOption: { min: 25, max: null, values: null } }],
 });
@@ -29,6 +29,13 @@ describe("approved manufacturer list", () => {
     expect(sheet.rows[0]?.cells[amlColumn.approvedOn]).toBe("Jun 2024");
     expect(sheet.rows[0]?.cells[amlColumn.validUntil]).toBe("Jun 2027");
     expect(sheet.rows[0]?.cells[amlColumn.pack]).toBe(25);
+  });
+
+  it("dates approval from when the supplier's status changed to Approved", () => {
+    const row = mapping("RMA002", "Albendazole", "A", "2027-06-30T00:00:00Z");
+    expect(approvalDate(row)).toBe("2024-06-01T00:00:00Z");
+    expect(approvalDate({ ...row, supplier: { ...row.supplier, status: 0 } })).toBeNull();
+    expect(approvalDate({ ...row, supplier: { ...row.supplier, status: 2 } })).toBeNull();
   });
 
   it("counts distinct materials, approved sources and approvals running out", () => {
