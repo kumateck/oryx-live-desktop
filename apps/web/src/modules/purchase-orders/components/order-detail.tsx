@@ -14,12 +14,14 @@ import { Tabs, useTabParam } from "@/shared/detail/tabs";
 import { formatDate } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { PrintButton } from "@/shared/print/print-button";
+import { ReviewPanel } from "@/shared/reviews/review-panel";
 import { formatMoney } from "@/shared/procurement/price";
 import { SupplierSummary } from "@/shared/procurement/supplier-summary";
 import { supplierTypeLabels, type SupplierType } from "@/shared/procurement/supplier-type";
-import { cancelOrderPermissions, mayCancelOrder, orderListPath, orderStatus, reviseOrderPath, reviseOrderPermissions } from "../lib/purchase-order-access";
+import { cancelOrderPermissions, finaliseOrderPermissions, mayCancelOrder, orderListPath, orderReview, orderStatus, reviseOrderPath, reviseOrderPermissions } from "../lib/purchase-order-access";
 import { describeChange, revisionKind } from "../lib/revisions";
 import { CancelOrderDialog } from "./cancel-order-dialog";
+import { FinaliseOrderDialog } from "./finalise-order-dialog";
 import { OrderStatusBadge } from "./order-status-badge";
 import { OrderTerms, OrderTotals } from "./order-terms";
 
@@ -35,6 +37,7 @@ export function OrderDetail({ order, type }: { order: PurchaseOrder; type: Suppl
   const mayRevise = order.status === orderStatus.sent && has(reviseOrderPermissions[type]);
   const mayCancel = mayCancelOrder(order.status) && has(cancelOrderPermissions[type]);
   const [cancelling, setCancelling] = useState(false);
+  const review = orderReview(order.id, type);
   return <article className="min-w-0 space-y-4">
     <PageHeader title={order.code} crumbs={[{ label: "Order list", to: `${orderListPath}?type=${type}` }, { label: order.code }]}
       actions={<>{mayRevise ? <Button asChild variant="outline"><Link to={reviseOrderPath(order.id, type)}><FilePenLine />Revise order</Link></Button> : null}
@@ -49,6 +52,8 @@ export function OrderDetail({ order, type }: { order: PurchaseOrder; type: Suppl
       <KeyFact label="Value of lines" value={order.total === null ? "Not available" : formatMoney(order.total, currency)} />
       <KeyFact label={type === 0 ? "Total CIF value" : "Grand total"} value={order.recorded.grandTotal === null ? "Not finalised" : formatMoney(order.recorded.grandTotal, currency)} />
     </KeyFacts>
+    <ReviewPanel record={review.record} keys={review.keys} label="order"
+      correction={{ label: "Correct charges", require: finaliseOrderPermissions[type], dialog: (close) => <FinaliseOrderDialog order={order} type={type} onClose={close} /> }} />
     <SupplierSummary supplier={order.supplier} />
     <OrderTerms order={order} />
     <Tabs label="Order records" tabs={tabs} active={active} onSelect={select}>

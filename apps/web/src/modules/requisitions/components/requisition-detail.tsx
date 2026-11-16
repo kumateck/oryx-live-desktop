@@ -6,9 +6,12 @@ import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { PrintButton } from "@/shared/print/print-button";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
+import { ReviewPanel } from "@/shared/reviews/review-panel";
 import { toLargestUnit } from "@/shared/units/quantity";
 import { requisitionsPath } from "../lib/requisition-access";
+import { requisitionReview } from "../lib/requisition-review";
 import type { Requisition, RequisitionLine } from "../schemas/requisition-schema";
+import { CorrectRequisitionDialog } from "./correct-requisition-dialog";
 import { RequisitionFacts } from "./requisition-facts";
 import { RequisitionPrint } from "./requisition-print";
 import { RequisitionStatusBadge } from "./requisition-status-badge";
@@ -23,12 +26,15 @@ export function RequisitionDetail({ requisition }: { requisition: Requisition })
     column.accessor("quantity", { header: "Requested", size: 170, cell: ({ row }) => toLargestUnit(row.original.quantity, row.original.unit, "calculated")?.text ?? String(row.original.quantity) }),
     column.accessor("status", { header: "Status", size: 190, cell: ({ row }) => <RequisitionStatusBadge status={row.original.status} type={requisition.type} /> }),
   ]), [requisition.type]);
+  const review = useMemo(() => requisitionReview(requisition), [requisition]);
   return <article className="min-w-0 space-y-4">
     <PageHeader title={requisition.code} crumbs={[{ label: "Material requisitions", to: requisitionsPath }, { label: requisition.code }]}
       actions={<><PrintButton preview={(close) => <RequisitionPrint requisition={requisition} onClose={close} />} />
         {requisition.whitePlaceboPreparationId ? <Button asChild><Link to={whitePlaceboPreparationPath(requisition.whitePlaceboPreparationId)}>White Placebo preparation</Link></Button> : null}</>} />
     <RequisitionStatusBadge status={requisition.status} type={requisition.type} />
     <RequisitionFacts requisition={requisition} />
+    {review ? <ReviewPanel record={review.record} keys={review.keys} label="requisition"
+      correction={review.edit ? { label: "Correct requisition", require: review.edit, dialog: (close) => <CorrectRequisitionDialog requisition={requisition} onClose={close} /> } : undefined} /> : null}
     {requisition.comments ? <section className="space-y-1 rounded-lg border bg-card p-4"><h2 className="text-sm font-semibold">Remarks</h2><RichTextView html={requisition.comments} className="text-sm" /></section> : null}
     <ClientDataTable label="Requested materials" columns={columns} rows={requisition.items} getRowId={(row) => row.id} fill={false} emptyTitle="No materials on this requisition" />
   </article>;
