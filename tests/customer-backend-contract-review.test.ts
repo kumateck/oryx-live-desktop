@@ -60,20 +60,20 @@ function stripBomSubstituteQuantities(document: ObjectValue) {
     for (const field of fields) delete properties[field];
   }
 }
-/** Specification revision reason (2026-11-16): required on both edit requests, optional on the DTOs and history rows. */
-const specificationReasonFields: Record<string, string> = {
-  "DOMAIN.Entities.MaterialSpecifications.UpdateMaterialSpecificationRequest": "revisionReason",
-  "DOMAIN.Entities.ProductSpecifications.UpdateProductSpecificationRequest": "revisionReason",
-  "DOMAIN.Entities.MaterialSpecifications.MaterialSpecificationDto": "revisionReason",
-  "DOMAIN.Entities.ProductSpecifications.ProductSpecificationDto": "revisionReason",
-  "DOMAIN.Entities.Specifications.SpecificationPrintRevision": "reason",
+/** Specification revision reason (2026-11-16): required on both edit requests, optional on the DTOs; history rows add reason and effective date. */
+const specificationReasonFields: Record<string, readonly string[]> = {
+  "DOMAIN.Entities.MaterialSpecifications.UpdateMaterialSpecificationRequest": ["revisionReason"],
+  "DOMAIN.Entities.ProductSpecifications.UpdateProductSpecificationRequest": ["revisionReason"],
+  "DOMAIN.Entities.MaterialSpecifications.MaterialSpecificationDto": ["revisionReason"],
+  "DOMAIN.Entities.ProductSpecifications.ProductSpecificationDto": ["revisionReason"],
+  "DOMAIN.Entities.Specifications.SpecificationPrintRevision": ["reason", "effectiveDate"],
 };
 function stripSpecificationRevisionReason(document: ObjectValue) {
   const schemas = object(object(document.components ?? null).schemas ?? null);
-  for (const [name, field] of Object.entries(specificationReasonFields)) {
+  for (const [name, fields] of Object.entries(specificationReasonFields)) {
     const schema = object(schemas[name] ?? null);
-    delete object(schema.properties ?? null)[field];
-    if (Array.isArray(schema.required)) schema.required = schema.required.filter((entry) => entry !== field);
+    for (const field of fields) delete object(schema.properties ?? null)[field];
+    if (Array.isArray(schema.required)) schema.required = schema.required.filter((entry) => typeof entry !== "string" || !fields.includes(entry));
   }
 }
 
@@ -652,14 +652,16 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   const digest = contractDigest(current);
-  assert.equal(digest, "f02f0982a07af3863e693c4d88b8c5abcbe239ff079c4a30424d5e21a6535a71");
+  assert.equal(digest, "f2960caf053dd6bb3c943cc82c774328f21f6ae8409528741ba119a631dfc6f9");
   checkCompatibility(hostConfig, policy, digest);
   const schemas = object(object(current.components ?? null).schemas ?? null);
-  for (const [name, field] of Object.entries(specificationReasonFields)) {
+  for (const [name, fields] of Object.entries(specificationReasonFields)) {
     const schema = object(schemas[name] ?? null);
-    assert.ok(object(schema.properties ?? null)[field] !== undefined, `${name}.${field}`);
-    const required = Array.isArray(schema.required) && schema.required.includes(field);
-    assert.equal(required, name.includes(".Update"), `${name}.${field} required`);
+    for (const field of fields) {
+      assert.ok(object(schema.properties ?? null)[field] !== undefined, `${name}.${field}`);
+      const required = Array.isArray(schema.required) && schema.required.includes(field);
+      assert.equal(required, name.includes(".Update"), `${name}.${field} required`);
+    }
   }
   stripSpecificationRevisionReason(current);
   assert.equal(contractDigest(current), "6c84e6f93d57882923dc0cc61a6e7df1649371ab08a8b34ccd287150105b9806");

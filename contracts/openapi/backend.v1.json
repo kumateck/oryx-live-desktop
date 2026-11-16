@@ -181564,6 +181564,11 @@
           "reason": {
             "type": "string",
             "nullable": true
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false

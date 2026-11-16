@@ -19,10 +19,9 @@ interface SpecificationPrintActionProps {
   title: string;
   specification: Specification;
   sections: readonly SpecificationSection[];
-  subjectFacts: readonly { label: string; value: string | null }[];
 }
 
-function SpecificationPrintPreview({ kind, title, specification, sections, subjectFacts, onClose }: SpecificationPrintActionProps & { onClose: () => void }) {
+function SpecificationPrintPreview({ kind, title, specification, sections, onClose }: SpecificationPrintActionProps & { onClose: () => void }) {
   const args = { id: specification.id, module: "Quality Assurance", subModule: `${title} print` };
   const options = { refetchOnMountOrArgChange: true };
   const raw = analyticalApi.useGetRawMaterialSpecificationPrintHistoryQuery(kind === "raw" ? args : skipToken, options);
@@ -31,7 +30,7 @@ function SpecificationPrintPreview({ kind, title, specification, sections, subje
   const query = { raw, packaging, product }[kind];
   const history = query.isSuccess && !query.isFetching ? query.currentData : undefined;
   return <PrintPreviewDialog title={`${title} · ${specification.number}`} onClose={onClose} ready={Boolean(history)}>
-    {history ? <SpecificationPrint title={title} specification={specification} sections={sections} subjectFacts={subjectFacts} history={history} />
+    {history ? <SpecificationPrint title={title} subject={kind === "product" ? "Product" : "Material"} specification={specification} sections={sections} history={history} />
       : query.isError && !query.isFetching ? <div role="alert" className="space-y-2 p-4">
         <p>{apiErrorMessage(query.error)}</p><Button variant="outline" onClick={() => void query.refetch()}>Retry</Button>
       </div> : <p role="status" className="p-4">Loading specification history…</p>}

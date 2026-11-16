@@ -3877,6 +3877,7 @@ export type DomainEntitiesSpecificationsSpecificationPrintRevision = {
   occurredAt?: string | null;
   event?: string | null;
   reason?: string | null;
+  effectiveDate?: string | null;
 };
 export type DomainEntitiesSpecificationsSpecificationPrintHistory = {
   revisedBy?: string | null;

@@ -3,6 +3,7 @@ import type { DomainEntitiesSpecificationsSpecificationPrintHistory, DomainEntit
 import { PrintFacts, PrintHeader, PrintTable, type PrintColumn } from "@/shared/print/print-sheet";
 import { specificationReferenceLabel } from "@/shared/questions/question-types";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
+import { testStageLabel } from "./specification-rules";
 import type { Specification, SpecificationSection } from "./specification-schema";
 
 const columns: readonly PrintColumn<SpecificationSection>[] = [
@@ -15,48 +16,42 @@ const columns: readonly PrintColumn<SpecificationSection>[] = [
   { id: "reference", header: "Reference", width: "20%", cell: (section) => specificationReferenceLabel(section.value) ?? "Not set" },
 ];
 
+/** One row per revision number (the server keeps each revision's latest record), newest first. */
 const revisionColumns: readonly PrintColumn<DomainEntitiesSpecificationsSpecificationPrintRevision>[] = [
-  { id: "event", header: "Event", cell: (row) => row.event },
-  { id: "number", header: "Specification number", cell: (row) => row.specificationNumber },
-  { id: "revision", header: "Revision", cell: (row) => row.revisionNumber },
-  { id: "supersedes", header: "Supersedes", cell: (row) => row.supersedesNumber },
-  { id: "reason", header: "Reason for revision", width: "24%", cell: (row) => row.reason ?? (row.event === "Revised" ? "Not recorded" : "—") },
-  { id: "person", header: "Recorded by", cell: (row) => row.recordedBy ?? "—" },
-  { id: "time", header: "Date and time", cell: (row) => formatDateTime(row.occurredAt) ?? "—" },
+  { id: "number", header: "Sr. No.", width: "8%", cell: (_row, index) => index + 1 },
+  { id: "revision", header: "Revision No.", width: "14%", cell: (row) => row.revisionNumber ?? "—" },
+  { id: "effective", header: "Effective Date", width: "18%", cell: (row) => formatDate(row.effectiveDate) ?? "—" },
+  { id: "reason", header: "Reason for Change", cell: (row) => row.reason ?? (row.event === "Revised" ? "Not recorded" : "—") },
 ];
 
-export function SpecificationPrint({ title, specification, sections, subjectFacts, history }: {
+export function SpecificationPrint({ title, subject, specification, sections, history }: {
   title: string;
   specification: Specification;
   sections: readonly SpecificationSection[];
-  subjectFacts: readonly { label: string; value: string | null }[];
+  /** What the specification is for: its name and code head the print. */
+  subject: "Product" | "Material";
   history: DomainEntitiesSpecificationsSpecificationPrintHistory;
 }) {
   return <>
     <PrintHeader title={title} reference={specification.number} />
     <PrintFacts facts={[
-      ...subjectFacts,
-      { label: "Revision", value: specification.revisionNumber },
-      { label: "Revision By", value: history.revisedBy ?? "—" },
-      { label: "Revision Date and Time", value: formatDateTime(history.revisedAt) ?? "—" },
+      { label: "Spec No.", value: specification.number },
+      { label: "Revision No.", value: specification.revisionNumber },
       { label: "Supersedes", value: specification.supersedesNumber },
-      { label: "Status", value: specification.isVerified ? "Approved" : "Not approved" },
-      { label: "Effective", value: formatDate(specification.effectiveDate) },
-      { label: "Revise by", value: formatDate(specification.reviewDate) },
-      { label: "Due", value: formatDate(specification.dueDate) },
-      { label: "Reference", value: specification.reference },
-      { label: "Template", value: specification.form?.name },
-      { label: "Created by", value: specification.createdBy?.name },
-      { label: "Department", value: specification.createdBy?.department },
-      { label: "Created", value: formatDateTime(specification.createdAt) },
+      { label: subject, value: specification.item?.name ?? null },
+      { label: `${subject} Code`, value: specification.item?.code ?? null },
+      // Only a product specification has a test stage (in-process, bulk or finished product).
+      ...(subject === "Product" ? [{ label: "Stage", value: testStageLabel(specification.testStage) }] : []),
+      { label: "Effective Date", value: formatDate(specification.effectiveDate) },
+      { label: "Review Date", value: formatDate(specification.reviewDate) },
     ]} />
     {specification.description ? <section className="print-note">
       <h2 className="print-section">Notes</h2>
       <RichTextView html={specification.description} />
     </section> : null}
     <PrintTable caption="Tests" columns={columns} rows={sections} rowKey={(section) => section.id} empty="The template has no tests." />
-    <PrintTable caption="Specification history" columns={revisionColumns} rows={history.revisions ?? []}
-      rowKey={(row, index) => `${row.occurredAt ?? ""}-${index}`} empty="No recorded specification history is available." />
+    <PrintTable caption="Revision History" columns={revisionColumns} rows={history.revisions ?? []}
+      rowKey={(row, index) => `${row.revisionNumber ?? ""}-${index}`} empty="No recorded revision history is available." />
     {history.historyAvailableFrom ? <p className="print-note">History capture began {formatDateTime(history.historyAvailableFrom)}.</p> : null}
   </>;
 }
