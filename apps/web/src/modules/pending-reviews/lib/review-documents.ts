@@ -13,8 +13,11 @@ const pages: Record<string, (id: string) => string> = {
   AllocateProductionOrder: (id) => `/crm/allocations/${id}`,
 };
 
-export function reviewDocumentPath(row: Pick<PendingReview, "modelType" | "modelId" | "variant">): string | null {
+export function reviewDocumentPath(row: Pick<PendingReview, "modelType" | "modelId" | "variant"> & { parentId?: string | null | undefined }): string | null {
   const id = encodeURIComponent(row.modelId);
+  // A stock issue is checked on its requisition's page; a formula revision on its question's review page.
+  if (row.modelType === "StockRequisitionIssue") return row.parentId ? `/warehouse/stock-requisition/${encodeURIComponent(row.parentId)}` : null;
+  if (row.modelType === "FormulaRevision") return row.parentId ? `/qa/formula-reviews/${encodeURIComponent(row.parentId)}?revisionId=${id}` : null;
   if (row.modelType === "PurchaseOrder") return row.variant === 0 || row.variant === 1 ? `/procurement/purchase-orders/${id}?type=${row.variant}` : null;
   if (row.modelType === "PurchaseRequisition" || row.modelType === "RawStockRequisition" || row.modelType === "PackageStockRequisition")
     return `/production/requisition/${id}/details`;
@@ -24,5 +27,5 @@ export function reviewDocumentPath(row: Pick<PendingReview, "modelType" | "model
 const labels: Record<string, string> = { PurchaseOrder: "Purchase order", PurchaseRequisition: "Purchase requisition",
   RawStockRequisition: "Raw material stock requisition", PackageStockRequisition: "Packaging material stock requisition",
   BillingSheet: "Billing sheet", StaffRequisition: "Staff requisition", OvertimeRequest: "Overtime request", LeaveRequest: "Leave request",
-  JobRequest: "Job request", AllocateProductionOrder: "Packing list" };
+  JobRequest: "Job request", AllocateProductionOrder: "Packing list", StockRequisitionIssue: "Stock issue check", FormulaRevision: "QC formula revision" };
 export const reviewDocumentLabel = (row: Pick<PendingReview, "modelType" | "documentLabel">) => labels[row.modelType] ?? row.documentLabel ?? row.modelType;

@@ -15,6 +15,7 @@ import { actorText, revisionStandingText, selectRevision, type RevisionStage } f
 import { PageHeader } from "@/shared/navigation/page-header";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { formulaRevisionAudit, revisionDetailPath, stageConfig } from "../lib/formula-revisions";
+import { ReviewPanel } from "@/shared/reviews/review-panel";
 
 function Fact({ label, children, mono = false }: { label: string; children: ReactNode; mono?: boolean }) {
   return <div className="min-w-0"><dt className="text-xs text-muted-foreground">{label}</dt><dd className={mono ? "break-all font-mono text-xs" : "text-sm"}>{children}</dd></div>;
@@ -88,6 +89,9 @@ export function FormulaRevisionDetailPage({ stage }: { stage: RevisionStage }) {
     <div className="space-y-2"><FormulaChecks cases={revision.testCases} outcomes={evidence?.state === "checked" ? evidence.outcomes : undefined} authority="provisional" />
       <p className="text-xs text-muted-foreground">These results come from running the saved checks in this app. The author's server validation is the record.</p></div>
     <History revision={revision} userId={userId} />
+    {/* Its document review: status, history and Return to draft. The review itself is recorded below, with the hash and a reason. */}
+    {stage === "review" ? <ReviewPanel record={{ modelType: "FormulaRevision", modelId: revision.id }} label="revision" onChanged={() => void navigate(config.path)}
+      keys={{ confirm: "CanReviewFormulaRevision", return: "CanReturnFormulaRevision", resubmit: "CanEditQuestions" }} /> : null}
     <section aria-label={stage === "review" ? "Review decision" : "Approval decision"} className="space-y-3 rounded-lg border bg-card p-4">
       <h2 className="font-semibold">{stage === "review" ? "Your review" : "Your approval"}</h2>
       <FormulaRevisionDecision revision={revision} stage={stage} audit={formulaRevisionAudit} reread={reread} onDecided={() => void navigate(config.path)} />

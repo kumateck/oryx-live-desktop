@@ -22,3 +22,7 @@ A record of a reviewed document type is checked before it goes for approval. The
   - Staff requisitions, overtime requests and leave requests: the page's own Edit action corrects them.
   - Job requests and packing lists: their Edit actions correct them while they wait. A packing list edited
     after its check goes back to review as a new submission.
+  - Stock issues: the voucher page shows the issue's check as its Review panel; a returned issue is
+    corrected through the issued-material repair.
+  - QC formula revisions: the review page shows the Review panel (status, history, Return to draft);
+    the review itself is still recorded below it, with the definition hash and a reason.
