@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ListDataTable, dataTableColumns } from "@/shared/datatable";
 import { toLargestUnit } from "@/shared/units/quantity";
-import { isCovered, shortfall, usableStock } from "../lib/forecast";
+import { freeStock, isCovered, shortfall, usableStock } from "../lib/forecast";
 import type { ForecastMaterial } from "../schemas/forecast-schema";
 
 const column = dataTableColumns<ForecastMaterial>();
@@ -17,10 +17,10 @@ export function ForecastTable({ title, materials, loading, error, onRetry }: {
       <div className="break-words font-medium">{row.original.name}</div>
       <div className="text-xs text-muted-foreground">{row.original.code || "No code"}</div></div> }),
     column.accessor((item) => quantity(item.needed, item.unit), { id: "needed", header: "Needed", size: 120 }),
-    column.accessor((item) => usableStock(item), { id: "stock", header: "Warehouse stock", size: 190, cell: ({ row }) => { const item = row.original; return <div className="min-w-0 space-y-0.5">
-      <div>{quantity(usableStock(item), item.unit)} <span className="text-xs text-muted-foreground">usable</span></div>
+    column.accessor((item) => freeStock(item), { id: "stock", header: "Free stock", size: 190, cell: ({ row }) => { const item = row.original; return <div className="min-w-0 space-y-0.5">
+      <div>{quantity(freeStock(item), item.unit)} <span className="text-xs text-muted-foreground">free</span></div>
+      {item.reserved > 0 ? <div className="text-xs text-muted-foreground">{quantity(usableStock(item), item.unit)} usable, less {quantity(item.reserved, item.unit)} reserved for other batches</div> : null}
       {item.expired > 0 ? <div className="text-xs text-destructive">{quantity(item.expired, item.unit)} expired</div> : null}
-      {item.reserved > 0 ? <div className="text-xs text-muted-foreground">{quantity(item.reserved, item.unit)} reserved for other batches</div> : null}
     </div>; } }),
     column.accessor((item) => isCovered(item) ? "Enough" : "Short", { id: "status", header: "Status", size: 130, cell: ({ row }) => isCovered(row.original)
       ? <Badge variant="secondary">Enough</Badge>
