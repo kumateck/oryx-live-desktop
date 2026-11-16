@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
+import { InputTypes } from "@/shared/forms/input-types";
 
 // What material and product specifications share: their pharmacopoeia reference, dates, numbering rules and per-test values.
 
@@ -28,11 +29,20 @@ export const specificationBaseSchema = z.object({
   effectiveDate: z.date({ message: "Choose the effective date." }), reviewDate: z.date({ message: "Choose the revision date." }),
   form: z.object({ value: z.string().min(1, "Choose the template."), label: z.string() }, { message: "Choose the template." }),
   reference: option.nullish(), description: z.string().nullish(),
+  revisionReason: z.string().max(1000, "Keep the reason to 1000 characters.").optional(),
 });
 export type SpecificationBaseValues = z.infer<typeof specificationBaseSchema>;
 export function checkRevisionDate(values: { effectiveDate: Date; reviewDate: Date }, context: z.RefinementCtx) {
   if (startOfDay(values.reviewDate) < earliestRevisionDate(values.effectiveDate)) context.addIssue({ code: "custom", path: ["reviewDate"], message: "The revision date must be after the effective date and after today." });
 }
+/** Every edit of a saved specification is a revision and must say why; the server refuses it otherwise. */
+export function requireRevisionReason(values: { revisionReason?: string | undefined }, context: z.RefinementCtx) {
+  if ((values.revisionReason ?? "").trim().length < 10)
+    context.addIssue({ code: "custom", path: ["revisionReason"], message: "State the reason for this revision in at least 10 characters." });
+}
+/** The reason field shown when editing a saved specification. */
+export const revisionReasonField = { type: InputTypes.TEXTAREA, name: "revisionReason", label: "Reason for revision", required: true, rows: 3, className: "md:col-span-2",
+  description: "Why this specification is being revised. It is recorded in the specification's revision history." } as const;
 /** The request body. An edit keeps the saved due date; a new specification is due tomorrow, as Oryx Next set it. */
 export const specificationBody = (values: SpecificationBaseValues, savedDue: string | null = null, now = new Date()) => ({
   specificationNumber: values.specificationNumber, revisionNumber: values.revisionNumber, supersedesNumber: values.supersedesNumber,

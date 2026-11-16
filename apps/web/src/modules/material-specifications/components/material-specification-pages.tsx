@@ -48,12 +48,7 @@ export function MaterialSpecificationDetailPage() {
         <KeyFact label="Pharmacopoeia" value={specification.item?.pharmacopoeia ?? "–"} /></>}
       actions={<>
         {asKind(specification.item?.kind) !== null ? <SpecificationPrintAction
-          kind={kind === 1 ? "packaging" : "raw"} title="Material specification" specification={specification} sections={tests.sections}
-          subjectFacts={[
-            { label: "Material", value: specification.item?.name ?? null },
-            { label: "Material code", value: specification.item?.code ?? null },
-            { label: "Pharmacopoeia", value: specification.item?.pharmacopoeia ?? null },
-          ]} /> : null}
+          kind={kind === 1 ? "packaging" : "raw"} title="Material specification" specification={specification} sections={tests.sections} /> : null}
         {!specification.isVerified ? <PermissionGuard require={specPermissions.verify[kind]}><Button variant="outline" onClick={() => setApproving(true)}><BadgeCheck />Approve</Button></PermissionGuard> : null}
         <PermissionGuard require={completePermission(kind)}><Button asChild variant="outline"><Link to={completePath(specification.id)}><ClipboardCheck />Set test references</Link></Button></PermissionGuard>
         <PermissionGuard require={specPermissions.edit[kind]}><Button asChild><Link to={editPath(specification.id)}><Pencil />Edit</Link></Button></PermissionGuard>

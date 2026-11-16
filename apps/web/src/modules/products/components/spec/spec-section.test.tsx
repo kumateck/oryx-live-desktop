@@ -58,9 +58,14 @@ it("edits a specification keeping its stage, due date and reference", async () =
   expect(within(dialog).getByText(/shared by several products/)).toBeTruthy();
   const revision = await within(dialog).findByLabelText(/^Revision\b(?! date)/, { selector: "input" });
   fireEvent.change(revision, { target: { value: "02" } });
+  // An edit is a revision: it is not sent until its reason is given.
+  fireEvent.click(within(dialog).getByRole("button", { name: "Save changes" }));
+  expect(await within(dialog).findByText("State the reason for this revision in at least 10 characters.")).toBeTruthy();
+  expect(calls).toHaveLength(0);
+  fireEvent.change(within(dialog).getByLabelText(/Reason for revision/), { target: { value: "  Bulk assay limit revised.  " } });
   fireEvent.click(within(dialog).getByRole("button", { name: "Save changes" }));
   await waitFor(() => expect(calls.length).toBe(1));
   expect(calls[0]).toMatchObject({ method: "PUT", path: "/api/v1/product-specifications/s1" });
   expect(JSON.parse(calls[0]?.body ?? "{}")).toMatchObject({ specificationNumber: "NMP/B/SPC/004", revisionNumber: "02", supersedesNumber: "None", formId: "f-bulk",
-    testStage: 1, dueDate: "2026-01-01T00:00:00Z", reference: "REF-1", description: "<p>Bulk</p>" });
+    testStage: 1, dueDate: "2026-01-01T00:00:00Z", reference: "REF-1", description: "<p>Bulk</p>", revisionReason: "Bulk assay limit revised." });
 });
