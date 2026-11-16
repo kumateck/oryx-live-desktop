@@ -1,7 +1,9 @@
 import { formatDate } from "@/shared/format/dates";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { PrintFacts, PrintHeader, PrintSignatures, PrintTable, type PrintColumn } from "@/shared/print/print-sheet";
+import { useDocumentSigners } from "@/shared/reviews/use-document-signatures";
 import { toLargestUnit } from "@/shared/units/quantity";
+import { requisitionReview } from "../lib/requisition-review";
 import { requisitionTypeLabels, statusLabel } from "../lib/requisition-status";
 import type { Requisition, RequisitionLine } from "../schemas/requisition-schema";
 
@@ -20,12 +22,14 @@ export function RequisitionPrint({ requisition, onClose }: { requisition: Requis
     { id: "status", header: "Status", cell: (row) => statusLabel(row.status, requisition.type) },
   ];
   const remarks = requisition.comments ? plainText(requisition.comments) : "";
+  // Prepared by is whoever raised it, Checked by its reviewer and Approved by its final approver; the store signs for receipt by hand.
+  const signers = useDocumentSigners(requisitionReview(requisition)?.record ?? null);
   return <PrintPreviewDialog title={`Requisition ${requisition.code}`} onClose={onClose}>
     <PrintHeader title={`${requisitionTypeLabels[requisition.type]} requisition`} reference={requisition.code} />
     <PrintFacts facts={[{ label: "Requested by", value: requisition.requestedBy }, { label: "Department", value: requisition.department }, { label: "Requested on", value: formatDate(requisition.createdAt) },
       { label: "Needed by", value: formatDate(requisition.expectedDelivery) }, { label: "Status", value: statusLabel(requisition.status, requisition.type) }, { label: "For product", value: requisition.product }]} />
     {remarks ? <p className="print-note"><strong>Remarks:</strong> {remarks}</p> : null}
     <PrintTable columns={columns} rows={requisition.items} rowKey={(row) => row.id} empty="No materials on this requisition" />
-    <PrintSignatures roles={["Requested by", "Approved by", "Received by"]} />
+    <PrintSignatures signers={[...signers, { role: "Received by" }]} />
   </PrintPreviewDialog>;
 }

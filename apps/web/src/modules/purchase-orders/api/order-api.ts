@@ -4,7 +4,9 @@ import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "PurchaseOrderList" as const, id: "all" };
 const one = (id: string) => ({ type: "PurchaseOrder" as const, id });
-const changed = (_result: unknown, error: unknown, arg: { purchaseOrderId: string }) => error ? [] : [list, one(arg.purchaseOrderId)];
+// Finalising, checking and revising an order also move its review (its check), so the review panel and pending reviews refresh.
+const changed = (_result: unknown, error: unknown, arg: { purchaseOrderId: string }) => error ? [] : [list, one(arg.purchaseOrderId),
+  { type: "DocumentReview" as const, id: `PurchaseOrder:${arg.purchaseOrderId}` }, { type: "PendingReviews" as const, id: "all" }];
 
 export const orderApi = procurementApi.enhanceEndpoints({
   endpoints: {
