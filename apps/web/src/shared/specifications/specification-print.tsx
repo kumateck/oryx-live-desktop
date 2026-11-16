@@ -20,6 +20,7 @@ const revisionColumns: readonly PrintColumn<DomainEntitiesSpecificationsSpecific
   { id: "number", header: "Specification number", cell: (row) => row.specificationNumber },
   { id: "revision", header: "Revision", cell: (row) => row.revisionNumber },
   { id: "supersedes", header: "Supersedes", cell: (row) => row.supersedesNumber },
+  { id: "reason", header: "Reason for revision", width: "24%", cell: (row) => row.reason ?? (row.event === "Revised" ? "Not recorded" : "—") },
   { id: "person", header: "Recorded by", cell: (row) => row.recordedBy ?? "—" },
   { id: "time", header: "Date and time", cell: (row) => formatDateTime(row.occurredAt) ?? "—" },
 ];

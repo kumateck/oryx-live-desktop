@@ -38,7 +38,9 @@ function open(path: string, permissions: string[], waitForSavedReferences?: Prom
     if (url.pathname === "/api/v1/material-specifications/s1") return Response.json(spec);
     if (url.pathname === "/api/v1/specification-print/packaging-material/s1") return Response.json({
       revisedBy: "Kofi Mensah", revisedAt: "2026-11-12T15:10:00Z", historyAvailableFrom: "2026-10-27T09:00:00Z",
-      revisions: [{ specificationNumber: "QCD/SPC/PM/003", revisionNumber: "01", supersedesNumber: "None",
+      revisions: [{ specificationNumber: "QCD/SPC/PM/003", revisionNumber: "02", supersedesNumber: "01",
+        recordedBy: "Esi Boateng", occurredAt: "2026-11-10T08:30:00Z", event: "Revised", reason: "Closure torque limit tightened." },
+      { specificationNumber: "QCD/SPC/PM/003", revisionNumber: "01", supersedesNumber: "None",
         recordedBy: "Ama Owusu", occurredAt: "2026-10-27T09:00:00Z", event: "History baseline" }],
     });
     if (url.pathname === "/api/v1/form/f1") return Response.json(template);
@@ -115,6 +117,9 @@ it("prints the saved specification with revision author, date and history", asyn
   expect(preview.getByText(formatDateTime("2026-11-12T15:10:00Z") ?? "missing date")).toBeTruthy();
   const history = within(preview.getByRole("table", { name: "Specification history" }));
   expect(history.getByText("History baseline")).toBeTruthy();
+  // Each revision shows the reason it was made.
+  expect(history.getByText("Reason for revision")).toBeTruthy();
+  expect(history.getByText("Closure torque limit tightened.")).toBeTruthy();
   expect(history.getByText("Ama Owusu")).toBeTruthy();
   expect(preview.getByRole("button", { name: "Print" })).toHaveProperty("disabled", false);
   expect(calls).toEqual([]);

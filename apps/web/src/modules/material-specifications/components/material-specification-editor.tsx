@@ -19,7 +19,7 @@ import { useNextSerial } from "@/shared/qc/qc-numbers";
 import { useKindTabs, type MaterialKind } from "@/shared/reference-data/kind-tabs";
 import { FormPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import {
-  checkRevisionDate, documentReferences, earliestRevisionDate, linkDelta, materialSpecificationPrefix, serialNumber, specificationBaseSchema, specificationBody, specificationDefaults,
+  checkRevisionDate, requireRevisionReason, revisionReasonField, documentReferences, earliestRevisionDate, linkDelta, materialSpecificationPrefix, serialNumber, specificationBaseSchema, specificationBody, specificationDefaults,
 } from "@/shared/specifications/specification-rules";
 import { specificationRowsSchema, specificationSchema, type Specification } from "@/shared/specifications/specification-schema";
 import { SpecificationUnavailable } from "@/shared/specifications/specification-views";
@@ -27,8 +27,10 @@ import { useTemplateLoader } from "@/shared/specifications/use-template-loader";
 import { materialSpecificationsApi } from "../api/material-specifications-api";
 import { asKind, audit, completePath, detailPath, kindName, listOf, specPermissions } from "../lib/material-specifications";
 
-const schema = specificationBaseSchema.extend({ materials: z.array(z.object({ value: z.string(), label: z.string() })).min(1, "Choose at least one material.") }).superRefine(checkRevisionDate);
-type Values = z.input<typeof schema>;
+const base = specificationBaseSchema.extend({ materials: z.array(z.object({ value: z.string(), label: z.string() })).min(1, "Choose at least one material.") }).superRefine(checkRevisionDate);
+/** Editing a saved specification is a revision, which needs its reason. */
+const schemaFor = (editing: boolean) => editing ? base.superRefine(requireRevisionReason) : base;
+type Values = z.input<typeof base>;
 const years = { fromYear: 2000, toYear: 2100 } as const;
 
 function Editor({ kind, saved, linked }: { kind: MaterialKind; saved: Specification | null; linked: readonly SelectOption[] }) {
@@ -37,6 +39,7 @@ function Editor({ kind, saved, linked }: { kind: MaterialKind; saved: Specificat
   const userId = state.status === "authenticated" ? state.session.user.id : null;
   const require = saved ? specPermissions.edit[kind] : specPermissions.create[kind];
   const permission = usePermissionAction(require);
+  const schema = useMemo(() => schemaFor(saved !== null), [saved]);
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: saved ? { ...specificationDefaults(saved), materials: [...linked] }
     : { specificationNumber: "", revisionNumber: "", supersedesNumber: "", reference: null, description: "", materials: [] } });
   const effectiveDate = useWatch({ control: form.control, name: "effectiveDate" });
@@ -86,7 +89,8 @@ function Editor({ kind, saved, linked }: { kind: MaterialKind; saved: Specificat
     { type: InputTypes.SELECT, mode: "single", source: "async", name: "form", label: "Template", required: true, loadOptions: loadTemplates, placeholder: "Select a template", searchPlaceholder: "Search templates",
       description: "The tests of the specification come from this template.", className: "md:col-span-2" },
     { type: InputTypes.RICHTEXT, name: "description", label: "Notes", rows: 4, className: "md:col-span-2" },
-  ] as const satisfies readonly WizardField<Values>[], [kind, earliest, loadOptions, loadTemplates]);
+    ...(saved ? [revisionReasonField] : []),
+  ] as const satisfies readonly WizardField<Values>[], [kind, earliest, loadOptions, loadTemplates, saved]);
 
   const submit = form.handleSubmit(async (raw) => {
     const values = schema.parse(raw);
@@ -107,7 +111,7 @@ function Editor({ kind, saved, linked }: { kind: MaterialKind; saved: Specificat
         void navigate(id ? completePath(id) : listOf(kind));
         return;
       }
-      const updated = await update({ ...audit, id: saved.id, domainEntitiesMaterialSpecificationsUpdateMaterialSpecificationRequest: specificationBody(values, saved.dueDate) });
+      const updated = await update({ ...audit, id: saved.id, domainEntitiesMaterialSpecificationsUpdateMaterialSpecificationRequest: { ...specificationBody(values, saved.dueDate), revisionReason: (values.revisionReason ?? "").trim() } });
       if ("error" in updated) { setMessage(apiErrorMessage(updated.error)); return; }
       const delta = linkDelta(linkedIds, materialIds);
       if (delta.add.length > 0 || delta.remove.length > 0) {

@@ -3262,6 +3262,7 @@ export type DomainEntitiesMaterialSpecificationsMaterialSpecificationDto = {
   createdAt?: string;
   specificationNumber?: string | null;
   revisionNumber?: string | null;
+  revisionReason?: string | null;
   supersedesNumber?: string | null;
   effectiveDate?: string;
   reviewDate?: string;
@@ -3294,6 +3295,7 @@ export type DomainEntitiesMaterialSpecificationsMaterialSpecificationMappingDto 
   };
 export type DomainEntitiesMaterialSpecificationsUpdateMaterialSpecificationRequest =
   {
+    revisionReason: string;
     specificationNumber: string;
     revisionNumber: string;
     supersedesNumber: string;
@@ -3678,6 +3680,7 @@ export type DomainEntitiesProductSpecificationsProductSpecificationDto = {
   createdAt?: string;
   specificationNumber?: string | null;
   revisionNumber?: string | null;
+  revisionReason?: string | null;
   supersedesNumber?: string | null;
   labelClaim?: string | null;
   packingStyle?: string | null;
@@ -3703,6 +3706,7 @@ export type DomainEntitiesProductSpecificationsProductSpecificationDtoRead = {
   createdAt?: string;
   specificationNumber?: string | null;
   revisionNumber?: string | null;
+  revisionReason?: string | null;
   supersedesNumber?: string | null;
   labelClaim?: string | null;
   packingStyle?: string | null;
@@ -3750,6 +3754,7 @@ export type DomainEntitiesProductSpecificationsProductSpecificationMappingDto =
   };
 export type DomainEntitiesProductSpecificationsUpdateProductSpecificationRequest =
   {
+    revisionReason: string;
     specificationNumber: string;
     revisionNumber: string;
     supersedesNumber: string;
@@ -3871,6 +3876,7 @@ export type DomainEntitiesSpecificationsSpecificationPrintRevision = {
   recordedBy?: string | null;
   occurredAt?: string | null;
   event?: string | null;
+  reason?: string | null;
 };
 export type DomainEntitiesSpecificationsSpecificationPrintHistory = {
   revisedBy?: string | null;

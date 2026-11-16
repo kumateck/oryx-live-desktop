@@ -71,6 +71,14 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+Specification revision reason (2026-11-16) makes `revisionReason` required on
+`UpdateMaterialSpecificationRequest` and `UpdateProductSpecificationRequest` (every edit is a
+revision and states why) and adds it, optional, to both specification DTOs, with `reason` on
+`SpecificationPrintRevision`. Typed digest
+`f02f0982a07af3863e693c4d88b8c5abcbe239ff079c4a30424d5e21a6535a71`; removing exactly these
+fields reproduces `6c84e6f9…9806`. Apply `AddSpecificationRevisionReason` and deploy the
+backend first.
+
 BOM substitute quantities (2026-11-14) add typed `GET`/`POST`
 `/api/v1/requisition/{requisitionId}/material-options` (warehouse domain), five owned
 schemas, and optional substitute quantity fields on BOM substitute DTOs/requests plus
