@@ -3,6 +3,17 @@ import { formulaPreview } from "@/shared/formula/formula-preview";
 import { FormulaType } from "@/shared/questions/question-types";
 
 const objectSchema = z.record(z.string(), z.json());
+type Json = z.infer<ReturnType<typeof z.json>>;
+
+function nestedSettings(expression: Json | undefined): Record<string, Json> {
+  if (typeof expression !== "string" || !expression.trim().startsWith("{")) return {};
+  try {
+    const nested = objectSchema.safeParse(JSON.parse(expression));
+    return nested.success && typeof nested.data.expression === "string" ? nested.data : {};
+  } catch {
+    return {};
+  }
+}
 
 /** Preserve the stored calculation contract while unwrapping legacy JSON and settings envelopes. */
 export function evaluationSettings(raw: string): { type: FormulaType; settings: string } | null {
@@ -14,8 +25,10 @@ export function evaluationSettings(raw: string): { type: FormulaType; settings: 
       const parsed = objectSchema.safeParse(candidate);
       return parsed.success ? [parsed.data] : [];
     })];
-    const payload = candidates.find((candidate) => typeof candidate.expression === "string" || typeof candidate.mode === "string");
-    if (!payload) return null;
+    const found = candidates.find((candidate) => typeof candidate.expression === "string" || typeof candidate.mode === "string");
+    if (!found) return null;
+    // The question editor stores a Simple formula as { type, expression: "<builder settings JSON>" }; read the inner settings.
+    const payload = { ...found, ...nestedSettings(found.expression) };
     const type = formulaPreview(raw).type;
     if (type !== FormulaType.Uniformity && (typeof payload.expression !== "string" || !payload.expression.trim())) return null;
     return { type, settings: JSON.stringify({ ...root, ...payload, type }) };
