@@ -8,7 +8,7 @@ import { useGetApiV1RequisitionByRequisitionIdQuery } from "@/modules/requisitio
 import { ConfirmActionDialog } from "@/shared/actions";
 import { NoAccess } from "@/shared/auth/no-access";
 import { useAccess } from "@/shared/auth/use-access";
-import { ClientDataTable, ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
+import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDateTime } from "@/shared/format/dates";
@@ -24,12 +24,12 @@ import { usePageSearch } from "@/shared/search/page-search";
 import { whitePlaceboPreparationPath } from "@/shared/production/white-placebo-path";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation } from "../api/stock-issue-api";
-import { audit, batchNumber, issueQueues, type IssueQueue, checkNote, issueBlock, issueCheckKeys, issuePermissions, issueRequisitionPath, shortfall, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
-import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockLine, type StockRequisition } from "../schemas/stock-issue-schema";
+import { audit, issueQueues, type IssueQueue, checkNote, issueBlock, issueCheckKeys, issuePermissions, issueRequisitionPath, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
+import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockRequisition } from "../schemas/stock-issue-schema";
 import { AlternativeBatches } from "./alternative-batches";
 import { VoucherTable } from "./voucher-table";
+import { IssueLines } from "./issue-lines";
 import { MaterialChoices } from "./material-choices";
-import { BatchBreakdown, amount } from "./batch-breakdown";
 
 function Standing({ requisition }: { requisition: Pick<StockRequisition, "approved" | "status"> }) {
   if (requisition.status === 3) return <Badge>Issued</Badge>;
@@ -138,7 +138,7 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
     {kind === 0 && requisition.status !== 3 && requisition.status !== 4 ? <MaterialChoices requisitionId={requisition.id} /> : null}
     {/* Batches can only be swapped while the stock has not left the store. */}
     {requisition.status !== 3 && requisition.status !== 4 ? <AlternativeBatches requisitionId={requisition.id} mayAsk={has(issuePermissions[kind])} /> : null}
-    <ClientDataTable label="Materials and the batches set aside" columns={lineColumns} rows={requisition.items} getRowId={(row) => row.id} fill={false} emptyTitle="No materials on this requisition" />
+    <IssueLines requisition={requisition} />
     {confirming ? <ConfirmActionDialog require={issuePermissions[kind]} destructive={false} title={`Issue ${requisition.code}?`}
       description={`The batches shown leave your store for ${requisition.department ?? "production"}${requisition.batch ? `, for batch ${requisition.batch}` : ""}. This cannot be undone.`} confirmLabel="Issue stock" busyLabel="Issuing…" onClose={() => setConfirming(false)}
       onConfirm={async () => { const result = await issue({ ...audit, stockRequisitionId: requisition.id });

@@ -71,6 +71,14 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+Packaging issue quantity (2026-11-17) adds typed `PUT
+/api/v1/requisition/{requisitionId}/items/{itemId}/issued-quantity` (warehouse domain) with
+its request schema `AdjustIssuedQuantityRequest`, and four optional fields on
+`RequisitionItemDto`: `issuedQuantity`, `issueAdjustmentReason`, `issueAdjustedBy` and
+`issueAdjustedAt`. Typed digest
+`2cc7b3a5a969853d122ab625816f1440a33be0d8a62a74574b845a438d9c5cf5`; removing exactly these
+reproduces `e4bf7bc3…a42a`. Apply `AddPackagingIssuedQuantity` and deploy the backend first.
+
 Requisition issued filter (2026-11-17) adds one optional boolean query parameter, `issued`, to
 `GET /api/v1/requisition/department`: `true` lists issued (completed) requisitions, `false` those
 still awaiting issue (neither completed nor rejected). Typed digest

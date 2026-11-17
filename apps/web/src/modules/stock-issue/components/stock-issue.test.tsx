@@ -47,7 +47,7 @@ function open(address: string, permissions: string[], record: object = requisiti
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const path = new URL(input.url).pathname;
-    calls.push({ method: input.method, path, ...(input.method === "POST" && path.endsWith("/swap") ? { body: await input.clone().json() } : {}),
+    calls.push({ method: input.method, path, ...(input.method === "POST" && path.endsWith("/swap") || input.method === "PUT" ? { body: await input.clone().json() } : {}),
       ...(path === "/api/v1/requisition/department" ? { search: new URL(input.url).search } : {}) });
     const other = extra(path, input.method);
     if (other) return other;
@@ -277,3 +277,38 @@ it("lays out each batch in its own columns on the issue screen and the printed v
   expect(rows[2]?.[0]).toBe("Total");
   expect(voucher.querySelectorAll(".voucher-tick")).toHaveLength(2);
 });
+
+// Labels come in sealed packs of 10 kg; 18.75 kg is required.
+const labels = (line: object = {}) => requisition("sr-1", { code: "PM/B/26/001", items: [{ id: "p1", quantity: 18_750, material: { name: "Labels", code: "PM-1", kind: 1 }, uoM: { symbol: "g" },
+  batches: [{ quantityToTake: 18_750, batch: { id: "b1", batchNumber: "L-1", expiryDate: "2099-01-01T00:00:00Z", quantityPerContainer: 10_000, numberOfContainers: 5 } }], ...line }] });
+
+it("lets a warehouse supervisor issue packaging over its requirement, with a reason", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/warehouse/stock-requisition/sr-1?type=1", ["CanViewPackagingMaterialRequisitions", "CanAdjustPackagingMaterialIssueQuantity"], labels(),
+    (path, method) => method === "PUT" && path === "/api/v1/requisition/sr-1/items/p1/issued-quantity" ? new Response(null, { status: 204 }) : null);
+  await user.click(await screen.findByRole("button", { name: "Actions for Labels" }));
+  await user.click(await screen.findByRole("menuitem", { name: "Set quantity to issue" }));
+  const dialog = within(await screen.findByRole("dialog"));
+  expect(dialog.getByText("20 kg")).toBeTruthy();
+  await user.click(dialog.getByRole("button", { name: "Use" }));
+  expect(dialog.getByText("1.25 kg over the requirement.")).toBeTruthy();
+  await user.click(dialog.getByRole("button", { name: "Save quantity" }));
+  expect(await dialog.findByText("Say why more or less than the requirement is issued.")).toBeTruthy();
+  expect(calls.filter((call) => call.method === "PUT")).toEqual([]);
+  await user.type(dialog.getByRole("textbox", { name: /Reason/ }), "Sealed packs of 10");
+  await user.click(dialog.getByRole("button", { name: "Save quantity" }));
+  await waitFor(() => expect(calls.some((call) => call.method === "PUT")).toBe(true));
+  expect(calls.find((call) => call.method === "PUT")?.body).toEqual({ quantity: 20_000, reason: "Sealed packs of 10" });
+}, 30_000);
+
+it("offers the quantity only to holders of the supervisor key, and prints a set quantity with its reason", async () => {
+  open("/warehouse/stock-requisition/sr-1?type=1", ["CanViewPackagingMaterialRequisitions"],
+    labels({ issuedQuantity: 20_000, issueAdjustmentReason: "Sealed packs of 10", issueAdjustedBy: { name: "Kofi Mensah" } }));
+  expect(await screen.findByText("To issue 20 kg · 1.25 kg over")).toBeTruthy();
+  expect(screen.getByText("Sealed packs of 10")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Actions for Labels" })).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: "Print" }));
+  const preview = within(await screen.findByRole("dialog"));
+  expect(preview.getByText("To issue 20 kg: 1.25 kg over")).toBeTruthy();
+  expect(preview.getByText("Reason: Sealed packs of 10")).toBeTruthy();
+}, 30_000);

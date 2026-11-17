@@ -4279,6 +4279,11 @@ export type DomainEntitiesRequisitionsRequisitionItemDto = {
   batches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
   approvedQuantity?: number | null;
   substituteFor?: SharedCollectionItemDto;
+  /** A packaging line issued over or under its requirement; null when issued exactly as requested. */
+  issuedQuantity?: number | null;
+  issueAdjustmentReason?: string | null;
+  issueAdjustedBy?: SharedCollectionItemDto;
+  issueAdjustedAt?: string | null;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   id?: string;
@@ -4290,6 +4295,11 @@ export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
   approvedQuantity?: number | null;
   substituteFor?: SharedCollectionItemDto;
+  /** A packaging line issued over or under its requirement; null when issued exactly as requested. */
+  issuedQuantity?: number | null;
+  issueAdjustmentReason?: string | null;
+  issueAdjustedBy?: SharedCollectionItemDto;
+  issueAdjustedAt?: string | null;
 };
 export type DomainEntitiesRequisitionsVoucherSignatoryDto = {
   userId?: string | null;
