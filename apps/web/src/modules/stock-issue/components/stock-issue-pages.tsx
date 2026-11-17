@@ -1,4 +1,3 @@
-import { missingStockLocation } from "@/shared/warehouse/stock-location";
 import { useEffect, useMemo, useState } from "react";
 import { PackageCheck } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -9,15 +8,15 @@ import { useGetApiV1RequisitionByRequisitionIdQuery } from "@/modules/requisitio
 import { ConfirmActionDialog } from "@/shared/actions";
 import { NoAccess } from "@/shared/auth/no-access";
 import { useAccess } from "@/shared/auth/use-access";
-import { ClientDataTable, ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
+import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { formatDateTime, formatMonthYear } from "@/shared/format/dates";
+import { formatDateTime } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { ReviewPanel } from "@/shared/reviews/review-panel";
 import { PrintButton } from "@/shared/print/print-button";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
-import { PrintFacts, PrintHeader, PrintSignatures, PrintTable, type PrintColumn, type PrintSigner } from "@/shared/print/print-sheet";
+import { PrintFacts, PrintHeader, PrintSignatures, type PrintSigner } from "@/shared/print/print-sheet";
 import { KindSwitch } from "@/shared/reference-data/kind-switch";
 import { useKindTabs } from "@/shared/reference-data/kind-tabs";
 import { RichTextView, richTextToPlain } from "@/shared/rich-text/rich-text-view";
@@ -25,11 +24,12 @@ import { usePageSearch } from "@/shared/search/page-search";
 import { whitePlaceboPreparationPath } from "@/shared/production/white-placebo-path";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation } from "../api/stock-issue-api";
-import { audit, batchNumber, checkNote, issueBlock, issueCheckKeys, issuePermissions, issueRequisitionPath, shortfall, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
-import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockLine, type StockRequisition } from "../schemas/stock-issue-schema";
+import { audit, issueQueues, type IssueQueue, checkNote, issueBlock, issueCheckKeys, issuePermissions, issueRequisitionPath, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
+import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockRequisition } from "../schemas/stock-issue-schema";
 import { AlternativeBatches } from "./alternative-batches";
+import { VoucherTable } from "./voucher-table";
+import { IssueLines } from "./issue-lines";
 import { MaterialChoices } from "./material-choices";
-import { BatchBreakdown, amount } from "./batch-breakdown";
 
 function Standing({ requisition }: { requisition: Pick<StockRequisition, "approved" | "status"> }) {
   if (requisition.status === 3) return <Badge>Issued</Badge>;
@@ -52,11 +52,14 @@ const columns = column.columns([
 export function StockIssueListPage() {
   const navigate = useNavigate();
   const { kind, select, tabs } = useKindTabs(viewPermissions);
+  const [queue, setQueue] = useState<IssueQueue>("awaiting");
+  const shown = issueQueues.find((entry) => entry.value === queue) ?? issueQueues[0];
   const [busy, setBusy] = useState(false);
   const search = usePageSearch("stock requisitions", busy);
-  const table = useServerTable({ pageSize: 50, resetKey: `${search}|${kind}` });
+  const table = useServerTable({ pageSize: 50, resetKey: `${search}|${kind}|${queue}` });
   // Type 0 is a stock requisition.
-  const query = useGetApiV1RequisitionDepartmentQuery({ ...audit, type: 0, kind: kind ?? 0, page: table.page, pageSize: table.pageSize, searchQuery: search }, { skip: kind === null });
+  const query = useGetApiV1RequisitionDepartmentQuery({ ...audit, type: 0, kind: kind ?? 0, page: table.page, pageSize: table.pageSize, searchQuery: search,
+    ...(shown.issued === undefined ? {} : { issued: shown.issued }) }, { skip: kind === null });
   const parsed = useMemo(() => query.data ? stockRequisitionRowsSchema.safeParse(query.data.data ?? []) : null, [query.data]);
   const rows = useMemo(() => parsed?.success ? parsed.data : [], [parsed]);
   const meta = pageMeta(query.data, table, rows.length);
@@ -64,12 +67,16 @@ export function StockIssueListPage() {
   return <section className="page-fill">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><p className="eyebrow">WAREHOUSE</p><h1 className="text-xl font-semibold">Issue stock requisitions</h1></div>
-      <KindSwitch tabs={tabs} kind={kind} onSelect={select} />
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="group" aria-label="Requisition status" className="flex gap-1">{issueQueues.map((entry) =>
+          <Button key={entry.value} type="button" size="sm" variant={queue === entry.value ? "default" : "outline"} aria-pressed={queue === entry.value} onClick={() => setQueue(entry.value)}>{entry.label}</Button>)}</div>
+        <KindSwitch tabs={tabs} kind={kind} onSelect={select} />
+      </div>
     </div>
     <ServerDataTable label="Stock requisitions" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} onRowOpen={(row) => void navigate(row.whitePlaceboPreparationId ? whitePlaceboPreparationPath(row.whitePlaceboPreparationId) : issueRequisitionPath(row.id, kind ?? 0))}
       error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned requisitions the app could not read." : null}
-      emptyTitle={search.trim() ? "No requisitions match this search" : "No stock requisitions"} emptyDescription={search.trim() ? "Search by requisition number." : "Requisitions appear here when production asks your store for materials."} />
+      emptyTitle={search.trim() ? "No requisitions match this search" : shown.empty} emptyDescription={search.trim() ? "Search by requisition number." : "Requisitions appear here when production asks your store for materials."} />
   </section>;
 }
 
@@ -77,19 +84,12 @@ const lineColumn = dataTableColumns<StockLine>();
 const lineColumns = lineColumn.columns([
   lineColumn.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div>
     {row.original.substituteFor ? <div className="break-words text-xs text-muted-foreground">Substitute for {row.original.substituteFor}</div> : null}</div> }),
-  lineColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => { const short = shortfall(row.original);
+  lineColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => {
     return <div><div>{amount(row.original.quantity, row.original.unit)}</div>
       {row.original.approvedQuantity !== null ? <div className="text-xs text-muted-foreground">Originally approved: {amount(row.original.approvedQuantity, row.original.unit)} · repaired after issue</div> : null}
-      {short > 0 && row.original.batches.length > 0 ? <div className="text-xs text-destructive">{amount(short, row.original.unit)} not set aside</div> : null}</div>; } }),
+      </div>; } }),
   lineColumn.display({ id: "batches", header: "Issued from", cell: ({ row }) => <BatchBreakdown line={row.original} /> }),
 ]);
-const printColumns: PrintColumn<StockLine>[] = [
-  { id: "n", header: "#", cell: (_row, index) => index + 1, width: "6%" },
-  { id: "material", header: "Material", cell: (row) => <>{row.materialName}<small>{row.materialCode ?? "No code"}</small>{row.substituteFor ? <small>Substitute for {row.substituteFor}</small> : null}</> },
-  { id: "quantity", header: "Quantity", align: "right", cell: (row) => <>{amount(row.quantity, row.unit)}
-    {row.approvedQuantity !== null ? <small>Originally approved: {amount(row.approvedQuantity, row.unit)}; repaired after issue</small> : null}</> },
-  { id: "batches", header: "Batch · AR No. · location · quantity · expiry", cell: (row) => row.batches.length ? row.batches.map((batch) => <div key={batch.key}>{batchNumber(batch.number)} · {amount(batch.quantity, row.unit)} · {formatMonthYear(batch.expires) ?? "no expiry"}<small>AR No.: {batch.arNumber ?? "Not recorded"}</small><small>{batch.location ?? missingStockLocation}</small></div>) : "None set aside" },
-];
 
 /** The voucher's signature lines: the store user who issued it, the approver who checked the issue, and the requester who receives it. */
 function voucherSigners(requisition: StockRequisition): PrintSigner[] {
@@ -110,12 +110,12 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
   const reference = requisition.contentRevision ? `${requisition.code} · Revision ${requisition.contentRevision}` : requisition.code;
   return <article className="min-w-0 space-y-4">
     <PageHeader title={`Stock requisition ${reference}`} crumbs={[{ label: "Issue stock requisitions", to: back }, { label: reference }]} actions={<>
-      <PrintButton preview={(close) => <PrintPreviewDialog title={`Stock requisition voucher · ${requisition.code}`} onClose={close}>
+      <PrintButton preview={(close) => <PrintPreviewDialog landscape title={`Stock requisition voucher · ${requisition.code}`} onClose={close}>
         <PrintHeader title="Stock requisition voucher" reference={reference} />
         <PrintFacts facts={[{ label: "Product", value: [requisition.product, requisition.productCode].filter(Boolean).join(" · ") }, { label: "Schedule", value: requisition.schedule }, { label: "Batch", value: requisition.batch },
           { label: "Requested by", value: requisition.requestedBy }, { label: "Department", value: requisition.department }, { label: "Requested on", value: formatDateTime(requisition.createdAt) }]} />
         {remarks ? <p className="print-note"><strong>Justification:</strong> {remarks}</p> : null}
-        <PrintTable columns={printColumns} rows={requisition.items} rowKey={(row) => row.id} empty="No materials on this requisition" />
+        <VoucherTable lines={requisition.items} />
         <PrintSignatures signers={voucherSigners(requisition)} />
       </PrintPreviewDialog>} />
       {has(issuePermissions[kind]) && requisition.status !== 3 ? <Button type="button" disabled={block !== null} onClick={() => setConfirming(true)}><PackageCheck />Issue stock</Button> : null}
@@ -138,7 +138,7 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
     {kind === 0 && requisition.status !== 3 && requisition.status !== 4 ? <MaterialChoices requisitionId={requisition.id} /> : null}
     {/* Batches can only be swapped while the stock has not left the store. */}
     {requisition.status !== 3 && requisition.status !== 4 ? <AlternativeBatches requisitionId={requisition.id} mayAsk={has(issuePermissions[kind])} /> : null}
-    <ClientDataTable label="Materials and the batches set aside" columns={lineColumns} rows={requisition.items} getRowId={(row) => row.id} fill={false} emptyTitle="No materials on this requisition" />
+    <IssueLines requisition={requisition} />
     {confirming ? <ConfirmActionDialog require={issuePermissions[kind]} destructive={false} title={`Issue ${requisition.code}?`}
       description={`The batches shown leave your store for ${requisition.department ?? "production"}${requisition.batch ? `, for batch ${requisition.batch}` : ""}. This cannot be undone.`} confirmLabel="Issue stock" busyLabel="Issuing…" onClose={() => setConfirming(false)}
       onConfirm={async () => { const result = await issue({ ...audit, stockRequisitionId: requisition.id });
