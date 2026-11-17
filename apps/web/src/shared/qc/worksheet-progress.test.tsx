@@ -35,8 +35,10 @@ it("shows saved completion, the current analyst, and a filled print action", asy
   expect(within(screen.getByRole("row", { name: /Identification/ })).getByText("Outstanding")).toBeTruthy();
   expect(within(screen.getByRole("row", { name: /Assay/ })).getByText("Outstanding")).toBeTruthy();
   expect(screen.getByText("Worksheet in progress · shows saved answers")).toBeTruthy();
-  // Section names are saved as rich text; the table shows their text, never the markup.
-  expect(screen.getByText("Description of sample")).toBeTruthy();
+  // Section names are saved as rich text; the table shows them formatted, never as markup.
+  const description = screen.getByText("Description");
+  expect(description.tagName).toBe("STRONG");
+  expect(description.parentElement?.textContent).toBe("Description of sample");
   expect(screen.queryByText(/<p>|<span/)).toBeNull();
   await userEvent.click(screen.getByRole("button", { name: "Print filled worksheet" }));
   expect(screen.getByText("Filled worksheet preview")).toBeTruthy();
