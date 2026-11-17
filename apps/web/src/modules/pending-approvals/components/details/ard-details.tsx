@@ -11,6 +11,7 @@ import { DetailGroup, DetailItem } from "@/shared/detail/detail-list";
 import { formatDate, formatMonthYear } from "@/shared/format/dates";
 import { useAccess } from "@/shared/auth/use-access";
 import { PrintButton } from "@/shared/print/print-button";
+import { AtrRequestSection } from "@/shared/qc/atr-request-section";
 import { ArdDocument, type CertificateFacts } from "./ard-document";
 import { ArdWorksheet } from "./ard-worksheet";
 import { ardAnswersSchema as answers, ardFormSchema as formSchema, ardPersonSchema as person } from "../../schemas/ard-result-schema";
@@ -83,9 +84,12 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
   const failures = [...recorded.values()].filter(answerFails).length;
   // A product's investigation reopens, and its certificate is made from, the test request of the step that was tested.
   const approved = response?.approved === true;
-  const stepId = (rejection || approved) && recordId ? response?.productionActivityStepId ?? null : null;
+  // The test request is also shown and printed with a product's certificate.
+  const stepId = recordId ? response?.productionActivityStepId ?? null : null;
   const atrQuery = useGetApiV1QaAnalyticalTestsActivityStepByActivityStepIdQuery(stepId ? { ...audit, activityStepId: stepId } : skipToken);
-  const atr = useParsed(atrSchema, atrQuery.data);
+  const parsedAtr = useParsed(atrSchema, atrQuery.data);
+  // An investigation or certificate is made only once the results are rejected or approved.
+  const atr = rejection || approved ? parsedAtr : null;
   const coaTarget = materialBatchId ? { materialBatchId } : atr?.id ? { analyticalTestRequestId: atr.id } : null;
   const certificateSections = sections.map((section) => ({ id: section.id, name: section.name, description: section.description, groupName: section.groupName,
     fields: [...(section.fields ?? [])].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0)) }));
@@ -129,5 +133,6 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
         <article aria-label="Certificate of analysis" className="print-sheet min-w-0">
           <ArdDocument sections={certificateSections} recorded={recorded} signatories={signatories} facts={facts} />
         </article></>}
+      {isMaterial ? null : <AtrRequestSection data={atrQuery.data} />}
     </div>; }}</DetailState>;
 }

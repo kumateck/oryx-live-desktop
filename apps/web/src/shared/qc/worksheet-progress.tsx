@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { FormResponseDto } from "@/shared/ard-view/dto";
 import { hasMeaningfulResponse } from "@/shared/ard-view/raw-data/print/section-utils";
+import { RichTextView, richTextToPlain } from "@/shared/rich-text/rich-text-view";
 import { draftStatus } from "@/shared/form-response/draft-status";
 import type { AnswerForm } from "@/shared/form-response/form-model";
 import type { StoredAnswers } from "@/shared/form-response/use-answer-form";
@@ -74,8 +75,12 @@ export function WorksheetProgress({ form, stored, responses, assignments, submit
         {progress.sections.map((section) => <TableBody key={section.id}>
           <TableRow className="bg-muted/50">
             <TableHead colSpan={3} scope="rowgroup" className="h-auto whitespace-normal py-2">
-              <span className="font-semibold">{section.name || "Test results"}</span>
-              <span className="ml-3 text-xs font-normal text-muted-foreground tabular-nums">{section.completed} of {section.fields.length} completed</span>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                {richTextToPlain(section.name)
+                  ? <RichTextView html={section.name} className="font-semibold [&_p]:m-0" />
+                  : <span className="font-semibold">Test results</span>}
+                <span className="text-xs font-normal text-muted-foreground tabular-nums">{section.completed} of {section.fields.length} completed</span>
+              </div>
             </TableHead>
           </TableRow>
           {section.fields.map((field) => <TableRow key={field.id}>

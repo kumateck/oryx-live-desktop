@@ -24,7 +24,7 @@ import { usePageSearch } from "@/shared/search/page-search";
 import { whitePlaceboPreparationPath } from "@/shared/production/white-placebo-path";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation } from "../api/stock-issue-api";
-import { audit, checkNote, issueBlock, issueCheckKeys, issuePermissions, issueRequisitionPath, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
+import { audit, batchNumber, issueQueues, type IssueQueue, checkNote, issueBlock, issueCheckKeys, issuePermissions, issueRequisitionPath, shortfall, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
 import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockLine, type StockRequisition } from "../schemas/stock-issue-schema";
 import { AlternativeBatches } from "./alternative-batches";
 import { VoucherTable } from "./voucher-table";
@@ -52,11 +52,14 @@ const columns = column.columns([
 export function StockIssueListPage() {
   const navigate = useNavigate();
   const { kind, select, tabs } = useKindTabs(viewPermissions);
+  const [queue, setQueue] = useState<IssueQueue>("awaiting");
+  const shown = issueQueues.find((entry) => entry.value === queue) ?? issueQueues[0];
   const [busy, setBusy] = useState(false);
   const search = usePageSearch("stock requisitions", busy);
-  const table = useServerTable({ pageSize: 50, resetKey: `${search}|${kind}` });
+  const table = useServerTable({ pageSize: 50, resetKey: `${search}|${kind}|${queue}` });
   // Type 0 is a stock requisition.
-  const query = useGetApiV1RequisitionDepartmentQuery({ ...audit, type: 0, kind: kind ?? 0, page: table.page, pageSize: table.pageSize, searchQuery: search }, { skip: kind === null });
+  const query = useGetApiV1RequisitionDepartmentQuery({ ...audit, type: 0, kind: kind ?? 0, page: table.page, pageSize: table.pageSize, searchQuery: search,
+    ...(shown.issued === undefined ? {} : { issued: shown.issued }) }, { skip: kind === null });
   const parsed = useMemo(() => query.data ? stockRequisitionRowsSchema.safeParse(query.data.data ?? []) : null, [query.data]);
   const rows = useMemo(() => parsed?.success ? parsed.data : [], [parsed]);
   const meta = pageMeta(query.data, table, rows.length);
@@ -64,12 +67,16 @@ export function StockIssueListPage() {
   return <section className="page-fill">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><p className="eyebrow">WAREHOUSE</p><h1 className="text-xl font-semibold">Issue stock requisitions</h1></div>
-      <KindSwitch tabs={tabs} kind={kind} onSelect={select} />
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="group" aria-label="Requisition status" className="flex gap-1">{issueQueues.map((entry) =>
+          <Button key={entry.value} type="button" size="sm" variant={queue === entry.value ? "default" : "outline"} aria-pressed={queue === entry.value} onClick={() => setQueue(entry.value)}>{entry.label}</Button>)}</div>
+        <KindSwitch tabs={tabs} kind={kind} onSelect={select} />
+      </div>
     </div>
     <ServerDataTable label="Stock requisitions" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} onRowOpen={(row) => void navigate(row.whitePlaceboPreparationId ? whitePlaceboPreparationPath(row.whitePlaceboPreparationId) : issueRequisitionPath(row.id, kind ?? 0))}
       error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned requisitions the app could not read." : null}
-      emptyTitle={search.trim() ? "No requisitions match this search" : "No stock requisitions"} emptyDescription={search.trim() ? "Search by requisition number." : "Requisitions appear here when production asks your store for materials."} />
+      emptyTitle={search.trim() ? "No requisitions match this search" : shown.empty} emptyDescription={search.trim() ? "Search by requisition number." : "Requisitions appear here when production asks your store for materials."} />
   </section>;
 }
 
