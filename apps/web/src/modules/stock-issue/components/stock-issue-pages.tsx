@@ -80,17 +80,6 @@ export function StockIssueListPage() {
   </section>;
 }
 
-const lineColumn = dataTableColumns<StockLine>();
-const lineColumns = lineColumn.columns([
-  lineColumn.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div>
-    {row.original.substituteFor ? <div className="break-words text-xs text-muted-foreground">Substitute for {row.original.substituteFor}</div> : null}</div> }),
-  lineColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => {
-    return <div><div>{amount(row.original.quantity, row.original.unit)}</div>
-      {row.original.approvedQuantity !== null ? <div className="text-xs text-muted-foreground">Originally approved: {amount(row.original.approvedQuantity, row.original.unit)} · repaired after issue</div> : null}
-      </div>; } }),
-  lineColumn.display({ id: "batches", header: "Issued from", cell: ({ row }) => <BatchBreakdown line={row.original} /> }),
-]);
-
 /** The voucher's signature lines: the store user who issued it, the approver who checked the issue, and the requester who receives it. */
 function voucherSigners(requisition: StockRequisition): PrintSigner[] {
   const { issuedBy, checkedBy, receivedBy, checkStatus } = requisition.signatories;
