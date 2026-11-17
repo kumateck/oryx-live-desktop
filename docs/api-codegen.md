@@ -71,6 +71,20 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+Packaging issue quantity (2026-11-17) adds typed `PUT
+/api/v1/requisition/{requisitionId}/items/{itemId}/issued-quantity` (warehouse domain) with
+its request schema `AdjustIssuedQuantityRequest`, and four optional fields on
+`RequisitionItemDto`: `issuedQuantity`, `issueAdjustmentReason`, `issueAdjustedBy` and
+`issueAdjustedAt`. Typed digest
+`2cc7b3a5a969853d122ab625816f1440a33be0d8a62a74574b845a438d9c5cf5`; removing exactly these
+reproduces `e4bf7bc3…a42a`. Apply `AddPackagingIssuedQuantity` and deploy the backend first.
+
+Requisition issued filter (2026-11-17) adds one optional boolean query parameter, `issued`, to
+`GET /api/v1/requisition/department`: `true` lists issued (completed) requisitions, `false` those
+still awaiting issue (neither completed nor rejected). Typed digest
+`e4bf7bc3756169634fc42cc65d9de3e0c0c00fb245ccf90c8b8f8a381bf6a42a`; removing exactly this
+parameter reproduces `f2960caf…c6f9`. Deploy the backend first.
+
 Specification revision reason (2026-11-16) makes `revisionReason` required on
 `UpdateMaterialSpecificationRequest` and `UpdateProductSpecificationRequest` (every edit is a
 revision and states why) and adds it, optional, to both specification DTOs, with `reason` and

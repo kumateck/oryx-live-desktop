@@ -87701,6 +87701,14 @@
             }
           },
           {
+            "name": "issued",
+            "in": "query",
+            "description": "True for issued requisitions only; false for those still awaiting issue (not issued or rejected).",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -117821,6 +117829,139 @@
             "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.ChooseStockRequisitionMaterialRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requisition/{requisitionId}/items/{itemId}/issued-quantity": {
+      "put": {
+        "tags": [
+          "Requisition"
+        ],
+        "summary": "Sets how much of a packaging line will be issued when whole packs make it differ from the requirement.\r\nA quantity other than the requirement needs a reason; the requirement itself clears the adjustment.",
+        "parameters": [
+          {
+            "name": "requisitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The stock requisition."
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "description": "The packaging line.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The quantity to issue, in the line's unit, and the reason it differs.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.AdjustIssuedQuantityRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.AdjustIssuedQuantityRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Requisitions.AdjustIssuedQuantityRequest"
               }
             }
           }
@@ -168358,6 +168499,24 @@
           },
           "substituteFor": {
             "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          },
+          "issuedQuantity": {
+            "type": "number",
+            "description": "A packaging line issued over or under its requirement; null when issued exactly as requested.",
+            "format": "double",
+            "nullable": true
+          },
+          "issueAdjustmentReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "issueAdjustedBy": {
+            "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          },
+          "issueAdjustedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -181718,6 +181877,21 @@
           }
         },
         "additionalProperties": false
+      },
+      "DOMAIN.Entities.Requisitions.AdjustIssuedQuantityRequest": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A warehouse supervisor's issued quantity for a packaging line, with the reason it differs from the requirement."
       }
     },
     "securitySchemes": {

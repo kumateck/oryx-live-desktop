@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { CertificatePreview } from "@/shared/ard-view/certificate-preview";
+import { AtrRequestSection } from "@/shared/qc/atr-request-section";
 import { buildCoaCompliancePayload, type CoaComplianceItem } from "@/shared/ard-view/raw-data/coa-compliance";
 import { ProductSummary } from "@/shared/ard-view/templates/sumary/product";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
@@ -144,7 +145,8 @@ export function AtrResultsPage() {
         facts={{ batchNumber: atr.batchNumber, made: atr.made, expires: atr.expires, arNumber: atr.arNumber, sampled: atr.sampledAt, analysed: atr.sampledAt, subject: `${atr.product}${atr.productCode ? ` · ${atr.productCode}` : ""}` }}
         extra={[{ label: "Composition", value: atr.composition }, { label: "Pack style", value: atr.packing }, { label: "Shelf life", value: atr.shelfLife }]}
         onCompliance={(sectionId, complies) => { if (sheet.certificate.canGenerate) setCompliance((list) => list.map((item) => item.formSectionId === sectionId ? { ...item, complies, requiresReview: false } : item)); }} />
-        {message ? <p role="alert" className="mt-2 text-sm text-destructive">{message}</p> : null}</DialogBody>
+        {message ? <p role="alert" className="mt-2 text-sm text-destructive">{message}</p> : null}
+        <div className="mt-6 border-t pt-4"><AtrRequestSection data={sheet.rawAtr} /></div></DialogBody>
       <DialogFooter><Button type="button" variant="outline" disabled={generating.isLoading} onClick={() => setPreviewing(false)}>Close</Button>
         {sheet.certificate.canGenerate ? <Button type="button" disabled={generating.isLoading || compliance.length === 0} onClick={() => void issue()}>{generating.isLoading ? <><Spinner />Submitting…</> : "Generate certificate"}</Button> : null}</DialogFooter>
     </DialogContent></Dialog> : null}

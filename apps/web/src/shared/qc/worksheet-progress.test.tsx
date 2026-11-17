@@ -10,7 +10,7 @@ import { WorksheetProgress } from "./worksheet-progress";
 afterEach(cleanup);
 
 const form = formSchema.parse({ id: "worksheet", sections: [
-  { id: "description", name: "Description", fields: [{ id: "appearance", question: { label: "Appearance" } }] },
+  { id: "description", name: "<p><span style=\"color: rgb(0, 0, 0);\"><strong>Description</strong> of sample</span></p>", fields: [{ id: "appearance", question: { label: "Appearance" } }] },
   { id: "results", name: "Results", fields: [
     { id: "identity", question: { label: "Identification" } },
     { id: "assay", question: { label: "Assay", type: QuestionType.Formula } },
@@ -35,6 +35,11 @@ it("shows saved completion, the current analyst, and a filled print action", asy
   expect(within(screen.getByRole("row", { name: /Identification/ })).getByText("Outstanding")).toBeTruthy();
   expect(within(screen.getByRole("row", { name: /Assay/ })).getByText("Outstanding")).toBeTruthy();
   expect(screen.getByText("Worksheet in progress · shows saved answers")).toBeTruthy();
+  // Section names are saved as rich text; the table shows them formatted, never as markup.
+  const description = screen.getByText("Description");
+  expect(description.tagName).toBe("STRONG");
+  expect(description.parentElement?.textContent).toBe("Description of sample");
+  expect(screen.queryByText(/<p>|<span/)).toBeNull();
   await userEvent.click(screen.getByRole("button", { name: "Print filled worksheet" }));
   expect(screen.getByText("Filled worksheet preview")).toBeTruthy();
 });

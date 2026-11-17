@@ -125,3 +125,11 @@ it("turns counted tablets into packs, then shippers, loose packs and leftover ta
   expect(yieldFigures({ received: 329, averageFilled: 329, actualPacked: 150, qcSample: 0, retained: 0, stability: 0 }, tablets))
     .toMatchObject({ totalPacked: 0, fullShippers: 0, leftOver: 0, leftoverUnits: 150 });
 });
+
+it("receives what the store issued for packaging, so an over-issue comes back as leftover", () => {
+  const issued = issuedPackagingSchema.parse({ items: [
+    { material: { id: "labels", name: "Labels", code: "PM-1" }, uoM: { id: "g", symbol: "g" }, quantity: 18_750, issuedQuantity: 20_000 },
+    { material: { id: "caps", name: "Caps", code: "PM-2" }, uoM: { id: "pcs", symbol: "pcs" }, quantity: 500 },
+  ] });
+  expect(issued.map((item) => [item.materialId, item.quantity])).toEqual([["labels", 20_000], ["caps", 500]]);
+});

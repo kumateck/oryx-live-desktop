@@ -69,3 +69,11 @@ export const issueCheckKeys: Record<MaterialKind, { confirm: string; return: str
   0: { confirm: "CanCheckRawMaterialIssue", return: "CanReturnRawMaterialIssue", resubmit: "CanRepairIssuedBom" },
   1: { confirm: "CanCheckPackagingMaterialIssue", return: "CanReturnPackagingMaterialIssue", resubmit: "CanRepairIssuedPackaging" },
 };
+
+/** The store's queues: what is still to be issued (awaiting approval or ready), what has been issued, or everything. */
+export const issueQueues = [
+  { value: "awaiting", label: "Awaiting issue", issued: false, empty: "No requisitions are awaiting issue" },
+  { value: "issued", label: "Issued", issued: true, empty: "No requisitions have been issued" },
+  { value: "all", label: "All", issued: undefined, empty: "No stock requisitions" },
+] as const;
+export type IssueQueue = (typeof issueQueues)[number]["value"];
