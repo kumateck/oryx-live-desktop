@@ -35,7 +35,20 @@ const extractNumbers = (value: string) =>
     .map((match) => toNumber(match[0]))
     .filter((item): item is number => item !== null);
 
+const number = String.raw`(-?\d[\d,]*(?:\.\d+)?)`;
+const upperLimit = new RegExp(String.raw`(?:\bnmt\b|not more than|\bmax(?:imum)?\b\.?|≤|<=|less than or equal to)\s*:?\s*` + number);
+const lowerLimit = new RegExp(String.raw`(?:\bnlt\b|not less than|\bmin(?:imum)?\b\.?|≥|>=|greater than or equal to)\s*:?\s*` + number);
+
+/** The limits a specification states: one-sided ("NMT 120.0%", "NLT 85%"), both, or a plain "2 to 4" range. */
 const getRange = (spec: string) => {
+  const upper = upperLimit.exec(spec)?.[1];
+  const lower = lowerLimit.exec(spec)?.[1];
+  if (upper !== undefined || lower !== undefined) {
+    const max = upper === undefined ? null : toNumber(upper);
+    const min = lower === undefined ? null : toNumber(lower);
+    if ((upper !== undefined && max === null) || (lower !== undefined && min === null)) return null;
+    return { min: min ?? Number.NEGATIVE_INFINITY, max: max ?? Number.POSITIVE_INFINITY };
+  }
   const numbers = extractNumbers(spec);
   if (numbers.length < 2) return null;
   const [first = 0, second = 0] = numbers;
@@ -79,7 +92,9 @@ const getFieldResult = (response: FormResponseDto, section: FormSectionDto) => {
   }
 
   if (isGovernedFormulaResponse(response)) {
-    return parseStoredFormulaResults(response)[0]?.value ?? "";
+    // Every sample's result must meet the specification, not only the first.
+    const results = parseStoredFormulaResults(response).map((result) => result.value);
+    return results.length ? results : "";
   }
 
   const templateField = section.fields?.find(
@@ -103,14 +118,10 @@ export const buildCoaCompliancePayload = (
     if (!formSectionId) return [];
     const fieldResults = (section.fields ?? []).flatMap((field) => {
       const response = field.id ? responseMap.get(field.id) : undefined;
-      return response
-        ? [
-            inferCompliance(
-              sanitizeString(section.description),
-              sanitizeString(getFieldResult(response, section)),
-            ),
-          ]
-        : [];
+      if (!response) return [];
+      const result = getFieldResult(response, section);
+      return (Array.isArray(result) ? result : [result]).map((value) =>
+        inferCompliance(sanitizeString(section.description), sanitizeString(value)));
     });
 
     return [

@@ -4,7 +4,7 @@ import {
   FormResponseDto,
   FormSectionDto,
 } from "@/shared/ard-view/dto";
-import { buildCoaCompliancePayload } from "./coa-compliance";
+import { buildCoaCompliancePayload, inferCompliance } from "./coa-compliance";
 
 const section = {
   id: "section-1",
@@ -40,5 +40,36 @@ describe("governed COA compliance", () => {
     const result = buildCoaCompliancePayload([section], [response()]);
 
     expect(result[0]).toMatchObject({ complies: false, requiresReview: true });
+  });
+
+  it("checks every sample against a one-sided limit, as for the Amoximed assays", () => {
+    const assay = (description: string) => ({ ...section, description }) as FormSectionDto;
+    const results = (...values: string[]) => response(JSON.stringify(values.map((value, index) => ({ key: `sample${index + 1}`, value, unit: null }))));
+    const nmt = '<p><span style="color: black; font-size: 12pt;">NMT 120.0% of the label claim</span></p>';
+    const nlt = '<p><span style="color: black; font-size: 12pt;">NLT 85% of the label claim</span></p>';
+
+    expect(buildCoaCompliancePayload([assay(nmt)], [results("99.96", "99.97")])[0]).toMatchObject({ complies: true, requiresReview: false });
+    expect(buildCoaCompliancePayload([assay(nlt)], [results("91.68", "90.15")])[0]).toMatchObject({ complies: true, requiresReview: false });
+    // One failing sample fails the test.
+    expect(buildCoaCompliancePayload([assay(nlt)], [results("91.68", "84.9")])[0]).toMatchObject({ complies: false, requiresReview: false });
+    expect(buildCoaCompliancePayload([assay(nmt)], [results("99.96", "120.5")])[0]).toMatchObject({ complies: false, requiresReview: false });
+  });
+});
+
+describe("specification limits", () => {
+  it.each([
+    ["NMT 120.0% of the label claim", "120", true],
+    ["Not more than 2.0%", "2.1", false],
+    ["NLT 85% of the label claim", "85", true],
+    ["Not less than 90.0%", "89.99", false],
+    ["NLT 90.0% and NMT 110.0%", "105", true],
+    ["NLT 90.0% and NMT 110.0%", "111", false],
+    ["4.0 to 7.0", "5.12", true],
+  ])("%s with %s", (specification, result, complies) => {
+    expect(inferCompliance(specification, result)).toEqual({ complies, isCertain: true });
+  });
+
+  it("still asks for review when the specification states no number", () => {
+    expect(inferCompliance("Free flowing light pink powder", "12")).toMatchObject({ isCertain: false });
   });
 });
