@@ -38,7 +38,7 @@ const requisition = (id: string, extra: object = {}) => ({ id, code: id.toUpperC
   productionScheduleProduct: { batchNumber: "T081K004", product: { name: "Paracetamol syrup", code: "FP-1" }, productionSchedule: { code: "PS026" } },
   items: [{ id: "l1", quantity: 50_000_000, material: { name: "Maize starch", code: "RM-1", kind: 0 }, uoM: { symbol: "mg" },
     batches: [{ quantityToTake: 30_000_000, batch: { id: "b1", batchNumber: "B-1", arNumber: "QCD/RM/26/314", expiryDate: "2099-01-01T00:00:00Z" } }, { quantityToTake: 20_000_000, batch: { id: "b2", batchNumber: "B-2", expiryDate: "2099-06-01T00:00:00Z", isReturn: true } }] }], ...extra });
-interface Call { method: string; path: string; body?: unknown }
+interface Call { method: string; path: string; body?: unknown; search?: string }
 function open(address: string, permissions: string[], record: object = requisition("sr-1"), extra: (path: string, method: string) => Response | null = () => null) {
   const backend = stubBackend({ permissions });
   rememberSession();
@@ -47,7 +47,8 @@ function open(address: string, permissions: string[], record: object = requisiti
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const path = new URL(input.url).pathname;
-    calls.push({ method: input.method, path, ...(input.method === "POST" && path.endsWith("/swap") ? { body: await input.clone().json() } : {}) });
+    calls.push({ method: input.method, path, ...(input.method === "POST" && path.endsWith("/swap") ? { body: await input.clone().json() } : {}),
+      ...(path === "/api/v1/requisition/department" ? { search: new URL(input.url).search } : {}) });
     const other = extra(path, input.method);
     if (other) return other;
     if (path === "/api/v1/requisition/department") return Response.json({ data: [requisition("sr-1"), requisition("sr-2", { approved: false, status: 0 })], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
@@ -66,6 +67,20 @@ it("lists the store's requisitions with where each stands", async () => {
   expect(await screen.findByText("SR-1")).toBeTruthy();
   expect(screen.getByText("Ready to issue")).toBeTruthy();
   expect(screen.getByText("Awaiting approval")).toBeTruthy();
+});
+
+it("separates requisitions awaiting issue from issued ones, awaiting first", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/warehouse/stock-requisition", ["CanViewRawMaterialRequisitions"]);
+  expect(await screen.findByText("SR-1")).toBeTruthy();
+  const listed = () => calls.filter((call) => call.path === "/api/v1/requisition/department").map((call) => new URLSearchParams(call.search).get("issued"));
+  const status = within(screen.getByRole("group", { name: "Requisition status" }));
+  expect(status.getByRole("button", { name: "Awaiting issue" }).getAttribute("aria-pressed")).toBe("true");
+  expect(listed().at(-1)).toBe("false");
+  await user.click(status.getByRole("button", { name: "Issued" }));
+  await waitFor(() => expect(listed().at(-1)).toBe("true"));
+  await user.click(status.getByRole("button", { name: "All" }));
+  await waitFor(() => expect(listed().at(-1)).toBeNull());
 });
 
 it("issues only after a confirmation, and only to someone who may issue that kind", async () => {

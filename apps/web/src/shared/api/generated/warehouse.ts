@@ -131,6 +131,7 @@ const injectedRtkApi = api.injectEndpoints({
           status: queryArg.status,
           type: queryArg["type"],
           kind: queryArg.kind,
+          issued: queryArg.issued,
         },
       }),
     }),
@@ -1407,6 +1408,8 @@ export type GetApiV1RequisitionDepartmentApiArg = {
   /** Filter between stock and purchase requisitions. (Stock = 0, Purchase =  1) */
   type?: DomainEntitiesRequisitionsRequisitionType;
   kind?: DomainEntitiesMaterialsMaterialKind;
+  /** True for issued requisitions only; false for those still awaiting issue (not issued or rejected). */
+  issued?: boolean;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
