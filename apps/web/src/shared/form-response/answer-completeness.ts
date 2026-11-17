@@ -39,8 +39,12 @@ export function formulaAnswerComplete(raw: string, definition: string): boolean 
   const samples = array(value.sampleInputs);
   const inputsComplete = (configured: JsonValue | undefined, entered: Record<string, JsonValue>) =>
     array(configured).every(input => { const key = object(input).key; return typeof key === "string" && numeric(entered[key]); }) && Object.values(entered).every(numeric);
-  if (!inputsComplete(config.standardInputs, standard)) return false;
-  const configuredSamples = array(config.sampleInputs);
+  // Only the inputs the worksheet shows are required. A formula whose standard (or sample) inputs are switched off
+  // can still list them in its settings; the analyst never sees those boxes, so they can never be filled.
+  const shown = (enabled: JsonValue | undefined, configured: JsonValue | undefined) => typeof enabled === "boolean" ? enabled : array(configured).length > 0;
+  const standardShown = shown(config.standardInput, config.standardInputs) && config.standardInTable === true;
+  if (!inputsComplete(standardShown ? config.standardInputs : [], standard)) return false;
+  const configuredSamples = shown(config.sampleInput, config.sampleInputs) ? array(config.sampleInputs) : [];
   if (samples.length < configuredSamples.length || !samples.every((sample, index) => inputsComplete(configuredSamples[index], object(sample)))) return false;
   const manual = object(value.manualVars);
   const expressions = [config.expression, ...array(config.namedExpressions).map(entry => object(entry).expression)].join(" ");
