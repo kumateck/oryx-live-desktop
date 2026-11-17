@@ -72,4 +72,12 @@ describe("specification limits", () => {
   it("still asks for review when the specification states no number", () => {
     expect(inferCompliance("Free flowing light pink powder", "12")).toMatchObject({ isCertain: false });
   });
+
+  it("reads a hyphen between two numbers as a range, as for Weight per ml (1.00-1.300) g/ml", () => {
+    expect(inferCompliance("(1.00-1.300) g/ml", "1.13")).toEqual({ complies: true, isCertain: true });
+    expect(inferCompliance("(1.00-1.300) g/ml", "1.31")).toEqual({ complies: false, isCertain: true });
+    expect(inferCompliance("2 - 4", "3")).toEqual({ complies: true, isCertain: true });
+    // A real negative limit is still read as negative.
+    expect(inferCompliance("-5 to 5", "-4")).toEqual({ complies: true, isCertain: true });
+  });
 });
