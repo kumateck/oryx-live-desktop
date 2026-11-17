@@ -13,6 +13,7 @@ export const productApi = productsApi.enhanceEndpoints({
     getApiV1Product: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
     getApiV1ProductByProductId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "Product", id: arg.productId }]); },
     postApiV1Product: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list]); },
+    deleteApiV1ProductByProductId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list]); },
     putApiV1ProductByProductId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [list, { type: "Product", id: arg.productId }]); },
     getApiV1ProductByProductIdBom: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "ProductBom", id: arg.productId }]); },
     putApiV1ProductByProductIdBomArchive: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [
@@ -54,7 +55,7 @@ export const {
   useGetApiV1ProductByProductIdPackagesQuery, usePostApiV1ProductByProductIdPackagesMutation,
   usePutApiV1ProductPackageDescriptionByProductIdMutation, usePostApiV1ProductByProductIdRoutesMutation, useLazyGetApiV1ProductQuery,
   useLazyGetApiV1ProductByProductIdRoutesQuery,
-  useGetApiV1ProductByProductIdBomQuery, usePutApiV1ProductByProductIdBomArchiveMutation,
+  useGetApiV1ProductByProductIdBomQuery, usePutApiV1ProductByProductIdBomArchiveMutation, useDeleteApiV1ProductByProductIdMutation,
 } = productApi;
 export const { usePostApiV1VerificationMutation } = verificationApi;
 // Quality documents attached to a product, shown on its detail page.
