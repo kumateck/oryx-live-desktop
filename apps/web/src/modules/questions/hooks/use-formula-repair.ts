@@ -11,6 +11,7 @@ import { useApplyFormulaRepairMutation, usePreviewFormulaRepairMutation } from "
 import { formulaRepairPermissions } from "@/shared/formula/repairs/access";
 import { randomId } from "@/shared/ids/random-id";
 import { formulaRepairDefaults, manualRepairVariables, repairedFormulaDefinition } from "../lib/formula-repair";
+import { compareFormulaSettings } from "../lib/formula-settings-comparison";
 import { formulaRepairValuesSchema, repairPreviewSchema, repairReasonSchema, repairReceiptSchema, repairTestKey,
   type FormulaRepairValues, type RepairContext, type RepairPreview, type RepairProblem, type RepairReceipt } from "../schemas/formula-repair-schema";
 import { questionsAudit } from "../lib/questions";
@@ -41,6 +42,8 @@ export function useFormulaRepair(context: RepairContext, atr: string | null, fie
     catch { return formulaRepairDefaults(context.definition).expression; }
   }, [context, atr, field]);
   const initial = useMemo(() => approved ?? formulaRepairDefaults(context.definition), [approved, context.definition]);
+  // Every setting of the formula this test uses now beside the approved revision's, so nothing changes unseen.
+  const settings = useMemo(() => compareFormulaSettings(currentDefinition(context, atr, field), context.approvedDefinition), [context, atr, field]);
   const form = useForm<FormulaRepairValues>({ resolver: zodResolver(formulaRepairValuesSchema), defaultValues: {
     ...initial, updateQuestion: !atr && context.canRepairQuestion,
     // Opened from a test, every field of this formula on that test is repaired together.
@@ -108,7 +111,7 @@ export function useFormulaRepair(context: RepairContext, atr: string | null, fie
       setProblem({ kind: "unconfirmed", message: error instanceof Error ? error.message : "The repair could not be confirmed. Retry the same reviewed request." });
     } finally { pending.current = false; }
   });
-  return { form, approved, current: currentExpression, manualKeys: manualRepairVariables(context.approvedDefinition ?? context.definition, approved?.expression ?? expression), preview: current, problem, receipt, submit,
+  return { form, approved, current: currentExpression, settings, manualKeys: manualRepairVariables(context.approvedDefinition ?? context.definition, approved?.expression ?? expression), preview: current, problem, receipt, submit,
     busy: previewing.isLoading || applying.isLoading, applying: applying.isLoading,
     back: onBack ?? (() => void navigate(atr ? `/atr/${encodeURIComponent(atr)}/test` : "/settings/questions")),
     canApply: Boolean(current && !current.blockers.length && !receipt) };
