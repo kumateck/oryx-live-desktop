@@ -12,10 +12,10 @@ afterEach(() => { cleanup(); forgetSession(); });
 
 // Paracetamol Syrup 120mg, as on the paper request (Annexure QAD/SOP/046/F02-04).
 const request = {
-  stage: 1, state: { name: "Liquid" }, createdAt: "2026-11-02T08:00:00Z", createdBy: { firstName: "Ama", lastName: "Owusu" },
+  stage: 1 as const, state: { name: "Liquid" }, createdAt: "2026-11-02T08:00:00Z", createdBy: { firstName: "Ama", lastName: "Owusu" },
   manufacturingDate: "2026-11-01T00:00:00Z", expiryDate: "2029-10-31T00:00:00Z", filled: "100 mL", sampledQuantity: "100 mL", numberOfContainers: 2,
   sampledBy: { firstName: "Kofi", lastName: "Mensah" }, sampledAt: "2026-11-02T09:00:00Z", acknowledgedBy: { firstName: "Esi", lastName: "Boateng" },
-  acknowledgedAt: "2026-11-02T10:00:00Z", releasedAt: null, releasedBy: null,
+  acknowledgedAt: "2026-11-02T10:00:00Z", releasedAt: null,
   batchManufacturingRecord: { batchNumber: "L001K073" },
   productionScheduleProduct: { product: { name: "Paracetamol Syrup 120mg", code: "NL-012" }, productPacking: { name: "1 x 100 mL" } },
 };
