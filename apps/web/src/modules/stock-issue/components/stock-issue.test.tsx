@@ -258,12 +258,22 @@ it("labels a line issued as a substitute on the requisition", async () => {
   expect(await screen.findByText("Substitute for Maize starch")).toBeTruthy();
 });
 
-it("shows each batch's AR number on the issue screen and printed voucher", async () => {
+it("lays out each batch in its own columns on the issue screen and the printed voucher", async () => {
   open("/warehouse/stock-requisition/sr-1", ["CanViewRawMaterialRequisitions"]);
-  expect(await screen.findByText("AR No.: QCD/RM/26/314")).toBeTruthy();
-  expect(screen.getByText("AR No.: Not recorded")).toBeTruthy();
+  expect(await screen.findByText("QCD/RM/26/314")).toBeTruthy();
+  expect(screen.getByText("Not recorded")).toBeTruthy();
+  expect(screen.getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(expect.arrayContaining(["Batch No.", "AR No.", "Location", "Quantity", "Expiry"]));
   await userEvent.click(screen.getByRole("button", { name: "Print" }));
   const preview = within(await screen.findByRole("dialog"));
-  expect(preview.getByText("AR No.: QCD/RM/26/314")).toBeTruthy();
-  expect(preview.getByText("AR No.: Not recorded")).toBeTruthy();
+  const voucher = preview.getAllByRole("table").find((table) => table.classList.contains("voucher-table"));
+  if (!voucher) throw new Error("No voucher table");
+  expect([...voucher.querySelectorAll("thead th")].map((cell) => cell.textContent)).toEqual(["#", "Material", "Qty required", "Batch No.", "AR No.", "Location", "Qty from batch", "Expiry", "✓"]);
+  // Maize starch is taken from two batches: named once beside both, soonest expiry first, then their total.
+  const rows = [...voucher.querySelectorAll("tbody tr")].map((row) => [...row.querySelectorAll("td")].map((cell) => cell.textContent));
+  expect(rows[0]?.slice(0, 2)).toEqual(["1", "Maize starchRM-1"]);
+  expect(voucher.querySelector("tbody td[rowspan='3']")?.textContent).toBe("1");
+  expect(rows[0]?.slice(3, 5)).toEqual(["B-1", "QCD/RM/26/314"]);
+  expect(rows[1]?.slice(0, 2)).toEqual(["B-2Returned stock", "Not recorded"]);
+  expect(rows[2]?.[0]).toBe("Total");
+  expect(voucher.querySelectorAll(".voucher-tick")).toHaveLength(2);
 });

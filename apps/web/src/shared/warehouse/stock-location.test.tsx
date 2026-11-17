@@ -25,11 +25,12 @@ describe("warehouse batch picking locations", () => {
     expect(transferBatchesSchema.parse(allocations).map((batch) => batch.location)).toEqual(["Rack A (Shelf 1)", "Rack A (Shelf 2)"]);
     if (!request?.items[0]) throw new Error("Missing test allocation");
     render(<BatchBreakdown line={request.items[0]} />);
-    const rows = screen.getAllByRole("listitem");
-    expect(within(rows[0] ?? document.body).getByText("Rack A (Shelf 1)")).toBeTruthy();
+    // One table row per shelf allocation, after the header row, each with its own location and quantity.
+    const rows = screen.getAllByRole("row").slice(1);
+    expect(within(rows[0] ?? document.body).getByText("Rack A · Shelf 1")).toBeTruthy();
     expect(rows[0]?.textContent).toContain("2 kg");
-    expect(rows[0]?.textContent?.indexOf("B-12")).toBeLessThan(rows[0]?.textContent?.indexOf("Rack A (Shelf 1)") ?? 0);
-    expect(within(rows[1] ?? document.body).getByText("Rack A (Shelf 2)")).toBeTruthy();
+    expect(rows[0]?.textContent?.indexOf("B-12")).toBeLessThan(rows[0]?.textContent?.indexOf("Rack A · Shelf 1") ?? 0);
+    expect(within(rows[1] ?? document.body).getByText("Rack A · Shelf 2")).toBeTruthy();
     expect(rows[1]?.textContent).toContain("3 kg");
   });
 

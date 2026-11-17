@@ -1,4 +1,3 @@
-import { missingStockLocation } from "@/shared/warehouse/stock-location";
 import { useEffect, useMemo, useState } from "react";
 import { PackageCheck } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -12,12 +11,12 @@ import { useAccess } from "@/shared/auth/use-access";
 import { ClientDataTable, ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { formatDateTime, formatMonthYear } from "@/shared/format/dates";
+import { formatDateTime } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { ReviewPanel } from "@/shared/reviews/review-panel";
 import { PrintButton } from "@/shared/print/print-button";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
-import { PrintFacts, PrintHeader, PrintSignatures, PrintTable, type PrintColumn, type PrintSigner } from "@/shared/print/print-sheet";
+import { PrintFacts, PrintHeader, PrintSignatures, type PrintSigner } from "@/shared/print/print-sheet";
 import { KindSwitch } from "@/shared/reference-data/kind-switch";
 import { useKindTabs } from "@/shared/reference-data/kind-tabs";
 import { RichTextView, richTextToPlain } from "@/shared/rich-text/rich-text-view";
@@ -28,6 +27,7 @@ import { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStoc
 import { audit, batchNumber, issueQueues, type IssueQueue, checkNote, issueBlock, issueCheckKeys, issuePermissions, issueRequisitionPath, shortfall, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
 import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockLine, type StockRequisition } from "../schemas/stock-issue-schema";
 import { AlternativeBatches } from "./alternative-batches";
+import { VoucherTable } from "./voucher-table";
 import { MaterialChoices } from "./material-choices";
 import { BatchBreakdown, amount } from "./batch-breakdown";
 
@@ -84,19 +84,12 @@ const lineColumn = dataTableColumns<StockLine>();
 const lineColumns = lineColumn.columns([
   lineColumn.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div>
     {row.original.substituteFor ? <div className="break-words text-xs text-muted-foreground">Substitute for {row.original.substituteFor}</div> : null}</div> }),
-  lineColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => { const short = shortfall(row.original);
+  lineColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => {
     return <div><div>{amount(row.original.quantity, row.original.unit)}</div>
       {row.original.approvedQuantity !== null ? <div className="text-xs text-muted-foreground">Originally approved: {amount(row.original.approvedQuantity, row.original.unit)} · repaired after issue</div> : null}
-      {short > 0 && row.original.batches.length > 0 ? <div className="text-xs text-destructive">{amount(short, row.original.unit)} not set aside</div> : null}</div>; } }),
+      </div>; } }),
   lineColumn.display({ id: "batches", header: "Issued from", cell: ({ row }) => <BatchBreakdown line={row.original} /> }),
 ]);
-const printColumns: PrintColumn<StockLine>[] = [
-  { id: "n", header: "#", cell: (_row, index) => index + 1, width: "6%" },
-  { id: "material", header: "Material", cell: (row) => <>{row.materialName}<small>{row.materialCode ?? "No code"}</small>{row.substituteFor ? <small>Substitute for {row.substituteFor}</small> : null}</> },
-  { id: "quantity", header: "Quantity", align: "right", cell: (row) => <>{amount(row.quantity, row.unit)}
-    {row.approvedQuantity !== null ? <small>Originally approved: {amount(row.approvedQuantity, row.unit)}; repaired after issue</small> : null}</> },
-  { id: "batches", header: "Batch · AR No. · location · quantity · expiry", cell: (row) => row.batches.length ? row.batches.map((batch) => <div key={batch.key}>{batchNumber(batch.number)} · {amount(batch.quantity, row.unit)} · {formatMonthYear(batch.expires) ?? "no expiry"}<small>AR No.: {batch.arNumber ?? "Not recorded"}</small><small>{batch.location ?? missingStockLocation}</small></div>) : "None set aside" },
-];
 
 /** The voucher's signature lines: the store user who issued it, the approver who checked the issue, and the requester who receives it. */
 function voucherSigners(requisition: StockRequisition): PrintSigner[] {
@@ -117,12 +110,12 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
   const reference = requisition.contentRevision ? `${requisition.code} · Revision ${requisition.contentRevision}` : requisition.code;
   return <article className="min-w-0 space-y-4">
     <PageHeader title={`Stock requisition ${reference}`} crumbs={[{ label: "Issue stock requisitions", to: back }, { label: reference }]} actions={<>
-      <PrintButton preview={(close) => <PrintPreviewDialog title={`Stock requisition voucher · ${requisition.code}`} onClose={close}>
+      <PrintButton preview={(close) => <PrintPreviewDialog landscape title={`Stock requisition voucher · ${requisition.code}`} onClose={close}>
         <PrintHeader title="Stock requisition voucher" reference={reference} />
         <PrintFacts facts={[{ label: "Product", value: [requisition.product, requisition.productCode].filter(Boolean).join(" · ") }, { label: "Schedule", value: requisition.schedule }, { label: "Batch", value: requisition.batch },
           { label: "Requested by", value: requisition.requestedBy }, { label: "Department", value: requisition.department }, { label: "Requested on", value: formatDateTime(requisition.createdAt) }]} />
         {remarks ? <p className="print-note"><strong>Justification:</strong> {remarks}</p> : null}
-        <PrintTable columns={printColumns} rows={requisition.items} rowKey={(row) => row.id} empty="No materials on this requisition" />
+        <VoucherTable lines={requisition.items} />
         <PrintSignatures signers={voucherSigners(requisition)} />
       </PrintPreviewDialog>} />
       {has(issuePermissions[kind]) && requisition.status !== 3 ? <Button type="button" disabled={block !== null} onClick={() => setConfirming(true)}><PackageCheck />Issue stock</Button> : null}
