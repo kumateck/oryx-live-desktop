@@ -38,7 +38,7 @@ const requisition = (id: string, extra: object = {}) => ({ id, code: id.toUpperC
   productionScheduleProduct: { batchNumber: "T081K004", product: { name: "Paracetamol syrup", code: "FP-1" }, productionSchedule: { code: "PS026" } },
   items: [{ id: "l1", quantity: 50_000_000, material: { name: "Maize starch", code: "RM-1", kind: 0 }, uoM: { symbol: "mg" },
     batches: [{ quantityToTake: 30_000_000, batch: { id: "b1", batchNumber: "B-1", arNumber: "QCD/RM/26/314", expiryDate: "2099-01-01T00:00:00Z" } }, { quantityToTake: 20_000_000, batch: { id: "b2", batchNumber: "B-2", expiryDate: "2099-06-01T00:00:00Z", isReturn: true } }] }], ...extra });
-interface Call { method: string; path: string; body?: unknown }
+interface Call { method: string; path: string; body?: unknown; search?: string }
 function open(address: string, permissions: string[], record: object = requisition("sr-1"), extra: (path: string, method: string) => Response | null = () => null) {
   const backend = stubBackend({ permissions });
   rememberSession();
@@ -47,7 +47,8 @@ function open(address: string, permissions: string[], record: object = requisiti
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const path = new URL(input.url).pathname;
-    calls.push({ method: input.method, path, ...(input.method === "POST" && path.endsWith("/swap") ? { body: await input.clone().json() } : {}) });
+    calls.push({ method: input.method, path, ...(input.method === "POST" && path.endsWith("/swap") || input.method === "PUT" ? { body: await input.clone().json() } : {}),
+      ...(path === "/api/v1/requisition/department" ? { search: new URL(input.url).search } : {}) });
     const other = extra(path, input.method);
     if (other) return other;
     if (path === "/api/v1/requisition/department") return Response.json({ data: [requisition("sr-1"), requisition("sr-2", { approved: false, status: 0 })], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
@@ -66,6 +67,20 @@ it("lists the store's requisitions with where each stands", async () => {
   expect(await screen.findByText("SR-1")).toBeTruthy();
   expect(screen.getByText("Ready to issue")).toBeTruthy();
   expect(screen.getByText("Awaiting approval")).toBeTruthy();
+});
+
+it("separates requisitions awaiting issue from issued ones, awaiting first", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/warehouse/stock-requisition", ["CanViewRawMaterialRequisitions"]);
+  expect(await screen.findByText("SR-1")).toBeTruthy();
+  const listed = () => calls.filter((call) => call.path === "/api/v1/requisition/department").map((call) => new URLSearchParams(call.search).get("issued"));
+  const status = within(screen.getByRole("group", { name: "Requisition status" }));
+  expect(status.getByRole("button", { name: "Awaiting issue" }).getAttribute("aria-pressed")).toBe("true");
+  expect(listed().at(-1)).toBe("false");
+  await user.click(status.getByRole("button", { name: "Issued" }));
+  await waitFor(() => expect(listed().at(-1)).toBe("true"));
+  await user.click(status.getByRole("button", { name: "All" }));
+  await waitFor(() => expect(listed().at(-1)).toBeNull());
 });
 
 it("issues only after a confirmation, and only to someone who may issue that kind", async () => {
@@ -243,12 +258,57 @@ it("labels a line issued as a substitute on the requisition", async () => {
   expect(await screen.findByText("Substitute for Maize starch")).toBeTruthy();
 });
 
-it("shows each batch's AR number on the issue screen and printed voucher", async () => {
+it("lays out each batch in its own columns on the issue screen and the printed voucher", async () => {
   open("/warehouse/stock-requisition/sr-1", ["CanViewRawMaterialRequisitions"]);
-  expect(await screen.findByText("AR No.: QCD/RM/26/314")).toBeTruthy();
-  expect(screen.getByText("AR No.: Not recorded")).toBeTruthy();
+  expect(await screen.findByText("QCD/RM/26/314")).toBeTruthy();
+  expect(screen.getByText("Not recorded")).toBeTruthy();
+  expect(screen.getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(expect.arrayContaining(["Batch No.", "AR No.", "Location", "Quantity", "Expiry"]));
   await userEvent.click(screen.getByRole("button", { name: "Print" }));
   const preview = within(await screen.findByRole("dialog"));
-  expect(preview.getByText("AR No.: QCD/RM/26/314")).toBeTruthy();
-  expect(preview.getByText("AR No.: Not recorded")).toBeTruthy();
+  const voucher = preview.getAllByRole("table").find((table) => table.classList.contains("voucher-table"));
+  if (!voucher) throw new Error("No voucher table");
+  expect([...voucher.querySelectorAll("thead th")].map((cell) => cell.textContent)).toEqual(["#", "Material", "Qty required", "Batch No.", "AR No.", "Location", "Qty from batch", "Expiry", "✓"]);
+  // Maize starch is taken from two batches: named once beside both, soonest expiry first, then their total.
+  const rows = [...voucher.querySelectorAll("tbody tr")].map((row) => [...row.querySelectorAll("td")].map((cell) => cell.textContent));
+  expect(rows[0]?.slice(0, 2)).toEqual(["1", "Maize starchRM-1"]);
+  expect(voucher.querySelector("tbody td[rowspan='3']")?.textContent).toBe("1");
+  expect(rows[0]?.slice(3, 5)).toEqual(["B-1", "QCD/RM/26/314"]);
+  expect(rows[1]?.slice(0, 2)).toEqual(["B-2Returned stock", "Not recorded"]);
+  expect(rows[2]?.[0]).toBe("Total");
+  expect(voucher.querySelectorAll(".voucher-tick")).toHaveLength(2);
 });
+
+// Labels come in sealed packs of 10 kg; 18.75 kg is required.
+const labels = (line: object = {}) => requisition("sr-1", { code: "PM/B/26/001", items: [{ id: "p1", quantity: 18_750, material: { name: "Labels", code: "PM-1", kind: 1 }, uoM: { symbol: "g" },
+  batches: [{ quantityToTake: 18_750, batch: { id: "b1", batchNumber: "L-1", expiryDate: "2099-01-01T00:00:00Z", quantityPerContainer: 10_000, numberOfContainers: 5 } }], ...line }] });
+
+it("lets a warehouse supervisor issue packaging over its requirement, with a reason", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/warehouse/stock-requisition/sr-1?type=1", ["CanViewPackagingMaterialRequisitions", "CanAdjustPackagingMaterialIssueQuantity"], labels(),
+    (path, method) => method === "PUT" && path === "/api/v1/requisition/sr-1/items/p1/issued-quantity" ? new Response(null, { status: 204 }) : null);
+  await user.click(await screen.findByRole("button", { name: "Actions for Labels" }));
+  await user.click(await screen.findByRole("menuitem", { name: "Set quantity to issue" }));
+  const dialog = within(await screen.findByRole("dialog"));
+  expect(dialog.getByText("20 kg")).toBeTruthy();
+  await user.click(dialog.getByRole("button", { name: "Use" }));
+  expect(dialog.getByText("1.25 kg over the requirement.")).toBeTruthy();
+  await user.click(dialog.getByRole("button", { name: "Save quantity" }));
+  expect(await dialog.findByText("Say why more or less than the requirement is issued.")).toBeTruthy();
+  expect(calls.filter((call) => call.method === "PUT")).toEqual([]);
+  await user.type(dialog.getByRole("textbox", { name: /Reason/ }), "Sealed packs of 10");
+  await user.click(dialog.getByRole("button", { name: "Save quantity" }));
+  await waitFor(() => expect(calls.some((call) => call.method === "PUT")).toBe(true));
+  expect(calls.find((call) => call.method === "PUT")?.body).toEqual({ quantity: 20_000, reason: "Sealed packs of 10" });
+}, 30_000);
+
+it("offers the quantity only to holders of the supervisor key, and prints a set quantity with its reason", async () => {
+  open("/warehouse/stock-requisition/sr-1?type=1", ["CanViewPackagingMaterialRequisitions"],
+    labels({ issuedQuantity: 20_000, issueAdjustmentReason: "Sealed packs of 10", issueAdjustedBy: { name: "Kofi Mensah" } }));
+  expect(await screen.findByText("To issue 20 kg · 1.25 kg over")).toBeTruthy();
+  expect(screen.getByText("Sealed packs of 10")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Actions for Labels" })).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: "Print" }));
+  const preview = within(await screen.findByRole("dialog"));
+  expect(preview.getByText("To issue 20 kg: 1.25 kg over")).toBeTruthy();
+  expect(preview.getByText("Reason: Sealed packs of 10")).toBeTruthy();
+}, 30_000);

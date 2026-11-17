@@ -25,8 +25,11 @@ const amount = z.number().finite().nonnegative();
 /** The packaging materials issued to the batch on its stock requisition. */
 export const issuedPackagingSchema = z.object({ items: z.array(z.object({
   material: z.object({ id: z.string().min(1), name: text, code: text }), uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), quantity: amount,
+  issuedQuantity: z.number().finite().nonnegative().nullish(),
 })) }).nullish().transform((value) => (value?.items ?? []).map((item) => ({
-  materialId: item.material.id, name: item.material.name || "Unnamed material", code: item.material.code, unit: item.uoM?.symbol || null, unitId: item.uoM?.id ?? null, quantity: item.quantity })));
+  materialId: item.material.id, name: item.material.name || "Unnamed material", code: item.material.code, unit: item.uoM?.symbol || null, unitId: item.uoM?.id ?? null,
+  // Packs are issued whole, so production received what the store handed over, which may be more or less than requested.
+  quantity: item.issuedQuantity ?? item.quantity })));
 
 /** Extra packaging issued to the batch. The endpoint also returns extra raw material (kind 0), which is never on the packaging requisition. */
 export const extraIssuedSchema = z.array(z.object({ material: z.object({ id: z.string().min(1), kind: z.number().nullish() }), quantity: amount,

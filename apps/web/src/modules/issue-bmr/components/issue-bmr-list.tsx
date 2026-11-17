@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { formatDate } from "@/shared/format/dates";
+import { formatDateTime } from "@/shared/format/dates";
 import { usePageSearch } from "@/shared/search/page-search";
 import { toLargestUnit } from "@/shared/units/quantity";
 import { useGetApiV1ProductionScheduleManufacturingQuery } from "../api/issue-bmr-api";
@@ -12,7 +12,7 @@ import { bmrRowsSchema, type Bmr } from "../schemas/bmr-schema";
 
 const column = dataTableColumns<Bmr>();
 const columns = column.columns([
-  column.accessor((row) => row.requestedAt ?? "", { id: "requested", header: "Requested", size: 130, cell: ({ row }) => formatDate(row.original.requestedAt) ?? "–" }),
+  column.accessor((row) => row.requestedAt ?? "", { id: "requested", header: "Requested", size: 170, cell: ({ row }) => formatDateTime(row.original.requestedAt) ?? "–" }),
   column.accessor((row) => row.schedule ?? "", { id: "schedule", header: "Schedule", size: 150, cell: ({ row }) => row.original.schedule ?? "–" }),
   column.accessor((row) => row.productName ?? "", { id: "product", header: "Product", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.productName ?? "Unnamed product"}</div>
     <div className="text-xs text-muted-foreground">{row.original.productCode ?? "No code"}</div></div> }),
@@ -20,7 +20,7 @@ const columns = column.columns([
   column.accessor("quantity", { header: "Batch size", size: 130, cell: ({ row }) => toLargestUnit(row.original.quantity, row.original.unit)?.text ?? "–" }),
   column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", size: 130, cell: ({ row }) => row.original.batchNumber ?? "–" }),
   column.accessor((row) => row.issuedAt ?? "", { id: "status", header: "Status", size: 150, cell: ({ row }) => row.original.issuedAt
-    ? <div><Badge>Issued</Badge><div className="text-xs text-muted-foreground">{formatDate(row.original.issuedAt)}</div></div> : <Badge variant="outline">Awaiting issue</Badge> }),
+    ? <div><Badge>Issued</Badge><div className="text-xs text-muted-foreground">{formatDateTime(row.original.issuedAt)}</div></div> : <Badge variant="outline">Awaiting issue</Badge> }),
 ]);
 
 /** Batch manufacturing and packaging records production has requested from QA. */
