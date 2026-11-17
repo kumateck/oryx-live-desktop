@@ -44,3 +44,11 @@ A recalculated repair result shows "Stored authoritative draft result — not fi
 ## Progress page
 
 Section names are saved as rich text. The Test progress page now shows them formatted through the sanitised `RichTextView`, instead of raw HTML (desktop #263).
+
+## Save and submit do everything (17 November 2026, later)
+
+Found on ATR QCD/BP/26/0006 (Assay: Paracetamol) on the client server: Submit stayed disabled, and the field said "No readings are saved for this field yet" although the analyst had entered and saved every reading.
+
+- **No separate recalculation step.** Saving a repaired field's readings recalculates it on the server in the same request. Submitting first recalculates any repaired field still pending, then finalizes every result. The **Recalculate saved readings** action and the "needs recalculation" warning are gone. Submission stops only when a reading the formula uses has no value, and it names that reading.
+- **Only the inputs the worksheet shows are required.** The approved Paracetamol revision still lists a standard Weight input in its settings, with standard inputs switched off, so the worksheet never shows that box. The completeness check on both the desktop and the server required it anyway, so the answer could never be complete. A standard input now counts only when standard inputs are on and in the table, and a sample input only when sample inputs are on.
+- **The save writes the answer the server reads.** A response can hold more than one answer row for a field, because there is no unique index. The draft save updated the first row it found, while recalculation, submission and the worksheet read the newest row, which the repair had emptied. The save now writes the newest row.
