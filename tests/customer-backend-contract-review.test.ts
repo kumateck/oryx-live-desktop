@@ -84,9 +84,21 @@ function stripRequisitionIssuedFilter(document: ObjectValue) {
   if (Array.isArray(operation.parameters)) operation.parameters = operation.parameters.filter((entry) => object(entry).name !== "issued");
 }
 
+/** Packaging issue quantity (2026-11-17): one typed PUT, its request schema, and four optional fields on the requisition line. */
+const issuedQuantityPath = "/api/v1/requisition/{requisitionId}/items/{itemId}/issued-quantity";
+const issuedQuantityFields = ["issuedQuantity", "issueAdjustmentReason", "issueAdjustedBy", "issueAdjustedAt"] as const;
+function stripPackagingIssueQuantity(document: ObjectValue) {
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete object(document.paths ?? null)[issuedQuantityPath];
+  delete schemas["DOMAIN.Entities.Requisitions.AdjustIssuedQuantityRequest"];
+  const properties = object(object(schemas["DOMAIN.Entities.Requisitions.RequisitionItemDto"] ?? null).properties ?? null);
+  for (const field of issuedQuantityFields) delete properties[field];
+}
+
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripPackagingIssueQuantity(document);
   stripRequisitionIssuedFilter(document);
   stripSpecificationRevisionReason(document);
   stripBomSubstituteQuantities(document);
@@ -639,6 +651,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripPackagingIssueQuantity(current);
   stripRequisitionIssuedFilter(current);
   stripSpecificationRevisionReason(current);
   const digest = contractDigest(current);
@@ -660,6 +673,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripPackagingIssueQuantity(current);
   stripRequisitionIssuedFilter(current);
   const digest = contractDigest(current);
   assert.equal(digest, "f2960caf053dd6bb3c943cc82c774328f21f6ae8409528741ba119a631dfc6f9");
@@ -679,6 +693,7 @@ test("a specification revision requires a reason and returns it on the specifica
 
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripPackagingIssueQuantity(current);
   const digest = contractDigest(current);
   assert.equal(digest, "e4bf7bc3756169634fc42cc65d9de3e0c0c00fb245ccf90c8b8f8a381bf6a42a");
   checkCompatibility(hostConfig, policy, digest);
@@ -688,4 +703,20 @@ test("the store's requisition list adds only an optional issued filter, preservi
   assert.deepEqual(issued && { in: issued.in, required: issued.required, schema: issued.schema }, { in: "query", required: undefined, schema: { type: "boolean" } });
   stripRequisitionIssuedFilter(current);
   assert.equal(contractDigest(current), "f2960caf053dd6bb3c943cc82c774328f21f6ae8409528741ba119a631dfc6f9");
+});
+
+test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "2cc7b3a5a969853d122ab625816f1440a33be0d8a62a74574b845a438d9c5cf5");
+  checkCompatibility(hostConfig, policy, digest);
+  assert.deepEqual(Object.keys(object(object(current.paths ?? null)[issuedQuantityPath] ?? null)), ["put"]);
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  const item = object(schemas["DOMAIN.Entities.Requisitions.RequisitionItemDto"] ?? null);
+  for (const field of issuedQuantityFields) {
+    assert.ok(object(item.properties ?? null)[field] !== undefined, field);
+    assert.ok(!Array.isArray(item.required) || !item.required.includes(field));
+  }
+  stripPackagingIssueQuantity(current);
+  assert.equal(contractDigest(current), "e4bf7bc3756169634fc42cc65d9de3e0c0c00fb245ccf90c8b8f8a381bf6a42a");
 });

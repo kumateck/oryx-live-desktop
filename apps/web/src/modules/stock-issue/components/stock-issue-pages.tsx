@@ -8,7 +8,7 @@ import { useGetApiV1RequisitionByRequisitionIdQuery } from "@/modules/requisitio
 import { ConfirmActionDialog } from "@/shared/actions";
 import { NoAccess } from "@/shared/auth/no-access";
 import { useAccess } from "@/shared/auth/use-access";
-import { ClientDataTable, ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
+import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDateTime } from "@/shared/format/dates";
@@ -25,11 +25,11 @@ import { whitePlaceboPreparationPath } from "@/shared/production/white-placebo-p
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation } from "../api/stock-issue-api";
 import { audit, issueQueues, type IssueQueue, checkNote, issueBlock, issueCheckKeys, issuePermissions, issueRequisitionPath, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
-import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockLine, type StockRequisition } from "../schemas/stock-issue-schema";
+import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockRequisition } from "../schemas/stock-issue-schema";
 import { AlternativeBatches } from "./alternative-batches";
 import { VoucherTable } from "./voucher-table";
+import { IssueLines } from "./issue-lines";
 import { MaterialChoices } from "./material-choices";
-import { BatchBreakdown, amount } from "./batch-breakdown";
 
 function Standing({ requisition }: { requisition: Pick<StockRequisition, "approved" | "status"> }) {
   if (requisition.status === 3) return <Badge>Issued</Badge>;
@@ -80,16 +80,6 @@ export function StockIssueListPage() {
   </section>;
 }
 
-const lineColumn = dataTableColumns<StockLine>();
-const lineColumns = lineColumn.columns([
-  lineColumn.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div>
-    {row.original.substituteFor ? <div className="break-words text-xs text-muted-foreground">Substitute for {row.original.substituteFor}</div> : null}</div> }),
-  lineColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => {
-    return <div><div>{amount(row.original.quantity, row.original.unit)}</div>
-      {row.original.approvedQuantity !== null ? <div className="text-xs text-muted-foreground">Originally approved: {amount(row.original.approvedQuantity, row.original.unit)} · repaired after issue</div> : null}
-      </div>; } }),
-  lineColumn.display({ id: "batches", header: "Issued from", cell: ({ row }) => <BatchBreakdown line={row.original} /> }),
-]);
 
 /** The voucher's signature lines: the store user who issued it, the approver who checked the issue, and the requester who receives it. */
 function voucherSigners(requisition: StockRequisition): PrintSigner[] {
@@ -138,7 +128,7 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
     {kind === 0 && requisition.status !== 3 && requisition.status !== 4 ? <MaterialChoices requisitionId={requisition.id} /> : null}
     {/* Batches can only be swapped while the stock has not left the store. */}
     {requisition.status !== 3 && requisition.status !== 4 ? <AlternativeBatches requisitionId={requisition.id} mayAsk={has(issuePermissions[kind])} /> : null}
-    <ClientDataTable label="Materials and the batches set aside" columns={lineColumns} rows={requisition.items} getRowId={(row) => row.id} fill={false} emptyTitle="No materials on this requisition" />
+    <IssueLines requisition={requisition} />
     {confirming ? <ConfirmActionDialog require={issuePermissions[kind]} destructive={false} title={`Issue ${requisition.code}?`}
       description={`The batches shown leave your store for ${requisition.department ?? "production"}${requisition.batch ? `, for batch ${requisition.batch}` : ""}. This cannot be undone.`} confirmLabel="Issue stock" busyLabel="Issuing…" onClose={() => setConfirming(false)}
       onConfirm={async () => { const result = await issue({ ...audit, stockRequisitionId: requisition.id });

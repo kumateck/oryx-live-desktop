@@ -1316,6 +1316,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    putApiV1RequisitionByRequisitionIdItemsAndItemIdIssuedQuantity:
+      build.mutation<
+        PutApiV1RequisitionByRequisitionIdItemsAndItemIdIssuedQuantityApiResponse,
+        PutApiV1RequisitionByRequisitionIdItemsAndItemIdIssuedQuantityApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/requisition/${queryArg.requisitionId}/items/${queryArg.itemId}/issued-quantity`,
+          method: "PUT",
+          body: queryArg.domainEntitiesRequisitionsAdjustIssuedQuantityRequest,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
   }),
   overrideExisting: false,
 });
@@ -2219,6 +2234,20 @@ export type PostApiV1RequisitionByRequisitionIdMaterialOptionsApiArg = {
   subModule?: string;
   domainEntitiesRequisitionsChooseStockRequisitionMaterialRequest: DomainEntitiesRequisitionsChooseStockRequisitionMaterialRequest;
 };
+export type PutApiV1RequisitionByRequisitionIdItemsAndItemIdIssuedQuantityApiResponse = void;
+export type PutApiV1RequisitionByRequisitionIdItemsAndItemIdIssuedQuantityApiArg =
+  {
+    /** The stock requisition. */
+    requisitionId: string;
+    /** The packaging line. */
+    itemId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+    /** The quantity to issue, in the line's unit, and the reason it differs. */
+    domainEntitiesRequisitionsAdjustIssuedQuantityRequest: DomainEntitiesRequisitionsAdjustIssuedQuantityRequest;
+  };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -2649,6 +2678,11 @@ export type DomainEntitiesRequisitionsRequisitionItemDto = {
   batches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
   approvedQuantity?: number | null;
   substituteFor?: SharedCollectionItemDto;
+  /** A packaging line issued over or under its requirement; null when issued exactly as requested. */
+  issuedQuantity?: number | null;
+  issueAdjustmentReason?: string | null;
+  issueAdjustedBy?: SharedCollectionItemDto;
+  issueAdjustedAt?: string | null;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   id?: string;
@@ -2660,6 +2694,11 @@ export type DomainEntitiesRequisitionsRequisitionItemDtoRead = {
   batches?: DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
   approvedQuantity?: number | null;
   substituteFor?: SharedCollectionItemDto;
+  /** A packaging line issued over or under its requirement; null when issued exactly as requested. */
+  issuedQuantity?: number | null;
+  issueAdjustmentReason?: string | null;
+  issueAdjustedBy?: SharedCollectionItemDto;
+  issueAdjustedAt?: string | null;
 };
 export type DomainEntitiesProductsEquipmentsEquipmentDto = {
   id?: string;
@@ -4346,6 +4385,10 @@ export type DomainEntitiesRequisitionsChooseStockRequisitionMaterialRequest = {
   revision?: number;
   reason?: string | null;
 };
+export type DomainEntitiesRequisitionsAdjustIssuedQuantityRequest = {
+  quantity?: number;
+  reason?: string | null;
+};
 export const {
   usePostApiV1DamagedGoodsMutation,
   useGetApiV1DamagedGoodsQuery,
@@ -4484,4 +4527,5 @@ export const {
   useGetApiV1RequisitionByRequisitionIdMaterialOptionsQuery,
   useLazyGetApiV1RequisitionByRequisitionIdMaterialOptionsQuery,
   usePostApiV1RequisitionByRequisitionIdMaterialOptionsMutation,
+  usePutApiV1RequisitionByRequisitionIdItemsAndItemIdIssuedQuantityMutation,
 } = injectedRtkApi;

@@ -1,6 +1,7 @@
 import { formatMonthYear } from "@/shared/format/dates";
 import { batchLines, batchPlace } from "../lib/batch-lines";
 import { batchNumber, expiredOrDue } from "../lib/stock-issue";
+import { issueDifference } from "../lib/issue-quantity";
 import type { StockLine } from "../schemas/stock-issue-schema";
 import { amount } from "./batch-breakdown";
 
@@ -25,7 +26,10 @@ export function VoucherTable({ lines }: { lines: readonly StockLine[] }) {
           <td rowSpan={span}>{index + 1}</td>
           <td rowSpan={span}>{line.materialName}<small>{line.materialCode ?? "No code"}</small>{line.substituteFor ? <small>Substitute for {line.substituteFor}</small> : null}</td>
           <td rowSpan={span} style={{ textAlign: "right" }}>{amount(line.quantity, line.unit)}
-            {line.approvedQuantity !== null ? <small>Originally approved: {amount(line.approvedQuantity, line.unit)}; repaired after issue</small> : null}</td></>;
+            {line.approvedQuantity !== null ? <small>Originally approved: {amount(line.approvedQuantity, line.unit)}; repaired after issue</small> : null}
+            {line.issuedQuantity !== null && issueDifference(line) !== 0 ? <>
+              <small><strong>{line.issued ? "Issued" : "To issue"} {amount(line.issuedQuantity, line.unit)}: {amount(Math.abs(issueDifference(line)), line.unit)} {issueDifference(line) > 0 ? "over" : "under"}</strong></small>
+              {line.adjustmentReason ? <small>Reason: {line.adjustmentReason}</small> : null}</> : null}</td></>;
         return <tbody key={line.id} className="voucher-material">
           {batches.length === 0 ? <tr>{material}<td colSpan={5}>None set aside<small>{amount(line.quantity, line.unit)} short</small></td><td /></tr>
             : batches.map((batch, position) => { const number = batchNumber(batch.number); const expired = expiredOrDue(batch.expires);
