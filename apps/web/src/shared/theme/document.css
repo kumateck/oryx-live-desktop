@@ -78,6 +78,12 @@
 .print-spec-header .print-spec-banner { font-weight: 700; letter-spacing: .03em; text-align: center; text-transform: uppercase; }
 .print-spec-header .print-spec-subject { font-weight: 700; text-align: center; text-transform: uppercase; }
 .print-spec-header .print-spec-subject span { display: block; }
+.print-form-grid { width: 100%; margin: var(--document-space-14px) 0 0; border-collapse: collapse; table-layout: fixed; }
+.print-form-grid td { padding: var(--document-space-6px) var(--document-space-8px); border: 1px solid #111; vertical-align: top; overflow-wrap: anywhere; }
+.print-form-label { font-weight: 600; }
+.print-check-row { display: flex; flex-wrap: wrap; gap: var(--document-space-6px) var(--document-space-20px); }
+.print-check { display: inline-flex; align-items: center; gap: var(--document-space-6px); }
+.print-check-box { display: inline-flex; width: 13px; height: 13px; align-items: center; justify-content: center; border: 1px solid #111; font-size: var(--document-font-10px); line-height: 1; }
 .print-note { margin: var(--document-space-12px) 0 0; color: #333; }
 .print-section { margin: var(--document-space-16px) 0 0; font-size: var(--document-font-12px); font-weight: 700; }
 .print-blank { display: block; height: 16px; border-bottom: 1px solid #111; }
