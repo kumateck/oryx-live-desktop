@@ -43,25 +43,15 @@ function open(disabled: boolean, fields = [assay], pendingFields = ["field-1"]) 
   return { evaluations, onReload, setUnsaved: (unsaved: boolean) => rerender(page(unsaved)) };
 }
 
-it("shows pending recalculation and recalculates against the configuration the worksheet opened with", async () => {
-  const { evaluations, onReload } = open(false);
-  expect(await screen.findByText("Repaired formula needs recalculation")).toBeTruthy();
+it("offers repair only: saving and submitting recalculate a repaired field, so there is no separate step or warning", async () => {
+  const { evaluations, setUnsaved } = open(true);
   const user = userEvent.setup();
-  await user.click(screen.getByRole("button", { name: "Assay" }));
-  expect(await screen.findByRole("menuitem", { name: "Repair formula" })).toBeTruthy();
-  await user.click(screen.getByRole("menuitem", { name: "Recalculate saved readings" }));
-  await waitFor(() => expect(onReload).toHaveBeenCalledOnce());
-  expect(evaluations.map(body => JSON.parse(body))).toEqual([{ expectedConfigurationHash: hash }]);
-});
-
-it("keeps repair available while unsaved readings block only recalculation", async () => {
-  const { evaluations } = open(true);
-  const menu = await screen.findByRole("button", { name: "Assay" });
-  expect(menu).toHaveProperty("disabled", false);
-  await userEvent.setup().click(menu);
+  await user.click(await screen.findByRole("button", { name: "Assay" }));
   expect((await screen.findByRole("menuitem", { name: "Repair formula" })).getAttribute("aria-disabled")).not.toBe("true");
-  expect(screen.getByRole("menuitem", { name: /Recalculate saved readings/ }).getAttribute("aria-disabled")).toBe("true");
-  expect(screen.queryByText("Save your changes before repairing or recalculating a formula.")).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: /Recalculate/ })).toBeNull();
+  expect(screen.queryByText(/needs? recalculation/)).toBeNull();
+  setUnsaved(false);
+  await new Promise(resolve => setTimeout(resolve, 20));
   expect(evaluations).toEqual([]);
 });
 
@@ -122,25 +112,9 @@ it("repairs a test with no saved response in a dialog while keeping the workshee
   expect(drafts).toEqual([]);
 });
 
-it("shows one menu for a formula that appears twice and recalculates both fields together", async () => {
+it("shows one menu for a formula that appears twice", async () => {
   const second = fieldSchema.parse({ id: "field-2", formulaConfigurationHash: hash, question: { id: "question-1", type: QuestionType.Formula, label: "Assay", options: [] } });
-  const { evaluations, onReload } = open(false, [assay, second], ["field-1", "field-2"]);
-  const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: "Assay (2 fields)" }));
+  open(false, [assay, second], ["field-1", "field-2"]);
+  await screen.findByRole("button", { name: "Assay (2 fields)" });
   expect(screen.queryByRole("button", { name: "Assay" })).toBeNull();
-  await user.click(await screen.findByRole("menuitem", { name: "Recalculate saved readings" }));
-  await waitFor(() => expect(onReload).toHaveBeenCalledOnce());
-  expect(evaluations).toEqual([JSON.stringify({ expectedConfigurationHash: hash }), `field-2:${JSON.stringify({ expectedConfigurationHash: hash })}`]);
-});
-
-it("recalculates every repaired field automatically once the worksheet is saved", async () => {
-  const second = fieldSchema.parse({ id: "field-2", formulaConfigurationHash: hash, question: { id: "question-2", type: QuestionType.Formula, label: "Weight per mL", options: [] } });
-  const { evaluations, onReload, setUnsaved } = open(true, [assay, second], ["field-1", "field-2"]);
-  await screen.findByText("Repaired formulas need recalculation");
-  expect(evaluations).toEqual([]);
-  // The analyst saves the readings they entered: the unsaved state clears.
-  setUnsaved(false);
-  await waitFor(() => expect(evaluations).toHaveLength(2));
-  // The worksheet reloads once, with the recalculated results.
-  await waitFor(() => expect(onReload).toHaveBeenCalledOnce());
 });

@@ -50,6 +50,20 @@ describe("formula draft completeness", () => {
     expect(formulaAnswerComplete(JSON.stringify({ manualVars: { ph: { raw: "", evaluated: null } }, tableData: [] }), manualOnly)).toBe(false);
   });
 
+  it("does not require standard inputs the worksheet hides, as for Assay: Paracetamol", () => {
+    // The approved revision keeps a standard Weight input in its settings, but standard inputs are switched off.
+    const paracetamol = JSON.stringify({ type: 3, expression: "(:sampleAvg/:A)*(:dil/:sampleWeight)*:wt*5*(1000/:Claim)*:purity",
+      constants: { Claim: 120, A: 715, dil: 200 }, headers: ["Sample 1", "Sample 2"], numberOfReadings: 2, numberOfSamples: 2,
+      standardInput: false, standardInTable: false, standardInputs: [{ key: "weight" }], sampleInput: true, sampleInTable: true,
+      sampleInputs: [[{ key: "weight" }], [{ key: "weight" }]], manualVarLabels: { wt: "", purity: "" } });
+    const entered = { standardInputs: {}, sampleInputs: [{ weight: "5.6613" }, { weight: "5.6822" }], tableData: [["0.4468", "0.4474"], ["0.4465", "0.4470"]],
+      manualVars: { wt: { raw: "1.13", evaluated: 1.13 }, purity: { raw: "100", evaluated: 100 } } };
+    expect(formulaAnswerComplete(JSON.stringify(entered), paracetamol)).toBe(true);
+    expect(formulaAnswerComplete(JSON.stringify({ ...entered, sampleInputs: [{ weight: "5.6613" }, {}] }), paracetamol)).toBe(false);
+    const shownStandard = JSON.stringify({ ...JSON.parse(paracetamol), standardInput: true, standardInTable: true, headers: ["Standard", "Sample 1", "Sample 2"] });
+    expect(formulaAnswerComplete(JSON.stringify({ ...entered, tableData: [["1", "0.4468", "0.4474"], ["1", "0.4465", "0.4470"]] }), shownStandard)).toBe(false);
+  });
+
   it("reads a Simple formula stored with its builder settings inside the expression", () => {
     // pH of sample as the question editor stores it (ATR 01a1cb57): the expression is the builder's settings JSON.
     const wrapped = JSON.stringify({ type: 0, expression: JSON.stringify({ expression: "(:ph1+:ph2)/2", decimalPlaces: 2, percent: false, type: 0,
