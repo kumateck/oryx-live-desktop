@@ -44,23 +44,26 @@ function open(address: string, permissions: string[], stockDepartments: { id?: s
   return calls;
 }
 
-it("lists batches expiring in the current month with where they sit and what is left", async () => {
+it("lists batches of every date by default with where they sit and what is left", async () => {
   const calls = open("/warehouse/about-to-expire-materials", ["CanViewAboutToExpireMaterials"]);
   expect(await screen.findByText("Lactose")).toBeTruthy();
   expect(screen.getByText("R1 (S1)")).toBeTruthy();
   expect(screen.getByText("4 kg")).toBeTruthy();
-  const month = monthRangeDays(monthOf())!;
-  expect(calls.some((call) => call.includes(`startDate=${apiDay(month.from)}`) && call.includes(`endDate=${apiDay(month.to)}`) && call.includes("materialKind=0"))).toBe(true);
+  expect(calls.some((call) => call.includes("materialKind=0") && !call.includes("startDate=") && !call.includes("endDate="))).toBe(true);
+  expect(screen.queryByRole("button", { name: "Clear dates" })).toBeNull();
+  expect(screen.getByText(/Stock in your department's stores/)).toBeTruthy();
 });
 
-it("combines material code search with dates, and keeps searching after dates are cleared", async () => {
-  const user = userEvent.setup();
+it("says when the reader sees every department's stock", async () => {
+  open("/warehouse/expired-materials", ["CanViewExpiredMaterials", "CanViewExpiryAcrossDepartments"]);
+  expect(await screen.findByText("Lactose")).toBeTruthy();
+  expect(screen.getByText(/Stock in every department's stores/)).toBeTruthy();
+});
+
+it("combines material code search with dates", async () => {
   const calls = open("/warehouse/about-to-expire-materials?q=RM-2", ["CanViewAboutToExpireMaterials"]);
   await screen.findByText("Lactose");
-  expect(calls.some((call) => call.includes("searchQuery=RM-2") && call.includes("startDate="))).toBe(true);
-  await user.click(screen.getByRole("button", { name: "Clear dates" }));
-  await waitFor(() => expect(calls.some((call) => call.includes("searchQuery=RM-2") && !call.includes("startDate=") && !call.includes("endDate="))).toBe(true));
-  expect(screen.getByText("Lactose")).toBeTruthy();
+  expect(calls.some((call) => call.includes("searchQuery=RM-2") && !call.includes("startDate="))).toBe(true);
 });
 
 it.each(["expired", "about-to-expire"])("shows every stock-holding department for searched %s raw and packaging batches", async (mode) => {
