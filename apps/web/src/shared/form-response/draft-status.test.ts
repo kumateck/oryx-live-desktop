@@ -50,6 +50,14 @@ describe("formula draft completeness", () => {
     expect(formulaAnswerComplete(JSON.stringify({ manualVars: { ph: { raw: "", evaluated: null } }, tableData: [] }), manualOnly)).toBe(false);
   });
 
+  it("reads a Simple formula stored with its builder settings inside the expression", () => {
+    // pH of sample as the question editor stores it (ATR 01a1cb57): the expression is the builder's settings JSON.
+    const wrapped = JSON.stringify({ type: 0, expression: JSON.stringify({ expression: "(:ph1+:ph2)/2", decimalPlaces: 2, percent: false, type: 0,
+      variables: { ph1: { value: "", label: "pH reading 1" }, ph2: { value: "", label: "pH reading 2" } }, constants: {} }) });
+    expect(formulaAnswerComplete('{"ph1":5.1232,"ph2":5.1126}', wrapped)).toBe(true);
+    expect(formulaAnswerComplete('{"ph1":5.1232}', wrapped)).toBe(false);
+  });
+
   it("checks simple formula variables and permits configured constants", () => {
     const simple = JSON.stringify({ type: 0, expression: ":a + :b + :constant", constants: { constant: 2 } });
     expect(formulaAnswerComplete('{"a":0,"b":null}', simple)).toBe(false);
