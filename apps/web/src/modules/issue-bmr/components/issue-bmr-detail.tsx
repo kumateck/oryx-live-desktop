@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { formatDate, formatMonthYear } from "@/shared/format/dates";
+import { formatDateTime, formatMonthYear } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { toLargestUnit } from "@/shared/units/quantity";
@@ -27,8 +27,8 @@ function IssueBmrDetail({ id }: { id: string }) {
       <KeyFact label="Product code" value={bmr.productCode ?? "–"} />
       <KeyFact label="Schedule" value={bmr.schedule ?? "–"} />
       <KeyFact label="Department" value={bmr.department ?? "–"} />
-      <KeyFact label="Requested" value={formatDate(bmr.requestedAt) ?? "–"} />
-      <KeyFact label="Status" value={bmr.issuedAt ? <Badge>Issued</Badge> : <Badge variant="outline">Awaiting issue</Badge>} note={bmr.issuedAt ? formatDate(bmr.issuedAt) ?? undefined : undefined} />
+      <KeyFact label="Requested" value={formatDateTime(bmr.requestedAt) ?? "–"} />
+      <KeyFact label="Status" value={bmr.issuedAt ? <Badge>Issued</Badge> : <Badge variant="outline">Awaiting issue</Badge>} note={bmr.issuedAt ? formatDateTime(bmr.issuedAt) ?? undefined : undefined} />
     </KeyFacts>
     <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
       <section aria-label="Batch details" className="min-w-0 space-y-3 rounded-lg border bg-card p-4">

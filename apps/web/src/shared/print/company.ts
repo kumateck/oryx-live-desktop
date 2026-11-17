@@ -8,4 +8,6 @@ export const company = {
   email: "info@entranceindustries.com",
   website: "www.entranceindustries.com",
   logoUrl,
+  /** Annexure numbers of controlled forms printed from Oryx. */
+  documents: { productTestRequest: "QAD/SOP/046/F02-04" },
 } as const;
