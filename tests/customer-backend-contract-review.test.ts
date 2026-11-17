@@ -77,9 +77,17 @@ function stripSpecificationRevisionReason(document: ObjectValue) {
   }
 }
 
+/** Requisition issued filter (2026-11-17): one optional boolean query parameter on the store's requisition list. */
+const requisitionListPath = "/api/v1/requisition/department";
+function stripRequisitionIssuedFilter(document: ObjectValue) {
+  const operation = object(object(object(document.paths ?? null)[requisitionListPath] ?? null).get ?? null);
+  if (Array.isArray(operation.parameters)) operation.parameters = operation.parameters.filter((entry) => object(entry).name !== "issued");
+}
+
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripRequisitionIssuedFilter(document);
   stripSpecificationRevisionReason(document);
   stripBomSubstituteQuantities(document);
   return document;
@@ -631,6 +639,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripRequisitionIssuedFilter(current);
   stripSpecificationRevisionReason(current);
   const digest = contractDigest(current);
   assert.equal(digest, "6c84e6f93d57882923dc0cc61a6e7df1649371ab08a8b34ccd287150105b9806");
@@ -651,6 +660,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripRequisitionIssuedFilter(current);
   const digest = contractDigest(current);
   assert.equal(digest, "f2960caf053dd6bb3c943cc82c774328f21f6ae8409528741ba119a631dfc6f9");
   checkCompatibility(hostConfig, policy, digest);
@@ -665,4 +675,17 @@ test("a specification revision requires a reason and returns it on the specifica
   }
   stripSpecificationRevisionReason(current);
   assert.equal(contractDigest(current), "6c84e6f93d57882923dc0cc61a6e7df1649371ab08a8b34ccd287150105b9806");
+});
+
+test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "e4bf7bc3756169634fc42cc65d9de3e0c0c00fb245ccf90c8b8f8a381bf6a42a");
+  checkCompatibility(hostConfig, policy, digest);
+  const operation = object(object(object(current.paths ?? null)[requisitionListPath] ?? null).get ?? null);
+  assert.ok(Array.isArray(operation.parameters));
+  const issued = operation.parameters.map((entry) => object(entry)).find((entry) => entry.name === "issued");
+  assert.deepEqual(issued && { in: issued.in, required: issued.required, schema: issued.schema }, { in: "query", required: undefined, schema: { type: "boolean" } });
+  stripRequisitionIssuedFilter(current);
+  assert.equal(contractDigest(current), "f2960caf053dd6bb3c943cc82c774328f21f6ae8409528741ba119a631dfc6f9");
 });

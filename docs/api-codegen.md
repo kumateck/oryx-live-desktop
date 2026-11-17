@@ -71,6 +71,12 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+Requisition issued filter (2026-11-17) adds one optional boolean query parameter, `issued`, to
+`GET /api/v1/requisition/department`: `true` lists issued (completed) requisitions, `false` those
+still awaiting issue (neither completed nor rejected). Typed digest
+`e4bf7bc3756169634fc42cc65d9de3e0c0c00fb245ccf90c8b8f8a381bf6a42a`; removing exactly this
+parameter reproduces `f2960caf…c6f9`. Deploy the backend first.
+
 Specification revision reason (2026-11-16) makes `revisionReason` required on
 `UpdateMaterialSpecificationRequest` and `UpdateProductSpecificationRequest` (every edit is a
 revision and states why) and adds it, optional, to both specification DTOs, with `reason` and
