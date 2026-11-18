@@ -1,5 +1,5 @@
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
-import { QuestionType, sanitizeString, toSentenceCase } from "@/shared/ard-view/legacy";
+import { QuestionType, sanitizeString } from "@/shared/ard-view/legacy";
 import { FormResponseDto } from "@/shared/ard-view/dto";
 import { format } from "date-fns";
 import ViewFormulaQuestion from "../view-formula-question";
@@ -80,7 +80,7 @@ export const renderStoredValue = (response?: FormResponseDto) => {
 
   return (
     <span className="text-sm text-foreground print:text-black">
-      {toSentenceCase(valueOnly)}
+      {valueOnly || "—"}
     </span>
   );
 };

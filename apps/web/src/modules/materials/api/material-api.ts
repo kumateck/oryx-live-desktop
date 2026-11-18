@@ -4,7 +4,7 @@ import { addTags } from "@/shared/api/add-tags";
 const list = { type: "MaterialList" as const, id: "all" };
 const links = { type: "MaterialList" as const, id: "links" };
 const changed = (_result: unknown, error: unknown) => error ? [] : [list];
-const relinked = (_result: unknown, error: unknown) => error ? [] : [links];
+const relinked = (_result: unknown, error: unknown) => error ? [] : [links, list, "StockOnShelves" as const, "StockTransfers" as const, "ScheduleBatch" as const, "ActivityBoard" as const];
 
 export const materialApi = materialsApi.enhanceEndpoints({
   endpoints: {

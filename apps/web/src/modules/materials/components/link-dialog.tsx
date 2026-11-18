@@ -24,6 +24,7 @@ export interface LinkTarget { id: string; name: string; code: string; kind: Mate
  */
 export function LinkDialog({ material, link, onClose }: { material: LinkTarget; link?: MaterialLink; onClose: () => void }) {
   const permission = usePermissionAction(link ? materialPermissions.editLinked[material.kind] : materialPermissions.link[material.kind]);
+  const densityPermission = usePermissionAction(materialPermissions.density[material.kind]);
   const [loadUnits, units] = usePostApiV1CollectionMutation();
   useEffect(() => { void loadUnits({ ...audit, body: ["UnitOfMeasure"] }); }, [loadUnits]);
   const [save, saving] = usePostApiV1MaterialDepartmentMutation();
@@ -43,11 +44,11 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
   const unit = useWatch({ control: form.control, name: "unit" });
   const shown = unit ? levelUnit(unit.label) : "";
   const suffix = shown ? ` (${shown})` : "";
-  const canSetDensity = Boolean(densityUnit);
+  const canSetDensity = Boolean(densityUnit) && densityPermission.allowed;
   const fields = useMemo((): WizardField<LinkFormValues>[] => [
     { type: InputTypes.SELECT, name: "unit", label: "Counted in", mode: "single", source: "sync", options, required: true, placeholder: units.isLoading || units.isUninitialized ? "Loading…" : "Select a unit", className: "md:col-span-3" },
     ...(canSetDensity ? [{ type: InputTypes.NUMBER, name: "density", label: "Density (g/mL)", min: 0,
-      description: "Enter a verified measurement in g/mL to update the density used for BOM conversion." } satisfies WizardField<LinkFormValues>] : []),
+      description: "Shared by all warehouses and density conversions for this material. Enter a verified measurement in g/mL." } satisfies WizardField<LinkFormValues>] : []),
     { type: InputTypes.NUMBER, name: "minimum", label: `Minimum level${suffix}`, min: 0, required: true },
     { type: InputTypes.NUMBER, name: "reorder", label: `Re-order level${suffix}`, min: 0, required: true },
     { type: InputTypes.NUMBER, name: "maximum", label: `Maximum level${suffix}`, min: 0, required: true },
@@ -62,8 +63,9 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
     // A level that was not touched is sent exactly as it was stored, so converting there and back cannot shift it.
     const keep = (entered: number, before: number | undefined, stored: number | undefined) => link && link.unitId === values.unit?.value && before !== undefined && stored !== undefined && entered === before ? stored : storedLevel(entered, label);
     const density = values.density;
-    const densityChange = densityUnit && typeof density === "number" && Number.isFinite(density) && density !== savedDensity
+    const densityChange = canSetDensity && densityUnit && typeof density === "number" && Number.isFinite(density) && density !== savedDensity
       ? { density, densityUoMId: densityUnit.value } : {};
+    if (Object.keys(densityChange).length) { const deniedDensity = densityPermission.check(); if (deniedDensity) { setMessage(deniedDensity); return; } }
     const result = await save({ ...audit, body: [{ materialId: material.id, uoMId: values.unit.value, minimumStockLevel: keep(values.minimum, start?.minimum, link?.minimum), reOrderLevel: keep(values.reorder, start?.reorder, link?.reorder),
       maximumStockLevel: keep(values.maximum, start?.maximum, link?.maximum), ...densityChange }] });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
@@ -82,7 +84,7 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
           {link && link.density > 0 && savedDensity === undefined ? <p className="text-sm text-muted-foreground">
             Saved density: {link.density} {link.densityUnitSymbol ?? "(unit not recorded)"}.
           </p> : null}
-          {units.isSuccess && !canSetDensity ? <p className="text-sm text-muted-foreground">
+          {units.isSuccess && !densityUnit ? <p className="text-sm text-muted-foreground">
             To record a density for BOM conversion, configure one active unit with the symbol g/mL.
           </p> : null}
           <FormWizard form={form} fields={fields} className="md:grid-cols-3" />

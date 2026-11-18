@@ -32,6 +32,7 @@ import { weightInputPresentation } from "@/shared/formula/builder/universal-vari
 interface FormulaPrintPreviewProps {
   settings: string;
   response: string;
+  inputsOnly?: boolean;
 }
 
 const resolveFormulaLabel = (label?: string, key?: string) => {
@@ -47,6 +48,7 @@ const resolveFormulaValue = (value: unknown) => {
 const FormulaPrintPreview = ({
   settings,
   response,
+  inputsOnly = false,
 }: FormulaPrintPreviewProps) => {
   const parsed = useMemo(
     () => parseJson<ExpressionExtract>(settings),
@@ -84,7 +86,7 @@ const FormulaPrintPreview = ({
   ]);
 
   const standardInputs = useMemo(() => {
-    return (parsed?.standardInputs || []).map((input: LabeledInputField) => ({
+    return (parsed?.standardInput === false ? [] : parsed?.standardInputs || []).map((input: LabeledInputField) => ({
       label: resolveFormulaLabel(
         weightInputPresentation(
           parsed,
@@ -99,7 +101,7 @@ const FormulaPrintPreview = ({
   }, [parsed, parsedResponse?.standardInputs]);
 
   const sampleInputs = useMemo(() => {
-    return (parsed?.sampleInputs || []).map((inputs, sampleIndex) => {
+    return (parsed?.sampleInput === false ? [] : parsed?.sampleInputs || []).map((inputs, sampleIndex) => {
       return inputs.map((input: LabeledInputField) => ({
         sampleIndex,
         label: resolveFormulaLabel(
@@ -119,8 +121,8 @@ const FormulaPrintPreview = ({
   }, [parsed, parsedResponse?.sampleInputs]);
 
   const manualVars = useMemo<ManualVarsMap>(
-    () => coerceManualVars(parsedResponse?.manualVars ?? parsed?.manualVars),
-    [parsedResponse?.manualVars, parsed?.manualVars],
+    () => coerceManualVars(parsedResponse?.manualVars),
+    [parsedResponse?.manualVars],
   );
 
   const { vars: extractedVars, varKeys } = useVariableExtraction(
@@ -174,7 +176,7 @@ const FormulaPrintPreview = ({
     const entries = Object.entries(manualVars).map(([key, value]) => ({
       key,
       label: resolveFormulaLabel(
-        value.label,
+        parsed?.manualVarLabels?.[key] || value.label,
         (extractedVars as VarMapWithLabels)?.[key]?.label || key,
       ),
       value: resolveFormulaValue(value.raw),
@@ -200,7 +202,7 @@ const FormulaPrintPreview = ({
 
   const results = useMemo(
     () =>
-      computeFormulaResults({
+      inputsOnly ? [] : computeFormulaResults({
         parsed,
         headers,
         data,
@@ -208,7 +210,7 @@ const FormulaPrintPreview = ({
         tableVars,
         manualVars,
       }),
-    [parsed, headers, data, inputVariables, tableVars, manualVars],
+    [parsed, headers, data, inputVariables, tableVars, manualVars, inputsOnly],
   );
 
   const averageResult = useMemo(
