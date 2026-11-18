@@ -810,14 +810,20 @@ export const routes: RouteObject[] = [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-retests/page")).default }) },
           { path: ":id", Component: Outlet, children: [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-retests/[id]/page")).default }) },
-            { path: "certificate", Component: Outlet, children: [
-              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-retests/[id]/certificate/page")).default }) }
+            { path: "assign", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-retests/[id]/assign/page")).default }) }
             ] },
-            { path: "test-request", Component: Outlet, children: [
-              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-retests/[id]/test-request/page")).default }) }
+            { path: "progress", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-retests/[id]/progress/page")).default }) }
             ] },
-            { path: "testing", Component: Outlet, children: [
-              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-retests/[id]/testing/page")).default }) }
+            { path: "reassign", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-retests/[id]/reassign/page")).default }) }
+            ] },
+            { path: "results", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-retests/[id]/results/page")).default }) }
+            ] },
+            { path: "test", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-retests/[id]/test/page")).default }) }
             ] }
           ] }
         ] },

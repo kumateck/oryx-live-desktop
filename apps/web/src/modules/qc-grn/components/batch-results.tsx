@@ -1,3 +1,4 @@
+import { skipToken } from "@reduxjs/toolkit/query";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -26,7 +27,7 @@ export function BatchResultsPage() {
   const route = useBatchRoute();
   const navigate = useNavigate();
   const sheet = useBatchWorksheet(route.batchId, { assignees: false });
-  const sampling = qcGrnAnalyticalApi.useGetApiV1MaterialSamplingsByGrnIdAndBatchIdQuery({ ...qcGrnAudit, grnId: route.grnId, batchId: route.batchId });
+  const sampling = qcGrnAnalyticalApi.useGetApiV1MaterialSamplingsByGrnIdAndBatchIdQuery(route.grnId ? { ...qcGrnAudit, grnId: route.grnId, batchId: route.batchId } : skipToken);
   const batchQuery = qcGrnMaterialsApi.useGetApiV1MaterialBatchByBatchIdQuery({ ...qcGrnAudit, batchId: route.batchId });
   const [generate, generating] = qcGrnFormsApi.usePostApiV1FormGenerateCertificateByMaterialBatchIdMutation();
   const permission = usePermissionAction(qcPermissions.check[route.kind]);
@@ -37,7 +38,7 @@ export function BatchResultsPage() {
   const inferred = useMemo(() => buildCoaCompliancePayload(sections, sheet.responses), [sections, sheet.responses]);
   const [compliance, setCompliance] = useState<CoaComplianceItem[]>([]);
   useEffect(() => { setCompliance(inferred); }, [inferred]);
-  const sample = samplingSchema.safeParse(sampling.data ?? null);
+  const sample = samplingSchema.safeParse(route.sampling ?? sampling.data ?? null);
   const batch = batchSchema.safeParse(batchQuery.data ?? null);
   const facts = { batchNumber: batch.success ? batch.data?.batchNumber ?? null : null, made: batch.success ? batch.data?.manufacturingDate ?? null : null, expires: batch.success ? batch.data?.expiryDate ?? null : null,
     arNumber: sample.success ? sample.data?.arNumber ?? null : null, sampled: sample.success ? sample.data?.sampleDate ?? null : null, analysed: sample.success ? sample.data?.sampleDate ?? null : null,
