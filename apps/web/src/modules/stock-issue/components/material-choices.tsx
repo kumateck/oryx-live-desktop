@@ -42,12 +42,12 @@ function Option({ line, option, mayChoose, onChoose }: { line: MaterialOptionLin
   </li>;
 }
 
-function ChooseDialog({ requisitionId, line, option, onClose }: { requisitionId: string; line: MaterialOptionLine; option: MaterialOption; onClose: () => void }) {
+function ChooseDialog({ requisitionId, kind, line, option, onClose }: { requisitionId: string; kind: 0 | 1; line: MaterialOptionLine; option: MaterialOption; onClose: () => void }) {
   const id = useId();
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const permission = usePermissionAction(choosePermission);
+  const permission = usePermissionAction(choosePermission(kind));
   const [choose] = usePostApiV1RequisitionByRequisitionIdMaterialOptionsMutation();
   const current = line.options.find((item) => item.isCurrent);
   const run = async () => {
@@ -83,7 +83,7 @@ function ChooseDialog({ requisitionId, line, option, onClose }: { requisitionId:
  * BOM lines this raw-material requisition may issue as another material: the BOM material or a substitute, each with its
  * own quantity. The store compares stock and expiry and picks one; the materials are never issued together.
  */
-export function MaterialChoices({ requisitionId }: { requisitionId: string }) {
+export function MaterialChoices({ requisitionId, kind }: { requisitionId: string; kind: 0 | 1 }) {
   const { has } = useAccess();
   const query = useGetApiV1RequisitionByRequisitionIdMaterialOptionsQuery({ ...audit, requisitionId });
   const parsed = useMemo(() => query.data ? materialOptionsSchema.safeParse(query.data) : null, [query.data]);
@@ -91,7 +91,7 @@ export function MaterialChoices({ requisitionId }: { requisitionId: string }) {
   const lines = parsed?.success ? parsed.data : [];
   const error = query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned material options the app could not read." : null;
   if (!query.isLoading && !error && lines.length === 0) return null;
-  const mayChoose = has(choosePermission);
+  const mayChoose = has(choosePermission(kind));
   return <section aria-label="Material to issue" className="space-y-3 rounded-lg border bg-card p-4">
     <div><h2 className="text-sm font-semibold">Material to issue</h2>
       <p className="text-sm text-muted-foreground">These materials have substitutes on the BOM, each with its own quantity. Issue one of them, using the stock that expires first or the one this store holds.</p></div>
@@ -104,6 +104,6 @@ export function MaterialChoices({ requisitionId }: { requisitionId: string }) {
         <ul className="grid gap-2 md:grid-cols-2">{line.options.map((option) => <Option key={option.materialId} line={line} option={option} mayChoose={mayChoose}
           onChoose={() => setChoosing({ line, option })} />)}</ul>
       </div>)}
-    {choosing ? <ChooseDialog requisitionId={requisitionId} line={choosing.line} option={choosing.option} onClose={() => setChoosing(null)} /> : null}
+    {choosing ? <ChooseDialog requisitionId={requisitionId} kind={kind} line={choosing.line} option={choosing.option} onClose={() => setChoosing(null)} /> : null}
   </section>;
 }
