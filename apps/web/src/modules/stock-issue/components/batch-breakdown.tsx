@@ -19,7 +19,9 @@ function Expiry({ expires }: { expires: string | null }) {
 export function BatchBreakdown({ line }: { line: { quantity?: number; unit: string | null; batches: readonly SetAsideBatch[] } }) {
   if (line.batches.length === 0) return <span className="text-sm text-destructive">No stock set aside</span>;
   const { batches, total, short, totalLine } = batchLines({ quantity: line.quantity ?? 0, batches: line.batches });
-  return <table className="w-full min-w-[32rem] table-fixed border-collapse text-sm">
+  return <div role="region" aria-label="Batch details" tabIndex={0} data-row-click="ignore"
+    className="w-full min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:outline-ring">
+    <table className="w-full min-w-[32rem] table-fixed border-collapse text-sm">
     <thead className="text-xs text-muted-foreground"><tr>
       <th scope="col" className="w-[24%] px-2 py-1 text-left font-medium">Batch No.</th><th scope="col" className="w-[22%] px-2 py-1 text-left font-medium">AR No.</th>
       <th scope="col" className="w-[24%] px-2 py-1 text-left font-medium">Location</th><th scope="col" className="w-[14%] px-2 py-1 text-right font-medium">Quantity</th>
@@ -36,5 +38,6 @@ export function BatchBreakdown({ line }: { line: { quantity?: number; unit: stri
         <td className="px-2 py-1 text-right font-semibold tabular-nums">{amount(total, line.unit)}</td>
         <td className="px-2 py-1 text-xs">{short > 0 ? <span className="font-medium text-destructive">{amount(short, line.unit)} short</span> : null}</td></tr> : null}
     </tbody>
-  </table>;
+    </table>
+  </div>;
 }
