@@ -856,6 +856,90 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getProductTestCorrectionHistory: build.query<
+      GetProductTestCorrectionHistoryApiResponse,
+      GetProductTestCorrectionHistoryApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "test-correction", id: queryArg.responseId }],
+      query: (queryArg) => ({
+        url: `/api/v1/test-corrections/${queryArg.responseId}/product`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    returnProductTestForCorrection: build.mutation<
+      ReturnProductTestForCorrectionApiResponse,
+      ReturnProductTestForCorrectionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "test-correction", id: "LIST" }, { type: "test-correction", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/test-corrections/${queryArg.responseId}/product`,
+        method: "POST",
+        body: queryArg.appServicesFormsReturnTestForCorrectionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getRawMaterialTestCorrectionHistory: build.query<
+      GetRawMaterialTestCorrectionHistoryApiResponse,
+      GetRawMaterialTestCorrectionHistoryApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "test-correction", id: queryArg.responseId }],
+      query: (queryArg) => ({
+        url: `/api/v1/test-corrections/${queryArg.responseId}/raw-material`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    returnRawMaterialTestForCorrection: build.mutation<
+      ReturnRawMaterialTestForCorrectionApiResponse,
+      ReturnRawMaterialTestForCorrectionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "test-correction", id: "LIST" }, { type: "test-correction", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/test-corrections/${queryArg.responseId}/raw-material`,
+        method: "POST",
+        body: queryArg.appServicesFormsReturnTestForCorrectionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getPackagingMaterialTestCorrectionHistory: build.query<
+      GetPackagingMaterialTestCorrectionHistoryApiResponse,
+      GetPackagingMaterialTestCorrectionHistoryApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "test-correction", id: queryArg.responseId }],
+      query: (queryArg) => ({
+        url: `/api/v1/test-corrections/${queryArg.responseId}/packaging-material`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    returnPackagingMaterialTestForCorrection: build.mutation<
+      ReturnPackagingMaterialTestForCorrectionApiResponse,
+      ReturnPackagingMaterialTestForCorrectionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "test-correction", id: "LIST" }, { type: "test-correction", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/test-corrections/${queryArg.responseId}/packaging-material`,
+        method: "POST",
+        body: queryArg.appServicesFormsReturnTestForCorrectionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -1445,6 +1529,63 @@ export type ReassignPackagingMaterialTestFieldsApiArg = {
   subModule?: string;
   appServicesFormsReassignTestFieldsRequest: AppServicesFormsReassignTestFieldsRequest;
 };
+export type GetProductTestCorrectionHistoryApiResponse =
+  /** status 200 OK */ AppServicesFormsTestCorrectionStateDto;
+export type GetProductTestCorrectionHistoryApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ReturnProductTestForCorrectionApiResponse =
+  /** status 200 OK */ string;
+export type ReturnProductTestForCorrectionApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesFormsReturnTestForCorrectionRequest: AppServicesFormsReturnTestForCorrectionRequest;
+};
+export type GetRawMaterialTestCorrectionHistoryApiResponse =
+  /** status 200 OK */ AppServicesFormsTestCorrectionStateDto;
+export type GetRawMaterialTestCorrectionHistoryApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ReturnRawMaterialTestForCorrectionApiResponse =
+  /** status 200 OK */ string;
+export type ReturnRawMaterialTestForCorrectionApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesFormsReturnTestForCorrectionRequest: AppServicesFormsReturnTestForCorrectionRequest;
+};
+export type GetPackagingMaterialTestCorrectionHistoryApiResponse =
+  /** status 200 OK */ AppServicesFormsTestCorrectionStateDto;
+export type GetPackagingMaterialTestCorrectionHistoryApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ReturnPackagingMaterialTestForCorrectionApiResponse =
+  /** status 200 OK */ string;
+export type ReturnPackagingMaterialTestForCorrectionApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesFormsReturnTestForCorrectionRequest: AppServicesFormsReturnTestForCorrectionRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -1984,6 +2125,24 @@ export type AppServicesFormsReassignTestFieldsRequest = {
   fields?: AppServicesFormsTestFieldReassignmentInput[] | null;
   reason?: string | null;
 };
+export type AppServicesFormsTestCorrectionHistoryItemDto = {
+  id?: string;
+  sourceResponseId?: string;
+  correctionResponseId?: string;
+  returnedById?: string;
+  returnedBy?: string | null;
+  returnedAt?: string;
+  reason?: string | null;
+};
+export type AppServicesFormsTestCorrectionStateDto = {
+  responseId?: string;
+  canReturn?: boolean;
+  blockedReason?: string | null;
+  history?: AppServicesFormsTestCorrectionHistoryItemDto[] | null;
+};
+export type AppServicesFormsReturnTestForCorrectionRequest = {
+  reason: string;
+};
 export const {
   usePostApiV1FormMutation,
   useGetApiV1FormQuery,
@@ -2060,4 +2219,13 @@ export const {
   useReassignProductTestFieldsMutation,
   useReassignRawMaterialTestFieldsMutation,
   useReassignPackagingMaterialTestFieldsMutation,
+  useGetProductTestCorrectionHistoryQuery,
+  useLazyGetProductTestCorrectionHistoryQuery,
+  useReturnProductTestForCorrectionMutation,
+  useGetRawMaterialTestCorrectionHistoryQuery,
+  useLazyGetRawMaterialTestCorrectionHistoryQuery,
+  useReturnRawMaterialTestForCorrectionMutation,
+  useGetPackagingMaterialTestCorrectionHistoryQuery,
+  useLazyGetPackagingMaterialTestCorrectionHistoryQuery,
+  useReturnPackagingMaterialTestForCorrectionMutation,
 } = injectedRtkApi;

@@ -315,6 +315,7 @@ export const generatedTagTypes = [
   "template-question/area",
   "template-repair",
   "template-repair/form",
+  "test-correction",
   "test-field-reassignment",
   "ticket",
   "unstart-leftover",

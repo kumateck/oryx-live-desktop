@@ -1,3 +1,4 @@
+import { testCorrectionAccess } from "@/shared/qc/test-correction-access";
 import type { ModuleManifest } from "../contract";
 
 const either = (raw: string, packaging: string) => ({ kind: "some" as const, permissions: [raw, packaging] });
@@ -18,3 +19,5 @@ export const manifest = {
     { pattern: "/qc/goods-receipt-note/:id/batches/:batchId/test", access: either("CanStartRawMaterialTest", "CanStartPackagingMaterialTest") },
   ],
 } satisfies ModuleManifest<"qc-grn", "/qc/goods-receipt-note">;
+
+export const materialCorrectionAccess = { raw: testCorrectionAccess.raw, packaging: testCorrectionAccess.packaging } as const;

@@ -1,3 +1,4 @@
+import { TestCorrectionPanel } from "@/shared/qc/test-correction-panel";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
@@ -36,7 +37,7 @@ export function BatchResultsPage() {
   const [previewing, setPreviewing] = useState(false);
   const [message, setMessage] = useState("");
   const responseId = sheet.responses.find(answer => answer.responseId)?.responseId;
-  const responseDetail = qcGrnFormsApi.useGetApiV1FormResponsesByFormResponseIdQuery(previewing && responseId ? { ...qcGrnAudit, formResponseId: responseId } : skipToken);
+  const responseDetail = qcGrnFormsApi.useGetApiV1FormResponsesByFormResponseIdQuery(responseId ? { ...qcGrnAudit, formResponseId: responseId } : skipToken);
   const sections = useMemo(() => sheet.rawForm?.sections ?? [], [sheet.rawForm]);
   const inferred = useMemo(() => buildCoaCompliancePayload(sections, sheet.responses), [sections, sheet.responses]);
   const [compliance, setCompliance] = useState<CoaComplianceItem[]>([]);
@@ -60,6 +61,8 @@ export function BatchResultsPage() {
       <Button type="button" variant="outline" disabled={!sheet.rawForm} onClick={() => setPrinting(true)}>Print</Button>
       <PermissionGuard require={qcPermissions.check[route.kind]}><Button type="button" disabled={!sheet.rawForm} onClick={() => { void sheet.reload(); setPreviewing(true); }}>Preview certificate</Button></PermissionGuard>
     </div>
+    {sheet.responseId ? <TestCorrectionPanel responseId={sheet.responseId} kind={route.kind === 0 ? "raw" : "packaging"} canReturn={Boolean((route.submitted ?? batchQuery.data?.status === 9) && responseDetail.currentData && !responseDetail.currentData.checkedAt && !responseDetail.currentData.approved && !responseDetail.currentData.rejected)}
+      onReturned={() => { toast.success("Test returned to the analyst for correction"); void navigate(route.notePath); }} /> : null}
     {sheet.formMissing ? <p className="text-sm text-muted-foreground">This material has no test form linked.</p> : <BatchWorksheet details={sheet.details} form={sheet.rawForm} responses={sheet.responses} blank={false} />}
     {printing ? <PrintPreviewDialog title="Analytical raw data" onClose={() => setPrinting(false)}><BatchWorksheet details={sheet.details} form={sheet.rawForm} responses={sheet.responses} blank={false} /></PrintPreviewDialog> : null}
     {previewing ? <Dialog open onOpenChange={(open) => { if (!open && !generating.isLoading) setPreviewing(false); }}><DialogContent className="sm:max-w-5xl">
