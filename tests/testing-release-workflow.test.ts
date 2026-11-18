@@ -161,7 +161,8 @@ test("testing activation preserves unrelated services and restores the working w
       writeFileSync(join(bin, "sleep"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
       writeFileSync(join(bin, "seq"), "#!/bin/sh\necho 1\n", { mode: 0o755 });
       const result = spawnSync("sh", ["-s"], {
-        input: remoteScript(deploy), encoding: "utf8", timeout: 30_000,
+        // Each scenario starts many Node subprocesses; allow Linux/amd64 emulation time under load.
+        input: remoteScript(deploy), encoding: "utf8", timeout: 120_000,
         env: { ...process.env, HOME: directory, PATH: `${bin}:${process.env.PATH ?? ""}`, TAG: "a".repeat(40),
           REGISTRY_USER: "fixture", REGISTRY_TOKEN: "fixture-token", RABBITMQ_HOST: "broker:5672", RABBITMQ_PASS: "fixture-pass",
           ORYX_TESTING_STATE: state, ORYX_TESTING_FAIL: failure, ORYX_FIXTURE_NODE: process.execPath,
