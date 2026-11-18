@@ -43,3 +43,9 @@ export const parseStoredFormulaResults = (
 
 export const isGovernedFormulaResponse = (response?: FormResponseDto) =>
   Boolean(response?.formulaGoverned || response?.formulaRepairPending || response?.formulaRepairEvaluated);
+
+/** "sample1" → "Sample 1", "average" → "Average"; labels already written for people are kept. */
+export function resultLabel(key: string): string {
+  const spaced = key.trim().replace(/_/g, " ").replace(/([a-z])(\d)/gi, "$1 $2").replace(/([a-z])([A-Z])/g, "$1 $2");
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}

@@ -50,6 +50,8 @@
 }
 
 .print-sheet, .print-portal { --density-scale: 1; }
+/* A printed sheet is white whatever the app's theme, so shared components inside it read light tokens. */
+.print-sheet { color-scheme: light; --background: #fff; --foreground: #111; --card: #fff; --card-foreground: #111; --muted: #f1f1f1; --muted-foreground: #555; --border: #9a9a9a; }
 
 /* Printed documents. They are always black on white, whatever the app's theme, and sized in print units. */
 .print-portal { display: none; }
@@ -108,5 +110,8 @@
   .print-table thead { display: table-header-group; }
   .print-table tr { break-inside: avoid; }
   .print-signatures { break-inside: avoid; }
+  /* Each worksheet test starts on a new page only when it would otherwise split; long calculations may still flow. */
+  .qc-worksheet-test { break-inside: avoid-page; border-radius: 0; }
+  .qc-worksheet-test header { break-after: avoid; }
   .voucher-table tbody.voucher-material { break-inside: avoid; }
 }

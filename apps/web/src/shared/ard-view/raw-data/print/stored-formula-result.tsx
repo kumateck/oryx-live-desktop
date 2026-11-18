@@ -1,6 +1,7 @@
 import { FormResponseDto } from "@/shared/ard-view/dto";
 import {
   GovernedFormResponse,
+  resultLabel,
   parseStoredFormulaResults,
 } from "../governed-formula-result";
 
@@ -21,7 +22,7 @@ const StoredFormulaResult = ({ response, preferAverage = false }: { response?: F
     <div className="space-y-1 text-sm text-foreground print:text-black">
       {results.map((result) => (
         <div key={result.key} className="flex gap-2">
-          <span className="font-medium">{result.key}:</span>
+          {results.length > 1 ? <span className="font-medium">{resultLabel(result.key)}:</span> : null}
           <span>
             {result.value}
             {result.unit ? ` ${result.unit}` : ""}
