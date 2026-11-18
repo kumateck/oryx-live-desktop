@@ -110,6 +110,13 @@ function Detail({ id }: { id: string }) {
         <Button type="button" size="sm" variant="outline" onClick={() => void batchQuery.refetch()}>Retry</Button>
       </div> : issued && batches.length === 0 ? <p className="text-sm text-muted-foreground">Issued batch history is unavailable for this transfer.</p>
         : <BatchBreakdown line={{ unit: transfer.unit, batches }} />}
+      {batches.some(batch => batch.sourceQuantity !== null && batch.sourceUnit && batch.sourceUnit.toLowerCase() !== transfer.unit?.toLowerCase()) ?
+        <div role="region" aria-label="Source stock quantities" className="space-y-1 text-sm">
+          <p className="font-medium">Quantities leaving the supplying store</p>
+          {batches.map(batch => batch.sourceQuantity !== null && batch.sourceUnit ? <p key={batch.key}>
+            Batch {batch.number ?? "not recorded"}: {amount(batch.sourceQuantity, batch.sourceUnit)}
+          </p> : null)}
+        </div> : null}
     </section> : null}
     {confirming ? <ConfirmActionDialog require={issuePermissions[transfer.kind]} destructive={false} title={`Issue ${amount(transfer.quantity, transfer.unit)} of ${transfer.materialName}?`}
       description={`The batches shown leave your store for ${transfer.to ?? "the other department"}, where they wait to be put on shelves. This cannot be undone.`} confirmLabel="Issue stock" busyLabel="Issuing…" onClose={() => setConfirming(false)}

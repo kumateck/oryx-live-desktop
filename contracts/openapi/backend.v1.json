@@ -142253,6 +142253,11 @@
           },
           "warehouseLocationShelf": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Warehouses.MaterialWarehouseLocationShelfDto"
+          },
+          "sourceQuantityToTake": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -143964,6 +143969,11 @@
           "quantity": {
             "type": "number",
             "format": "double"
+          },
+          "densityGramsPerMilliliter": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -144452,6 +144462,19 @@
           },
           "destinationWarehouse": {
             "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+          },
+          "destinationQuantity": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "destinationUoM": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -144597,6 +144620,11 @@
           },
           "isWhitePlacebo": {
             "type": "boolean"
+          },
+          "densityGramsPerMilliliter": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -144975,6 +145003,11 @@
           },
           "isWhitePlacebo": {
             "type": "boolean"
+          },
+          "densityGramsPerMilliliter": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -145301,6 +145334,11 @@
           },
           "isWhitePlacebo": {
             "type": "boolean"
+          },
+          "densityGramsPerMilliliter": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false

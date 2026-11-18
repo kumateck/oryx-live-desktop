@@ -139,6 +139,20 @@ function stripUpcomingBatchIssues(document: ObjectValue) {
   delete object(object(schemas["DOMAIN.Entities.Warehouses.CreateSwapRequest"] ?? null).properties ?? null).productionScheduleProductId;
 }
 
+const sharedDensityFields = {
+  "DOMAIN.Entities.Materials.Material": ["densityGramsPerMilliliter"],
+  "DOMAIN.Entities.Materials.MaterialDto": ["densityGramsPerMilliliter"],
+  "DOMAIN.Entities.Materials.MaterialWithWarehouseStockDto": ["densityGramsPerMilliliter"],
+  "DOMAIN.Entities.Materials.Batch.MaterialBatchReservedQuantity": ["densityGramsPerMilliliter"],
+  "DOMAIN.Entities.Materials.Batch.BatchToSupply": ["sourceQuantityToTake"],
+  "DOMAIN.Entities.Materials.HoldingMaterialTransferBatchDto": ["destinationQuantity", "destinationUoM", "receivedAt"],
+};
+function stripSharedDensity(document: ObjectValue) {
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const [name, fields] of Object.entries(sharedDensityFields))
+    for (const field of fields) delete object(object(schemas[name] ?? null).properties ?? null)[field];
+}
+
 /** Pre-COA correction return imports only three variant paths and their three owned DTOs. */
 function stripTestCorrections(document: ObjectValue) {
   const paths = object(document.paths ?? null);
@@ -168,6 +182,7 @@ function stripUnstartLeftovers(document: ObjectValue) {
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(document);
+  stripSharedDensity(document);
   stripUnstartReservations(document);
   stripUnstartLeftovers(document);
   stripUpcomingBatchIssues(document);
@@ -730,6 +745,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
+  stripSharedDensity(current);
   stripUnstartReservations(current);
   stripUnstartLeftovers(current);
   stripUpcomingBatchIssues(current);
@@ -760,6 +776,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
+  stripSharedDensity(current);
   stripUnstartReservations(current);
   stripUnstartLeftovers(current);
   stripUpcomingBatchIssues(current);
@@ -788,6 +805,7 @@ test("a specification revision requires a reason and returns it on the specifica
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
+  stripSharedDensity(current);
   stripUnstartReservations(current);
   stripUnstartLeftovers(current);
   stripUpcomingBatchIssues(current);
@@ -809,6 +827,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
+  stripSharedDensity(current);
   stripUnstartReservations(current);
   stripUnstartLeftovers(current);
   stripUpcomingBatchIssues(current);
@@ -832,6 +851,7 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
 test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
+  stripSharedDensity(current);
   stripUnstartReservations(current);
   stripUnstartLeftovers(current);
   stripUpcomingBatchIssues(current);
@@ -848,6 +868,7 @@ test("IT approval transfer adds only a typed read of the users on approval docum
 test("material retests add an AR number, read-only retest fields and three statuses, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
+  stripSharedDensity(current);
   stripUnstartReservations(current);
   stripUnstartLeftovers(current);
   stripUpcomingBatchIssues(current);
@@ -864,6 +885,7 @@ test("material retests add an AR number, read-only retest fields and three statu
  test("QC repair, partial reassignment and packaging quantities preserve the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
+  stripSharedDensity(current);
   stripUnstartReservations(current);
   stripUnstartLeftovers(current);
   stripUpcomingBatchIssues(current);
@@ -883,6 +905,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 test("upcoming batch issues add two typed reads and the started batch a swap may name, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
+  stripSharedDensity(current);
   stripUnstartReservations(current);
   stripUnstartLeftovers(current);
   stripTemplateRepairs(current);
@@ -897,6 +920,7 @@ test("upcoming batch issues add two typed reads and the started batch a swap may
 test("the combined QC repair and upcoming-issues contract is reviewed without dropping either addition", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
+  stripSharedDensity(current);
   stripUnstartReservations(current);
   stripUnstartLeftovers(current);
   const digest = contractDigest(current);
@@ -911,30 +935,34 @@ test("the combined QC repair and upcoming-issues contract is reviewed without dr
 test("Unstart leftovers add only two typed variant repair paths and owned DTOs", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
+  stripSharedDensity(current);
   stripUnstartReservations(current);
   const digest = contractDigest(current);
   assert.equal(digest, "8740d29923b194db052c53a97aff5fcdf863b619e8317a3b5c1c95bb7b433f4b");
   checkCompatibility(hostConfig, policy, digest);
   const paths = object(current.paths ?? null);
   for (const variant of ["raw", "packaging"]) assert.deepEqual(Object.keys(object(paths[`/api/v1/unstart-leftovers/${variant}`] ?? null)), ["get", "post"]);
-  stripTestCorrections(current);
-  stripUnstartReservations(current);
   stripUnstartLeftovers(current);
   assert.equal(contractDigest(current), "3bf7e9598e05b34f624541f573204aad101320f66b0ace2a56342ea067a33f0b");
 });
 
 
-test("Unstart reservation release adds two material-scoped typed repair paths and preserves its predecessor", () => {
+test("shared density combines with the reviewed Unstart reservation contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripTestCorrections(current);
-  const digest = contractDigest(current);
-  assert.equal(digest, "492bb17cb7c98b859259ae356d670a091c1045483600bdf2e4137e79751bc1d4");
-  checkCompatibility(hostConfig, policy, digest);
-  const paths = object(current.paths ?? null);
-  for (const variant of ["raw", "packaging"]) assert.deepEqual(Object.keys(object(paths[`/api/v1/unstart-reservations/{materialId}/${variant}`] ?? null)), ["get", "post"]);
-  stripTestCorrections(current);
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+  stripSharedDensity(current);
+  assert.equal(contractDigest(current), "492bb17cb7c98b859259ae356d670a091c1045483600bdf2e4137e79751bc1d4");
   stripUnstartReservations(current);
   assert.equal(contractDigest(current), "8740d29923b194db052c53a97aff5fcdf863b619e8317a3b5c1c95bb7b433f4b");
+});
+test("Unstart reservations combine with the reviewed shared-density contract", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTestCorrections(current);
+  const paths = object(current.paths ?? null);
+  for (const variant of ["raw", "packaging"]) assert.deepEqual(Object.keys(object(paths[`/api/v1/unstart-reservations/{materialId}/${variant}`] ?? null)), ["get", "post"]);
+  stripUnstartReservations(current);
+  assert.equal(contractDigest(current), "54d15fbce18e5e1cf519c483f27d83da4960f8f6e41863cad71992a213d7d326");
 });
 
 test("pre-COA correction imports three typed variant paths, a required reason and history only", () => {
@@ -946,5 +974,5 @@ test("pre-COA correction imports three typed variant paths, a required reason an
   const schemas = object(object(current.components ?? null).schemas ?? null);
   assert.deepEqual(object(schemas["APP.Services.Forms.ReturnTestForCorrectionRequest"] ?? null).required, ["reason"]);
   stripTestCorrections(current);
-  assert.equal(contractDigest(current), "492bb17cb7c98b859259ae356d670a091c1045483600bdf2e4137e79751bc1d4");
+  assert.equal(contractDigest(current), "e9f0e6838046b0db5121ed1611371bd6f8096c611c37a2eb22c0a9649e4bdcaa");
 });

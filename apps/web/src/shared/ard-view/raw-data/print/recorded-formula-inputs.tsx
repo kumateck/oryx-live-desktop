@@ -1,3 +1,7 @@
+import { UniformityPreview } from "@/shared/ard-view/response/print/preview/uniformity";
+import FormulaPrintPreview from "./formula-print-preview";
+import ExpressionRenderer from "@/shared/formula/ui/math/expression-view";
+import { FormulaType } from "@/shared/questions/question-types";
 import type { ReactNode } from "react";
 import { z } from "zod";
 import { normalizeFormulaResponse } from "./normalize-formula-response";
@@ -7,7 +11,7 @@ import type { QuestionOptionDto } from "@/shared/ard-view/dto";
 const json = z.json();
 type Json = z.infer<typeof json>;
 const object = (value: Json): value is { [key: string]: Json } => value !== null && typeof value === "object" && !Array.isArray(value);
-const derived = new Set(["result", "results", "average", "averageResult", "evaluations", "formulaExecutionId", "executionId", "evaluated"]);
+const derived = new Set(["settings", "schema", "type", "formula", "expression", "result", "results", "average", "averageResult", "evaluations", "formulaExecutionId", "executionId", "evaluated"]);
 const titles: Record<string, string> = { tableData: "Readings", standardInputs: "Standard inputs", sampleInputs: "Sample inputs", manualVars: "Manual inputs" };
 const humanize = (key: string) => titles[key] ?? key.replace(/([a-z])([A-Z])/g, "$1 $2").replaceAll("_", " ");
 function read(raw: string): Json {
@@ -17,7 +21,9 @@ function read(raw: string): Json {
 /** Show every saved input without evaluating the formula or substituting configured defaults for missing readings. */
 export function RecordedFormulaInputs({ value, option }: { value: string; option?: QuestionOptionDto | undefined }) {
   const saved = read(normalizeFormulaResponse(value));
-  const definition = evaluationSettings(option?.name ?? "");
+  const savedSettings = object(saved) ? saved.settings : null;
+  const definition = (savedSettings ? evaluationSettings(typeof savedSettings === "string" ? savedSettings : JSON.stringify(savedSettings)) : null)
+    ?? evaluationSettings(option?.name ?? "");
   const settings = definition ? read(definition.settings) : null;
   const labels = new Map<string, string>();
   const collect = (entry: Json): void => {
@@ -30,6 +36,14 @@ export function RecordedFormulaInputs({ value, option }: { value: string; option
   if (settings !== null && object(settings) && settings.manualVarLabels && object(settings.manualVarLabels))
     for (const [key, label] of Object.entries(settings.manualVarLabels)) if (typeof label === "string") labels.set(key, label);
   const headers = settings !== null && object(settings) && Array.isArray(settings.headers) ? settings.headers.filter((header): header is string => typeof header === "string") : [];
+
+  if (definition?.type === FormulaType.Universal) return <section aria-label="Recorded formula inputs" className="space-y-4">
+    <FormulaPrintPreview settings={definition.settings} response={normalizeFormulaResponse(value)} inputsOnly />
+  </section>;
+
+  if (definition?.type === FormulaType.Uniformity) return <section aria-label="Recorded formula inputs">
+    <UniformityPreview settings={definition.settings} response={normalizeFormulaResponse(value)} inputsOnly />
+  </section>;
 
   const renderValue = (entry: Json, path: string): ReactNode => {
     if (path === "tableData" && Array.isArray(entry) && entry.every(Array.isArray)) return <div className="max-w-full overflow-x-auto">
@@ -51,7 +65,7 @@ export function RecordedFormulaInputs({ value, option }: { value: string; option
   if (saved === null || saved === "" || object(saved) && Object.keys(saved).every(key => derived.has(key))) return null;
   return <section aria-label="Recorded formula inputs" className="space-y-2 text-sm">
     <h4 className="font-semibold">Recorded inputs</h4>
-    {settings !== null && object(settings) && typeof settings.expression === "string" ? <p className="whitespace-pre-wrap break-words">Formula: {settings.expression}</p> : null}
+    {settings !== null && object(settings) && typeof settings.expression === "string" ? <ExpressionRenderer print expression={settings.expression} fallbackToText className="text-sm" /> : null}
     {renderValue(saved, "")}
   </section>;
 }
