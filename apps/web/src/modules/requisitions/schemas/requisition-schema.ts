@@ -11,6 +11,7 @@ const item = z.object({
   id: z.string().nullish(), quantity: amount, status,
   material: z.object({ id: z.string().nullish(), code: text, name: text, kind: z.number().int().nullish() }).nullish(),
   uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(),
+  batches: z.array(z.object({ quantityToTake: amount, warehouseLocationShelfId: text, batch: z.object({ id: text, batchNumber: text, uoM: z.object({ symbol: text }).nullish() }).nullish() })).nullish(),
 });
 const requisition = z.object({
   id: z.string().min(1), code: text, requisitionType: type, status, approved: z.boolean().nullish(), comments: text,
@@ -30,6 +31,7 @@ function read(value: z.infer<typeof requisition>) {
       id: line.id ?? `line-${index}`, materialId: line.material?.id ?? null, materialName: line.material?.name ?? "Unnamed material", materialCode: line.material?.code ?? null,
       materialKind: line.material?.kind === 0 || line.material?.kind === 1 ? line.material.kind : null,
       quantity: line.quantity, unit: line.uoM?.symbol ?? null, unitId: line.uoM?.id ?? null, status: line.status,
+      batches: (line.batches ?? []).map((allocation) => ({ key: `${allocation.batch?.id ?? allocation.batch?.batchNumber}:${allocation.warehouseLocationShelfId ?? allocation.quantityToTake}`, number: allocation.batch?.batchNumber ?? "Not recorded", quantity: allocation.quantityToTake, unit: allocation.batch?.uoM?.symbol ?? line.uoM?.symbol ?? null })),
     })),
   };
 }
@@ -40,7 +42,11 @@ export const requisitionRowsSchema = z.array(z.unknown()).nullish().transform((v
   const parsed = requisitionSchema.safeParse(entry);
   return parsed.success ? [parsed.data] : [];
 }));
-export type Requisition = z.infer<typeof requisitionSchema>;
+type ParsedRequisition = z.infer<typeof requisitionSchema>;
+export type Requisition = Omit<ParsedRequisition, "batchNumber" | "items"> & {
+  batchNumber?: string | null;
+  items: (Omit<ParsedRequisition["items"][number], "batches"> & { batches?: { key: string; number: string; quantity: number; unit: string | null }[] })[];
+};
 export type RequisitionLine = Requisition["items"][number];
 
 /** A material the department keeps, as offered when raising a purchase requisition. Quantities are in the material's stored unit. */

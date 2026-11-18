@@ -12,6 +12,8 @@ export const approvalApi = approvalsApi.enhanceEndpoints({
     getApiV1ApprovalMyPendingStats: (definition) => { definition.providesTags = addTags(definition.providesTags, [queue]); },
     getApiV1ApprovalMyPendingDocumentCounts: (definition) => { definition.providesTags = addTags(definition.providesTags, [queue]); },
     getApiV1ApprovalMyPendingByModelTypeAndModelId: (definition) => { definition.providesTags = addTags(definition.providesTags, [queue]); },
+    rejectProductionRawStockRequisition: d => { d.invalidatesTags = addTags(d.invalidatesTags, decided); },
+    rejectProductionPackagingStockRequisition: d => { d.invalidatesTags = addTags(d.invalidatesTags, decided); },
     postApiV1ApprovalApproveByModelTypeAndModelId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, decided); },
     postApiV1ApprovalRejectByModelTypeAndModelId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, decided); },
   },

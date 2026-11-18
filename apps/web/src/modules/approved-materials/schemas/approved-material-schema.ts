@@ -37,7 +37,7 @@ export const shelfBatchRowsSchema = z.array(z.object({
   location: item.warehouseLocationShelf?.warehouseLocationRack?.warehouseLocation?.name ?? null,
   floor: item.warehouseLocationShelf?.warehouseLocationRack?.warehouseLocation?.floorName ?? null,
 })));
-export type ShelfBatchRow = z.infer<typeof shelfBatchRowsSchema>[number];
+export type ShelfBatchRow = Omit<z.infer<typeof shelfBatchRowsSchema>[number], "warehouseQuantity" | "warehouseUnit"> & { warehouseQuantity?: number | null; warehouseUnit?: string | null };
 
 /** One entry on a material's bin card: stock received or issued, and the balance after it. */
 export const binCardRowsSchema = z.array(z.object({

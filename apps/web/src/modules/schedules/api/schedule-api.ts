@@ -1,3 +1,4 @@
+import { packagingRequirementsTag } from "@/shared/stock/production-requirements-cache";
 import { productionApi } from "@/shared/api/generated/production";
 import { productsApi } from "@/shared/api/generated/products";
 import { salesApi } from "@/shared/api/generated/sales";
@@ -6,6 +7,7 @@ import { addTags } from "@/shared/api/add-tags";
 const list = { type: "ScheduleList" as const, id: "all" };
 
 export const scheduleApi = productionApi.enhanceEndpoints({
+  addTagTypes: ["PackagingRequirements"],
   endpoints: {
     getApiV1ProductionSchedule: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
     getApiV1ProductionScheduleByScheduleId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "Schedule", id: arg.scheduleId }]); },
@@ -16,7 +18,7 @@ export const scheduleApi = productionApi.enhanceEndpoints({
     postApiV1ProductionScheduleActivityStartByProductionScheduleProductId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [list, "Schedule", { type: "ScheduleBatch", id: arg.productionScheduleProductId }]); },
     getApiV1ProductionScheduleActivityProductByProductionScheduleProductId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "ScheduleBatch", id: arg.productionScheduleProductId }]); },
     getApiV1ProductionScheduleMaterialStockByProductionScheduleProductId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "ScheduleBatch", id: arg.productionScheduleProductId }]); },
-    getApiV1ProductionSchedulePackageMaterialStockByProductionScheduleProductId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "ScheduleBatch", id: arg.productionScheduleProductId }]); },
+    getApiV1ProductionSchedulePackageMaterialStockByProductionScheduleProductId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [packagingRequirementsTag, { type: "ScheduleBatch", id: arg.productionScheduleProductId }]); },
     putApiV1ProductionScheduleByScheduleId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [list, { type: "Schedule", id: arg.scheduleId }]); },
   },
 });

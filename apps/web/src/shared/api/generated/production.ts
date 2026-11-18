@@ -4536,6 +4536,8 @@ export type DomainEntitiesWarehousesShelfMaterialBatchDto = {
   quantity?: number;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   note?: string | null;
+  warehouseQuantity?: number | null;
+  warehouseUoM?: DomainEntitiesBaseUnitOfMeasureDto;
 };
 export type DomainEntitiesWarehousesShelfMaterialBatchDtoRead = {
   id?: string;
@@ -4544,6 +4546,8 @@ export type DomainEntitiesWarehousesShelfMaterialBatchDtoRead = {
   quantity?: number;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   note?: string | null;
+  warehouseQuantity?: number | null;
+  warehouseUoM?: DomainEntitiesBaseUnitOfMeasureDto;
 };
 export type DomainEntitiesWarehousesWarehouseLocationShelfDto = {
   id?: string;

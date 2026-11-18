@@ -1,3 +1,4 @@
+import { isProductionStockDocument, stockRejectionKind } from "../lib/stock-rejection";
 import { useVerifiedMutation } from "@/shared/workflows/use-verified-mutation";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { decisionEvidenceApi, type DecisionEvidence } from "../api/decision-evidence";
@@ -6,13 +7,18 @@ import { audit, decidedElsewhere, decisionPermission, decisionViewPermission, is
 import { approvalSchema, type PendingApproval } from "../schemas/approval-schema";
 
 export function useApprovalDecision(approval: PendingApproval, decision: Decision, evidence: DecisionEvidence) {
-  const guard = useVerifiedMutation<{ approval: PendingApproval; evidence: DecisionEvidence }>({ kind: "all", permissions: [decisionPermission(approval.type, decision), decisionViewPermission(approval.type)] }, { approval, evidence });
+  const stockKind = stockRejectionKind(evidence);
+  const guard = useVerifiedMutation<{ approval: PendingApproval; evidence: DecisionEvidence }>({ kind: "all", permissions: [decisionPermission(approval.type, decision, stockKind), decisionViewPermission(approval.type)] }, { approval, evidence });
   const [read] = approvalApi.useLazyGetApiV1ApprovalMyPendingByModelTypeAndModelIdQuery();
   const [readEvidence] = decisionEvidenceApi.useLazyDecisionEvidenceQuery();
+  const [rejectRawStock] = approvalApi.useRejectProductionRawStockRequisitionMutation();
+  const [rejectPackagingStock] = approvalApi.useRejectProductionPackagingStockRequisitionMutation();
   const [approve] = approvalApi.usePostApiV1ApprovalApproveByModelTypeAndModelIdMutation();
   const [reject] = approvalApi.usePostApiV1ApprovalRejectByModelTypeAndModelIdMutation();
   const submit = async (comments: string, outcome: 0 | 1 | null) => {
     const type = approval.type;
+    if (isProductionStockDocument(type) && decision === "reject" && stockKind === null) return "The stock requisition's material kind could not be verified. Reload its details.";
+    if (isProductionStockDocument(type) && decision === "reject" && comments.trim().length > 1000) return "Keep the stock rejection reason under 1000 characters.";
     if (!isReadable(type) || decidedElsewhere(type)) return "This document must be decided in its dedicated workflow.";
     if (type === "Response" && decision === "reject" && outcome === null) return "Choose rework testing or disposal.";
     return guard.run({ approval, evidence }, async () => {
@@ -28,6 +34,12 @@ export function useApprovalDecision(approval: PendingApproval, decision: Decisio
         ...(type === "StockRequisition" ? { contentRevision: approval.contentRevision ?? 0 } : {}),
         comments: comments.trim() || null, ...(type === "Response" && decision === "reject" && outcome !== null ? { responseRejectionOutcome: outcome } : {}),
       } };
+      if (decision === "reject" && isProductionStockDocument(type) && stockKind !== null) {
+        const request = { ...audit, requisitionId: approval.id, appServicesApprovalsRejectProductionStockRequisitionRequest: { reason: comments.trim(), contentRevision: approval.contentRevision ?? 0 } };
+        const result = stockKind === 0 ? await rejectRawStock(request) : await rejectPackagingStock(request);
+        if ("error" in result) throw new Error(apiErrorMessage(result.error));
+        return;
+      }
       const result = decision === "reject" ? await reject(arg) : await approve(arg);
       if ("error" in result) throw new Error(apiErrorMessage(result.error));
     });

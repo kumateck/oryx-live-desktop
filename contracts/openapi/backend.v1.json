@@ -119404,6 +119404,128 @@
           }
         }
       }
+    },
+    "/api/v1/production-stock-requisitions/{requisitionId}/raw/reject": {
+      "post": {
+        "tags": [
+          "ProductionStockRequisition"
+        ],
+        "operationId": "RejectProductionRawStockRequisition",
+        "parameters": [
+          {
+            "name": "requisitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/APP.Services.Approvals.RejectProductionStockRequisitionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/APP.Services.Approvals.RejectProductionStockRequisitionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/APP.Services.Approvals.RejectProductionStockRequisitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/production-stock-requisitions/{requisitionId}/packaging/reject": {
+      "post": {
+        "tags": [
+          "ProductionStockRequisition"
+        ],
+        "operationId": "RejectProductionPackagingStockRequisition",
+        "parameters": [
+          {
+            "name": "requisitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/APP.Services.Approvals.RejectProductionStockRequisitionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/APP.Services.Approvals.RejectProductionStockRequisitionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/APP.Services.Approvals.RejectProductionStockRequisitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -178242,6 +178364,14 @@
           "note": {
             "type": "string",
             "nullable": true
+          },
+          "warehouseQuantity": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "warehouseUoM": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
           }
         },
         "additionalProperties": false
@@ -184104,6 +184234,26 @@
           },
           "alreadyApplied": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.Approvals.RejectProductionStockRequisitionRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "contentRevision": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
