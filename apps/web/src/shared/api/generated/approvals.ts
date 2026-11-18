@@ -14,6 +14,19 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1ApprovalUsersOnRecord: build.query<
+      GetApiV1ApprovalUsersOnRecordApiResponse,
+      GetApiV1ApprovalUsersOnRecordApiArg
+    >({
+      providesTags: [{ type: "approval/users-on-record", id: "LIST" }, { type: "approval", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/approval/users-on-record`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     postApiV1Approval: build.mutation<
       PostApiV1ApprovalApiResponse,
       PostApiV1ApprovalApiArg
@@ -268,6 +281,14 @@ export { injectedRtkApi as approvalsApi };
 export type GetApiV1ApprovalUsersWithPendingApiResponse =
   /** status 200 OK */ DomainEntitiesUsersUserDto[];
 export type GetApiV1ApprovalUsersWithPendingApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1ApprovalUsersOnRecordApiResponse =
+  /** status 200 OK */ DomainEntitiesUsersUserDto[];
+export type GetApiV1ApprovalUsersOnRecordApiArg = {
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -592,6 +613,8 @@ export type AppServicesApprovalsPendingRevisionApprovalDto = {
 export const {
   useGetApiV1ApprovalUsersWithPendingQuery,
   useLazyGetApiV1ApprovalUsersWithPendingQuery,
+  useGetApiV1ApprovalUsersOnRecordQuery,
+  useLazyGetApiV1ApprovalUsersOnRecordQuery,
   usePostApiV1ApprovalMutation,
   useGetApiV1ApprovalQuery,
   useLazyGetApiV1ApprovalQuery,

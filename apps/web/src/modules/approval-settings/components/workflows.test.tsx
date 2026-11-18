@@ -4,9 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, expect, it } from "vitest";
 import ApprovalRightsTransferPage from "../../../pages/(workspace)/qa/approval-rights-transfer/page";
+import ItApprovalRightsTransferPage from "../../../pages/(workspace)/it/approval-rights-transfer/page";
 import { ApiProvider } from "../../../shared/api/api-provider";
 import { SessionProvider } from "../../../shared/auth/session-provider";
-import { forgetSession, rememberSession, stubBackend } from "../../../test/backend";
+import { forgetSession, rememberSession, stubBackend, userId } from "../../../test/backend";
 import { chooseAction, openMenu } from "../../../test/menu";
 import { WorkflowCreatePage as CreateWorkflowPage, WorkflowEditPage as EditWorkflowPage, WorkflowListPage as ApprovalsSettingsPage } from "./workflow-pages";
 import { transferSchema, userOptions } from "../../approval-rights-transfer/components/transfer-rights-page";
@@ -61,14 +62,14 @@ function open(address: string, permissions: string[]) {
     if (path === "/api/v1/approval" && input.method === "GET") return Response.json({ data: [workflow], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
     if (path === "/api/v1/approval") return Response.json("w-9", { status: 201 });
     if (path === "/api/v1/approval/w-1") return input.method === "GET" ? Response.json(workflow) : new Response(null, { status: 204 });
-    if (path === "/api/v1/approval/users-with-pending") return Response.json([{ id: "u1", firstName: "Ama", lastName: "Owusu" }]);
+    if (path === "/api/v1/approval/users-on-record") return Response.json([{ id: "u1", firstName: "Ama", lastName: "Owusu" }, { id: "u9", firstName: "Old", lastName: "Leaver", isDisabled: true }]);
     // Receivers come only from people who can see pending approvals.
     if (path === "/api/v1/user/by-permission" && url.searchParams.getAll("permissionKey").join() === "CanViewPendingApprovals") return Response.json({ data: [{ id: "u1", firstName: "Ama", lastName: "Owusu" }, { id: "u2", firstName: "Kofi", lastName: "Boateng" }], pageIndex: 1, pageCount: 1 });
     if (path === "/api/v1/approval/transfer-rights") return new Response(null, { status: 204 });
     return new Response(null, { status: 404 });
   });
   const router = createMemoryRouter([{ path: "/settings/approvals", element: <ApprovalsSettingsPage /> }, { path: "/settings/approvals/create", element: <CreateWorkflowPage /> }, { path: "/settings/approvals/edit/:id", element: <EditWorkflowPage /> },
-    { path: "/qa/approval-rights-transfer", element: <ApprovalRightsTransferPage /> }], { initialEntries: [address] });
+    { path: "/qa/approval-rights-transfer", element: <ApprovalRightsTransferPage /> }, { path: "/it/approval-rights-transfer", element: <ItApprovalRightsTransferPage /> }], { initialEntries: [address] });
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   return { calls, router };
 }
@@ -122,23 +123,36 @@ it("does not create a workflow without a document and an approver", async () => 
   expect(await screen.findByRole("option", { name: "Purchase order (already has a workflow)" })).toBeTruthy();
 }, 30_000);
 
-it("transfers approval rights only after both people are chosen and the consequences are confirmed", async () => {
+it("hands over only the signed-in person's own approvals, after the consequences are confirmed", async () => {
   const user = userEvent.setup();
   const { calls } = open("/qa/approval-rights-transfer", ["CanTransferApprovalRights"]);
-  await screen.findByRole("combobox", { name: /Take approvals from/ });
+  // Locked to the signed-in person: nobody else's approvals can be chosen here, and the list of others is never read.
+  expect(await screen.findByText("Ada Mensah (you)")).toBeTruthy();
+  expect(screen.queryByRole("combobox", { name: /Take approvals from/ })).toBeNull();
   await user.click(screen.getByRole("button", { name: "Transfer rights" }));
-  expect(await screen.findByText("Choose who the approvals are taken from")).toBeTruthy();
-  await user.click(screen.getByRole("combobox", { name: /Take approvals from/ }));
-  await user.click(await screen.findByRole("option", { name: "Ama Owusu" }));
+  expect(await screen.findByText("Choose who takes them over")).toBeTruthy();
   await user.click(await screen.findByRole("combobox", { name: /Give them to/ }));
-  // The person giving up their approvals is not offered as the one taking them.
-  const offered = await screen.findAllByRole("option");
-  expect(offered.map((item) => item.textContent)).toEqual(["Kofi Boateng"]);
-  await user.click(offered[0]!);
+  await user.click(await screen.findByRole("option", { name: "Kofi Boateng" }));
   await user.click(screen.getByRole("button", { name: "Transfer rights" }));
   const dialog = await screen.findByRole("dialog");
-  expect(within(dialog).getByText(/replaces Ama Owusu in every approval workflow/)).toBeTruthy();
+  expect(within(dialog).getByText(/replaces Ada Mensah in every approval workflow/)).toBeTruthy();
   expect(writes(calls)).toEqual([]);
   await user.click(within(dialog).getByRole("button", { name: "Transfer rights" }));
-  await waitFor(() => expect(writes(calls)).toEqual([{ method: "POST", path: "/api/v1/approval/transfer-rights", body: { fromUserId: "u1", toUserId: "u2" } }]));
+  await waitFor(() => expect(writes(calls)).toEqual([{ method: "POST", path: "/api/v1/approval/transfer-rights", body: { fromUserId: userId, toUserId: "u2" } }]));
+  expect(calls.some((call) => call.path === "/api/v1/approval/users-on-record")).toBe(false);
+}, 30_000);
+
+it("lets IT hand over the approvals of anyone on an approval document, including people who left", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/it/approval-rights-transfer", ["CanTransferAnyApprovalRights"]);
+  // The list of people on record loads first.
+  expect(await screen.findByText("Select a person")).toBeTruthy();
+  await user.click(await screen.findByRole("combobox", { name: /Take approvals from/ }));
+  expect((await screen.findAllByRole("option")).map((item) => item.textContent)).toEqual(["Ama Owusu", "Old Leaver (disabled)"]);
+  await user.click(screen.getByRole("option", { name: "Old Leaver (disabled)" }));
+  await user.click(await screen.findByRole("combobox", { name: /Give them to/ }));
+  await user.click(await screen.findByRole("option", { name: "Kofi Boateng" }));
+  await user.click(screen.getByRole("button", { name: "Transfer rights" }));
+  await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Transfer rights" }));
+  await waitFor(() => expect(writes(calls)).toEqual([{ method: "POST", path: "/api/v1/approval/transfer-rights", body: { fromUserId: "u9", toUserId: "u2" } }]));
 }, 30_000);

@@ -1890,6 +1890,65 @@
         }
       }
     },
+    "/api/v1/approval/users-on-record": {
+      "get": {
+        "tags": [
+          "Approval"
+        ],
+        "summary": "Everyone named on an approval document (workflow stages and request history), for IT to hand over their approvals.",
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Users.UserDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Users.UserDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DOMAIN.Entities.Users.UserDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/approval": {
       "post": {
         "tags": [

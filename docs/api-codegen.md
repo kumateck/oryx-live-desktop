@@ -71,6 +71,12 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+IT approval transfer (2026-11-17) adds typed `GET /api/v1/approval/users-on-record`
+(approvals domain, `CanTransferAnyApprovalRights`): everyone named on an approval workflow or
+request, for IT to hand over a leaver's approvals. Typed digest
+`dca46e49d205cc65b0572d43a710dcc6c6e0ac79e0de1412e5de1d5bacf61f6f`; removing exactly this path
+reproduces `2cc7b3a5…5cf5`. Deploy backend #1876 first; no migration.
+
 Packaging issue quantity (2026-11-17) adds typed `PUT
 /api/v1/requisition/{requisitionId}/items/{itemId}/issued-quantity` (warehouse domain) with
 its request schema `AdjustIssuedQuantityRequest`, and four optional fields on
