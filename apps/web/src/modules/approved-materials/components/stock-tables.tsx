@@ -3,15 +3,18 @@ import { rackShelfLocation } from "@/shared/warehouse/stock-location";
 import { Link } from "react-router";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { useMemo } from "react";
-import { ClientDataTable, ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
+import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { formatDate, formatDateTime, formatMonthYear } from "@/shared/format/dates";
+import { formatDate, formatMonthYear } from "@/shared/format/dates";
 import { toLargestUnit } from "@/shared/units/quantity";
 import {
   useGetApiV1MaterialByMaterialIdBatchesV2AndDepartmentIdQuery, useGetApiV1MaterialByMaterialIdReservedQuery, useGetApiV1WarehouseBincardinformationByMaterialIdAndDepartmentIdQuery,
 } from "../api/approved-material-api";
 import { audit } from "../lib/approved-material-access";
-import { binCardRowsSchema, reservedRowsSchema, shelfBatchRowsSchema, type BinCardRow, type ReservedRow, type ShelfBatchRow } from "../schemas/approved-material-schema";
+import { binCardRowsSchema, reservedRowsSchema, shelfBatchRowsSchema, type BinCardRow, type ShelfBatchRow } from "../schemas/approved-material-schema";
+import { groupReservedProducts } from "../lib/reserved-groups";
+import { UnstartReservationRepair } from "./unstart-reservation-repair";
+import { ReservedProductGroups } from "./reserved-product-groups";
 import { ExpiryCell } from "./expiry-cell";
 
 const quantity = (value: number, unit: string | null) => toLargestUnit(value, unit, "calculated")?.text ?? String(value);
@@ -68,23 +71,12 @@ export function BinCardTable({ materialId, departmentId, search }: Props & { sea
     emptyTitle={search.trim() ? "No entries match this search" : "No bin card entries"} />;
 }
 
-const reservedColumn = dataTableColumns<ReservedRow>();
-const reservedColumns = reservedColumn.columns([
-  reservedColumn.accessor((row) => row.dateTime ?? "", { id: "schedule", header: "Schedule", cell: ({ row }) => <div className="min-w-0"><div className="font-medium">{row.original.schedule ?? "–"}</div>
-    <div className="text-xs text-muted-foreground">{formatDateTime(row.original.dateTime) ?? "–"}</div></div> }),
-  reservedColumn.accessor((row) => row.productName ?? "", { id: "product", header: "Reserved for", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.productName ?? "–"}</div>
-    <div className="text-xs text-muted-foreground">{row.original.productCode ?? "–"} · batch {row.original.productBatchNumber ?? "–"}</div></div> }),
-  reservedColumn.accessor((row) => row.materialBatchNumber ?? "", { id: "batch", header: "Material batch", cell: ({ row }) => <div><div>{row.original.materialBatchNumber ?? "–"}</div><StockBatchLocation locations={[rackShelfLocation(row.original.rackName, row.original.shelfName)]} />
-    <div className="text-xs text-muted-foreground">AR {row.original.arNumber ?? "–"}</div></div> }),
-  reservedColumn.accessor("reserved", { header: "Reserved", size: 140, cell: ({ row }) => <span className="font-medium">{quantity(row.original.reserved, row.original.unit)}</span> }),
-  reservedColumn.accessor("balance", { header: "Balance after", size: 140, cell: ({ row }) => quantity(row.original.balance, row.original.unit) }),
-  reservedColumn.accessor((row) => row.effectiveExpiryDate ?? "", { id: "expiry", header: "Valid until", size: 190, cell: ({ row }) => <div><ExpiryCell date={row.original.effectiveExpiryDate} />{row.original.effectiveExpiryDate !== row.original.expiryDate ? <span className="text-xs text-muted-foreground">Retest extension · expiry {formatMonthYear(row.original.expiryDate) ?? "not recorded"}</span> : null}</div> }),
-]);
-
 /** Stock of the material set aside for production batches that have not drawn it yet. */
-export function ReservedTable({ materialId, departmentId }: Props) {
+export function ReservedTable({ materialId, departmentId, kind }: Props & { kind: 0 | 1 }) {
   const query = useGetApiV1MaterialByMaterialIdReservedQuery({ ...audit, materialId, departmentId });
-  const rows = useMemo(() => { const parsed = reservedRowsSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data : []; }, [query.data]);
-  return <ClientDataTable label="Reserved stock" columns={reservedColumns} rows={rows} getRowId={(row) => row.id} loading={query.isLoading}
-    error={query.error ? apiErrorMessage(query.error) : null} onRetry={() => { void query.refetch(); }} fill={false} emptyTitle="Nothing is reserved" emptyDescription="Stock is reserved when a production batch is scheduled to use it." />;
+  const rows = useMemo(() => { const parsed = reservedRowsSchema.safeParse(query.data ?? null); return parsed.success ? groupReservedProducts(parsed.data) : []; }, [query.data]);
+  return <div className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Grouped by product · expand a batch to see its allocations.</p>
+    <UnstartReservationRepair key={materialId} materialId={materialId} kind={kind} /></div>
+    <ReservedProductGroups rows={rows} loading={query.isLoading} error={query.error ? apiErrorMessage(query.error) : null}
+    onRetry={() => { void query.refetch(); }} /></div>;
 }
