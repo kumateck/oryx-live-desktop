@@ -11,7 +11,7 @@ import { ProductionUnstart } from "./production-unstart";
 afterEach(() => { cleanup(); forgetSession(); vi.unstubAllGlobals(); });
 const preview = () => ({ activityId: "run-1", batchId: "batch-1", scheduleId: "schedule-1", productName: "Amoxicillin 500mg Capsule-BF",
   batchNumber: "BFC4K338", previewToken: "a".repeat(64), canApply: true, alreadyUnstarted: false, blockers: [] as string[],
-  stepsToArchive: 12, draftDocumentsToArchive: 2, scheduleStatusBefore: 1, scheduleStatusAfter: 0,
+  stepsToArchive: 12, draftDocumentsToArchive: 2, requisitionsToCancel: ["RQ/26/0042"], scheduleStatusBefore: 1, scheduleStatusAfter: 0,
   reservations: [{ id: "reserve-1", materialCode: "PMF015", materialName: "Amoxicillin foil", lotNumber: "SYNTHETIC-LOT", unit: "mg", quantity: 22_500_000 }] });
 
 function open({ permission = true, button = false, evidence = preview(), malformed = false, fail = false } = {}) {
@@ -40,7 +40,8 @@ it.each([false, true])("previews and unstarts production with a valid request ID
   const { writes, router } = open();
   expect(await screen.findByText("PMF015")).toBeTruthy();
   expect(screen.getByText("22.5 kg")).toBeTruthy();
-  expect(screen.getByText(/12 steps and 2 draft documents/)).toBeTruthy();
+  expect(screen.getByText(/12 steps and 2 BMR and BPR documents/)).toBeTruthy();
+  expect(screen.getByText(/Stock requested but not issued is cancelled: RQ\/26\/0042/)).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Unstart production" }));
   expect(await screen.findByText("Record why this production start needs reversing")).toBeTruthy(); expect(writes).toHaveLength(0);
   fireEvent.change(screen.getByRole("textbox", { name: /Repair reason/ }), { target: { value: "Production was started accidentally" } });
@@ -52,8 +53,8 @@ it.each([false, true])("previews and unstarts production with a valid request ID
   expect(JSON.parse(writes[0] ?? "null")).toMatchObject({ previewToken: "a".repeat(64), reason: "Production was started accidentally" });
 });
 
-it("blocks a run with an issued BMR without posting a repair", async () => {
-  const evidence = preview(); evidence.canApply = false; evidence.blockers = ["The BMR and BPR must both be unissued, unsampled draft records."];
+it("blocks a run the server refuses without posting a repair", async () => {
+  const evidence = preview(); evidence.canApply = false; evidence.blockers = ["Stock has been issued for this batch. Releasing reservations cannot undo an issue."];
   const { writes } = open({ evidence });
   expect(await screen.findByText(evidence.blockers[0] ?? "")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Unstart production" })).toHaveProperty("disabled", true); expect(writes).toHaveLength(0);
