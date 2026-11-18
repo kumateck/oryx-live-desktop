@@ -2810,6 +2810,8 @@ export type DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto = {
   issuedAt?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   isRetest?: boolean;
+  testedAt?: string | null;
+  testedBy?: DomainEntitiesUsersUserDto;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -3529,6 +3531,7 @@ export type DomainEntitiesProductsProductBillOfMaterialDto = {
 export type DomainEntitiesProductsProductPackageSubstituteDto = {
   id?: string;
   substituteMaterial?: DomainEntitiesMaterialsMaterialDto;
+  prescribedQuantity?: number | null;
 };
 export type DomainEntitiesProductsProductPackageDto = {
   id?: string;

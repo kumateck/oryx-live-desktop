@@ -48,7 +48,7 @@ export function PackagingSection({ productId }: { productId: string }) {
         const sameMaterial = previous?.material.value === values.material.value;
         const line: PackagingLine = {
           key: previous?.key ?? `new-${randomId()}`, material: values.material, packing: values.packing ?? null, unit,
-          prescribedQuantity: values.prescribedQuantity, packingExcessMargin: values.packingExcessMargin ?? 0, substitutes: values.substitutes ?? [],
+          prescribedQuantity: values.prescribedQuantity, packingExcessMargin: 0, substitutes: (values.substitutes ?? []).map(item => ({ ...item, prescribedQuantity: values.substituteQuantities?.[item.value] ?? null })),
           code: facts?.code ?? (sameMaterial ? previous?.code ?? "" : ""),
           specification: facts ? facts.specification : sameMaterial ? previous?.specification ?? null : null,
           // Fields this page does not edit are kept for the same material and start from defaults for a new one.

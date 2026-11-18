@@ -29,7 +29,7 @@ const { useGetApiV1ProductionScheduleManufacturingByBatchManufacturingRecordIdQu
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 const item = z.object({ id: z.string().nullish(), name: text, code: text }).nullish();
-const responseSchema = z.object({ form: item, materialBatch: item, batchManufacturingRecord: item, formResponses: answers, checkedBy: person, checkedAt: z.string().nullish(), productionActivityStepId: z.string().nullish(), approved: z.boolean().nullish() });
+const responseSchema = z.object({ form: item, materialBatch: item, batchManufacturingRecord: item, formResponses: answers, checkedBy: person, approvedBy: person, checkedAt: z.string().nullish(), productionActivityStepId: z.string().nullish(), approved: z.boolean().nullish() });
 const materialSchema = z.object({ arNumber: text, grnNumber: text, specNumber: text, stpNumber: text, supplier: item, manufacturer: item, sampledDate: z.string().nullish(), sampledBy: person, quantityReceived: z.number().nullish(), quantitySampled: z.number().nullish(),
   materialBatch: z.object({ batchNumber: text, material: item, uoM: z.object({ symbol: text }).nullish(), manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), analysedDate: z.string().nullish() }).nullish() });
 const batchSchema = z.object({ batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), productionScheduleProduct: z.object({ product: item }).nullish() });
@@ -77,7 +77,7 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
     const own = (batchAnswers ?? []).filter((entry) => !entry.responseId || entry.responseId === id);
     return answersByField(own.length > 0 ? own : response?.formResponses ?? []);
   }, [batchAnswers, response, id]);
-  const signatories = useMemo(() => ardSignatories(id, response?.formResponses ?? [], batchAnswers ?? [], response?.checkedBy), [id, response, batchAnswers]);
+  const signatories = useMemo(() => ardSignatories(id, response?.formResponses ?? [], batchAnswers ?? [], response?.checkedBy, response?.approvedBy), [id, response, batchAnswers]);
   const sections = useMemo(() => [...(form?.sections ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [form]);
   const state = queryState(query);
   const loading = state.loading || formQuery.isLoading || materialQuery.isLoading || materialAnswers.isLoading || batchQuery.isLoading || productAnswers.isLoading || ardsQuery.isLoading || productQuery.isLoading;

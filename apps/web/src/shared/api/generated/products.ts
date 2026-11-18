@@ -1059,6 +1059,7 @@ export type DomainEntitiesProductsProductPackingDto = {
 export type DomainEntitiesProductsProductPackageSubstituteDto = {
   id?: string;
   substituteMaterial?: DomainEntitiesMaterialsMaterialDto;
+  prescribedQuantity?: number | null;
 };
 export type DomainEntitiesProductsProductPackageDto = {
   id?: string;
@@ -8058,6 +8059,10 @@ export type DomainEntitiesRoutesCreateRouteRequest = {
   order?: number;
   isCritical?: boolean;
 };
+export type DomainEntitiesProductsCreateProductPackageSubstituteRequest = {
+  materialId?: string;
+  prescribedQuantity?: number;
+};
 export type DomainEntitiesProductsCreateProductPackageRequest = {
   materialId: string;
   materialThickness?: string | null;
@@ -8071,6 +8076,8 @@ export type DomainEntitiesProductsCreateProductPackageRequest = {
   loose?: number;
   productPackingId?: string | null;
   substituteMaterialIds?: string[] | null;
+  substitutes?:
+    DomainEntitiesProductsCreateProductPackageSubstituteRequest[] | null;
 };
 export type DomainEntitiesProductsCreateProductPackingList = {
   uomId?: string;
