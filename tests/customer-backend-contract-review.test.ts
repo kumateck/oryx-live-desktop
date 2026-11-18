@@ -101,9 +101,22 @@ function stripApprovalUsersOnRecord(document: ObjectValue) {
   delete object(document.paths ?? null)[usersOnRecordPath];
 }
 
+/** Material retest on the material test (2026-11-18): an AR number on the sample, read-only retest fields and three statuses. */
+const retestDetailFields = ["arNumber", "materialSamplingId", "batchStatus", "materialName", "materialCode"] as const;
+function stripMaterialRetestAtr(document: ObjectValue) {
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  const sample = object(schemas["DOMAIN.Entities.Materials.Batch.RecordMaterialRetestSample"] ?? null);
+  delete object(sample.properties ?? null).arNumber;
+  if (Array.isArray(sample.required)) sample.required = sample.required.filter((name) => name !== "arNumber");
+  const detail = object(object(schemas["APP.Services.Materials.MaterialRetestDetailDto"] ?? null).properties ?? null);
+  for (const field of retestDetailFields) delete detail[field];
+  object(schemas["DOMAIN.Entities.Materials.Batch.MaterialRetestStatus"] ?? null).enum = [0, 1, 2, 3, 4, 5, 6];
+}
+
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripMaterialRetestAtr(document);
   stripApprovalUsersOnRecord(document);
   stripPackagingIssueQuantity(document);
   stripRequisitionIssuedFilter(document);
@@ -658,6 +671,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
   stripRequisitionIssuedFilter(current);
@@ -681,6 +695,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
   stripRequisitionIssuedFilter(current);
@@ -702,6 +717,7 @@ test("a specification revision requires a reason and returns it on the specifica
 
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
   const digest = contractDigest(current);
@@ -717,6 +733,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   const digest = contractDigest(current);
   assert.equal(digest, "2cc7b3a5a969853d122ab625816f1440a33be0d8a62a74574b845a438d9c5cf5");
@@ -734,10 +751,22 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
 
 test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripMaterialRetestAtr(current);
   const digest = contractDigest(current);
   assert.equal(digest, "dca46e49d205cc65b0572d43a710dcc6c6e0ac79e0de1412e5de1d5bacf61f6f");
   checkCompatibility(hostConfig, policy, digest);
   assert.deepEqual(Object.keys(object(object(current.paths ?? null)[usersOnRecordPath] ?? null)), ["get"]);
   stripApprovalUsersOnRecord(current);
   assert.equal(contractDigest(current), "2cc7b3a5a969853d122ab625816f1440a33be0d8a62a74574b845a438d9c5cf5");
+});
+
+test("material retests add an AR number, read-only retest fields and three statuses, preserving the approved predecessor", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
+  checkCompatibility(hostConfig, policy, digest);
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  assert.deepEqual(object(schemas["DOMAIN.Entities.Materials.Batch.MaterialRetestStatus"] ?? null).enum, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  stripMaterialRetestAtr(current);
+  assert.equal(contractDigest(current), "dca46e49d205cc65b0572d43a710dcc6c6e0ac79e0de1412e5de1d5bacf61f6f");
 });

@@ -118784,6 +118784,26 @@
             "format": "date-time",
             "nullable": true
           },
+          "arNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialSamplingId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "batchStatus": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.BatchStatus"
+          },
+          "materialName": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialCode": {
+            "type": "string",
+            "nullable": true
+          },
           "events": {
             "type": "array",
             "items": {
@@ -142273,7 +142293,10 @@
           3,
           4,
           5,
-          6
+          6,
+          7,
+          8,
+          9
         ],
         "type": "integer",
         "format": "int32"
@@ -142377,10 +142400,16 @@
       },
       "DOMAIN.Entities.Materials.Batch.RecordMaterialRetestSample": {
         "required": [
+          "arNumber",
           "proposedExpiryDate"
         ],
         "type": "object",
         "properties": {
+          "arNumber": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
           "sampleQuantity": {
             "type": "number",
             "format": "double"
