@@ -3,6 +3,7 @@ import type { ModuleManifest } from "../contract";
 export const manifest = { id: "form-templates", label: "Templates", root: "/settings/templates", order: 95,
   access: { kind: "all", permissions: ["CanViewTemplate"] },
   routes: [
+    { pattern: "/settings/templates/:id/repair", access: { kind: "all", permissions: ["CanViewTemplateRepair"] } },
     { pattern: "/settings/templates/create", access: { kind: "all", permissions: ["CanViewTemplate", "CanCreateTemplate"] } },
     { pattern: "/settings/templates/:id/edit", access: { kind: "all", permissions: ["CanViewTemplate", "CanEditTemplate"] } },
   ],

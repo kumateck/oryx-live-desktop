@@ -88,7 +88,7 @@ export type ShelfRecord = z.infer<typeof shelfRecordsSchema>[number];
 export interface SwapRequestBody {
   firstWarehouseId: string;
   secondWarehouseId: string;
-  stockRequisitionId: string;
+  stockRequisitionId?: string; productionScheduleProductId?: string;
   firstSwapShelfMaterialBatches: { shelfMaterialBatchId: string; materialBatchId: string; uoMId: string; quantity: number }[];
   secondSwapShelfMaterialBatches: { shelfMaterialBatchId: string; materialBatchId: string; uoMId: string; quantity: number }[];
 }
@@ -97,7 +97,10 @@ export interface SwapRequestBody {
  * The request for one suggestion, checked against the shelves as they are now, or the reason it cannot be asked
  * for. The server takes one batch of a material on each side of a request, so every suggestion is its own request.
  */
-export function swapRequestFor(suggestion: SwapSuggestion, records: readonly ShelfRecord[], requisitionId: string): { body: SwapRequestBody } | { reason: string } {
+/** What the swapped stock is reserved for: a stock requisition, or a started batch whose stock is not requested yet. */
+export type SwapSource = { requisitionId: string } | { batchId: string };
+
+export function swapRequestFor(suggestion: SwapSuggestion, records: readonly ShelfRecord[], source: SwapSource): { body: SwapRequestBody } | { reason: string } {
   const find = (batchId: string, shelfId: string) => records.find((record) => record.batchId === batchId && record.shelfId === shelfId);
   const ours = find(suggestion.current.batchId, suggestion.current.shelfId);
   const theirs = find(suggestion.alternative.batchId, suggestion.alternative.shelfId);
@@ -107,7 +110,8 @@ export function swapRequestFor(suggestion: SwapSuggestion, records: readonly She
   if (theirs.quantity + tiny < suggestion.quantity) return { reason: `${suggestion.alternative.store} now holds less of the batch than the swap needs.` };
   const unitId = suggestion.unitId ?? ours.unitId ?? theirs.unitId;
   if (!unitId) return { reason: "The batch has no unit of measure recorded." };
-  return { body: { firstWarehouseId: ours.storeId, secondWarehouseId: suggestion.alternative.storeId, stockRequisitionId: requisitionId,
+  return { body: { firstWarehouseId: ours.storeId, secondWarehouseId: suggestion.alternative.storeId,
+    ...("requisitionId" in source ? { stockRequisitionId: source.requisitionId } : { productionScheduleProductId: source.batchId }),
     firstSwapShelfMaterialBatches: [{ shelfMaterialBatchId: ours.id, materialBatchId: suggestion.current.batchId, uoMId: unitId, quantity: suggestion.quantity }],
     secondSwapShelfMaterialBatches: [{ shelfMaterialBatchId: theirs.id, materialBatchId: suggestion.alternative.batchId, uoMId: unitId, quantity: suggestion.quantity }] } };
 }

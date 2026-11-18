@@ -1,5 +1,14 @@
 # Oryx Live Desktop plan
 
+## Template repair, QC review and packaging substitutes (2026-11-18)
+
+Finish the template repair in its isolated worktrees. The form-templates module owns the repair route, schemas, preview/apply/history and permission-gated menu action. Share the typed per-question reassignment controls across product, GRN and retest pages; retain current-owner review, test-kind permissions, saved-answer protection and atomic server writes.
+
+QC review shows complete questions and saved inputs alongside authoritative formula results. Specification/COA summaries prefer the recorded average, choice answers survive question-type changes, analysis dates use actual test metadata, and certificate signatories come from saved authors, generator and final approver. Packaging substitutes have their own quantities and both raw/packaging lists show them. Hide allowance controls; new/edited rows use zero while untouched rows retain saved values.
+
+Deploy both companion schema migrations and backend endpoints before activating the desktop. New template-repair view/apply keys are granted to nobody automatically. See `docs/template-repair-and-qc-follow-ups.md` for behavior, permissions and verification.
+
+
 ## BOM density conversion (2026-11-10)
 
 An explicitly enabled raw-material BOM line may be authored in a mass unit and

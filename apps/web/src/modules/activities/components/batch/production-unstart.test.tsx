@@ -5,6 +5,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { ApiProvider } from "@/shared/api/api-provider";
 import { SessionProvider } from "@/shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
+import { stockIssueApi } from "@/modules/stock-issue/api/stock-issue-api";
 import ProductionUnstartDialog from "./production-unstart-dialog";
 import { ProductionUnstart } from "./production-unstart";
 
@@ -19,8 +20,10 @@ function open({ permission = true, button = false, evidence = preview(), malform
   rememberSession();
   const session = backend.fetcher.getMockImplementation();
   const writes: string[] = [];
+  const queueReads: string[] = [];
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
+    if (new URL(input.url).pathname === "/api/v1/requisition/department") { queueReads.push(input.url); return Response.json({ data: [], pageIndex: 1, pageCount: 1, totalRecordCount: 0 }); }
     if (new URL(input.url).pathname === "/api/v1/production-schedule/activity/run-1/unstart") {
       if (input.method === "GET") return Response.json(malformed ? { rows: null } : evidence);
       writes.push(await input.clone().text());
@@ -31,14 +34,22 @@ function open({ permission = true, button = false, evidence = preview(), malform
   });
   const router = createMemoryRouter([{ path: "/", element: button ? <ProductionUnstart activityId="run-1" /> : <ProductionUnstartDialog activityId="run-1" onClose={() => {}} /> },
     { path: "/production/schedules/:id/details", element: <p>Awaiting start</p> }]);
-  render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
-  return { writes, router };
+  render(<SessionProvider><ApiProvider><RouterProvider router={router} /><IssueQueue /></ApiProvider></SessionProvider>);
+  return { writes, router, queueReads };
+}
+
+/** The store's issue queue, open in the same app: unstarting must refresh it so cancelled requests disappear. */
+function IssueQueue() {
+  stockIssueApi.useGetApiV1RequisitionDepartmentQuery({ module: "Warehouse", subModule: "Stock Requisition", type: 0, kind: 0, page: 1, pageSize: 10 });
+  return null;
 }
 
 it.each([false, true])("previews and unstarts production with a valid request ID (HTTP fallback: %s)", async (http) => {
   if (http) vi.stubGlobal("crypto", { getRandomValues: crypto.getRandomValues.bind(crypto), subtle: crypto.subtle });
-  const { writes, router } = open();
+  const { writes, router, queueReads } = open();
   expect(await screen.findByText("PMF015")).toBeTruthy();
+  await waitFor(() => expect(queueReads.length).toBeGreaterThan(0));
+  const readsBefore = queueReads.length;
   expect(screen.getByText("22.5 kg")).toBeTruthy();
   expect(screen.getByText(/12 steps and 2 BMR and BPR documents/)).toBeTruthy();
   expect(screen.getByText(/Stock requested but not issued is cancelled: RQ\/26\/0042/)).toBeTruthy();
@@ -49,9 +60,11 @@ it.each([false, true])("previews and unstarts production with a valid request ID
   await waitFor(() => expect(router.state.location.pathname).toBe("/production/schedules/schedule-1/details"));
   expect(router.state.location.search).toBe("?batch=batch-1");
   expect(writes).toHaveLength(1);
+  // The cancelled stock requests leave the issue queue: it is read again instead of served from cache.
+  await waitFor(() => expect(queueReads.length).toBeGreaterThan(readsBefore));
   expect(JSON.parse(writes[0] ?? "{}").requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   expect(JSON.parse(writes[0] ?? "null")).toMatchObject({ previewToken: "a".repeat(64), reason: "Production was started accidentally" });
-});
+}, 20_000);
 
 it("blocks a run the server refuses without posting a repair", async () => {
   const evidence = preview(); evidence.canApply = false; evidence.blockers = ["Stock has been issued for this batch. Releasing reservations cannot undo an issue."];

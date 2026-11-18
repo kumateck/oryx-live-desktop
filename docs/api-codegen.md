@@ -1,3 +1,5 @@
+Template repair and QC/packaging follow-ups (2026-11-18) add four `/api/v1/template-repairs` operations and three variant-specific `/api/v1/test-field-reassignments` operations to the forms domain. Additive fields expose product test date/actor, the response's final approver/time, and independent packaging substitute quantities. Import only these with `bun scripts/import-template-repairs.ts EXPORT.json`, then regenerate/check. Reviewed typed digest `372d3b48c762718b8989a817286410bd1a76b4846e69f024696f3ea9ce8b6e00`; stripping exactly these additions reproduces `7a00169a…20d6`. Apply `AddTemplateRepairs` and `AddPackagingSubstituteQuantities` and deploy the companion backend before activation. New repair permissions are explicitly assigned, with no automatic grants. See [repair and QC follow-ups](template-repair-and-qc-follow-ups.md).
+
 Specification printing adds three read operations under `/api/v1/specification-print`
 for raw material, packaging material, and product specifications. The print preview
 uses the recorded specification revisions and requires the corresponding export
@@ -70,6 +72,13 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 [formula repair](question-formula-repair-proposal.md).
 
 # API contracts and generated hooks
+
+Upcoming batch issues (2026-11-18) adds typed `GET /api/v1/upcoming-batch-issues` and `GET
+/api/v1/upcoming-batch-issues/{productionScheduleProductId}/alternative-batches` (production
+domain, `CanViewUpcomingBatchIssues`) with the three `UpcomingBatch*` schemas, and an optional
+`productionScheduleProductId` on `CreateSwapRequest`. Typed digest `0feb3b56925a1248f279fbce9668b02ffb18c50d06249be0f0fd1468de812bb5`; removing exactly these
+reproduces `7a00169a…20d6`. Deploy backend #1874 and #1885 (migration
+`AddSwapRequestProductionBatch`) first.
 
 Material retest on the material test (2026-11-18): `RecordMaterialRetestSample` gains a
 required `arNumber`; `MaterialRetestDetailDto` gains read-only `arNumber`, `materialSamplingId`,
@@ -374,3 +383,21 @@ companion metadata export, then regenerate and check the materials client.
 An omitted AR preserves the current reference; an empty string clears it. This
 requires the companion `AddMigrationArCorrections` audit migration. No customer
 release fingerprint is approved by this source change.
+
+## PR #297 merge contract review (2026-11-18)
+
+The combined source contract retains template repair, question reassignment, QC
+provenance and packaging substitute quantities together with development's
+upcoming batch issue reads and swap batch reference. Its reviewed digest is
+`3bf7e9598e05b34f624541f573204aad101320f66b0ace2a56342ea067a33f0b`.
+Both predecessor approvals remain; removing only the named additions reproduces
+their reviewed contracts. Regenerate the clients with `bun run api:generate`.
+
+## Unstart leftover repair (2026-11-18)
+
+`bun scripts/import-unstart-leftovers.ts /path/to/backend-export.json` imports only
+the raw/packaging preview and repair paths and their owned DTOs. Regenerate with
+`bun run api:generate`. The reviewed additive digest is
+`8740d29923b194db052c53a97aff5fcdf863b619e8317a3b5c1c95bb7b433f4b`;
+removing only these additions reproduces the PR #297 merged contract. Existing
+approved fingerprints remain. Deploy the backend audit migration first.

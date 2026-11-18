@@ -176,6 +176,9 @@ const requestsIndex = warehouse?.items.findIndex((item) => item.id === "warehous
 if (!warehouse || requestsIndex < 0) throw new Error("Warehouse Material Requests navigation entry is missing.");
 warehouse.items.splice(requestsIndex + 1, 0, { id: "warehouse-management.production-material-forecast", label: "Production Forecast",
   path: "/warehouse/production-forecast", permissions: ["CanViewProductionScheduleMaterialForecast"] });
+// Batches whose production has started: the warehouse prepares (and swaps) their reserved lots before the requisition.
+warehouse.items.splice(requestsIndex + 2, 0, { id: "warehouse-management.upcoming-batch-issues", label: "Upcoming Batch Issues",
+  path: "/warehouse/upcoming-batch-issues", permissions: ["CanViewUpcomingBatchIssues"] });
 
 // Pages whose key changed in the permissions redesign (one key per task and context).
 const pageKeys: Readonly<Record<string, string[]>> = {

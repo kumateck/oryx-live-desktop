@@ -25,10 +25,16 @@ function optionList(raw: string): SelectOption[] {
 }
 
 /** The value a form field starts with, from what was stored for it. Files cannot be put back in a file input, so they start empty. */
-export function storedToAnswer(raw: string | null | undefined, type: QuestionType): AnswerValue {
+export function storedToAnswer(raw: string | null | undefined, type: QuestionType, choices: readonly string[] = []): AnswerValue {
   if (!raw?.trim()) return null;
   switch (type) {
-    case QuestionType.Dropdown: case QuestionType.Specification: return option(raw);
+    case QuestionType.Dropdown: case QuestionType.Specification: {
+      const parsed = optionSchema.safeParse(json(raw));
+      const saved = parsed.success ? parsed.data.value : typeof json(raw) === "string" ? String(json(raw)) : raw;
+      const normalize = (text: string) => text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+      const matched = choices.find(choice => normalize(choice) === normalize(saved));
+      return option(matched ?? saved);
+    }
     case QuestionType.Checkbox: case QuestionType.Instrument: return optionList(raw);
     case QuestionType.Equipment: { const read = optionSchema.safeParse(json(raw)); return read.success ? read.data : option(raw); }
     case QuestionType.Datepicker: { const date = new Date(raw); return Number.isNaN(date.getTime()) ? null : date; }

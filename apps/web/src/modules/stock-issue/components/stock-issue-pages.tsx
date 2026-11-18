@@ -29,6 +29,7 @@ import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockRequisiti
 import { AlternativeBatches } from "./alternative-batches";
 import { VoucherTable } from "./voucher-table";
 import { IssueLines } from "./issue-lines";
+import { UnstartLeftoverRepair } from "./unstart-leftover-repair";
 import { MaterialChoices } from "./material-choices";
 
 function Standing({ requisition }: { requisition: Pick<StockRequisition, "approved" | "status"> }) {
@@ -71,6 +72,7 @@ export function StockIssueListPage() {
         <div role="group" aria-label="Requisition status" className="flex gap-1">{issueQueues.map((entry) =>
           <Button key={entry.value} type="button" size="sm" variant={queue === entry.value ? "default" : "outline"} aria-pressed={queue === entry.value} onClick={() => setQueue(entry.value)}>{entry.label}</Button>)}</div>
         <KindSwitch tabs={tabs} kind={kind} onSelect={select} />
+        {kind !== null ? <UnstartLeftoverRepair key={kind} kind={kind} /> : null}
       </div>
     </div>
     <ServerDataTable label="Stock requisitions" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
@@ -126,7 +128,7 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
     {/* The material, like its batches, can change only while the stock has not left the store. Substitutes are on raw-material BOMs only. */}
     {requisition.status !== 3 && requisition.status !== 4 ? <MaterialChoices requisitionId={requisition.id} kind={kind} /> : null}
     {/* Batches can only be swapped while the stock has not left the store. */}
-    {requisition.status !== 3 && requisition.status !== 4 ? <AlternativeBatches requisitionId={requisition.id} mayAsk={has(issuePermissions[kind])} /> : null}
+    {requisition.status !== 3 && requisition.status !== 4 ? <AlternativeBatches source={{ requisitionId: requisition.id }} mayAsk={has(issuePermissions[kind])} /> : null}
     <IssueLines requisition={requisition} />
     {confirming ? <ConfirmActionDialog require={issuePermissions[kind]} destructive={false} title={`Issue ${requisition.code}?`}
       description={`The batches shown leave your store for ${requisition.department ?? "production"}${requisition.batch ? `, for batch ${requisition.batch}` : ""}. This cannot be undone.`} confirmLabel="Issue stock" busyLabel="Issuing…" onClose={() => setConfirming(false)}

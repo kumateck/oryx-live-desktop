@@ -1,3 +1,4 @@
+import { selectedOptionLabels } from "@/shared/ard-view/response/selected-options";
 import StoredFormulaResult from "@/shared/ard-view/raw-data/print/stored-formula-result";
 import { isGovernedFormulaResponse } from "@/shared/ard-view/raw-data/governed-formula-result";
 import { getCompactFormulaEvaluations } from "@/shared/ard-view/raw-data/print/formula-evaluation";
@@ -16,8 +17,13 @@ export const renderSpecificationResult = (
   response: FormResponseDto,
   templateField: FormFieldDto,
 ) => {
-  if (isGovernedFormulaResponse(response)) return <StoredFormulaResult response={response} />;
+  if (isGovernedFormulaResponse(response)) return <StoredFormulaResult response={response} preferAverage />;
   const questionType = sanitizeNumber(templateField.question?.type ?? response.formField?.question?.type);
+  if ([QuestionType.Dropdown, QuestionType.SingleChoice, QuestionType.Checkbox].some(type => questionType === sanitizeNumber(type))) {
+    const question = templateField.question ?? response.formField?.question;
+    const field = { ...response.formField, ...templateField, ...(question ? { question } : {}) };
+    return <span>{selectedOptionLabels({ ...response, formField: field }).join(", ") || "—"}</span>;
+  }
   if (questionType !== sanitizeNumber(QuestionType.Formula)) {
     return renderPrintStoredResponseValue(response, templateField);
   }
@@ -65,6 +71,9 @@ export const renderSpecificationResult = (
 export const isSpecificationSummaryType = (type?: number | null) => {
   const questionType = sanitizeNumber(type);
   return (
+    questionType === sanitizeNumber(QuestionType.Dropdown) ||
+    questionType === sanitizeNumber(QuestionType.SingleChoice) ||
+    questionType === sanitizeNumber(QuestionType.Checkbox) ||
     questionType === sanitizeNumber(QuestionType.ShortAnswer) ||
     questionType === sanitizeNumber(QuestionType.LongAnswer) ||
     questionType === sanitizeNumber(QuestionType.Paragraph) ||

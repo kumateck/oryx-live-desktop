@@ -42,8 +42,8 @@ it("lists the saved materials with entered quantities kept and totals calculated
   const row = (await screen.findByText("Bottle")).closest("tr");
   if (!row) throw new Error("row not found");
   expect(within(row).getByText("1x100ml")).toBeTruthy();
-  expect(await within(row).findByText("0.005 pcs")).toBeTruthy();
-  expect(within(row).getByText("1.005 pcs")).toBeTruthy();
+  expect(within(row).queryByText("0.005 pcs")).toBeNull();
+  expect(await within(row).findByText("1.005 pcs")).toBeTruthy();
   expect(await within(row).findByText("SPEC-9")).toBeTruthy();
   expect(screen.getByText("All styles")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Save packing materials" }).hasAttribute("disabled")).toBe(true);

@@ -57,7 +57,7 @@ export function useAtrWorksheet(id: string, options: { fresh?: boolean; assignee
       : options.fresh && assignees.error && (!("status" in assignees.error) || assignees.error.status !== 404) ? apiErrorMessage(assignees.error)
         : formQuery.error && !response.data?.effectiveForm ? apiErrorMessage(formQuery.error) : null;
   return {
-    atr, rawAtr: atrQuery.data ?? null, ard, form, rawForm, loading, error, formMissing: !loading && !form, stored, responses: response.data?.formResponses ?? [], assignees: assigned,
+    atr, responseDetail: response.currentData ?? null, rawAtr: atrQuery.data ?? null, ard, form, rawForm, loading, error, formMissing: !loading && !form, stored, responses: response.data?.formResponses ?? [], assignees: assigned,
     certificate: response.data?.formResponses?.some(row => row.formulaRepairPending) ? { canGenerate: false, label: "Repaired formula results are calculated when their readings are saved" } : certificateState(parsedResponse),
     context: context ? { ...context, ...(currentResponseId && response.data && stored.size === 0 ? { responseId: currentResponseId } : {}) } : null,
     reload: () => { if (context) void responseId.refetch(); if (currentResponseId) void response.refetch(); if (options.assignees !== false && atr?.bmrId) void assignees.refetch(); },
