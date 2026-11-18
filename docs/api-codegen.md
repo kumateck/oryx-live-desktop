@@ -392,3 +392,12 @@ upcoming batch issue reads and swap batch reference. Its reviewed digest is
 `3bf7e9598e05b34f624541f573204aad101320f66b0ace2a56342ea067a33f0b`.
 Both predecessor approvals remain; removing only the named additions reproduces
 their reviewed contracts. Regenerate the clients with `bun run api:generate`.
+
+## Unstart leftover repair (2026-11-18)
+
+`bun scripts/import-unstart-leftovers.ts /path/to/backend-export.json` imports only
+the raw/packaging preview and repair paths and their owned DTOs. Regenerate with
+`bun run api:generate`. The reviewed additive digest is
+`8740d29923b194db052c53a97aff5fcdf863b619e8317a3b5c1c95bb7b433f4b`;
+removing only these additions reproduces the PR #297 merged contract. Existing
+approved fingerprints remain. Deploy the backend audit migration first.
