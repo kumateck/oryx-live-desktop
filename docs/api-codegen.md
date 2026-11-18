@@ -1,4 +1,8 @@
-Production material request follow-ups add only two typed rejection POST operations and two optional shelf display fields. Import with `bun scripts/import-production-material-followups.ts EXPORT.json`, then generate/check. Reviewed digest `ba3863c627fb90398277863658833e9876b26678c7f1c8c7a4527cdde854c12a`. Deploy the companion backend migration before activation. See [request follow-ups](production-material-request-followups.md).
+Production material request follow-ups add only two typed rejection POST operations and two optional shelf display fields. Import with `bun scripts/import-production-material-followups.ts EXPORT.json`, then generate/check. Reviewed digest `ba3863c627fb90398277863658833e9876b26678c7f1c8c7a4527cdde854c12a`. Deploy the companion backend migration before activation. See [request follow-ups](production-material-request-followups.md). Merged on top of operation departments and test corrections (2026-11-19): combined digest `5125e67ffa628c1514db817e9006369e43e105c9ddf2efca7daa58a531f19bc1`; removing only these follow-ups reproduces `dfc02620…198b`.
+
+The combined correction/density/reservation contract now has digest `aa0c7ce5baebd3ef474598cf8ebf10520dc44f08aa7eb9f19b22e2c137ace5af`; removing only correction paths and DTOs reproduces the merged density/reservation digest `e9f0e683…dcaa`. Both prior additive reviews remain checked.
+
+Pre-COA correction return (2026-11-18) adds three variant paths (GET history / POST return) and three owned DTOs in the forms domain. Import with `bun scripts/import-test-corrections.ts EXPORT.json`, then generate/check. Reviewed digest `5ce396f4d012f7917141faab404d23f5bbc97f7e70a3aba1f690e0f5ea5d8e15`; removing only these additions reproduces the reserved-stock digest `492bb17c…1d4`. Apply `AddTestCorrectionReturns` and assign the new variant return/history permissions before use. See [test corrections](test-correction-return.md).
 
 Unstart reservation release (2026-11-18) adds four material-scoped operations in the materials domain and four owned DTO schemas. Import with `bun scripts/import-unstart-reservations.ts EXPORT.json`, then generate/check. Reviewed source digest `492bb17cb7c98b859259ae356d670a091c1045483600bdf2e4137e79751bc1d4`; deploy the companion backend migration first. See [reserved stock and Unstart release](reserved-stock-and-unstart-release.md).
 
@@ -405,3 +409,16 @@ the raw/packaging preview and repair paths and their owned DTOs. Regenerate with
 `8740d29923b194db052c53a97aff5fcdf863b619e8317a3b5c1c95bb7b433f4b`;
 removing only these additions reproduces the PR #297 merged contract. Existing
 approved fingerprints remain. Deploy the backend audit migration first.
+
+## Operation departments (2026-11-18)
+
+`bun scripts/import-operation-departments.ts /path/to/backend-export.json` imports only
+`PUT /api/v1/collection/operations/{operationId}/department/{departmentId}`
+(`CanLinkOperationDepartment`) and `DELETE /api/v1/collection/operations/{operationId}/department`
+(`CanUnlinkOperationDepartment`), plus the optional `linkedDepartmentId`/`linkedDepartmentName` on
+`SHARED.CollectionItemDto` and `departmentId`/`departmentName` on `DOMAIN.Entities.Base.OperationDto`.
+Regenerate with `bun run api:generate`. Typed digest
+`dfc02620ae1fddd96dfe39228840ce8089f17d177ebe701aa0086518ce14198b`; removing only these
+additions reproduces `aa0c7ce5…ace5af`. Deploy the backend and its `GrantOperationDepartmentLinkKeys`
+data migration first. An operation links to one production department; it must be unlinked
+before it is linked elsewhere.

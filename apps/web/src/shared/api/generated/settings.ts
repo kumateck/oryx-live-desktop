@@ -724,6 +724,34 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    putApiV1CollectionOperationsByOperationIdDepartmentAndDepartmentId:
+      build.mutation<
+        PutApiV1CollectionOperationsByOperationIdDepartmentAndDepartmentIdApiResponse,
+        PutApiV1CollectionOperationsByOperationIdDepartmentAndDepartmentIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/collection/operations/${queryArg.operationId}/department/${queryArg.departmentId}`,
+          method: "PUT",
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
+    deleteApiV1CollectionOperationsByOperationIdDepartment: build.mutation<
+      DeleteApiV1CollectionOperationsByOperationIdDepartmentApiResponse,
+      DeleteApiV1CollectionOperationsByOperationIdDepartmentApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "collection/operation", id: "LIST" }, { type: "collection", id: "LIST" }, { type: "collection/operation", id: queryArg.operationId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/collection/operations/${queryArg.operationId}/department`,
+        method: "DELETE",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -1220,6 +1248,24 @@ export type DeleteApiV1WorkingHoursPolicyByIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type PutApiV1CollectionOperationsByOperationIdDepartmentAndDepartmentIdApiResponse = void;
+export type PutApiV1CollectionOperationsByOperationIdDepartmentAndDepartmentIdApiArg =
+  {
+    operationId: string;
+    departmentId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+  };
+export type DeleteApiV1CollectionOperationsByOperationIdDepartmentApiResponse = void;
+export type DeleteApiV1CollectionOperationsByOperationIdDepartmentApiArg = {
+  operationId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
 export type DomainEntitiesUsersBsonUserDto = {
   id?: string;
   firstName?: string | null;
@@ -1300,6 +1346,8 @@ export type SharedCollectionItemDto = {
   description?: string | null;
   symbol?: string | null;
   uom?: string | null;
+  linkedDepartmentId?: string | null;
+  linkedDepartmentName?: string | null;
 };
 export type DomainEntitiesDepartmentsDepartmentListDto = {
   id?: string;
@@ -1434,6 +1482,8 @@ export type DomainEntitiesBaseOperationDto = {
   name?: string | null;
   description?: string | null;
   order?: number;
+  departmentId?: string | null;
+  departmentName?: string | null;
 };
 export type SystemDayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type DomainEntitiesCompanyWorkingDaysCompanyWorkingDaysDto = {
@@ -1611,4 +1661,6 @@ export const {
   useGetApiV1WorkingHoursPolicyQuery,
   useLazyGetApiV1WorkingHoursPolicyQuery,
   useDeleteApiV1WorkingHoursPolicyByIdMutation,
+  usePutApiV1CollectionOperationsByOperationIdDepartmentAndDepartmentIdMutation,
+  useDeleteApiV1CollectionOperationsByOperationIdDepartmentMutation,
 } = injectedRtkApi;
