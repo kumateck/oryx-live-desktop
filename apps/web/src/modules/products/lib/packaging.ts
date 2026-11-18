@@ -17,12 +17,14 @@ export interface PackagingLine {
   packing: Option | null;
   prescribedQuantity: number;
   packingExcessMargin: number;
+  /** Packing materials the store may issue instead of this one, one pack for one pack. */
+  substitutes: Option[];
   /**
    * Fields this page does not edit. The backend replaces every packing material on save, so they
    * are sent back unchanged; leaving them out would erase them.
    */
   carried: Pick<DomainEntitiesProductsCreateProductPackageRequest, "baseQuantity" | "unitCapacity" | "baseUoMId" | "directLinkMaterialId"
-    | "materialThickness" | "otherStandards" | "substituteMaterialIds">;
+    | "materialThickness" | "otherStandards">;
 }
 
 export function fromSavedPackages(saved: SavedPackages): PackagingLine[] {
@@ -31,11 +33,12 @@ export function fromSavedPackages(saved: SavedPackages): PackagingLine[] {
     material: { value: item.material.id, label: item.material.name }, code: item.material.code, specification: null, unit: null,
     packing: item.productPacking?.id ? { value: item.productPacking.id, label: item.productPacking.name } : null,
     prescribedQuantity: item.prescribedQuantity ?? 0, packingExcessMargin: item.packingExcessMargin ?? 0,
+    substitutes: item.substitutes.flatMap((entry) => entry.substituteMaterial?.id
+      ? [{ value: entry.substituteMaterial.id, label: entry.substituteMaterial.name || entry.substituteMaterial.code || "Unnamed material" }] : []),
     carried: {
       baseQuantity: item.baseQuantity ?? 1, unitCapacity: item.unitCapacity ?? 0,
       directLinkMaterialId: item.directLinkMaterial?.id ?? null,
       materialThickness: item.materialThickness ?? null, otherStandards: item.otherStandards ?? null,
-      substituteMaterialIds: item.substitutes.flatMap((entry) => entry.substituteMaterial?.id ? [entry.substituteMaterial.id] : []),
     },
   }] : []);
 }
@@ -64,6 +67,7 @@ export function toPackagesRequest(lines: readonly PackagingLine[]): DomainEntiti
     productPackingId: line.packing?.value ?? null,
     prescribedQuantity: line.prescribedQuantity,
     packingExcessMargin: line.packingExcessMargin,
+    substituteMaterialIds: line.substitutes.map((item) => item.value),
     // The backend keeps the allowance in two fields; Oryx Next writes both, and reports read either.
     loose: line.packingExcessMargin,
   }));
