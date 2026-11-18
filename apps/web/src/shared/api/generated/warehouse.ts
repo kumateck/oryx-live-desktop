@@ -2544,6 +2544,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
   isWhitePlacebo?: boolean;
+  densityGramsPerMilliliter?: number | null;
 };
 export type DomainEntitiesBasePackageStyleDto = {
   id?: string;
@@ -2751,12 +2752,14 @@ export type DomainEntitiesMaterialsBatchBatchToSupply = {
   quantityToTake?: number;
   warehouseLocationShelfId?: string | null;
   warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
+  sourceQuantityToTake?: number | null;
 };
 export type DomainEntitiesMaterialsBatchBatchToSupplyRead = {
   batch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
   quantityToTake?: number;
   warehouseLocationShelfId?: string | null;
   warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
+  sourceQuantityToTake?: number | null;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDto = {
   id?: string;
