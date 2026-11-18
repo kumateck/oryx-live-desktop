@@ -18,6 +18,9 @@ const product = { id, code: "NL-047", name: "Wormee 4 Suspension", category: { n
   outdatedBillOfMaterials: [{ version: 2, isActive: false, billOfMaterial: { items: [{ id: "b1", order: 1, material: { name: "Old sugar", code: "RM-009" }, baseQuantity: 1, baseUoM: { symbol: "g" } }] } }],
   packages: [{ id: "p1", material: { name: "Bottle", code: "PM-1" }, prescribedQuantity: 1000, packingExcessMargin: 20 }], packings: [] };
 
+let deleteReply: () => Response = () => new Response(null, { status: 204 });
+const deletes: string[] = [];
+
 function open(permissions: string[], address = `/production/products/${id}/details`, status = 200) {
   const backend = stubBackend({ permissions });
   rememberSession();
@@ -27,6 +30,7 @@ function open(permissions: string[], address = `/production/products/${id}/detai
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const path = new URL(input.url).pathname;
     paths.push(path);
+    if (path === `/api/v1/product/${id}` && input.method === "DELETE") { deletes.push(path); return deleteReply(); }
     if (path === `/api/v1/product/${id}`) return status === 200 ? Response.json(product) : new Response(null, { status });
     if (path === `/api/v1/product/${id}/routes`) return Response.json([{ id: "758da105-a506-44a9-8ff5-8d005a54f294", order: 1, operation: { name: "Mixing" }, isCritical: true,
       responsibleRoles: [{ role: { name: "Operator" }, action: 1 }] }]);
@@ -34,6 +38,7 @@ function open(permissions: string[], address = `/production/products/${id}/detai
   });
   render(<SessionProvider><MemoryRouter initialEntries={[address]}><ApiProvider><Routes>
     <Route path="/production/products/:id/details" element={<ProductDetailPage />} />
+    <Route path="/production/products" element={<p>Product list</p>} />
   </Routes></ApiProvider></MemoryRouter></SessionProvider>);
   return paths;
 }
@@ -48,6 +53,29 @@ it("shows the product, its scaled bill of materials, and only permitted actions"
   expect(screen.getByText("30 kg")).toBeTruthy();
   expect(screen.queryByRole("link", { name: "Edit product" })).toBeNull();
   expect(screen.queryByRole("button", { name: /Verify/ })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Delete product" })).toBeNull();
+});
+
+const viewer = ["CanViewProductionProducts", "CanViewProductionProductInfo", "CanViewProductionProductBom"];
+
+it("deletes an unused product after confirmation and returns to the list", async () => {
+  deletes.length = 0; deleteReply = () => new Response(null, { status: 204 });
+  open([...viewer, "CanDeleteProductionProduct"]);
+  fireEvent.click(await screen.findByRole("button", { name: "Delete product" }));
+  expect(screen.getByRole("heading", { name: "Delete Wormee 4 Suspension?" })).toBeTruthy();
+  fireEvent.click(screen.getAllByRole("button", { name: "Delete product" }).at(-1)!);
+  expect(await screen.findByText("Product list")).toBeTruthy();
+  expect(deletes).toEqual([`/api/v1/product/${id}`]);
+});
+
+it("keeps the dialog open with the server's reason when the product is in use", async () => {
+  deletes.length = 0;
+  deleteReply = () => Response.json({ title: "Conflict", status: 409, errors: [{ code: "Products.InUse", description: "This product cannot be deleted because it is used by 2 production schedules." }] }, { status: 409 });
+  open([...viewer, "CanDeleteProductionProduct"]);
+  fireEvent.click(await screen.findByRole("button", { name: "Delete product" }));
+  fireEvent.click(screen.getAllByRole("button", { name: "Delete product" }).at(-1)!);
+  expect(await screen.findByText(/used by 2 production schedules/)).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Delete Wormee 4 Suspension?" })).toBeTruthy();
 });
 
 it("loads a tab's records only when it is opened, and opens the tab named in the address", async () => {

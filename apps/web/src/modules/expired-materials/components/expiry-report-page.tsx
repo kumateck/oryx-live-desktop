@@ -15,12 +15,15 @@ import { InputTypes } from "@/shared/forms/input-types";
 import { KindSwitch } from "@/shared/reference-data/kind-switch";
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 import { toLargestUnit } from "@/shared/units/quantity";
-import { apiDay, daysToExpiry, expiryRowsSchema, monthOf, type ExpiryBatch } from "../expiry";
+import { PermissionGuard } from "@/shared/auth/permission-guard";
+import { apiDay, daysToExpiry, expiryRowsSchema, type ExpiryBatch } from "../expiry";
 
 const { useGetApiV1MaterialBatchesExpiredQuery, useGetApiV1MaterialBatchesAboutToExpireQuery } = materialsApi;
 const show = (value: number, unit: string | null) => toLargestUnit(value, unit, "calculated")?.text ?? String(value);
 const kinds = [{ value: 0 as const }, { value: 1 as const }];
 interface Filter { range: MonthRange | null }
+/** Widens both reports from the reader's own department to every department, as quality control needs. */
+const acrossDepartments = "CanViewExpiryAcrossDepartments";
 const fields: WizardField<Filter>[] = [{ type: InputTypes.MONTH_RANGE, name: "range", label: "Expiring from month to month" }];
 const column = dataTableColumns<ExpiryBatch>();
 const columns = column.columns([
@@ -41,8 +44,8 @@ export function ExpiryReportPage({ mode }: { mode: "expired" | "soon" }) {
   const title = mode === "expired" ? "Expired materials" : "About to expire materials";
   const audit = { module: "Warehouse", subModule: mode === "expired" ? "Expired Materials" : "About To Expire Materials" };
   const [kind, setKind] = useState<MaterialKind>(0);
-  const [initial] = useState(() => monthOf());
-  const form = useForm<Filter>({ defaultValues: { range: initial } });
+  // Every date by default: a month filter hid batches that expired before this month, so the list looked empty.
+  const form = useForm<Filter>({ defaultValues: { range: null } });
   const range = useWatch({ control: form.control, name: "range" });
   // Whole months: from the first day of the first month to the last day of the last.
   const days = monthRangeDays(range);
@@ -62,7 +65,7 @@ export function ExpiryReportPage({ mode }: { mode: "expired" | "soon" }) {
       <h1 className="text-xl font-semibold">{title}</h1>
       <div className="flex flex-wrap items-end gap-3"><div className="w-72 max-w-full"><FormWizard form={form} fields={fields} /></div>{range ? <Button variant="outline" onClick={() => form.setValue("range", null)}>Clear dates</Button> : null}<KindSwitch tabs={kinds} kind={kind} onSelect={setKind} /></div>
     </div>
-    <p className="text-sm text-muted-foreground">Search by material code or name in the header. {from ? "Dates and search are combined." : mode === "expired" ? "Showing expired materials across all dates." : "Showing materials due within three months."}</p>
+    <p className="text-sm text-muted-foreground">Search by material code or name in the header. <PermissionGuard require={acrossDepartments} fallback="Stock in your department's stores. ">Stock in every department's stores. </PermissionGuard>{from ? "Dates and search are combined." : mode === "expired" ? "Showing expired materials across all dates." : "Showing materials due within three months."}</p>
     <ServerDataTable label={title} columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
       onRowOpen={(row) => void navigate(`/warehouse/${mode === "expired" ? "expired-materials" : "about-to-expire-materials"}/${encodeURIComponent(row.id)}?kind=${kind}`)}
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned batches the app could not read." : null}

@@ -421,6 +421,9 @@ export const routes: RouteObject[] = [
         { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/inventory-command-center/page")).default }) }
       ] },
       { path: "it", Component: Outlet, children: [
+        { path: "approval-rights-transfer", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/it/approval-rights-transfer/page")).default }) }
+        ] },
         { path: "my-issues", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/it/my-issues/page")).default }) },
           { path: ":id", Component: Outlet, children: [

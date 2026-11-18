@@ -7,6 +7,11 @@ export const packagingItemFormSchema = z.object({
   packing: option.nullish(),
   prescribedQuantity: z.number({ message: "Enter the prescribed quantity" }).finite("Enter the prescribed quantity").positive("The prescribed quantity must be greater than 0"),
   packingExcessMargin: z.number({ message: "Enter the packing allowance" }).finite().min(0, "The packing allowance cannot be negative").nullish(),
+  /** Packing materials the store may issue instead of this one, pack for pack. */
+  substitutes: z.array(option).optional(),
+}).superRefine((values, context) => {
+  if (values.substitutes?.some((item) => item.value === values.material.value))
+    context.addIssue({ code: "custom", path: ["substitutes"], message: "A material cannot substitute for itself" });
 });
 export type PackagingItemFormValues = z.infer<typeof packagingItemFormSchema>;
 
@@ -19,6 +24,6 @@ export const savedPackagesSchema = z.array(z.object({
   id: z.string().nullish(), material: item, directLinkMaterial: item, productPacking: z.object({ id: z.string().nullish(), name: text }).nullish(),
   materialThickness: z.string().nullish(), otherStandards: z.string().nullish(), baseQuantity: num, unitCapacity: num,
   packingExcessMargin: num, prescribedQuantity: num,
-  substitutes: z.array(z.object({ substituteMaterial: z.object({ id: z.string().nullish() }).nullish() })).nullish().transform((value) => value ?? []),
+  substitutes: z.array(z.object({ substituteMaterial: z.object({ id: z.string().nullish(), name: text, code: text }).nullish() })).nullish().transform((value) => value ?? []),
 })).nullish().transform((value) => value ?? []);
 export type SavedPackages = z.infer<typeof savedPackagesSchema>;

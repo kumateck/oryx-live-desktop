@@ -23,11 +23,12 @@ export default function ProductionUnstartDialog({ activityId, onClose }: { activ
   return <Dialog open onOpenChange={(open) => { if (!open) state.close(); }}>
     <DialogContent className="sm:max-w-2xl" showCloseButton={!state.busy}>
       <DialogHeader><DialogTitle>Unstart production{state.preview?.batchNumber ? ` · ${state.preview.batchNumber}` : ""}</DialogTitle>
-        <DialogDescription>Return this batch to awaiting start while its BMR is still unissued. The original run and draft documents stay in the repair history.</DialogDescription></DialogHeader>
+        <DialogDescription>Return this batch to awaiting start while no stock has been issued for it, even if its BMR is issued. The original run, BMR and BPR stay in the repair history.</DialogDescription></DialogHeader>
       <form noValidate onSubmit={(event) => { event.stopPropagation(); void state.submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         <DialogBody className="space-y-4">
           {state.preview ? <div className="space-y-1 text-sm"><p className="font-medium break-words">{state.preview.productName}</p>
-            <p>{state.preview.stepsToArchive} steps and {state.preview.draftDocumentsToArchive} draft documents will be archived.</p>
+            <p>{state.preview.stepsToArchive} steps and {state.preview.draftDocumentsToArchive} BMR and BPR documents will be archived.</p>
+            {state.preview.requisitionsToCancel.length ? <p className="break-words">Stock requested but not issued is cancelled: {state.preview.requisitionsToCancel.join(", ")}.</p> : null}
             <p>Unissued reservations are released. Physical shelf stock does not change.</p></div> : null}
           <ListDataTable label="Reservations to release" columns={columns} rows={state.preview?.reservations ?? empty} getRowId={(row) => row.id}
             loading={state.loading} emptyTitle="No material reservations to release" />
