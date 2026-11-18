@@ -10,6 +10,7 @@ export const generatedTagTypes = [
   "approval/my-pending",
   "approval/reject",
   "approval/transfer-right",
+  "approval/users-on-record",
   "approval/users-with-pending",
   "attendance-record",
   "attendance-record/daily-summary",

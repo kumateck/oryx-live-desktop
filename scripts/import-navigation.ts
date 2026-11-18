@@ -189,6 +189,8 @@ const pageKeys: Readonly<Record<string, string[]>> = {
   "/inventory-command-center": ["CanViewInventoryCommandCenter"],
   "/production-health-dashboard": ["CanViewProductionHealthDashboard"],
   "/fgtn-dashbord": ["CanViewFgtnDashboard"],
+  // Handing over one's own approvals; IT hands over anyone's from its own page.
+  "/qa/approval-rights-transfer": ["CanTransferApprovalRights"],
 };
 const setPageKeys = (items: CatalogItem[]): void => {
   for (const item of items) {
@@ -197,6 +199,11 @@ const setPageKeys = (items: CatalogItem[]): void => {
   }
 };
 for (const group of catalog) setPageKeys(group.items);
+
+// IT hands over the approvals of anyone on an approval document, such as a person who left.
+const itSupport = catalog.find((group) => group.id === "it-support");
+if (!itSupport) throw new Error("IT Support navigation group is missing.");
+itSupport.items.push({ id: "it-support.approval-rights-transfer", label: "Transfer Approval Rights", path: "/it/approval-rights-transfer", permissions: ["CanTransferAnyApprovalRights"] });
 
 // Production's requisition list has its own keys; the Warehouse issue list keeps CanViewRawMaterialRequisitions.
 const productionRequisitionKeys: Readonly<Record<string, string>> = {

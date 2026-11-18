@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
@@ -13,18 +13,29 @@ import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import type { SelectLoader, SelectOption } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
 import { addTags } from "@/shared/api/add-tags";
+import { useCurrentUser } from "@/shared/auth/session-provider";
 
-const { useGetApiV1ApprovalUsersWithPendingQuery, usePostApiV1ApprovalTransferRightsMutation } = approvalsApi.enhanceEndpoints({
-  endpoints: { getApiV1ApprovalUsersWithPending: (definition) => { definition.providesTags = addTags(definition.providesTags, [{ type: "PendingApprovals", id: "all" }]); }, postApiV1ApprovalTransferRights: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["PendingApprovals"]); } } });
+const { useGetApiV1ApprovalUsersOnRecordQuery, usePostApiV1ApprovalTransferRightsMutation } = approvalsApi.enhanceEndpoints({
+  endpoints: { getApiV1ApprovalUsersOnRecord: (definition) => { definition.providesTags = addTags(definition.providesTags, [{ type: "PendingApprovals", id: "all" }]); }, postApiV1ApprovalTransferRights: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : ["PendingApprovals"]); } } });
 const { useLazyGetApiV1UserByPermissionQuery } = identityApi;
 /** The receiver decides from the pending approvals page; the server refuses anyone else. */
 const approverKey = "CanViewPendingApprovals";
-const audit = { module: "Quality Assurance", subModule: "Approval Rights Transfer" } as const;
+/**
+ * Who a page may hand over. Quality assurance hands over the signed-in person's own approvals to whoever takes charge;
+ * IT hands over anyone named on an approval document, such as a person who left. The server enforces the same rule.
+ */
+export type TransferScope = "own" | "any";
+const scopes = {
+  own: { key: "CanTransferApprovalRights", audit: { module: "Quality Assurance", subModule: "Approval Rights Transfer" }, eyebrow: "QUALITY ASSURANCE",
+    intro: "Hand your approval duties to the person taking charge, for when you leave or are away for long." },
+  any: { key: "CanTransferAnyApprovalRights", audit: { module: "IT Support", subModule: "Approval Rights Transfer" }, eyebrow: "IT SUPPORT",
+    intro: "Hand anyone's approval duties to another person, for when an approver leaves or is away for long." },
+} as const;
 
-interface Person { id?: string | null | undefined; firstName?: string | null | undefined; lastName?: string | null | undefined; email?: string | null | undefined }
-/** People as choices, by name, falling back to their email. */
+interface Person { id?: string | null | undefined; firstName?: string | null | undefined; lastName?: string | null | undefined; email?: string | null | undefined; isDisabled?: boolean | null | undefined }
+/** People as choices, by name, falling back to their email. A disabled account (someone who left) says so. */
 export function userOptions(users: readonly Person[] | null | undefined): SelectOption[] {
-  return (users ?? []).flatMap((user) => user.id ? [{ value: user.id, label: [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.email?.trim() || "Unnamed user" }] : []);
+  return (users ?? []).flatMap((user) => user.id ? [{ value: user.id, label: `${[user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.email?.trim() || "Unnamed user"}${user.isDisabled ? " (disabled)" : ""}` }] : []);
 }
 
 const option = z.object({ value: z.string().min(1), label: z.string() });
@@ -38,12 +49,18 @@ type TransferValues = z.infer<typeof transferSchema>;
  * Hands one person's approval duties to another: everything waiting for them, and their place in every
  * approval workflow. For when an approver leaves or is away for long.
  */
-export function TransferRightsPage() {
-  const pending = useGetApiV1ApprovalUsersWithPendingQuery({ ...audit });
+export function TransferRightsPage({ scope }: { scope: TransferScope }) {
+  const { key, audit, eyebrow, intro } = scopes[scope];
+  const me = useCurrentUser();
+  const mine = useMemo<SelectOption | null>(() => me ? { value: me.id, label: me.name || me.email || "You" } : null, [me]);
+  // Only IT reads the list of everyone on record; a person handing over their own approvals needs nobody else's.
+  const pending = useGetApiV1ApprovalUsersOnRecordQuery({ ...audit }, { skip: scope === "own" });
   const [loadUsers] = useLazyGetApiV1UserByPermissionQuery();
   const [transfer] = usePostApiV1ApprovalTransferRightsMutation();
   const [confirming, setConfirming] = useState<{ from: SelectOption; to: SelectOption } | null>(null);
-  const form = useForm<TransferValues>({ resolver: zodResolver(transferSchema), defaultValues: { from: null, to: null } });
+  const form = useForm<TransferValues>({ resolver: zodResolver(transferSchema), defaultValues: { from: scope === "own" ? mine : null, to: null } });
+  // The signed-in person is the only source on the own-approvals page, also once the session has loaded.
+  useEffect(() => { if (scope === "own") form.setValue("from", mine); }, [scope, mine, form]);
   // Read here so the form re-renders, and its fields show their messages, when validation fails.
   void form.formState.errors;
   const from = useWatch({ control: form.control, name: "from" });
@@ -54,16 +71,17 @@ export function TransferRightsPage() {
     return { options: userOptions(result.data).filter((user) => user.value !== from?.value), hasNext: Number(result.pageIndex) < Number(result.pageCount), hasPrevious: Number(result.pageIndex) > 1 };
   }, [loadUsers, from?.value]);
   const fields = useMemo((): WizardField<TransferValues>[] => [
-    { type: InputTypes.SELECT, name: "from", label: "Take approvals from", mode: "single", source: "sync", options: fromOptions, required: true,
-      placeholder: pending.isLoading ? "Loading…" : fromOptions.length ? "Select a person" : "Nobody has approvals waiting", description: "People with at least one request waiting for them." },
+    ...(scope === "own" ? [] : [{ type: InputTypes.SELECT, name: "from", label: "Take approvals from", mode: "single", source: "sync", options: fromOptions, required: true,
+      placeholder: pending.isLoading ? "Loading…" : fromOptions.length ? "Select a person" : "Nobody is named on an approval document",
+      description: "Everyone named on an approval workflow or request, including people with nothing waiting." } satisfies WizardField<TransferValues>]),
     { type: InputTypes.SELECT, name: "to", label: "Give them to", mode: "single", source: "async", loadOptions: loadActive, required: true, placeholder: "Search for a person", description: "Active people who can see pending approvals." },
-  ], [fromOptions, pending.isLoading, loadActive]);
+  ], [scope, mine, fromOptions, pending.isLoading, loadActive]);
 
   const submit = form.handleSubmit((values) => { if (values.from && values.to) setConfirming({ from: values.from, to: values.to }); });
 
   return <section className="min-w-0 max-w-3xl space-y-4">
-    <div><p className="eyebrow">QUALITY ASSURANCE</p><h1 className="text-xl font-semibold">Transfer approval rights</h1>
-      <p className="text-sm text-muted-foreground">Hand one person's approval duties to another, for when an approver leaves or is away for long.</p></div>
+    <div><p className="eyebrow">{eyebrow}</p><h1 className="text-xl font-semibold">Transfer approval rights</h1>
+      <p className="text-sm text-muted-foreground">{intro}</p></div>
     <div role="note" className="space-y-1 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
       <p className="font-medium">A transfer does two things, and neither is undone from here.</p>
       <ul className="list-disc space-y-0.5 pl-5"><li>Every request waiting for the first person moves to the second.</li>
@@ -71,16 +89,19 @@ export function TransferRightsPage() {
     </div>
     {pending.error ? <p role="alert" className="text-sm text-destructive">{apiErrorMessage(pending.error)} <Button type="button" size="sm" variant="link" onClick={() => void pending.refetch()}>Retry</Button></p> : null}
     <form noValidate onSubmit={(event) => void submit(event)} className="space-y-4 rounded-lg border bg-card p-4">
+      {scope === "own" ? <div className="space-y-1 text-sm"><p className="font-medium">Take approvals from</p>
+        <p aria-label="Take approvals from">{mine?.label ?? "You"} (you)</p>
+        <p className="text-muted-foreground">Your own approvals. IT hands over someone else's.</p></div> : null}
       <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
       <div className="flex justify-end"><Button type="submit"><ArrowRight />Transfer rights</Button></div>
     </form>
-    {confirming ? <ConfirmActionDialog require={"CanTransferApprovalRights"} title={`Transfer ${confirming.from.label}'s approvals to ${confirming.to.label}?`}
+    {confirming ? <ConfirmActionDialog require={key} title={`Transfer ${confirming.from.label}'s approvals to ${confirming.to.label}?`}
       description={`Everything waiting for ${confirming.from.label} moves to ${confirming.to.label}, and ${confirming.to.label} replaces ${confirming.from.label} in every approval workflow. ${confirming.from.label} will no longer be asked to approve anything. To reverse it, the workflows have to be edited and the requests transferred back.`}
       confirmLabel="Transfer rights" busyLabel="Transferring…" onClose={() => setConfirming(null)} onConfirm={async () => {
         const result = await transfer({ ...audit, domainEntitiesApprovalsTransferApprovalRequest: { fromUserId: confirming.from.value, toUserId: confirming.to.value } });
         if ("error" in result) return apiErrorMessage(result.error);
         toast.success("Approval rights transferred", { description: `${confirming.to.label} now holds ${confirming.from.label}'s approvals.` });
-        form.reset({ from: null, to: null });
+        form.reset({ from: scope === "own" ? mine : null, to: null });
         return null;
       }} /> : null}
   </section>;

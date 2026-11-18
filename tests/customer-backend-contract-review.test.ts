@@ -95,9 +95,16 @@ function stripPackagingIssueQuantity(document: ObjectValue) {
   for (const field of issuedQuantityFields) delete properties[field];
 }
 
+/** IT approval transfer (2026-11-17): one typed read listing everyone named on an approval document. */
+const usersOnRecordPath = "/api/v1/approval/users-on-record";
+function stripApprovalUsersOnRecord(document: ObjectValue) {
+  delete object(document.paths ?? null)[usersOnRecordPath];
+}
+
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripApprovalUsersOnRecord(document);
   stripPackagingIssueQuantity(document);
   stripRequisitionIssuedFilter(document);
   stripSpecificationRevisionReason(document);
@@ -651,6 +658,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
   stripRequisitionIssuedFilter(current);
   stripSpecificationRevisionReason(current);
@@ -673,6 +681,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
   stripRequisitionIssuedFilter(current);
   const digest = contractDigest(current);
@@ -693,6 +702,7 @@ test("a specification revision requires a reason and returns it on the specifica
 
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
   const digest = contractDigest(current);
   assert.equal(digest, "e4bf7bc3756169634fc42cc65d9de3e0c0c00fb245ccf90c8b8f8a381bf6a42a");
@@ -707,6 +717,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripApprovalUsersOnRecord(current);
   const digest = contractDigest(current);
   assert.equal(digest, "2cc7b3a5a969853d122ab625816f1440a33be0d8a62a74574b845a438d9c5cf5");
   checkCompatibility(hostConfig, policy, digest);
@@ -719,4 +730,14 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
   }
   stripPackagingIssueQuantity(current);
   assert.equal(contractDigest(current), "e4bf7bc3756169634fc42cc65d9de3e0c0c00fb245ccf90c8b8f8a381bf6a42a");
+});
+
+test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "dca46e49d205cc65b0572d43a710dcc6c6e0ac79e0de1412e5de1d5bacf61f6f");
+  checkCompatibility(hostConfig, policy, digest);
+  assert.deepEqual(Object.keys(object(object(current.paths ?? null)[usersOnRecordPath] ?? null)), ["get"]);
+  stripApprovalUsersOnRecord(current);
+  assert.equal(contractDigest(current), "2cc7b3a5a969853d122ab625816f1440a33be0d8a62a74574b845a438d9c5cf5");
 });

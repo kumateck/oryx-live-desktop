@@ -312,3 +312,31 @@ it("offers the quantity only to holders of the supervisor key, and prints a set 
   expect(preview.getByText("To issue 20 kg: 1.25 kg over")).toBeTruthy();
   expect(preview.getByText("Reason: Sealed packs of 10")).toBeTruthy();
 }, 30_000);
+
+const bottles = [{ requisitionItemId: "p1", sourceMaterial: { id: "m-amber", name: "Amber bottle", code: "PM-1" }, currentMaterialId: "m-amber", revision: 1, canChange: true,
+  options: [
+    { material: { id: "m-amber", name: "Amber bottle", code: "PM-1" }, isMain: true, isCurrent: true, quantity: 1_000, unit: { symbol: "pcs" }, available: 400, covers: false,
+      earliestExpiry: "2099-01-01T00:00:00Z", batches: [] },
+    { material: { id: "m-clear", name: "Clear bottle", code: "PM-2" }, isMain: false, isCurrent: false, quantity: 1_000, unit: { symbol: "pcs" }, available: 5_000, covers: true,
+      earliestExpiry: "2099-01-01T00:00:00Z", batches: [{ materialBatchId: "c1", batchNumber: "C-1", quantity: 1_000, expiry: "2099-01-01T00:00:00Z" }] },
+  ] }];
+const withBottles = (path: string, method: string) => path === "/api/v1/requisition/sr-1/material-options"
+  ? method === "POST" ? new Response(null, { status: 204 }) : Response.json(bottles) : null;
+
+it("lets the packing store issue a packaging substitute, pack for pack, only with the packaging key", async () => {
+  const user = userEvent.setup();
+  // The raw-material key does not cover packaging.
+  const denied = open("/warehouse/stock-requisition/sr-1?type=1", ["CanViewPackagingMaterialRequisitions", "CanChooseRawMaterialRequisitionSubstitute"], labels(), withBottles);
+  const panel = await screen.findByRole("region", { name: "Material to issue" });
+  expect(await within(panel).findByText("Clear bottle")).toBeTruthy();
+  expect(within(panel).queryByRole("button", { name: /instead/ })).toBeNull();
+  expect(writes(denied.calls)).toEqual([]);
+  cleanup();
+
+  const allowed = open("/warehouse/stock-requisition/sr-1?type=1", ["CanViewPackagingMaterialRequisitions", "CanChoosePackagingMaterialRequisitionSubstitute"], labels(), withBottles);
+  await user.click(await screen.findByRole("button", { name: "Issue Clear bottle instead" }));
+  const dialog = await screen.findByRole("dialog");
+  await user.type(within(dialog).getByLabelText("Reason"), "Amber bottles are short");
+  await user.click(within(dialog).getByRole("button", { name: "Issue Clear bottle" }));
+  await waitFor(() => expect(writes(allowed.calls)).toEqual([{ method: "POST", path: "/api/v1/requisition/sr-1/material-options" }]));
+}, 20_000);

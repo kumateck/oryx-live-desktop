@@ -9,6 +9,7 @@ import { ExpressionView } from "@/shared/formula/ui/math/expression-view";
 import { useFormulaRepair } from "../hooks/use-formula-repair";
 import { repairTestKey, type FormulaRepairValues, type RepairContext, type RepairProblem } from "../schemas/formula-repair-schema";
 import { FormulaRepairHistory } from "./formula-repair-history";
+import { FormulaSettingsComparison } from "./formula-settings-comparison";
 import { FormulaRepairReceipt } from "./formula-repair-receipt";
 import { FormulaRepairReview } from "./formula-repair-review";
 
@@ -36,6 +37,7 @@ export function FormulaRepairForm({ context, atr, field, refresh, onBack, onAppl
       <h2 className="font-semibold">1. {page.approved ? "Formula to apply" : "Correct the configuration"}</h2>
       <FormulaShown title={atr ? "Current formula on this test" : "Current formula"} expression={page.current} />
       {page.approved ? <FormulaShown title={`Approved revision ${context.approvedRevision ?? ""}`.trim()} expression={page.approved.expression} /> : null}
+      <FormulaSettingsComparison rows={page.settings} approvedTitle={page.approved ? `Approved revision ${context.approvedRevision ?? ""}`.trim() : null} />
       <p className="text-sm text-muted-foreground">Used by {context.formsUsingQuestion} forms · {context.responsesAffected} existing responses. Existing tests keep their configuration unless selected below.</p>
       {context.blockers.map(text => <p key={text} role="alert" className="text-sm text-destructive">{text}</p>)}
       {page.approved ? <>

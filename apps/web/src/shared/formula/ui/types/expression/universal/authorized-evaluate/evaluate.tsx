@@ -253,8 +253,14 @@ export const AuthorizedUniversalEvaluate: React.FC<Props> = ({
   );
 
   // Inputs initializers (enabled for editing even in test; we just won’t persist onChange)
+  // Only the inputs the formula's settings switch on are shown, as on the ordinary worksheet and in the completeness
+  // check: an approved revision can keep a standard (or sample) input in its list while standard inputs are disabled.
+  const shown = (enabled: boolean | undefined, configured: readonly unknown[] | undefined) =>
+    typeof enabled === "boolean" ? enabled : (configured?.length ?? 0) > 0;
+  const standardShown = shown(parsed?.standardInput, parsed?.standardInputs) && parsed?.standardInTable === true;
+  const samplesShown = shown(parsed?.sampleInput, parsed?.sampleInputs);
   const initStandard = (): LabeledInputField[] =>
-    parsed?.standardInputs
+    parsed?.standardInputs && standardShown
       ? parsed.standardInputs.map((i) => ({
           ...i,
           value:
@@ -265,7 +271,7 @@ export const AuthorizedUniversalEvaluate: React.FC<Props> = ({
       : [];
 
   const initSamples = (): LabeledInputField[][] =>
-    parsed?.sampleInputs
+    parsed?.sampleInputs && samplesShown
       ? parsed.sampleInputs.map((inputs, idx) =>
           inputs.map((i) => ({
             ...i,

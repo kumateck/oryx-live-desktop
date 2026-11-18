@@ -14,5 +14,6 @@ export const manifest = {
     { pattern: "/it/my-issues/:id/details", access: { kind: "authenticated" } },
     { pattern: "/it/support-tickets", access: team },
     { pattern: "/it/support-tickets/:id/details", access: team },
+    { pattern: "/it/approval-rights-transfer", access: { kind: "all", permissions: ["CanTransferAnyApprovalRights"] } },
   ],
 } satisfies ModuleManifest<"it-tickets", "/it">;
