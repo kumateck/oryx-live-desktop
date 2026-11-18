@@ -94,7 +94,7 @@ it("adds a material with a suggested code that follows its name, sending the kin
 
 it("shows stock levels, updates a measured density and saves only the changed stock level", async () => {
   const user = userEvent.setup();
-  const { calls } = open("/warehouse/materials/linked", ["CanViewLinkedRawMaterials", "CanEditLinkedRawMaterials", "CanUnlinkRawMaterials"]);
+  const { calls } = open("/warehouse/materials/linked", ["CanViewLinkedRawMaterials", "CanEditLinkedRawMaterials", "CanUnlinkRawMaterials", "CanEditRawMaterialDensity"]);
   await screen.findByText("Maize starch");
   // Maize starch: 15 kg held, 10 kg reserved, minimum 10 kg. Lactose: none held.
   expect(screen.getAllByText("Below minimum")).toHaveLength(2);
@@ -164,3 +164,15 @@ it("fills in several unlinked materials and links the complete ones in one reque
   expect(await screen.findByText("Choose the unit the stock is counted in")).toBeTruthy();
   expect(screen.getByRole("status", { name: "Materials filled in" }).textContent).toContain("1 filled in · 0 ready to link");
 }, 30_000);
+
+
+it("keeps stock-level editing available without allowing shared density changes", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/warehouse/materials/linked", ["CanViewLinkedRawMaterials", "CanEditLinkedRawMaterials"]);
+  await screen.findByText("Maize starch");
+  await chooseAction("Actions for Maize starch", "Change stock levels");
+  const dialog = await screen.findByRole("dialog");
+  await within(dialog).findByRole("spinbutton", { name: /Maximum level/ });
+  expect(within(dialog).queryByRole("spinbutton", { name: "Density (g/mL)" })).toBeNull();
+  expect(writes(calls)).toEqual([]);
+});

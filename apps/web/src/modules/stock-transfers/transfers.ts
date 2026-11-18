@@ -31,8 +31,8 @@ export const transferRowsSchema = z.array(transfer).nullish().transform((value) 
 export type Transfer = z.infer<typeof transferRowsSchema>[number];
 
 /** Proposed batches before issue, recorded batches after issue. */
-export const transferBatchesSchema = z.array(z.object({ warehouseLocationShelf: stockShelfSchema, quantityToTake: amount, batch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, expired: z.boolean().nullish(), isReturn: z.boolean().nullish() }).nullish() })).nullish()
-  .transform((value) => (value ?? []).map((item, index) => ({ key: `${item.batch?.id ?? "batch"}-${index}`, id: item.batch?.id ?? null, number: item.batch?.batchNumber ?? null, quantity: item.quantityToTake, expires: item.batch?.effectiveExpiryDate ?? item.batch?.expiryDate ?? null, ...(typeof item.batch?.expired === "boolean" ? { expired: item.batch.expired } : {}), returned: item.batch?.isReturn === true, location: stockShelfLocation(item.warehouseLocationShelf) })));
+export const transferBatchesSchema = z.array(z.object({ warehouseLocationShelf: stockShelfSchema, sourceQuantityToTake: z.number().nullish(), quantityToTake: amount, batch: z.object({ uoM: z.object({ symbol: text }).nullish(), id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, expired: z.boolean().nullish(), isReturn: z.boolean().nullish() }).nullish() })).nullish()
+  .transform((value) => (value ?? []).map((item, index) => ({ key: `${item.batch?.id ?? "batch"}-${index}`, id: item.batch?.id ?? null, number: item.batch?.batchNumber ?? null, quantity: item.quantityToTake, sourceQuantity: item.sourceQuantityToTake ?? null, sourceUnit: item.batch?.uoM?.symbol ?? null, expires: item.batch?.effectiveExpiryDate ?? item.batch?.expiryDate ?? null, ...(typeof item.batch?.expired === "boolean" ? { expired: item.batch.expired } : {}), returned: item.batch?.isReturn === true, location: stockShelfLocation(item.warehouseLocationShelf) })));
 export type TransferBatch = z.infer<typeof transferBatchesSchema>[number];
 
 /**
@@ -49,10 +49,10 @@ export function transferIssueBlock(transfer: Pick<Transfer, "status" | "quantity
   return null;
 }
 
-const holding = z.object({ id: z.string().nullish(), status: z.number().nullish(), batches: z.array(z.object({ quantity: amount, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), sourceWarehouse: z.object({ name: text }).nullish(),
+const holding = z.object({ id: z.string().nullish(), status: z.number().nullish(), batches: z.array(z.object({ receivedAt: text, destinationQuantity: z.number().nullish(), destinationUoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), quantity: amount, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), sourceWarehouse: z.object({ name: text }).nullish(),
   materialBatch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), material: z.object({ name: text, code: text }).nullish() }).nullish() })).nullish() });
 /** Stock that has been issued to this department by transfer and is waiting to be put on shelves, one row per batch. */
-export const holdingRowsSchema = z.array(holding).nullish().transform((value) => (value ?? []).flatMap((entry) => entry.id ? (entry.batches ?? []).flatMap((batch, index) => { const unit = batch.uoM?.id ? batch.uoM : batch.materialBatch?.uoM ?? batch.uoM;
+export const holdingRowsSchema = z.array(holding).nullish().transform((value) => (value ?? []).flatMap((entry) => entry.id ? (entry.batches ?? []).filter(batch => !batch.receivedAt).flatMap((batch, index) => { const unit = batch.destinationUoM?.id ? batch.destinationUoM : batch.uoM?.id ? batch.uoM : batch.materialBatch?.uoM ?? batch.uoM;
   return batch.materialBatch?.id ? [{ key: `${entry.id}:${batch.materialBatch.id}:${index}`, holdingId: entry.id as string, batchId: batch.materialBatch.id, batchNumber: batch.materialBatch.batchNumber ?? null, expires: batch.materialBatch.effectiveExpiryDate ?? batch.materialBatch.expiryDate ?? null,
-    materialName: batch.materialBatch.material?.name ?? "Unnamed material", materialCode: batch.materialBatch.material?.code ?? null, quantity: batch.quantity, unit: unit?.symbol ?? null, unitId: unit?.id ?? null, from: batch.sourceWarehouse?.name ?? null }] : []; }) : []));
+    materialName: batch.materialBatch.material?.name ?? "Unnamed material", materialCode: batch.materialBatch.material?.code ?? null, quantity: batch.destinationQuantity ?? batch.quantity, unit: unit?.symbol ?? null, unitId: unit?.id ?? null, from: batch.sourceWarehouse?.name ?? null }] : []; }) : []));
 export type HeldStock = z.infer<typeof holdingRowsSchema>[number];

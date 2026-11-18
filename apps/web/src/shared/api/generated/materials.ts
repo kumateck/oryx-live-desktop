@@ -2288,6 +2288,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
   isWhitePlacebo?: boolean;
+  densityGramsPerMilliliter?: number | null;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsMaterialDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -3102,6 +3103,7 @@ export type DomainEntitiesMaterialsMaterialWithWarehouseStockDto = {
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
   warehouseStock?: number;
   isWhitePlacebo?: boolean;
+  densityGramsPerMilliliter?: number | null;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialsMaterialWithWarehouseStockDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -3120,6 +3122,9 @@ export type DomainEntitiesMaterialsHoldingMaterialTransferBatchDto = {
   quantity?: number;
   sourceWarehouse?: SharedCollectionItemDto;
   destinationWarehouse?: SharedCollectionItemDto;
+  destinationQuantity?: number | null;
+  destinationUoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  receivedAt?: string | null;
 };
 export type DomainEntitiesMaterialsHoldingMaterialTransferBatchDtoRead = {
   materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
@@ -3127,6 +3132,9 @@ export type DomainEntitiesMaterialsHoldingMaterialTransferBatchDtoRead = {
   quantity?: number;
   sourceWarehouse?: SharedCollectionItemDto;
   destinationWarehouse?: SharedCollectionItemDto;
+  destinationQuantity?: number | null;
+  destinationUoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  receivedAt?: string | null;
 };
 export type DomainEntitiesMaterialsHoldingMaterialTransferDto = {
   id?: string;
