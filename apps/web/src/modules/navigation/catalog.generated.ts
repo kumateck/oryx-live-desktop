@@ -603,6 +603,14 @@ export const navigationCatalog = [
         ]
       },
       {
+        "id": "warehouse-management.upcoming-batch-issues",
+        "label": "Upcoming Batch Issues",
+        "path": "/warehouse/upcoming-batch-issues",
+        "permissions": [
+          "CanViewUpcomingBatchIssues"
+        ]
+      },
+      {
         "id": "warehouse-management.stock-location",
         "label": "Stock Location",
         "permissions": [

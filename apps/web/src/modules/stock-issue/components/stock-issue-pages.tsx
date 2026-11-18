@@ -126,7 +126,7 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
     {/* The material, like its batches, can change only while the stock has not left the store. Substitutes are on raw-material BOMs only. */}
     {requisition.status !== 3 && requisition.status !== 4 ? <MaterialChoices requisitionId={requisition.id} kind={kind} /> : null}
     {/* Batches can only be swapped while the stock has not left the store. */}
-    {requisition.status !== 3 && requisition.status !== 4 ? <AlternativeBatches requisitionId={requisition.id} mayAsk={has(issuePermissions[kind])} /> : null}
+    {requisition.status !== 3 && requisition.status !== 4 ? <AlternativeBatches source={{ requisitionId: requisition.id }} mayAsk={has(issuePermissions[kind])} /> : null}
     <IssueLines requisition={requisition} />
     {confirming ? <ConfirmActionDialog require={issuePermissions[kind]} destructive={false} title={`Issue ${requisition.code}?`}
       description={`The batches shown leave your store for ${requisition.department ?? "production"}${requisition.batch ? `, for batch ${requisition.batch}` : ""}. This cannot be undone.`} confirmLabel="Issue stock" busyLabel="Issuing…" onClose={() => setConfirming(false)}

@@ -314,6 +314,7 @@ export const generatedTagTypes = [
   "template-question",
   "template-question/area",
   "ticket",
+  "upcoming-batch-issue",
   "user",
   "user/authenticated",
   "user/avatar",
