@@ -8,6 +8,8 @@ export const collectionRowsSchema = z.array(z.object({
   description: z.string().nullish(),
   symbol: z.string().nullish(),
   code: z.string().nullish(),
+  linkedDepartmentId: z.string().nullish(),
+  linkedDepartmentName: z.string().nullish(),
 }));
 export type CollectionRow = z.infer<typeof collectionRowsSchema>[number];
 
@@ -38,3 +40,15 @@ export function itemPayload(definition: CollectionDefinition, values: ItemValues
     ...(definition.mode === "payment" ? { dueDays: values.dueDays } : {}),
   };
 }
+
+const text = z.string().nullish();
+/** Production departments an operation can be linked to, as select options. */
+export const departmentOptionsSchema = z.object({ data: z.array(z.object({ id: text, name: text })).nullish() })
+  .transform((value) => (value.data ?? []).flatMap((department) => department.id ? [{ value: department.id, label: department.name?.trim() || "Unnamed department" }] : []));
+
+export interface LinkDepartmentValues { department: { value: string; label: string } | null }
+export const linkDepartmentSchema: z.ZodType<LinkDepartmentValues, LinkDepartmentValues> = z.object({
+  department: z.object({ value: z.string().min(1), label: z.string() }).nullable(),
+}).superRefine((value, context) => {
+  if (!value.department) context.addIssue({ code: "custom", path: ["department"], message: "Choose a production department" });
+});

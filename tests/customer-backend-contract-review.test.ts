@@ -178,9 +178,22 @@ function stripUnstartLeftovers(document: ObjectValue) {
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Requisitions.") && /UnstartLeftover/.test(name)) delete schemas[name];
 }
 
+/** Operation departments (2026-11-18): link/unlink paths and four optional department fields. */
+function stripOperationDepartments(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  delete paths["/api/v1/collection/operations/{operationId}/department/{departmentId}"];
+  delete paths["/api/v1/collection/operations/{operationId}/department"];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  const item = object(object(schemas["SHARED.CollectionItemDto"] ?? null).properties ?? null);
+  delete item.linkedDepartmentId; delete item.linkedDepartmentName;
+  const operation = object(object(schemas["DOMAIN.Entities.Base.OperationDto"] ?? null).properties ?? null);
+  delete operation.departmentId; delete operation.departmentName;
+}
+
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(document);
   stripTestCorrections(document);
   stripSharedDensity(document);
   stripUnstartReservations(document);
@@ -744,6 +757,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   stripSharedDensity(current);
   stripUnstartReservations(current);
@@ -775,6 +789,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   stripSharedDensity(current);
   stripUnstartReservations(current);
@@ -804,6 +819,7 @@ test("a specification revision requires a reason and returns it on the specifica
 
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   stripSharedDensity(current);
   stripUnstartReservations(current);
@@ -826,6 +842,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   stripSharedDensity(current);
   stripUnstartReservations(current);
@@ -850,6 +867,7 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
 
 test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   stripSharedDensity(current);
   stripUnstartReservations(current);
@@ -867,6 +885,7 @@ test("IT approval transfer adds only a typed read of the users on approval docum
 
 test("material retests add an AR number, read-only retest fields and three statuses, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   stripSharedDensity(current);
   stripUnstartReservations(current);
@@ -884,6 +903,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 
  test("QC repair, partial reassignment and packaging quantities preserve the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   stripSharedDensity(current);
   stripUnstartReservations(current);
@@ -904,6 +924,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 
 test("upcoming batch issues add two typed reads and the started batch a swap may name, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   stripSharedDensity(current);
   stripUnstartReservations(current);
@@ -919,6 +940,7 @@ test("upcoming batch issues add two typed reads and the started batch a swap may
 
 test("the combined QC repair and upcoming-issues contract is reviewed without dropping either addition", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   stripSharedDensity(current);
   stripUnstartReservations(current);
@@ -934,6 +956,7 @@ test("the combined QC repair and upcoming-issues contract is reviewed without dr
 
 test("Unstart leftovers add only two typed variant repair paths and owned DTOs", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   stripSharedDensity(current);
   stripUnstartReservations(current);
@@ -949,6 +972,7 @@ test("Unstart leftovers add only two typed variant repair paths and owned DTOs",
 
 test("shared density combines with the reviewed Unstart reservation contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   checkCompatibility(hostConfig, policy, contractDigest(current));
   stripSharedDensity(current);
@@ -958,6 +982,7 @@ test("shared density combines with the reviewed Unstart reservation contract", (
 });
 test("Unstart reservations combine with the reviewed shared-density contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   stripTestCorrections(current);
   const paths = object(current.paths ?? null);
   for (const variant of ["raw", "packaging"]) assert.deepEqual(Object.keys(object(paths[`/api/v1/unstart-reservations/{materialId}/${variant}`] ?? null)), ["get", "post"]);
@@ -967,6 +992,7 @@ test("Unstart reservations combine with the reviewed shared-density contract", (
 
 test("pre-COA correction imports three typed variant paths, a required reason and history only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripOperationDepartments(current);
   checkCompatibility(hostConfig, policy, contractDigest(current));
   const paths = object(current.paths ?? null);
   for (const kind of ["product", "raw-material", "packaging-material"])
@@ -975,4 +1001,16 @@ test("pre-COA correction imports three typed variant paths, a required reason an
   assert.deepEqual(object(schemas["APP.Services.Forms.ReturnTestForCorrectionRequest"] ?? null).required, ["reason"]);
   stripTestCorrections(current);
   assert.equal(contractDigest(current), "e9f0e6838046b0db5121ed1611371bd6f8096c611c37a2eb22c0a9649e4bdcaa");
+});
+
+test("operation departments add a typed link and unlink and optional department fields only", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "dfc02620ae1fddd96dfe39228840ce8089f17d177ebe701aa0086518ce14198b");
+  checkCompatibility(hostConfig, policy, digest);
+  const paths = object(current.paths ?? null);
+  assert.deepEqual(Object.keys(object(paths["/api/v1/collection/operations/{operationId}/department/{departmentId}"] ?? null)), ["put"]);
+  assert.deepEqual(Object.keys(object(paths["/api/v1/collection/operations/{operationId}/department"] ?? null)), ["delete"]);
+  stripOperationDepartments(current);
+  assert.equal(contractDigest(current), "aa0c7ce5baebd3ef474598cf8ebf10520dc44f08aa7eb9f19b22e2c137ace5af");
 });

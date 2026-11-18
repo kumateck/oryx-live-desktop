@@ -16,7 +16,17 @@ export interface CollectionDefinition {
   description?: boolean;
   nameLimit?: number;
   descriptionLimit?: number;
+  /** Operations: each operation is linked to at most one production department. */
+  departments?: OperationDepartmentPermissions;
 }
+
+export interface OperationDepartmentPermissions {
+  link: string;
+  unlink: string;
+}
+
+/** The production department type (`SHARED.DepartmentType.Production`); operations link only to these. */
+export const productionDepartmentType = 0;
 
 const permissions = (view: string, create: string, edit: string, remove: string): CollectionPermissions => ({ view, create, edit, delete: remove });
 
@@ -35,7 +45,8 @@ export const collections: readonly CollectionDefinition[] = [
   { id: "resources", label: "Resources", group: "Procedures", model: "Resource", mode: "resource",
     permissions: permissions("CanViewResources", "CanCreateResource", "CanEditResource", "CanDeleteResource") },
   { id: "operations", label: "Operations", group: "Procedures", model: "Operation", description: true,
-    permissions: permissions("CanViewOperations", "CanCreateOperation", "CanEditOperation", "CanDeleteOperation") },
+    permissions: permissions("CanViewOperations", "CanCreateOperation", "CanEditOperation", "CanDeleteOperation"),
+    departments: { link: "CanLinkOperationDepartment", unlink: "CanUnlinkOperationDepartment" } },
   { id: "work-centers", label: "Work centers", group: "Procedures", model: "WorkCenter", description: true,
     permissions: permissions("CanViewWorkCenters", "CanCreateWorkCenter", "CanEditWorkCenter", "CanDeleteWorkCenter") },
   { id: "sites", label: "Sites", group: "Procedures", model: "Site", description: true, nameLimit: 100,

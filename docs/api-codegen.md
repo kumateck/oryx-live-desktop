@@ -407,3 +407,16 @@ the raw/packaging preview and repair paths and their owned DTOs. Regenerate with
 `8740d29923b194db052c53a97aff5fcdf863b619e8317a3b5c1c95bb7b433f4b`;
 removing only these additions reproduces the PR #297 merged contract. Existing
 approved fingerprints remain. Deploy the backend audit migration first.
+
+## Operation departments (2026-11-18)
+
+`bun scripts/import-operation-departments.ts /path/to/backend-export.json` imports only
+`PUT /api/v1/collection/operations/{operationId}/department/{departmentId}`
+(`CanLinkOperationDepartment`) and `DELETE /api/v1/collection/operations/{operationId}/department`
+(`CanUnlinkOperationDepartment`), plus the optional `linkedDepartmentId`/`linkedDepartmentName` on
+`SHARED.CollectionItemDto` and `departmentId`/`departmentName` on `DOMAIN.Entities.Base.OperationDto`.
+Regenerate with `bun run api:generate`. Typed digest
+`dfc02620ae1fddd96dfe39228840ce8089f17d177ebe701aa0086518ce14198b`; removing only these
+additions reproduces `aa0c7ce5…ace5af`. Deploy the backend and its `GrantOperationDepartmentLinkKeys`
+data migration first. An operation links to one production department; it must be unlinked
+before it is linked elsewhere.
