@@ -13,3 +13,9 @@ The OpenAPI change adds optional read fields only. Import with `bun scripts/impo
 Verification covers conversion in both directions, shared density permissions/audit, production reservations in a different physical unit, retained adopted density, duplicate receipt prevention, existing transfer concurrency, and PostgreSQL migration/grants/audit triggers. UI tests cover deny/allow density controls and receiving quantities. A rendered-browser check could not run because local browser access is unavailable for this chat.
 
 The combined import with merged Unstart reservation operations has reviewed digest `e9f0e6838046b0db5121ed1611371bd6f8096c611c37a2eb22c0a9649e4bdcaa`. Removing the eight density fields reproduces the Unstart reservation digest; removing just the four reservation paths and four owned schemas reproduces the original density digest. Both predecessor reviews remain checked.
+
+## Supplying store's unit (2026-11-18)
+
+The supplying store reads an incoming transfer in its own stock unit: the list, the detail page, the picked batches and the issue confirmation show the backend's optional `supplierQuantity`/`supplierUoM` (for example 20,720 kg), with "Asked as 20,000 L" beside it. The issue request still sends the request-unit quantities, and the receiving store shelves in its own unit as before. Without those fields (older backend) the request quantity is shown. These are read through the module's zod schema only; the OpenAPI contract is not re-imported for these optional read fields.
+
+The pending-approvals list for stock requisitions adds a Production batch column from the optional `batchNumber`/`productName` fields.
