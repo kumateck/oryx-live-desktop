@@ -55,7 +55,7 @@ export function SwapListPage() {
     column.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div></div> }),
     column.accessor((row) => (direction === 0 ? row.asking : row.asked) ?? "", { id: "store", header: direction === 0 ? "Asked by" : "Asked of", cell: ({ row }) => (direction === 0 ? row.original.asking : row.original.asked) ?? "–" }),
     column.display({ id: "quantity", header: "Quantity", size: 140, cell: ({ row }) => amount(total(row.original.taking), row.original.unit) }),
-    column.display({ id: "batches", header: "Batches wanted", cell: ({ row }) => <BatchBreakdown line={{ unit: row.original.unit, batches: row.original.taking }} /> }),
+    column.display({ id: "batches", header: "Batches wanted", size: 560, cell: ({ row }) => <BatchBreakdown line={{ unit: row.original.unit, batches: row.original.taking }} /> }),
     column.accessor("status", { header: "Status", size: 190, cell: ({ row }) => <Standing status={row.original.status} /> }),
   ]), [direction]);
   return <section className="page-fill">

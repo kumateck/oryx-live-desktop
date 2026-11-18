@@ -12,7 +12,8 @@ HTMLElement.prototype.hasPointerCapture = () => false;
 HTMLElement.prototype.setPointerCapture = () => {};
 HTMLElement.prototype.releasePointerCapture = () => {};
 HTMLElement.prototype.scrollIntoView = () => {};
-afterEach(() => { cleanup(); forgetSession(); vi.restoreAllMocks(); });
+// Let RTK Query's queued animation-frame notifications finish before jsdom is torn down.
+afterEach(async () => { cleanup(); forgetSession(); await new Promise(resolve => setTimeout(resolve, 50)); vi.restoreAllMocks(); });
 
 const stp = { id: "t1", stpNumber: "QCD/STP/RM/004", description: "<p>Assay</p>", createdAt: "2026-02-01T00:00:00Z", material: { id: "m1", name: "Lactose", code: "RM-1" }, attachments: [] };
 const documentOf = (status: number) => ({ id: "d1", ownerType: "MaterialStandardTestProcedure", ownerId: "t1", status, versions: [
