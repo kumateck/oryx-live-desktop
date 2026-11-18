@@ -4,7 +4,7 @@ import { fromSavedPackages, packagingConflict, packagingTotal, toPackagesRequest
 
 const saved = savedPackagesSchema.parse([
   { id: "p1", material: { id: "m-bottle", name: "Bottle", code: "PM-001" }, productPacking: { id: "s1", name: "1x100ml" }, prescribedQuantity: 1, packingExcessMargin: 0.05,
-    baseQuantity: 1, unitCapacity: 0, materialThickness: "2mm", directLinkMaterial: { id: "m-cap" }, substitutes: [{ substituteMaterial: { id: "m-alt" } }] },
+    baseQuantity: 1, unitCapacity: 0, materialThickness: "2mm", directLinkMaterial: { id: "m-cap" }, substitutes: [{ substituteMaterial: { id: "m-alt", name: "Clear bottle", code: "PM-009" } }] },
   { id: "p2", material: { id: "m-carton", name: "Carton", code: "PM-002" }, prescribedQuantity: 0.02 },
   { id: "p3", material: null },
 ]);
@@ -32,4 +32,11 @@ it("allows different packing styles and All styles together while rejecting dupl
   // Editing a line does not conflict with itself.
   expect(packagingConflict(lines, "m-bottle", "s1", "p1")).toBeNull();
   expect(packagingConflict(lines, "m-new", null, null)).toBeNull();
+});
+
+it("keeps each packing line's substitutes with their names and sends them back on save", () => {
+  const [bottle] = fromSavedPackages(saved);
+  expect(bottle?.substitutes).toEqual([{ value: "m-alt", label: "Clear bottle" }]);
+  const edited = { ...bottle!, substitutes: [{ value: "m-alt", label: "Clear bottle" }, { value: "m-alt2", label: "Flint bottle" }] };
+  expect(toPackagesRequest([edited])[0]?.substituteMaterialIds).toEqual(["m-alt", "m-alt2"]);
 });

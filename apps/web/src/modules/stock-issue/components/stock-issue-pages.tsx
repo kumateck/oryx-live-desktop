@@ -124,7 +124,7 @@ function Issue({ requisition, kind }: { requisition: StockRequisition; kind: 0 |
     {requisition.signatories.issueId ? <ReviewPanel record={{ modelType: "StockRequisitionIssue", modelId: requisition.signatories.issueId }} keys={issueCheckKeys[kind]} label="issue" /> : null}
     {requisition.comments ? <section className="space-y-1 rounded-lg border bg-card p-4"><h2 className="text-sm font-semibold">Justification</h2><RichTextView html={requisition.comments} className="text-sm" /></section> : null}
     {/* The material, like its batches, can change only while the stock has not left the store. Substitutes are on raw-material BOMs only. */}
-    {kind === 0 && requisition.status !== 3 && requisition.status !== 4 ? <MaterialChoices requisitionId={requisition.id} /> : null}
+    {requisition.status !== 3 && requisition.status !== 4 ? <MaterialChoices requisitionId={requisition.id} kind={kind} /> : null}
     {/* Batches can only be swapped while the stock has not left the store. */}
     {requisition.status !== 3 && requisition.status !== 4 ? <AlternativeBatches requisitionId={requisition.id} mayAsk={has(issuePermissions[kind])} /> : null}
     <IssueLines requisition={requisition} />

@@ -128,7 +128,8 @@ it("applies the approved revision to every field of the formula on the opened te
   await screen.findByRole("heading", { name: "Repair Assay" });
   expect(reads[0]).toContain(`atrId=${atr}`);
   // The approved formula is shown, not typed in again.
-  expect(screen.getByText("Approved revision 3")).toBeTruthy();
+  expect(screen.getAllByText("Approved revision 3").length).toBe(2); // The formula heading and the settings column.
+  expect(screen.getByRole("table", { name: "Formula settings" })).toBeTruthy();
   expect(screen.getByText("Current formula on this test")).toBeTruthy();
   expect(screen.queryByRole("textbox", { name: /Corrected expression/ })).toBeNull();
   expect(screen.getByText(/one repair fixes them all/)).toBeTruthy();

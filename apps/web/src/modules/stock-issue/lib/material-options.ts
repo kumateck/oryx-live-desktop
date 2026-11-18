@@ -31,7 +31,8 @@ export type MaterialOptionLine = z.output<typeof materialOptionsSchema>[number];
 export type MaterialOption = MaterialOptionLine["options"][number];
 
 /** Raw-material lines only: the store's choice between a BOM material and its substitutes. */
-export const choosePermission = "CanChooseRawMaterialRequisitionSubstitute";
+/** Raw and packaging substitutes each have their own key (0 raw, 1 packaging). */
+export const choosePermission = (kind: 0 | 1) => kind === 0 ? "CanChooseRawMaterialRequisitionSubstitute" : "CanChoosePackagingMaterialRequisitionSubstitute";
 
 /** The option that expires first among those with enough stock: the store's usual first pick. */
 export function earliestCovering(line: MaterialOptionLine): MaterialOption | null {

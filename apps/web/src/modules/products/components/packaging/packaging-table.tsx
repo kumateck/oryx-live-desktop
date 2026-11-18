@@ -23,7 +23,10 @@ export function PackagingLinesTable({ lines, loading, error, onRetry, onEdit, on
   const columns = useMemo(() => column.columns([
     column.display({ id: "number", header: "#", cell: ({ row }) => row.index + 1 }),
     column.accessor((line) => line.code || dash, { id: "code", header: "Code" }),
-    column.accessor((line) => line.material.label, { id: "material", header: "Component material" }),
+    column.accessor((line) => line.material.label, { id: "material", header: "Component material", cell: ({ row }) => <div className="min-w-0">
+      <div className="break-words">{row.original.material.label}</div>
+      {row.original.substitutes.length ? <div className="break-words text-xs text-muted-foreground">or {row.original.substitutes.map((item) => item.label).join(", ")}</div> : null}
+    </div> }),
     column.display({ id: "spec", header: "Spec ref", cell: ({ row }) => <MaterialSpecRef materialId={row.original.material.value} known={row.original.specification} /> }),
     column.accessor((line) => line.packing?.label ?? "All styles", { id: "packing", header: "Packing style" }),
     // Typed by the user: shown exactly as entered.

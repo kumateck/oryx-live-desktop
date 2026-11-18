@@ -28,7 +28,8 @@ const toNumber = (value: string) => {
   return Number.isFinite(numeric) ? numeric : null;
 };
 
-const numberPattern = /-?\d[\d,]*(?:\.\d+)?/g;
+// A minus sign only when it does not follow a number: in "1.00-1.300" the dash separates a range.
+const numberPattern = /(?:(?<![\d.])-)?\d[\d,]*(?:\.\d+)?/g;
 
 const extractNumbers = (value: string) =>
   Array.from(value.matchAll(numberPattern))

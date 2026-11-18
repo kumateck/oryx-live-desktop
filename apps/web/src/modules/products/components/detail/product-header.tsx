@@ -10,10 +10,11 @@ import { formatDateTime } from "@/shared/format/dates";
 import { divisionLabel, productPermissions } from "../../lib/product-access";
 import type { ProductDetail } from "../../schemas/product-detail-schema";
 import { QualityBadge, VerifyProductButton } from "../verify-product-button";
+import { DeleteProductButton } from "./delete-product-button";
 import { ProductPrint } from "./product-print";
 
 export function ProductHeader({ product }: { product: ProductDetail }) {
-  const { editPath: productEditPath, editRequirement, task, keys } = useProductWorkspace();
+  const { editPath: productEditPath, editRequirement, task, keys, context, listPath } = useProductWorkspace();
   const created = formatDateTime(product.createdAt);
   const division = divisionLabel(product.division);
   return <header className="min-w-0 space-y-3">
@@ -25,6 +26,9 @@ export function ProductHeader({ product }: { product: ProductDetail }) {
         <PermissionGuard require={editRequirement}>
           <Button asChild size="sm" variant="outline"><Link to={productEditPath(product.id)}><Pencil />Edit product</Link></Button>
         </PermissionGuard>
+        {keys.deleteProduct ? <PermissionGuard require={task(keys.deleteProduct)}>
+          <DeleteProductButton product={product} require={task(keys.deleteProduct)} context={context} listPath={listPath} />
+        </PermissionGuard> : null}
       </div>
     </div>
     <div className="min-w-0 space-y-1.5">

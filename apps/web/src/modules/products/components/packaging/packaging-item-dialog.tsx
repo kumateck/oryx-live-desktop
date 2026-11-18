@@ -27,14 +27,18 @@ export function PackagingItemDialog({ editing, lines, packingStyles, onSubmit, o
 }) {
   const materials = useMaterialOptions(materialKind.packaging, packagingAudit);
   const form = useForm<PackagingItemFormValues>({ resolver: zodResolver(packagingItemFormSchema), defaultValues: editing
-    ? { material: editing.material, packing: editing.packing, prescribedQuantity: editing.prescribedQuantity, packingExcessMargin: editing.packingExcessMargin }
-    : { packing: null, packingExcessMargin: 0 } });
+    ? { material: editing.material, packing: editing.packing, prescribedQuantity: editing.prescribedQuantity, packingExcessMargin: editing.packingExcessMargin,
+      substitutes: editing.substitutes }
+    : { packing: null, packingExcessMargin: 0, substitutes: [] } });
   const [material, prescribed, allowance] = useWatch({ control: form.control, name: ["material", "prescribedQuantity", "packingExcessMargin"] });
   const facts = materials.facts(material?.value);
   const linked = useMaterialUnit(material?.value, facts?.unit ?? (editing?.material.value === material?.value ? editing?.unit ?? null : null), packagingAudit);
   // A stable loader: the picker reloads its options whenever the loader it is given changes.
   const makeLoader = materials.loader;
   const loadMaterials = useMemo(() => makeLoader(noExclusions), [makeLoader]);
+  // A substitute is never the line's own material.
+  const chosen = material?.value;
+  const loadSubstitutes = useMemo(() => makeLoader(chosen ? [chosen] : noExclusions), [makeLoader, chosen]);
 
   const fields = useMemo(() => [
     { type: InputTypes.SELECT, name: "material", label: "Component material", mode: "single", source: "async", loadOptions: loadMaterials, required: true,
@@ -42,7 +46,10 @@ export function PackagingItemDialog({ editing, lines, packingStyles, onSubmit, o
     { type: InputTypes.SELECT, name: "packing", label: "Packing style", mode: "single", source: "sync", options: packingStyles,
       placeholder: packingStyles.length ? "All packing styles" : "No packing styles saved yet", className: "md:col-span-2",
       description: "Leave empty when the material is used the same way for every packing style." },
-  ] as const satisfies readonly WizardField<PackagingItemFormValues>[], [loadMaterials, packingStyles]);
+    { type: InputTypes.SELECT, name: "substitutes", label: "Substitute materials", mode: "multiple", source: "async", loadOptions: loadSubstitutes,
+      placeholder: "None", searchPlaceholder: "Search by name or code", className: "md:col-span-2",
+      description: "Packing materials the store may issue instead of this one, pack for pack. The store issues this material or one substitute, never both." },
+  ] as const satisfies readonly WizardField<PackagingItemFormValues>[], [loadMaterials, loadSubstitutes, packingStyles]);
 
   const submit = form.handleSubmit((values) => {
     const conflict = packagingConflict(lines, values.material.value, values.packing?.value ?? null, editing?.key ?? null);

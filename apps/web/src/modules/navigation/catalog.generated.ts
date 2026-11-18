@@ -143,7 +143,7 @@ export const navigationCatalog = [
         "label": "Transfer Approval Rights",
         "path": "/qa/approval-rights-transfer",
         "permissions": [
-          "CanViewPendingApprovals"
+          "CanTransferApprovalRights"
         ]
       }
     ]
@@ -1976,6 +1976,14 @@ export const navigationCatalog = [
           "CanAssignTicket",
           "CanCloseTicket",
           "CanCommentOnTicket"
+        ]
+      },
+      {
+        "id": "it-support.approval-rights-transfer",
+        "label": "Transfer Approval Rights",
+        "path": "/it/approval-rights-transfer",
+        "permissions": [
+          "CanTransferAnyApprovalRights"
         ]
       }
     ]
