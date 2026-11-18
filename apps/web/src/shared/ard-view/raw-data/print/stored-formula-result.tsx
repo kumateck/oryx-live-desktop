@@ -4,8 +4,10 @@ import {
   parseStoredFormulaResults,
 } from "../governed-formula-result";
 
-const StoredFormulaResult = ({ response }: { response?: FormResponseDto | undefined }) => {
-  const results = parseStoredFormulaResults(response);
+const StoredFormulaResult = ({ response, preferAverage = false }: { response?: FormResponseDto | undefined; preferAverage?: boolean }) => {
+  const stored = parseStoredFormulaResults(response);
+  const average = stored.find(result => /^(average|mean)([ _-]+(content|result|assay))?$/i.test(result.key.trim()));
+  const results = preferAverage && average ? [average] : stored;
   const finalized = (response as GovernedFormResponse | undefined)
     ?.formulaResultFinalized;
   if (!results.length) {

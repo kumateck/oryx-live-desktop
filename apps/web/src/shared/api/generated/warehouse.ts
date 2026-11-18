@@ -1331,6 +1331,62 @@ const injectedRtkApi = api.injectEndpoints({
           },
         }),
       }),
+    previewRawUnstartLeftovers: build.query<
+      PreviewRawUnstartLeftoversApiResponse,
+      PreviewRawUnstartLeftoversApiArg
+    >({
+      providesTags: [{ type: "unstart-leftover/raw", id: "LIST" }, { type: "unstart-leftover", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/unstart-leftovers/raw`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    repairRawUnstartLeftovers: build.mutation<
+      RepairRawUnstartLeftoversApiResponse,
+      RepairRawUnstartLeftoversApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "unstart-leftover/raw", id: "LIST" }, { type: "unstart-leftover", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/unstart-leftovers/raw`,
+        method: "POST",
+        body: queryArg.domainEntitiesRequisitionsRepairUnstartLeftoversRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    previewPackagingUnstartLeftovers: build.query<
+      PreviewPackagingUnstartLeftoversApiResponse,
+      PreviewPackagingUnstartLeftoversApiArg
+    >({
+      providesTags: [{ type: "unstart-leftover/packaging", id: "LIST" }, { type: "unstart-leftover", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/unstart-leftovers/packaging`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    repairPackagingUnstartLeftovers: build.mutation<
+      RepairPackagingUnstartLeftoversApiResponse,
+      RepairPackagingUnstartLeftoversApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "unstart-leftover/packaging", id: "LIST" }, { type: "unstart-leftover", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/unstart-leftovers/packaging`,
+        method: "POST",
+        body: queryArg.domainEntitiesRequisitionsRepairUnstartLeftoversRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2248,6 +2304,40 @@ export type PutApiV1RequisitionByRequisitionIdItemsAndItemIdIssuedQuantityApiArg
     /** The quantity to issue, in the line's unit, and the reason it differs. */
     domainEntitiesRequisitionsAdjustIssuedQuantityRequest: DomainEntitiesRequisitionsAdjustIssuedQuantityRequest;
   };
+export type PreviewRawUnstartLeftoversApiResponse =
+  /** status 200 OK */ DomainEntitiesRequisitionsUnstartLeftoverPreviewDto;
+export type PreviewRawUnstartLeftoversApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type RepairRawUnstartLeftoversApiResponse =
+  /** status 200 OK */ DomainEntitiesRequisitionsRepairUnstartLeftoversResultDto;
+export type RepairRawUnstartLeftoversApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesRequisitionsRepairUnstartLeftoversRequest: DomainEntitiesRequisitionsRepairUnstartLeftoversRequest;
+};
+export type PreviewPackagingUnstartLeftoversApiResponse =
+  /** status 200 OK */ DomainEntitiesRequisitionsUnstartLeftoverPreviewDto;
+export type PreviewPackagingUnstartLeftoversApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type RepairPackagingUnstartLeftoversApiResponse =
+  /** status 200 OK */ DomainEntitiesRequisitionsRepairUnstartLeftoversResultDto;
+export type RepairPackagingUnstartLeftoversApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesRequisitionsRepairUnstartLeftoversRequest: DomainEntitiesRequisitionsRepairUnstartLeftoversRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -4281,6 +4371,7 @@ export type DomainEntitiesWarehousesCreateSwapRequest = {
   secondSwapShelfMaterialBatches?:
     DomainEntitiesWarehousesCreateSwapShelfMaterialBatch[] | null;
   stockRequisitionId?: string | null;
+  productionScheduleProductId?: string | null;
 };
 export type DomainEntitiesWarehousesCreateSwapRequestRead = {
   firstWarehouseId?: string;
@@ -4291,6 +4382,7 @@ export type DomainEntitiesWarehousesCreateSwapRequestRead = {
     DomainEntitiesWarehousesCreateSwapShelfMaterialBatch[] | null;
   quantityIsValid?: boolean;
   stockRequisitionId?: string | null;
+  productionScheduleProductId?: string | null;
 };
 export type DomainEntitiesWarehousesSwapShelfMaterialBatchDto = {
   materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchReducedDto;
@@ -4388,6 +4480,30 @@ export type DomainEntitiesRequisitionsChooseStockRequisitionMaterialRequest = {
 export type DomainEntitiesRequisitionsAdjustIssuedQuantityRequest = {
   quantity?: number;
   reason?: string | null;
+};
+export type DomainEntitiesRequisitionsUnstartLeftoverRowDto = {
+  requisitionId?: string;
+  code?: string | null;
+  batchNumber?: string | null;
+  unstartRepairId?: string;
+  unstartedAt?: string;
+  materialCount?: number;
+  blockers?: string[] | null;
+};
+export type DomainEntitiesRequisitionsUnstartLeftoverPreviewDto = {
+  previewToken?: string | null;
+  requisitions?: DomainEntitiesRequisitionsUnstartLeftoverRowDto[] | null;
+};
+export type DomainEntitiesRequisitionsRepairUnstartLeftoversResultDto = {
+  repairId?: string;
+  cancelledCount?: number;
+  alreadyApplied?: boolean;
+};
+export type DomainEntitiesRequisitionsRepairUnstartLeftoversRequest = {
+  requestId?: string;
+  previewToken: string;
+  reason: string;
+  requisitionIds: string[];
 };
 export const {
   usePostApiV1DamagedGoodsMutation,
@@ -4528,4 +4644,10 @@ export const {
   useLazyGetApiV1RequisitionByRequisitionIdMaterialOptionsQuery,
   usePostApiV1RequisitionByRequisitionIdMaterialOptionsMutation,
   usePutApiV1RequisitionByRequisitionIdItemsAndItemIdIssuedQuantityMutation,
+  usePreviewRawUnstartLeftoversQuery,
+  useLazyPreviewRawUnstartLeftoversQuery,
+  useRepairRawUnstartLeftoversMutation,
+  usePreviewPackagingUnstartLeftoversQuery,
+  useLazyPreviewPackagingUnstartLeftoversQuery,
+  useRepairPackagingUnstartLeftoversMutation,
 } = injectedRtkApi;

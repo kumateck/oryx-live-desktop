@@ -1,3 +1,5 @@
+import { MaterialQuantity } from "../material-quantity";
+import { packagingAudit } from "../../hooks/use-packaging";
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { formatCount } from "@/shared/packing/packs";
@@ -12,11 +14,16 @@ const packageColumn = dataTableColumns<ProductPackage>();
 const packageColumns = packageColumn.columns([
   packageColumn.display({ id: "number", header: "#", size: 50, cell: ({ row }) => row.index + 1 }),
   packageColumn.accessor((item) => item.material?.code ?? dash, { id: "code", header: "Code", size: 120 }),
-  packageColumn.accessor((item) => item.material?.name ?? dash, { id: "material", header: "Component material" }),
+  packageColumn.accessor((item) => item.material?.name ?? dash, { id: "material", header: "Component material", cell: ({ row }) => <div className="space-y-1">
+    <p>{row.original.material?.name ?? dash}</p>
+    {row.original.substitutes.map(substitute => <div key={substitute.substituteMaterial?.id ?? `${substitute.substituteMaterial?.name}:${JSON.stringify(substitute)}`} className="flex flex-wrap gap-1 text-xs text-muted-foreground">
+      <span>Substitute: {substitute.substituteMaterial?.name ?? dash} ·</span>
+      {substitute.substituteMaterial?.id ? <MaterialQuantity materialId={substitute.substituteMaterial.id} known={null} audit={packagingAudit} value={substitute.prescribedQuantity ?? row.original.prescribedQuantity} origin="entered" /> : "Quantity not set"}
+    </div>)}
+  </div> }),
   packageColumn.accessor((item) => item.directLinkMaterial?.name ?? dash, { id: "linked", header: "Linked material" }),
   packageColumn.accessor((item) => item.productPacking ?? dash, { id: "style", header: "Packing style" }),
   packageColumn.accessor((item) => item.prescribedQuantity ?? dash, { id: "prescribed", header: "Prescribed qty", size: 120 }),
-  packageColumn.accessor((item) => item.packingExcessMargin ?? dash, { id: "excess", header: "Extra", size: 80 }),
   packageColumn.accessor((item) => packageTotal(item.prescribedQuantity, item.packingExcessMargin) ?? dash, { id: "total", header: "Total qty", size: 100 }),
 ]);
 

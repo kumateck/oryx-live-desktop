@@ -19,6 +19,7 @@ const bomMaterial = z.object({
 }).nullish().transform((value) => value ? { id: value.id, name: value.name, code: value.code, category: value.materialCategory, specificationNumber: value.specification } : null);
 const bomItem = z.object({
   id: text, order: num, material: bomMaterial, baseQuantity: num, baseUoM: symbol, grade: text, casNumber: text,
+  substitutes: list(z.object({ substituteMaterial: bomMaterial, baseQuantity: num, baseUoM: symbol })),
 });
 const bom = z.object({
   version: num, effectiveDate: text, isActive: flag,
@@ -31,6 +32,7 @@ const packing = z.object({
 });
 const productPackage = z.object({
   id: text, material: item, directLinkMaterial: item, baseQuantity: num, unitCapacity: num, packingExcessMargin: num,
+  substitutes: list(z.object({ substituteMaterial: item, prescribedQuantity: num })),
   prescribedQuantity: num, productPacking: z.object({ name: text }).nullish().transform((value) => value?.name ?? null),
 });
 

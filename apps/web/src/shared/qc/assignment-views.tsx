@@ -1,17 +1,7 @@
-import { useState } from "react";
 import { ClipboardList, UserRound } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { formsApi } from "@/shared/api/generated/forms";
-import type { PermissionRequirement } from "@/shared/auth/access";
-import { usePermissionAction } from "@/shared/auth/use-permission-action";
-import { apiErrorMessage } from "@/shared/errors/api-error-message";
-import { SearchableSelect } from "@/shared/forms/searchable-select";
-import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import type { FormAssignees } from "./assignments";
-import { useAnalystOptions } from "./use-analyst-options";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 
 function AnalystList({ assignees }: { assignees: FormAssignees | null }) {
@@ -46,35 +36,4 @@ export function AssignmentsDialog({ assignees, loading, error, onClose }: { assi
   </DialogContent></Dialog>;
 }
 
-/** Moves all of one analyst's fields to another analyst, one analyst at a time. */
-export function ReassignPanel({ assignees, require, audit, onDone }: { assignees: FormAssignees; require: PermissionRequirement; audit: { module: string; subModule: string }; onDone: () => void }) {
-  const loadAnalysts = useAnalystOptions();
-  const permission = usePermissionAction(require);
-  const [reassign] = formsApi.usePostApiV1FormAssigneesReassignMutation();
-  const [chosen, setChosen] = useState<Record<string, SelectOption>>({});
-  const [busy, setBusy] = useState<string | null>(null);
-  const [message, setMessage] = useState<Record<string, string>>({});
-  const move = async (assigneeId: string, name: string) => {
-    const target = chosen[assigneeId];
-    if (!target) { setMessage({ ...message, [assigneeId]: "Choose who takes these fields." }); return; }
-    if (target.value === assigneeId) { setMessage({ ...message, [assigneeId]: "Choose a different analyst." }); return; }
-    const denied = permission.check();
-    if (denied) { setMessage({ ...message, [assigneeId]: denied }); return; }
-    setBusy(assigneeId);
-    const result = await reassign({ ...audit, domainEntitiesFormsRequestReassignFormAssigneeRequest: { formAssigneeId: assignees.id, oldAssigneeId: assigneeId, newAssigneeId: target.value } });
-    setBusy(null);
-    if ("error" in result) { setMessage({ ...message, [assigneeId]: apiErrorMessage(result.error) }); return; }
-    toast.success(`${name}'s fields moved to ${target.label}`);
-    setChosen((current) => { const next = { ...current }; delete next[assigneeId]; return next; });
-    onDone();
-  };
-  if (assignees.analysts.length === 0) return <p className="text-sm text-muted-foreground">No analysts are assigned yet. Assign the test first.</p>;
-  return <ul className="space-y-3">{assignees.analysts.map((analyst) => <li key={analyst.assigneeId} className="space-y-3 rounded-lg border bg-card p-4">
-    <div><p className="font-semibold">{analyst.name}</p>
-      <p className="text-sm text-muted-foreground">Reassigning moves all questions in this analyst’s assignment.</p></div>
-    <div className="flex flex-wrap items-center gap-2"><div className="w-72 max-w-full"><SearchableSelect clearable={false} label={`New analyst for ${analyst.name}'s fields`} placeholder="Choose the new analyst" value={chosen[analyst.assigneeId] ?? null}
-      loadOptions={loadAnalysts} onChange={(option) => { if (option) setChosen({ ...chosen, [analyst.assigneeId]: option }); }} /></div>
-      <Button type="button" disabled={busy !== null} onClick={() => void move(analyst.assigneeId, analyst.name)}>{busy === analyst.assigneeId ? <><Spinner />Reassigning…</> : "Reassign"}</Button></div>
-    {message[analyst.assigneeId] ? <p role="alert" className="text-sm text-destructive">{message[analyst.assigneeId]}</p> : null}
-  </li>)}</ul>;
-}
+export { ReassignPanel } from "./reassign-fields-panel";

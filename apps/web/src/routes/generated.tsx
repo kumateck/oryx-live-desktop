@@ -1135,6 +1135,9 @@ export const routes: RouteObject[] = [
           { path: ":id", Component: Outlet, children: [
             { path: "edit", Component: Outlet, children: [
               { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/templates/[id]/edit/page")).default }) }
+            ] },
+            { path: "repair", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/templates/[id]/repair/page")).default }) }
             ] }
           ] },
           { path: "create", Component: Outlet, children: [
@@ -1330,6 +1333,9 @@ export const routes: RouteObject[] = [
               { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/swap-requests/[id]/details/page")).default }) }
             ] }
           ] }
+        ] },
+        { path: "upcoming-batch-issues", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/upcoming-batch-issues/page")).default }) }
         ] }
       ] },
       { path: "warehouse-dashboard", Component: Outlet, children: [

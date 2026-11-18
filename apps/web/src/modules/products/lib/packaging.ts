@@ -18,7 +18,7 @@ export interface PackagingLine {
   prescribedQuantity: number;
   packingExcessMargin: number;
   /** Packing materials the store may issue instead of this one, one pack for one pack. */
-  substitutes: Option[];
+  substitutes: (Option & { prescribedQuantity?: number | null })[];
   /**
    * Fields this page does not edit. The backend replaces every packing material on save, so they
    * are sent back unchanged; leaving them out would erase them.
@@ -34,7 +34,7 @@ export function fromSavedPackages(saved: SavedPackages): PackagingLine[] {
     packing: item.productPacking?.id ? { value: item.productPacking.id, label: item.productPacking.name } : null,
     prescribedQuantity: item.prescribedQuantity ?? 0, packingExcessMargin: item.packingExcessMargin ?? 0,
     substitutes: item.substitutes.flatMap((entry) => entry.substituteMaterial?.id
-      ? [{ value: entry.substituteMaterial.id, label: entry.substituteMaterial.name || entry.substituteMaterial.code || "Unnamed material" }] : []),
+      ? [{ value: entry.substituteMaterial.id, label: entry.substituteMaterial.name || entry.substituteMaterial.code || "Unnamed material", prescribedQuantity: entry.prescribedQuantity }] : []),
     carried: {
       baseQuantity: item.baseQuantity ?? 1, unitCapacity: item.unitCapacity ?? 0,
       directLinkMaterialId: item.directLinkMaterial?.id ?? null,
@@ -68,6 +68,7 @@ export function toPackagesRequest(lines: readonly PackagingLine[]): DomainEntiti
     prescribedQuantity: line.prescribedQuantity,
     packingExcessMargin: line.packingExcessMargin,
     substituteMaterialIds: line.substitutes.map((item) => item.value),
+    ...(line.substitutes.some(item => item.prescribedQuantity != null) ? { substitutes: line.substitutes.map(item => ({ materialId: item.value, prescribedQuantity: item.prescribedQuantity ?? line.prescribedQuantity })) } : {}),
     // The backend keeps the allowance in two fields; Oryx Next writes both, and reports read either.
     loose: line.packingExcessMargin,
   }));

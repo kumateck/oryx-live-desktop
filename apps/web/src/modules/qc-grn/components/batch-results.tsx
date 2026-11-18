@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { certificateSignatories } from "@/shared/ard-view/certificate-signatures";
 import { CertificatePreview } from "@/shared/ard-view/certificate-preview";
 import { buildCoaCompliancePayload, type CoaComplianceItem } from "@/shared/ard-view/raw-data/coa-compliance";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
@@ -34,6 +35,8 @@ export function BatchResultsPage() {
   const [printing, setPrinting] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   const [message, setMessage] = useState("");
+  const responseId = sheet.responses.find(answer => answer.responseId)?.responseId;
+  const responseDetail = qcGrnFormsApi.useGetApiV1FormResponsesByFormResponseIdQuery(previewing && responseId ? { ...qcGrnAudit, formResponseId: responseId } : skipToken);
   const sections = useMemo(() => sheet.rawForm?.sections ?? [], [sheet.rawForm]);
   const inferred = useMemo(() => buildCoaCompliancePayload(sections, sheet.responses), [sections, sheet.responses]);
   const [compliance, setCompliance] = useState<CoaComplianceItem[]>([]);
@@ -61,7 +64,7 @@ export function BatchResultsPage() {
     {printing ? <PrintPreviewDialog title="Analytical raw data" onClose={() => setPrinting(false)}><BatchWorksheet details={sheet.details} form={sheet.rawForm} responses={sheet.responses} blank={false} /></PrintPreviewDialog> : null}
     {previewing ? <Dialog open onOpenChange={(open) => { if (!open && !generating.isLoading) setPreviewing(false); }}><DialogContent className="sm:max-w-5xl">
       <DialogHeader><DialogTitle>Certificate of analysis</DialogTitle><DialogDescription>Check each test's compliance, then generate the certificate. The batch is approved or rejected through its approval.</DialogDescription></DialogHeader>
-      <DialogBody><CertificatePreview kind="Material" facts={facts} sections={sections} responses={sheet.responses} compliance={compliance}
+      <DialogBody><CertificatePreview kind="Material" signatories={certificateSignatories(sheet.responses, responseDetail.currentData ?? null)} facts={facts} sections={sections} responses={sheet.responses} compliance={compliance}
         onCompliance={(sectionId, complies) => setCompliance((list) => list.map((item) => item.formSectionId === sectionId ? { ...item, complies, requiresReview: false } : item))} />
         {message ? <p role="alert" className="mt-2 text-sm text-destructive">{message}</p> : null}</DialogBody>
       <DialogFooter><Button type="button" variant="outline" disabled={generating.isLoading} onClick={() => setPreviewing(false)}>Cancel</Button>

@@ -157,7 +157,7 @@ const TestDetailedViewEnhanced: React.FC<TestDetailedViewEnhancedProps> = ({
                           if (
                             !noResponse &&
                             !shouldShowQuestionLabel &&
-                            !hasResponse
+                            !hasResponse && !sanitizeString(field.description).trim()
                           ) {
                             return null;
                           }
@@ -166,9 +166,10 @@ const TestDetailedViewEnhanced: React.FC<TestDetailedViewEnhancedProps> = ({
                             <div key={field.id} className="mb-4 last:mb-0">
                               {shouldShowQuestionLabel && (
                                 <div className="text-sm font-medium text-foreground mb-2">
-                                  {questionLabel}:
+                                  <RichTextView html={questionLabel} />
                                 </div>
                               )}
+                              {sanitizeString(field.description).trim() ? <RichTextView html={sanitizeString(field.description)} /> : null}
                               <div>{valueNode}</div>
                             </div>
                           );

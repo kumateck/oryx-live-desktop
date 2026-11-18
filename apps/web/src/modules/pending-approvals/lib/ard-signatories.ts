@@ -1,10 +1,10 @@
 import type { ArdAnswer, ArdPerson } from "../schemas/ard-result-schema";
 
-export interface ArdSignatories { analysts: readonly string[]; checker: string | null }
+export interface ArdSignatories { analysts: readonly string[]; checker: string | null; approver?: string | null }
 const nameOf = (person: ArdPerson) => [person?.firstName?.trim(), person?.lastName?.trim()].filter(Boolean).join(" ");
 
 /** Attribute only this response's recorded answers, never another test in the same batch or the print operator. */
-export function ardSignatories(responseId: string, embedded: readonly ArdAnswer[], batch: readonly ArdAnswer[], checkedBy: ArdPerson): ArdSignatories {
+export function ardSignatories(responseId: string, embedded: readonly ArdAnswer[], batch: readonly ArdAnswer[], checkedBy: ArdPerson, approvedBy?: ArdPerson): ArdSignatories {
   const people = new Map<string, string>();
   const own = [...embedded.filter((answer) => !answer.responseId || answer.responseId === responseId),
     ...batch.filter((answer) => answer.responseId === responseId)];
@@ -14,5 +14,5 @@ export function ardSignatories(responseId: string, embedded: readonly ArdAnswer[
       people.set(answer.createdBy?.id || name, name);
     }
   }
-  return { analysts: [...people.values()], checker: nameOf(checkedBy) || null };
+  return { analysts: [...people.values()], checker: nameOf(checkedBy) || null, ...(approvedBy ? { approver: nameOf(approvedBy) || null } : {}) };
 }

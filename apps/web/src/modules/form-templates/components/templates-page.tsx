@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { usePageSearch } from "@/shared/search/page-search";
 import { templatesApi } from "../api/templates-api";
 import { templateRowsSchema, type TemplateRow } from "../lib/template-schema";
 import { createTemplatePath, editTemplatePath, templatePermissions, templatesAudit, templateTypeLabel, templateTypes } from "../lib/templates";
+
+import { templateRepairPath, templateRepairPermissions } from "../lib/template-repair-schema";
 
 const column = dataTableColumns<TemplateRow>();
 
@@ -38,6 +40,7 @@ export function TemplatesPage() {
     column.accessor((row) => row.createdAt ?? "", { id: "created", header: "Created", size: 130, cell: ({ row }) => formatDate(row.original.createdAt) ?? "–" }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.name}`} items={[
       { id: "edit", label: "Edit", icon: Pencil, require: templatePermissions.edit, to: editTemplatePath(row.original.id) },
+      { id: "repair", label: "Repair template", icon: Wrench, require: templateRepairPermissions.view, to: templateRepairPath(row.original.id) },
       { id: "copy", label: "Copy", icon: Copy, require: templatePermissions.create, to: createTemplatePath(row.original.id) },
       { id: "remove", label: "Delete", icon: Trash2, destructive: true, separated: true, require: templatePermissions.remove, onSelect: () => setRemoving(row.original) },
     ]} /> }),

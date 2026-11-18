@@ -33,7 +33,7 @@ export function useAnswerForm(fields: readonly FormField[], stored: StoredAnswer
   const schemaRef = useRef(schema);
   useEffect(() => { schemaRef.current = schema; }, [schema]);
   const resolver = useMemo<Resolver<FieldValues>>(() => (values, context, options) => zodResolver(schemaRef.current)(values, context, options), []);
-  const defaults = useMemo(() => Object.fromEntries(fields.map((field) => [field.id, storedToAnswer(stored.get(field.id)?.value, field.question.type)])), [fields, stored]);
+  const defaults = useMemo(() => Object.fromEntries(fields.map((field) => [field.id, storedToAnswer(stored.get(field.id)?.value, field.question.type, field.question.options)])), [fields, stored]);
   const form = useForm<FieldValues>({ resolver, defaultValues: defaults, mode: "onSubmit" });
   const applied = useRef(defaults);
   useEffect(() => {
