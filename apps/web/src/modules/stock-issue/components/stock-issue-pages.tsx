@@ -29,6 +29,7 @@ import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockRequisiti
 import { AlternativeBatches } from "./alternative-batches";
 import { VoucherTable } from "./voucher-table";
 import { IssueLines } from "./issue-lines";
+import { UnstartLeftoverRepair } from "./unstart-leftover-repair";
 import { MaterialChoices } from "./material-choices";
 
 function Standing({ requisition }: { requisition: Pick<StockRequisition, "approved" | "status"> }) {
@@ -71,6 +72,7 @@ export function StockIssueListPage() {
         <div role="group" aria-label="Requisition status" className="flex gap-1">{issueQueues.map((entry) =>
           <Button key={entry.value} type="button" size="sm" variant={queue === entry.value ? "default" : "outline"} aria-pressed={queue === entry.value} onClick={() => setQueue(entry.value)}>{entry.label}</Button>)}</div>
         <KindSwitch tabs={tabs} kind={kind} onSelect={select} />
+        {kind !== null ? <UnstartLeftoverRepair key={kind} kind={kind} /> : null}
       </div>
     </div>
     <ServerDataTable label="Stock requisitions" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
