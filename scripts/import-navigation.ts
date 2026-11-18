@@ -131,6 +131,10 @@ productionPlanning.items.push({ id: "production-planning.white-placebo", label: 
 const qualityAssurance = catalog.find(group => group.id === "quality-assurance");
 if (!qualityAssurance) throw new Error("Quality Assurance navigation group is missing.");
 qualityAssurance.items.unshift({ id: "quality-assurance.products", label: "Products", path: "/qa/products", permissions: ["CanViewQaProducts"] });
+// QA takes material retest samples as it takes analytical test request samples; the entry sits next to that one.
+const qaAtrIndex = qualityAssurance.items.findIndex((item) => item.path === "/atr?type=0");
+if (qaAtrIndex < 0) throw new Error("QA Analytical Test Requests navigation entry is missing.");
+qualityAssurance.items.splice(qaAtrIndex + 1, 0, { id: "quality-assurance.material-retests", label: "Material Retests", path: "/qc/material-retests?tab=sample", permissions: ["CanRecordMaterialRetestSample"] });
 qualityAssurance.items.push({ id: "quality-assurance.issued-bmr-records", label: "Issued BMR records", path: "/qa/issued-bmrs", permissions: ["CanViewIssuedBmrRecords"] });
 qualityAssurance.items.push(...vendorApproval);
 

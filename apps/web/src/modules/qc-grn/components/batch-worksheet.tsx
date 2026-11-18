@@ -12,6 +12,7 @@ import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { qcGrnAnalyticalApi } from "../api/qc-grn-api";
 import { useBatchWorksheet } from "../hooks/use-batch-worksheet";
+import { useBatchRoute } from "../hooks/use-batch-route";
 import { printsFilled, qcGrnAudit, qcWorksheetAccess } from "../lib/qc-grn";
 
 const kindTitle = (details: MaterialBatchArdRead | null) => `${(details?.materialBatch as { material?: { kind?: number | null } } | undefined)?.material?.kind === 1 ? "Packaging" : "Raw"} material analytical raw data`;
@@ -54,7 +55,8 @@ export function BatchWorksheetPreview({ sheet, filled, onClose }: {
   filled: boolean;
   onClose: () => void;
 }) {
-  const submitted = printsFilled(sheet.details?.materialBatch?.status ?? null);
+  const route = useBatchRoute();
+  const submitted = route.submitted ?? printsFilled(sheet.details?.materialBatch?.status ?? null);
   const hasResults = sheet.responses.some((row) => hasMeaningfulResponse(row));
   return <WorksheetPreview title={filled ? "Filled material worksheet" : "Blank analytical worksheet"}
     loading={sheet.loading} error={sheet.error} hasForm={Boolean(sheet.rawForm)}

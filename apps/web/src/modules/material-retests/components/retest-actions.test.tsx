@@ -65,6 +65,8 @@ it.each([true, false])("checks the assigned approval stage before signing (assig
 it("records a governed sample with a month-only proposed expiry at leap-year month end", async () => {
   const user = userEvent.setup();
   const { writes, done } = open("sample");
+  // QA gives the sample its AR number, as on an analytical test request.
+  await user.type(await screen.findByRole("textbox", { name: /AR number/ }), "QCD/RM/26/900");
   const quantity = await screen.findByRole("spinbutton", { name: /Sample quantity/ });
   await user.clear(quantity);
   await user.type(quantity, "5");
@@ -84,6 +86,6 @@ it("records a governed sample with a month-only proposed expiry at leap-year mon
   await user.click(screen.getByRole("button", { name: "Record sample" }));
   await waitFor(() => expect(done).toHaveBeenCalledOnce());
   expect(writes.map((entry) => ({ path: entry.path, body: JSON.parse(entry.body) }))).toEqual([
-    { path: "/api/v1/qc/material-retests/retest-1/sample", body: { sampleQuantity: 5, sampledContainers: 2, proposedExpiryDate: "2028-02-29T00:00:00.000Z" } },
+    { path: "/api/v1/qc/material-retests/retest-1/sample", body: { arNumber: "QCD/RM/26/900", sampleQuantity: 5, sampledContainers: 2, proposedExpiryDate: "2028-02-29T00:00:00.000Z" } },
   ]);
 });

@@ -2982,7 +2982,9 @@ export type DomainEntitiesInstrumentsUpdateInstrumentCalibrationRequest = {
 export type DomainEntitiesMaterialsMaterialKind = 0 | 1;
 export type DomainEntitiesMaterialsBatchMaterialRetestOrigin = 0 | 1;
 export type DomainEntitiesMaterialsBatchMaterialRetestStatus =
-  0 | 1 | 2 | 3 | 4 | 5 | 6;
+  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+export type DomainEntitiesMaterialsBatchBatchStatus =
+  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AppServicesMaterialsMaterialRetestEventDto = {
   action?: string | null;
   detail?: string | null;
@@ -3008,6 +3010,11 @@ export type AppServicesMaterialsMaterialRetestDetailDto = {
   testRequestId?: string | null;
   coaId?: string | null;
   completedAt?: string | null;
+  arNumber?: string | null;
+  materialSamplingId?: string | null;
+  batchStatus?: DomainEntitiesMaterialsBatchBatchStatus;
+  materialName?: string | null;
+  materialCode?: string | null;
   events?: AppServicesMaterialsMaterialRetestEventDto[] | null;
 };
 export type DomainEntitiesMaterialsBatchCreateMaterialRetestRequest = {
@@ -3018,6 +3025,7 @@ export type DomainEntitiesMaterialsBatchMaterialRetestDecision = {
   comments: string;
 };
 export type DomainEntitiesMaterialsBatchRecordMaterialRetestSample = {
+  arNumber: string;
   sampleQuantity?: number;
   sampledContainers?: number;
   proposedExpiryDate: string;
