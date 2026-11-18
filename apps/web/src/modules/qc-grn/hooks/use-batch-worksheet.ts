@@ -53,7 +53,7 @@ export function useBatchWorksheet(batchId: string, options: { assignees?: boolea
         : formQuery.error && !notFound(formQuery.error) ? apiErrorMessage(formQuery.error) : null;
   return {
     loading, error, form, formMissing: !loading && !form && (notFound(ard.error) || notFound(formQuery.error) || !formId), details: details.currentData ?? null,
-    stored, responses: rows, rawForm, assignees: assigned,
+    responseId: latestResponseId, stored, responses: rows, rawForm, assignees: assigned,
     reload: () => { void responses.refetch(); if (options.assignees !== false) void assignees.refetch(); },
     retry: () => { void ard.refetch(); void details.refetch(); void responses.refetch(); if (options.assignees !== false) void assignees.refetch(); if (formId) void formQuery.refetch(); },
   };

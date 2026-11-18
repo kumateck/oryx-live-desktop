@@ -41,7 +41,11 @@ const open = (element: ReactNode, granted: string[], me: string | null, path = "
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   return { state, calls, writes: () => calls.filter((c) => c.method !== "GET") };
 };
-afterEach(() => { cleanup(); forgetSession(); });
+afterEach(async () => {
+  cleanup(); forgetSession();
+  // Drain RTK's queued animation-frame notifications before jsdom removes its frame APIs.
+  await new Promise<void>(resolve => setTimeout(resolve, 25));
+});
 
 it("opens a personal review to the people who submit assessments", () => {
   const can = (keys: string[]) => { const p = routeAccessPolicy(modules, `/hr/goals/reviews/${review.id}`); return Boolean(p && canAccess(p.access, { state: "authenticated", permissions: new Set(keys) })); };
