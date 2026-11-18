@@ -19,3 +19,7 @@ The combined import with merged Unstart reservation operations has reviewed dige
 The supplying store reads an incoming transfer in its own stock unit: the list, the detail page, the picked batches and the issue confirmation show the backend's optional `supplierQuantity`/`supplierUoM` (for example 20,720 kg), with "Asked as 20,000 L" beside it. The issue request still sends the request-unit quantities, and the receiving store shelves in its own unit as before. Without those fields (older backend) the request quantity is shown. These are read through the module's zod schema only; the OpenAPI contract is not re-imported for these optional read fields.
 
 The pending-approvals list for stock requisitions adds a Production batch column from the optional `batchNumber`/`productName` fields.
+
+## One stock rule on every screen (2026-11-18)
+
+Approved materials, the material's Stock by batch and Reserved tabs, the schedule forecast, the stock availability dialog and the warehouse stock reports read the backend's store-stock split: free to use, reserved (live holds only), expired and not released, adding up to the total approved. Stock by batch lists every lot on the store's shelves with its own free/reserved share, so the rows add up to the list's totals; a hold drops out of the Reserved tab once it is released (Unstart, back to the shelf), issued to the floor, or its batch is cancelled. All of these fields are optional and read through each module's zod schema; older servers show what they did before.

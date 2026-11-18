@@ -27,6 +27,14 @@ const batchColumns = batchColumn.columns([
   batchColumn.accessor((row) => row.shelf ?? "", { id: "shelf", header: "Shelf", cell: ({ row }) => row.original.shelf ? <div><div className="font-medium">{row.original.shelf}</div>
     <div className="text-xs text-muted-foreground">{[row.original.rack, row.original.location, row.original.floor].filter(Boolean).join(" · ")}</div></div> : dash }),
   batchColumn.accessor("quantity", { header: "Quantity", size: 150, cell: ({ row }) => quantity(row.original.quantity, row.original.unit) }),
+  // Each row's share of the list's totals: free to use + reserved, or all of it expired or not released.
+  batchColumn.accessor((row) => row.free ?? -1, { id: "free", header: "Free to use", size: 150, cell: ({ row }) => {
+    const { stockState, free, stockUnit } = row.original;
+    if (stockState === "Expired") return <span className="text-destructive">Expired</span>;
+    if (stockState === "NotReleased") return <span className="text-destructive">Not released</span>;
+    return free === null ? dash : <span className="font-medium">{quantity(free, stockUnit)}</span>; } }),
+  batchColumn.accessor((row) => row.reserved ?? -1, { id: "reserved", header: "Reserved", size: 140, cell: ({ row }) =>
+    row.original.reserved ? quantity(row.original.reserved, row.original.stockUnit) : dash }),
   batchColumn.accessor((row) => formatMonthYear(row.manufacturingDate) ?? "", { id: "made", header: "Manufactured", size: 150, cell: ({ row }) => formatMonthYear(row.original.manufacturingDate) ?? dash }),
   batchColumn.accessor((row) => row.effectiveExpiryDate ?? "", { id: "expiry", header: "Valid until", size: 190, cell: ({ row }) => <div><ExpiryCell date={row.original.effectiveExpiryDate} />{row.original.effectiveExpiryDate !== row.original.expiryDate ? <span className="text-xs text-muted-foreground">Retest extension · expiry {formatMonthYear(row.original.expiryDate) ?? "not recorded"}</span> : null}</div> }),
   batchColumn.accessor((row) => formatMonthYear(row.retestDate) ?? "", { id: "retest", header: "Retest", size: 150, cell: ({ row }) => formatMonthYear(row.original.retestDate) ?? dash }),

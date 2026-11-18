@@ -1,7 +1,11 @@
 import type { DomainEntitiesReportsWarehouseInventoryValuationDetailDto, DomainEntitiesReportsWarehouseMaterialsStockBatchDetailDto, DomainEntitiesReportsWarehouseMaterialsStockSummaryDto } from "@/shared/api/generated/reports";
 import { reportSheet, reportDate, reportEnum, reportQuantity } from "@/shared/reports/report-data";
 
-export const materialStockSummarySheet = (name: string, rows: readonly DomainEntitiesReportsWarehouseMaterialsStockSummaryDto[]) => reportSheet(name, rows, [
+// Optional fields the store-stock rule adds; older servers leave them out, so their cells stay empty.
+type StockSplit = { expiredQuantity?: number | null; unavailableQuantity?: number | null; reservedQuantity?: number | null; freeQuantity?: number | null };
+const split = (value: number | null | undefined, unit: string | null | undefined) => typeof value === "number" ? reportQuantity(value, unit) : null;
+
+export const materialStockSummarySheet = (name: string, rows: readonly (DomainEntitiesReportsWarehouseMaterialsStockSummaryDto & StockSplit)[]) => reportSheet(name, rows, [
   { label: "No.", read: (row) => row.no },
   { label: "Material name", read: (row) => row.materialName },
   { label: "Material code", read: (row) => row.materialCode },
@@ -10,9 +14,13 @@ export const materialStockSummarySheet = (name: string, rows: readonly DomainEnt
   { label: "Warehouse type", read: (row) => row.warehouseType },
   { label: "No of batches", read: (row) => row.noOfBatches },
   { label: "Total quantity", read: (row) => reportQuantity(row.totalQuantity, row.uom) },
+  { label: "Free to issue", read: (row) => split(row.freeQuantity, row.uom) },
+  { label: "Reserved", read: (row) => split(row.reservedQuantity, row.uom) },
+  { label: "Expired", read: (row) => split(row.expiredQuantity, row.uom) },
+  { label: "Not released", read: (row) => split(row.unavailableQuantity, row.uom) },
 ]);
 
-export const materialStockDetailSheet = (name: string, rows: readonly DomainEntitiesReportsWarehouseMaterialsStockBatchDetailDto[]) => reportSheet(name, rows, [
+export const materialStockDetailSheet = (name: string, rows: readonly (DomainEntitiesReportsWarehouseMaterialsStockBatchDetailDto & { reservedQuantity?: number | null; stockState?: string | null })[]) => reportSheet(name, rows, [
   { label: "No.", read: (row) => row.no },
   { label: "Material name", read: (row) => row.materialName },
   { label: "Material code", read: (row) => row.materialCode },
@@ -21,6 +29,8 @@ export const materialStockDetailSheet = (name: string, rows: readonly DomainEnti
   { label: "Manufacturing date", read: (row) => reportDate(row.manufacturingDate) },
   { label: "Expiry date", read: (row) => reportDate(row.expiryDate) },
   { label: "Quantity available", read: (row) => reportQuantity(row.quantityAvailable, row.uom) },
+  { label: "Stock state", read: (row) => row.stockState ?? null },
+  { label: "Reserved", read: (row) => split(row.reservedQuantity, row.uom) },
   { label: "Production department", read: (row) => row.productionDepartment },
   { label: "Warehouse type", read: (row) => row.warehouseType },
   { label: "Storage location", read: (row) => row.storageLocation },

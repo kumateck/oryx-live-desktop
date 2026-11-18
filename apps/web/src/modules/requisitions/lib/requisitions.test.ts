@@ -66,7 +66,11 @@ it("sorts lines into ready, left for later and half filled in, and sends quantit
 
 it("reads stock held elsewhere, keeping expired stock out of what is usable", () => {
   expect(warehouseStockSchema.parse([{ warehouse: { id: "w1", name: "Raw store", type: 0 }, stockQuantity: 9_000_000, expiredQuantity: 1_000_000 }, { warehouse: { id: "w2", name: "Floor 1", type: 3 }, stockQuantity: 500, expiredQuantity: 900 }]))
-    .toEqual([{ id: "w1", name: "Raw store", onFloor: false, total: 9_000_000, expired: 1_000_000, usable: 8_000_000 }, { id: "w2", name: "Floor 1", onFloor: true, total: 500, expired: 900, usable: 0 }]);
+    .toEqual([{ id: "w1", name: "Raw store", onFloor: false, total: 9_000_000, expired: 1_000_000, unavailable: 0, usable: 8_000_000, reserved: 0, free: 8_000_000 },
+      { id: "w2", name: "Floor 1", onFloor: true, total: 500, expired: 900, unavailable: 0, usable: 0, reserved: 0, free: 0 }]);
+  // The server's store-stock split is used when sent: free is what is left after live holds.
+  expect(warehouseStockSchema.parse([{ warehouse: { id: "w1", name: "Raw store", type: 0 }, stockQuantity: 100, expiredQuantity: 10, unavailableQuantity: 20, reservedQuantity: 30, freeQuantity: 40 }]))
+    .toEqual([{ id: "w1", name: "Raw store", onFloor: false, total: 100, expired: 10, unavailable: 20, usable: 70, reserved: 30, free: 40 }]);
   expect(pipelineSchema.parse([{ id: "po1", reference: "PO-9", stage: 3, route: 0, quantity: 5, uom: { symbol: "kg" } }, { stage: 99 }]).map((row) => [row.stage, row.route])).toEqual([["Purchase order", "Foreign"], ["In the pipeline", null]]);
 });
 
