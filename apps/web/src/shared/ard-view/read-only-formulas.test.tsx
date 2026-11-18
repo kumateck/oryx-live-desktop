@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
+import { RecordedFormulaInputs } from "./raw-data/print/recorded-formula-inputs";
 import ArdTemplateBody from "./templates/body";
 import { CertificatePreview } from "./certificate-preview";
 import { getCompactFormulaEvaluations } from "./raw-data/print/formula-evaluation";
@@ -88,4 +89,42 @@ it("shows the recorded analyst, certificate generator and approver in the certif
   expect(footer.textContent).toContain("Analysed byAma Analyst, Kojo Analyst");
   expect(footer.textContent).toContain("Released byEsi QC");
   expect(footer.textContent).toContain("Approved byKofi QA");
+});
+
+
+it("renders saved universal worksheet inputs in the entry layout without configuration JSON or editable controls", async () => {
+  const settings = { type: 3, expression: "(:sampleAvg/:A)*(:dil/:sampleWeight)*:wt*5*(1000/:Claim)*:purity",
+    constants: { Claim: 120, A: 715, dil: 200 }, headers: ["Sample 1", "Sample 2"],
+    rowHeaders: [{ id: "r1", label: "Reading 1" }, { id: "r2", label: "Reading 2" }],
+    sampleInput: true, standardInput: false, sampleTable: true, calculateAvgInTable: true,
+    manualVarLabels: { wt: "Weight per ml", purity: "% purity" },
+    sampleInputs: [[{ key: "weight", label: "Weight (g)", value: "" }], [{ key: "weight", label: "Weight (g)", value: "" }]],
+    standardInputs: [{ key: "unused", label: "Hidden standard", value: "" }],
+    decimalPlaces: 2, averageAllResults: true };
+  const section = { ...assaySection, fields: [{ id: "f-assay", question: { type: 10 as const, label: "Assay: Paracetamol", options: [{ name: JSON.stringify(settings) }] } }] };
+  const value = { settings, tableData: [["0.4468", "0.4474"], ["0.4465", "0.4470"]],
+    sampleInputs: [{ weight: "5.6613" }, { weight: "5.6822" }], manualVars: { wt: { raw: "1.13", evaluated: 1.13 }, purity: { raw: "100.0", evaluated: 100 } } };
+  const answer = { ...wrappedAssayAnswer, value: JSON.stringify(value), formulaGoverned: true, formulaResultFinalized: true,
+    formulaDisplayResultsJson: JSON.stringify([{ key: "average", value: "103.78", unit: "%" }]) };
+  const { container } = render(<ArdTemplateBody sections={[section]} responses={[answer]} showRemarks={false} />);
+  expect(await screen.findByText("Weight per ml: 1.13")).toBeTruthy();
+  expect(screen.getByText("% purity: 100.0")).toBeTruthy();
+  expect(screen.getByText("Sample 1 Weight (g): 5.6613")).toBeTruthy();
+  expect(screen.getByText("Sample 2 Weight (g): 5.6822")).toBeTruthy();
+  expect(screen.getByText("0.4470")).toBeTruthy();
+  expect(screen.getByText("Claim: 120")).toBeTruthy();
+  expect(screen.queryByText(/Hidden standard/)).toBeNull();
+  expect(container.textContent).not.toContain('"averageAllResults"');
+  expect(container.querySelector("input, textarea, select, button")).toBeNull();
+  expect(container.textContent).toContain("103.78 %");
+});
+
+
+it("renders labelled simple formula readings without leaking saved settings", () => {
+  const settings = { type: 0, expression: "(:C-:A)/(:B-:A)", manualVarLabels: { C: "Weight of pycnometer and sample", A: "Empty pycnometer", B: "Pycnometer and water" } };
+  const { container } = render(<RecordedFormulaInputs option={{ name: JSON.stringify(settings) }} value={JSON.stringify({ C: "61.0224", A: "29.7506", B: "57.3314", settings })} />);
+  expect(screen.getByText("Weight of pycnometer and sample")).toBeTruthy();
+  expect(screen.getByText("61.0224")).toBeTruthy();
+  expect(container.textContent).not.toContain('"manualVarLabels"');
+  expect(container.querySelector("input, textarea, select")).toBeNull();
 });
