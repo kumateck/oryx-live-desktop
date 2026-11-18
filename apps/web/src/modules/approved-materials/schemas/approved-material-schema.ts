@@ -19,12 +19,14 @@ export const materialHeaderSchema = z.object({ id: z.string().min(1), code: text
 
 /** Stock of one batch on one shelf. */
 export const shelfBatchRowsSchema = z.array(z.object({
+  warehouseQuantity: z.number().finite().nullish(), warehouseUoM: z.object({ symbol: text }).nullish(),
   id: z.string().nullish(), quantity: amount, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(),
   materialBatch: z.object({ id: z.string().nullish(), batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), effectiveExpiryDate: z.string().nullish(), retestDate: z.string().nullish(),
     material: z.object({ id: z.string().nullish(), code: text, name: text }).nullish() }).nullish(),
   warehouseLocationShelf: z.object({ id: z.string().nullish(), code: text, name: text,
     warehouseLocationRack: z.object({ name: text, warehouseLocation: z.object({ name: text, floorName: text }).nullish() }).nullish() }).nullish(),
 })).nullish().transform((value) => (value ?? []).map((item, index) => ({
+  warehouseQuantity: item.warehouseQuantity ?? null, warehouseUnit: item.warehouseUoM?.symbol ?? null,
   id: item.id ?? `row-${index}`, shelfBatchId: item.id ?? null, quantity: item.quantity, unit: item.uoM?.symbol ?? null, unitId: item.uoM?.id ?? null,
   batchNumber: item.materialBatch?.batchNumber ?? null, manufacturingDate: item.materialBatch?.manufacturingDate ?? null, expiryDate: item.materialBatch?.expiryDate ?? null,
   batchId: item.materialBatch?.id ?? null, effectiveExpiryDate: item.materialBatch?.effectiveExpiryDate ?? item.materialBatch?.expiryDate ?? null,

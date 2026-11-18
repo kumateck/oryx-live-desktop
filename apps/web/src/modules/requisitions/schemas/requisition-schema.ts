@@ -15,7 +15,7 @@ const item = z.object({
 const requisition = z.object({
   id: z.string().min(1), code: text, requisitionType: type, status, approved: z.boolean().nullish(), comments: text,
   requestedBy: named, department: named, createdAt: z.string().nullish(), expectedDelivery: z.string().nullish(), items: z.array(item).nullish(),
-  productionScheduleProduct: z.object({ product: z.object({ name: text }).nullish() }).nullish(),
+  productionScheduleProduct: z.object({ batchNumber: text, product: z.object({ name: text }).nullish() }).nullish(),
   whitePlaceboPreparationId: z.string().uuid().nullish(),
 });
 
@@ -24,6 +24,7 @@ function read(value: z.infer<typeof requisition>) {
     id: value.id, code: value.code ?? "No number", type: value.requisitionType, status: value.status, approved: value.approved === true, comments: value.comments,
     requestedBy: value.requestedBy?.name ?? null, department: value.department?.name ?? null, createdAt: value.createdAt ?? null, expectedDelivery: value.expectedDelivery ?? null,
     product: value.productionScheduleProduct?.product?.name ?? null,
+    batchNumber: value.productionScheduleProduct?.batchNumber ?? null,
     whitePlaceboPreparationId: value.whitePlaceboPreparationId ?? null,
     items: (value.items ?? []).map((line, index) => ({
       id: line.id ?? `line-${index}`, materialId: line.material?.id ?? null, materialName: line.material?.name ?? "Unnamed material", materialCode: line.material?.code ?? null,
