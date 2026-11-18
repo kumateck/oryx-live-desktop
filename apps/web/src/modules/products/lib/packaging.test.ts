@@ -36,7 +36,15 @@ it("allows different packing styles and All styles together while rejecting dupl
 
 it("keeps each packing line's substitutes with their names and sends them back on save", () => {
   const [bottle] = fromSavedPackages(saved);
-  expect(bottle?.substitutes).toEqual([{ value: "m-alt", label: "Clear bottle" }]);
+  expect(bottle?.substitutes).toEqual([{ value: "m-alt", label: "Clear bottle", prescribedQuantity: null }]);
   const edited = { ...bottle!, substitutes: [{ value: "m-alt", label: "Clear bottle" }, { value: "m-alt2", label: "Flint bottle" }] };
   expect(toPackagesRequest([edited])[0]?.substituteMaterialIds).toEqual(["m-alt", "m-alt2"]);
+});
+
+it("saves each substitute's own quantity while preserving the untouched allowance", () => {
+  const line = fromSavedPackages(saved)[0];
+  if (!line) throw new Error("Missing fixture line");
+  const body = toPackagesRequest([{ ...line, substitutes: [{ value: "m-alt", label: "Alternate bottle", prescribedQuantity: 1.25 }] }])[0];
+  expect(body?.substitutes).toEqual([{ materialId: "m-alt", prescribedQuantity: 1.25 }]);
+  expect(body?.packingExcessMargin).toBe(0.05);
 });

@@ -13,7 +13,12 @@ export function BomTable({ bom, product }: { bom: ProductBom; product: ProductDe
   const columns = useMemo(() => column.columns([
     column.accessor((item) => item.order ?? "", { id: "step", header: "Step", size: 70 }),
     column.accessor((item) => item.material?.code ?? dash, { id: "code", header: "Code", size: 130 }),
-    column.accessor((item) => item.material?.name ?? dash, { id: "material", header: "Material" }),
+    column.accessor((item) => item.material?.name ?? dash, { id: "material", header: "Material", cell: ({ row }) => <div className="space-y-1">
+      <p>{row.original.material?.name ?? dash}</p>
+      {row.original.substitutes.map(substitute => <p key={substitute.substituteMaterial?.id ?? `${substitute.substituteMaterial?.name}:${JSON.stringify(substitute)}`} className="text-xs text-muted-foreground">
+        Substitute: {substitute.substituteMaterial?.name ?? dash} · {toLargestUnit(substitute.baseQuantity, substitute.baseUoM)?.text ?? "Quantity not set"}
+      </p>)}
+    </div> }),
     column.accessor((item) => toLargestUnit(item.baseQuantity, item.baseUoM)?.text ?? dash, { id: "unit", header: "Unit quantity" }),
     column.accessor((item) => toLargestUnit(batchQuantity(item.baseQuantity, product.baseQuantity, product.fullBatchSize), item.baseUoM, "calculated")?.text ?? dash,
       { id: "batch", header: "Batch quantity" }),

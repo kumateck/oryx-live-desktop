@@ -64,23 +64,22 @@ async function selectUnit(symbol: string) {
   await user.click(await screen.findByRole("option", { name: symbol }));
 }
 
-it("shows mass units in the table and converts both inputs without changing the linked UOM", async () => {
+it("shows mass units in the table and converts the prescribed input without changing the linked UOM", async () => {
   const { writes, reads } = open();
   expect(await screen.findByText("2.5 kg")).toBeTruthy();
-  expect(screen.getByText("125 g")).toBeTruthy();
+  expect(screen.queryByText("125 g")).toBeNull();
   expect(screen.getByText("2.625 kg")).toBeTruthy();
   expect(reads.filter((path) => path.endsWith("/uom"))).toHaveLength(1);
   const dialog = await edit();
   expect(within(dialog).getByText("Material unit").nextElementSibling?.textContent).toBe("mg");
   await selectUnit("kg");
   expect(within(dialog).getByRole("spinbutton", { name: "Prescribed quantity (kg)" })).toHaveProperty("value", "2.5");
-  expect(within(dialog).getByRole("spinbutton", { name: "Packing allowance (kg)" })).toHaveProperty("value", "0.125");
+  expect(within(dialog).queryByRole("spinbutton", { name: /Packing allowance/ })).toBeNull();
   fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Prescribed quantity (kg)" }), { target: { value: "1.234567891" } });
-  fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Packing allowance (kg)" }), { target: { value: "0.00000001" } });
   await selectUnit("g");
   expect(within(dialog).getByRole("spinbutton", { name: "Prescribed quantity (g)" })).toHaveProperty("value", "1234.567891");
   await selectUnit("mg");
-  expect(within(dialog).getByRole("spinbutton", { name: "Packing allowance (mg)" })).toHaveProperty("value", "0.01");
+  expect(within(dialog).queryByRole("spinbutton", { name: /Packing allowance/ })).toBeNull();
   fireEvent.click(within(dialog).getByRole("button", { name: "Update material" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   // Reopening starts in the linked unit, preserving the draft amount without a second conversion.
@@ -91,7 +90,7 @@ it("shows mass units in the table and converts both inputs without changing the 
   fireEvent.click(screen.getByRole("button", { name: "Save packing materials" }));
   await waitFor(() => expect(writes).toHaveLength(1));
   expect(JSON.parse(writes[0]?.body ?? "[]")).toEqual([{
-    materialId: "m-foil", productPackingId: null, prescribedQuantity: 1234567.891, packingExcessMargin: 0.01, loose: 0.01,
+    materialId: "m-foil", productPackingId: null, prescribedQuantity: 1234567.891, packingExcessMargin: 0, loose: 0,
     baseQuantity: 1, unitCapacity: 0, directLinkMaterialId: null, materialThickness: "0.02mm", otherStandards: "Keep this", substituteMaterialIds: [],
   }]);
 });
@@ -106,7 +105,7 @@ it("allows ml or L and saves entered litres as linked millilitres", async () => 
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   fireEvent.click(screen.getByRole("button", { name: "Save packing materials" }));
   await waitFor(() => expect(writes).toHaveLength(1));
-  expect(JSON.parse(writes[0]?.body ?? "[]")[0]).toMatchObject({ prescribedQuantity: 2345.6789, packingExcessMargin: 25, loose: 25 });
+  expect(JSON.parse(writes[0]?.body ?? "[]")[0]).toMatchObject({ prescribedQuantity: 2345.6789, packingExcessMargin: 0, loose: 0 });
 });
 
 it("shows a fixed unit for counted materials and keeps quantity validation", async () => {
@@ -114,16 +113,14 @@ it("shows a fixed unit for counted materials and keeps quantity validation", asy
   const dialog = await edit();
   expect(within(dialog).queryByRole("combobox", { name: "Enter quantities in" })).toBeNull();
   fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Prescribed quantity (pcs)" }), { target: { value: "0" } });
-  fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Packing allowance (pcs)" }), { target: { value: "-1" } });
   fireEvent.click(within(dialog).getByRole("button", { name: "Update material" }));
   expect(await within(dialog).findByText("The prescribed quantity must be greater than 0")).toBeTruthy();
-  expect(within(dialog).getByText("The packing allowance cannot be negative")).toBeTruthy();
   expect(writes).toEqual([]);
 });
 
 it("blocks edits on a missing or unreadable linked unit while retaining visible saved quantities", async () => {
   const { writes } = open({ unitResponse: () => Response.json(null) });
-  expect((await screen.findAllByText("(unit not set)")).length).toBe(3);
+  expect((await screen.findAllByText("(unit not set)")).length).toBe(2);
   await chooseAction("Actions for Foil", "Edit");
   const dialog = await screen.findByRole("dialog");
   expect(await within(dialog).findByText(/No unit is set for this material/)).toBeTruthy();
@@ -154,16 +151,15 @@ it("uses the new material's linked unit after switching from mass to a counted m
   expect(await within(dialog).findByRole("spinbutton", { name: "Prescribed quantity (pcs)" })).toHaveProperty("value", "2500000");
   expect(within(dialog).queryByRole("combobox", { name: "Enter quantities in" })).toBeNull();
   fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Prescribed quantity (pcs)" }), { target: { value: "10" } });
-  fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Packing allowance (pcs)" }), { target: { value: "1" } });
   fireEvent.click(within(dialog).getByRole("button", { name: "Update material" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   fireEvent.click(screen.getByRole("button", { name: "Save packing materials" }));
   await waitFor(() => expect(writes).toHaveLength(1));
-  expect(JSON.parse(writes[0]?.body ?? "[]")[0]).toMatchObject({ materialId: "m-label", prescribedQuantity: 10, packingExcessMargin: 1 });
+  expect(JSON.parse(writes[0]?.body ?? "[]")[0]).toMatchObject({ materialId: "m-label", prescribedQuantity: 10, packingExcessMargin: 0 });
   expect(writes[0]?.path).toBe(`/api/v1/product/${id}/packages`);
 });
 
-it("adds a material using its picker's linked unit and converts both quantities before saving", async () => {
+it("adds a material using its picker's linked unit and converts prescribed quantity before saving", async () => {
   const { writes, reads } = open();
   await screen.findByText("Foil");
   fireEvent.click(await screen.findByRole("button", { name: "Add material" }));
@@ -173,14 +169,13 @@ it("adds a material using its picker's linked unit and converts both quantities 
   await user.click(await screen.findByRole("option", { name: "PM-3 - Liquid" }));
   await selectUnit("L");
   fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Prescribed quantity (L)" }), { target: { value: "0.5" } });
-  fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Packing allowance (L)" }), { target: { value: "0.025" } });
   fireEvent.click(within(dialog).getByRole("button", { name: "Add material" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  expect(screen.getByText("525 ml")).toBeTruthy();
+  expect(screen.getAllByText("500 ml")[0]).toBeTruthy();
   expect(reads).not.toContain("/api/v1/material/m-liquid/uom");
   fireEvent.click(screen.getByRole("button", { name: "Save packing materials" }));
   await waitFor(() => expect(writes).toHaveLength(1));
-  expect(JSON.parse(writes[0]?.body ?? "[]")[1]).toMatchObject({ materialId: "m-liquid", prescribedQuantity: 500, packingExcessMargin: 25, loose: 25 });
+  expect(JSON.parse(writes[0]?.body ?? "[]")[1]).toMatchObject({ materialId: "m-liquid", prescribedQuantity: 500, packingExcessMargin: 0, loose: 0 });
 });
 
 it("keeps converted draft quantities after a failed save", async () => {
@@ -192,7 +187,7 @@ it("keeps converted draft quantities after a failed save", async () => {
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   fireEvent.click(screen.getByRole("button", { name: "Save packing materials" }));
   expect(await screen.findByRole("alert")).toBeTruthy();
-  expect(screen.getByText("3.25 kg")).toBeTruthy();
+  expect(screen.getAllByText("3.25 kg")[0]).toBeTruthy();
   const reopened = await edit();
   expect(within(reopened).getByRole("spinbutton", { name: "Prescribed quantity (mg)" })).toHaveProperty("value", "3250000");
 });

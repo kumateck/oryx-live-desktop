@@ -752,6 +752,110 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getTemplateRepairContext: build.query<
+      GetTemplateRepairContextApiResponse,
+      GetTemplateRepairContextApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "template-repair/form", id: queryArg.formId }],
+      query: (queryArg) => ({
+        url: `/api/v1/template-repairs/forms/${queryArg.formId}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          formAssigneeId: queryArg.formAssigneeId,
+        },
+      }),
+    }),
+    previewTemplateRepair: build.mutation<
+      PreviewTemplateRepairApiResponse,
+      PreviewTemplateRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "template-repair/form", id: "LIST" }, { type: "template-repair", id: "LIST" }, { type: "template-repair/form", id: queryArg.formId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/template-repairs/forms/${queryArg.formId}/preview`,
+        method: "POST",
+        body: queryArg.appServicesFormsTemplateRepairCandidate,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    applyTemplateRepair: build.mutation<
+      ApplyTemplateRepairApiResponse,
+      ApplyTemplateRepairApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "template-repair/form", id: "LIST" }, { type: "template-repair", id: "LIST" }, { type: "template-repair/form", id: queryArg.formId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/template-repairs/forms/${queryArg.formId}/apply`,
+        method: "POST",
+        body: queryArg.appServicesFormsApplyTemplateRepairRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getTemplateRepairHistory: build.query<
+      GetTemplateRepairHistoryApiResponse,
+      GetTemplateRepairHistoryApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "template-repair/form", id: queryArg.formId }],
+      query: (queryArg) => ({
+        url: `/api/v1/template-repairs/forms/${queryArg.formId}/history`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    reassignProductTestFields: build.mutation<
+      ReassignProductTestFieldsApiResponse,
+      ReassignProductTestFieldsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "test-field-reassignment", id: "LIST" }, { type: "test-field-reassignment", id: queryArg.assignmentId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/test-field-reassignments/${queryArg.assignmentId}/product`,
+        method: "POST",
+        body: queryArg.appServicesFormsReassignTestFieldsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    reassignRawMaterialTestFields: build.mutation<
+      ReassignRawMaterialTestFieldsApiResponse,
+      ReassignRawMaterialTestFieldsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "test-field-reassignment", id: "LIST" }, { type: "test-field-reassignment", id: queryArg.assignmentId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/test-field-reassignments/${queryArg.assignmentId}/raw-material`,
+        method: "POST",
+        body: queryArg.appServicesFormsReassignTestFieldsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    reassignPackagingMaterialTestFields: build.mutation<
+      ReassignPackagingMaterialTestFieldsApiResponse,
+      ReassignPackagingMaterialTestFieldsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "test-field-reassignment", id: "LIST" }, { type: "test-field-reassignment", id: queryArg.assignmentId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/test-field-reassignments/${queryArg.assignmentId}/packaging-material`,
+        method: "POST",
+        body: queryArg.appServicesFormsReassignTestFieldsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -1272,6 +1376,75 @@ export type GetFormulaRepairHistoryApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetTemplateRepairContextApiResponse =
+  /** status 200 OK */ AppServicesFormsTemplateRepairContextDto;
+export type GetTemplateRepairContextApiArg = {
+  formId: string;
+  formAssigneeId?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PreviewTemplateRepairApiResponse =
+  /** status 200 OK */ AppServicesFormsTemplateRepairPreviewDto;
+export type PreviewTemplateRepairApiArg = {
+  formId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesFormsTemplateRepairCandidate: AppServicesFormsTemplateRepairCandidate;
+};
+export type ApplyTemplateRepairApiResponse =
+  /** status 200 OK */ AppServicesFormsTemplateRepairResultDto;
+export type ApplyTemplateRepairApiArg = {
+  formId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesFormsApplyTemplateRepairRequest: AppServicesFormsApplyTemplateRepairRequest;
+};
+export type GetTemplateRepairHistoryApiResponse =
+  /** status 200 OK */ AppServicesFormsTemplateRepairHistoryDto[];
+export type GetTemplateRepairHistoryApiArg = {
+  formId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ReassignProductTestFieldsApiResponse =
+  /** status 200 OK */ AppServicesFormsReassignTestFieldsResultDto;
+export type ReassignProductTestFieldsApiArg = {
+  assignmentId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesFormsReassignTestFieldsRequest: AppServicesFormsReassignTestFieldsRequest;
+};
+export type ReassignRawMaterialTestFieldsApiResponse =
+  /** status 200 OK */ AppServicesFormsReassignTestFieldsResultDto;
+export type ReassignRawMaterialTestFieldsApiArg = {
+  assignmentId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesFormsReassignTestFieldsRequest: AppServicesFormsReassignTestFieldsRequest;
+};
+export type ReassignPackagingMaterialTestFieldsApiResponse =
+  /** status 200 OK */ AppServicesFormsReassignTestFieldsResultDto;
+export type ReassignPackagingMaterialTestFieldsApiArg = {
+  assignmentId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesFormsReassignTestFieldsRequest: AppServicesFormsReassignTestFieldsRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -1553,6 +1726,8 @@ export type DomainEntitiesFormsResponseDetailDto = {
   rejected?: boolean;
   hasPendingApproval?: boolean;
   effectiveForm?: DomainEntitiesFormsFormDto;
+  approvedBy?: DomainEntitiesUsersUserDto;
+  approvedAt?: string | null;
 };
 export type DomainEntitiesFormsRequestCreateQuestionOptionsRequest = {
   name?: string | null;
@@ -1710,6 +1885,105 @@ export type AppServicesFormulasFormulaRepairHistoryDto = {
   repairedTests?: number;
   capturedTests?: number;
 };
+export type AppServicesFormsTemplateRepairFieldDto = {
+  formFieldId?: string;
+  sectionId?: string;
+  section?: string | null;
+  label?: string | null;
+  required?: boolean;
+};
+export type AppServicesFormsTemplateRepairTestKind = 0 | 1 | 2;
+export type AppServicesFormsTemplateRepairAnalystDto = {
+  userId?: string;
+  name?: string | null;
+  fields?: number;
+};
+export type AppServicesFormsTemplateRepairMissingFieldDto = {
+  formFieldId?: string;
+  suggestedAssigneeId?: string | null;
+};
+export type AppServicesFormsTemplateRepairTestDto = {
+  formAssigneeId?: string;
+  kind?: AppServicesFormsTemplateRepairTestKind;
+  retest?: boolean;
+  recordId?: string;
+  label?: string | null;
+  responseId?: string | null;
+  answeredFields?: number;
+  eligible?: boolean;
+  blocker?: string | null;
+  analysts?: AppServicesFormsTemplateRepairAnalystDto[] | null;
+  missing?: AppServicesFormsTemplateRepairMissingFieldDto[] | null;
+};
+export type AppServicesFormsTemplateRepairContextDto = {
+  formId?: string;
+  formName?: string | null;
+  canApply?: boolean;
+  fields?: AppServicesFormsTemplateRepairFieldDto[] | null;
+  tests?: AppServicesFormsTemplateRepairTestDto[] | null;
+  hiddenTests?: number;
+};
+export type AppServicesFormsTemplateRepairPreviewFieldDto = {
+  formFieldId?: string;
+  section?: string | null;
+  label?: string | null;
+  assigneeId?: string;
+  assigneeName?: string | null;
+};
+export type AppServicesFormsTemplateRepairPreviewTestDto = {
+  formAssigneeId?: string;
+  label?: string | null;
+  answersKept?: number;
+  added?: AppServicesFormsTemplateRepairPreviewFieldDto[] | null;
+};
+export type AppServicesFormsTemplateRepairPreviewDto = {
+  previewToken?: string | null;
+  fieldsAdded?: number;
+  tests?: AppServicesFormsTemplateRepairPreviewTestDto[] | null;
+  blockers?: string[] | null;
+};
+export type AppServicesFormsTemplateRepairAssignmentInput = {
+  formAssigneeId?: string;
+  formFieldId?: string;
+  assigneeId?: string;
+};
+export type AppServicesFormsTemplateRepairCandidate = {
+  assignments?: AppServicesFormsTemplateRepairAssignmentInput[] | null;
+};
+export type AppServicesFormsTemplateRepairResultDto = {
+  repairId?: string;
+  alreadyApplied?: boolean;
+  formAssigneeIds?: string[] | null;
+  fieldsAdded?: number;
+};
+export type AppServicesFormsApplyTemplateRepairRequest = {
+  candidate?: AppServicesFormsTemplateRepairCandidate;
+  previewToken?: string | null;
+  requestId?: string;
+  reason?: string | null;
+};
+export type AppServicesFormsTemplateRepairHistoryDto = {
+  id?: string;
+  actorId?: string;
+  actorName?: string | null;
+  appliedAt?: string;
+  reason?: string | null;
+  tests?: number;
+  fields?: number;
+};
+export type AppServicesFormsReassignTestFieldsResultDto = {
+  fieldsChanged?: number;
+  alreadyApplied?: boolean;
+};
+export type AppServicesFormsTestFieldReassignmentInput = {
+  assignmentId?: string;
+  expectedAssigneeId?: string;
+  newAssigneeId?: string;
+};
+export type AppServicesFormsReassignTestFieldsRequest = {
+  fields?: AppServicesFormsTestFieldReassignmentInput[] | null;
+  reason?: string | null;
+};
 export const {
   usePostApiV1FormMutation,
   useGetApiV1FormQuery,
@@ -1777,4 +2051,13 @@ export const {
   useApplyFormulaRepairMutation,
   useGetFormulaRepairHistoryQuery,
   useLazyGetFormulaRepairHistoryQuery,
+  useGetTemplateRepairContextQuery,
+  useLazyGetTemplateRepairContextQuery,
+  usePreviewTemplateRepairMutation,
+  useApplyTemplateRepairMutation,
+  useGetTemplateRepairHistoryQuery,
+  useLazyGetTemplateRepairHistoryQuery,
+  useReassignProductTestFieldsMutation,
+  useReassignRawMaterialTestFieldsMutation,
+  useReassignPackagingMaterialTestFieldsMutation,
 } = injectedRtkApi;

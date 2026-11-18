@@ -1,3 +1,5 @@
+Template repair and QC/packaging follow-ups (2026-11-18) add four `/api/v1/template-repairs` operations and three variant-specific `/api/v1/test-field-reassignments` operations to the forms domain. Additive fields expose product test date/actor, the response's final approver/time, and independent packaging substitute quantities. Import only these with `bun scripts/import-template-repairs.ts EXPORT.json`, then regenerate/check. Reviewed typed digest `372d3b48c762718b8989a817286410bd1a76b4846e69f024696f3ea9ce8b6e00`; stripping exactly these additions reproduces `7a00169a…20d6`. Apply `AddTemplateRepairs` and `AddPackagingSubstituteQuantities` and deploy the companion backend before activation. New repair permissions are explicitly assigned, with no automatic grants. See [repair and QC follow-ups](template-repair-and-qc-follow-ups.md).
+
 Specification printing adds three read operations under `/api/v1/specification-print`
 for raw material, packaging material, and product specifications. The print preview
 uses the recorded specification revisions and requires the corresponding export

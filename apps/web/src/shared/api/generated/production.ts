@@ -3978,6 +3978,8 @@ export type DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto = {
   issuedAt?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   isRetest?: boolean;
+  testedAt?: string | null;
+  testedBy?: DomainEntitiesUsersUserDto;
 };
 export type DomainEntitiesProductsProductionProductionStepAnalysisDto = {
   request?: DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto;

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { certificateSignatories } from "@/shared/ard-view/certificate-signatures";
 import { CertificatePreview } from "@/shared/ard-view/certificate-preview";
 import { AtrRequestSection } from "@/shared/qc/atr-request-section";
 import { buildCoaCompliancePayload, type CoaComplianceItem } from "@/shared/ard-view/raw-data/coa-compliance";
@@ -142,7 +143,8 @@ export function AtrResultsPage() {
     {previewing && atr ? <Dialog open onOpenChange={(open) => { if (!open && !generating.isLoading) setPreviewing(false); }}><DialogContent className="sm:max-w-5xl">
       <DialogHeader><DialogTitle>Certificate of analysis</DialogTitle><DialogDescription>{sheet.certificate.canGenerate ? "Check each test's compliance, then submit the certificate for approval." : sheet.certificate.label}</DialogDescription></DialogHeader>
       <DialogBody><CertificatePreview kind="Product" sections={sections} responses={sheet.responses} compliance={compliance}
-        facts={{ batchNumber: atr.batchNumber, made: atr.made, expires: atr.expires, arNumber: atr.arNumber, sampled: atr.sampledAt, analysed: atr.sampledAt, subject: `${atr.product}${atr.productCode ? ` · ${atr.productCode}` : ""}` }}
+        signatories={certificateSignatories(sheet.responses, sheet.responseDetail)}
+        facts={{ received: atr.acknowledgedAt, batchNumber: atr.batchNumber, made: atr.made, expires: atr.expires, arNumber: atr.arNumber, sampled: atr.sampledAt, analysed: atr.testedAt, subject: `${atr.product}${atr.productCode ? ` · ${atr.productCode}` : ""}` }}
         extra={[{ label: "Composition", value: atr.composition }, { label: "Pack style", value: atr.packing }, { label: "Shelf life", value: atr.shelfLife }]}
         onCompliance={(sectionId, complies) => { if (sheet.certificate.canGenerate) setCompliance((list) => list.map((item) => item.formSectionId === sectionId ? { ...item, complies, requiresReview: false } : item)); }} />
         {message ? <p role="alert" className="mt-2 text-sm text-destructive">{message}</p> : null}

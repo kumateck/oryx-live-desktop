@@ -14,6 +14,7 @@ import { useMaterialUnit } from "../../hooks/use-material-unit";
 import type { MaterialFacts } from "../../lib/bom";
 import { packagingConflict, type PackagingLine, type PackagingUnit } from "../../lib/packaging";
 import { packagingItemFormSchema, type PackagingItemFormValues } from "../../schemas/packaging-schema";
+import { PackagingSubstituteQuantity } from "./packaging-substitute-quantity";
 import { PackagingQuantityFields } from "./packaging-quantity-fields";
 
 const noExclusions: readonly string[] = [];
@@ -27,10 +28,11 @@ export function PackagingItemDialog({ editing, lines, packingStyles, onSubmit, o
 }) {
   const materials = useMaterialOptions(materialKind.packaging, packagingAudit);
   const form = useForm<PackagingItemFormValues>({ resolver: zodResolver(packagingItemFormSchema), defaultValues: editing
-    ? { material: editing.material, packing: editing.packing, prescribedQuantity: editing.prescribedQuantity, packingExcessMargin: editing.packingExcessMargin,
-      substitutes: editing.substitutes }
-    : { packing: null, packingExcessMargin: 0, substitutes: [] } });
-  const [material, prescribed, allowance] = useWatch({ control: form.control, name: ["material", "prescribedQuantity", "packingExcessMargin"] });
+    ? { material: editing.material, packing: editing.packing, prescribedQuantity: editing.prescribedQuantity, packingExcessMargin: 0,
+      substitutes: editing.substitutes,
+      substituteQuantities: Object.fromEntries(editing.substitutes.flatMap(item => item.prescribedQuantity == null ? [] : [[item.value, item.prescribedQuantity]])) }
+    : { packing: null, packingExcessMargin: 0, substitutes: [], substituteQuantities: {} } });
+  const [material, prescribed, substitutes] = useWatch({ control: form.control, name: ["material", "prescribedQuantity", "substitutes"] });
   const facts = materials.facts(material?.value);
   const linked = useMaterialUnit(material?.value, facts?.unit ?? (editing?.material.value === material?.value ? editing?.unit ?? null : null), packagingAudit);
   // A stable loader: the picker reloads its options whenever the loader it is given changes.
@@ -48,7 +50,7 @@ export function PackagingItemDialog({ editing, lines, packingStyles, onSubmit, o
       description: "Leave empty when the material is used the same way for every packing style." },
     { type: InputTypes.SELECT, name: "substitutes", label: "Substitute materials", mode: "multiple", source: "async", loadOptions: loadSubstitutes,
       placeholder: "None", searchPlaceholder: "Search by name or code", className: "md:col-span-2",
-      description: "Packing materials the store may issue instead of this one, pack for pack. The store issues this material or one substitute, never both." },
+      description: "Packing materials the store may issue instead of this one, with its own quantity. The store issues this material or one substitute, never both." },
   ] as const satisfies readonly WizardField<PackagingItemFormValues>[], [loadMaterials, loadSubstitutes, packingStyles]);
 
   const submit = form.handleSubmit((values) => {
@@ -57,7 +59,8 @@ export function PackagingItemDialog({ editing, lines, packingStyles, onSubmit, o
     if (!linked.unit) { form.setError("material", { message: "The material's linked unit must be available before quantities can be entered." }); return; }
     onSubmit(values, facts, linked.unit);
   });
-  const total = typeof prescribed === "number" ? prescribed + (typeof allowance === "number" ? allowance : 0) : null;
+  // Allowance is hidden and new/edited rows use zero, as requested. Untouched saved rows retain their stored allowance.
+  const total = typeof prescribed === "number" ? prescribed : null;
   const code = facts?.code ?? (editing && editing.material.value === material?.value ? editing.code : "");
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -73,6 +76,11 @@ export function PackagingItemDialog({ editing, lines, packingStyles, onSubmit, o
               {linked.status === "error" ? "The material unit could not be loaded." : "No unit is set for this material. Set its unit on the material linkage first."}
               <Button type="button" size="sm" variant="outline" onClick={linked.retry}>Retry unit</Button>
             </p> : null}
+          {(substitutes ?? []).length ? <section aria-label="Packaging substitute quantities" className="space-y-3">
+            <h3 className="text-sm font-medium">Substitute quantities</h3>
+            <p className="text-xs text-muted-foreground">Enter the full-batch quantity of each substitute in its own stock unit.</p>
+            {(substitutes ?? []).map(item => <PackagingSubstituteQuantity key={item.value} form={form} substitute={item} />)}
+          </section> : null}
           {material?.value ? <dl className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-md bg-muted/50 p-3 text-sm">
             <dt className="text-muted-foreground">Code</dt><dd>{code || "–"}</dd>
             <dt className="text-muted-foreground">Material unit</dt><dd>{linked.unit?.symbol ?? "–"}</dd>
