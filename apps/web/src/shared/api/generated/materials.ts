@@ -1249,6 +1249,62 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    previewRawUnstartReservations: build.query<
+      PreviewRawUnstartReservationsApiResponse,
+      PreviewRawUnstartReservationsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "unstart-reservation", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/unstart-reservations/${queryArg.materialId}/raw`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    releaseRawUnstartReservations: build.mutation<
+      ReleaseRawUnstartReservationsApiResponse,
+      ReleaseRawUnstartReservationsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "unstart-reservation", id: "LIST" }, { type: "unstart-reservation", id: queryArg.materialId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/unstart-reservations/${queryArg.materialId}/raw`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionReleaseUnstartReservationsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    previewPackagingUnstartReservations: build.query<
+      PreviewPackagingUnstartReservationsApiResponse,
+      PreviewPackagingUnstartReservationsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "unstart-reservation", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/unstart-reservations/${queryArg.materialId}/packaging`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    releasePackagingUnstartReservations: build.mutation<
+      ReleasePackagingUnstartReservationsApiResponse,
+      ReleasePackagingUnstartReservationsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "unstart-reservation", id: "LIST" }, { type: "unstart-reservation", id: queryArg.materialId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/unstart-reservations/${queryArg.materialId}/packaging`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductsProductionReleaseUnstartReservationsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2128,6 +2184,44 @@ export type PutApiV1MaterialBatchByBatchIdMigrationDetailsApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesMaterialsBatchUpdateMigrationBatchDetails: DomainEntitiesMaterialsBatchUpdateMigrationBatchDetails;
+};
+export type PreviewRawUnstartReservationsApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionUnstartReservationPreviewDto;
+export type PreviewRawUnstartReservationsApiArg = {
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ReleaseRawUnstartReservationsApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionReleaseUnstartReservationsResultDto;
+export type ReleaseRawUnstartReservationsApiArg = {
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionReleaseUnstartReservationsRequest: DomainEntitiesProductsProductionReleaseUnstartReservationsRequest;
+};
+export type PreviewPackagingUnstartReservationsApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionUnstartReservationPreviewDto;
+export type PreviewPackagingUnstartReservationsApiArg = {
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ReleasePackagingUnstartReservationsApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionReleaseUnstartReservationsResultDto;
+export type ReleasePackagingUnstartReservationsApiArg = {
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductsProductionReleaseUnstartReservationsRequest: DomainEntitiesProductsProductionReleaseUnstartReservationsRequest;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -3611,6 +3705,35 @@ export type DomainEntitiesMaterialsBatchUpdateMigrationBatchDetails = {
   expectedGrnNumber: string | null;
   reason: string;
 };
+export type DomainEntitiesProductsProductionUnstartReservationRowDto = {
+  reservationId?: string;
+  unstartRepairId?: string;
+  product?: string | null;
+  productBatch?: string | null;
+  materialBatch?: string | null;
+  quantity?: number;
+  unit?: string | null;
+  unstartedAt?: string;
+  blockers?: string[] | null;
+};
+export type DomainEntitiesProductsProductionUnstartReservationPreviewDto = {
+  previewToken?: string | null;
+  reservations?:
+    DomainEntitiesProductsProductionUnstartReservationRowDto[] | null;
+};
+export type DomainEntitiesProductsProductionReleaseUnstartReservationsResultDto =
+  {
+    repairId?: string;
+    releasedCount?: number;
+    alreadyApplied?: boolean;
+  };
+export type DomainEntitiesProductsProductionReleaseUnstartReservationsRequest =
+  {
+    requestId?: string;
+    previewToken: string;
+    reason: string;
+    reservationIds: string[];
+  };
 export const {
   usePostApiV1BomMutation,
   usePutApiV1BomByBillOfMaterialIdMutation,
@@ -3735,4 +3858,10 @@ export const {
   useLazyPreviewStockMigrationMaterialLinksQuery,
   useCreateStockMigrationMaterialLinksMutation,
   usePutApiV1MaterialBatchByBatchIdMigrationDetailsMutation,
+  usePreviewRawUnstartReservationsQuery,
+  useLazyPreviewRawUnstartReservationsQuery,
+  useReleaseRawUnstartReservationsMutation,
+  usePreviewPackagingUnstartReservationsQuery,
+  useLazyPreviewPackagingUnstartReservationsQuery,
+  useReleasePackagingUnstartReservationsMutation,
 } = injectedRtkApi;

@@ -32,7 +32,7 @@ export function ApprovedMaterialDetail({ material }: { material: MaterialHeader 
       {active === "stock" ? <StockByBatchTable materialId={material.id} departmentId={departmentId} /> : null}
       {active === "bin-card" ? <div className="space-y-2"><div className="flex justify-end"><PrintButton label="Print bin card" preview={(close) => <BinCardPrint material={material} departmentId={departmentId} search={search} onClose={close} />} /></div>
         <BinCardTable materialId={material.id} departmentId={departmentId} search={search} /></div> : null}
-      {active === "reserved" ? <ReservedTable materialId={material.id} departmentId={departmentId} /> : null}
+      {active === "reserved" ? <ReservedTable materialId={material.id} departmentId={departmentId} kind={material.kind} /> : null}
     </Tabs> : <p role="alert" className="text-sm">Your account has no department, so there is no warehouse stock to show.</p>}
   </article>;
 }
