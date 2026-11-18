@@ -113,9 +113,21 @@ function stripMaterialRetestAtr(document: ObjectValue) {
   object(schemas["DOMAIN.Entities.Materials.Batch.MaterialRetestStatus"] ?? null).enum = [0, 1, 2, 3, 4, 5, 6];
 }
 
+/** Upcoming batch issues (2026-11-18): two typed reads, their schemas, and the started batch a swap may name. */
+const upcomingPaths = ["/api/v1/upcoming-batch-issues", "/api/v1/upcoming-batch-issues/{productionScheduleProductId}/alternative-batches"] as const;
+const upcomingSchemas = ["UpcomingBatchIssue", "UpcomingBatchIssuePage", "UpcomingBatchMaterial"].map((name) => `DOMAIN.Entities.Products.Production.${name}`);
+function stripUpcomingBatchIssues(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  for (const path of upcomingPaths) delete paths[path];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of upcomingSchemas) delete schemas[name];
+  delete object(object(schemas["DOMAIN.Entities.Warehouses.CreateSwapRequest"] ?? null).properties ?? null).productionScheduleProductId;
+}
+
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(document);
   stripMaterialRetestAtr(document);
   stripApprovalUsersOnRecord(document);
   stripPackagingIssueQuantity(document);
@@ -671,6 +683,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
@@ -695,6 +708,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
@@ -717,6 +731,7 @@ test("a specification revision requires a reason and returns it on the specifica
 
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
@@ -733,6 +748,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   const digest = contractDigest(current);
@@ -751,6 +767,7 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
 
 test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripMaterialRetestAtr(current);
   const digest = contractDigest(current);
   assert.equal(digest, "dca46e49d205cc65b0572d43a710dcc6c6e0ac79e0de1412e5de1d5bacf61f6f");
@@ -762,6 +779,7 @@ test("IT approval transfer adds only a typed read of the users on approval docum
 
 test("material retests add an AR number, read-only retest fields and three statuses, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   const digest = contractDigest(current);
   assert.equal(digest, "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
   checkCompatibility(hostConfig, policy, digest);
@@ -769,4 +787,14 @@ test("material retests add an AR number, read-only retest fields and three statu
   assert.deepEqual(object(schemas["DOMAIN.Entities.Materials.Batch.MaterialRetestStatus"] ?? null).enum, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
   stripMaterialRetestAtr(current);
   assert.equal(contractDigest(current), "dca46e49d205cc65b0572d43a710dcc6c6e0ac79e0de1412e5de1d5bacf61f6f");
+});
+
+test("upcoming batch issues add two typed reads and the started batch a swap may name, preserving the approved predecessor", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "0feb3b56925a1248f279fbce9668b02ffb18c50d06249be0f0fd1468de812bb5");
+  checkCompatibility(hostConfig, policy, digest);
+  for (const path of upcomingPaths) assert.deepEqual(Object.keys(object(object(current.paths ?? null)[path] ?? null)), ["get"]);
+  stripUpcomingBatchIssues(current);
+  assert.equal(contractDigest(current), "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
 });

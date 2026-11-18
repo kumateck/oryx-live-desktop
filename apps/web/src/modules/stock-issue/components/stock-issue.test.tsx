@@ -142,11 +142,13 @@ it("pairs each batch set aside with earlier batches, soonest first, and never of
   // 25 of b1 already waits in another swap: only the remaining 5 is offered.
   expect(swapSuggestions(alternativesSchema.parse(alternatives), new Map([["b1", 25_000_000]])).filter((row) => row.current.number === "B1").map((row) => row.quantity)).toEqual([5_000_000]);
   const records = shelfRecordsSchema.parse(shelves);
-  expect(swapRequestFor(rows[1]!, records, "sr-1")).toEqual({ body: { firstWarehouseId: "w1", secondWarehouseId: "w2", stockRequisitionId: "sr-1",
+  expect(swapRequestFor(rows[1]!, records, { requisitionId: "sr-1" })).toEqual({ body: { firstWarehouseId: "w1", secondWarehouseId: "w2", stockRequisitionId: "sr-1",
     firstSwapShelfMaterialBatches: [{ shelfMaterialBatchId: "r1", materialBatchId: "b1", uoMId: "u-mg", quantity: 20_000_000 }], secondSwapShelfMaterialBatches: [{ shelfMaterialBatchId: "r8", materialBatchId: "a2", uoMId: "u-mg", quantity: 20_000_000 }] } });
+  // A started batch whose stock is not requested yet is named instead of a requisition.
+  expect(swapRequestFor(rows[1]!, records, { batchId: "batch-1" })).toMatchObject({ body: { productionScheduleProductId: "batch-1" } });
   // The other store has since used some of a1.
-  expect(swapRequestFor(rows[0]!, records, "sr-1")).toEqual({ reason: "Beta raw store now holds less of the batch than the swap needs." });
-  expect(swapRequestFor(rows[0]!, records.filter((record) => record.id !== "r1"), "sr-1")).toEqual({ reason: "The batch set aside is no longer on its shelf." });
+  expect(swapRequestFor(rows[0]!, records, { requisitionId: "sr-1" })).toEqual({ reason: "Beta raw store now holds less of the batch than the swap needs." });
+  expect(swapRequestFor(rows[0]!, records.filter((record) => record.id !== "r1"), { requisitionId: "sr-1" })).toEqual({ reason: "The batch set aside is no longer on its shelf." });
 });
 
 const swapBackend = (path: string, method: string) => {

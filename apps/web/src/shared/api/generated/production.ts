@@ -1604,6 +1604,37 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    listUpcomingBatchIssues: build.query<
+      ListUpcomingBatchIssuesApiResponse,
+      ListUpcomingBatchIssuesApiArg
+    >({
+      providesTags: [{ type: "upcoming-batch-issue", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/upcoming-batch-issues`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          searchQuery: queryArg.searchQuery,
+        },
+      }),
+    }),
+    listUpcomingBatchAlternatives: build.query<
+      ListUpcomingBatchAlternativesApiResponse,
+      ListUpcomingBatchAlternativesApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "upcoming-batch-issue", id: queryArg.productionScheduleProductId }],
+      query: (queryArg) => ({
+        url: `/api/v1/upcoming-batch-issues/${queryArg.productionScheduleProductId}/alternative-batches`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     postApiV1WorkOrder: build.mutation<
       PostApiV1WorkOrderApiResponse,
       PostApiV1WorkOrderApiArg
@@ -3027,6 +3058,26 @@ export type GetApiV1ProductionScheduleForecastApiArg = {
   numberOfBatches?: number;
   productPackingId?: string;
   batchSize?: DomainEntitiesProductionSchedulesBatchSize;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ListUpcomingBatchIssuesApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionUpcomingBatchIssuePage;
+export type ListUpcomingBatchIssuesApiArg = {
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ListUpcomingBatchAlternativesApiResponse =
+  /** status 200 OK */ DomainEntitiesRequisitionsMaterialAlternativeBatchesDtoRead[];
+export type ListUpcomingBatchAlternativesApiArg = {
+  productionScheduleProductId: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -5163,6 +5214,63 @@ export type DomainEntitiesProductionSchedulesForecastMaterialDtoRead = {
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   isAvailable?: boolean;
 };
+export type DomainEntitiesProductsProductionUpcomingBatchMaterial = {
+  materialId?: string;
+  materialCode?: string | null;
+  materialName?: string | null;
+  kind?: DomainEntitiesMaterialsMaterialKind;
+  lotNumber?: string | null;
+  warehouse?: string | null;
+  location?: string | null;
+  quantity?: number;
+  unit?: string | null;
+};
+export type DomainEntitiesProductsProductionUpcomingBatchIssue = {
+  bmrId?: string;
+  productionScheduleProductId?: string;
+  productCode?: string | null;
+  productName?: string | null;
+  scheduleCode?: string | null;
+  startedAt?: string;
+  batchNumber?: string | null;
+  batchQuantity?: number;
+  batchUnit?: string | null;
+  materials?: DomainEntitiesProductsProductionUpcomingBatchMaterial[] | null;
+};
+export type DomainEntitiesProductsProductionUpcomingBatchIssuePage = {
+  data?: DomainEntitiesProductsProductionUpcomingBatchIssue[] | null;
+  totalRecordCount?: number;
+  pageIndex?: number;
+  pageCount?: number;
+};
+export type DomainEntitiesRequisitionsAlternativeBatchDto = {
+  batch?: DomainEntitiesMaterialsBatchMaterialBatchListDto;
+  quantityAvailable?: number;
+  warehouse?: SharedCollectionItemDto;
+  warehouseLocationShelfId?: string | null;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
+};
+export type DomainEntitiesRequisitionsAlternativeBatchDtoRead = {
+  batch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
+  quantityAvailable?: number;
+  warehouse?: SharedCollectionItemDto;
+  warehouseLocationShelfId?: string | null;
+  warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
+};
+export type DomainEntitiesRequisitionsMaterialAlternativeBatchesDto = {
+  material?: DomainEntitiesMaterialsMaterialDto;
+  requestedQuantity?: number;
+  currentReservedBatches?: DomainEntitiesMaterialsBatchBatchToSupply[] | null;
+  alternativeBatches?: DomainEntitiesRequisitionsAlternativeBatchDto[] | null;
+};
+export type DomainEntitiesRequisitionsMaterialAlternativeBatchesDtoRead = {
+  material?: DomainEntitiesMaterialsMaterialDto;
+  requestedQuantity?: number;
+  currentReservedBatches?:
+    DomainEntitiesMaterialsBatchBatchToSupplyRead[] | null;
+  alternativeBatches?:
+    DomainEntitiesRequisitionsAlternativeBatchDtoRead[] | null;
+};
 export type DomainEntitiesWorkOrdersCreateProductionStepRequest = {
   description?: string | null;
   resourceId?: string;
@@ -5678,6 +5786,10 @@ export const {
   useLazyGetApiV1ProductionScheduleDetailedReportQuery,
   useGetApiV1ProductionScheduleForecastQuery,
   useLazyGetApiV1ProductionScheduleForecastQuery,
+  useListUpcomingBatchIssuesQuery,
+  useLazyListUpcomingBatchIssuesQuery,
+  useListUpcomingBatchAlternativesQuery,
+  useLazyListUpcomingBatchAlternativesQuery,
   usePostApiV1WorkOrderMutation,
   useGetApiV1WorkOrderByWorkOrderIdQuery,
   useLazyGetApiV1WorkOrderByWorkOrderIdQuery,

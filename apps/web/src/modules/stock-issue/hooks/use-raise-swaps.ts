@@ -1,6 +1,6 @@
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useLazyGetApiV1MaterialByMaterialIdShelfQuery, usePostApiV1WarehouseSwapMutation } from "../api/stock-issue-api";
-import { shelfRecordsSchema, swapRequestFor, type ShelfRecord, type SwapSuggestion } from "../lib/alternative-batches";
+import { shelfRecordsSchema, swapRequestFor, type ShelfRecord, type SwapSource, type SwapSuggestion } from "../lib/alternative-batches";
 import { audit } from "../lib/stock-issue";
 
 export interface SwapOutcome { key: string; reason: string | null }
@@ -10,7 +10,7 @@ export interface SwapOutcome { key: string; reason: string | null }
  * now before it is sent. Every suggestion gets an outcome, so a run that only partly works says exactly which
  * swaps were asked for and why the others were not.
  */
-export function useRaiseSwaps(requisitionId: string) {
+export function useRaiseSwaps(source: SwapSource) {
   const [loadShelves] = useLazyGetApiV1MaterialByMaterialIdShelfQuery();
   const [create] = usePostApiV1WarehouseSwapMutation();
   return async (suggestions: readonly SwapSuggestion[]): Promise<SwapOutcome[]> => {
@@ -25,7 +25,7 @@ export function useRaiseSwaps(requisitionId: string) {
         shelves.set(suggestion.materialId, records);
       }
       if (typeof records === "string") { outcomes.push({ key: suggestion.key, reason: records }); continue; }
-      const request = swapRequestFor(suggestion, records, requisitionId);
+      const request = swapRequestFor(suggestion, records, source);
       if ("reason" in request) { outcomes.push({ key: suggestion.key, reason: request.reason }); continue; }
       const result = await create({ ...audit, domainEntitiesWarehousesCreateSwapRequest: request.body });
       outcomes.push({ key: suggestion.key, reason: "error" in result && result.error ? apiErrorMessage(result.error) : null });

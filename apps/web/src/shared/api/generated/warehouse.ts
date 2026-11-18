@@ -4281,6 +4281,7 @@ export type DomainEntitiesWarehousesCreateSwapRequest = {
   secondSwapShelfMaterialBatches?:
     DomainEntitiesWarehousesCreateSwapShelfMaterialBatch[] | null;
   stockRequisitionId?: string | null;
+  productionScheduleProductId?: string | null;
 };
 export type DomainEntitiesWarehousesCreateSwapRequestRead = {
   firstWarehouseId?: string;
@@ -4291,6 +4292,7 @@ export type DomainEntitiesWarehousesCreateSwapRequestRead = {
     DomainEntitiesWarehousesCreateSwapShelfMaterialBatch[] | null;
   quantityIsValid?: boolean;
   stockRequisitionId?: string | null;
+  productionScheduleProductId?: string | null;
 };
 export type DomainEntitiesWarehousesSwapShelfMaterialBatchDto = {
   materialBatch?: DomainEntitiesMaterialsBatchMaterialBatchReducedDto;
