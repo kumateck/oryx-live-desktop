@@ -1,0 +1,7 @@
+# Completed worksheet rendering
+
+Completed worksheets reuse the structured formula display: constants and labelled manual variables, enabled standard/sample inputs, a readings table and formatted equations. Values are static text. Universal formula configuration JSON is never printed as a response. Saved settings on a response take precedence over current option settings for its recorded inputs. Disabled standard/sample sections are omitted, and missing readings remain missing rather than being filled from configured defaults.
+
+Governed/repaired formula responses render their saved inputs without recalculating an authoritative result. The separately stored authoritative results remain the source for the worksheet and COA. Uniformity inputs use the same static layout with recalculation disabled in this mode. Simple formulas retain their labelled recorded readings alongside the formatted equation. Plain short-answer values preserve their original casing. Existing table, choice, rich text and attachment renderers remain shared by worksheet views and print previews.
+
+No API, permission or database changes. Existing view/export access still guards the parent views. Regression coverage includes legacy response wrappers, universal/sample tables, labelled simple variables, preserved precision, no editable controls, no settings JSON and authoritative-result preservation. A live rendered-browser review could not run because local browser access is unavailable for this chat.

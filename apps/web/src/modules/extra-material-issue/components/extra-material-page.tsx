@@ -40,7 +40,7 @@ export function ExtraMaterialPage() {
       <div className="break-words text-xs text-muted-foreground">{[row.original.schedule, row.original.batch ? `Batch ${row.original.batch}` : null].filter(Boolean).join(" · ") || "No schedule"}</div></div> }),
     column.accessor((row) => row.createdAt ?? "", { id: "requested", header: "Requested", size: 170, cell: ({ row }) => <div><div>{formatDate(row.original.createdAt) ?? "–"}</div><div className="text-xs text-muted-foreground">{row.original.requestedBy ?? ""}</div></div> }),
     column.accessor("quantity", { header: "Quantity", size: 140, cell: ({ row }) => amount(row.original.quantity, row.original.unit) }),
-    column.display({ id: "batches", header: "Issued from", cell: ({ row }) => <BatchBreakdown line={row.original} /> }),
+    column.display({ id: "batches", header: "Issued from", size: 560, cell: ({ row }) => <BatchBreakdown line={row.original} /> }),
     column.accessor("approved", { header: "Approval", size: 160, cell: ({ row }) => row.original.approved ? <Badge variant="secondary">Approved</Badge> : <Badge variant="outline">Awaiting approval</Badge> }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => { const block = extraIssueBlock(row.original);
       return <TableMenu label={`Actions for ${row.original.materialName}`} items={[{ id: "issue", label: "Issue", icon: PackageCheck, onSelect: () => setIssuing(row.original), ...(block ? { disabled: true, disabledReason: block } : {}) }]} />; } }),

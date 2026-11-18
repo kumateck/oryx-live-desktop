@@ -22,5 +22,8 @@ export default function ViewFormulaQuestion({ questionOption, responseRecord, re
   const value = normalizeFormulaResponse(response ?? responseRecord?.value ?? "");
   return definition.type === FormulaType.Universal
     ? <FormulaPrintPreview settings={definition.settings} response={value} />
-    : <TheAduseiPreviewPrint type={definition.type} settings={definition.settings} response={value} />;
+    : definition.type === FormulaType.Simple ? <div className="space-y-4">
+      <RecordedFormulaInputs value={value} option={questionOption} />
+      <TheAduseiPreviewPrint type={definition.type} settings={definition.settings} response={value} />
+    </div> : <TheAduseiPreviewPrint type={definition.type} settings={definition.settings} response={value} />;
 }

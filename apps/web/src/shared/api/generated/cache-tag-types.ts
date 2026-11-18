@@ -320,6 +320,7 @@ export const generatedTagTypes = [
   "unstart-leftover",
   "unstart-leftover/packaging",
   "unstart-leftover/raw",
+  "unstart-reservation",
   "upcoming-batch-issue",
   "user",
   "user/authenticated",
