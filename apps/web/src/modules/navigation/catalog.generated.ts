@@ -1196,6 +1196,14 @@ export const navigationCatalog = [
         ]
       },
       {
+        "id": "quality-assurance.material-retests",
+        "label": "Material Retests",
+        "path": "/qc/material-retests?tab=sample",
+        "permissions": [
+          "CanRecordMaterialRetestSample"
+        ]
+      },
+      {
         "id": "quality-assurance.formula-reviews",
         "label": "Formula Reviews",
         "path": "/qa/formula-reviews",

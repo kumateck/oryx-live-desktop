@@ -20,7 +20,7 @@ import { TestEntry, TestEntryEmpty } from "@/shared/qc/test-entry";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useBatchRoute } from "../hooks/use-batch-route";
 import { useBatchWorksheet } from "../hooks/use-batch-worksheet";
-import { grnListAudit, printsFilled, qcGrnAudit, qcGrnPath, qcPermissions, qcWorksheetAccess } from "../lib/qc-grn";
+import { grnListAudit, printsFilled, qcGrnAudit, qcPermissions, qcWorksheetAccess } from "../lib/qc-grn";
 
 import { BatchWorksheetPreview } from "./batch-worksheet";
 
@@ -31,10 +31,10 @@ function Frame({ sheet, title, crumb, children }: { sheet: Sheet; title: string;
   const route = useBatchRoute();
   if (sheet.loading) return <DetailPageSkeleton label="Loading batch test" />;
   if (sheet.error) return <div role="alert" className="mx-auto max-w-md space-y-3 py-12 text-center"><h1 className="text-lg font-semibold">Batch test unavailable</h1><p className="text-sm text-muted-foreground">{sheet.error}</p>
-    <div className="flex justify-center gap-2"><Button size="sm" variant="outline" onClick={sheet.retry}>Retry</Button><Button asChild size="sm"><Link to={route.notePath}>Back to the note</Link></Button></div></div>;
+    <div className="flex justify-center gap-2"><Button size="sm" variant="outline" onClick={sheet.retry}>Retry</Button><Button asChild size="sm"><Link to={route.notePath}>{route.backLabel}</Link></Button></div></div>;
   const subject = material(sheet);
   return <article className="min-w-0 space-y-4">
-    <PageHeader title={`${title} · ${subject.name}`} crumbs={[{ label: "Goods receipt notes", to: `${qcGrnPath}?type=${String(route.kind)}` }, { label: "Note", to: route.notePath }, { label: crumb }]} />
+    <PageHeader title={`${title} · ${subject.name}`} crumbs={[...route.crumbs, { label: crumb }]} />
     {children}
   </article>;
 }
@@ -101,11 +101,12 @@ export function BatchProgressPage() {
   const route = useBatchRoute();
   const access = useAccess();
   const note = qcGrnWarehouseApi.useGetApiV1WarehouseGrnByIdQuery(
-    route.ready && access.allows(qcWorksheetAccess(route.kind))
+    route.ready && route.grnId && access.allows(qcWorksheetAccess(route.kind))
       ? { ...grnListAudit, id: route.grnId }
       : skipToken,
   );
-  const onNote = note.currentData?.materialBatches?.some((batch) => batch.id === route.batchId);
+  // A retest's batch is not on a note: the retest that provides the route already holds it.
+  const onNote = route.grnId === null || note.currentData?.materialBatches?.some((batch) => batch.id === route.batchId);
   const batch = qcGrnAnalyticalApi.useGetApiV1MaterialArdMaterialBatchDetailsByMaterialBatchIdQuery(
     onNote ? { ...qcGrnAudit, materialBatchId: route.batchId } : skipToken,
   );
@@ -122,11 +123,12 @@ export function BatchProgressPage() {
 }
 
 function BatchProgressSheet({ batchId, kind }: { batchId: string; kind: 0 | 1 }) {
+  const route = useBatchRoute();
   const sheet = useBatchWorksheet(batchId, { fresh: true });
   return <Frame sheet={sheet} title="Test progress" crumb="Test progress">
     {summary(sheet, kind)}
     <WorksheetProgress form={sheet.form} stored={sheet.stored} responses={sheet.responses}
-      assignments={sheet.assignees} submitted={printsFilled(sheet.details?.materialBatch?.status ?? null)}
+      assignments={sheet.assignees} submitted={route.submitted ?? printsFilled(sheet.details?.materialBatch?.status ?? null)}
       preview={(close) => <BatchWorksheetPreview sheet={sheet} filled onClose={close} />} />
   </Frame>;
 }

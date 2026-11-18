@@ -71,6 +71,12 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+Material retest on the material test (2026-11-18): `RecordMaterialRetestSample` gains a
+required `arNumber`; `MaterialRetestDetailDto` gains read-only `arNumber`, `materialSamplingId`,
+`batchStatus`, `materialName` and `materialCode`; `MaterialRetestStatus` adds `7` Assigned, `8`
+TestTaken and `9` Checked. Typed digest `7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6`; removing exactly these reproduces `dca46e49…1f6f`.
+Deploy backend #1882 and its `AddMaterialRetestSampling` migration first.
+
 IT approval transfer (2026-11-17) adds typed `GET /api/v1/approval/users-on-record`
 (approvals domain, `CanTransferAnyApprovalRights`): everyone named on an approval workflow or
 request, for IT to hand over a leaver's approvals. Typed digest
