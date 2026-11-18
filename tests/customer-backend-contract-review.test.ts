@@ -128,9 +128,21 @@ function stripTemplateRepairs(document: ObjectValue) {
   }
 }
 
+/** Upcoming batch issues (2026-11-18): two typed reads, their schemas, and the started batch a swap may name. */
+const upcomingPaths = ["/api/v1/upcoming-batch-issues", "/api/v1/upcoming-batch-issues/{productionScheduleProductId}/alternative-batches"] as const;
+const upcomingSchemas = ["UpcomingBatchIssue", "UpcomingBatchIssuePage", "UpcomingBatchMaterial"].map((name) => `DOMAIN.Entities.Products.Production.${name}`);
+function stripUpcomingBatchIssues(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  for (const path of upcomingPaths) delete paths[path];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of upcomingSchemas) delete schemas[name];
+  delete object(object(schemas["DOMAIN.Entities.Warehouses.CreateSwapRequest"] ?? null).properties ?? null).productionScheduleProductId;
+}
+
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(document);
   stripTemplateRepairs(document);
   stripMaterialRetestAtr(document);
   stripApprovalUsersOnRecord(document);
@@ -689,6 +701,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripTemplateRepairs(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
@@ -715,6 +728,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripTemplateRepairs(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
@@ -739,6 +753,7 @@ test("a specification revision requires a reason and returns it on the specifica
 
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripTemplateRepairs(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
@@ -756,6 +771,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripTemplateRepairs(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
@@ -775,6 +791,7 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
 
 test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripTemplateRepairs(current);
   stripMaterialRetestAtr(current);
   const digest = contractDigest(current);
@@ -787,6 +804,7 @@ test("IT approval transfer adds only a typed read of the users on approval docum
 
 test("material retests add an AR number, read-only retest fields and three statuses, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   stripTemplateRepairs(current);
   const digest = contractDigest(current);
   assert.equal(digest, "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
@@ -799,6 +817,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 
  test("QC repair, partial reassignment and packaging quantities preserve the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
   const paths = object(current.paths ?? null);
   const operations = Object.entries(paths).filter(([path]) => path.startsWith("/api/v1/template-repairs/"));
   assert.equal(operations.length, 4);
@@ -809,5 +828,27 @@ test("material retests add an AR number, read-only retest fields and three statu
   assert.deepEqual(transfers.flatMap(([, item]) => Object.values(object(item)).map(op => object(op).operationId)).sort(),
     ["ReassignPackagingMaterialTestFields", "ReassignProductTestFields", "ReassignRawMaterialTestFields"]);
   stripTemplateRepairs(current);
+  assert.equal(contractDigest(current), "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
+});
+
+test("upcoming batch issues add two typed reads and the started batch a swap may name, preserving the approved predecessor", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTemplateRepairs(current);
+  const digest = contractDigest(current);
+  assert.equal(digest, "0feb3b56925a1248f279fbce9668b02ffb18c50d06249be0f0fd1468de812bb5");
+  checkCompatibility(hostConfig, policy, digest);
+  for (const path of upcomingPaths) assert.deepEqual(Object.keys(object(object(current.paths ?? null)[path] ?? null)), ["get"]);
+  stripUpcomingBatchIssues(current);
+  assert.equal(contractDigest(current), "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
+});
+
+test("the combined QC repair and upcoming-issues contract is reviewed without dropping either addition", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "3bf7e9598e05b34f624541f573204aad101320f66b0ace2a56342ea067a33f0b");
+  checkCompatibility(hostConfig, policy, digest);
+  stripTemplateRepairs(current);
+  assert.equal(contractDigest(current), "0feb3b56925a1248f279fbce9668b02ffb18c50d06249be0f0fd1468de812bb5");
+  stripUpcomingBatchIssues(current);
   assert.equal(contractDigest(current), "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
 });

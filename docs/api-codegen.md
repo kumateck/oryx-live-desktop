@@ -73,6 +73,13 @@ companion `AddLegacyFormulaRepairs` migration must precede activation. See
 
 # API contracts and generated hooks
 
+Upcoming batch issues (2026-11-18) adds typed `GET /api/v1/upcoming-batch-issues` and `GET
+/api/v1/upcoming-batch-issues/{productionScheduleProductId}/alternative-batches` (production
+domain, `CanViewUpcomingBatchIssues`) with the three `UpcomingBatch*` schemas, and an optional
+`productionScheduleProductId` on `CreateSwapRequest`. Typed digest `0feb3b56925a1248f279fbce9668b02ffb18c50d06249be0f0fd1468de812bb5`; removing exactly these
+reproduces `7a00169a…20d6`. Deploy backend #1874 and #1885 (migration
+`AddSwapRequestProductionBatch`) first.
+
 Material retest on the material test (2026-11-18): `RecordMaterialRetestSample` gains a
 required `arNumber`; `MaterialRetestDetailDto` gains read-only `arNumber`, `materialSamplingId`,
 `batchStatus`, `materialName` and `materialCode`; `MaterialRetestStatus` adds `7` Assigned, `8`
@@ -376,3 +383,12 @@ companion metadata export, then regenerate and check the materials client.
 An omitted AR preserves the current reference; an empty string clears it. This
 requires the companion `AddMigrationArCorrections` audit migration. No customer
 release fingerprint is approved by this source change.
+
+## PR #297 merge contract review (2026-11-18)
+
+The combined source contract retains template repair, question reassignment, QC
+provenance and packaging substitute quantities together with development's
+upcoming batch issue reads and swap batch reference. Its reviewed digest is
+`3bf7e9598e05b34f624541f573204aad101320f66b0ace2a56342ea067a33f0b`.
+Both predecessor approvals remain; removing only the named additions reproduces
+their reviewed contracts. Regenerate the clients with `bun run api:generate`.

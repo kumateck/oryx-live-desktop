@@ -10,9 +10,11 @@ import { useCurrentUser } from "@/shared/auth/session-provider";
 import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatMonthYear } from "@/shared/format/dates";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { productionApi } from "@/shared/api/generated/production";
 import { useGetApiV1RequisitionByRequisitionIdAlternativeBatchesQuery, useGetApiV1WarehouseSwapQuery } from "../api/stock-issue-api";
 import { useRaiseSwaps, type SwapOutcome } from "../hooks/use-raise-swaps";
-import { alternativesSchema, swapSuggestions, type SwapSuggestion } from "../lib/alternative-batches";
+import { alternativesSchema, swapSuggestions, type SwapSource, type SwapSuggestion } from "../lib/alternative-batches";
 import { audit, batchNumber } from "../lib/stock-issue";
 import { amount } from "./batch-breakdown";
 import { SwapReviewDialog } from "./swap-review-dialog";
@@ -30,12 +32,15 @@ const columns = column.columns([
 ]);
 
 /**
- * Batches in other stores that expire before the ones set aside for this requisition. Swapping to them uses the
- * older stock first. With `mayAsk`, swaps can be chosen and asked for; the other store then decides each one.
+ * Batches in other stores that expire before the ones set aside for a requisition, or for a started batch whose stock
+ * is not requested yet (Upcoming batch issues). Swapping to them uses the older stock first. With `mayAsk`, swaps can
+ * be chosen and asked for; the other store then decides each one.
  */
-export function AlternativeBatches({ requisitionId, mayAsk }: { requisitionId: string; mayAsk: boolean }) {
+export function AlternativeBatches({ source, mayAsk }: { source: SwapSource; mayAsk: boolean }) {
   const departmentId = useCurrentUser()?.departmentId ?? null;
-  const query = useGetApiV1RequisitionByRequisitionIdAlternativeBatchesQuery({ ...audit, requisitionId });
+  const byRequisition = useGetApiV1RequisitionByRequisitionIdAlternativeBatchesQuery("requisitionId" in source ? { ...audit, requisitionId: source.requisitionId } : skipToken);
+  const byBatch = productionApi.useListUpcomingBatchAlternativesQuery("batchId" in source ? { ...audit, productionScheduleProductId: source.batchId } : skipToken);
+  const query = "requisitionId" in source ? byRequisition : byBatch;
   // Swaps this store has already asked for and that wait for a decision: that stock is not offered again.
   const waitingQuery = useGetApiV1WarehouseSwapQuery({ ...audit, departmentId: departmentId ?? "", direction: 1, status: 0, page: 1, pageSize: 100 }, { skip: !departmentId });
   const parsed = useMemo(() => query.data ? alternativesSchema.safeParse(query.data) : null, [query.data]);
@@ -49,7 +54,7 @@ export function AlternativeBatches({ requisitionId, mayAsk }: { requisitionId: s
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
   const [reviewing, setReviewing] = useState(false);
   const [outcomes, setOutcomes] = useState<readonly SwapOutcome[]>([]);
-  const raise = useRaiseSwaps(requisitionId);
+  const raise = useRaiseSwaps(source);
   const chosen = suggestions.filter((row) => picked.has(row.key));
   const error = query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned batches the app could not read." : null;
   const send = async () => {
