@@ -163,6 +163,7 @@ const Metric: React.FC<{
 interface Props {
   settings: string;
   response: string;
+  inputsOnly?: boolean;
 }
 
 /**
@@ -171,7 +172,7 @@ interface Props {
  * All weight inputs are replaced with static value labels.
  * Results are either taken from the stored response or recomputed from inputs.
  */
-export const UniformityPreview: React.FC<Props> = ({ settings, response }) => {
+export const UniformityPreview: React.FC<Props> = ({ settings, response, inputsOnly = false }) => {
   const parsedSettings = useMemo<ExpressionExtract | null>(() => {
     try {
       if (!settings || settings.trim() === "") return null;
@@ -213,6 +214,8 @@ export const UniformityPreview: React.FC<Props> = ({ settings, response }) => {
 
   // Use stored results if available; fall back to re-computed
   const results = useMemo<Results>(() => {
+    if (inputsOnly) return { totalContent: null, avgCapsule: null, minCaps: null, maxCaps: null,
+      minContent: null, maxContent: null, avg: null, minW: null, maxW: null, plusDev: null, minusDev: null };
     if (parsedResponse?.results) return parsedResponse.results as Results;
 
     // Recompute from inputs
@@ -288,7 +291,7 @@ export const UniformityPreview: React.FC<Props> = ({ settings, response }) => {
       plusDev,
       minusDev,
     };
-  }, [parsedResponse, mode, sampleCount, inputs, nominal]);
+  }, [parsedResponse, mode, sampleCount, inputs, nominal, inputsOnly]);
 
   const nominalToken = mode === "capsule" ? "nominal_content_wt" : "nominal_wt";
   const nominalExpr =
