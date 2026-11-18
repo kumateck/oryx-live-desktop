@@ -1,3 +1,4 @@
+import { RecordedFormulaInputs } from "./recorded-formula-inputs";
 import { FormulaType } from "@/shared/questions/question-types";
 import { evaluationSettings } from "@/shared/formula/ui/types/evaluate/settings";
 import type { FormResponseDto, QuestionOptionDto } from "@/shared/ard-view/dto";
@@ -11,7 +12,10 @@ interface Props { questionOption?: QuestionOptionDto | undefined; responseRecord
 
 /** Shared with Oryx Next's detailed worksheet path. Read-only views always use recorded settings, never debug overrides. */
 export default function ViewFormulaQuestion({ questionOption, responseRecord, response }: Props) {
-  if (isGovernedFormulaResponse(responseRecord)) return <StoredFormulaResult response={responseRecord} />;
+  if (isGovernedFormulaResponse(responseRecord)) return <div className="space-y-4">
+    <RecordedFormulaInputs value={response ?? responseRecord?.value ?? ""} option={questionOption} />
+    <StoredFormulaResult response={responseRecord} />
+  </div>;
   const candidates = [questionOption, ...(responseRecord?.formField?.question?.options ?? [])];
   const definition = candidates.map((option) => evaluationSettings(option?.name ?? "")).find((entry) => entry !== null);
   if (!definition) return <p role="alert" className="text-sm text-destructive">Formula configuration unavailable. The recorded calculation cannot be displayed.</p>;

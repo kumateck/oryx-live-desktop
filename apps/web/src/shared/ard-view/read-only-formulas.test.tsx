@@ -57,3 +57,35 @@ it("shows the screenshot's unresolved sample-weight reading without substituting
   expect(screen.queryByText("10.04%")).toBeNull();
   expect(screen.queryByText("0.00%")).toBeNull();
 });
+
+it("uses only the authoritative average in the specification summary and preserves all inputs/results in the worksheet", () => {
+  const answer = { ...wrappedAssayAnswer, formulaGoverned: true, formulaResultFinalized: true,
+    formulaDisplayResultsJson: JSON.stringify([{ key: "sample1", value: "103.92", unit: "%" }, { key: "sample2", value: "103.65", unit: "%" }, { key: "average", value: "103.78", unit: "%" }]) };
+  const { container } = render(<ArdTemplateBody sections={[assaySection]} responses={[answer]} showRemarks={false} />);
+  const tables = container.querySelectorAll("table");
+  expect(tables[0]?.textContent).toContain("103.78 %");
+  expect(tables[0]?.textContent).not.toContain("103.92");
+  expect(screen.getByRole("region", { name: "Recorded formula inputs" })).toBeTruthy();
+  expect(container.textContent).toContain("0.02");
+  expect(container.textContent).toContain("0.35");
+  expect(container.textContent).toContain("103.92 %");
+  expect(container.querySelector("input, textarea")).toBeNull();
+});
+
+it("keeps matching saved short answers visible after a question changes to dropdown, including commas", () => {
+  const section = { id: "s-description", name: "Description", fields: [{ id: "f-description", question: { type: 5 as const, label: "Description",
+    options: [{ name: "Clear pink syrup, sweet flavour" }, { name: "Cloudy syrup" }] } }] };
+  render(<CertificatePreview kind="Product" facts={facts} sections={[section]}
+    responses={[{ formField: { id: "f-description" }, value: "Clear pink syrup, sweet flavour" }]} compliance={[]} onCompliance={() => {}} />);
+  expect(screen.getByText("Clear pink syrup, sweet flavour")).toBeTruthy();
+  expect(screen.queryByText("Cloudy syrup")).toBeNull();
+});
+
+it("shows the recorded analyst, certificate generator and approver in the certificate footer", () => {
+  render(<CertificatePreview kind="Product" facts={facts} sections={[]} responses={[]} compliance={[]} onCompliance={() => {}}
+    signatories={{ analysts: ["Ama Analyst", "Kojo Analyst"], releasedBy: "Esi QC", approvedBy: "Kofi QA" }} />);
+  const footer = screen.getByRole("region", { name: "Certificate signatories" });
+  expect(footer.textContent).toContain("Analysed byAma Analyst, Kojo Analyst");
+  expect(footer.textContent).toContain("Released byEsi QC");
+  expect(footer.textContent).toContain("Approved byKofi QA");
+});

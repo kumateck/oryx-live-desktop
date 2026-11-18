@@ -4,7 +4,7 @@ const text = z.string().nullish().transform((value) => value?.trim() || "");
 /** Who was given which fields of a test form. */
 export const formAssigneeSchema = z.object({
   id: z.string().min(1),
-  fieldAssignees: z.array(z.object({ formField: z.object({ id: z.string().nullish(), formSection: z.object({ id: z.string().nullish(), name: text }).nullish(), question: z.object({ label: text }).nullish() }).nullish(),
+  fieldAssignees: z.array(z.object({ id: z.string().nullish(), formField: z.object({ id: z.string().nullish(), formSection: z.object({ id: z.string().nullish(), name: text }).nullish(), question: z.object({ label: text }).nullish() }).nullish(),
     assignee: z.object({ id: z.string().nullish(), firstName: text, lastName: text }).nullish() })).nullish(),
 }).transform((value) => {
   const groups = new Map<string, { assigneeId: string; name: string; sections: Map<string, { name: string; questions: string[] }>; fieldIds: string[] }>();
@@ -20,7 +20,11 @@ export const formAssigneeSchema = z.object({
     if (entry.formField?.id) group.fieldIds.push(entry.formField.id);
     groups.set(id, group);
   }
-  return { id: value.id, analysts: [...groups.values()].map((analyst) => ({ ...analyst, sections: [...analyst.sections.values()] })) };
+  return { id: value.id, assignments: (value.fieldAssignees ?? []).flatMap(entry => entry.id && entry.assignee?.id && entry.formField?.id ? [{
+    id: entry.id, fieldId: entry.formField.id, section: entry.formField.formSection?.name || "Unsectioned questions",
+    label: entry.formField.question?.label || "Untitled question", assigneeId: entry.assignee.id,
+    assigneeName: `${entry.assignee.firstName} ${entry.assignee.lastName}`.trim() || "Unnamed analyst",
+  }] : []), analysts: [...groups.values()].map((analyst) => ({ ...analyst, sections: [...analyst.sections.values()] })) };
 });
 export type FormAssignees = z.infer<typeof formAssigneeSchema>;
 /** The fields given to one person. */

@@ -55,6 +55,7 @@ function stripBomSubstituteQuantities(document: ObjectValue) {
   const schemas = object(object(document.components ?? null).schemas ?? null);
   delete object(document.paths ?? null)["/api/v1/requisition/{requisitionId}/material-options"];
   for (const name of bomSubstituteSchemas) delete schemas[name];
+  delete schemas["DOMAIN.Entities.Products.CreateProductPackageSubstituteRequest"];
   for (const [name, fields] of Object.entries(bomSubstituteFields)) {
     const properties = object(object(schemas[name] ?? null).properties ?? null);
     for (const field of fields) delete properties[field];
@@ -70,6 +71,7 @@ const specificationReasonFields: Record<string, readonly string[]> = {
 };
 function stripSpecificationRevisionReason(document: ObjectValue) {
   const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete schemas["DOMAIN.Entities.Products.CreateProductPackageSubstituteRequest"];
   for (const [name, fields] of Object.entries(specificationReasonFields)) {
     const schema = object(schemas[name] ?? null);
     for (const field of fields) delete object(schema.properties ?? null)[field];
@@ -113,6 +115,19 @@ function stripMaterialRetestAtr(document: ObjectValue) {
   object(schemas["DOMAIN.Entities.Materials.Batch.MaterialRetestStatus"] ?? null).enum = [0, 1, 2, 3, 4, 5, 6];
 }
 
+/** Template repair (2026-11-18): four new forms-domain operations and owned schemas only. */
+function stripTemplateRepairs(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  for (const path of Object.keys(paths)) if (path.startsWith("/api/v1/template-repairs/") || path.startsWith("/api/v1/test-field-reassignments/")) delete paths[path];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of Object.keys(schemas)) if (name.startsWith("APP.Services.Forms.") && /TemplateRepair|TestFieldReassignment|ReassignTestFields/.test(name)) delete schemas[name];
+  delete schemas["DOMAIN.Entities.Products.CreateProductPackageSubstituteRequest"];
+  for (const [name, fields] of Object.entries({ "DOMAIN.Entities.AnalyticalTestRequests.AnalyticalTestRequestDto": ["testedAt", "testedBy"], "DOMAIN.Entities.Forms.ResponseDetailDto": ["approvedBy", "approvedAt"], "DOMAIN.Entities.Products.CreateProductPackageRequest": ["substitutes"], "DOMAIN.Entities.Products.ProductPackageSubstituteDto": ["prescribedQuantity"] })) {
+    const properties = object(object(schemas[name] ?? null).properties ?? null);
+    for (const field of fields) delete properties[field];
+  }
+}
+
 /** Upcoming batch issues (2026-11-18): two typed reads, their schemas, and the started batch a swap may name. */
 const upcomingPaths = ["/api/v1/upcoming-batch-issues", "/api/v1/upcoming-batch-issues/{productionScheduleProductId}/alternative-batches"] as const;
 const upcomingSchemas = ["UpcomingBatchIssue", "UpcomingBatchIssuePage", "UpcomingBatchMaterial"].map((name) => `DOMAIN.Entities.Products.Production.${name}`);
@@ -128,6 +143,7 @@ function stripUpcomingBatchIssues(document: ObjectValue) {
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripUpcomingBatchIssues(document);
+  stripTemplateRepairs(document);
   stripMaterialRetestAtr(document);
   stripApprovalUsersOnRecord(document);
   stripPackagingIssueQuantity(document);
@@ -154,6 +170,7 @@ const stockLocationFields: Record<string, readonly string[]> = {
   "DOMAIN.Entities.Materials.WhitePlacebo.WhitePlaceboInputDto": ["warehouseLocationShelf"],
 };
 function stripStockLocations(schemas: ObjectValue) {
+  delete schemas["DOMAIN.Entities.Products.CreateProductPackageSubstituteRequest"];
   for (const [name, fields] of Object.entries(stockLocationFields)) {
     if (schemas[name] === undefined) continue;
     const properties = object(object(schemas[name] ?? null).properties ?? null);
@@ -288,6 +305,7 @@ test("stock picking adds only seven optional read fields and preserves the appro
   stripBomDensityConversion(schemas);
   const digest = contractDigest(current);
   assert.equal(digest, "4cd376b6624dfe633457cb79f7bf8592cd283590d7a6bc855ccb7afa196bd64c");
+  delete schemas["DOMAIN.Entities.Products.CreateProductPackageSubstituteRequest"];
   for (const [name, fields] of Object.entries(stockLocationFields)) {
     const schema = object(schemas[name] ?? null);
     const properties = object(schema.properties ?? null);
@@ -684,6 +702,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripUpcomingBatchIssues(current);
+  stripTemplateRepairs(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
@@ -695,6 +714,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
   const path = object(object(current.paths ?? null)["/api/v1/requisition/{requisitionId}/material-options"] ?? null);
   assert.deepEqual(Object.keys(path).sort(), ["get", "post"]);
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  delete schemas["DOMAIN.Entities.Products.CreateProductPackageSubstituteRequest"];
   for (const [name, fields] of Object.entries(bomSubstituteFields)) {
     const schema = object(schemas[name] ?? null);
     for (const field of fields) {
@@ -709,6 +729,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripUpcomingBatchIssues(current);
+  stripTemplateRepairs(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
@@ -717,6 +738,7 @@ test("a specification revision requires a reason and returns it on the specifica
   assert.equal(digest, "f2960caf053dd6bb3c943cc82c774328f21f6ae8409528741ba119a631dfc6f9");
   checkCompatibility(hostConfig, policy, digest);
   const schemas = object(object(current.components ?? null).schemas ?? null);
+  delete schemas["DOMAIN.Entities.Products.CreateProductPackageSubstituteRequest"];
   for (const [name, fields] of Object.entries(specificationReasonFields)) {
     const schema = object(schemas[name] ?? null);
     for (const field of fields) {
@@ -732,6 +754,7 @@ test("a specification revision requires a reason and returns it on the specifica
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripUpcomingBatchIssues(current);
+  stripTemplateRepairs(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   stripPackagingIssueQuantity(current);
@@ -749,6 +772,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripUpcomingBatchIssues(current);
+  stripTemplateRepairs(current);
   stripMaterialRetestAtr(current);
   stripApprovalUsersOnRecord(current);
   const digest = contractDigest(current);
@@ -768,6 +792,7 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
 test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripUpcomingBatchIssues(current);
+  stripTemplateRepairs(current);
   stripMaterialRetestAtr(current);
   const digest = contractDigest(current);
   assert.equal(digest, "dca46e49d205cc65b0572d43a710dcc6c6e0ac79e0de1412e5de1d5bacf61f6f");
@@ -780,6 +805,7 @@ test("IT approval transfer adds only a typed read of the users on approval docum
 test("material retests add an AR number, read-only retest fields and three statuses, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripUpcomingBatchIssues(current);
+  stripTemplateRepairs(current);
   const digest = contractDigest(current);
   assert.equal(digest, "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
   checkCompatibility(hostConfig, policy, digest);
@@ -789,12 +815,40 @@ test("material retests add an AR number, read-only retest fields and three statu
   assert.equal(contractDigest(current), "dca46e49d205cc65b0572d43a710dcc6c6e0ac79e0de1412e5de1d5bacf61f6f");
 });
 
+ test("QC repair, partial reassignment and packaging quantities preserve the approved predecessor", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripUpcomingBatchIssues(current);
+  const paths = object(current.paths ?? null);
+  const operations = Object.entries(paths).filter(([path]) => path.startsWith("/api/v1/template-repairs/"));
+  assert.equal(operations.length, 4);
+  assert.deepEqual(operations.flatMap(([, item]) => Object.values(object(item)).map(op => object(op).operationId)).sort(),
+    ["ApplyTemplateRepair", "GetTemplateRepairContext", "GetTemplateRepairHistory", "PreviewTemplateRepair"]);
+  const transfers = Object.entries(paths).filter(([path]) => path.startsWith("/api/v1/test-field-reassignments/"));
+  assert.equal(transfers.length, 3);
+  assert.deepEqual(transfers.flatMap(([, item]) => Object.values(object(item)).map(op => object(op).operationId)).sort(),
+    ["ReassignPackagingMaterialTestFields", "ReassignProductTestFields", "ReassignRawMaterialTestFields"]);
+  stripTemplateRepairs(current);
+  assert.equal(contractDigest(current), "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
+});
+
 test("upcoming batch issues add two typed reads and the started batch a swap may name, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTemplateRepairs(current);
   const digest = contractDigest(current);
   assert.equal(digest, "0feb3b56925a1248f279fbce9668b02ffb18c50d06249be0f0fd1468de812bb5");
   checkCompatibility(hostConfig, policy, digest);
   for (const path of upcomingPaths) assert.deepEqual(Object.keys(object(object(current.paths ?? null)[path] ?? null)), ["get"]);
+  stripUpcomingBatchIssues(current);
+  assert.equal(contractDigest(current), "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
+});
+
+test("the combined QC repair and upcoming-issues contract is reviewed without dropping either addition", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "3bf7e9598e05b34f624541f573204aad101320f66b0ace2a56342ea067a33f0b");
+  checkCompatibility(hostConfig, policy, digest);
+  stripTemplateRepairs(current);
+  assert.equal(contractDigest(current), "0feb3b56925a1248f279fbce9668b02ffb18c50d06249be0f0fd1468de812bb5");
   stripUpcomingBatchIssues(current);
   assert.equal(contractDigest(current), "7a00169a25431d5dd0424332097da09b423ef4271a12908bfeedb4e3694220d6");
 });

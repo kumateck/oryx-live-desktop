@@ -8,14 +8,14 @@ const product = z.object({ id: z.string().nullish(), name: text, code: text, lab
 export const atrSchema = z.object({
   id: z.string().min(1), status: z.number().nullish(), stage: z.number().nullish(), isRetest: z.boolean().nullish(),
   manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), arNumber: text, issueNumber: text, sampledQuantity: text, numberOfContainers: z.number().nullish(),
-  sampledBy: person, sampledAt: z.string().nullish(), acknowledgedAt: z.string().nullish(), assignedAt: z.string().nullish(), assignees: z.array(z.object({ firstName: text, lastName: text })).nullish(),
+  sampledBy: person, sampledAt: z.string().nullish(), testedAt: z.string().nullish(), testedBy: person, acknowledgedAt: z.string().nullish(), assignedAt: z.string().nullish(), assignees: z.array(z.object({ firstName: text, lastName: text })).nullish(),
   batchManufacturingRecord: z.object({ id: z.string().nullish(), batchNumber: text }).nullish(),
   productionScheduleProduct: z.object({ productionSchedule: z.object({ code: text }).nullish(), product, productPacking: z.object({ name: text }).nullish() }).nullish(),
   productionActivityStep: z.object({ id: z.string().nullish(), order: z.number().nullish() }).nullish(),
 }).transform((atr) => ({
   id: atr.id, status: atr.status ?? null, stage: atr.stage ?? null, isRetest: atr.isRetest ?? false, made: atr.manufacturingDate ?? null, expires: atr.expiryDate ?? null,
   arNumber: atr.arNumber, issueNumber: atr.issueNumber, sampledQuantity: atr.sampledQuantity, containers: atr.numberOfContainers ?? null, sampledBy: atr.sampledBy, sampledAt: atr.sampledAt ?? null,
-  acknowledgedAt: atr.acknowledgedAt ?? null, assignedAt: atr.assignedAt ?? null,
+  testedAt: atr.testedAt ?? null, testedBy: atr.testedBy, acknowledgedAt: atr.acknowledgedAt ?? null, assignedAt: atr.assignedAt ?? null,
   analysts: (atr.assignees ?? []).map((user) => `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()).filter(Boolean),
   bmrId: atr.batchManufacturingRecord?.id ?? null, batchNumber: atr.batchManufacturingRecord?.batchNumber ?? null, stepId: atr.productionActivityStep?.id ?? null, step: atr.productionActivityStep?.order ?? null,
   schedule: atr.productionScheduleProduct?.productionSchedule?.code ?? null, productId: atr.productionScheduleProduct?.product?.id ?? null,

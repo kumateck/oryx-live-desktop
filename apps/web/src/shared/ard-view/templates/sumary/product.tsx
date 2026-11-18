@@ -67,8 +67,7 @@ export const ProductSummary: React.FC<SummaryProps> = ({
     stageLabelByValue[Number(data?.stage)] || fallback?.stageLabel || "-";
   const cellClassName = "outline outline-2 -outline-offset-1 outline-black";
 
-  // Use sampledAt for analysis date as per the previous logic
-  const analysisDate = sampledAt;
+  const analysisDate = data?.testedAt;
   return (
     <div className="p-1">
       <div className="grid grid-cols-3 border-2 border-black">

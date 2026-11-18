@@ -25,15 +25,13 @@ export function PackagingLinesTable({ lines, loading, error, onRetry, onEdit, on
     column.accessor((line) => line.code || dash, { id: "code", header: "Code" }),
     column.accessor((line) => line.material.label, { id: "material", header: "Component material", cell: ({ row }) => <div className="min-w-0">
       <div className="break-words">{row.original.material.label}</div>
-      {row.original.substitutes.length ? <div className="break-words text-xs text-muted-foreground">or {row.original.substitutes.map((item) => item.label).join(", ")}</div> : null}
+      {row.original.substitutes.length ? <div className="break-words text-xs text-muted-foreground">Substitutes: {row.original.substitutes.map(item => <div key={item.value} className="flex flex-wrap gap-1"><span>{item.label}:</span><MaterialQuantity materialId={item.value} known={null} audit={packagingAudit} value={item.prescribedQuantity ?? row.original.prescribedQuantity} origin="entered" /></div>)}</div> : null}
     </div> }),
     column.display({ id: "spec", header: "Spec ref", cell: ({ row }) => <MaterialSpecRef materialId={row.original.material.value} known={row.original.specification} /> }),
     column.accessor((line) => line.packing?.label ?? "All styles", { id: "packing", header: "Packing style" }),
     // Typed by the user: shown exactly as entered.
     column.accessor("prescribedQuantity", { id: "prescribed", header: "Prescribed qty",
       cell: ({ row }) => <MaterialQuantity materialId={row.original.material.value} known={row.original.unit} audit={packagingAudit} value={row.original.prescribedQuantity} origin="entered" /> }),
-    column.accessor("packingExcessMargin", { id: "allowance", header: "Allowance",
-      cell: ({ row }) => <MaterialQuantity materialId={row.original.material.value} known={row.original.unit} audit={packagingAudit} value={row.original.packingExcessMargin} origin="entered" /> }),
     column.accessor(packagingTotal, { id: "total", header: "Total qty",
       cell: ({ row }) => <MaterialQuantity materialId={row.original.material.value} known={row.original.unit} audit={packagingAudit} value={packagingTotal(row.original)} origin="calculated" /> }),
     column.display({ id: "actions", header: TableMenuHeader, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.material.label}`} items={[

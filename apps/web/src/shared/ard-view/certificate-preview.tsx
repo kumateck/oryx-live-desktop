@@ -1,3 +1,4 @@
+import { CertificateSignatures, type CertificateSignatories } from "./certificate-signatures";
 import { useMemo } from "react";
 import { formatDate, formatMonthYear } from "@/shared/format/dates";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
@@ -7,7 +8,7 @@ import type { CoaComplianceItem } from "./raw-data/coa-compliance";
 import { getBestResponseMap } from "./raw-data/print/response-pick";
 import { getResponsesForSection } from "./templates/render";
 
-export interface CertificateFacts { batchNumber: string | null; made: string | null; expires: string | null; arNumber: string | null; sampled: string | null; analysed: string | null; subject: string }
+export interface CertificateFacts { batchNumber: string | null; made: string | null; expires: string | null; arNumber: string | null; sampled: string | null; analysed: string | null; subject: string; received?: string | null }
 
 /** "Complies with In-House specification" only when every test is marked as complying. */
 export const certificateComment = (items: readonly CoaComplianceItem[], subject: "Material" | "Product") =>
@@ -17,8 +18,9 @@ export const certificateComment = (items: readonly CoaComplianceItem[], subject:
  * A certificate of analysis as it will be issued: the batch, each test with its result and specification, and whether it complies.
  * Compliance is inferred from the result against the specification and can be corrected test by test before the certificate is generated.
  */
-export function CertificatePreview({ kind, facts, extra = [], sections, responses, compliance, onCompliance }: {
+export function CertificatePreview({ kind, facts, extra = [], sections, responses, compliance, onCompliance, signatories }: {
   kind: "Material" | "Product"; facts: CertificateFacts; extra?: readonly { label: string; value: string | null }[]; sections: readonly FormSectionDto[]; responses: readonly FormResponseDto[]; compliance: readonly CoaComplianceItem[];
+  signatories?: CertificateSignatories | undefined;
   onCompliance: (sectionId: string, complies: boolean) => void;
 }) {
   const responseMap = useMemo(() => getBestResponseMap([...responses]), [responses]);
@@ -33,7 +35,7 @@ export function CertificatePreview({ kind, facts, extra = [], sections, response
     <div className="space-y-5 p-4 sm:p-6">
       <dl className="grid grid-cols-2 gap-x-5 gap-y-4 rounded-md border bg-background p-4 sm:grid-cols-3 lg:grid-cols-4">
         {fact("Batch number", facts.batchNumber)}{fact("Manufactured", formatMonthYear(facts.made))}{fact("Expiry", formatMonthYear(facts.expires))}
-        {fact("QC AR number", facts.arNumber)}{fact("Sampled", formatDate(facts.sampled))}{fact("Analysed", formatDate(facts.analysed))}
+        {fact("Received", formatDate(facts.received))}{fact("QC AR number", facts.arNumber)}{fact("Sampled", formatDate(facts.sampled))}{fact("Analysed", formatDate(facts.analysed))}
       </dl>
       <section aria-label="Material or product" className="rounded-md border-l-2 border-primary bg-muted/20 px-4 py-3">
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{kind}</p>
@@ -57,6 +59,7 @@ export function CertificatePreview({ kind, facts, extra = [], sections, response
       </section>
       <section className="rounded-md border bg-muted/20 px-4 py-3"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Overall assessment</p>
         <p className="mt-1 font-medium">{certificateComment(compliance, kind)}</p></section>
+      <CertificateSignatures signatories={signatories} />
     </div>
   </article>;
 }
