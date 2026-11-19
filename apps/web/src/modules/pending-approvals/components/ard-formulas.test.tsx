@@ -39,19 +39,19 @@ it("reviews the COA on the page and prints detailed worksheet or COA previews wi
   expect(screen.getAllByText("7.17%")).toBeTruthy();
   expect(container.textContent).not.toContain('"tableData"');
   expect(container.textContent).not.toContain("Unrelated result");
-  expect(screen.queryByText("Test & Observations")).toBeNull();
+  expect(container.querySelector(".qc-worksheet")).toBeNull();
   expect(screen.getByRole("article", { name: "Certificate of analysis" }).textContent).toContain("10.04%");
   expect(container.querySelector("input, textarea")).toBeNull();
   const print = vi.spyOn(window, "print").mockImplementation(() => {});
   await userEvent.click(screen.getByRole("button", { name: "Print Worksheet" }));
   const worksheet = await screen.findByRole("dialog");
-  expect(within(worksheet).getByText("Test & Observations")).toBeTruthy();
+  expect(within(worksheet).getAllByRole("region", { name: "Test 1" })).toBeTruthy();
   expect(worksheet.textContent).toContain("10.04%");
   expect(worksheet.textContent).not.toContain("Unrelated result");
   expect(within(worksheet).getByText("Recorded Analyst")).toBeTruthy();
   expect(within(worksheet).getByText("Recorded Checker")).toBeTruthy();
   expect(worksheet.textContent).not.toContain("Other Analyst");
-  expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Test & Observations");
+  expect(document.body.querySelector(":scope > .print-portal .qc-worksheet")).toBeTruthy();
   expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Recorded Analyst");
   expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Recorded Checker");
   expect(print).not.toHaveBeenCalled();
@@ -65,11 +65,11 @@ it("reviews the COA on the page and prints detailed worksheet or COA previews wi
   expect(await within(preview).findByText("10.04%")).toBeTruthy();
   expect(preview.textContent).toContain("Does not comply");
   expect(preview.textContent).not.toContain('"manualVars"');
-  expect(within(preview).queryByText("Test & Observations")).toBeNull();
+  expect(preview.querySelector(".qc-worksheet")).toBeNull();
   expect(within(preview).getByText("Recorded Analyst")).toBeTruthy();
   expect(within(preview).getByText("Recorded Checker")).toBeTruthy();
   expect(preview.textContent).not.toContain("Other Analyst");
-  expect(document.body.querySelector(":scope > .print-portal")?.textContent).not.toContain("Test & Observations");
+  expect(document.body.querySelector(":scope > .print-portal .qc-worksheet")).toBeNull();
   expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Recorded Analyst");
   expect(document.body.querySelector(":scope > .print-portal")?.textContent).toContain("Recorded Checker");
   await userEvent.click(within(preview).getByRole("button", { name: "Print" }));
@@ -103,7 +103,7 @@ it("explains a missing formula definition without exposing response JSON", async
 it("keeps missing readings unresolved and uses response question settings if supplied", async () => {
   const record = { ...formulaAnswers[0], value: "{}", formField: formulaForm.sections[0]?.fields[0] };
   const { container } = render(<ArdResultsTable sections={sections()} recorded={answersByField(ardAnswersSchema.parse([record]))} />);
-  expect(await screen.findByText("Formula")).toBeTruthy();
+  expect(await screen.findAllByText("Formula")).toHaveLength(2);
   expect(screen.queryByText("0%", { exact: true })).toBeNull();
   expect(container.textContent).not.toContain("NaN");
 });

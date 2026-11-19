@@ -4,7 +4,7 @@ import {
 } from "@/shared/ard-view/dto";
 import React from "react";
 import TestSpecification from "./specification";
-import TestDetailedViewEnhanced from "./test";
+import { WorksheetTests } from "@/shared/ard-view/worksheet/worksheet-tests";
 import UniformitySection from "./uniformity";
 import { splitUniformitySections } from "./uniformity-sections";
 
@@ -39,13 +39,7 @@ const ArdTemplateBody = ({
         responses={responses}
         noResponse={noResponse}
       />
-      <TestDetailedViewEnhanced
-        responses={responses}
-        sections={testSections}
-        showQuestionLabels
-        showInstrumentInfo
-        noResponse={noResponse}
-      />
+      <WorksheetTests sections={testSections} responses={responses} blank={noResponse} />
     </>
   );
 };
