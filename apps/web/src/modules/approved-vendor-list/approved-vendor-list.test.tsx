@@ -2,7 +2,7 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { decisionPermission } from "@/modules/pending-approvals/lib/approval-documents";
 import { reviewDocumentPath } from "@/modules/pending-reviews/lib/review-documents";
 import { ApiProvider } from "@/shared/api/api-provider";
@@ -51,7 +51,7 @@ function open(element: ReactNode, granted: string[], data: { lists?: unknown[]; 
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   return { writes: () => calls.filter((c) => c.method !== "GET") };
 }
-afterEach(() => { cleanup(); forgetSession(); });
+afterEach(() => { cleanup(); forgetSession(); vi.unstubAllGlobals(); });
 
 it("guards each page with the key for its task", () => {
   const can = (path: string, keys: string[]) => { const p = routeAccessPolicy(modules, path); return Boolean(p && canAccess(p.access, { state: "authenticated", permissions: new Set(keys) })); };
@@ -145,4 +145,14 @@ it("disables suppliers and manufacturers the current list does not allow, and le
   expect(manufacturerRefusal(listed, "mf1", null)).toBeNull();
   expect(markOptions([{ value: "s1", label: "Indosol" }, { value: "s2", label: "Other" }], (id) => supplierRefusal(listed, id)))
     .toEqual([{ value: "s1", label: "Indosol" }, { value: "s2", label: "Other (not approved)", disabled: true }]);
+});
+
+it("opens the line editor on a plain HTTP site, where the browser has no crypto.randomUUID", async () => {
+  // The testing and customer servers are served over HTTP: only getRandomValues is available there.
+  const real = globalThis.crypto;
+  vi.stubGlobal("crypto", { getRandomValues: (bytes: Uint8Array<ArrayBuffer>) => real.getRandomValues(bytes) });
+  open(<VendorListEditorPage mode="new" />, [view, "CanCreateApprovedVendorList"], {}, "/x");
+  (await screen.findByRole("button", { name: /Add material/ })).click();
+  expect(await screen.findByRole("dialog", { name: "Add material" })).toBeTruthy();
+  expect(screen.queryByText(/Something went wrong/i)).toBeNull();
 });
