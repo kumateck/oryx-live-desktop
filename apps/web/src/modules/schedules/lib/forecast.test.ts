@@ -36,3 +36,10 @@ it("groups raw and packaging materials with the short ones first, and keeps the 
   expect(groups.short).toBe(2);
   expect(forecastGroups(forecastSchema.parse(null))).toMatchObject({ raw: [], packaging: [], other: [], short: 0 });
 });
+
+it("uses the forecast's server-measured usable and free stock", () => {
+  const [item] = forecastSchema.parse([{ material: { id: "m1", name: "Artemether" }, uoM: { symbol: "kg" }, quantityNeeded: 24, quantityOnHand: 100, expiredQuantity: 10,
+    unavailableQuantity: 15, reservedQuantity: 124.8, usableQuantity: 75, freeQuantity: 0 }]);
+  expect(item && usableStock(item)).toBe(75);
+  expect(item && freeStock(item)).toBe(0);
+});

@@ -38,13 +38,13 @@ export function StockAvailabilityDialog({ material, audit, onClose }: { material
         <Tabs label="Stock availability" tabs={tabs} active={tab} onSelect={setTab}>
           {tab === "current" ? stock.isLoading ? <PageSkeleton label="Loading stock" /> : stock.error ? <Problem message={apiErrorMessage(stock.error)} onRetry={() => void stock.refetch()} />
             : stores.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No store holds this material.</p>
-            : <Table><TableHeader><TableRow><TableHead>Store</TableHead><TableHead>Usable</TableHead><TableHead>Expired</TableHead><TableHead>Total</TableHead></TableRow></TableHeader>
+            : <Table><TableHeader><TableRow><TableHead>Store</TableHead><TableHead>Free</TableHead><TableHead>Reserved</TableHead><TableHead>Expired or not released</TableHead><TableHead>Total</TableHead></TableRow></TableHeader>
               <TableBody>{groups.map((group) => <Fragment key={group.label}>
-                <TableRow className="bg-muted/50"><TableCell colSpan={4} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</TableCell></TableRow>
-                {group.rows.map((row) => <TableRow key={row.id}><TableCell className="font-medium">{row.name}</TableCell><TableCell>{show(row.usable)}</TableCell>
-                  <TableCell className={row.expired > 0 ? "text-destructive" : undefined}>{show(row.expired)}</TableCell><TableCell>{show(row.total)}</TableCell></TableRow>)}
-                <TableRow className="font-semibold"><TableCell>{group.label} total</TableCell><TableCell>{show(sum(group.rows, (row) => row.usable))}</TableCell>
-                  <TableCell>{show(sum(group.rows, (row) => row.expired))}</TableCell><TableCell>{show(sum(group.rows, (row) => row.total))}</TableCell></TableRow>
+                <TableRow className="bg-muted/50"><TableCell colSpan={5} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</TableCell></TableRow>
+                {group.rows.map((row) => <TableRow key={row.id}><TableCell className="font-medium">{row.name}</TableCell><TableCell>{show(row.free)}</TableCell><TableCell>{show(row.reserved)}</TableCell>
+                  <TableCell className={row.expired + row.unavailable > 0 ? "text-destructive" : undefined}>{show(row.expired + row.unavailable)}</TableCell><TableCell>{show(row.total)}</TableCell></TableRow>)}
+                <TableRow className="font-semibold"><TableCell>{group.label} total</TableCell><TableCell>{show(sum(group.rows, (row) => row.free))}</TableCell><TableCell>{show(sum(group.rows, (row) => row.reserved))}</TableCell>
+                  <TableCell>{show(sum(group.rows, (row) => row.expired + row.unavailable))}</TableCell><TableCell>{show(sum(group.rows, (row) => row.total))}</TableCell></TableRow>
               </Fragment>)}</TableBody></Table> : null}
           {tab === "incoming" ? pipeline.isLoading ? <PageSkeleton label="Loading incoming stock" /> : pipeline.error ? <Problem message={apiErrorMessage(pipeline.error)} onRetry={() => void pipeline.refetch()} />
             : incoming.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">Nothing is on order or on its way in.</p>

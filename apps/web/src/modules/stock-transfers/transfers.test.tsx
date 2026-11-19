@@ -10,7 +10,7 @@ import { ApiProvider } from "../../shared/api/api-provider";
 import { SessionProvider } from "../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
 import { openMenu } from "../../test/menu";
-import { holdingRowsSchema, transferIssueBlock } from "./transfers";
+import { batchesInSupplyUnit, holdingRowsSchema, supplyQuantity, transferIssueBlock, transferRowsSchema } from "./transfers";
 
 afterEach(() => { cleanup(); forgetSession(); });
 
@@ -107,4 +107,17 @@ it("uses the saved receiving quantity and unit while leaving received lines out 
   const rows = holdingRowsSchema.parse([{ id: "transfer", batches: [batch, { ...batch, receivedAt: "2026-11-18T12:00:00Z" }] }]);
   expect(rows).toHaveLength(1);
   expect(rows[0]).toMatchObject({ quantity: 20, unitId: "kg", unit: "kg" });
+});
+
+it("reads a transfer in the supplying store's unit and keeps the requester's figure beside it", () => {
+  const only = <T,>(items: T[]): T => { const [item] = items; if (!item) throw new Error("Expected one transfer"); return item; };
+  const row = only(transferRowsSchema.parse([{ id: "t9", status: 1, quantity: 20_000_000, uoM: { symbol: "mL" }, supplierQuantity: 20_720, supplierUoM: { symbol: "kg" }, material: { name: "Propylene Glycol", kind: 0 } }]));
+  expect(supplyQuantity(row)).toEqual({ quantity: 20_720, unit: "kg", asked: { quantity: 20_000_000, unit: "mL" } });
+  // An older server sends no supplier fields; the request quantity is shown as before.
+  const old = only(transferRowsSchema.parse([{ id: "t8", status: 1, quantity: 10, uoM: { symbol: "kg" }, material: { name: "Lactose", kind: 0 } }]));
+  expect(supplyQuantity(old)).toEqual({ quantity: 10, unit: "kg", asked: null });
+  const batch = (sourceQuantity: number | null, sourceUnit: string | null) => ({ quantity: 1_000, sourceQuantity, sourceUnit });
+  expect(batchesInSupplyUnit([batch(1.036, "kg")], "kg")).toEqual([{ quantity: 1.036, sourceQuantity: 1.036, sourceUnit: "kg" }]);
+  expect(batchesInSupplyUnit([batch(1.036, "kg"), batch(null, null)], "kg")).toBeNull();
+  expect(batchesInSupplyUnit([batch(1.036, "kg")], null)).toBeNull();
 });

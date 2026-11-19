@@ -246,3 +246,11 @@ it("refreshes pending approval counts on demand instead of keeping an old empty 
   await waitFor(() => expect(calls.filter((call) => call.path === "/api/v1/approval/my-pending/document-counts").length).toBeGreaterThan(before));
   expect(writes(calls)).toHaveLength(0);
 });
+
+it("reads the production batch a stock requisition was raised for", async () => {
+  const { approvalRowsSchema } = await import("../schemas/approval-schema");
+  const [row] = approvalRowsSchema.parse([{ id: "r1", modelType: "StockRequisition", code: "PM/N/26/007", batchNumber: "AZC-26-007", productName: "Azirocin Capsules" }]);
+  expect(row).toMatchObject({ batchNumber: "AZC-26-007", productName: "Azirocin Capsules" });
+  const [old] = approvalRowsSchema.parse([{ id: "r2", modelType: "StockRequisition" }]);
+  expect(old).toMatchObject({ batchNumber: null, productName: null });
+});

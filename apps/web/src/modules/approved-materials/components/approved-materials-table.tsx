@@ -15,9 +15,14 @@ export function ApprovedMaterialsTable({ rows, search, paging, loading, refreshi
   const columns = useMemo(() => column.columns([
     column.accessor("name", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.name}</div>
       <div className="text-xs text-muted-foreground">{row.original.code ?? "No code"}</div></div> }),
-    column.accessor((row) => freeToIssue(row), { id: "free", header: "Free to issue", size: 170, cell: ({ row }) => { const free = freeToIssue(row.original);
+    column.accessor((row) => freeToIssue(row), { id: "free", header: "Free to use", size: 170, cell: ({ row }) => { const free = freeToIssue(row.original);
       return <span className={free === 0 ? "font-medium text-destructive" : "font-medium"}>{quantity(free, row.original.unit)}</span>; } }),
     column.accessor("reserved", { header: "Reserved for production", size: 200, cell: ({ row }) => quantity(row.original.reserved, row.original.unit) }),
+    // The columns add up: free + reserved + expired + not released = total approved.
+    column.accessor("expired", { header: "Expired", size: 140, cell: ({ row }) => row.original.expired > 0
+      ? <span className="text-destructive">{quantity(row.original.expired, row.original.unit)}</span> : <span className="text-muted-foreground">–</span> }),
+    column.accessor("unavailable", { header: "Not released", size: 140, cell: ({ row }) => row.original.unavailable > 0
+      ? <span className="text-destructive">{quantity(row.original.unavailable, row.original.unit)}</span> : <span className="text-muted-foreground">–</span> }),
     column.accessor("available", { header: "Total approved", size: 170, cell: ({ row }) => quantity(row.original.available, row.original.unit) }),
   ]), []);
   return <ServerDataTable label="Approved materials" columns={columns} rows={rows} getRowId={(row) => row.id} {...paging} loading={loading} refreshing={refreshing}
