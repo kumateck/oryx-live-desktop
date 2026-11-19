@@ -1,10 +1,12 @@
+import { packagingRequirementsTag } from "@/shared/stock/production-requirements-cache";
 import { productionApi } from "@/shared/api/generated/production";
 import { addTags } from "@/shared/api/add-tags";
 
 const records = { type: "BatchManufacturingRecords" as const, id: "all" };
 const record = (id: string) => ({ type: "BatchManufacturingRecords" as const, id });
 
-export const issueBmrApi = productionApi.enhanceEndpoints({ addTagTypes: ["BatchManufacturingRecords"], endpoints: {
+export const issueBmrApi = productionApi.enhanceEndpoints({ addTagTypes: ["BatchManufacturingRecords", "PackagingRequirements"], endpoints: {
+  getApiV1ProductionSchedulePackageMaterialStockByProductionScheduleProductId: d => { d.providesTags = addTags(d.providesTags, [packagingRequirementsTag]); },
   getApiV1ProductionScheduleManufacturing: (definition) => { definition.providesTags = addTags(definition.providesTags, [records]); },
   getApiV1ProductionScheduleManufacturingByBatchManufacturingRecordId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [record(arg.batchManufacturingRecordId)]); },
   putApiV1ProductionScheduleManufacturingById: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [records, record(arg.id)]); },

@@ -22,6 +22,7 @@ export const materialHeaderSchema = z.object({ id: z.string().min(1), code: text
 
 /** Stock of one batch on one shelf. */
 export const shelfBatchRowsSchema = z.array(z.object({
+  warehouseQuantity: z.number().finite().nullish(), warehouseUoM: z.object({ symbol: text }).nullish(),
   id: z.string().nullish(), quantity: amount, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(),
   materialBatch: z.object({ id: z.string().nullish(), batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), effectiveExpiryDate: z.string().nullish(), retestDate: z.string().nullish(),
     material: z.object({ id: z.string().nullish(), code: text, name: text }).nullish() }).nullish(),
@@ -30,6 +31,7 @@ export const shelfBatchRowsSchema = z.array(z.object({
   // This row's share of the material's totals by the store-stock rule (optional: older servers leave them out).
   stockState: text, reservedQuantity: z.number().nullish(), freeQuantity: z.number().nullish(), stockUnit: text,
 })).nullish().transform((value) => (value ?? []).map((item, index) => ({
+  warehouseQuantity: item.warehouseQuantity ?? null, warehouseUnit: item.warehouseUoM?.symbol ?? null,
   id: item.id ?? `row-${index}`, shelfBatchId: item.id ?? null, quantity: item.quantity, unit: item.uoM?.symbol ?? null, unitId: item.uoM?.id ?? null,
   stockState: item.stockState === "Usable" || item.stockState === "Expired" || item.stockState === "NotReleased" ? item.stockState : null,
   reserved: item.reservedQuantity ?? null, free: item.freeQuantity ?? null, stockUnit: item.stockUnit ?? item.uoM?.symbol ?? null,
@@ -42,7 +44,7 @@ export const shelfBatchRowsSchema = z.array(z.object({
   location: item.warehouseLocationShelf?.warehouseLocationRack?.warehouseLocation?.name ?? null,
   floor: item.warehouseLocationShelf?.warehouseLocationRack?.warehouseLocation?.floorName ?? null,
 })));
-export type ShelfBatchRow = z.infer<typeof shelfBatchRowsSchema>[number];
+export type ShelfBatchRow = Omit<z.infer<typeof shelfBatchRowsSchema>[number], "warehouseQuantity" | "warehouseUnit"> & { warehouseQuantity?: number | null; warehouseUnit?: string | null };
 
 /** One entry on a material's bin card: stock received or issued, and the balance after it. */
 export const binCardRowsSchema = z.array(z.object({

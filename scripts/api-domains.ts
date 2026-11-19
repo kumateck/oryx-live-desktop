@@ -11,7 +11,7 @@ export interface ApiDomain {
 export const apiDomains: readonly ApiDomain[] = [
   { id: "auth", exportName: "authApi", tags: ["Auth", "Verification"] },
   { id: "identity", exportName: "identityApi", tags: ["User", "Role", "Permission", "Department"] },
-  { id: "approvals", exportName: "approvalsApi", tags: ["Approval", "PendingApprovalDocumentCounts", "PendingRevisionApproval"] },
+  { id: "approvals", exportName: "approvalsApi", tags: ["Approval", "PendingApprovalDocumentCounts", "PendingRevisionApproval", "ProductionStockRequisition"] },
   { id: "settings", exportName: "settingsApi", tags: [
     "ActivityLog", "Alert", "Collection", "CompanyWorkingDays", "Configuration", "Country", "File", "Holiday", "WorkingHoursPolicy",
   ] },

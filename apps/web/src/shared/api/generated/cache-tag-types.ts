@@ -201,6 +201,7 @@ export const generatedTagTypes = [
   "production-schedule/return-before-production",
   "production-schedule/stock-transfer",
   "production-schedule/summary-report",
+  "production-stock-requisition",
   "qa",
   "qa/analytical-test",
   "qa/oos-investigation",

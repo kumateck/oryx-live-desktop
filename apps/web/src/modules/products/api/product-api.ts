@@ -1,3 +1,4 @@
+import { packagingRequirementsTag } from "@/shared/stock/production-requirements-cache";
 import { analyticalApi } from "@/shared/api/generated/analytical";
 import { authApi } from "@/shared/api/generated/auth";
 import { identityApi } from "@/shared/api/generated/identity";
@@ -9,6 +10,7 @@ import { addTags } from "@/shared/api/add-tags";
 const list = { type: "ProductList" as const, id: "all" };
 
 export const productApi = productsApi.enhanceEndpoints({
+  addTagTypes: ["PackagingRequirements"],
   endpoints: {
     getApiV1Product: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
     getApiV1ProductByProductId: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "Product", id: arg.productId }]); },
@@ -25,15 +27,15 @@ export const productApi = productsApi.enhanceEndpoints({
       { type: "ProductRoutes", id: arg.productId }, { type: "Product", id: arg.productId },
     ]); },
     getApiV1ProductByProductIdPackages: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "ProductPackages", id: arg.productId }]); },
-    postApiV1ProductByProductIdPackages: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [
+    postApiV1ProductByProductIdPackages: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [packagingRequirementsTag,
       { type: "ProductPackages", id: arg.productId }, { type: "Product", id: arg.productId },
     ]); },
     getApiV1ProductByProductIdPacking: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "ProductPacking", id: arg.productId }]); },
-    postApiV1ProductByProductIdPacking: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [
+    postApiV1ProductByProductIdPacking: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [packagingRequirementsTag,
       { type: "ProductPacking", id: arg.productId }, { type: "Product", id: arg.productId },
     ]); },
     // The finished goods warehouse saves the same packing styles through its own endpoint and permission.
-    postApiV1ProductByProductIdPackingApprovedProduct: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [
+    postApiV1ProductByProductIdPackingApprovedProduct: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [packagingRequirementsTag,
       { type: "ProductPacking", id: arg.productId }, { type: "Product", id: arg.productId },
     ]); },
   },
