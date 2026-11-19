@@ -22,11 +22,11 @@ function open(address = "/production/stock-transfer-requests", granted = permiss
   const backend = stubBackend({ permissions: granted });
   const auth = backend.fetcher.getMockImplementation();
   const state = { record: transfer(), fail: false };
-  const calls: { path: string; method: string; module: string | null; subModule: string | null; search: string }[] = [];
+  const calls: { path: string; method: string; module: string | null; subModule: string | null; search: string; body: string | null }[] = [];
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return auth ? auth(input, init) : new Response(null, { status: 500 });
     const url = new URL(input.url);
-    calls.push({ path: url.pathname, method: input.method, search: url.search, module: input.headers.get("Module"), subModule: input.headers.get("SubModule") });
+    calls.push({ path: url.pathname, method: input.method, search: url.search, module: input.headers.get("Module"), subModule: input.headers.get("SubModule"), body: input.method === "GET" ? null : await input.clone().text() });
     if (input.method !== "GET") return new Response(null, { status: state.fail ? 409 : 204 });
     if (url.pathname.endsWith("/in-bound")) return Response.json({ data: [state.record], pageIndex: 1, totalRecordCount: 1 });
     if (url.pathname.endsWith("/out-bound")) return Response.json({ data: [{ ...state.record, fromDepartment: state.record.toDepartment, toDepartment: state.record.fromDepartment }], pageIndex: 1, totalRecordCount: 1 });
@@ -89,8 +89,12 @@ it("refuses an already issued transfer returned by the preflight", async () => {
   const user = userEvent.setup(); const page = open(); await screen.findByText("Lactose");
   await openMenu(/Actions for Lactose/); await user.click(screen.getByRole("menuitem", { name: "Reject" }));
   page.state.record = transfer(2);
-  await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Reject transfer" }));
-  expect((await screen.findByRole("alert")).textContent).toContain("no longer awaiting"); expect(page.writes()).toHaveLength(0);
+  const dialog = await screen.findByRole("dialog");
+  // A reason is required before anything is sent.
+  expect(within(dialog).getByRole("button", { name: "Reject transfer" }).hasAttribute("disabled")).toBe(true);
+  await user.type(within(dialog).getByLabelText("Why can't it be supplied?"), "Short by 900 kg");
+  await user.click(within(dialog).getByRole("button", { name: "Reject transfer" }));
+  expect((await screen.findByRole("alert")).textContent).toContain("already been issued"); expect(page.writes()).toHaveLength(0);
 });
 
 it("hides decisions from viewers and denies a detail in the wrong department", async () => {
@@ -104,6 +108,9 @@ it("hides decisions from viewers and denies a detail in the wrong department", a
 it("does not automatically retry a failed rejection", async () => {
   const user = userEvent.setup(); const page = open(); page.state.fail = true; await screen.findByText("Lactose");
   await openMenu(/Actions for Lactose/); await user.click(screen.getByRole("menuitem", { name: "Reject" }));
-  await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Reject transfer" }));
+  const dialog = await screen.findByRole("dialog");
+  await user.type(within(dialog).getByLabelText("Why can't it be supplied?"), "Stock is committed to a running campaign");
+  await user.click(within(dialog).getByRole("button", { name: "Reject transfer" }));
   await screen.findByRole("alert"); expect(page.writes()).toHaveLength(1); expect(screen.getByRole("dialog")).toBeTruthy();
+  expect(JSON.parse(page.writes()[0]?.body ?? "null")).toEqual({ reason: "Stock is committed to a running campaign" });
 });

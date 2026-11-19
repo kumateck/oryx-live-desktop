@@ -1191,6 +1191,7 @@ const injectedRtkApi = api.injectEndpoints({
         query: (queryArg) => ({
           url: `/api/v1/production-schedule/stock-transfer/reject/${queryArg.stockTransferId}`,
           method: "PUT",
+          body: queryArg.domainEntitiesProductionSchedulesStockTransfersRequestRejectStockTransferRequest,
           headers: {
             Module: queryArg["module"],
             SubModule: queryArg.subModule,
@@ -2762,6 +2763,7 @@ export type PutApiV1ProductionScheduleStockTransferRejectByStockTransferIdApiArg
     module?: string;
     /** The sub module this request falls under */
     subModule?: string;
+    domainEntitiesProductionSchedulesStockTransfersRequestRejectStockTransferRequest: DomainEntitiesProductionSchedulesStockTransfersRequestRejectStockTransferRequest;
   };
 export type GetApiV1ProductionScheduleStockTransferBatchByStockTransferIdApiResponse =
   /** status 200 OK */ DomainEntitiesMaterialsBatchBatchToSupplyRead[];
@@ -5002,6 +5004,11 @@ export type DomainEntitiesProductionSchedulesStockTransfersDepartmentStockTransf
     approvedAt?: string | null;
     issuedAt?: string | null;
     reason?: string | null;
+    supplierQuantity?: number | null;
+    supplierUoM?: DomainEntitiesBaseUnitOfMeasureDto;
+    rejectionReason?: string | null;
+    rejectedAt?: string | null;
+    rejectedBy?: SharedCollectionItemDto;
   };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesProductionSchedulesStockTransfersDepartmentStockTransferDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -5014,6 +5021,10 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     numberOfPagesToShow?: number;
     startPageIndex?: number;
     stopPageIndex?: number;
+  };
+export type DomainEntitiesProductionSchedulesStockTransfersRequestRejectStockTransferRequest =
+  {
+    reason?: string | null;
   };
 export type DomainEntitiesProductionSchedulesStockTransfersRequestBatchTransferRequest =
   {
