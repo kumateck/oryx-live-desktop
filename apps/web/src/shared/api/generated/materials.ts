@@ -2285,6 +2285,8 @@ export type SharedCollectionItemDto = {
   description?: string | null;
   symbol?: string | null;
   uom?: string | null;
+  linkedDepartmentId?: string | null;
+  linkedDepartmentName?: string | null;
 };
 export type DomainEntitiesDepartmentsDepartmentListDto = {
   id?: string;
@@ -2772,6 +2774,8 @@ export type DomainEntitiesWarehousesShelfMaterialBatchDto = {
   quantity?: number;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   note?: string | null;
+  warehouseQuantity?: number | null;
+  warehouseUoM?: DomainEntitiesBaseUnitOfMeasureDto;
 };
 export type DomainEntitiesWarehousesShelfMaterialBatchDtoRead = {
   id?: string;
@@ -2780,6 +2784,8 @@ export type DomainEntitiesWarehousesShelfMaterialBatchDtoRead = {
   quantity?: number;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   note?: string | null;
+  warehouseQuantity?: number | null;
+  warehouseUoM?: DomainEntitiesBaseUnitOfMeasureDto;
 };
 export type DomainEntitiesChecklistsMaterialBatchChecklistDto = {
   checkedAt?: string | null;

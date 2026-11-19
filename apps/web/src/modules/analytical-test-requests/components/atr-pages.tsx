@@ -1,3 +1,4 @@
+import { TestCorrectionPanel } from "@/shared/qc/test-correction-panel";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -89,6 +90,7 @@ export function AtrTestPage() {
   const mine = useMemo(() => assignedFieldIds(sheet.assignees, user?.id ?? null), [sheet.assignees, user?.id]);
   const details = [{ label: "Form", value: sheet.form?.name ?? null }, { label: "You", value: user?.name ?? null }, { label: "Product", value: [sheet.atr?.product, sheet.atr?.productCode].filter(Boolean).join(" · ") }];
   return <Frame sheet={sheet} title="Enter results">
+    {sheet.responseId ? <TestCorrectionPanel responseId={sheet.responseId} kind="product" canReturn={false} onReturned={sheet.reload} /> : null}
     {!sheet.form || !sheet.context ? <TestEntryEmpty kind="no-form" details={details} onBack={() => void navigate(back(sheet))} />
       : mine.size === 0 ? <>{summary(sheet)}<TestEntryEmpty kind="not-assigned" details={details} onBack={() => void navigate(back(sheet))} /></>
       : <TestEntry progressTo={atrStepPath(sheet.atr?.id ?? "", "progress")} form={sheet.form} mine={mine} stored={sheet.stored} context={sheet.context} audit={atrAudit} require={atrPermissions.start} summary={summary(sheet)} onReload={noReload} onDone={() => void navigate(back(sheet))}
@@ -101,6 +103,7 @@ export function AtrProgressPage() {
   const id = useAtrId();
   const sheet = useAtrWorksheet(id, { fresh: true });
   return <Frame sheet={sheet} title="Test progress">
+    {sheet.responseId ? <TestCorrectionPanel responseId={sheet.responseId} kind="product" canReturn={false} onReturned={sheet.reload} /> : null}
     {summary(sheet)}
     <WorksheetProgress form={sheet.form} stored={sheet.stored} responses={sheet.responses}
       assignments={sheet.assignees} submitted={atrPrintsFilled(sheet.atr?.status ?? null)}
@@ -138,6 +141,8 @@ export function AtrResultsPage() {
     <div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="outline" disabled={!sheet.rawForm} onClick={() => setPrinting(true)}>Print</Button>
       <PermissionGuard require={atrPermissions.check}><Button type="button" disabled={!sheet.rawForm} onClick={() => { sheet.reload(); setPreviewing(true); }}>
         {sheet.certificate.canGenerate ? "Preview certificate" : `View certificate · ${sheet.certificate.label}`}</Button></PermissionGuard></div>
+    {sheet.responseId ? <TestCorrectionPanel responseId={sheet.responseId} kind="product" canReturn={atr?.status === 4 && sheet.certificate.canGenerate}
+      onReturned={() => { toast.success("Test returned to the analyst for correction"); void navigate(atrListPath(3)); }} /> : null}
     {sheet.formMissing ? <p className="text-sm text-muted-foreground">This product has no test form for this stage.</p> : worksheet}
     {printing ? <PrintPreviewDialog title="Product analytical raw data" onClose={() => setPrinting(false)}>{worksheet}</PrintPreviewDialog> : null}
     {previewing && atr ? <Dialog open onOpenChange={(open) => { if (!open && !generating.isLoading) setPreviewing(false); }}><DialogContent className="sm:max-w-5xl">

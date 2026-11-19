@@ -69,13 +69,13 @@ function render(node: MathNode, key: string): ReactNode {
   }
 }
 
-/** A formula as it is written on a worksheet, with "= result" when a result is given. Falls back to the raw text when it does not parse. */
+/** A formula as it is written on a worksheet, with "= result" only when a result is given (never a bare "="). Falls back to the raw text when it does not parse. */
 export const ExpressionView = memo(function ExpressionView({ expression, className, print = false, option }: ExpressionViewProps) {
   const tree = useMemo(() => { try { if (!parse) return null; const source = normalize(expression); return parse(option?.append100 ? `(${source}) * 100` : source); } catch { return null; } }, [expression, option?.append100]);
   const result = option?.result;
   return <div className={cn("flex flex-wrap items-center justify-center gap-1 p-3 text-lg", print && "p-1 text-sm", className)} aria-label={`Formula: ${canonicalizeUniversalInputTokens(expression)}`}>
     {tree ? render(tree, "root") : <span className="font-mono text-sm">{expression}</span>}
-    <span className="mx-1">=</span>{result !== null && result !== undefined ? <span className="font-semibold">{String(result)}</span> : null}
+    {result !== null && result !== undefined && result !== "" ? <><span className="mx-1">=</span><span className="font-semibold">{String(result)}</span></> : null}
   </div>;
 });
 export default ExpressionView;

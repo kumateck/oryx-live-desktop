@@ -1,5 +1,9 @@
 # Oryx Live Desktop plan
 
+## Production material requests (2026-11-18)
+
+Keep existing approval and stock tables. Show production and material batch numbers, require stored-kind rejection permissions with reason and evidence revalidation, and refresh running packaging requirements after product master saves. Display server-converted stock with its warehouse unit while preserving physical values for actions. Notification routing and tablet procedure variants await client clarification. See `docs/production-material-request-followups.md`.
+
 ## Template repair, QC review and packaging substitutes (2026-11-18)
 
 Finish the template repair in its isolated worktrees. The form-templates module owns the repair route, schemas, preview/apply/history and permission-gated menu action. Share the typed per-question reassignment controls across product, GRN and retest pages; retain current-owner review, test-kind permissions, saved-answer protection and atomic server writes.
