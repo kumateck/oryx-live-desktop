@@ -16,7 +16,7 @@ export const stageLabels: Record<number, string> = { 0: "Intermediate", 1: "Bulk
 /** The AR number's type for a production stage: intermediate, bulk or finished product. */
 export const stageCode = (stage: number | null): "IP" | "BP" | "FP" => stage === 0 ? "IP" : stage === 1 ? "BP" : "FP";
 
-export type AtrAction = "sample" | "acknowledge" | "assign" | "start" | "continue" | "repair" | "reassign" | "assignments" | "progress" | "check" | "requestRetest" | "completeRetest" | "print";
+export type AtrAction = "sample" | "acknowledge" | "assign" | "start" | "continue" | "repair" | "reassign" | "assignments" | "progress" | "check" | "requestRetest" | "completeRetest" | "print" | "printCoa";
 export function atrActions(status: number | null, isRetest: boolean, hasAssignees: boolean): ReadonlySet<AtrAction> {
   const S = AtrStatus;
   const actions = new Set<AtrAction>();
@@ -29,6 +29,8 @@ export function atrActions(status: number | null, isRetest: boolean, hasAssignee
   if ((status === S.Assigned || status === S.Testing) && hasAssignees) actions.add("reassign");
   if (status !== null && status !== S.New && status !== S.Sampled && status !== S.Acknowledged) actions.add("assignments");
   if (status === S.TestTaken) actions.add("check");
+  // The certificate exists once the checked results are generated into it; the print dialog says if it has not been.
+  if (status === S.TestTaken || status === S.Released) actions.add("printCoa");
   if (status === S.Released) actions.add("requestRetest");
   if (status === S.Testing && isRetest) actions.add("completeRetest");
   if (status === S.Assigned || status === S.Testing || status === S.TestTaken || status === S.Released) {

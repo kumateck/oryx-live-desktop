@@ -178,6 +178,20 @@ function stripUnstartLeftovers(document: ObjectValue) {
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Requisitions.") && /UnstartLeftover/.test(name)) delete schemas[name];
 }
 
+/** Cross-store units and substitutes (2026-11-19): across-warehouses uomId/uoM, forecast substitute fields, the start body. */
+function stripStockUnitsSubstitutes(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  const stock = object(object(paths["/api/v1/material/{materialId}/stock/across-warehouses"] ?? null).get ?? null);
+  if (Array.isArray(stock.parameters)) stock.parameters = stock.parameters.filter((item) => object(item).name !== "uomId");
+  delete object(object(paths["/api/v1/production-schedule/activity/start/{productionScheduleProductId}"] ?? null).post ?? null).requestBody;
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete object(object(schemas["DOMAIN.Entities.Warehouses.WarehouseStockDto"] ?? null).properties ?? null).uoM;
+  const forecast = object(object(schemas["DOMAIN.Entities.ProductionSchedules.ForecastMaterialDto"] ?? null).properties ?? null);
+  delete forecast.isSubstitute; delete forecast.substituteFor;
+  delete schemas["DOMAIN.Entities.ProductionSchedules.StartProductionRequest"];
+  delete schemas["DOMAIN.Entities.ProductionSchedules.StartProductionMaterialChoice"];
+}
+
 /** Transfer rejection reasons (2026-11-19): the reject body and its DTO, supplier/rejection fields and department-stock uomId. */
 function stripTransferRejection(document: ObjectValue) {
   const paths = object(document.paths ?? null);
@@ -205,6 +219,7 @@ function stripOperationDepartments(document: ObjectValue) {
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(document);
   stripTransferRejection(document);
   stripProductionFollowups(document);
   stripOperationDepartments(document);
@@ -771,6 +786,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -805,6 +821,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -837,6 +854,7 @@ test("a specification revision requires a reason and returns it on the specifica
 
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -862,6 +880,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -889,6 +908,7 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
 
 test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -909,6 +929,7 @@ test("IT approval transfer adds only a typed read of the users on approval docum
 
 test("material retests add an AR number, read-only retest fields and three statuses, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -929,6 +950,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 
  test("QC repair, partial reassignment and packaging quantities preserve the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -952,6 +974,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 
 test("upcoming batch issues add two typed reads and the started batch a swap may name, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -970,6 +993,7 @@ test("upcoming batch issues add two typed reads and the started batch a swap may
 
 test("the combined QC repair and upcoming-issues contract is reviewed without dropping either addition", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -988,6 +1012,7 @@ test("the combined QC repair and upcoming-issues contract is reviewed without dr
 
 test("Unstart leftovers add only two typed variant repair paths and owned DTOs", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -1006,6 +1031,7 @@ test("Unstart leftovers add only two typed variant repair paths and owned DTOs",
 
 test("shared density combines with the reviewed Unstart reservation contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -1018,6 +1044,7 @@ test("shared density combines with the reviewed Unstart reservation contract", (
 });
 test("Unstart reservations combine with the reviewed shared-density contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -1045,6 +1072,7 @@ test("production follow-ups add two rejection operations and optional warehouse 
     assert.deepEqual(Object.keys(object(paths[`/api/v1/production-stock-requisitions/{requisitionId}/${variant}/reject`] ?? null)), ["post"]);
   }
   assert.deepEqual(current.security, reviewedImport().security);
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -1054,6 +1082,7 @@ test("production follow-ups add two rejection operations and optional warehouse 
 
 test("pre-COA correction imports three typed variant paths, a required reason and history only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
@@ -1069,6 +1098,7 @@ test("pre-COA correction imports three typed variant paths, a required reason an
 
 test("operation departments add a typed link and unlink and optional department fields only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   stripProductionFollowups(current);
   const digest = contractDigest(current);
@@ -1083,12 +1113,26 @@ test("operation departments add a typed link and unlink and optional department 
 
 test("transfer rejection adds a required reason body, optional supplier and rejection fields and a department-stock unit only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStockUnitsSubstitutes(current);
   const digest = contractDigest(current);
   assert.equal(digest, "131197bfcb2cebd380f15e839d01f8326f7c403c175e234de342e67a176a0281");
   checkCompatibility(hostConfig, policy, digest);
   const reject = object(object(object(current.paths ?? null)["/api/v1/production-schedule/stock-transfer/reject/{stockTransferId}"] ?? null).put ?? null);
   assert.ok(reject.requestBody);
   assert.deepEqual(current.security, reviewedImport().security);
+  stripStockUnitsSubstitutes(current);
   stripTransferRejection(current);
   assert.equal(contractDigest(current), "5125e67ffa628c1514db817e9006369e43e105c9ddf2efca7daa58a531f19bc1");
+});
+
+test("cross-store units and substitutes add an optional unit, optional substitute fields and an optional start body only", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "08c2823c661cab08eb9f3106b2e859eec2799b52a4bec5a55c46a4c1a69ad231");
+  checkCompatibility(hostConfig, policy, digest);
+  const start = object(object(object(current.paths ?? null)["/api/v1/production-schedule/activity/start/{productionScheduleProductId}"] ?? null).post ?? null);
+  assert.equal(object(start.requestBody ?? null).required ?? false, false);
+  assert.deepEqual(current.security, reviewedImport().security);
+  stripStockUnitsSubstitutes(current);
+  assert.equal(contractDigest(current), "131197bfcb2cebd380f15e839d01f8326f7c403c175e234de342e67a176a0281");
 });

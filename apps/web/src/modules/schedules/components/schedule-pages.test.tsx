@@ -88,6 +88,24 @@ it("starts a batch only when every material is covered, after confirming", async
   expect(screen.getByRole("button", { name: "Start production" }).hasAttribute("disabled")).toBe(true);
 });
 
+it("starts on the main material by default, or on the substitute chosen for its line, even when the main is short", async () => {
+  const substitute = { ...material("Citric Monohydrate", 500, 900), isSubstitute: true, parentMaterial: { id: "Citric Anhydrous", name: "Citric Anhydrous", code: "C-Citric Anhydrous" } };
+  const { calls } = open(`/production/schedules/${id}/details?batch=b2`, { rawFor: { b2: [material("Sugar", 500, 900), material("Citric Anhydrous", 500, 100), substitute] } });
+  // The main material is chosen by default, and it is short: the batch cannot start until the substitute is chosen.
+  expect(await screen.findByText(/1 raw material is short, so production cannot start/)).toBeTruthy();
+  const start = screen.getByRole("button", { name: "Start production" });
+  expect(start.hasAttribute("disabled")).toBe(true);
+  expect((screen.getByRole("radio", { name: "Use Citric Anhydrous for this batch" }) as HTMLInputElement).checked).toBe(true);
+  fireEvent.click(screen.getByRole("radio", { name: "Use Citric Monohydrate for this batch" }));
+  await waitFor(() => expect(start.hasAttribute("disabled")).toBe(false));
+  fireEvent.click(start);
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByText("Substitute: Citric Monohydrate")).toBeTruthy();
+  fireEvent.click(within(dialog).getByRole("button", { name: "Start production" }));
+  await waitFor(() => expect(calls.map((call) => call.path)).toEqual(["/api/v1/production-schedule/activity/start/b2"]));
+  expect(JSON.parse(calls[0]?.body ?? "null")).toEqual({ materialChoices: [{ materialId: "Citric Anhydrous", useMaterialId: "Citric Monohydrate" }] });
+});
+
 it("starts a batch while packaging is short, saying it is requested later", async () => {
   const { calls } = open(`/production/schedules/${id}/details?batch=b2`, { rawFor: { b2: [material("Sugar", 500, 900)] }, packagingFor: { b2: [material("Bottle", 500, 100)] } });
   expect(await screen.findByText(/1 packaging material is short\. Production can start without it/)).toBeTruthy();
