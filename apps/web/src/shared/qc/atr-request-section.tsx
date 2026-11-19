@@ -1,12 +1,13 @@
 import type { DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto as AtrDto } from "@/shared/api/generated/analytical";
+import type { DomainEntitiesFormsResponseDetailDto as ResponseDto } from "@/shared/api/generated/forms";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { PrintButton } from "@/shared/print/print-button";
 import { PrintPreviewDialog } from "@/shared/print/print-preview-dialog";
 import { AtrRequestForm, atrRequestPrintPermission, parseAtrRequest } from "./atr-request-form";
 
-/** The product's Analytical Test Request, shown as the paper form with a print action for holders of the print key. */
-export function AtrRequestSection({ data }: { data: AtrDto | null | undefined }) {
-  const request = parseAtrRequest(data);
+/** The product's Analytical Test Request (with `response`, its test response, naming who generated and approved the certificate), shown as the paper form with a print action for holders of the print key. */
+export function AtrRequestSection({ data, response }: { data: AtrDto | null | undefined; response?: ResponseDto | null | undefined }) {
+  const request = parseAtrRequest(data, response);
   if (!request) return null;
   return <section aria-label="Analytical test request" className="space-y-2">
     <div className="flex flex-wrap items-center justify-between gap-2">
