@@ -321,6 +321,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          uomId: queryArg.uomId,
+        },
       }),
     }),
     getApiV1MaterialByMaterialIdStockPipeline: build.query<
@@ -1540,6 +1543,7 @@ export type GetApiV1MaterialByMaterialIdStockAcrossWarehousesApiResponse =
 export type GetApiV1MaterialByMaterialIdStockAcrossWarehousesApiArg = {
   /** The id of the material */
   materialId: string;
+  uomId?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -3058,6 +3062,7 @@ export type DomainEntitiesWarehousesWarehouseStockDto = {
   warehouse?: DomainEntitiesWarehousesWarehouseDto;
   stockQuantity?: number;
   expiredQuantity?: number;
+  uoM?: DomainEntitiesBaseUnitOfMeasureDto;
 };
 export type DomainEntitiesMaterialsMaterialPipelineStage =
   0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;

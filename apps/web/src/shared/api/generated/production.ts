@@ -617,6 +617,7 @@ const injectedRtkApi = api.injectEndpoints({
         query: (queryArg) => ({
           url: `/api/v1/production-schedule/activity/start/${queryArg.productionScheduleProductId}`,
           method: "POST",
+          body: queryArg.domainEntitiesProductionSchedulesStartProductionRequest,
           headers: {
             Module: queryArg["module"],
             SubModule: queryArg.subModule,
@@ -2380,6 +2381,7 @@ export type PostApiV1ProductionScheduleActivityStartByProductionScheduleProductI
     module?: string;
     /** The sub module this request falls under */
     subModule?: string;
+    domainEntitiesProductionSchedulesStartProductionRequest: DomainEntitiesProductionSchedulesStartProductionRequest;
   };
 export type GetApiV1ProductionScheduleActivityApiResponse =
   /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesProductsProductionProductionActivityDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
@@ -4780,6 +4782,14 @@ export type DomainEntitiesProductionSchedulesProductionScheduleProcurementPackag
     isSubstitute?: boolean;
     parentMaterial?: DomainEntitiesMaterialsMaterialDto;
   };
+export type DomainEntitiesProductionSchedulesStartProductionMaterialChoice = {
+  materialId?: string;
+  useMaterialId?: string;
+};
+export type DomainEntitiesProductionSchedulesStartProductionRequest = {
+  materialChoices?:
+    DomainEntitiesProductionSchedulesStartProductionMaterialChoice[] | null;
+};
 export type DomainEntitiesProductsProductionProductionActivityLogDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -5228,6 +5238,8 @@ export type DomainEntitiesProductionSchedulesForecastMaterialDto = {
   expiredQuantity?: number;
   reservedQuantity?: number;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
+  isSubstitute?: boolean;
+  substituteFor?: DomainEntitiesMaterialsMaterialDto;
 };
 export type DomainEntitiesProductionSchedulesForecastMaterialDtoRead = {
   material?: DomainEntitiesMaterialsMaterialDto;
@@ -5237,6 +5249,8 @@ export type DomainEntitiesProductionSchedulesForecastMaterialDtoRead = {
   reservedQuantity?: number;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   isAvailable?: boolean;
+  isSubstitute?: boolean;
+  substituteFor?: DomainEntitiesMaterialsMaterialDto;
 };
 export type DomainEntitiesWorkOrdersCreateProductionStepRequest = {
   description?: string | null;

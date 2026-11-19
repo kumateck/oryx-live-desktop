@@ -29,6 +29,10 @@ export function StockAvailabilityDialog({ material, audit, onClose }: { material
   const stores = useMemo(() => { const parsed = warehouseStockSchema.safeParse(stock.data ?? null); return parsed.success ? parsed.data : []; }, [stock.data]);
   const incoming = useMemo(() => { const parsed = pipelineSchema.safeParse(pipeline.data ?? null); return parsed.success ? parsed.data : []; }, [pipeline.data]);
   const show = (value: number, unit: string | null = material.unit) => toLargestUnit(value, unit, "calculated")?.text ?? String(value);
+  // Each row names its unit; the server converts every store into the viewer's unit with the material's density.
+  // A total is only added up when every row shares one unit.
+  const groupUnit = (rows: readonly WarehouseStock[]) => { const units = new Set(rows.map((row) => row.unit ?? material.unit)); return units.size === 1 ? [...units][0] ?? null : undefined; };
+  const showTotal = (rows: readonly WarehouseStock[], pick: (row: WarehouseStock) => number) => { const unit = groupUnit(rows); return unit === undefined ? "Mixed units" : show(sum(rows, pick), unit); };
   const groups = [{ label: "Stores", rows: stores.filter((row) => !row.onFloor) }, { label: "Production floors", rows: stores.filter((row) => row.onFloor) }].filter((group) => group.rows.length > 0);
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -41,10 +45,10 @@ export function StockAvailabilityDialog({ material, audit, onClose }: { material
             : <Table><TableHeader><TableRow><TableHead>Store</TableHead><TableHead>Free</TableHead><TableHead>Reserved</TableHead><TableHead>Expired or not released</TableHead><TableHead>Total</TableHead></TableRow></TableHeader>
               <TableBody>{groups.map((group) => <Fragment key={group.label}>
                 <TableRow className="bg-muted/50"><TableCell colSpan={5} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</TableCell></TableRow>
-                {group.rows.map((row) => <TableRow key={row.id}><TableCell className="font-medium">{row.name}</TableCell><TableCell>{show(row.free)}</TableCell><TableCell>{show(row.reserved)}</TableCell>
-                  <TableCell className={row.expired + row.unavailable > 0 ? "text-destructive" : undefined}>{show(row.expired + row.unavailable)}</TableCell><TableCell>{show(row.total)}</TableCell></TableRow>)}
-                <TableRow className="font-semibold"><TableCell>{group.label} total</TableCell><TableCell>{show(sum(group.rows, (row) => row.free))}</TableCell><TableCell>{show(sum(group.rows, (row) => row.reserved))}</TableCell>
-                  <TableCell>{show(sum(group.rows, (row) => row.expired + row.unavailable))}</TableCell><TableCell>{show(sum(group.rows, (row) => row.total))}</TableCell></TableRow>
+                {group.rows.map((row) => <TableRow key={row.id}><TableCell className="font-medium">{row.name}</TableCell><TableCell>{show(row.free, row.unit ?? material.unit)}</TableCell><TableCell>{show(row.reserved, row.unit ?? material.unit)}</TableCell>
+                  <TableCell className={row.expired + row.unavailable > 0 ? "text-destructive" : undefined}>{show(row.expired + row.unavailable, row.unit ?? material.unit)}</TableCell><TableCell>{show(row.total, row.unit ?? material.unit)}</TableCell></TableRow>)}
+                <TableRow className="font-semibold"><TableCell>{group.label} total</TableCell><TableCell>{showTotal(group.rows, (row) => row.free)}</TableCell><TableCell>{showTotal(group.rows, (row) => row.reserved)}</TableCell>
+                  <TableCell>{showTotal(group.rows, (row) => row.expired + row.unavailable)}</TableCell><TableCell>{showTotal(group.rows, (row) => row.total)}</TableCell></TableRow>
               </Fragment>)}</TableBody></Table> : null}
           {tab === "incoming" ? pipeline.isLoading ? <PageSkeleton label="Loading incoming stock" /> : pipeline.error ? <Problem message={apiErrorMessage(pipeline.error)} onRetry={() => void pipeline.refetch()} />
             : incoming.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">Nothing is on order or on its way in.</p>
