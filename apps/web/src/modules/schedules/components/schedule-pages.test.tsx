@@ -106,6 +106,15 @@ it("starts on the main material by default, or on the substitute chosen for its 
   expect(JSON.parse(calls[0]?.body ?? "null")).toEqual({ materialChoices: [{ materialId: "Citric Anhydrous", useMaterialId: "Citric Monohydrate" }] });
 });
 
+it("shows a substitute that cannot be used with its reason, and does not let it be chosen", async () => {
+  const unusable = { ...material("Citric Monohydrate", 0, 900), isSubstitute: true, parentMaterial: { id: "Citric Anhydrous", name: "Citric Anhydrous", code: "C-Citric Anhydrous" },
+    substituteUnavailableReason: "No quantity of its own on the product BOM. Set it on the BOM to use it." };
+  open(`/production/schedules/${id}/details?batch=b2`, { rawFor: { b2: [material("Citric Anhydrous", 500, 900), unusable] } });
+  expect(await screen.findByText(/Cannot be used: No quantity of its own on the product BOM/)).toBeTruthy();
+  expect((screen.getByRole("radio", { name: "Use Citric Monohydrate for this batch" }) as HTMLInputElement).disabled).toBe(true);
+  expect((screen.getByRole("radio", { name: "Use Citric Anhydrous for this batch" }) as HTMLInputElement).checked).toBe(true);
+});
+
 it("starts a batch while packaging is short, saying it is requested later", async () => {
   const { calls } = open(`/production/schedules/${id}/details?batch=b2`, { rawFor: { b2: [material("Sugar", 500, 900)] }, packagingFor: { b2: [material("Bottle", 500, 100)] } });
   expect(await screen.findByText(/1 packaging material is short\. Production can start without it/)).toBeTruthy();

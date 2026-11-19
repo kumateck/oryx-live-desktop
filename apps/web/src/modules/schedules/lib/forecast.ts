@@ -30,7 +30,7 @@ export function substitutesOf(main: ForecastMaterial, materials: readonly Foreca
 
 /** A BOM or packaging line is covered when its main material, or one of its substitutes, has enough free stock. */
 export function lineCovered(main: ForecastMaterial, materials: readonly ForecastMaterial[]): boolean {
-  return isCovered(main) || substitutesOf(main, materials).some(isCovered);
+  return isCovered(main) || substitutesOf(main, materials).some((item) => !item.unusableReason && isCovered(item));
 }
 
 const raw = 0;
