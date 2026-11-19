@@ -42,7 +42,8 @@ it("is open only to holders of the page's key", () => {
   expect(manifest.access).toEqual({ kind: "all", permissions: ["CanViewUpcomingBatchIssues"] });
 });
 
-it("lists each started batch with the lots reserved for it, raw and packaging apart, before any batch number or requisition", async () => {
+it("lists each started batch with the lots reserved for it, one material kind at a time, before any batch number or requisition", async () => {
+  const user = userEvent.setup();
   open(["CanViewUpcomingBatchIssues"]);
   const batch = await screen.findByRole("region", { name: "Lufart DS Tablet" });
   expect(within(batch).getByText("Batch number not assigned yet")).toBeTruthy();
@@ -50,7 +51,23 @@ it("lists each started batch with the lots reserved for it, raw and packaging ap
   expect(within(raw).getByText("LF-E-26137")).toBeTruthy();
   expect(within(raw).getByText("129.4 kg")).toBeTruthy();
   expect(within(raw).getByText("Bay A · R1 · S2")).toBeTruthy();
-  expect(within(within(batch).getByRole("table", { name: "Packaging materials" })).getByText("No shelf recorded")).toBeTruthy();
+  expect(within(batch).queryByRole("table", { name: "Packaging materials" })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Packaging" }));
+  const packaging = await within(await screen.findByRole("region", { name: "Lufart DS Tablet" })).findByRole("table", { name: "Packaging materials" });
+  expect(within(packaging).getByText("No shelf recorded")).toBeTruthy();
+  expect(screen.queryByRole("table", { name: "Raw materials" })).toBeNull();
+});
+
+it("folds and unfolds each batch", async () => {
+  const user = userEvent.setup();
+  open(["CanViewUpcomingBatchIssues"]);
+  const batch = await screen.findByRole("region", { name: "Lufart DS Tablet" });
+  const toggle = within(batch).getByRole("button", { expanded: true, name: /Lufart DS Tablet/ });
+  await user.click(toggle);
+  expect(within(batch).queryByRole("table", { name: "Raw materials" })).toBeNull();
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  await user.click(screen.getByRole("button", { name: "Expand all" }));
+  expect(within(batch).getByRole("table", { name: "Raw materials" })).toBeTruthy();
 });
 
 it("looks for swaps against the started batch itself, and only an issuing store may ask for them", async () => {
