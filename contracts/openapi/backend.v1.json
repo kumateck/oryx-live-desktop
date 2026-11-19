@@ -30889,6 +30889,14 @@
             }
           },
           {
+            "name": "uomId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -57964,6 +57972,25 @@
                 "schema": {
                   "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
                 }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionSchedules.StartProductionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionSchedules.StartProductionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionSchedules.StartProductionRequest"
               }
             }
           }
@@ -150886,6 +150913,12 @@
           "isAvailable": {
             "type": "boolean",
             "readOnly": true
+          },
+          "isSubstitute": {
+            "type": "boolean"
+          },
+          "substituteFor": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialDto"
           }
         },
         "additionalProperties": false
@@ -179834,6 +179867,9 @@
           "expiredQuantity": {
             "type": "number",
             "format": "double"
+          },
+          "uoM": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
           }
         },
         "additionalProperties": false
@@ -184989,6 +185025,33 @@
           "reason": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProductionSchedules.StartProductionRequest": {
+        "type": "object",
+        "properties": {
+          "materialChoices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.ProductionSchedules.StartProductionMaterialChoice"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProductionSchedules.StartProductionMaterialChoice": {
+        "type": "object",
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "useMaterialId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "additionalProperties": false
