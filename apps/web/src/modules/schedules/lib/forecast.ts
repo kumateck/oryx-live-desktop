@@ -1,13 +1,13 @@
 import type { ForecastMaterial } from "../schemas/forecast-schema";
 
 /** Stock on hand that has not expired; only this can go into production. */
-export function usableStock(item: Pick<ForecastMaterial, "onHand" | "expired">): number {
-  return Math.max(item.onHand - item.expired, 0);
+export function usableStock(item: Pick<ForecastMaterial, "onHand" | "expired"> & { usable?: number | null; unavailable?: number }): number {
+  return typeof item.usable === "number" ? Math.max(item.usable, 0) : Math.max(item.onHand - item.expired - (item.unavailable ?? 0), 0);
 }
 
-/** Usable stock not reserved for other batches: what new production could actually be issued. */
-export function freeStock(item: Pick<ForecastMaterial, "onHand" | "expired" | "reserved">): number {
-  return Math.max(usableStock(item) - item.reserved, 0);
+/** Usable stock not reserved for other batches: what new production could actually be issued. The server's figure when sent. */
+export function freeStock(item: Pick<ForecastMaterial, "onHand" | "expired" | "reserved"> & { usable?: number | null; unavailable?: number; free?: number | null }): number {
+  return typeof item.free === "number" ? Math.max(item.free, 0) : Math.max(usableStock(item) - item.reserved, 0);
 }
 
 /**

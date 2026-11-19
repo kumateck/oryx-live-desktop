@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
+import { RecordedFormulaInputs } from "./raw-data/print/recorded-formula-inputs";
 import ArdTemplateBody from "./templates/body";
 import { CertificatePreview } from "./certificate-preview";
 import { getCompactFormulaEvaluations } from "./raw-data/print/formula-evaluation";
@@ -12,10 +13,14 @@ const facts = { batchNumber: "B-1", made: null, expires: null, arNumber: "AR-1",
 
 it("renders the Next summary and full worksheet from wrapped legacy Assay readings", async () => {
   const { container } = render(<ArdTemplateBody sections={[assaySection]} responses={[wrappedAssayAnswer]} showRemarks={false} />);
-  expect(await screen.findAllByText("10.04%")).toHaveLength(2);
-  expect(screen.getAllByText("7.17%")).toHaveLength(2);
-  expect(screen.getByText("Test & Observations")).toBeTruthy();
-  expect(screen.getByText(/Weight \(g\): 0\.02/)).toBeTruthy();
+  // The specification summary, the test's result and the sample's calculation.
+  expect(await screen.findAllByText("10.04%")).toHaveLength(3);
+  expect(screen.getAllByText("7.17%")).toHaveLength(3);
+  const test = screen.getByRole("region", { name: "Test 1" });
+  expect(within(test).getByText("99.0–101.0% (Dried substance)")).toBeTruthy();
+  const standard = within(test).getByText("Standard inputs").parentElement;
+  expect(standard?.textContent).toContain("Weight (g)");
+  expect(standard?.textContent).toContain("0.02");
   expect(container.textContent).not.toContain('"tabledata"');
   expect(container.querySelector("input")).toBeNull();
 });
@@ -53,7 +58,8 @@ it("shows the screenshot's unresolved sample-weight reading without substituting
   const original = option.replaceAll(":spl.wt", ":spltwt");
   const section = { ...assaySection, fields: [{ id: "f-assay", question: { type: 10 as const, label: "Assay – Titration", options: [{ name: original }] } }] };
   render(<ArdTemplateBody sections={[section]} responses={[wrappedAssayAnswer]} showRemarks={false} />);
-  expect(await screen.findAllByText("Result unavailable")).toHaveLength(3);
+  // The specification summary, the test's result, and each sample's calculation.
+  expect(await screen.findAllByText("Result unavailable")).toHaveLength(4);
   expect(screen.queryByText("10.04%")).toBeNull();
   expect(screen.queryByText("0.00%")).toBeNull();
 });
@@ -65,7 +71,10 @@ it("uses only the authoritative average in the specification summary and preserv
   const tables = container.querySelectorAll("table");
   expect(tables[0]?.textContent).toContain("103.78 %");
   expect(tables[0]?.textContent).not.toContain("103.92");
-  expect(screen.getByRole("region", { name: "Recorded formula inputs" })).toBeTruthy();
+  const calculations = screen.getByRole("table", { name: "Calculations" });
+  if (!(calculations instanceof HTMLTableElement)) throw new Error("Calculations is not a table");
+  expect(calculations.rows[0]?.textContent).toContain("103.92 %");
+  expect(calculations.rows[1]?.textContent).toContain("103.65 %");
   expect(container.textContent).toContain("0.02");
   expect(container.textContent).toContain("0.35");
   expect(container.textContent).toContain("103.92 %");
@@ -88,4 +97,46 @@ it("shows the recorded analyst, certificate generator and approver in the certif
   expect(footer.textContent).toContain("Analysed byAma Analyst, Kojo Analyst");
   expect(footer.textContent).toContain("Released byEsi QC");
   expect(footer.textContent).toContain("Approved byKofi QA");
+});
+
+
+it("renders saved universal worksheet inputs in the entry layout without configuration JSON or editable controls", async () => {
+  const settings = { type: 3, expression: "(:sampleAvg/:A)*(:dil/:sampleWeight)*:wt*5*(1000/:Claim)*:purity",
+    constants: { Claim: 120, A: 715, dil: 200 }, headers: ["Sample 1", "Sample 2"],
+    rowHeaders: [{ id: "r1", label: "Reading 1" }, { id: "r2", label: "Reading 2" }],
+    sampleInput: true, standardInput: false, sampleTable: true, calculateAvgInTable: true,
+    manualVarLabels: { wt: "Weight per ml", purity: "% purity" },
+    sampleInputs: [[{ key: "weight", label: "Weight (g)", value: "" }], [{ key: "weight", label: "Weight (g)", value: "" }]],
+    standardInputs: [{ key: "unused", label: "Hidden standard", value: "" }],
+    decimalPlaces: 2, averageAllResults: true };
+  const section = { ...assaySection, fields: [{ id: "f-assay", question: { type: 10 as const, label: "Assay: Paracetamol", options: [{ name: JSON.stringify(settings) }] } }] };
+  const value = { settings, tableData: [["0.4468", "0.4474"], ["0.4465", "0.4470"]],
+    sampleInputs: [{ weight: "5.6613" }, { weight: "5.6822" }], manualVars: { wt: { raw: "1.13", evaluated: 1.13 }, purity: { raw: "100.0", evaluated: 100 } } };
+  const answer = { ...wrappedAssayAnswer, value: JSON.stringify(value), formulaGoverned: true, formulaResultFinalized: true,
+    formulaDisplayResultsJson: JSON.stringify([{ key: "average", value: "103.78", unit: "%" }]) };
+  const { container } = render(<ArdTemplateBody sections={[section]} responses={[answer]} showRemarks={false} />);
+  const row = (group: string, name: string) => within(screen.getByText(group).parentElement ?? document.body).getByRole("rowheader", { name: new RegExp(name.replace(/[()%]/g, "\\$&")) }).closest("tr")?.textContent;
+  expect(row("Recorded variables", "Weight per ml")).toContain("1.13");
+  expect(row("Recorded variables", "% purity")).toContain("100.0");
+  expect(row("Sample 1 inputs", "Weight (g)")).toContain("5.6613");
+  expect(row("Sample 2 inputs", "Weight (g)")).toContain("5.6822");
+  expect(row("Constants", "Claim")).toContain("120");
+  expect(screen.getByText("0.4470")).toBeTruthy();
+  // Governed: the stored average is the result, and no bare "=" is left without a number.
+  expect(within(screen.getByLabelText("Results")).getByText("103.78 %")).toBeTruthy();
+  expect(screen.getByRole("table", { name: "Calculations" }).textContent).not.toMatch(/=\s*$/);
+  expect(screen.queryByText(/Hidden standard/)).toBeNull();
+  expect(container.textContent).not.toContain('"averageAllResults"');
+  expect(container.querySelector("input, textarea, select, button")).toBeNull();
+  expect(container.textContent).toContain("103.78 %");
+});
+
+
+it("renders labelled simple formula readings without leaking saved settings", () => {
+  const settings = { type: 0, expression: "(:C-:A)/(:B-:A)", manualVarLabels: { C: "Weight of pycnometer and sample", A: "Empty pycnometer", B: "Pycnometer and water" } };
+  const { container } = render(<RecordedFormulaInputs option={{ name: JSON.stringify(settings) }} value={JSON.stringify({ C: "61.0224", A: "29.7506", B: "57.3314", settings })} />);
+  expect(screen.getByText("Weight of pycnometer and sample")).toBeTruthy();
+  expect(screen.getByText("61.0224")).toBeTruthy();
+  expect(container.textContent).not.toContain('"manualVarLabels"');
+  expect(container.querySelector("input, textarea, select")).toBeNull();
 });

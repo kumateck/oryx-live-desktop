@@ -1,0 +1,11 @@
+# Reserved stock and Unstart release
+
+The approved-material Reserved tab groups the complete reservation response by product, then production schedule and batch. Each batch shows its subtotal and expandable material-lot allocations. The product total includes every batch before pagination. Compatible units are normalized before addition; quantities with different dimensions or missing units remain separate. Repeated stock balances are never added together.
+
+Normal Unstart stamps both ReleasedAt and DeletedAt on unused reservations, preserving the original Unstart reference. Active queries exclude released rows even if an older row lacks DeletedAt. Neither operation restores shelf stock or changes QC/retest status.
+
+For historical holds, open **Repair Unstart reservations** on the material's Reserved tab. Review the eligible holds and blockers, select holds, enter a reason and release them. The server requires the original immutable Unstart receipt to name each reservation, an archived run and no restart, issue or consumption evidence. Missing evidence is blocked for investigation. The preview is limited to 200 candidate holds for this material and the caller's department. Reload and review after a conflict. Identical retries retain the request ID and return the recorded repair.
+
+Backend deployment and `AddUnstartReservationRepairs` must precede the desktop change. The audit receipt is append-only in EF and PostgreSQL. The source API import is reproducible with `bun scripts/import-unstart-reservations.ts EXPORT.json`, then `bun run api:generate` and `bun run api:check`. Reviewed source digest: `492bb17cb7c98b859259ae356d670a091c1045483600bdf2e4137e79751bc1d4`; stripping exactly these four operations and their four owned DTO schemas reproduces `8740d299…33f4b`.
+
+Permissions are `CanViewApprovedRawMaterials` / `CanViewApprovedPackagingMaterials` for preview, and the new `CanRepairUnstartRawMaterialReservations` / `CanRepairUnstartPackagingMaterialReservations` for release. Both repair keys are registered under Warehouse / Approved Materials and granted to nobody automatically. A release also requires the matching view key and current department membership. The dialog checks the dedicated key before the write; backend authorization is authoritative. An administrator must explicitly assign the repair task.

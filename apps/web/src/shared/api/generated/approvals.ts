@@ -274,6 +274,36 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    rejectProductionRawStockRequisition: build.mutation<
+      RejectProductionRawStockRequisitionApiResponse,
+      RejectProductionRawStockRequisitionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-stock-requisition", id: "LIST" }, { type: "production-stock-requisition", id: queryArg.requisitionId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-stock-requisitions/${queryArg.requisitionId}/raw/reject`,
+        method: "POST",
+        body: queryArg.appServicesApprovalsRejectProductionStockRequisitionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    rejectProductionPackagingStockRequisition: build.mutation<
+      RejectProductionPackagingStockRequisitionApiResponse,
+      RejectProductionPackagingStockRequisitionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-stock-requisition", id: "LIST" }, { type: "production-stock-requisition", id: queryArg.requisitionId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-stock-requisitions/${queryArg.requisitionId}/packaging/reject`,
+        method: "POST",
+        body: queryArg.appServicesApprovalsRejectProductionStockRequisitionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -449,6 +479,24 @@ export type GetApiV1ApprovalMyPendingRevisionsApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type RejectProductionRawStockRequisitionApiResponse = void;
+export type RejectProductionRawStockRequisitionApiArg = {
+  requisitionId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesApprovalsRejectProductionStockRequisitionRequest: AppServicesApprovalsRejectProductionStockRequisitionRequest;
+};
+export type RejectProductionPackagingStockRequisitionApiResponse = void;
+export type RejectProductionPackagingStockRequisitionApiArg = {
+  requisitionId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  appServicesApprovalsRejectProductionStockRequisitionRequest: AppServicesApprovalsRejectProductionStockRequisitionRequest;
+};
 export type SharedDepartmentType = 0 | 1 | 2;
 export type DomainEntitiesProductsDivision = 0 | 1;
 export type SharedCollectionItemDto = {
@@ -458,6 +506,8 @@ export type SharedCollectionItemDto = {
   description?: string | null;
   symbol?: string | null;
   uom?: string | null;
+  linkedDepartmentId?: string | null;
+  linkedDepartmentName?: string | null;
 };
 export type DomainEntitiesDepartmentsDepartmentListDto = {
   id?: string;
@@ -610,6 +660,10 @@ export type AppServicesApprovalsPendingRevisionApprovalDto = {
   createdAt?: string;
   resourcePath?: string | null;
 };
+export type AppServicesApprovalsRejectProductionStockRequisitionRequest = {
+  reason: string;
+  contentRevision?: number;
+};
 export const {
   useGetApiV1ApprovalUsersWithPendingQuery,
   useLazyGetApiV1ApprovalUsersWithPendingQuery,
@@ -641,4 +695,6 @@ export const {
   useLazyGetApiV1ApprovalMyPendingDocumentCountsQuery,
   useGetApiV1ApprovalMyPendingRevisionsQuery,
   useLazyGetApiV1ApprovalMyPendingRevisionsQuery,
+  useRejectProductionRawStockRequisitionMutation,
+  useRejectProductionPackagingStockRequisitionMutation,
 } = injectedRtkApi;

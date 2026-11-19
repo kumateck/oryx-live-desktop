@@ -832,6 +832,8 @@ export type SharedCollectionItemDto = {
   description?: string | null;
   symbol?: string | null;
   uom?: string | null;
+  linkedDepartmentId?: string | null;
+  linkedDepartmentName?: string | null;
 };
 export type DomainEntitiesBaseUnitOfMeasureType = 0 | 1 | 2 | 3;
 export type DomainEntitiesBaseUnitOfMeasureCategory = 0 | 1 | 2 | 3 | 4;
@@ -1002,6 +1004,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
   isWhitePlacebo?: boolean;
+  densityGramsPerMilliliter?: number | null;
 };
 export type DomainEntitiesBillOfMaterialsBillOfMaterialItemSubstituteDto = {
   id?: string;
@@ -1517,6 +1520,7 @@ export type DomainEntitiesMaterialsMaterial = {
   isUnlimited?: boolean;
   departments?: DomainEntitiesMaterialsMaterialDepartment[] | null;
   isWhitePlacebo?: boolean;
+  densityGramsPerMilliliter?: number | null;
 };
 export type DomainEntitiesMaterialsMaterialRead = {
   id?: string;
@@ -1543,6 +1547,7 @@ export type DomainEntitiesMaterialsMaterialRead = {
   totalStock?: number;
   departments?: DomainEntitiesMaterialsMaterialDepartmentRead[] | null;
   isWhitePlacebo?: boolean;
+  densityGramsPerMilliliter?: number | null;
 };
 export type DomainEntitiesBaseProductionStatus = 0 | 1 | 2 | 3 | 4;
 export type DomainEntitiesProductionSchedulesProductionSchedule = {
@@ -7194,6 +7199,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReservedQuantity = {
   uoMId?: string;
   uoM?: DomainEntitiesBaseUnitOfMeasure;
   quantity?: number;
+  densityGramsPerMilliliter?: number | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatchReservedQuantityRead = {
   id?: string;
@@ -7217,6 +7223,7 @@ export type DomainEntitiesMaterialsBatchMaterialBatchReservedQuantityRead = {
   uoMId?: string;
   uoM?: DomainEntitiesBaseUnitOfMeasureRead;
   quantity?: number;
+  densityGramsPerMilliliter?: number | null;
 };
 export type DomainEntitiesMaterialsBatchMaterialBatch = {
   id?: string;

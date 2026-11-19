@@ -1,10 +1,12 @@
+import { stockRejectionPermissions } from "./stock-rejection-access";
 export const approvalsPath = "/qa/pending-approvals";
 export const approvalListPath = (type: string) => `${approvalsPath}?type=${encodeURIComponent(type)}`;
 export const approvalPath = (type: string, id: string) => `${approvalsPath}/${encodeURIComponent(type)}/${encodeURIComponent(id)}`;
 /** Seeing the queue, approving and rejecting are three permissions. */
 export const approvalPermissions = { view: "CanViewPendingApprovals", approve: "CanApprovePendingApproval", reject: "CanRejectPendingApproval" } as const;
-export const decisionPermission = (type: string, decision: Decision): string =>
-  type === "StockDiscrepancy" ? decision === "approve" ? "CanApproveStockDiscrepancy" : "CanRejectStockDiscrepancy"
+export const decisionPermission = (type: string, decision: Decision, stockKind: 0 | 1 | null = null): string =>
+  decision === "reject" && stockKind !== null && ["StockRequisition", "RawStockRequisition", "PackageStockRequisition"].includes(type) ? stockRejectionPermissions[stockKind]
+    : type === "StockDiscrepancy" ? decision === "approve" ? "CanApproveStockDiscrepancy" : "CanRejectStockDiscrepancy"
     : type === "ShipmentDiscrepancy" ? decision === "approve" ? "CanApproveShipmentDiscrepancy" : "CanRejectShipmentDiscrepancy"
     : type === "Response"
     ? decision === "approve" ? "CanApproveResponse" : "CanRejectResponse"

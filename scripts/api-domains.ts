@@ -11,7 +11,7 @@ export interface ApiDomain {
 export const apiDomains: readonly ApiDomain[] = [
   { id: "auth", exportName: "authApi", tags: ["Auth", "Verification"] },
   { id: "identity", exportName: "identityApi", tags: ["User", "Role", "Permission", "Department"] },
-  { id: "approvals", exportName: "approvalsApi", tags: ["Approval", "PendingApprovalDocumentCounts", "PendingRevisionApproval"] },
+  { id: "approvals", exportName: "approvalsApi", tags: ["Approval", "PendingApprovalDocumentCounts", "PendingRevisionApproval", "ProductionStockRequisition"] },
   { id: "settings", exportName: "settingsApi", tags: [
     "ActivityLog", "Alert", "Collection", "CompanyWorkingDays", "Configuration", "Country", "File", "Holiday", "WorkingHoursPolicy",
   ] },
@@ -19,7 +19,7 @@ export const apiDomains: readonly ApiDomain[] = [
     "AttendanceRecord", "Designation", "Employee", "Onboarding", "LeaveEntitlement", "LeaveRequest", "LeaveType", "OvertimeRequest",
     "Payroll", "Performance", "ShiftCategory", "ShiftSchedule", "ShiftType", "StaffRequisition",
   ] },
-  { id: "materials", exportName: "materialsApi", tags: ["Material", "BillOfMaterial", "StockMigration", "WhitePlacebo"] },
+  { id: "materials", exportName: "materialsApi", tags: ["Material", "BillOfMaterial", "StockMigration", "WhitePlacebo", "UnstartReservations"] },
   { id: "products", exportName: "productsApi", tags: ["Product"] },
   { id: "production", exportName: "productionApi", tags: ["ProductionSchedule", "ProductionOrder", "WorkOrder", "IssuedMaterialRepair", "ProductionUnstart", "ProductionScheduleBulkRepair", "ReservationRepair"] },
   { id: "warehouse", exportName: "warehouseApi", tags: ["Warehouse", "Requisition", "UnstartLeftovers", "StockAdjustment", "StockDiscrepancy", "DamagedStocks"] },
@@ -40,7 +40,7 @@ export const apiDomains: readonly ApiDomain[] = [
     "ProductSpecification", "ProductStandardTestProcedure", "SpecificationPrint", "StpDocument",
   ] },
   { id: "qa", exportName: "qaApi", tags: ["QualityAudit"] },
-  { id: "forms", exportName: "formsApi", tags: ["Form", "FormRevision", "FormulaDefinition", "FormulaQuestion", "FormulaRuntime", "FormulaRepair", "TemplateRepair", "TestFieldReassignment"] },
+  { id: "forms", exportName: "formsApi", tags: ["Form", "FormRevision", "FormulaDefinition", "FormulaQuestion", "FormulaRuntime", "FormulaRepair", "TemplateRepair", "TestFieldReassignment", "TestCorrection"] },
   { id: "templates", exportName: "templatesApi", tags: [
     "Procedure", "TemplateActivity", "TemplateAdoption", "TemplateArea", "TemplateForm", "TemplateQuestion",
     "TemplateSection", "TemplateSharing", "TemplateWorkflow",

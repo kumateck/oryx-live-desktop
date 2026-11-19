@@ -1,3 +1,4 @@
+import { TestCorrectionPanel } from "@/shared/qc/test-correction-panel";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useMemo, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
@@ -91,6 +92,7 @@ export function BatchTestPage() {
   const details = [{ label: "Form", value: sheet.form?.name ?? null }, { label: "You", value: user?.name ?? null }, { label: "Material", value: [subject.name, subject.code].filter(Boolean).join(" · ") }];
   const context = useMemo(() => ({ materialBatchId: route.batchId }), [route.batchId]);
   return <Frame sheet={sheet} title="Enter results" crumb="Enter results">
+    {sheet.responseId ? <TestCorrectionPanel responseId={sheet.responseId} kind={route.kind === 0 ? "raw" : "packaging"} canReturn={false} onReturned={sheet.reload} /> : null}
     {!sheet.form ? <TestEntryEmpty kind="no-form" details={details} onBack={() => void navigate(route.notePath)} />
       : mine.size === 0 ? <>{summary(sheet, route.kind)}<TestEntryEmpty kind="not-assigned" details={details} onBack={() => void navigate(route.notePath)} /></>
       : <TestEntry progressTo={route.path("progress")} form={sheet.form} mine={mine} stored={sheet.stored} context={context} audit={qcGrnAudit} require={qcPermissions.test[route.kind]} summary={summary(sheet, route.kind)} onReload={sheet.reload} onDone={() => void navigate(route.notePath)} />}
@@ -126,6 +128,7 @@ function BatchProgressSheet({ batchId, kind }: { batchId: string; kind: 0 | 1 })
   const route = useBatchRoute();
   const sheet = useBatchWorksheet(batchId, { fresh: true });
   return <Frame sheet={sheet} title="Test progress" crumb="Test progress">
+    {sheet.responseId ? <TestCorrectionPanel responseId={sheet.responseId} kind={kind === 0 ? "raw" : "packaging"} canReturn={false} onReturned={sheet.reload} /> : null}
     {summary(sheet, kind)}
     <WorksheetProgress form={sheet.form} stored={sheet.stored} responses={sheet.responses}
       assignments={sheet.assignees} submitted={route.submitted ?? printsFilled(sheet.details?.materialBatch?.status ?? null)}

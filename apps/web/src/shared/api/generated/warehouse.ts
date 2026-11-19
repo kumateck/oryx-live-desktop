@@ -2363,6 +2363,8 @@ export type SharedCollectionItemDto = {
   description?: string | null;
   symbol?: string | null;
   uom?: string | null;
+  linkedDepartmentId?: string | null;
+  linkedDepartmentName?: string | null;
 };
 export type DomainEntitiesDepartmentsDepartmentListDto = {
   id?: string;
@@ -2544,6 +2546,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
   isWhitePlacebo?: boolean;
+  densityGramsPerMilliliter?: number | null;
 };
 export type DomainEntitiesBasePackageStyleDto = {
   id?: string;
@@ -2751,12 +2754,14 @@ export type DomainEntitiesMaterialsBatchBatchToSupply = {
   quantityToTake?: number;
   warehouseLocationShelfId?: string | null;
   warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
+  sourceQuantityToTake?: number | null;
 };
 export type DomainEntitiesMaterialsBatchBatchToSupplyRead = {
   batch?: DomainEntitiesMaterialsBatchMaterialBatchListDtoRead;
   quantityToTake?: number;
   warehouseLocationShelfId?: string | null;
   warehouseLocationShelf?: DomainEntitiesWarehousesMaterialWarehouseLocationShelfDto;
+  sourceQuantityToTake?: number | null;
 };
 export type DomainEntitiesRequisitionsRequisitionItemDto = {
   id?: string;
@@ -3368,6 +3373,8 @@ export type DomainEntitiesWarehousesShelfMaterialBatchDto = {
   quantity?: number;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   note?: string | null;
+  warehouseQuantity?: number | null;
+  warehouseUoM?: DomainEntitiesBaseUnitOfMeasureDto;
 };
 export type DomainEntitiesWarehousesShelfMaterialBatchDtoRead = {
   id?: string;
@@ -3376,6 +3383,8 @@ export type DomainEntitiesWarehousesShelfMaterialBatchDtoRead = {
   quantity?: number;
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   note?: string | null;
+  warehouseQuantity?: number | null;
+  warehouseUoM?: DomainEntitiesBaseUnitOfMeasureDto;
 };
 export type DomainEntitiesWarehousesWarehouseLocationShelfDto = {
   id?: string;
@@ -3647,6 +3656,8 @@ export type DomainEntitiesBaseOperationDto = {
   name?: string | null;
   description?: string | null;
   order?: number;
+  departmentId?: string | null;
+  departmentName?: string | null;
 };
 export type DomainEntitiesBaseResourceDto = {
   id?: string | null;

@@ -2000,6 +2000,8 @@ export type SharedCollectionItemDto = {
   description?: string | null;
   symbol?: string | null;
   uom?: string | null;
+  linkedDepartmentId?: string | null;
+  linkedDepartmentName?: string | null;
 };
 export type DomainEntitiesDepartmentsDepartmentListDto = {
   id?: string;
@@ -2098,6 +2100,7 @@ export type DomainEntitiesMaterialsMaterialDto = {
   manufacturers?:
     DomainEntitiesProcurementManufacturersManufacturerListDto[] | null;
   isWhitePlacebo?: boolean;
+  densityGramsPerMilliliter?: number | null;
 };
 export type DomainEntitiesProcurementManufacturersQuantityPerPackOption = {
   type?: DomainEntitiesProcurementManufacturersQuantityType;

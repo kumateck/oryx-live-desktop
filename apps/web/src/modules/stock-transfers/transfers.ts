@@ -19,10 +19,13 @@ const amount = z.number().nullish().transform((value) => typeof value === "numbe
 const date = z.string().nullish().transform((value) => value && new Date(value).getFullYear() >= 1900 ? value : null);
 
 const transfer = z.object({ id: z.string().nullish(), createdAt: z.string().nullish(), approvedAt: date, issuedAt: date, status: z.number().nullish(), quantity: amount, reason: text, uoM: z.object({ symbol: text }).nullish(),
+  // The same quantity in the supplying store's own unit (server-converted with the material's density). Optional for older servers.
+  supplierQuantity: z.number().nullish(), supplierUoM: z.object({ symbol: text }).nullish(),
   material: z.object({ name: text, code: text, kind: z.number().nullish() }).nullish(), fromDepartment: z.object({ name: text }).nullish(), toDepartment: z.object({ name: text }).nullish() });
 function read(entry: z.infer<typeof transfer>) {
   if (!entry.id) return null;
   return { id: entry.id, createdAt: entry.createdAt ?? null, approvedAt: entry.approvedAt, issuedAt: entry.issuedAt, status: entry.issuedAt ? transferStatus.issued : entry.status ?? transferStatus.inProgress, quantity: entry.quantity, reason: entry.reason, unit: entry.uoM?.symbol ?? null,
+    supply: typeof entry.supplierQuantity === "number" && Number.isFinite(entry.supplierQuantity) && entry.supplierUoM?.symbol ? { quantity: entry.supplierQuantity, unit: entry.supplierUoM.symbol } : null,
     materialName: entry.material?.name ?? "Unnamed material", materialCode: entry.material?.code ?? null, kind: (entry.material?.kind === 1 ? 1 : 0) as MaterialKind, from: entry.fromDepartment?.name ?? null, to: entry.toDepartment?.name ?? null };
 }
 /** One department's share of a stock transfer: a quantity of a material moving from one department's store to another's. */
@@ -31,8 +34,8 @@ export const transferRowsSchema = z.array(transfer).nullish().transform((value) 
 export type Transfer = z.infer<typeof transferRowsSchema>[number];
 
 /** Proposed batches before issue, recorded batches after issue. */
-export const transferBatchesSchema = z.array(z.object({ warehouseLocationShelf: stockShelfSchema, quantityToTake: amount, batch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, expired: z.boolean().nullish(), isReturn: z.boolean().nullish() }).nullish() })).nullish()
-  .transform((value) => (value ?? []).map((item, index) => ({ key: `${item.batch?.id ?? "batch"}-${index}`, id: item.batch?.id ?? null, number: item.batch?.batchNumber ?? null, quantity: item.quantityToTake, expires: item.batch?.effectiveExpiryDate ?? item.batch?.expiryDate ?? null, ...(typeof item.batch?.expired === "boolean" ? { expired: item.batch.expired } : {}), returned: item.batch?.isReturn === true, location: stockShelfLocation(item.warehouseLocationShelf) })));
+export const transferBatchesSchema = z.array(z.object({ warehouseLocationShelf: stockShelfSchema, sourceQuantityToTake: z.number().nullish(), quantityToTake: amount, batch: z.object({ uoM: z.object({ symbol: text }).nullish(), id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, expired: z.boolean().nullish(), isReturn: z.boolean().nullish() }).nullish() })).nullish()
+  .transform((value) => (value ?? []).map((item, index) => ({ key: `${item.batch?.id ?? "batch"}-${index}`, id: item.batch?.id ?? null, number: item.batch?.batchNumber ?? null, quantity: item.quantityToTake, sourceQuantity: item.sourceQuantityToTake ?? null, sourceUnit: item.batch?.uoM?.symbol ?? null, expires: item.batch?.effectiveExpiryDate ?? item.batch?.expiryDate ?? null, ...(typeof item.batch?.expired === "boolean" ? { expired: item.batch.expired } : {}), returned: item.batch?.isReturn === true, location: stockShelfLocation(item.warehouseLocationShelf) })));
 export type TransferBatch = z.infer<typeof transferBatchesSchema>[number];
 
 /**
@@ -49,10 +52,25 @@ export function transferIssueBlock(transfer: Pick<Transfer, "status" | "quantity
   return null;
 }
 
-const holding = z.object({ id: z.string().nullish(), status: z.number().nullish(), batches: z.array(z.object({ quantity: amount, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), sourceWarehouse: z.object({ name: text }).nullish(),
+/** What the supplying store sees: the quantity in its own unit when the server converted it, with the requester's figure kept beside it. */
+export function supplyQuantity(transfer: Pick<Transfer, "quantity" | "unit" | "supply">): { quantity: number; unit: string | null; asked: { quantity: number; unit: string | null } | null } {
+  const converted = transfer.supply && transfer.supply.unit.toLowerCase() !== transfer.unit?.toLowerCase();
+  return converted && transfer.supply ? { quantity: transfer.supply.quantity, unit: transfer.supply.unit, asked: { quantity: transfer.quantity, unit: transfer.unit } } : { quantity: transfer.quantity, unit: transfer.unit, asked: null };
+}
+
+/**
+ * The picked batches in the supplying store's unit when every batch reports its physical quantity in that unit;
+ * otherwise null and the batches stay in the request unit.
+ */
+export function batchesInSupplyUnit<T extends Pick<TransferBatch, "quantity" | "sourceQuantity" | "sourceUnit">>(batches: readonly T[], unit: string | null): T[] | null {
+  if (!unit || batches.length === 0 || batches.some((batch) => batch.sourceQuantity === null || batch.sourceUnit?.toLowerCase() !== unit.toLowerCase())) return null;
+  return batches.map((batch) => ({ ...batch, quantity: batch.sourceQuantity ?? batch.quantity }));
+}
+
+const holding = z.object({ id: z.string().nullish(), status: z.number().nullish(), batches: z.array(z.object({ receivedAt: text, destinationQuantity: z.number().nullish(), destinationUoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), quantity: amount, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), sourceWarehouse: z.object({ name: text }).nullish(),
   materialBatch: z.object({ id: z.string().nullish(), batchNumber: text, expiryDate: date, effectiveExpiryDate: date, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), material: z.object({ name: text, code: text }).nullish() }).nullish() })).nullish() });
 /** Stock that has been issued to this department by transfer and is waiting to be put on shelves, one row per batch. */
-export const holdingRowsSchema = z.array(holding).nullish().transform((value) => (value ?? []).flatMap((entry) => entry.id ? (entry.batches ?? []).flatMap((batch, index) => { const unit = batch.uoM?.id ? batch.uoM : batch.materialBatch?.uoM ?? batch.uoM;
+export const holdingRowsSchema = z.array(holding).nullish().transform((value) => (value ?? []).flatMap((entry) => entry.id ? (entry.batches ?? []).filter(batch => !batch.receivedAt).flatMap((batch, index) => { const unit = batch.destinationUoM?.id ? batch.destinationUoM : batch.uoM?.id ? batch.uoM : batch.materialBatch?.uoM ?? batch.uoM;
   return batch.materialBatch?.id ? [{ key: `${entry.id}:${batch.materialBatch.id}:${index}`, holdingId: entry.id as string, batchId: batch.materialBatch.id, batchNumber: batch.materialBatch.batchNumber ?? null, expires: batch.materialBatch.effectiveExpiryDate ?? batch.materialBatch.expiryDate ?? null,
-    materialName: batch.materialBatch.material?.name ?? "Unnamed material", materialCode: batch.materialBatch.material?.code ?? null, quantity: batch.quantity, unit: unit?.symbol ?? null, unitId: unit?.id ?? null, from: batch.sourceWarehouse?.name ?? null }] : []; }) : []));
+    materialName: batch.materialBatch.material?.name ?? "Unnamed material", materialCode: batch.materialBatch.material?.code ?? null, quantity: batch.destinationQuantity ?? batch.quantity, unit: unit?.symbol ?? null, unitId: unit?.id ?? null, from: batch.sourceWarehouse?.name ?? null }] : []; }) : []));
 export type HeldStock = z.infer<typeof holdingRowsSchema>[number];
