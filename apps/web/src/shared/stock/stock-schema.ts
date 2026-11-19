@@ -7,11 +7,13 @@ const productionFloor = 3;
 /** What one store or production floor holds of a material. */
 // The reserved, unavailable and free fields come from the store-stock rule; older servers leave them out.
 export const warehouseStockSchema = z.array(z.object({ warehouse: z.object({ id: z.string().nullish(), name: text, type: z.number().nullish() }).nullish(), stockQuantity: amount, expiredQuantity: amount,
-  unavailableQuantity: z.number().nullish(), reservedQuantity: z.number().nullish(), freeQuantity: z.number().nullish() }))
+  unavailableQuantity: z.number().nullish(), reservedQuantity: z.number().nullish(), freeQuantity: z.number().nullish(),
+  // The unit the row is in (optional: older servers sent each store in its own unit without saying which).
+  uoM: z.object({ symbol: text }).nullish() }))
   .nullish().transform((value) => (value ?? []).map((entry, index) => {
     const unavailable = entry.unavailableQuantity ?? 0; const usable = Math.max(entry.stockQuantity - entry.expiredQuantity - unavailable, 0); const reserved = entry.reservedQuantity ?? 0;
     return { id: entry.warehouse?.id ?? `store-${index}`, name: entry.warehouse?.name ?? "Unnamed store", onFloor: entry.warehouse?.type === productionFloor,
-      total: entry.stockQuantity, expired: entry.expiredQuantity, unavailable, usable, reserved, free: entry.freeQuantity ?? Math.max(usable - reserved, 0) };
+      total: entry.stockQuantity, expired: entry.expiredQuantity, unavailable, usable, reserved, free: entry.freeQuantity ?? Math.max(usable - reserved, 0), unit: entry.uoM?.symbol ?? null };
   }));
 export type WarehouseStock = z.infer<typeof warehouseStockSchema>[number];
 

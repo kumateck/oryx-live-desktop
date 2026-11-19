@@ -6,7 +6,7 @@ import {
   useGetApiV1ProductionScheduleActivityProductByProductionScheduleProductIdQuery, useGetApiV1ProductionScheduleMaterialStockByProductionScheduleProductIdQuery,
   useGetApiV1ProductionSchedulePackageMaterialStockByProductionScheduleProductIdQuery, usePostApiV1ProductionScheduleActivityStartByProductionScheduleProductIdMutation,
 } from "../api/schedule-api";
-import { materialCovered, shortFirst } from "../lib/batch-materials";
+import { shortFirst, shortLines, substitutesOf } from "../lib/batch-materials";
 import { audit, schedulePermissions } from "../lib/schedule-access";
 import { batchActivitySchema, batchMaterialsSchema } from "../schemas/batch-schema";
 
@@ -29,15 +29,23 @@ export function useBatch(batchId: string) {
   const activity = useMemo(() => { const parsed = batchActivitySchema.safeParse(notFound(activityQuery.error) ? null : activityQuery.data ?? null); return parsed.success ? parsed.data : null; },
     [activityQuery.data, activityQuery.error]);
   const loaded = raw.isSuccess && packaging.isSuccess && rawRows !== null && packagingRows !== null;
+  // For a line with substitutes, the material production will use: the main material unless a substitute is chosen.
+  const [choices, setChoices] = useState<ReadonlyMap<string, string>>(new Map());
+  const choose = (mainId: string, useId: string) => setChoices((current) => new Map(current).set(mainId, useId));
   // Only raw material has to be in stock to start; packaging is requested during production, up to final packing.
-  const short = loaded ? rawRows.filter((item) => !materialCovered(item)).length : null;
-  const packagingShort = loaded ? packagingRows.filter((item) => !materialCovered(item)).length : null;
+  const short = loaded ? shortLines(rawRows, choices).length : null;
+  const packagingShort = loaded ? shortLines(packagingRows, choices).length : null;
+  /** Every line that has substitutes, raw first: what the start dialog offers a choice for. */
+  const choosable = loaded ? [...rawRows, ...packagingRows].filter((item) => !item.substituteFor && substitutesOf(item, [...rawRows, ...packagingRows]).length > 0) : [];
 
   const start = async (): Promise<boolean> => {
     const denied = permission.check();
     if (denied) { setMessage(denied); return false; }
     setMessage("");
-    const result = await startBatch({ ...activityAudit, productionScheduleProductId: batchId });
+    // Every line with substitutes is sent, so the server reserves exactly what was shown: main by default.
+    const materialChoices = choosable.flatMap((main) => main.materialId ? [{ materialId: main.materialId, useMaterialId: choices.get(main.materialId) ?? main.materialId }] : []);
+    const result = await startBatch({ ...activityAudit, productionScheduleProductId: batchId,
+      domainEntitiesProductionSchedulesStartProductionRequest: { materialChoices } });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return false; }
     toast.success("Production started");
     return true;
@@ -54,6 +62,9 @@ export function useBatch(batchId: string) {
     /** Packaging that is short does not hold up the start, but production cannot be packed without it. */
     packagingShort,
     start, starting: starting.isLoading, message,
+    /** Lines with substitutes, the choice for each, and how to change it. */
+    choosable, choices, choose,
+    allRows: [...(rawRows ?? []), ...(packagingRows ?? [])],
   };
 }
 export type BatchData = ReturnType<typeof useBatch>;

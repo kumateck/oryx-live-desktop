@@ -23,15 +23,33 @@ export function shortfall(item: ForecastMaterial): number {
   return isCovered(item) ? 0 : Math.max(item.needed - freeStock(item), 0);
 }
 
+/** The substitutes listed for a main material, in the server's order. */
+export function substitutesOf(main: ForecastMaterial, materials: readonly ForecastMaterial[]): ForecastMaterial[] {
+  return materials.filter((item) => item.substituteFor !== null && item.substituteFor.id === main.materialId && item.kind === main.kind);
+}
+
+/** A BOM or packaging line is covered when its main material, or one of its substitutes, has enough free stock. */
+export function lineCovered(main: ForecastMaterial, materials: readonly ForecastMaterial[]): boolean {
+  return isCovered(main) || substitutesOf(main, materials).some(isCovered);
+}
+
 const raw = 0;
 const packaging = 1;
-/** Materials split the way they are bought and issued, with those that are short listed first. */
+/**
+ * Materials split the way they are bought and issued. Lines that are short come first; each main material is followed
+ * directly by its substitutes, so the two read together.
+ */
 export function forecastGroups(materials: readonly ForecastMaterial[]) {
-  const shortFirst = (kind: number) => materials.filter((item) => item.kind === kind).sort((a, b) => Number(isCovered(a)) - Number(isCovered(b)));
+  const mains = materials.filter((item) => item.substituteFor === null);
+  const ordered = (kind: number) => mains.filter((item) => item.kind === kind)
+    .sort((a, b) => Number(lineCovered(a, materials)) - Number(lineCovered(b, materials)))
+    .flatMap((main) => [main, ...substitutesOf(main, materials)]);
+  // A substitute whose main material was not sent is still shown, after the lines.
+  const listed = new Set([...ordered(raw), ...ordered(packaging)].map((item) => item.id));
   return {
-    raw: shortFirst(raw), packaging: shortFirst(packaging),
+    raw: ordered(raw), packaging: ordered(packaging),
     // Anything the server did not class as raw or packaging is still shown, not dropped.
-    other: materials.filter((item) => item.kind !== raw && item.kind !== packaging),
-    short: materials.filter((item) => !isCovered(item)).length,
+    other: materials.filter((item) => !listed.has(item.id) && (item.kind !== raw && item.kind !== packaging || item.substituteFor !== null)),
+    short: mains.filter((item) => !lineCovered(item, materials)).length,
   };
 }

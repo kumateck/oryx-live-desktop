@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CircleCheck, ClipboardCheck, ClipboardList, Eye, FlaskConical, HandHelping, Pipette, Play, Printer, Target, UserCog, Wrench } from "lucide-react";
+import { CircleCheck, ClipboardCheck, ClipboardList, Eye, FileText, FlaskConical, HandHelping, Pipette, Play, Printer, Target, UserCog, Wrench } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,11 @@ import { AtrStatus, atrActions, atrAudit, atrPermissions, atrStatusLabels, atrWo
 import { atrRowsSchema, type Atr } from "../schemas/atr-schema";
 import { AtrAssignmentsDialog, CompleteAtrRetestDialog, TakeSampleDialog } from "./atr-dialogs";
 import { AtrWorksheetPrint } from "./atr-worksheet";
+import { AtrCoaPrint } from "./atr-coa-print";
+import { printCertificatePermission } from "@/modules/pending-approvals/components/details/ard-certificate";
 import { AtrRepairDialog } from "./atr-repair-dialog";
 
-type Open = { kind: "sample" | "acknowledge" | "start" | "repair" | "requestRetest" | "completeRetest" | "assignments"; atr: Atr } | { kind: "print"; atr: Atr; filled: boolean } | null;
+type Open = { kind: "sample" | "acknowledge" | "start" | "repair" | "requestRetest" | "completeRetest" | "assignments" | "printCoa"; atr: Atr } | { kind: "print"; atr: Atr; filled: boolean } | null;
 const column = dataTableColumns<Atr>();
 
 /** Analytical test requests: QA's new requests to sample, or QC's queues from sample received to result released. */
@@ -70,6 +72,7 @@ export function AtrListPage() {
         actions.has("progress") && { id: "progress", label: "Test progress", icon: ClipboardList, require: atrWorksheetAccess, to: atrStepPath(atr.id, "progress") },
         actions.has("print") && { id: "print-blank", label: "Print blank worksheet", icon: Printer, require: atrWorksheetAccess, separated: true, onSelect: () => setOpen({ kind: "print", atr, filled: false }) },
         actions.has("print") && { id: "print-filled", label: "Print filled worksheet", icon: Printer, require: atrWorksheetAccess, onSelect: () => setOpen({ kind: "print", atr, filled: true }) },
+        actions.has("printCoa") && { id: "print-coa", label: "Print COA", icon: FileText, require: printCertificatePermission, onSelect: () => setOpen({ kind: "printCoa", atr }) },
       ]} />; } }),
   ]), []);
   const acknowledge = async (atr: Atr): Promise<string | null> => {
@@ -108,6 +111,7 @@ export function AtrListPage() {
     {open?.kind === "repair" ? <AtrRepairDialog atrId={open.atr.id} onClose={close} /> : null}
     {open?.kind === "completeRetest" ? <CompleteAtrRetestDialog atr={open.atr} onClose={close} /> : null}
     {open?.kind === "assignments" ? <AtrAssignmentsDialog atr={open.atr} onClose={close} /> : null}
+    {open?.kind === "printCoa" ? <AtrCoaPrint id={open.atr.id} onClose={close} /> : null}
     {open?.kind === "print" ? <AtrWorksheetPrint id={open.atr.id} filled={open.filled} onClose={close} /> : null}
     {open?.kind === "acknowledge" ? <ConfirmActionDialog require={atrPermissions.acknowledge} destructive={false} title={`Receive the sample of ${open.atr.batchNumber ?? open.atr.product}?`}
       description="The sample is logged as received by QC and given its AR number." confirmLabel="Receive sample" busyLabel="Receiving…" onClose={close} onConfirm={() => acknowledge(open.atr)} /> : null}

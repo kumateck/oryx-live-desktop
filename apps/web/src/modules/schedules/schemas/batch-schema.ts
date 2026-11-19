@@ -10,8 +10,11 @@ export const batchMaterialsSchema = z.array(z.object({
   baseUoM: z.object({ symbol: text }).nullish(),
   quantityNeeded: amount, quantityOnHand: amount, frozenQuantity: amount, totalFrozenQuantity: amount,
   status: z.number().nullish(),
+  // A substitute the batch may use instead of its main material (parentMaterial), listed by the server as its own row.
+  isSubstitute: z.boolean().nullish(), parentMaterial: z.object({ id: z.string().nullish(), code: text, name: text }).nullish(),
 }).transform((item) => ({
   materialId: item.material?.id ?? null,
+  substituteFor: item.isSubstitute && item.parentMaterial?.id ? { id: item.parentMaterial.id, code: item.parentMaterial.code, name: item.parentMaterial.name || "its main material" } : null,
   code: item.material?.code ?? "", name: item.material?.name || "Unnamed material",
   unit: item.materialDepartment?.uoM?.symbol || item.baseUoM?.symbol || null, unitId: item.materialDepartment?.uoM?.id ?? null,
   needed: item.quantityNeeded, onHand: item.quantityOnHand,

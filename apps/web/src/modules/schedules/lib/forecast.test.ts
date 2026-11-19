@@ -43,3 +43,14 @@ it("uses the forecast's server-measured usable and free stock", () => {
   expect(item && usableStock(item)).toBe(75);
   expect(item && freeStock(item)).toBe(0);
 });
+
+it("lists each substitute right below its main material, and counts a line short only when neither has enough", () => {
+  const row = (id: string, needed: number, free: number, mainOf?: string) => ({ material: { id, code: id, name: id, kind: 0 }, uoM: { symbol: "g" }, quantityNeeded: needed,
+    quantityOnHand: free, expiredQuantity: 0, reservedQuantity: 0, freeQuantity: free, ...(mainOf ? { isSubstitute: true, substituteFor: { id: mainOf, code: mainOf, name: mainOf } } : {}) });
+  const materials = forecastSchema.parse([row("Sugar", 10, 100), row("Anhydrous", 10, 1), row("Monohydrate", 12, 50, "Anhydrous"), row("Salt", 10, 1)]);
+  const groups = forecastGroups(materials);
+  // Salt is short with nothing to replace it; Anhydrous is short but its substitute covers the line.
+  expect(groups.raw.map((item) => item.name)).toEqual(["Salt", "Sugar", "Anhydrous", "Monohydrate"]);
+  expect(groups.short).toBe(1);
+  expect(groups.raw[3]?.substituteFor?.name).toBe("Anhydrous");
+});
