@@ -30,7 +30,7 @@ export function substitutesOf(main: BatchMaterial, materials: readonly BatchMate
 /** The material a line will use: the chosen substitute, or the main material (the default). */
 export function chosenFor(main: BatchMaterial, materials: readonly BatchMaterial[], choices: ReadonlyMap<string, string>): BatchMaterial {
   const wanted = main.materialId ? choices.get(main.materialId) : undefined;
-  return substitutesOf(main, materials).find((item) => item.materialId === wanted) ?? main;
+  return substitutesOf(main, materials).find((item) => item.materialId === wanted && !item.unusableReason) ?? main;
 }
 
 /** Lines (main materials) whose chosen material is short: the batch cannot start until each is covered. */
@@ -40,7 +40,7 @@ export function shortLines(materials: readonly BatchMaterial[], choices: Readonl
 
 /** Short lines come first, so they are seen without scrolling; each main material is followed by its substitutes. */
 export function shortFirst(materials: readonly BatchMaterial[]): BatchMaterial[] {
-  const covered = (main: BatchMaterial) => materialCovered(main) || substitutesOf(main, materials).some(materialCovered);
+  const covered = (main: BatchMaterial) => materialCovered(main) || substitutesOf(main, materials).some((item) => !item.unusableReason && materialCovered(item));
   const mains = [...materials.filter((item) => !item.substituteFor)].sort((a, b) => Number(covered(a)) - Number(covered(b)));
   const ordered = mains.flatMap((main) => [main, ...substitutesOf(main, materials)]);
   const listed = new Set(ordered.map((item) => item.id));
