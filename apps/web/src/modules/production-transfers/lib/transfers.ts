@@ -10,14 +10,18 @@ export const transferSchema = z.object({
   material: z.object({ id: z.string().nullish(), name: z.string().nullish(), code: z.string().nullish() }).nullish(),
   uoM: z.object({ id: z.string().nullish(), symbol: z.string().nullish() }).nullish(), fromDepartment: department, toDepartment: department,
   reason: z.string().nullish(), approvedAt: z.string().nullish(), issuedAt: z.string().nullish(),
+  // Why the supplying store refused it, when it did (optional: older servers leave these out).
+  rejectionReason: z.string().nullish(), rejectedAt: z.string().nullish(), rejectedBy: z.object({ name: z.string().nullish() }).nullish(),
 });
 export type Transfer = z.infer<typeof transferSchema>;
 export const transferRowsSchema = z.array(transferSchema);
 export const statusLabel = (status: number | null | undefined) => status === TransferStatus.Pending ? "Awaiting approval" : status === TransferStatus.Approved ? "Approved" : status === TransferStatus.Issued ? "Issued" : status === TransferStatus.Rejected ? "Rejected" : status == null ? "Not recorded" : `Unknown (${status})`;
 export const belongsToDepartment = (transfer: Transfer, departmentId: string | null, direction: TransferDirection) => Boolean(departmentId && (direction === TransferDirection.Incoming ? transfer.fromDepartment?.id : transfer.toDepartment?.id) === departmentId);
-export function decisionProblem(transfer: Transfer, departmentId: string | null): string | null {
+export function decisionProblem(transfer: Transfer, departmentId: string | null, decision: "approve" | "reject" = "approve"): string | null {
   if (!belongsToDepartment(transfer, departmentId, TransferDirection.Incoming)) return "Only the supplying department can decide this request.";
-  if (transfer.status !== TransferStatus.Pending) return "This transfer is no longer awaiting approval. Refresh the record.";
+  // An approved transfer the store cannot fill may still be refused until stock is issued.
+  if (decision === "reject" ? !(transfer.status === TransferStatus.Pending || transfer.status === TransferStatus.Approved) || Boolean(transfer.issuedAt)
+    : transfer.status !== TransferStatus.Pending) return decision === "reject" ? "This transfer has already been issued or decided. Refresh the record." : "This transfer is no longer awaiting approval. Refresh the record.";
   if (!transfer.material?.id || !transfer.toDepartment?.id || !transfer.quantity || transfer.quantity <= 0 || !transfer.uoM?.id) return "The material, unit, destination or quantity is missing. This request cannot be decided.";
   return null;
 }

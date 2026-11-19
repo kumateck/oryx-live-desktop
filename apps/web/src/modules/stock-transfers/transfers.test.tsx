@@ -10,7 +10,7 @@ import { ApiProvider } from "../../shared/api/api-provider";
 import { SessionProvider } from "../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
 import { openMenu } from "../../test/menu";
-import { batchesInSupplyUnit, holdingRowsSchema, supplyQuantity, transferIssueBlock, transferRowsSchema } from "./transfers";
+import { batchesInSupplyUnit, holdingRowsSchema, issueEligibility, supplyQuantity, transferIssueBlock, transferRowsSchema } from "./transfers";
 
 afterEach(() => { cleanup(); forgetSession(); });
 
@@ -29,7 +29,7 @@ it("issues a transfer only when approved, covered, and not from expired stock", 
 
 const transfer = (id: string, kind: number, status = 1) => ({ id, status, quantity: 10, uoM: { symbol: "kg" }, material: { name: kind ? "Bottle caps" : "Lactose", code: "M-1", kind }, toDepartment: { name: "Beta Production" }, fromDepartment: { name: "General Production" }, createdAt: "2026-10-01T09:00:00Z", reason: "<p>Short for batch 12</p>" });
 interface Call { method: string; path: string; body: unknown; search: string }
-function open(address: string, permissions: string[], issued?: { history: boolean }) {
+function open(address: string, permissions: string[], issued?: { history: boolean }, extra: { short?: string; rejected?: boolean } = {}) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: Call[] = [];
@@ -40,6 +40,10 @@ function open(address: string, permissions: string[], issued?: { history: boolea
     const text = input.method === "GET" ? "" : await input.clone().text();
     calls.push({ method: input.method, path: url.pathname, body: text ? JSON.parse(text) as unknown : null, search: url.search });
     if (url.pathname.endsWith("/stock-transfer/in-bound") || url.pathname.endsWith("/stock-transfer/out-bound")) return Response.json({ data: [transfer("t1", 0), transfer("t2", 1)], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
+    if (extra.short && url.pathname.endsWith("/stock-transfer/batch/t1"))
+      return Response.json({ title: "Server Failure", status: 412, errors: [{ code: "StockTransfer.InsufficientStock", description: extra.short }] }, { status: 412 });
+    if (extra.rejected && url.pathname.endsWith("/stock-transfer/t1"))
+      return Response.json({ ...transfer("t1", 0, 3), rejectionReason: "Stock is committed to a running campaign", rejectedAt: "2026-11-19T07:00:00Z", rejectedBy: { name: "Ama Mensah" } });
     if (url.pathname.endsWith("/stock-transfer/batch/t1")) {
       if (issued) return Response.json(issued.history ? [{ quantityToTake: 10, batch: { id: "b2", batchNumber: "ISSUED-LOT" } }] : []);
       return Response.json([{ quantityToTake: 10, batch: { id: "b1", batchNumber: "B-1", expiryDate: "2020-01-01T00:00:00Z", effectiveExpiryDate: "2099-01-01T00:00:00Z", expired: false } }]);
@@ -120,4 +124,40 @@ it("reads a transfer in the supplying store's unit and keeps the requester's fig
   expect(batchesInSupplyUnit([batch(1.036, "kg")], "kg")).toEqual([{ quantity: 1.036, sourceQuantity: 1.036, sourceUnit: "kg" }]);
   expect(batchesInSupplyUnit([batch(1.036, "kg"), batch(null, null)], "kg")).toBeNull();
   expect(batchesInSupplyUnit([batch(1.036, "kg")], null)).toBeNull();
+});
+
+it("says plainly why a transfer cannot be issued and what the store can do", () => {
+  const short = "The supplying store has 3,743.3 kg free of the 20,720 kg needed for 20,000 L. It is short by 16,976.7 kg.";
+  expect(issueEligibility({ status: 1 }, short, true, true)).toEqual({ title: "Not enough stock to issue this transfer", reason: short,
+    next: "Wait until the stock is received and approved, or reject it with the reason so the requesting department can ask elsewhere." });
+  expect(issueEligibility({ status: 1 }, short, true, false).next).toBe("Wait until the stock is received and approved.");
+  expect(issueEligibility({ status: 0 }, "This transfer is waiting for approval.", false, true).title).toBe("Not approved yet");
+});
+
+it("explains a shortfall and lets a store that may reject refuse the transfer with a reason", async () => {
+  const user = userEvent.setup();
+  const short = "The supplying store has 3,743.3 kg free of the 20,720 kg needed for 20,000 L. It is short by 16,976.7 kg.";
+  const { calls } = open("/warehouse/stock-transfer-requests/t1/details", ["CanIssueRawMaterialStockTransfers", "CanRejectIncomingStockTransferRequest"], undefined, { short });
+  const panel = await screen.findByRole("status", { name: "Not enough stock to issue this transfer" });
+  expect(within(panel).getByText(short)).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Issue stock" }).hasAttribute("disabled")).toBe(true);
+  await user.click(screen.getByRole("button", { name: "Reject" }));
+  const dialog = await screen.findByRole("dialog");
+  await user.type(within(dialog).getByLabelText("Why can't it be supplied?"), "Only 3,743.3 kg in stock");
+  await user.click(within(dialog).getByRole("button", { name: "Reject transfer" }));
+  await waitFor(() => expect(calls.some((call) => call.method === "PUT")).toBe(true));
+  expect(calls.find((call) => call.method === "PUT")).toMatchObject({ path: "/api/v1/production-schedule/stock-transfer/reject/t1", body: { reason: "Only 3,743.3 kg in stock" } });
+}, 20_000);
+
+it("offers no rejection without its key, and shows the reason once a transfer is rejected", async () => {
+  open("/warehouse/stock-transfer-requests/t1/details", ["CanIssueRawMaterialStockTransfers"], undefined, { short: "It is short by 1 kg." });
+  expect(await screen.findByRole("status", { name: "Not enough stock to issue this transfer" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Reject" })).toBeNull();
+  cleanup(); forgetSession();
+  open("/warehouse/stock-transfer-requests/t1/details", ["CanIssueRawMaterialStockTransfers", "CanRejectIncomingStockTransferRequest"], undefined, { rejected: true });
+  const notice = await screen.findByRole("status", { name: "This store will not supply this transfer" });
+  expect(within(notice).getByText("Stock is committed to a running campaign")).toBeTruthy();
+  expect(within(notice).getByText(/By Ama Mensah/)).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Reject" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Issue stock" })).toBeNull();
 });

@@ -8,10 +8,11 @@ import { formatDateTime } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
+import { RefusalNotice } from "@/shared/workflows/refusal-notice";
 import { toLargestUnit } from "@/shared/units/quantity";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { productionTransfersApi } from "../api/transfers-api";
-import { belongsToDepartment, directionPermission, TransferDirection, transferAudit, transferSchema, transfersPath } from "../lib/transfers";
+import { belongsToDepartment, directionPermission, TransferDirection, transferAudit, transferSchema, transfersPath, TransferStatus } from "../lib/transfers";
 import { TransferActions } from "./transfer-actions";
 import { TransferStanding } from "./transfer-standing";
 
@@ -32,6 +33,8 @@ function TransferDetail({ id }: { id: string }) {
     <PageHeader title={`Transfer of ${transfer.material?.name ?? "material"}`} crumbs={[{ label: "Stock transfers", to: `${transfersPath}?type=${direction}` }, { label: transfer.material?.code ?? "Details" }]}
       actions={<TransferActions transfer={transfer} direction={direction} detail />} />
     <TransferStanding status={transfer.status} />
+    {transfer.status === TransferStatus.Rejected ? <RefusalNotice title={`${transfer.fromDepartment?.name ?? "The supplying store"} will not supply this transfer`} reason={transfer.rejectionReason}
+      by={transfer.rejectedBy?.name} at={transfer.rejectedAt} next={direction === TransferDirection.Outgoing ? "You can raise a new request, from this department or another one that holds the stock." : undefined} /> : null}
     <KeyFacts><KeyFact label="Material" value={transfer.material?.name ?? "Not recorded"} note={transfer.material?.code} />
       <KeyFact label="Quantity" value={toLargestUnit(transfer.quantity, transfer.uoM?.symbol)?.text ?? "Not recorded"} />
       <KeyFact label="Supplying department" value={transfer.fromDepartment?.name ?? "Not recorded"} />

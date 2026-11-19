@@ -178,6 +178,18 @@ function stripUnstartLeftovers(document: ObjectValue) {
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Requisitions.") && /UnstartLeftover/.test(name)) delete schemas[name];
 }
 
+/** Transfer rejection reasons (2026-11-19): the reject body and its DTO, supplier/rejection fields and department-stock uomId. */
+function stripTransferRejection(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  delete object(object(paths["/api/v1/production-schedule/stock-transfer/reject/{stockTransferId}"] ?? null).put ?? null).requestBody;
+  const stock = object(object(paths["/api/v1/material/{materialId}/department-stock/{quantity}"] ?? null).get ?? null);
+  if (Array.isArray(stock.parameters)) stock.parameters = stock.parameters.filter((item) => object(item).name !== "uomId");
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete schemas["DOMAIN.Entities.ProductionSchedules.StockTransfers.Request.RejectStockTransferRequest"];
+  const dto = object(object(schemas["DOMAIN.Entities.ProductionSchedules.StockTransfers.DepartmentStockTransferDto"] ?? null).properties ?? null);
+  for (const key of ["supplierQuantity", "supplierUoM", "rejectionReason", "rejectedAt", "rejectedBy"]) delete dto[key];
+}
+
 /** Operation departments (2026-11-18): link/unlink paths and four optional department fields. */
 function stripOperationDepartments(document: ObjectValue) {
   const paths = object(document.paths ?? null);
@@ -193,6 +205,7 @@ function stripOperationDepartments(document: ObjectValue) {
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(document);
   stripProductionFollowups(document);
   stripOperationDepartments(document);
   stripTestCorrections(document);
@@ -758,6 +771,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -791,6 +805,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -822,6 +837,7 @@ test("a specification revision requires a reason and returns it on the specifica
 
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -846,6 +862,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -872,6 +889,7 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
 
 test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -891,6 +909,7 @@ test("IT approval transfer adds only a typed read of the users on approval docum
 
 test("material retests add an AR number, read-only retest fields and three statuses, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -910,6 +929,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 
  test("QC repair, partial reassignment and packaging quantities preserve the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -932,6 +952,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 
 test("upcoming batch issues add two typed reads and the started batch a swap may name, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -949,6 +970,7 @@ test("upcoming batch issues add two typed reads and the started batch a swap may
 
 test("the combined QC repair and upcoming-issues contract is reviewed without dropping either addition", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -966,6 +988,7 @@ test("the combined QC repair and upcoming-issues contract is reviewed without dr
 
 test("Unstart leftovers add only two typed variant repair paths and owned DTOs", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -983,6 +1006,7 @@ test("Unstart leftovers add only two typed variant repair paths and owned DTOs",
 
 test("shared density combines with the reviewed Unstart reservation contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -994,6 +1018,7 @@ test("shared density combines with the reviewed Unstart reservation contract", (
 });
 test("Unstart reservations combine with the reviewed shared-density contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -1020,6 +1045,7 @@ test("production follow-ups add two rejection operations and optional warehouse 
     assert.deepEqual(Object.keys(object(paths[`/api/v1/production-stock-requisitions/{requisitionId}/${variant}/reject`] ?? null)), ["post"]);
   }
   assert.deepEqual(current.security, reviewedImport().security);
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   stripTestCorrections(current);
@@ -1028,6 +1054,7 @@ test("production follow-ups add two rejection operations and optional warehouse 
 
 test("pre-COA correction imports three typed variant paths, a required reason and history only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   stripOperationDepartments(current);
   checkCompatibility(hostConfig, policy, contractDigest(current));
@@ -1042,6 +1069,7 @@ test("pre-COA correction imports three typed variant paths, a required reason an
 
 test("operation departments add a typed link and unlink and optional department fields only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripTransferRejection(current);
   stripProductionFollowups(current);
   const digest = contractDigest(current);
   assert.equal(digest, "dfc02620ae1fddd96dfe39228840ce8089f17d177ebe701aa0086518ce14198b");
@@ -1051,4 +1079,16 @@ test("operation departments add a typed link and unlink and optional department 
   assert.deepEqual(Object.keys(object(paths["/api/v1/collection/operations/{operationId}/department"] ?? null)), ["delete"]);
   stripOperationDepartments(current);
   assert.equal(contractDigest(current), "aa0c7ce5baebd3ef474598cf8ebf10520dc44f08aa7eb9f19b22e2c137ace5af");
+});
+
+test("transfer rejection adds a required reason body, optional supplier and rejection fields and a department-stock unit only", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "131197bfcb2cebd380f15e839d01f8326f7c403c175e234de342e67a176a0281");
+  checkCompatibility(hostConfig, policy, digest);
+  const reject = object(object(object(current.paths ?? null)["/api/v1/production-schedule/stock-transfer/reject/{stockTransferId}"] ?? null).put ?? null);
+  assert.ok(reject.requestBody);
+  assert.deepEqual(current.security, reviewedImport().security);
+  stripTransferRejection(current);
+  assert.equal(contractDigest(current), "5125e67ffa628c1514db817e9006369e43e105c9ddf2efca7daa58a531f19bc1");
 });

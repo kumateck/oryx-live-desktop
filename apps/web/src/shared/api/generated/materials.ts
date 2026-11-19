@@ -347,6 +347,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          uomId: queryArg.uomId,
+        },
       }),
     }),
     putApiV1MaterialBatchStatus: build.mutation<
@@ -1558,6 +1561,8 @@ export type GetApiV1MaterialByMaterialIdDepartmentStockAndQuantityApiArg = {
   materialId: string;
   /** The minimum quantity of the stock the department should have. */
   quantity: number;
+  /** The unit the quantity is in; defaults to the caller's department unit for the material. Each department's free stock is converted to it with the material's verified density. */
+  uomId?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
