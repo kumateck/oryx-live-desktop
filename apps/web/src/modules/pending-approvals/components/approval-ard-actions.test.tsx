@@ -77,7 +77,7 @@ it("generates the approved COA for a material batch or a product's test request 
     { subject: { batchManufacturingRecord: { id: "bmr-1", name: "Paracetamol" }, productionActivityStepId: "step-1" }, post: "/api/v1/qc/commercial-certificates/products/atr-1" }];
   for (const { subject, post } of subjects) for (const approved of [false, true]) {
     const user = userEvent.setup();
-    const backend = stubBackend({ permissions: ["CanViewPendingApprovals", "CanCheckRawMaterialTestResult", "CanCheckProductTest"] });
+    const backend = stubBackend({ permissions: ["CanViewPendingApprovals", "CanCheckRawMaterialTestResult", "CanCheckProductTest", "CanPrintProductCertificateOfAnalysis"] });
     rememberSession();
     const calls: Call[] = [];
     const session = backend.fetcher.getMockImplementation();
@@ -125,7 +125,7 @@ it("delegates whole local days, never more than ninety, starting now when the fi
 });
 
 it("says whose request it is when it waits for someone who delegated to the user", async () => {
-  const backend = stubBackend({ permissions: ["CanViewPendingApprovals", "CanApprovePendingApproval"] });
+  const backend = stubBackend({ permissions: ["CanViewPendingApprovals", "CanApprovePendingApproval", "CanPrintProductCertificateOfAnalysis"] });
   rememberSession();
   const session = backend.fetcher.getMockImplementation();
   backend.fetcher.mockImplementation(async (input, init) => {

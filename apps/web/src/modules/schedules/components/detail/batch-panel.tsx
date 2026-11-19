@@ -3,10 +3,11 @@ import { Play, SquareKanban } from "lucide-react";
 import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/shared/skeleton/skeleton";
 import { useBatch } from "../../hooks/use-batch";
+import { chosenFor } from "../../lib/batch-materials";
 import { batchSizeText, batchStateLabels, type BatchState } from "../../lib/schedule-batches";
 import type { ScheduleBatch } from "../../schemas/schedule-schema";
 import { BatchMaterialsTable } from "./batch-materials-table";
@@ -20,6 +21,8 @@ export function BatchPanel({ batch, batchId, label, state }: { batch: ScheduleBa
   const [confirming, setConfirming] = useState(false);
   const facts = [["Product", batch.code ? `${batch.code} - ${batch.name}` : batch.name], ["Batch size", batchSizeText(batch)], ["Packing style", batch.packing?.name ?? "–"], ["Market type", batch.market?.name ?? "–"]];
   const running = state === "started";
+  // Before the start, a line with substitutes can be switched from its main material to a substitute.
+  const choice = state === "waiting" ? { choices: data.choices, onChoose: data.choose } : undefined;
 
   return <section className="min-w-0 space-y-4 rounded-lg border bg-card p-4" aria-label={`${batch.name}, ${label}`}>
     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -39,7 +42,7 @@ export function BatchPanel({ batch, batchId, label, state }: { batch: ScheduleBa
       This batch was cancelled. {batch.cancellationReason ? `Reason: ${batch.cancellationReason}` : "No reason was recorded."}</p> : null}
     {state === "missed" ? <p className="rounded-md border bg-muted/50 p-3 text-sm">This batch was not started before the schedule ended. It can no longer be started.</p> : null}
     {state === "waiting" && data.short ? <p className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
-      {data.short} raw {data.short === 1 ? "material is" : "materials are"} short, so production cannot start. They are listed first below.
+      {data.short} raw {data.short === 1 ? "material is" : "materials are"} short, so production cannot start. They are listed first below; where a substitute has enough, choose it instead.
       A purchase requisition can be raised for those not already being bought.</p> : null}
     {state === "waiting" && data.packagingShort ? <p className="rounded-md border bg-muted/50 p-3 text-sm">
       {data.packagingShort} packaging {data.packagingShort === 1 ? "material is" : "materials are"} short. Production can start without {data.packagingShort === 1 ? "it" : "them"};
@@ -51,15 +54,20 @@ export function BatchPanel({ batch, batchId, label, state }: { batch: ScheduleBa
       <div key={name} className="min-w-0"><dt className="text-xs text-muted-foreground">{name}</dt><dd className="break-words text-sm font-medium">{value}</dd></div>)}</dl>
 
     <div className={state === "cancelled" ? "space-y-4 opacity-60" : "space-y-4"}>
-      <BatchMaterialsTable title="Raw materials" rows={data.raw.rows} loading={data.raw.loading} error={data.raw.error} onRetry={data.raw.retry}
+      <BatchMaterialsTable title="Raw materials" rows={data.raw.rows} loading={data.raw.loading} error={data.raw.error} onRetry={data.raw.retry} choice={choice}
         action={state === "waiting" ? <RaiseShortageRequisition kind={0} batchId={batchId} batchName={`${batch.name}, ${label}`} materials={data.raw.rows} onRaised={data.raw.retry} /> : null} />
-      <BatchMaterialsTable title="Packaging materials" rows={data.packaging.rows} loading={data.packaging.loading} error={data.packaging.error} onRetry={data.packaging.retry}
+      <BatchMaterialsTable title="Packaging materials" rows={data.packaging.rows} loading={data.packaging.loading} error={data.packaging.error} onRetry={data.packaging.retry} choice={choice}
         action={state === "waiting" ? <RaiseShortageRequisition kind={1} batchId={batchId} batchName={`${batch.name}, ${label}`} materials={data.packaging.rows} onRaised={data.packaging.retry} /> : null} />
     </div>
 
     {confirming ? <Dialog open onOpenChange={(open) => { if (!open) setConfirming(false); }}><DialogContent>
       <DialogHeader><DialogTitle>Start production of {batch.name}?</DialogTitle>
         <DialogDescription>{label}, {batchSizeText(batch).toLowerCase()}. Once started, the batch can no longer be removed from the schedule.</DialogDescription></DialogHeader>
+      {data.choosable.length > 0 ? <DialogBody className="space-y-1.5 text-sm"><p className="font-medium">Materials with a substitute</p>
+        <ul className="space-y-1">{data.choosable.map((main) => { const used = chosenFor(main, data.allRows, data.choices);
+          return <li key={main.id} className="flex flex-wrap justify-between gap-2 rounded-md bg-muted/50 px-2 py-1"><span>{main.name}</span>
+            <span className={used === main ? "text-muted-foreground" : "font-medium text-amber-700 dark:text-amber-300"}>{used === main ? "Main material" : `Substitute: ${used.name}`}</span></li>; })}</ul>
+        <p className="text-xs text-muted-foreground">The chosen material is reserved now, requested on the stock requisition and issued by the warehouse.</p></DialogBody> : null}
       <DialogFooter>
         <Button type="button" variant="outline" onClick={() => setConfirming(false)}>Cancel</Button>
         <Button type="button" onClick={() => { setConfirming(false); void data.start(); }}>Start production</Button>
