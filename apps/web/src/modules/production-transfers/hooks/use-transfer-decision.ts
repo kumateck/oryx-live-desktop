@@ -16,10 +16,11 @@ export function useTransferDecision() {
   const [approve] = productionTransfersApi.usePutApiV1ProductionScheduleStockTransferApproveByStockTransferIdMutation();
   const [reject] = productionTransfersApi.usePutApiV1ProductionScheduleStockTransferRejectByStockTransferIdMutation();
   const running = useRef(false);
-  const decide = async (transfer: Transfer, decision: "approve" | "reject"): Promise<string | null> => {
+  const decide = async (transfer: Transfer, decision: "approve" | "reject", reason = ""): Promise<string | null> => {
     if (running.current) return "A decision is already being sent.";
     const permission = decision === "approve" ? approvePermission : rejectPermission;
-    const denied = permission.check() ?? decisionProblem(transfer, currentDepartment.current);
+    if (decision === "reject" && !reason.trim()) return "Give the reason the transfer cannot be supplied.";
+    const denied = permission.check() ?? decisionProblem(transfer, currentDepartment.current, decision);
     if (denied) return denied;
     running.current = true;
     try {
@@ -27,13 +28,13 @@ export function useTransferDecision() {
       if ("error" in fresh) return apiErrorMessage(fresh.error);
       const parsed = transferSchema.safeParse(fresh.data);
       if (!parsed.success) return "The current transfer could not be verified. Refresh and try again.";
-      const changed = decisionProblem(parsed.data, currentDepartment.current);
+      const changed = decisionProblem(parsed.data, currentDepartment.current, decision);
       if (changed) return changed;
       if (!sameDecisionEvidence(transfer, parsed.data)) return "This request changed after you opened it. Close this dialog and review the refreshed record.";
       const revoked = permission.check();
       if (revoked) return revoked;
-      const action = decision === "approve" ? approve : reject;
-      const result = await action({ ...transferAudit, stockTransferId: transfer.id });
+      const result = decision === "approve" ? await approve({ ...transferAudit, stockTransferId: transfer.id })
+        : await reject({ ...transferAudit, stockTransferId: transfer.id, domainEntitiesProductionSchedulesStockTransfersRequestRejectStockTransferRequest: { reason: reason.trim() } });
       if ("error" in result) {
         // Never repeat a write automatically after an ambiguous network failure.
         void read({ ...transferAudit, stockTransferId: transfer.id }, false);
