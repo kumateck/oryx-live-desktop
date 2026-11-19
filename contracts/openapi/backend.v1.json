@@ -151673,6 +151673,10 @@
           },
           "substituteFor": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialDto"
+          },
+          "substituteUnavailableReason": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -152326,6 +152330,10 @@
           },
           "parentMaterial": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialDto"
+          },
+          "substituteUnavailableReason": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -152398,6 +152406,10 @@
           },
           "parentMaterial": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Materials.MaterialDto"
+          },
+          "substituteUnavailableReason": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

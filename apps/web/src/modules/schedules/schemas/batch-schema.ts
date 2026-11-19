@@ -12,7 +12,10 @@ export const batchMaterialsSchema = z.array(z.object({
   status: z.number().nullish(),
   // A substitute the batch may use instead of its main material (parentMaterial), listed by the server as its own row.
   isSubstitute: z.boolean().nullish(), parentMaterial: z.object({ id: z.string().nullish(), code: text, name: text }).nullish(),
+  // Why a substitute cannot be chosen (no quantity of its own on the BOM, not linked); null when it can.
+  substituteUnavailableReason: z.string().nullish(),
 }).transform((item) => ({
+  unusableReason: item.isSubstitute ? item.substituteUnavailableReason?.trim() || null : null,
   materialId: item.material?.id ?? null,
   substituteFor: item.isSubstitute && item.parentMaterial?.id ? { id: item.parentMaterial.id, code: item.parentMaterial.code, name: item.parentMaterial.name || "its main material" } : null,
   code: item.material?.code ?? "", name: item.material?.name || "Unnamed material",

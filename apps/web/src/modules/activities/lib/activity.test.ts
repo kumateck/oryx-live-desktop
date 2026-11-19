@@ -105,7 +105,7 @@ it("reads the board into columns of cards", () => {
 });
 
 it("builds one voucher for all the batch's materials, and names what stops it", () => {
-  const material = { id: "m-0", materialId: "m", code: "RM-1", name: "Sugar", unit: "g", unitId: "u-g", needed: 500, onHand: 0, reserved: 0, reservedByAll: 0, elsewhere: 0, source: null, substituteFor: null };
+  const material = { id: "m-0", materialId: "m", code: "RM-1", name: "Sugar", unit: "g", unitId: "u-g", needed: 500, onHand: 0, reserved: 0, reservedByAll: 0, elsewhere: 0, source: null, substituteFor: null, unusableReason: null };
   expect(requisitionProblem(material)).toBeNull();
   expect(requisitionProblem({ ...material, unitId: null })).toBe("it has no unit of measure in this department");
   expect(requisitionProblem({ ...material, needed: 0 })).toBe("the quantity needed is zero");
@@ -116,7 +116,7 @@ it("builds one voucher for all the batch's materials, and names what stops it", 
 });
 
 it("asks for extra material in the unit typed, stored in the smallest unit, and never more than is free", () => {
-  const sugar = { id: "m-0", materialId: "m", code: "RM-1", name: "Sugar", unit: "g", unitId: "u-g", needed: 500, onHand: 5_000_000, reserved: 0, reservedByAll: 1_000_000, elsewhere: 0, source: null, substituteFor: null };
+  const sugar = { id: "m-0", materialId: "m", code: "RM-1", name: "Sugar", unit: "g", unitId: "u-g", needed: 500, onHand: 5_000_000, reserved: 0, reservedByAll: 1_000_000, elsewhere: 0, source: null, substituteFor: null, unusableReason: null };
   const bottle = { ...sugar, id: "b-0", materialId: "b", name: "Bottle", unit: "piece", unitId: "u-p", onHand: 100, reservedByAll: 0 };
   const lines = extraMaterialLines([sugar], [bottle]);
   expect(lines.map((line) => [line.kind, line.unit, line.quantity])).toEqual([["raw", "kg", null], ["packaging", "piece", null]]);

@@ -13,7 +13,9 @@ export const forecastSchema = z.array(z.object({
   isAvailable: z.boolean().nullish(),
   // A substitute production may use instead of its main material (optional: older servers list main materials only).
   isSubstitute: z.boolean().nullish(), substituteFor: z.object({ id: z.string().nullish(), code: text, name: text }).nullish(),
+  substituteUnavailableReason: z.string().nullish(),
 }).transform((item) => ({
+  unusableReason: item.isSubstitute ? item.substituteUnavailableReason?.trim() || null : null,
   // A material can substitute on more than one line, so a substitute row is keyed by its main material too.
   id: `${item.material?.id ?? `${item.material?.code}:${item.material?.name}`}${item.isSubstitute ? `:for:${item.substituteFor?.id ?? item.substituteFor?.code ?? ""}` : ""}`,
   materialId: item.material?.id ?? null,
