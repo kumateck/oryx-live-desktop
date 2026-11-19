@@ -19,10 +19,13 @@ const amount = z.number().nullish().transform((value) => typeof value === "numbe
 const date = z.string().nullish().transform((value) => value && new Date(value).getFullYear() >= 1900 ? value : null);
 
 const transfer = z.object({ id: z.string().nullish(), createdAt: z.string().nullish(), approvedAt: date, issuedAt: date, status: z.number().nullish(), quantity: amount, reason: text, uoM: z.object({ symbol: text }).nullish(),
+  // The same quantity in the supplying store's own unit (server-converted with the material's density). Optional for older servers.
+  supplierQuantity: z.number().nullish(), supplierUoM: z.object({ symbol: text }).nullish(),
   material: z.object({ name: text, code: text, kind: z.number().nullish() }).nullish(), fromDepartment: z.object({ name: text }).nullish(), toDepartment: z.object({ name: text }).nullish() });
 function read(entry: z.infer<typeof transfer>) {
   if (!entry.id) return null;
   return { id: entry.id, createdAt: entry.createdAt ?? null, approvedAt: entry.approvedAt, issuedAt: entry.issuedAt, status: entry.issuedAt ? transferStatus.issued : entry.status ?? transferStatus.inProgress, quantity: entry.quantity, reason: entry.reason, unit: entry.uoM?.symbol ?? null,
+    supply: typeof entry.supplierQuantity === "number" && Number.isFinite(entry.supplierQuantity) && entry.supplierUoM?.symbol ? { quantity: entry.supplierQuantity, unit: entry.supplierUoM.symbol } : null,
     materialName: entry.material?.name ?? "Unnamed material", materialCode: entry.material?.code ?? null, kind: (entry.material?.kind === 1 ? 1 : 0) as MaterialKind, from: entry.fromDepartment?.name ?? null, to: entry.toDepartment?.name ?? null };
 }
 /** One department's share of a stock transfer: a quantity of a material moving from one department's store to another's. */
@@ -47,6 +50,21 @@ export function transferIssueBlock(transfer: Pick<Transfer, "status" | "quantity
   const picked = batches.reduce((sum, batch) => sum + batch.quantity, 0);
   if (transfer.quantity - picked > 1e-6) return "The stock picked does not cover the quantity asked for.";
   return null;
+}
+
+/** What the supplying store sees: the quantity in its own unit when the server converted it, with the requester's figure kept beside it. */
+export function supplyQuantity(transfer: Pick<Transfer, "quantity" | "unit" | "supply">): { quantity: number; unit: string | null; asked: { quantity: number; unit: string | null } | null } {
+  const converted = transfer.supply && transfer.supply.unit.toLowerCase() !== transfer.unit?.toLowerCase();
+  return converted && transfer.supply ? { quantity: transfer.supply.quantity, unit: transfer.supply.unit, asked: { quantity: transfer.quantity, unit: transfer.unit } } : { quantity: transfer.quantity, unit: transfer.unit, asked: null };
+}
+
+/**
+ * The picked batches in the supplying store's unit when every batch reports its physical quantity in that unit;
+ * otherwise null and the batches stay in the request unit.
+ */
+export function batchesInSupplyUnit<T extends Pick<TransferBatch, "quantity" | "sourceQuantity" | "sourceUnit">>(batches: readonly T[], unit: string | null): T[] | null {
+  if (!unit || batches.length === 0 || batches.some((batch) => batch.sourceQuantity === null || batch.sourceUnit?.toLowerCase() !== unit.toLowerCase())) return null;
+  return batches.map((batch) => ({ ...batch, quantity: batch.sourceQuantity ?? batch.quantity }));
 }
 
 const holding = z.object({ id: z.string().nullish(), status: z.number().nullish(), batches: z.array(z.object({ receivedAt: text, destinationQuantity: z.number().nullish(), destinationUoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), quantity: amount, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), sourceWarehouse: z.object({ name: text }).nullish(),

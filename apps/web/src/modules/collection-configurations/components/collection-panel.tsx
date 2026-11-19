@@ -7,6 +7,7 @@ import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { useAccess } from "@/shared/auth/use-access";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useGetApiV1CollectionByItemTypeQuery, useDeleteApiV1CollectionByItemTypeAndItemIdMutation, useDeleteApiV1CollectionUomByUomIdMutation } from "../api/collection-api";
+import { OperationDepartmentDialogs, type DepartmentAction } from "./operation-department-dialogs";
 import { collectionAudit, type CollectionDefinition } from "../lib/collections";
 import { collectionRowsSchema, type CollectionRow } from "../schemas/collection-schema";
 import { CollectionTable } from "./collection-table";
@@ -30,10 +31,13 @@ export function CollectionPanel({ definition, audit = collectionAudit, addLabel 
   const rows = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
     if (!needle) return all;
-    return all.filter((item) => [item.name, item.description, item.symbol, item.code].some((value) => value?.toLocaleLowerCase().includes(needle)));
+    return all.filter((item) => [item.name, item.description, item.symbol, item.code, item.linkedDepartmentName].some((value) => value?.toLocaleLowerCase().includes(needle)));
   }, [all, search]);
   const error = query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned collection items this app could not read." : null;
   const edit = useCallback((item: CollectionRow) => setEditing({ kind: "edit", item }), []);
+  const [departmentAction, setDepartmentAction] = useState<DepartmentAction | null>(null);
+  const linkDepartment = useCallback((item: CollectionRow) => setDepartmentAction({ kind: "link", item }), []);
+  const unlinkDepartment = useCallback((item: CollectionRow) => setDepartmentAction({ kind: "unlink", item }), []);
 
   const confirmRemove = async () => {
     if (!deleting) return null;
@@ -58,6 +62,7 @@ export function CollectionPanel({ definition, audit = collectionAudit, addLabel 
     {definition.mode === "read-only" ? <p className="text-sm text-muted-foreground">Countries are available for selection. Adding or changing countries is not supported.</p> : null}
     <CollectionTable key={search} label={definition.label} rows={rows} definition={definition}
       busy={removing.isLoading || removingUnit.isLoading} onEdit={edit} onRemove={setDeleting}
+      onLinkDepartment={linkDepartment} onUnlinkDepartment={unlinkDepartment}
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} error={error}
       onRetry={() => { void query.refetch(); }} emptyTitle={search ? "No matching items" : "No items in this collection"} />
     {editing ? <Suspense fallback={<p role="status" className="text-sm text-muted-foreground">Opening form…</p>}>
@@ -68,5 +73,7 @@ export function CollectionPanel({ definition, audit = collectionAudit, addLabel 
     {deleting ? <ConfirmActionDialog require={definition.permissions.delete} title="Remove collection item" description={`Remove “${deleting.name}” from ${definition.label.toLowerCase()}? Check any workflows that rely on this item before removing it.`}
       confirmLabel="Remove" busyLabel="Removing…"
       onConfirm={confirmRemove} onClose={() => setDeleting(null)} /> : null}
+    {departmentAction && definition.departments ? <OperationDepartmentDialogs action={departmentAction} permissions={definition.departments}
+      audit={audit} onClose={() => setDepartmentAction(null)} /> : null}
   </>;
 }

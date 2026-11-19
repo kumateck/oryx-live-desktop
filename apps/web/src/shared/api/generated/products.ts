@@ -832,6 +832,8 @@ export type SharedCollectionItemDto = {
   description?: string | null;
   symbol?: string | null;
   uom?: string | null;
+  linkedDepartmentId?: string | null;
+  linkedDepartmentName?: string | null;
 };
 export type DomainEntitiesBaseUnitOfMeasureType = 0 | 1 | 2 | 3;
 export type DomainEntitiesBaseUnitOfMeasureCategory = 0 | 1 | 2 | 3 | 4;

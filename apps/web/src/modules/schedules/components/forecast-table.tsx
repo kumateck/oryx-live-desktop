@@ -21,6 +21,7 @@ export function ForecastTable({ title, materials, loading, error, onRetry }: {
       <div>{quantity(freeStock(item), item.unit)} <span className="text-xs text-muted-foreground">free</span></div>
       {item.reserved > 0 ? <div className="text-xs text-muted-foreground">{quantity(usableStock(item), item.unit)} usable, less {quantity(item.reserved, item.unit)} reserved for other batches</div> : null}
       {item.expired > 0 ? <div className="text-xs text-destructive">{quantity(item.expired, item.unit)} expired</div> : null}
+      {item.unavailable > 0 ? <div className="text-xs text-destructive">{quantity(item.unavailable, item.unit)} not released for use</div> : null}
     </div>; } }),
     column.accessor((item) => isCovered(item) ? "Enough" : "Short", { id: "status", header: "Status", size: 130, cell: ({ row }) => isCovered(row.original)
       ? <Badge variant="secondary">Enough</Badge>

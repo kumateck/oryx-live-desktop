@@ -1,3 +1,4 @@
+import { stockRejectionPermissions } from "./lib/stock-rejection-access";
 import type { ModuleManifest } from "../contract";
 
 export const manifest = {
@@ -7,3 +8,5 @@ export const manifest = {
   order: 20,
   access: { kind: "all", permissions: ["CanViewPendingApprovals"] },
 } satisfies ModuleManifest<"pending-approvals", "/qa/pending-approvals">;
+
+export const productionStockRejectionAccess = stockRejectionPermissions;

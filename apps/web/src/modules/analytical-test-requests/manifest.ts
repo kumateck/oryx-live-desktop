@@ -1,3 +1,4 @@
+import { testCorrectionAccess } from "@/shared/qc/test-correction-access";
 import type { ModuleManifest } from "../contract";
 
 const qa = { kind: "some" as const, permissions: ["CanViewAnalyticalTestRequests", "CanViewAnalyticalTestRequestsForSampling"] };
@@ -15,3 +16,5 @@ export const manifest = {
     { pattern: "/atr/:id/test", access: { kind: "all", permissions: ["CanStartProductTest"] } },
   ],
 } satisfies ModuleManifest<"analytical-test-requests", "/atr">;
+
+export const atrCorrectionAccess = { product: testCorrectionAccess.product } as const;

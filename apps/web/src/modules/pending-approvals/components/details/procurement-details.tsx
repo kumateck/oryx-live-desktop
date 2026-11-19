@@ -11,6 +11,7 @@ import { OrderTerms, OrderTotals } from "@/modules/purchase-orders/components/or
 import { audit as orderAudit } from "@/modules/purchase-orders/lib/purchase-order-access";
 import { useGetApiV1RequisitionByRequisitionIdQuery, useGetApiV1RequisitionIssueByIssueIdQuery } from "@/modules/requisitions/api/requisition-api";
 import { RequisitionFacts } from "@/modules/requisitions/components/requisition-facts";
+import { RequisitionBatches } from "@/modules/requisitions/components/requisition-batches";
 import { listAudit } from "@/modules/requisitions/lib/requisition-access";
 import { requisitionSchema, type RequisitionLine } from "@/modules/requisitions/schemas/requisition-schema";
 import { ShipmentStatusBadge } from "@/modules/shipment-documents/components/shipment-status-badge";
@@ -39,6 +40,7 @@ const requisitionColumn = dataTableColumns<RequisitionLine>();
 const requisitionColumns = requisitionColumn.columns([
   requisitionColumn.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div></div> }),
   requisitionColumn.accessor("quantity", { header: "Requested", size: 180, cell: ({ row }) => quantity(row.original.quantity, row.original.unit) }),
+  requisitionColumn.display({ id: "batches", header: "Material batches", size: 230, cell: ({ row }) => <RequisitionBatches line={row.original} /> }),
 ]);
 /** A stock or purchase requisition: who asked, for which product, and for how much of what. */
 export function RequisitionDetails({ id }: { id: string }) {

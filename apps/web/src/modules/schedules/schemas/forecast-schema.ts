@@ -8,10 +8,13 @@ export const forecastSchema = z.array(z.object({
   material: z.object({ id: z.string().nullish(), code: text, name: text, kind: z.number().nullish() }).nullish(),
   uoM: z.object({ symbol: text }).nullish(),
   quantityNeeded: amount, quantityOnHand: amount, expiredQuantity: amount, reservedQuantity: amount,
+  // The store-stock rule's split (optional: older servers send only on hand, expired and reserved).
+  unavailableQuantity: z.number().nullish(), usableQuantity: z.number().nullish(), freeQuantity: z.number().nullish(),
   isAvailable: z.boolean().nullish(),
 }).transform((item) => ({
   id: item.material?.id ?? `${item.material?.code}:${item.material?.name}`,
   code: item.material?.code ?? "", name: item.material?.name || "Unnamed material", kind: item.material?.kind ?? null, unit: item.uoM?.symbol || null,
   needed: item.quantityNeeded, onHand: item.quantityOnHand, expired: item.expiredQuantity, reserved: item.reservedQuantity, available: item.isAvailable ?? null,
+  unavailable: item.unavailableQuantity ?? 0, usable: item.usableQuantity ?? null, free: item.freeQuantity ?? null,
 }))).nullish().transform((value) => value ?? []);
 export type ForecastMaterial = z.infer<typeof forecastSchema>[number];
