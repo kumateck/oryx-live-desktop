@@ -11,6 +11,7 @@ const pages: Record<string, (id: string) => string> = {
   LeaveRequest: (id) => `/hr/leave-management/${id}/details`,
   JobRequest: (id) => `/extrals/job-requests/${id}/details`,
   AllocateProductionOrder: (id) => `/crm/allocations/${id}`,
+  ApprovedVendorList: (id) => `/qa/approved-vendor-list/${id}/details`,
 };
 
 export function reviewDocumentPath(row: Pick<PendingReview, "modelType" | "modelId" | "variant"> & { parentId?: string | null | undefined }): string | null {
@@ -27,5 +28,6 @@ export function reviewDocumentPath(row: Pick<PendingReview, "modelType" | "model
 const labels: Record<string, string> = { PurchaseOrder: "Purchase order", PurchaseRequisition: "Purchase requisition",
   RawStockRequisition: "Raw material stock requisition", PackageStockRequisition: "Packaging material stock requisition",
   BillingSheet: "Billing sheet", StaffRequisition: "Staff requisition", OvertimeRequest: "Overtime request", LeaveRequest: "Leave request",
-  JobRequest: "Job request", AllocateProductionOrder: "Packing list", StockRequisitionIssue: "Stock issue check", FormulaRevision: "QC formula revision" };
+  JobRequest: "Job request", AllocateProductionOrder: "Packing list", StockRequisitionIssue: "Stock issue check", FormulaRevision: "QC formula revision",
+  ApprovedVendorList: "Approved vendor list" };
 export const reviewDocumentLabel = (row: Pick<PendingReview, "modelType" | "documentLabel">) => labels[row.modelType] ?? row.documentLabel ?? row.modelType;

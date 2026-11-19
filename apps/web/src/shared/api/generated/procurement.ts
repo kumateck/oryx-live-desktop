@@ -1139,6 +1139,131 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1ApprovedVendorList: build.query<
+      GetApiV1ApprovedVendorListApiResponse,
+      GetApiV1ApprovedVendorListApiArg
+    >({
+      providesTags: [{ type: "approved-vendor-list", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1ApprovedVendorList: build.mutation<
+      PostApiV1ApprovedVendorListApiResponse,
+      PostApiV1ApprovedVendorListApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "approved-vendor-list", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list`,
+        method: "POST",
+        body: queryArg.domainEntitiesApprovedVendorListsSaveApprovedVendorListRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1ApprovedVendorListById: build.query<
+      GetApiV1ApprovedVendorListByIdApiResponse,
+      GetApiV1ApprovedVendorListByIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "approved-vendor-list", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1ApprovedVendorListById: build.mutation<
+      PutApiV1ApprovedVendorListByIdApiResponse,
+      PutApiV1ApprovedVendorListByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "approved-vendor-list", id: "LIST" }, { type: "approved-vendor-list", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list/${queryArg.id}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesApprovedVendorListsSaveApprovedVendorListRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1ApprovedVendorListByIdPrint: build.query<
+      GetApiV1ApprovedVendorListByIdPrintApiResponse,
+      GetApiV1ApprovedVendorListByIdPrintApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "approved-vendor-list", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list/${queryArg.id}/print`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1ApprovedVendorListOptions: build.query<
+      GetApiV1ApprovedVendorListOptionsApiResponse,
+      GetApiV1ApprovedVendorListOptionsApiArg
+    >({
+      providesTags: [{ type: "approved-vendor-list/option", id: "LIST" }, { type: "approved-vendor-list", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list/options`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1ApprovedVendorListMappingsByMaterialId: build.query<
+      GetApiV1ApprovedVendorListMappingsByMaterialIdApiResponse,
+      GetApiV1ApprovedVendorListMappingsByMaterialIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "approved-vendor-list/mapping", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list/mappings/${queryArg.materialId}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1ApprovedVendorListEligibility: build.mutation<
+      PostApiV1ApprovedVendorListEligibilityApiResponse,
+      PostApiV1ApprovedVendorListEligibilityApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "approved-vendor-list/eligibility", id: "LIST" }, { type: "approved-vendor-list", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list/eligibility`,
+        method: "POST",
+        body: queryArg.domainEntitiesApprovedVendorListsApprovedVendorEligibilityRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1ApprovedVendorListRevise: build.mutation<
+      PostApiV1ApprovedVendorListReviseApiResponse,
+      PostApiV1ApprovedVendorListReviseApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "approved-vendor-list/revise", id: "LIST" }, { type: "approved-vendor-list", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list/revise`,
+        method: "POST",
+        body: queryArg.domainEntitiesApprovedVendorListsReviseApprovedVendorListRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -1958,6 +2083,85 @@ export type GetApiV1ProcurementDistributeMaterialByDistributeMaterialIdApiArg =
     /** The sub module this request falls under */
     subModule?: string;
   };
+export type GetApiV1ApprovedVendorListApiResponse =
+  /** status 200 OK */ DomainEntitiesApprovedVendorListsApprovedVendorListSummaryDto[];
+export type GetApiV1ApprovedVendorListApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1ApprovedVendorListApiResponse =
+  /** status 201 Created */ string;
+export type PostApiV1ApprovedVendorListApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesApprovedVendorListsSaveApprovedVendorListRequest: DomainEntitiesApprovedVendorListsSaveApprovedVendorListRequest;
+};
+export type GetApiV1ApprovedVendorListByIdApiResponse =
+  /** status 200 OK */ DomainEntitiesApprovedVendorListsApprovedVendorListDto;
+export type GetApiV1ApprovedVendorListByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PutApiV1ApprovedVendorListByIdApiResponse = void;
+export type PutApiV1ApprovedVendorListByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesApprovedVendorListsSaveApprovedVendorListRequest: DomainEntitiesApprovedVendorListsSaveApprovedVendorListRequest;
+};
+export type GetApiV1ApprovedVendorListByIdPrintApiResponse =
+  /** status 200 OK */ DomainEntitiesApprovedVendorListsApprovedVendorListDto;
+export type GetApiV1ApprovedVendorListByIdPrintApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1ApprovedVendorListOptionsApiResponse =
+  /** status 200 OK */ DomainEntitiesApprovedVendorListsApprovedVendorOptionsDto;
+export type GetApiV1ApprovedVendorListOptionsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1ApprovedVendorListMappingsByMaterialIdApiResponse =
+  /** status 200 OK */ DomainEntitiesApprovedVendorListsApprovedVendorMappingDto[];
+export type GetApiV1ApprovedVendorListMappingsByMaterialIdApiArg = {
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1ApprovedVendorListEligibilityApiResponse =
+  /** status 200 OK */ DomainEntitiesApprovedVendorListsApprovedVendorEligibilityDto[];
+export type PostApiV1ApprovedVendorListEligibilityApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesApprovedVendorListsApprovedVendorEligibilityRequest: DomainEntitiesApprovedVendorListsApprovedVendorEligibilityRequest;
+};
+export type PostApiV1ApprovedVendorListReviseApiResponse =
+  /** status 201 Created */ string;
+export type PostApiV1ApprovedVendorListReviseApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesApprovedVendorListsReviseApprovedVendorListRequest: DomainEntitiesApprovedVendorListsReviseApprovedVendorListRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -2905,6 +3109,135 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
+export type DomainEntitiesApprovedVendorListsApprovedVendorListStatus =
+  0 | 1 | 2 | 3;
+export type DomainEntitiesReviewsDocumentReviewStatus = 0 | 1 | 2;
+export type DomainEntitiesApprovedVendorListsApprovedVendorListSummaryDto = {
+  id?: string;
+  annexureNumber?: string | null;
+  revisionNumber?: number;
+  supersedesRevision?: number | null;
+  status?: DomainEntitiesApprovedVendorListsApprovedVendorListStatus;
+  reviewStatus?: DomainEntitiesReviewsDocumentReviewStatus;
+  lineCount?: number;
+  createdAt?: string;
+  approvedAt?: string | null;
+  preparedBy?: string | null;
+};
+export type DomainEntitiesApprovedVendorListsNewApprovedManufacturerRequest = {
+  name: string;
+  address?: string | null;
+};
+export type DomainEntitiesApprovedVendorListsNewApprovedSupplierRequest = {
+  name: string;
+  address?: string | null;
+  type?: DomainEntitiesProcurementSuppliersSupplierType;
+};
+export type DomainEntitiesApprovedVendorListsSaveApprovedVendorListLineRequest =
+  {
+    materialId?: string;
+    manufacturerId?: string | null;
+    newManufacturer?: DomainEntitiesApprovedVendorListsNewApprovedManufacturerRequest;
+    supplierId?: string | null;
+    newSupplier?: DomainEntitiesApprovedVendorListsNewApprovedSupplierRequest;
+    quantityPerPack?: number;
+    approvalDate?: string;
+    validityDate?: string;
+  };
+export type DomainEntitiesApprovedVendorListsSaveApprovedVendorListRequest = {
+  annexureNumber: string;
+  revisionNumber?: number;
+  supersedesRevision?: number | null;
+  reviewVersion?: number | null;
+  lines?:
+    DomainEntitiesApprovedVendorListsSaveApprovedVendorListLineRequest[] | null;
+};
+export type DomainEntitiesApprovedVendorListsApprovedVendorListLineDto = {
+  id?: string;
+  order?: number;
+  materialId?: string;
+  materialCode?: string | null;
+  materialName?: string | null;
+  manufacturerId?: string;
+  manufacturerName?: string | null;
+  manufacturerAddress?: string | null;
+  supplierId?: string;
+  supplierName?: string | null;
+  quantityPerPack?: number;
+  approvalDate?: string;
+  validityDate?: string;
+  lapsed?: boolean;
+};
+export type DomainEntitiesApprovedVendorListsApprovedVendorListSignatoryDto = {
+  userId?: string;
+  name?: string | null;
+  designation?: string | null;
+  signature?: string | null;
+  signedAt?: string | null;
+};
+export type DomainEntitiesApprovedVendorListsApprovedVendorListDto = {
+  id?: string;
+  annexureNumber?: string | null;
+  revisionNumber?: number;
+  supersedesRevision?: number | null;
+  status?: DomainEntitiesApprovedVendorListsApprovedVendorListStatus;
+  reviewStatus?: DomainEntitiesReviewsDocumentReviewStatus;
+  lineCount?: number;
+  createdAt?: string;
+  approvedAt?: string | null;
+  preparedBy?: string | null;
+  previousRevisionId?: string | null;
+  supersededAt?: string | null;
+  reviewVersion?: number | null;
+  lines?: DomainEntitiesApprovedVendorListsApprovedVendorListLineDto[] | null;
+  preparedBySignatory?: DomainEntitiesApprovedVendorListsApprovedVendorListSignatoryDto;
+  checkedBy?: DomainEntitiesApprovedVendorListsApprovedVendorListSignatoryDto;
+  approvedBy?: DomainEntitiesApprovedVendorListsApprovedVendorListSignatoryDto;
+};
+export type DomainEntitiesApprovedVendorListsApprovedVendorOptionDto = {
+  id?: string;
+  code?: string | null;
+  name?: string | null;
+  address?: string | null;
+};
+export type DomainEntitiesApprovedVendorListsApprovedVendorOptionsDto = {
+  materials?: DomainEntitiesApprovedVendorListsApprovedVendorOptionDto[] | null;
+  manufacturers?:
+    DomainEntitiesApprovedVendorListsApprovedVendorOptionDto[] | null;
+  suppliers?: DomainEntitiesApprovedVendorListsApprovedVendorOptionDto[] | null;
+};
+export type DomainEntitiesApprovedVendorListsApprovedVendorMappedSupplierDto = {
+  supplierId?: string;
+  supplierName?: string | null;
+};
+export type DomainEntitiesApprovedVendorListsApprovedVendorMappingDto = {
+  manufacturerId?: string;
+  manufacturerName?: string | null;
+  manufacturerAddress?: string | null;
+  quantityPerPack?: number | null;
+  suppliers?:
+    DomainEntitiesApprovedVendorListsApprovedVendorMappedSupplierDto[] | null;
+};
+export type DomainEntitiesApprovedVendorListsApprovedVendorPairDto = {
+  manufacturerId?: string;
+  supplierId?: string;
+  validityDate?: string;
+};
+export type DomainEntitiesApprovedVendorListsApprovedVendorEligibilityDto = {
+  materialId?: string;
+  restricted?: boolean;
+  approved?: DomainEntitiesApprovedVendorListsApprovedVendorPairDto[] | null;
+};
+export type DomainEntitiesApprovedVendorListsApprovedVendorEligibilityRequest =
+  {
+    materialIds?: string[] | null;
+  };
+export type DomainEntitiesApprovedVendorListsReviseApprovedVendorListRequest = {
+  annexureNumber: string;
+  revisionNumber?: number;
+  lines?:
+    DomainEntitiesApprovedVendorListsSaveApprovedVendorListLineRequest[] | null;
+};
 export const {
   usePostApiV1ProcurementManufacturerMutation,
   useGetApiV1ProcurementManufacturerQuery,
@@ -3017,4 +3350,18 @@ export const {
   useLazyGetApiV1ProcurementDistributeMaterialQuery,
   useGetApiV1ProcurementDistributeMaterialByDistributeMaterialIdQuery,
   useLazyGetApiV1ProcurementDistributeMaterialByDistributeMaterialIdQuery,
+  useGetApiV1ApprovedVendorListQuery,
+  useLazyGetApiV1ApprovedVendorListQuery,
+  usePostApiV1ApprovedVendorListMutation,
+  useGetApiV1ApprovedVendorListByIdQuery,
+  useLazyGetApiV1ApprovedVendorListByIdQuery,
+  usePutApiV1ApprovedVendorListByIdMutation,
+  useGetApiV1ApprovedVendorListByIdPrintQuery,
+  useLazyGetApiV1ApprovedVendorListByIdPrintQuery,
+  useGetApiV1ApprovedVendorListOptionsQuery,
+  useLazyGetApiV1ApprovedVendorListOptionsQuery,
+  useGetApiV1ApprovedVendorListMappingsByMaterialIdQuery,
+  useLazyGetApiV1ApprovedVendorListMappingsByMaterialIdQuery,
+  usePostApiV1ApprovedVendorListEligibilityMutation,
+  usePostApiV1ApprovedVendorListReviseMutation,
 } = injectedRtkApi;
