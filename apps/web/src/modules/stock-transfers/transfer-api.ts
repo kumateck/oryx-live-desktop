@@ -14,6 +14,8 @@ export const transferApi = productionApi.enhanceEndpoints({
     getApiV1ProductionScheduleStockTransferBatchByStockTransferId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
     // Issuing takes the stock off this store's shelves and puts it in the other department's holding.
     putApiV1ProductionScheduleStockTransferIssueByStockTransferId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list, held, "StockOnShelves"]); },
+    // Refusing a transfer only changes its standing; no stock moves.
+    putApiV1ProductionScheduleStockTransferRejectByStockTransferId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [list]); },
   },
 });
 export const heldApi = materialsApi.enhanceEndpoints({ endpoints: { getApiV1MaterialHolding: (definition) => { definition.providesTags = addTags(definition.providesTags, [held]); } } });
@@ -29,6 +31,7 @@ const moveApi = api.injectEndpoints({
   }),
 });
 export const { useGetApiV1ProductionScheduleStockTransferInBoundQuery, useGetApiV1ProductionScheduleStockTransferOutBoundQuery, useGetApiV1ProductionScheduleStockTransferByStockTransferIdQuery,
-  useGetApiV1ProductionScheduleStockTransferBatchByStockTransferIdQuery, usePutApiV1ProductionScheduleStockTransferIssueByStockTransferIdMutation } = transferApi;
+  useGetApiV1ProductionScheduleStockTransferBatchByStockTransferIdQuery, usePutApiV1ProductionScheduleStockTransferIssueByStockTransferIdMutation,
+  usePutApiV1ProductionScheduleStockTransferRejectByStockTransferIdMutation } = transferApi;
 export const { useGetApiV1MaterialHoldingQuery } = heldApi;
 export const { useShelveHeldStockMutation } = moveApi;

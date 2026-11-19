@@ -122,4 +122,12 @@ describe("worksheet tests", () => {
     expect(within(screen.getByRole("region", { name: "Test 3" })).getByLabelText("Results").textContent).toBe("Result");
     expect(container.querySelector("input, textarea, select")).toBeNull();
   });
+
+  it("lets the specification span the test unless a calculated result sits beside it", () => {
+    render(<WorksheetTests sections={sections} responses={responses} />);
+    const columns = (test: string) => within(screen.getByRole("region", { name: test })).getByText("Specification").closest("dl")?.className ?? "";
+    expect(columns("Test 1")).not.toContain("grid-cols-2");
+    expect(columns("Test 2")).not.toContain("grid-cols-2");
+    expect(columns("Test 3")).toContain("grid-cols-2");
+  });
 });
