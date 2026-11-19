@@ -19,7 +19,7 @@ import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetApiV1ProductionScheduleStockTransferBatchByStockTransferIdQuery, useGetApiV1ProductionScheduleStockTransferByStockTransferIdQuery, useGetApiV1ProductionScheduleStockTransferInBoundQuery,
   useGetApiV1ProductionScheduleStockTransferOutBoundQuery, usePutApiV1ProductionScheduleStockTransferIssueByStockTransferIdMutation } from "../transfer-api";
-import { audit, issuePermissions, transferBatchesSchema, transferIssueBlock, transferPath, transferRowsSchema, transferSchema, transferStatus, transferStatusLabels, transfersPath, viewPermissions, type Transfer } from "../transfers";
+import { audit, batchesInSupplyUnit, issuePermissions, supplyQuantity, transferBatchesSchema, transferIssueBlock, transferPath, transferRowsSchema, transferSchema, transferStatus, transferStatusLabels, transfersPath, viewPermissions, type Transfer } from "../transfers";
 
 function Standing({ status }: { status: number }) {
   return <Badge variant={status === transferStatus.issued ? "default" : status === transferStatus.rejected ? "destructive" : status === transferStatus.approved ? "secondary" : "outline"}>{transferStatusLabels[status] ?? "Unknown"}</Badge>;
@@ -53,7 +53,10 @@ export function TransferListPage() {
     column.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div>
       <div className="text-xs text-muted-foreground">{[row.original.materialCode ?? "No code", `${materialKindLabels[row.original.kind]} material`].join(" · ")}</div></div> }),
     column.accessor((row) => (direction === "in" ? row.to : row.from) ?? "", { id: "department", header: direction === "in" ? "Asked for by" : "Supplied by", cell: ({ row }) => (direction === "in" ? row.original.to : row.original.from) ?? "–" }),
-    column.accessor("quantity", { header: "Quantity", size: 140, cell: ({ row }) => amount(row.original.quantity, row.original.unit) }),
+    // The supplying store reads the quantity in its own unit; the requester keeps theirs.
+    column.accessor("quantity", { header: "Quantity", size: 160, cell: ({ row }) => { if (direction !== "in") return amount(row.original.quantity, row.original.unit);
+      const supply = supplyQuantity(row.original);
+      return <div><div>{amount(supply.quantity, supply.unit)}</div>{supply.asked ? <div className="text-xs text-muted-foreground">Asked as {amount(supply.asked.quantity, supply.asked.unit)}</div> : null}</div>; } }),
     column.accessor((row) => row.reason ?? "", { id: "reason", header: "Reason", cell: ({ row }) => { const reason = richTextToPlain(row.original.reason); return <span className="line-clamp-2 break-words" title={reason}>{reason || "–"}</span>; } }),
     column.accessor((row) => row.createdAt ?? "", { id: "requested", header: "Requested", size: 140, cell: ({ row }) => formatDate(row.original.createdAt) ?? "–" }),
     column.accessor("status", { header: "Status", size: 170, cell: ({ row }) => <Standing status={row.original.status} /> }),
@@ -87,6 +90,8 @@ function Detail({ id }: { id: string }) {
     <h1 className="text-lg font-semibold">Transfer unavailable</h1><p className="text-sm text-muted-foreground">{query.error ? apiErrorMessage(query.error) : "The server returned a transfer the app could not read."}</p>
     <div className="flex justify-center gap-2"><Button size="sm" variant="outline" onClick={() => void query.refetch()}>Retry</Button><Button asChild size="sm"><Link to={transfersPath}>Stock transfers</Link></Button></div></div>;
   if (!has(viewPermissions[transfer.kind]) && !has(issuePermissions[transfer.kind])) return <NoAccess />;
+  const supply = supplyQuantity(transfer);
+  const supplyBatches = batchesInSupplyUnit(batches, supply.asked ? supply.unit : null);
   const block = batchQuery.error ? `The stock picked for this transfer could not be read: ${apiErrorMessage(batchQuery.error)}` : transferIssueBlock(transfer, batches);
   const issued = transfer.status === transferStatus.issued;
   const open = !issued && transfer.status !== transferStatus.rejected;
@@ -97,7 +102,7 @@ function Detail({ id }: { id: string }) {
     {open && block ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">{block}</p> : null}
     <KeyFacts>
       <KeyFact label="Material" value={transfer.materialName} note={transfer.materialCode ?? "No code"} />
-      <KeyFact label="Quantity" value={amount(transfer.quantity, transfer.unit)} />
+      <KeyFact label="Quantity" value={amount(supply.quantity, supply.unit)} note={supply.asked ? `Asked as ${amount(supply.asked.quantity, supply.asked.unit)}; converted with the material's density` : undefined} />
       <KeyFact label="Asked for by" value={transfer.to ?? "–"} note={transfer.from ? `Supplied by ${transfer.from}` : undefined} />
       <KeyFact label="Requested" value={formatDateTime(transfer.createdAt) ?? "–"} />
       <KeyFact label="Approved" value={formatDateTime(transfer.approvedAt) ?? "Not yet"} note={transfer.issuedAt ? `Issued ${formatDateTime(transfer.issuedAt) ?? ""}` : undefined} />
@@ -109,8 +114,8 @@ function Detail({ id }: { id: string }) {
         <p>{apiErrorMessage(batchQuery.error)}</p>
         <Button type="button" size="sm" variant="outline" onClick={() => void batchQuery.refetch()}>Retry</Button>
       </div> : issued && batches.length === 0 ? <p className="text-sm text-muted-foreground">Issued batch history is unavailable for this transfer.</p>
-        : <BatchBreakdown line={{ unit: transfer.unit, batches }} />}
-      {batches.some(batch => batch.sourceQuantity !== null && batch.sourceUnit && batch.sourceUnit.toLowerCase() !== transfer.unit?.toLowerCase()) ?
+        : <BatchBreakdown line={supplyBatches ? { unit: supply.unit, batches: supplyBatches } : { unit: transfer.unit, batches }} />}
+      {!supplyBatches && batches.some(batch => batch.sourceQuantity !== null && batch.sourceUnit && batch.sourceUnit.toLowerCase() !== transfer.unit?.toLowerCase()) ?
         <div role="region" aria-label="Source stock quantities" className="space-y-1 text-sm">
           <p className="font-medium">Quantities leaving the supplying store</p>
           {batches.map(batch => batch.sourceQuantity !== null && batch.sourceUnit ? <p key={batch.key}>
@@ -118,8 +123,8 @@ function Detail({ id }: { id: string }) {
           </p> : null)}
         </div> : null}
     </section> : null}
-    {confirming ? <ConfirmActionDialog require={issuePermissions[transfer.kind]} destructive={false} title={`Issue ${amount(transfer.quantity, transfer.unit)} of ${transfer.materialName}?`}
-      description={`The batches shown leave your store for ${transfer.to ?? "the other department"}, where they wait to be put on shelves. This cannot be undone.`} confirmLabel="Issue stock" busyLabel="Issuing…" onClose={() => setConfirming(false)}
+    {confirming ? <ConfirmActionDialog require={issuePermissions[transfer.kind]} destructive={false} title={`Issue ${amount(supply.quantity, supply.unit)} of ${transfer.materialName}?`}
+      description={`The batches shown leave your store for ${transfer.to ?? "the other department"}, where they wait to be put on shelves${supply.asked ? ` as ${amount(supply.asked.quantity, supply.asked.unit)}` : ""}. This cannot be undone.`} confirmLabel="Issue stock" busyLabel="Issuing…" onClose={() => setConfirming(false)}
       onConfirm={async () => { const result = await issue({ ...audit, stockTransferId: transfer.id, body: batches.flatMap((batch) => batch.id ? [{ batchId: batch.id, quantity: batch.quantity }] : []) });
         if ("error" in result) return apiErrorMessage(result.error);
         toast.success("Transfer issued", { description: `${transfer.materialName} is on its way to ${transfer.to ?? "the other department"}.` });

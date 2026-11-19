@@ -7,9 +7,12 @@ const amount = z.number().nullish().transform((value) => typeof value === "numbe
 export const approvedMaterialRowsSchema = z.array(z.object({
   material: z.object({ id: z.string().nullish(), code: text, name: text, kind: z.number().nullish() }).nullish(),
   unitOfMeasure: z.object({ symbol: text }).nullish(), totalAvailableQuantity: amount, reservedQuantity: amount,
+  // The store-stock rule's split (optional: older servers send only the total and reserved).
+  freeQuantity: z.number().nullish(), expiredQuantity: z.number().nullish(), unavailableQuantity: z.number().nullish(),
 })).nullish().transform((value) => (value ?? []).flatMap((item) => item.material?.id ? [{
   id: item.material.id, code: item.material.code, name: item.material.name ?? "Unnamed material", unit: item.unitOfMeasure?.symbol ?? null,
   available: item.totalAvailableQuantity, reserved: item.reservedQuantity,
+  free: typeof item.freeQuantity === "number" ? item.freeQuantity : null, expired: item.expiredQuantity ?? 0, unavailable: item.unavailableQuantity ?? 0,
 }] : []));
 export type ApprovedMaterialRow = z.infer<typeof approvedMaterialRowsSchema>[number];
 
@@ -25,9 +28,13 @@ export const shelfBatchRowsSchema = z.array(z.object({
     material: z.object({ id: z.string().nullish(), code: text, name: text }).nullish() }).nullish(),
   warehouseLocationShelf: z.object({ id: z.string().nullish(), code: text, name: text,
     warehouseLocationRack: z.object({ name: text, warehouseLocation: z.object({ name: text, floorName: text }).nullish() }).nullish() }).nullish(),
+  // This row's share of the material's totals by the store-stock rule (optional: older servers leave them out).
+  stockState: text, reservedQuantity: z.number().nullish(), freeQuantity: z.number().nullish(), stockUnit: text,
 })).nullish().transform((value) => (value ?? []).map((item, index) => ({
   warehouseQuantity: item.warehouseQuantity ?? null, warehouseUnit: item.warehouseUoM?.symbol ?? null,
   id: item.id ?? `row-${index}`, shelfBatchId: item.id ?? null, quantity: item.quantity, unit: item.uoM?.symbol ?? null, unitId: item.uoM?.id ?? null,
+  stockState: item.stockState === "Usable" || item.stockState === "Expired" || item.stockState === "NotReleased" ? item.stockState : null,
+  reserved: item.reservedQuantity ?? null, free: item.freeQuantity ?? null, stockUnit: item.stockUnit ?? item.uoM?.symbol ?? null,
   batchNumber: item.materialBatch?.batchNumber ?? null, manufacturingDate: item.materialBatch?.manufacturingDate ?? null, expiryDate: item.materialBatch?.expiryDate ?? null,
   batchId: item.materialBatch?.id ?? null, effectiveExpiryDate: item.materialBatch?.effectiveExpiryDate ?? item.materialBatch?.expiryDate ?? null,
   retestDate: item.materialBatch?.retestDate ?? null,

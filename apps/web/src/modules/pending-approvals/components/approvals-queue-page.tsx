@@ -39,6 +39,10 @@ function DocumentCards({ documents }: { documents: readonly { type: string; coun
 const column = dataTableColumns<PendingApproval>();
 const columns = column.columns([
   column.accessor((row) => row.code ?? "", { id: "code", header: "Document", cell: ({ row }) => <span className="break-words font-medium">{row.original.code ?? "No number"}</span> }),
+  // Stock requisitions name the production batch they were raised for, so it can be checked before deciding.
+  column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Production batch", cell: ({ row }) => row.original.batchNumber
+    ? <div className="min-w-0"><div className="break-words font-medium">{row.original.batchNumber}</div>{row.original.productName ? <div className="break-words text-xs text-muted-foreground">{row.original.productName}</div> : null}</div>
+    : <span className="text-muted-foreground">–</span> }),
   column.accessor((row) => row.requestedBy ?? "", { id: "requestedBy", header: "Requested by", cell: ({ row }) => row.original.requestedBy ?? "–" }),
   // A request reached through a delegation says whose it is.
   column.accessor((row) => row.onBehalfOf ?? "", { id: "for", header: "Waiting for", size: 180, cell: ({ row }) => row.original.onBehalfOf
@@ -48,13 +52,16 @@ const columns = column.columns([
   column.accessor((row) => row.logs.length, { id: "stage", header: "Earlier decisions", size: 170, cell: ({ row }) => row.original.logs.length === 0 ? <span className="text-muted-foreground">You are first</span> : `${row.original.logs.length} recorded` }),
 ]);
 
+const batchTypes = new Set(["StockRequisition", "RawStockRequisition", "PackageStockRequisition"]);
+const columnsWithoutBatch = columns.filter((item) => item.id !== "batch");
+
 function DocumentList({ type }: { type: string }) {
   const navigate = useNavigate();
   const query = useGetApiV1ApprovalMyPendingQuery({ ...audit, modelType: type }, freshQueue);
   const parsed = useMemo(() => query.data ? approvalRowsSchema.safeParse(query.data) : null, [query.data]);
   // The server is asked for one type; anything else it sends back is left out.
   const rows = useMemo(() => parsed?.success ? parsed.data.filter((row) => row.type === type) : [], [parsed, type]);
-  return <ClientDataTable label={`${documentLabel(type)} waiting for you`} columns={columns} rows={rows} getRowId={(row) => row.id} loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()}
+  return <ClientDataTable label={`${documentLabel(type)} waiting for you`} columns={batchTypes.has(type) ? columns : columnsWithoutBatch} rows={rows} getRowId={(row) => row.id} loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()}
     error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned requests the app could not read." : null} onRowOpen={(row) => void navigate(approvalPath(row.type, row.id))}
     emptyTitle="Nothing is waiting" emptyDescription={`No ${documentLabel(type).toLowerCase()} needs your decision.`} />;
 }

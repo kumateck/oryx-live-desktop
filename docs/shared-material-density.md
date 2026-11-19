@@ -13,3 +13,13 @@ The OpenAPI change adds optional read fields only. Import with `bun scripts/impo
 Verification covers conversion in both directions, shared density permissions/audit, production reservations in a different physical unit, retained adopted density, duplicate receipt prevention, existing transfer concurrency, and PostgreSQL migration/grants/audit triggers. UI tests cover deny/allow density controls and receiving quantities. A rendered-browser check could not run because local browser access is unavailable for this chat.
 
 The combined import with merged Unstart reservation operations has reviewed digest `e9f0e6838046b0db5121ed1611371bd6f8096c611c37a2eb22c0a9649e4bdcaa`. Removing the eight density fields reproduces the Unstart reservation digest; removing just the four reservation paths and four owned schemas reproduces the original density digest. Both predecessor reviews remain checked.
+
+## Supplying store's unit (2026-11-18)
+
+The supplying store reads an incoming transfer in its own stock unit: the list, the detail page, the picked batches and the issue confirmation show the backend's optional `supplierQuantity`/`supplierUoM` (for example 20,720 kg), with "Asked as 20,000 L" beside it. The issue request still sends the request-unit quantities, and the receiving store shelves in its own unit as before. Without those fields (older backend) the request quantity is shown. These are read through the module's zod schema only; the OpenAPI contract is not re-imported for these optional read fields.
+
+The pending-approvals list for stock requisitions adds a Production batch column from the optional `batchNumber`/`productName` fields.
+
+## One stock rule on every screen (2026-11-18)
+
+Approved materials, the material's Stock by batch and Reserved tabs, the schedule forecast, the stock availability dialog and the warehouse stock reports read the backend's store-stock split: free to use, reserved (live holds only), expired and not released, adding up to the total approved. Stock by batch lists every lot on the store's shelves with its own free/reserved share, so the rows add up to the list's totals; a hold drops out of the Reserved tab once it is released (Unstart, back to the shelf), issued to the floor, or its batch is cancelled. All of these fields are optional and read through each module's zod schema; older servers show what they did before.
