@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo } from "react";
 import { RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditableComboboxCell, EditableNumberCell, EditableTextCell, ListDataTable, dataTableColumns } from "@/shared/datatable";
+import { manufacturerRefusal, markOptions, useApprovedVendors } from "@/shared/procurement/approved-vendors";
 import { formatMoney, formatUnitPrice } from "@/shared/procurement/price";
 import { toLargestUnit } from "@/shared/units/quantity";
 import { invoiceLineCost, storedQuantity, type InvoiceLine } from "../lib/invoice-lines";
@@ -22,11 +23,15 @@ function QuantityCell({ line }: { line: InvoiceLine }) {
   return <div className="flex items-center gap-2"><EditableNumberCell label={`Quantity of ${line.materialName} on ${line.orderCode}`} value={line.quantity} min={0} disabled={disabled} invalid={invalid.has(line.key)}
     onCommit={(quantity) => onChange(line.key, { quantity })} /><span className="shrink-0 text-sm text-muted-foreground">{line.enteredUnit}</span></div>;
 }
+const materialIds = (id: string) => [id];
 function ManufacturerCell({ line }: { line: InvoiceLine }) {
   const { invalid, disabled, onChange } = useEditing();
+  // Manufacturers QA's approved vendor list does not allow for this material are shown but cannot be chosen.
+  const eligibility = useApprovedVendors(materialIds(line.materialId)).get(line.materialId);
+  const options = useMemo(() => markOptions(line.manufacturers, (id) => manufacturerRefusal(eligibility, id, null)), [line.manufacturers, eligibility]);
   if (!line.included) return <span className="text-muted-foreground">–</span>;
   if (line.manufacturers.length === 0) return <span className="text-sm text-destructive">None set up for this supplier and material</span>;
-  return <EditableComboboxCell label={`Manufacturer of ${line.materialName} on ${line.orderCode}`} value={line.manufacturerId} options={line.manufacturers} disabled={disabled} invalid={invalid.has(line.key) && !line.manufacturerId}
+  return <EditableComboboxCell label={`Manufacturer of ${line.materialName} on ${line.orderCode}`} value={line.manufacturerId} options={options} disabled={disabled} invalid={invalid.has(line.key) && !line.manufacturerId}
     placeholder="Select a manufacturer" onCommit={(manufacturerId) => onChange(line.key, { manufacturerId })} />;
 }
 function ReasonCell({ line }: { line: InvoiceLine }) {
