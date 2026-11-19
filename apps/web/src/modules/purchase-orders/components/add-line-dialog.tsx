@@ -7,6 +7,7 @@ import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, Dia
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
+import { supplierRefusal, useApprovedVendors } from "@/shared/procurement/approved-vendors";
 import { relatedUnits } from "@/shared/units/quantity";
 import { useGetApiV1ProcurementSupplierBySupplierIdMaterialQuery } from "../api/order-api";
 import { audit } from "../lib/purchase-order-access";
@@ -37,20 +38,23 @@ export function AddLineDialog({ supplierId, currency, onOrder, onAdd, onClose }:
   const query = useGetApiV1ProcurementSupplierBySupplierIdMaterialQuery({ ...audit, supplierId }, { skip: !supplierId });
   // A material already on the order is changed on its own line, not added a second time.
   const supplied = useMemo(() => { const parsed = suppliedSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data.filter((item) => !onOrder.has(item.id)) : []; }, [query.data, onOrder]);
+  // Materials QA's approved vendor list does not allow from this supplier are left out; the server refuses them too.
+  const eligibility = useApprovedVendors(useMemo(() => supplied.map((item) => item.id), [supplied]));
+  const allowed = useMemo(() => supplied.filter((item) => !supplierRefusal(eligibility.get(item.id), supplierId)), [supplied, eligibility, supplierId]);
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { material: null, quantity: Number.NaN, price: Number.NaN, priceUnit: null } });
   // Read here so the dialog re-renders, and its fields show their messages, when validation fails.
   void form.formState.errors;
   const chosen = useWatch({ control: form.control, name: "material" });
-  const material = supplied.find((item) => item.id === chosen?.value) ?? null;
+  const material = allowed.find((item) => item.id === chosen?.value) ?? null;
   const fields = useMemo((): WizardField<Values>[] => [
     { type: InputTypes.SELECT, name: "material", label: "Material", mode: "single", source: "sync", required: true, className: "md:col-span-2",
-      options: supplied.map((item) => ({ value: item.id, label: item.code ? `${item.code} - ${item.name}` : item.name })),
-      placeholder: query.isLoading ? "Loading…" : supplied.length ? "Select a material" : "This supplier supplies nothing else" },
+      options: allowed.map((item) => ({ value: item.id, label: item.code ? `${item.code} - ${item.name}` : item.name })),
+      placeholder: query.isLoading ? "Loading…" : allowed.length ? "Select a material" : supplied.length ? "Nothing else from this supplier is on the approved vendor list" : "This supplier supplies nothing else" },
     { type: InputTypes.NUMBER, name: "quantity", label: `Quantity${material?.unit ? ` (${material.unit})` : ""}`, required: true, min: 0 },
     { type: InputTypes.NUMBER, name: "price", label: `Unit price${currency ? ` (${currency})` : ""}`, required: true, min: 0 },
     { type: InputTypes.SELECT, name: "priceUnit", label: "Priced per", mode: "single", source: "sync", required: true,
       options: (material ? relatedUnits(material.unit) : []).map((unit) => ({ value: unit, label: unit })), placeholder: material ? "Select a unit" : "Choose the material first" },
-  ], [supplied, query.isLoading, material, currency]);
+  ], [allowed, supplied.length, query.isLoading, material, currency]);
 
   const submit = form.handleSubmit((values) => {
     if (!material || !values.priceUnit) return;

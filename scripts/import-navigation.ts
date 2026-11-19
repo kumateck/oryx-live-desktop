@@ -98,6 +98,8 @@ const vendorApproval: CatalogItem[] = [
   { id: "quality-assurance.suppliers", label: "Suppliers", path: "/settings/suppliers", permissions: ["CanViewVendors"] },
   { ...manufacturers, id: "quality-assurance.manufacturers" },
   { ...compliance, id: "quality-assurance.supplier-compliance", permissions: ["CanViewSupplierCertifications"] },
+  // The approved manufacturer list for raw materials (QAD/SOP/007/A03-06); its current revision restricts procurement.
+  { id: "quality-assurance.approved-vendor-list", label: "Approved Vendor List", path: "/qa/approved-vendor-list", permissions: ["CanViewApprovedVendorList"] },
 ];
 
 // Every supported collection is independently accessible, including units, sites,
