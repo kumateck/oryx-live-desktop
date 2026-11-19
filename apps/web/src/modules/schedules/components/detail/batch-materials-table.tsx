@@ -28,7 +28,8 @@ export function BatchMaterialsTable({ title, rows, loading, error, onRetry, acti
       const selected = main?.materialId && choice ? chosenFor(main, rows, choice.choices).materialId === item.materialId : false;
       return <div className={cn("flex min-w-0 items-start gap-2", sub && "pl-3")}>
         {sub ? <CornerDownRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" /> : null}
-        {main?.materialId && item.materialId && choice ? <input type="radio" className="mt-1 size-4 shrink-0 accent-primary" name={`use-${main.materialId}`} checked={selected}
+        {main?.materialId && item.materialId && choice ? <input type="radio" className="mt-1 size-4 shrink-0 accent-primary disabled:opacity-40" name={`use-${main.materialId}`} checked={selected}
+          disabled={Boolean(item.unusableReason)} title={item.unusableReason ?? undefined}
           aria-label={`Use ${item.name} for this batch`} onChange={() => { if (main.materialId && item.materialId) choice.onChoose(main.materialId, item.materialId); }} /> : null}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5"><span className={cn("break-words", sub ? "font-normal" : "font-medium")}>{item.name}</span>
@@ -36,8 +37,9 @@ export function BatchMaterialsTable({ title, rows, loading, error, onRetry, acti
             {sub ? <Badge variant="outline" className="border-amber-500/70 text-[0.7rem] text-amber-700 dark:text-amber-300">Substitute</Badge> : null}
             {selected ? <Badge className="text-[0.7rem]">Used for this batch</Badge> : null}</div>
           <div className="text-xs text-muted-foreground">{item.code || "No code"}{sub ? ` · may replace ${sub.name}` : ""}</div>
+          {item.unusableReason ? <div className="text-xs text-amber-700 dark:text-amber-300">Cannot be used: {item.unusableReason}</div> : null}
         </div></div>; } }),
-    column.accessor((item) => quantity(item.needed, item.unit), { id: "needed", header: "Needed", size: 120 }),
+    column.accessor((item) => item.unusableReason ? "–" : quantity(item.needed, item.unit), { id: "needed", header: "Needed", size: 120 }),
     column.accessor((item) => quantity(item.reserved, item.unit), { id: "reserved", header: "Reserved for batch", size: 150 }),
     column.accessor((item) => quantity(freeStock(item), item.unit), { id: "free", header: "Free in warehouse", size: 150 }),
     // Opens where that stock is, store by store, and what is on its way in.

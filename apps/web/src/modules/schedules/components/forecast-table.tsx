@@ -24,8 +24,9 @@ export function ForecastTable({ title, materials, loading, error, onRetry }: {
             {hasSubstitutes ? <Badge variant="secondary" className="text-[0.7rem]">Main</Badge> : null}
             {sub ? <Badge variant="outline" className="border-amber-500/70 text-[0.7rem] text-amber-700 dark:text-amber-300">Substitute</Badge> : null}</div>
           <div className="text-xs text-muted-foreground">{item.code || "No code"}{sub ? ` · may replace ${sub.name}` : ""}</div>
+          {item.unusableReason ? <div className="text-xs text-amber-700 dark:text-amber-300">Cannot be used: {item.unusableReason}</div> : null}
         </div></div>; } }),
-    column.accessor((item) => quantity(item.needed, item.unit), { id: "needed", header: "Needed", size: 120 }),
+    column.accessor((item) => item.unusableReason ? "–" : quantity(item.needed, item.unit), { id: "needed", header: "Needed", size: 120 }),
     column.accessor((item) => freeStock(item), { id: "stock", header: "Free stock", size: 190, cell: ({ row }) => { const item = row.original; return <div className="min-w-0 space-y-0.5">
       <div>{quantity(freeStock(item), item.unit)} <span className="text-xs text-muted-foreground">free</span></div>
       {item.reserved > 0 ? <div className="text-xs text-muted-foreground">{quantity(usableStock(item), item.unit)} usable, less {quantity(item.reserved, item.unit)} reserved for other batches</div> : null}
@@ -33,6 +34,7 @@ export function ForecastTable({ title, materials, loading, error, onRetry }: {
       {item.unavailable > 0 ? <div className="text-xs text-destructive">{quantity(item.unavailable, item.unit)} not released for use</div> : null}
     </div>; } }),
     column.accessor((item) => isCovered(item) ? "Enough" : "Short", { id: "status", header: "Status", size: 150, cell: ({ row }) => { const item = row.original;
+      if (item.unusableReason) return <Badge variant="outline" className="border-amber-500/70 text-amber-700 dark:text-amber-300">Not usable</Badge>;
       if (isCovered(item)) return <Badge variant="secondary">Enough</Badge>;
       // A short main material whose substitute has enough does not stop the batch: say so.
       const coveredBySubstitute = !item.substituteFor && lineCovered(item, materials);

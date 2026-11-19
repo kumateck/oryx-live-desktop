@@ -4760,6 +4760,7 @@ export type DomainEntitiesProductionSchedulesProductionScheduleProcurementDto =
     extraQuantity?: number;
     isSubstitute?: boolean;
     parentMaterial?: DomainEntitiesMaterialsMaterialDto;
+    substituteUnavailableReason?: string | null;
   };
 export type DomainEntitiesProductionSchedulesProductionScheduleProcurementPackageDto =
   {
@@ -4781,6 +4782,7 @@ export type DomainEntitiesProductionSchedulesProductionScheduleProcurementPackag
     extraQuantity?: number;
     isSubstitute?: boolean;
     parentMaterial?: DomainEntitiesMaterialsMaterialDto;
+    substituteUnavailableReason?: string | null;
   };
 export type DomainEntitiesProductionSchedulesStartProductionMaterialChoice = {
   materialId?: string;
@@ -5240,6 +5242,7 @@ export type DomainEntitiesProductionSchedulesForecastMaterialDto = {
   uoM?: DomainEntitiesBaseUnitOfMeasureDto;
   isSubstitute?: boolean;
   substituteFor?: DomainEntitiesMaterialsMaterialDto;
+  substituteUnavailableReason?: string | null;
 };
 export type DomainEntitiesProductionSchedulesForecastMaterialDtoRead = {
   material?: DomainEntitiesMaterialsMaterialDto;
@@ -5251,6 +5254,7 @@ export type DomainEntitiesProductionSchedulesForecastMaterialDtoRead = {
   isAvailable?: boolean;
   isSubstitute?: boolean;
   substituteFor?: DomainEntitiesMaterialsMaterialDto;
+  substituteUnavailableReason?: string | null;
 };
 export type DomainEntitiesWorkOrdersCreateProductionStepRequest = {
   description?: string | null;
