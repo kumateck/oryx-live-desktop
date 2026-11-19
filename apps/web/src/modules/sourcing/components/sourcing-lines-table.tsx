@@ -5,6 +5,7 @@ import { supplierTypeLabels, type SupplierType } from "@/shared/procurement/supp
 import { toLargestUnit } from "@/shared/units/quantity";
 import { useMaterialSuppliers } from "../hooks/use-material-suppliers";
 import { noChoice, type SourcingChoice, type SourcingChoices } from "../lib/sourcing";
+import { markOptions, supplierRefusal, useApprovedVendors } from "@/shared/procurement/approved-vendors";
 
 interface Editing { choices: SourcingChoices; invalid: ReadonlySet<string>; disabled: boolean; onChange: (lineId: string, choice: SourcingChoice) => void }
 // The cells read what is being edited from here, so the columns never change and an open picker is not torn down by its own change.
@@ -29,12 +30,16 @@ function SupplierCell({ line }: { line: RequisitionLine }) {
   const { choices, invalid, disabled, onChange } = useEditing();
   const choice = choices[line.id] ?? noChoice;
   const suppliers = useMaterialSuppliers(line.materialId, choice.source);
+  // Suppliers QA's approved vendor list does not allow for this material are shown but cannot be chosen.
+  const eligibility = useApprovedVendors(materialIds(line.materialId ?? "")).get(line.materialId ?? "");
+  const options = useMemo(() => markOptions(suppliers.options, (id) => supplierRefusal(eligibility, id)), [suppliers.options, eligibility]);
   if (choice.source === null) return <span className="text-sm text-muted-foreground">Choose where to buy first</span>;
   if (suppliers.error) return <span role="alert" className="text-sm text-destructive">{suppliers.error}</span>;
-  return <EditableMultiSelectCell label={`Suppliers for ${line.materialName}`} values={choice.suppliers} options={suppliers.options} loading={suppliers.loading} disabled={disabled} invalid={invalid.has(line.id)}
+  return <EditableMultiSelectCell label={`Suppliers for ${line.materialName}`} values={choice.suppliers} options={options} loading={suppliers.loading} disabled={disabled} invalid={invalid.has(line.id)}
     placeholder="Select suppliers" emptyText={`No ${supplierTypeLabels[choice.source].toLowerCase()} supplier is set up for this material`} onCommit={(chosen) => onChange(line.id, { ...choice, suppliers: chosen })} />;
 }
 
+const materialIds = (id: string) => [id];
 const column = dataTableColumns<RequisitionLine>();
 const columns = column.columns([
   column.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div>

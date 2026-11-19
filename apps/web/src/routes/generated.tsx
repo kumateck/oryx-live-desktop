@@ -686,6 +686,23 @@ export const routes: RouteObject[] = [
         { path: "approval-rights-transfer", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/approval-rights-transfer/page")).default }) }
         ] },
+        { path: "approved-vendor-list", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/approved-vendor-list/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { path: "details", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/approved-vendor-list/[id]/details/page")).default }) }
+            ] },
+            { path: "edit", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/approved-vendor-list/[id]/edit/page")).default }) }
+            ] }
+          ] },
+          { path: "new", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/approved-vendor-list/new/page")).default }) }
+          ] },
+          { path: "revise", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/approved-vendor-list/revise/page")).default }) }
+          ] }
+        ] },
         { path: "formula-approvals", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qa/formula-approvals/page")).default }) },
           { path: ":questionId", Component: Outlet, children: [

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { supplierRefusal, useApprovedVendors } from "@/shared/procurement/approved-vendors";
 import { formatMoney, formatUnitPrice } from "@/shared/procurement/price";
 import { toLargestUnit } from "@/shared/units/quantity";
 import { lowestQuotes, quoteBlock, quoteCost } from "../lib/comparison";
@@ -9,6 +10,8 @@ import type { ComparisonGroup } from "../schemas/comparison-schema";
 /** One material: every supplier's quote side by side, with one to be chosen. */
 export function ComparisonGroupCard({ group, chosen, disabled, onChoose }: { group: ComparisonGroup; chosen: string | null; disabled: boolean; onChoose: ((quoteKey: string) => void) | null }) {
   const lowest = useMemo(() => lowestQuotes(group), [group]);
+  // A supplier QA's approved vendor list does not allow for this material cannot be chosen; the server refuses it too.
+  const eligibility = useApprovedVendors(useMemo(() => [group.materialId], [group.materialId])).get(group.materialId);
   const quantity = toLargestUnit(group.quantity, group.unit, "calculated")?.text ?? String(group.quantity);
   return <section aria-label={group.materialName} className="min-w-0 rounded-lg border bg-card">
     <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
@@ -23,7 +26,7 @@ export function ComparisonGroupCard({ group, chosen, disabled, onChoose }: { gro
         <TableHead>Supplier</TableHead><TableHead>Manufacturer</TableHead><TableHead>Unit price</TableHead><TableHead>Cost for {quantity}</TableHead>
       </TableRow></TableHeader>
       <TableBody>{group.quotes.map((quote) => {
-        const block = quoteBlock(quote);
+        const block = quoteBlock(quote) ?? supplierRefusal(eligibility, quote.supplierId);
         const id = `${group.id}:${quote.key}`;
         return <TableRow key={quote.key} data-state={chosen === quote.key ? "selected" : undefined}>
           {onChoose ? <TableCell><input type="radio" id={id} name={group.id} className="size-4 accent-primary" aria-label={`Choose ${quote.supplierName} for ${group.materialName}`}

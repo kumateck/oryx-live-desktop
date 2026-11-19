@@ -23,7 +23,7 @@ export const apiDomains: readonly ApiDomain[] = [
   { id: "products", exportName: "productsApi", tags: ["Product"] },
   { id: "production", exportName: "productionApi", tags: ["ProductionSchedule", "ProductionOrder", "WorkOrder", "IssuedMaterialRepair", "ProductionUnstart", "ProductionScheduleBulkRepair", "ReservationRepair"] },
   { id: "warehouse", exportName: "warehouseApi", tags: ["Warehouse", "Requisition", "UnstartLeftovers", "StockAdjustment", "StockDiscrepancy", "DamagedStocks"] },
-  { id: "procurement", exportName: "procurementApi", tags: ["Procurement", "Supplier"] },
+  { id: "procurement", exportName: "procurementApi", tags: ["Procurement", "Supplier", "ApprovedVendorList"] },
   { id: "inventory", exportName: "inventoryApi", tags: [
     "Item", "ItemGrn", "ItemInventoryTransaction", "ItemStockRequisition", "InventoryProcurement", "Vendor", "RecoverableItemsReport",
   ] },
