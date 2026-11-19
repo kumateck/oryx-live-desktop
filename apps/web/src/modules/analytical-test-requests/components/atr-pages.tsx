@@ -153,7 +153,7 @@ export function AtrResultsPage() {
         extra={[{ label: "Composition", value: atr.composition }, { label: "Pack style", value: atr.packing }, { label: "Shelf life", value: atr.shelfLife }]}
         onCompliance={(sectionId, complies) => { if (sheet.certificate.canGenerate) setCompliance((list) => list.map((item) => item.formSectionId === sectionId ? { ...item, complies, requiresReview: false } : item)); }} />
         {message ? <p role="alert" className="mt-2 text-sm text-destructive">{message}</p> : null}
-        <div className="mt-6 border-t pt-4"><AtrRequestSection data={sheet.rawAtr} /></div></DialogBody>
+        <div className="mt-6 border-t pt-4"><AtrRequestSection data={sheet.rawAtr} response={sheet.responseDetail} /></div></DialogBody>
       <DialogFooter><Button type="button" variant="outline" disabled={generating.isLoading} onClick={() => setPreviewing(false)}>Close</Button>
         {sheet.certificate.canGenerate ? <Button type="button" disabled={generating.isLoading || compliance.length === 0} onClick={() => void issue()}>{generating.isLoading ? <><Spinner />Submitting…</> : "Generate certificate"}</Button> : null}</DialogFooter>
     </DialogContent></Dialog> : null}

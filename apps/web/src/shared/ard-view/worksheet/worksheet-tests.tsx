@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from "react";
+import { cn } from "@/lib/utils";
 import type { FormFieldDto, FormResponseDto, FormSectionDto } from "@/shared/ard-view/dto";
 import { renderEmptyValue } from "@/shared/ard-view/raw-data/print/question-renderers/empty-value";
 import { renderStoredValue } from "@/shared/ard-view/raw-data/print/question-renderers/stored-value";
@@ -90,7 +91,8 @@ function WorksheetTest({ section, number, responses, blank }: { section: FormSec
       </h3>
       <TestHeaderIds section={section} responses={responses} blank={blank} />
     </header>
-    {specification || withResult ? <dl className="grid gap-x-6 gap-y-2 border-b border-border px-3 py-2 text-sm sm:grid-cols-2 print:grid-cols-2">
+    {/* Two columns only when there is a calculated result beside the specification; otherwise the specification spans the test. */}
+    {specification || withResult ? <dl className={cn("grid gap-x-6 gap-y-2 border-b border-border px-3 py-2 text-sm", specification && withResult && "sm:grid-cols-2 print:grid-cols-2")}>
       {specification ? <div className="min-w-0"><dt className={label}>Specification</dt><dd><RichTextView html={specification} className="[&_p]:m-0" /></dd></div> : null}
       {withResult ? <div className="min-w-0"><dt className={label}>Result</dt><dd className="font-semibold">{blank ? line : getResponsesForSection(answers, responses)}</dd></div> : null}
     </dl> : null}
