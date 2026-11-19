@@ -31076,6 +31076,15 @@
             }
           },
           {
+            "name": "uomId",
+            "in": "query",
+            "description": "The unit the quantity is in; defaults to the caller's department unit for the material. Each department's free stock is converted to it with the material's verified density.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "Module",
             "in": "header",
             "description": "The module this request falls under",
@@ -61125,6 +61134,25 @@
                 "schema": {
                   "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
                 }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionSchedules.StockTransfers.Request.RejectStockTransferRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionSchedules.StockTransfers.Request.RejectStockTransferRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionSchedules.StockTransfers.Request.RejectStockTransferRequest"
               }
             }
           }
@@ -151796,6 +151824,26 @@
           "reason": {
             "type": "string",
             "nullable": true
+          },
+          "supplierQuantity": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "supplierUoM": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
+          },
+          "rejectionReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "rejectedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "rejectedBy": {
+            "$ref": "#/components/schemas/SHARED.CollectionItemDto"
           }
         },
         "additionalProperties": false
@@ -184931,6 +184979,16 @@
             "minimum": 0,
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProductionSchedules.StockTransfers.Request.RejectStockTransferRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

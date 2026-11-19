@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto as AtrDto } from "@/shared/api/generated/analytical";
-import { formatDate, formatMonthYear } from "@/shared/format/dates";
+import type { DomainEntitiesFormsResponseDetailDto as ResponseDto } from "@/shared/api/generated/forms";
+import { formatDate, formatDateTime, formatMonthYear } from "@/shared/format/dates";
 import { company } from "@/shared/print/company";
 import { PrintHeader, PrintSignatures } from "@/shared/print/print-sheet";
 
@@ -17,12 +18,16 @@ const requestSchema = z.object({
   batchManufacturingRecord: z.object({ batchNumber: text }).nullish(),
   productionScheduleProduct: z.object({ product: z.object({ name: text, code: text }).nullish(), productPacking: z.object({ name: text }).nullish() }).nullish(),
 });
-export type AtrRequest = z.infer<typeof requestSchema>;
+/** The test response behind the certificate: who generated it (checked) and who gave the final approval. */
+const certificateSchema = z.object({ checkedBy: person, checkedAt: z.string().nullish(), approvedBy: person, approvedAt: z.string().nullish() });
+export type AtrRequest = z.infer<typeof requestSchema> & { certificate: z.infer<typeof certificateSchema> | null };
 
-/** The request as the server returned it, or null when it cannot be read. */
-export function parseAtrRequest(data: AtrDto | null | undefined): AtrRequest | null {
+/** The request as the server returned it, or null when it cannot be read. `response` is the stage's test response, when loaded. */
+export function parseAtrRequest(data: AtrDto | null | undefined, response?: ResponseDto | null): AtrRequest | null {
   const parsed = requestSchema.safeParse(data ?? null);
-  return parsed.success ? parsed.data : null;
+  if (!parsed.success) return null;
+  const certificate = certificateSchema.safeParse(response ?? null);
+  return { ...parsed.data, certificate: certificate.success ? certificate.data : null };
 }
 
 const stages = [{ value: 0, label: "Intermediate" }, { value: 1, label: "Bulk" }, { value: 2, label: "Finished" }] as const;
@@ -41,8 +46,12 @@ function Field({ label, value }: { label: string; value: string | number | null 
   return <><span className="print-form-label">{label}:</span> <span>{value === null || value === undefined || value === "" ? "" : value}</span></>;
 }
 
-/** A person and when they acted, as one line: "Kofi Mensah · 02/11/2026". */
-const who = (actor: { name: string | null } | null, at: string | null | undefined) => [actor?.name, formatDate(at)].filter(Boolean).join(" · ") || null;
+/** A person and when they acted, as one line: "Kofi Mensah · Nov 9, 2026, 10:42 AM". */
+const who = (actor: { name: string | null } | null, at: string | null | undefined) => [actor?.name, formatDateTime(at ?? null)].filter(Boolean).join(" · ") || null;
+
+/** A signature block; blank (for signing by hand) until the person has acted. */
+const signer = (role: string, actor: { name: string | null; signature: string | null } | null, at: string | null | undefined) =>
+  actor?.name ? { role, name: actor.name, signature: actor.signature, signedOn: formatDateTime(at ?? null) } : { role };
 
 /**
  * QA's Analytical Test Request for a product batch (Annexure QAD/SOP/046/F02-04), laid out like the paper form:
@@ -69,13 +78,14 @@ export function AtrRequestForm({ request }: { request: AtrRequest }) {
           <td><Field label="Sampled by (QA)" value={who(request.sampledBy, request.sampledAt)} /></td></tr>
         <tr><td><Field label="Number of containers sampled" value={request.numberOfContainers} /></td>
           <td><Field label="Received by" value={who(request.acknowledgedBy, request.acknowledgedAt)} /></td></tr>
-        <tr><td><Field label="Sampled quantity" value={request.sampledQuantity} /></td><td><Field label="Released on" value={formatDate(request.releasedAt)} /></td></tr>
+        <tr><td><Field label="Sampled quantity" value={request.sampledQuantity} /></td><td><Field label="Released on" value={formatDateTime(request.releasedAt ?? null)} /></td></tr>
       </tbody>
     </table>
     <PrintSignatures signers={[
-      { role: "Prepared by (Production)", name: request.createdBy?.name ?? null, signature: request.createdBy?.signature ?? null, signedOn: formatDate(request.createdAt) },
-      { role: "Released by Manager QC", name: request.releasedBy?.name ?? null, signature: request.releasedBy?.signature ?? null, signedOn: formatDate(request.releasedAt) },
-      { role: "Approved by Manager QA" },
+      signer("Prepared by (Production)", request.createdBy, request.createdAt),
+      // Released: whoever generated the certificate of analysis. Approved: whoever gave its final approval.
+      signer("Released by Manager QC", request.certificate?.checkedBy ?? null, request.certificate?.checkedAt),
+      signer("Approved by Manager QA", request.certificate?.approvedBy ?? null, request.certificate?.approvedAt),
     ]} />
   </div>;
 }

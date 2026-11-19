@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { PackageCheck } from "lucide-react";
+import { CircleAlert, PackageCheck, X } from "lucide-react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BatchBreakdown, amount } from "@/modules/stock-issue/components/batch-breakdown";
-import { ConfirmActionDialog } from "@/shared/actions";
+import { ConfirmActionDialog, ReasonDialog } from "@/shared/actions";
+import { RefusalNotice } from "@/shared/workflows/refusal-notice";
 import { NoAccess } from "@/shared/auth/no-access";
 import { useAccess } from "@/shared/auth/use-access";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
@@ -18,15 +19,15 @@ import { RichTextView, richTextToPlain } from "@/shared/rich-text/rich-text-view
 import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useGetApiV1ProductionScheduleStockTransferBatchByStockTransferIdQuery, useGetApiV1ProductionScheduleStockTransferByStockTransferIdQuery, useGetApiV1ProductionScheduleStockTransferInBoundQuery,
-  useGetApiV1ProductionScheduleStockTransferOutBoundQuery, usePutApiV1ProductionScheduleStockTransferIssueByStockTransferIdMutation } from "../transfer-api";
-import { audit, batchesInSupplyUnit, issuePermissions, supplyQuantity, transferBatchesSchema, transferIssueBlock, transferPath, transferRowsSchema, transferSchema, transferStatus, transferStatusLabels, transfersPath, viewPermissions, type Transfer } from "../transfers";
+  useGetApiV1ProductionScheduleStockTransferOutBoundQuery, usePutApiV1ProductionScheduleStockTransferIssueByStockTransferIdMutation, usePutApiV1ProductionScheduleStockTransferRejectByStockTransferIdMutation } from "../transfer-api";
+import { audit, batchesInSupplyUnit, issueEligibility, issuePermissions, refusable, rejectPermission, supplyQuantity, transferBatchesSchema, transferIssueBlock, transferPath, transferRowsSchema, transferSchema, transferStatus, transferStatusLabels, transfersPath, viewPermissions, type Transfer } from "../transfers";
 
 function Standing({ status }: { status: number }) {
   return <Badge variant={status === transferStatus.issued ? "default" : status === transferStatus.rejected ? "destructive" : status === transferStatus.approved ? "secondary" : "outline"}>{transferStatusLabels[status] ?? "Unknown"}</Badge>;
 }
 type Direction = "in" | "out";
 const directions: { value: Direction; label: string; hint: string }[] = [{ value: "in", label: "To supply", hint: "Other departments asking your store for stock." }, { value: "out", label: "Requested by us", hint: "Stock your department asked other stores for." }];
-const stages = [{ value: transferStatus.approved, label: "Ready to issue" }, { value: transferStatus.issued, label: "Issued" }] as const;
+const stages = [{ value: transferStatus.approved, label: "Ready to issue" }, { value: transferStatus.issued, label: "Issued" }, { value: transferStatus.rejected, label: "Rejected" }] as const;
 const column = dataTableColumns<Transfer>();
 
 /** Stock moving between departments' stores: what this store is asked to supply, and what it has asked for. */
@@ -35,7 +36,7 @@ export function TransferListPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const direction: Direction = params.get("direction") === "out" ? "out" : "in";
-  const stage = params.get("status") === String(transferStatus.issued) ? transferStatus.issued : transferStatus.approved;
+  const stage = params.get("status") === String(transferStatus.issued) ? transferStatus.issued : params.get("status") === String(transferStatus.rejected) ? transferStatus.rejected : transferStatus.approved;
   const set = (name: string, value: string) => setParams((current) => { const next = new URLSearchParams(current); next.set(name, value); return next; }, { replace: true });
   const [busy, setBusy] = useState(false);
   const search = usePageSearch("stock transfers", busy);
@@ -84,7 +85,9 @@ function Detail({ id }: { id: string }) {
   const transfer = useMemo(() => { const parsed = transferSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data : null; }, [query.data]);
   const batches = useMemo(() => { const parsed = transferBatchesSchema.safeParse(batchQuery.data ?? null); return parsed.success ? parsed.data : []; }, [batchQuery.data]);
   const [confirming, setConfirming] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
   const [issue] = usePutApiV1ProductionScheduleStockTransferIssueByStockTransferIdMutation();
+  const [reject] = usePutApiV1ProductionScheduleStockTransferRejectByStockTransferIdMutation();
   if (query.isLoading || batchQuery.isLoading) return <DetailPageSkeleton label="Loading transfer" groups={4} />;
   if (!transfer) return <div role="alert" className="mx-auto max-w-md space-y-3 py-12 text-center">
     <h1 className="text-lg font-semibold">Transfer unavailable</h1><p className="text-sm text-muted-foreground">{query.error ? apiErrorMessage(query.error) : "The server returned a transfer the app could not read."}</p>
@@ -92,14 +95,26 @@ function Detail({ id }: { id: string }) {
   if (!has(viewPermissions[transfer.kind]) && !has(issuePermissions[transfer.kind])) return <NoAccess />;
   const supply = supplyQuantity(transfer);
   const supplyBatches = batchesInSupplyUnit(batches, supply.asked ? supply.unit : null);
-  const block = batchQuery.error ? `The stock picked for this transfer could not be read: ${apiErrorMessage(batchQuery.error)}` : transferIssueBlock(transfer, batches);
+  // The server explains a shortfall in the supplying store's unit; say it as it is, not as a read failure.
+  const block = batchQuery.error ? apiErrorMessage(batchQuery.error) : transferIssueBlock(transfer, batches);
   const issued = transfer.status === transferStatus.issued;
   const open = !issued && transfer.status !== transferStatus.rejected;
+  const mayReject = refusable(transfer) && has(rejectPermission);
+  const eligibility = open && block ? issueEligibility(transfer, block, Boolean(batchQuery.error), mayReject) : null;
   return <article className="min-w-0 space-y-4">
     <PageHeader title={`Transfer of ${transfer.materialName}`} crumbs={[{ label: "Stock transfers", to: transfersPath }, { label: transfer.materialName }]}
-      actions={open && has(issuePermissions[transfer.kind]) ? <Button type="button" disabled={block !== null} onClick={() => setConfirming(true)}><PackageCheck />Issue stock</Button> : null} />
+      actions={<div className="flex flex-wrap gap-2">
+        {mayReject ? <Button type="button" variant="outline" className="text-destructive" onClick={() => setRejecting(true)}><X />Reject</Button> : null}
+        {open && has(issuePermissions[transfer.kind]) ? <Button type="button" disabled={block !== null} title={block ?? undefined} onClick={() => setConfirming(true)}><PackageCheck />Issue stock</Button> : null}
+      </div>} />
     <Standing status={transfer.status} />
-    {open && block ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">{block}</p> : null}
+    {transfer.status === transferStatus.rejected ? <RefusalNotice title="This store will not supply this transfer" reason={transfer.rejection?.reason} by={transfer.rejection?.by} at={transfer.rejection?.at}
+      next={`${transfer.to ?? "The requesting department"} sees this reason and can raise a new request.`} /> : null}
+    {eligibility ? <section role="status" aria-label={eligibility.title} className="space-y-1.5 rounded-md border border-amber-500/50 bg-amber-500/10 p-4 text-sm">
+      <h2 className="flex items-center gap-2 font-semibold"><CircleAlert aria-hidden="true" className="size-4 text-amber-600" />{eligibility.title}</h2>
+      <p className="break-words">{eligibility.reason}</p>
+      <p className="text-muted-foreground">{eligibility.next}</p>
+    </section> : null}
     <KeyFacts>
       <KeyFact label="Material" value={transfer.materialName} note={transfer.materialCode ?? "No code"} />
       <KeyFact label="Quantity" value={amount(supply.quantity, supply.unit)} note={supply.asked ? `Asked as ${amount(supply.asked.quantity, supply.asked.unit)}; converted with the material's density` : undefined} />
@@ -123,6 +138,14 @@ function Detail({ id }: { id: string }) {
           </p> : null)}
         </div> : null}
     </section> : null}
+    {rejecting ? <ReasonDialog require={rejectPermission} title={`Reject this transfer of ${transfer.materialName}?`} label="Why can't it be supplied?"
+      placeholder={block ?? "For example: the stock is committed to a running campaign."}
+      description={`${amount(supply.quantity, supply.unit)} asked by ${transfer.to ?? "another department"}. They see your reason and can raise a new request elsewhere. No stock moves.`}
+      confirmLabel="Reject transfer" busyLabel="Rejecting…" onClose={() => setRejecting(false)}
+      onConfirm={async (reason) => { const result = await reject({ ...audit, stockTransferId: transfer.id, domainEntitiesProductionSchedulesStockTransfersRequestRejectStockTransferRequest: { reason } });
+        if ("error" in result) return apiErrorMessage(result.error);
+        toast.success("Transfer rejected", { description: `${transfer.to ?? "The requesting department"} can see your reason.` });
+        return null; }} /> : null}
     {confirming ? <ConfirmActionDialog require={issuePermissions[transfer.kind]} destructive={false} title={`Issue ${amount(supply.quantity, supply.unit)} of ${transfer.materialName}?`}
       description={`The batches shown leave your store for ${transfer.to ?? "the other department"}, where they wait to be put on shelves${supply.asked ? ` as ${amount(supply.asked.quantity, supply.asked.unit)}` : ""}. This cannot be undone.`} confirmLabel="Issue stock" busyLabel="Issuing…" onClose={() => setConfirming(false)}
       onConfirm={async () => { const result = await issue({ ...audit, stockTransferId: transfer.id, body: batches.flatMap((batch) => batch.id ? [{ batchId: batch.id, quantity: batch.quantity }] : []) });

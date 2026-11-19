@@ -9,6 +9,8 @@ export const allocationPath = `${transfersPath}/allocation`;
 export const audit = { module: "Warehouse", subModule: "Stock Transfer Issues" } as const;
 export const viewPermissions: Record<MaterialKind, string> = { 0: "CanViewRawMaterialTransferList", 1: "CanViewPackagingMaterialTransferList" };
 export const issuePermissions: Record<MaterialKind, string> = { 0: "CanIssueRawMaterialStockTransfers", 1: "CanIssuePackagingMaterialStockTransfers" };
+/** Refusing a transfer the store cannot supply; the server also requires the supplying department. */
+export const rejectPermission = "CanRejectIncomingStockTransferRequest";
 
 /** Where a transfer stands. The numbers are the server's. */
 export const transferStatus = { inProgress: 0, approved: 1, issued: 2, rejected: 3 } as const;
@@ -21,10 +23,13 @@ const date = z.string().nullish().transform((value) => value && new Date(value).
 const transfer = z.object({ id: z.string().nullish(), createdAt: z.string().nullish(), approvedAt: date, issuedAt: date, status: z.number().nullish(), quantity: amount, reason: text, uoM: z.object({ symbol: text }).nullish(),
   // The same quantity in the supplying store's own unit (server-converted with the material's density). Optional for older servers.
   supplierQuantity: z.number().nullish(), supplierUoM: z.object({ symbol: text }).nullish(),
+  // Why the supplying store refused it (optional: older servers leave these out).
+  rejectionReason: text, rejectedAt: date, rejectedBy: z.object({ name: text }).nullish(),
   material: z.object({ name: text, code: text, kind: z.number().nullish() }).nullish(), fromDepartment: z.object({ name: text }).nullish(), toDepartment: z.object({ name: text }).nullish() });
 function read(entry: z.infer<typeof transfer>) {
   if (!entry.id) return null;
   return { id: entry.id, createdAt: entry.createdAt ?? null, approvedAt: entry.approvedAt, issuedAt: entry.issuedAt, status: entry.issuedAt ? transferStatus.issued : entry.status ?? transferStatus.inProgress, quantity: entry.quantity, reason: entry.reason, unit: entry.uoM?.symbol ?? null,
+    rejection: entry.rejectionReason || entry.rejectedAt ? { reason: entry.rejectionReason, at: entry.rejectedAt, by: entry.rejectedBy?.name ?? null } : null,
     supply: typeof entry.supplierQuantity === "number" && Number.isFinite(entry.supplierQuantity) && entry.supplierUoM?.symbol ? { quantity: entry.supplierQuantity, unit: entry.supplierUoM.symbol } : null,
     materialName: entry.material?.name ?? "Unnamed material", materialCode: entry.material?.code ?? null, kind: (entry.material?.kind === 1 ? 1 : 0) as MaterialKind, from: entry.fromDepartment?.name ?? null, to: entry.toDepartment?.name ?? null };
 }
@@ -65,6 +70,27 @@ export function supplyQuantity(transfer: Pick<Transfer, "quantity" | "unit" | "s
 export function batchesInSupplyUnit<T extends Pick<TransferBatch, "quantity" | "sourceQuantity" | "sourceUnit">>(batches: readonly T[], unit: string | null): T[] | null {
   if (!unit || batches.length === 0 || batches.some((batch) => batch.sourceQuantity === null || batch.sourceUnit?.toLowerCase() !== unit.toLowerCase())) return null;
   return batches.map((batch) => ({ ...batch, quantity: batch.sourceQuantity ?? batch.quantity }));
+}
+
+/** Whether the store may still refuse the transfer: not issued and not already decided against. */
+export const refusable = (transfer: Pick<Transfer, "status" | "issuedAt">) =>
+  !transfer.issuedAt && (transfer.status === transferStatus.inProgress || transfer.status === transferStatus.approved);
+
+/**
+ * Why the transfer cannot be issued now, said plainly, with what the store can do about it. `problem` is the local
+ * block or the server's answer about the picked stock; the server's shortfall already names what is free and needed.
+ */
+export function issueEligibility(transfer: Pick<Transfer, "status">, problem: string, fromServer: boolean, mayReject: boolean): { title: string; reason: string; next: string } {
+  const orReject = mayReject ? ", or reject it with the reason it cannot be supplied" : "";
+  if (transfer.status === transferStatus.inProgress)
+    return { title: "Not approved yet", reason: problem, next: `It must be approved before stock can be issued${orReject}.` };
+  const short = /short by|does not cover|no stock picked/i.test(problem);
+  return {
+    title: short ? "Not enough stock to issue this transfer" : "This transfer cannot be issued yet",
+    reason: problem,
+    next: short ? `Wait until the stock is received and approved${mayReject ? ", or reject it with the reason so the requesting department can ask elsewhere" : ""}.`
+      : `${fromServer ? "Resolve the problem above" : "Refresh after the problem above is resolved"}${orReject}.`,
+  };
 }
 
 const holding = z.object({ id: z.string().nullish(), status: z.number().nullish(), batches: z.array(z.object({ receivedAt: text, destinationQuantity: z.number().nullish(), destinationUoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), quantity: amount, uoM: z.object({ id: z.string().nullish(), symbol: text }).nullish(), sourceWarehouse: z.object({ name: text }).nullish(),

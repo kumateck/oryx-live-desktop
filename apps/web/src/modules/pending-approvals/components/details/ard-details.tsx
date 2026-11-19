@@ -133,6 +133,6 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
         <article aria-label="Certificate of analysis" className="print-sheet min-w-0">
           <ArdDocument sections={certificateSections} recorded={recorded} signatories={signatories} facts={facts} />
         </article></>}
-      {isMaterial ? null : <AtrRequestSection data={atrQuery.data} />}
+      {isMaterial ? null : <AtrRequestSection data={atrQuery.data} response={query.data} />}
     </div>; }}</DetailState>;
 }
