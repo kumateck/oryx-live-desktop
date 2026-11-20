@@ -16,7 +16,7 @@ export function ActivityCard({ card }: { card: BoardCard }) {
   return <Link to={batchBoardPath(card.activityId)} className="block space-y-2 rounded-lg border bg-card p-3 text-sm shadow-xs hover:border-primary focus-visible:outline-2">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <Badge variant="outline" className="font-mono">{card.batchNumber ?? "No batch number"}</Badge>
-      <StepStatusBadge status={card.stepStatus} />
+      <StepStatusBadge status={card.stepStatus} waiting />
     </div>
     <div className="min-w-0"><p className="break-words font-semibold">{card.productName}</p>
       <p className="text-xs text-muted-foreground">{[card.productCode, size, card.scheduleCode].filter(Boolean).join(" · ")}</p></div>
