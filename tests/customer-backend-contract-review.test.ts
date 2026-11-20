@@ -192,6 +192,17 @@ function stripStockUnitsSubstitutes(document: ObjectValue) {
   delete schemas["DOMAIN.Entities.ProductionSchedules.StartProductionMaterialChoice"];
 }
 
+/** Issued register (2026-11-20): issued-bmrs filters, the register operation and its two schemas. */
+function stripIssuedRegister(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  const list = object(object(paths["/api/v1/issued-bmrs"] ?? null).get ?? null);
+  if (Array.isArray(list.parameters)) list.parameters = list.parameters.filter((item) => !["departmentId", "productId", "issuedFrom", "issuedTo"].includes(String(object(item).name)));
+  delete paths["/api/v1/issued-bmrs/register"];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete schemas["DOMAIN.Entities.Products.Production.IssuedBmrRegister"];
+  delete schemas["DOMAIN.Entities.Products.Production.IssuedBmrProductTotal"];
+}
+
 /** Substitute reasons (2026-11-20): substituteUnavailableReason on the batch material DTOs and ForecastMaterialDto. */
 function stripSubstituteReasons(document: ObjectValue) {
   const schemas = object(object(document.components ?? null).schemas ?? null);
@@ -235,6 +246,7 @@ function stripOperationDepartments(document: ObjectValue) {
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(document);
   stripSubstituteReasons(document);
   stripApprovedVendorList(document);
   stripStockUnitsSubstitutes(document);
@@ -804,6 +816,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -841,6 +854,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -876,6 +890,7 @@ test("a specification revision requires a reason and returns it on the specifica
 
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -904,6 +919,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -934,6 +950,7 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
 
 test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -957,6 +974,7 @@ test("IT approval transfer adds only a typed read of the users on approval docum
 
 test("material retests add an AR number, read-only retest fields and three statuses, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -980,6 +998,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 
  test("QC repair, partial reassignment and packaging quantities preserve the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -1006,6 +1025,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 
 test("upcoming batch issues add two typed reads and the started batch a swap may name, preserving the approved predecessor", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -1027,6 +1047,7 @@ test("upcoming batch issues add two typed reads and the started batch a swap may
 
 test("the combined QC repair and upcoming-issues contract is reviewed without dropping either addition", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -1048,6 +1069,7 @@ test("the combined QC repair and upcoming-issues contract is reviewed without dr
 
 test("Unstart leftovers add only two typed variant repair paths and owned DTOs", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -1069,6 +1091,7 @@ test("Unstart leftovers add only two typed variant repair paths and owned DTOs",
 
 test("shared density combines with the reviewed Unstart reservation contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -1084,6 +1107,7 @@ test("shared density combines with the reviewed Unstart reservation contract", (
 });
 test("Unstart reservations combine with the reviewed shared-density contract", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -1108,6 +1132,7 @@ function stripProductionFollowups(document: ObjectValue) {
 
 test("production follow-ups add two rejection operations and optional warehouse quantities only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   checkCompatibility(hostConfig, policy, contractDigest(current));
@@ -1126,6 +1151,7 @@ test("production follow-ups add two rejection operations and optional warehouse 
 
 test("pre-COA correction imports three typed variant paths, a required reason and history only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -1144,6 +1170,7 @@ test("pre-COA correction imports three typed variant paths, a required reason an
 
 test("operation departments add a typed link and unlink and optional department fields only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -1161,6 +1188,7 @@ test("operation departments add a typed link and unlink and optional department 
 
 test("transfer rejection adds a required reason body, optional supplier and rejection fields and a department-stock unit only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   stripStockUnitsSubstitutes(current);
@@ -1177,6 +1205,7 @@ test("transfer rejection adds a required reason body, optional supplier and reje
 
 test("cross-store units and substitutes add an optional unit, optional substitute fields and an optional start body only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   const digest = contractDigest(current);
@@ -1191,6 +1220,7 @@ test("cross-store units and substitutes add an optional unit, optional substitut
 
 test("the approved vendor list adds typed list, read, print, options, mapping, eligibility, create, revise and correct operations only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   const digest = contractDigest(current);
   assert.equal(digest, "c38ebab2b55ea78797f4e8b971fe86e98b0253b0473f256ceba80fef5e34d79b");
@@ -1201,6 +1231,7 @@ test("the approved vendor list adds typed list, read, print, options, mapping, e
   assert.deepEqual(Object.keys(object(paths["/api/v1/approved-vendor-list/revise"] ?? null)), ["post"]);
   assert.deepEqual(Object.keys(object(paths["/api/v1/approved-vendor-list/eligibility"] ?? null)), ["post"]);
   assert.deepEqual(current.security, reviewedImport().security);
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
   assert.equal(contractDigest(current), "08c2823c661cab08eb9f3106b2e859eec2799b52a4bec5a55c46a4c1a69ad231");
@@ -1208,10 +1239,23 @@ test("the approved vendor list adds typed list, read, print, options, mapping, e
 
 test("substitute reasons add one optional field to the batch material and forecast rows only", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripIssuedRegister(current);
   const digest = contractDigest(current);
   assert.equal(digest, "a49aa7b16b9748debe24ac90081168a61c465fce5087be12c18bdf8b5034860e");
   checkCompatibility(hostConfig, policy, digest);
   assert.deepEqual(current.security, reviewedImport().security);
+  stripIssuedRegister(current);
   stripSubstituteReasons(current);
   assert.equal(contractDigest(current), "c38ebab2b55ea78797f4e8b971fe86e98b0253b0473f256ceba80fef5e34d79b");
+});
+
+test("the issued register adds optional list filters and one typed read operation only", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "6fb1587bcddbb7f4765ec5903a49a185a15794d6a0dbf2bbb7d1f1c7d183b520");
+  checkCompatibility(hostConfig, policy, digest);
+  assert.deepEqual(Object.keys(object(object(current.paths ?? null)["/api/v1/issued-bmrs/register"] ?? null)), ["get"]);
+  assert.deepEqual(current.security, reviewedImport().security);
+  stripIssuedRegister(current);
+  assert.equal(contractDigest(current), "a49aa7b16b9748debe24ac90081168a61c465fce5087be12c18bdf8b5034860e");
 });

@@ -1813,6 +1813,10 @@ const injectedRtkApi = api.injectEndpoints({
           page: queryArg.page,
           pageSize: queryArg.pageSize,
           searchQuery: queryArg.searchQuery,
+          departmentId: queryArg.departmentId,
+          productId: queryArg.productId,
+          issuedFrom: queryArg.issuedFrom,
+          issuedTo: queryArg.issuedTo,
         },
       }),
     }),
@@ -1958,6 +1962,26 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getIssuedBmrRegister: build.query<
+      GetIssuedBmrRegisterApiResponse,
+      GetIssuedBmrRegisterApiArg
+    >({
+      providesTags: [{ type: "issued-bmr/register", id: "LIST" }, { type: "issued-bmr", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/issued-bmrs/register`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          searchQuery: queryArg.searchQuery,
+          departmentId: queryArg.departmentId,
+          productId: queryArg.productId,
+          issuedFrom: queryArg.issuedFrom,
+          issuedTo: queryArg.issuedTo,
         },
       }),
     }),
@@ -3207,6 +3231,10 @@ export type ListIssuedBmrRecordsApiArg = {
   page?: number;
   pageSize?: number;
   searchQuery?: string;
+  departmentId?: string;
+  productId?: string;
+  issuedFrom?: string;
+  issuedTo?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -3306,6 +3334,19 @@ export type ListUpcomingBatchAlternativesApiResponse =
   /** status 200 OK */ DomainEntitiesRequisitionsMaterialAlternativeBatchesDtoRead[];
 export type ListUpcomingBatchAlternativesApiArg = {
   productionScheduleProductId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetIssuedBmrRegisterApiResponse =
+  /** status 200 OK */ DomainEntitiesProductsProductionIssuedBmrRegister;
+export type GetIssuedBmrRegisterApiArg = {
+  searchQuery?: string;
+  departmentId?: string;
+  productId?: string;
+  issuedFrom?: string;
+  issuedTo?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -5659,6 +5700,22 @@ export type DomainEntitiesRequisitionsMaterialAlternativeBatchesDtoRead = {
   alternativeBatches?:
     DomainEntitiesRequisitionsAlternativeBatchDtoRead[] | null;
 };
+export type DomainEntitiesProductsProductionIssuedBmrProductTotal = {
+  productId?: string;
+  productName?: string | null;
+  productCode?: string | null;
+  departmentName?: string | null;
+  batches?: number;
+  retired?: number;
+  firstIssuedAt?: string;
+  lastIssuedAt?: string;
+};
+export type DomainEntitiesProductsProductionIssuedBmrRegister = {
+  rows?: DomainEntitiesProductsProductionIssuedBmrRow[] | null;
+  byProduct?: DomainEntitiesProductsProductionIssuedBmrProductTotal[] | null;
+  total?: number;
+  truncated?: boolean;
+};
 export const {
   usePostApiV1ProductionOrdersMutation,
   useGetApiV1ProductionOrdersQuery,
@@ -5863,4 +5920,6 @@ export const {
   useLazyListUpcomingBatchIssuesQuery,
   useListUpcomingBatchAlternativesQuery,
   useLazyListUpcomingBatchAlternativesQuery,
+  useGetIssuedBmrRegisterQuery,
+  useLazyGetIssuedBmrRegisterQuery,
 } = injectedRtkApi;

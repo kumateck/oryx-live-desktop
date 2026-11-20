@@ -1187,7 +1187,7 @@ export const navigationCatalog = [
       },
       {
         "id": "quality-assurance.issue-bmr-bpr",
-        "label": "Issue BMR/BPR",
+        "label": "Issuance (BMR & BPR)",
         "path": "/qa/issue-bmr",
         "permissions": [
           "CanViewIssuedBmrBprs",
