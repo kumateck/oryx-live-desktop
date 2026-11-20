@@ -25,7 +25,7 @@ it("previews the certificate of analysis and starts an OOS investigation on reje
     if (input.method !== "GET") calls.push({ method: input.method, path, body: JSON.parse(await input.clone().text()) as object | null });
     if (path === "/api/v1/approval/my-pending/Response/doc-1") return Response.json(entity("Response", "doc-1", { code: "COA-12", approvalLogs: [{ user: { name: "K. Mensah" }, status: 2, comments: "Assay below limit" }] }));
     if (path === "/api/v1/form/responses/doc-1") return Response.json({ form: { id: "form-1" }, materialBatch: { id: "mb-1", name: "Maize starch" }, formResponses: [] });
-    if (path === "/api/v1/form/form-1") return Response.json({ sections: [{ id: "s1", name: "<p>Assay</p>", description: "<p>98.0% to 102.0%</p>", order: 1, fields: [{ id: "fld-1" }] },
+    if (path === "/api/v1/form/form-1") return Response.json({ sections: [{ id: "s1", name: "<p>Assay</p>", description: "<p>98.0% to 102.0%</p>", order: 1, fields: [{ id: "fld-1", question: { label: "Assay", reference: "BP 2024" } }] },
       { id: "s2", name: "<p>Loss on drying</p>", order: 2, fields: [{ id: "fld-2" }] }] });
     if (path === "/api/v1/form/responses/material-batch/mb-1") return Response.json([{ responseId: "doc-1", formField: { id: "fld-1" }, value: "94.1%", complies: false }]);
     if (path === "/api/v1/material-ard/material/batch-details/mb-1") return Response.json({ arNumber: "AR-55", materialBatch: { batchNumber: "B-1", material: { name: "Maize starch", code: "RM-1" } } });
@@ -38,6 +38,10 @@ it("previews the certificate of analysis and starts an OOS investigation on reje
   await user.click(await screen.findByRole("button", { name: "Print COA" }));
   const certificate = await screen.findByRole("dialog");
   expect(certificate.textContent).toContain("QC AR AR-55");
+  // Each test's reference is the certificate's last column.
+  const headers = within(certificate).getAllByRole("columnheader").map((cell) => cell.textContent);
+  expect(headers.at(-1)).toBe("Reference");
+  expect(within(certificate).getByRole("cell", { name: "BP 2024" })).toBeTruthy();
   // A test with no result is not reported as complying.
   expect(certificate.textContent).toContain("Does not comply");
   expect(certificate.textContent).toContain("Not recorded");
