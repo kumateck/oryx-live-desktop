@@ -19,10 +19,10 @@ function IssueBmrDetail({ id }: { id: string }) {
   if (query.isLoading || (bmr && !bmr.issuedAt && !page.suggestion)) return <DetailPageSkeleton label="Loading batch record" />;
   if (!bmr) return <div role="alert" className="mx-auto max-w-md space-y-3 py-12 text-center">
     <h1 className="text-lg font-semibold">Batch record unavailable</h1><p className="text-sm text-muted-foreground">{query.error ? apiErrorMessage(query.error) : "The server returned a record the app could not read."}</p>
-    <div className="flex justify-center gap-2"><Button size="sm" variant="outline" onClick={() => void query.refetch()}>Retry</Button><Button asChild size="sm"><Link to={issueBmrPath}>BMR and BPR requests</Link></Button></div></div>;
+    <div className="flex justify-center gap-2"><Button size="sm" variant="outline" onClick={() => void query.refetch()}>Retry</Button><Button asChild size="sm"><Link to={issueBmrPath}>Issuance (BMR &amp; BPR)</Link></Button></div></div>;
   const title = bmr.productName ?? "Batch record";
   return <article className="min-w-0 space-y-4">
-    <PageHeader title={title} crumbs={[{ label: "Issue BMR/BPR", to: issueBmrPath }, { label: bmr.batchNumber ?? title }]} />
+    <PageHeader title={title} crumbs={[{ label: "Issuance (BMR & BPR)", to: issueBmrPath }, { label: bmr.batchNumber ?? title }]} />
     <KeyFacts>
       <KeyFact label="Product code" value={bmr.productCode ?? "–"} />
       <KeyFact label="Schedule" value={bmr.schedule ?? "–"} />

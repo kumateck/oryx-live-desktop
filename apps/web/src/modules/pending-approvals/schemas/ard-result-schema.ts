@@ -2,7 +2,8 @@ import { z } from "zod";
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
 export const ardPersonSchema = z.object({ id: z.string().nullish(), firstName: text, lastName: text }).nullish();
-const question = z.object({ label: text, type: z.number().nullish(), options: z.array(z.object({ name: text })).nullish() });
+// `reference` is where the test's specification comes from (for example BP 2024 or In-house), printed on the COA.
+const question = z.object({ label: text, type: z.number().nullish(), reference: text, options: z.array(z.object({ name: text })).nullish() });
 export const ardFieldSchema = z.object({ id: z.string().nullish(), rank: z.number().nullish(), description: z.string().nullish(), question: question.nullish() });
 export const ardFormSchema = z.object({ sections: z.array(z.object({ id: z.string().nullish(), name: text, description: text, groupName: text, order: z.number().nullish(),
   fields: z.array(ardFieldSchema).nullish() })).nullish() });

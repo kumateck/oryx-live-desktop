@@ -49,8 +49,13 @@ export function AtrListPage() {
       <div className="text-xs text-muted-foreground">{row.original.schedule ?? "–"}{row.original.step !== null ? ` · step ${String(row.original.step)}` : ""}</div></div> }),
     column.display({ id: "batch", header: "Batch", size: 160, cell: ({ row }) => <div className="text-xs"><div className="font-medium">{row.original.batchNumber ?? "–"}</div><div>Made {formatMonthYear(row.original.made) ?? "–"}</div><div>Expires {formatMonthYear(row.original.expires) ?? "–"}</div></div> }),
     column.display({ id: "reference", header: "References", size: 170, cell: ({ row }) => <div className="text-xs"><div>AR {row.original.arNumber ?? "–"}</div><div>Issue {row.original.issueNumber ?? "–"}</div></div> }),
-    column.display({ id: "sampling", header: "Sample", size: 190, cell: ({ row }) => <div className="text-xs"><div>{row.original.sampledQuantity ?? "–"}{row.original.containers !== null ? ` · ${String(row.original.containers)} containers` : ""}</div>
-      <div>{row.original.sampledBy ?? "Not sampled"}</div><div className="text-muted-foreground">{formatDateTime(row.original.sampledAt) ?? ""}</div></div> }),
+    // When each sample was asked for and taken, and by whom, as QA records it.
+    column.display({ id: "requested", header: "Requested", size: 170, cell: ({ row }) => <div className="text-xs">
+      <div>{formatDateTime(row.original.requestedAt) ?? "–"}</div><div className="text-muted-foreground">{row.original.requestedBy ? `by ${row.original.requestedBy}` : "Requester not recorded"}</div></div> }),
+    column.display({ id: "sampling", header: "Sample taken", size: 190, cell: ({ row }) => <div className="text-xs">
+      {row.original.sampledAt || row.original.sampledBy ? <><div>{formatDateTime(row.original.sampledAt) ?? "Time not recorded"}</div>
+        <div className="text-muted-foreground">{row.original.sampledBy ? `by ${row.original.sampledBy}` : "Sampler not recorded"}</div></> : <div className="text-muted-foreground">Not sampled yet</div>}
+      {row.original.sampledQuantity || row.original.containers !== null ? <div className="text-muted-foreground">{row.original.sampledQuantity ?? ""}{row.original.containers !== null ? `${row.original.sampledQuantity ? " · " : ""}${String(row.original.containers)} containers` : ""}</div> : null}</div> }),
     column.display({ id: "analysis", header: "Analysis", size: 170, cell: ({ row }) => <div className="text-xs"><div>{row.original.analysts.join(", ") || "Not assigned"}</div>
       <div className="text-muted-foreground">{row.original.assignedAt ? `Assigned ${formatDate(row.original.assignedAt) ?? ""}` : row.original.acknowledgedAt ? `Received ${formatDateTime(row.original.acknowledgedAt) ?? ""}` : ""}</div></div> }),
     column.accessor((row) => row.status ?? -1, { id: "status", header: "Status", size: 130, cell: ({ row }) => <div className="space-y-1"><Badge variant="outline">{atrStatusLabels[row.original.status ?? -1] ?? "Unknown"}</Badge>

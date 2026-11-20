@@ -29,3 +29,12 @@ export const historySchema = z.object({ revisions: z.array(revisionSchema), chan
 
 export const expectedBmr = (row: IssuedBmr) => ({ expectedBatchNumber: row.batchNumber,
   expectedManufacturingDate: row.manufacturingDate, expectedExpiryDate: row.expiryDate });
+
+/** Every issued record for the chosen filters, with totals by product, for printing. */
+export const issuedRegisterSchema = z.object({
+  rows: z.array(issuedBmrRowSchema),
+  byProduct: z.array(z.object({ productId: z.string().min(1), productName: text, productCode: text, departmentName: text,
+    batches: z.number().int().nonnegative(), retired: z.number().int().nonnegative(), firstIssuedAt: z.string().min(1), lastIssuedAt: z.string().min(1) })),
+  total: z.number().int().nonnegative(), truncated: z.boolean(),
+});
+export type IssuedRegister = z.infer<typeof issuedRegisterSchema>;

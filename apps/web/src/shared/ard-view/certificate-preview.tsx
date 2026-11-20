@@ -4,6 +4,7 @@ import { formatDate, formatMonthYear } from "@/shared/format/dates";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import type { FormResponseDto, FormSectionDto } from "./dto";
 import CoaComplianceControl from "./raw-data/coa-compliance-control";
+import { testReference } from "./test-reference";
 import type { CoaComplianceItem } from "./raw-data/coa-compliance";
 import { getBestResponseMap } from "./raw-data/print/response-pick";
 import { getResponsesForSection } from "./templates/render";
@@ -46,15 +47,16 @@ export function CertificatePreview({ kind, facts, extra = [], sections, response
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><div><h3 className="font-semibold">Test results</h3><p className="text-xs text-muted-foreground">Review each result and confirm its specification compliance.</p></div>
           <span className="rounded-full border bg-background px-2.5 py-1 text-xs text-muted-foreground">{compliantCount} of {sections.length} comply</span></div>
         <div className="max-w-full overflow-x-auto rounded-md border"><table className="w-full min-w-[760px] border-collapse text-sm">
-          <colgroup><col className="w-10" /><col className="w-[18%]" /><col className="w-[22%]" /><col className="w-[20%]" /><col /></colgroup>
-          <thead><tr className="bg-muted/60 text-left">{["No.", "Test", "Result / observation", "Compliance review", "Specification"].map((head) => <th key={head} scope="col" className="border-b px-3 py-2.5 text-xs font-semibold text-muted-foreground">{head}</th>)}</tr></thead>
+          <colgroup><col className="w-10" /><col className="w-[17%]" /><col className="w-[20%]" /><col className="w-[18%]" /><col /><col className="w-[12%]" /></colgroup>
+          <thead><tr className="bg-muted/60 text-left">{["No.", "Test", "Result / observation", "Compliance review", "Specification", "Reference"].map((head) => <th key={head} scope="col" className="border-b px-3 py-2.5 text-xs font-semibold text-muted-foreground">{head}</th>)}</tr></thead>
           <tbody>{sections.map((section, index) => { const item = compliance.find((entry) => entry.formSectionId === section.id);
             return <tr key={section.id ?? index} className="align-top [&:not(:last-child)>td]:border-b"><td className="px-3 py-3 text-center text-xs text-muted-foreground">{index + 1}</td>
               <td className="px-3 py-3 font-medium"><RichTextView html={section.name} /></td>
               <td className="px-3 py-3"><div className="break-words">{getResponsesForSection(section.fields ?? [], responseMap)}</div></td>
               <td className="px-3 py-3">{section.id ? <div className="min-w-0 space-y-2"><CoaComplianceControl formSectionId={section.id} complies={item?.complies === true} onComplianceChange={onCompliance} />
                 {item?.requiresReview ? <p className="text-xs text-warning">Review required: result cannot be assessed automatically.</p> : null}</div> : "–"}</td>
-              <td className="px-3 py-3"><div className="break-words"><RichTextView html={section.description} /></div></td></tr>; })}</tbody>
+              <td className="px-3 py-3"><div className="break-words"><RichTextView html={section.description} /></div></td>
+              <td className="px-3 py-3 break-words text-xs">{testReference(section.fields)}</td></tr>; })}</tbody>
         </table></div>
       </section>
       <section className="rounded-md border bg-muted/20 px-4 py-3"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Overall assessment</p>

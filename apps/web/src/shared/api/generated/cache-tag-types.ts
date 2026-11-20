@@ -69,6 +69,7 @@ export const generatedTagTypes = [
   "formula-repair/test",
   "holiday",
   "issued-bmr",
+  "issued-bmr/register",
   "item",
   "item-grn",
   "item-inventory-transaction",

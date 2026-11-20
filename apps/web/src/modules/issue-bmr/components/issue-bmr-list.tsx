@@ -35,7 +35,7 @@ export function IssueBmrListPage() {
   const meta = pageMeta(query.data, table, rows.length);
   useEffect(() => { setBusy(query.isFetching); }, [query.isFetching]);
   return <section className="page-fill">
-    <div><p className="eyebrow">QUALITY ASSURANCE</p><h1 className="text-xl font-semibold">BMR and BPR requests</h1></div>
+    <div><p className="eyebrow">QUALITY ASSURANCE</p><h1 className="text-xl font-semibold">Issuance (BMR &amp; BPR)</h1></div>
     <ServerDataTable label="BMR and BPR requests" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows}
       onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange} loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()}
       onRowOpen={(row) => void navigate(issueBmrDetailPath(row.id))}
