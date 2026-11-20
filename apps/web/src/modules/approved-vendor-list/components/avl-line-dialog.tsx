@@ -10,8 +10,9 @@ import type { DomainEntitiesApprovedVendorListsApprovedVendorMappingDto as Mappi
 import { useLazyVendorMappingsQuery } from "../api/avl-api";
 import { lineProblem, materialLabel, type DraftLine } from "../lib/avl";
 import { avlAudit } from "../lib/keys";
+import { randomId } from "@/shared/ids/random-id";
 
-const blank = (): DraftLine => ({ key: crypto.randomUUID(), materialId: "", materialLabel: "", manufacturer: { id: null, name: "", address: null },
+const blank = (): DraftLine => ({ key: randomId(), materialId: "", materialLabel: "", manufacturer: { id: null, name: "", address: null },
   supplier: { id: null, name: "", address: null, type: 1 }, quantityPerPack: "", approvalMonth: "", validityMonth: "" });
 
 function Field({ label, htmlFor, children, hint }: { label: string; htmlFor?: string; children: ReactNode; hint?: string | null }) {
