@@ -24,5 +24,6 @@ A record of a reviewed document type is checked before it goes for approval. The
     after its check goes back to review as a new submission.
   - Stock issues: the voucher page shows the issue's check as its Review panel; a returned issue is
     corrected through the issued-material repair.
+  - Approved vendor lists: always checked; Correct list edits a list in review. See [approved vendor list](approved-vendor-list.md).
   - QC formula revisions: the review page shows the Review panel (status, history, Return to draft);
     the review itself is still recorded below it, with the definition hash and a reason.

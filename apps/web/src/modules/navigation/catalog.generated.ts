@@ -1266,6 +1266,14 @@ export const navigationCatalog = [
         "permissions": [
           "CanViewSupplierCertifications"
         ]
+      },
+      {
+        "id": "quality-assurance.approved-vendor-list",
+        "label": "Approved Vendor List",
+        "path": "/qa/approved-vendor-list",
+        "permissions": [
+          "CanViewApprovedVendorList"
+        ]
       }
     ]
   },
