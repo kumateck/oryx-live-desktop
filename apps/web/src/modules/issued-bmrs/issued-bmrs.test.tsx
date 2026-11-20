@@ -8,6 +8,7 @@ import { ApiProvider } from "@/shared/api/api-provider";
 import { SessionProvider } from "@/shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
 import { chooseAction, openMenu } from "@/test/menu";
+import { formatDate } from "@/shared/format/dates";
 import { IssuedBmrPage } from "./components/issued-bmr-page";
 import { issuedBmrPermissions as p } from "./lib/access";
 
@@ -32,6 +33,8 @@ function open(permissions: string[], { refuse = false, self = false }: { refuse?
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const path = new URL(input.url).pathname;
+    // The department filter reads the shared reference list through a POST; it changes nothing.
+    if (path === "/api/v1/collection") return Response.json({ Department: [{ id: "d-syrup", name: "Oral Liquid-Syrup" }] });
     if (input.method !== "GET") {
       const body = await input.clone().text(); writes.push({ path, body });
       if (refuse) return Response.json({ errors: [{ code: "IssuedBmr.Changed", description: "The batch details changed. Reload before continuing." }] }, { status: 409 });
@@ -40,8 +43,11 @@ function open(permissions: string[], { refuse = false, self = false }: { refuse?
       if (path.endsWith("/review")) { revision.status = 1; row.pendingRevisions = 0; row.expiryDate = revision.expiryDate; }
       return new Response(null, { status: 204 });
     }
-    reads.push(path);
+    reads.push(`${path}${new URL(input.url).search}`);
     if (path === "/api/v1/issued-bmrs") return Response.json({ data: [row], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
+    if (path === "/api/v1/issued-bmrs/register") return Response.json({ rows: [row, { ...row, id: "bmr-2", batchNumber: "BATCH-2", isRetired: true }], total: 2, truncated: false,
+      byProduct: [{ productId: "product-1", productName: "Zinvite", productCode: "P1", departmentName: "Production", batches: 2, retired: 1,
+        firstIssuedAt: "2026-02-01T00:00:00Z", lastIssuedAt: "2026-02-03T00:00:00Z" }] });
     if (path.endsWith("/history")) return Response.json({ changes: [], revisions: [revision] });
     return new Response(null, { status: 404 });
   });
@@ -130,4 +136,40 @@ it("does not offer approval for the requester's own revision", async () => {
   expect(await screen.findByText("Someone else with approval permission must review your request.")).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Review revision for BATCH-1" })).toBeNull();
   expect(writes).toEqual([]);
+});
+
+it("offers printing only to holders of the print key", async () => {
+  open([p.view]);
+  await screen.findByText("BATCH-1");
+  expect(screen.queryByRole("button", { name: "Print" })).toBeNull();
+  cleanup(); forgetSession();
+  open([p.view, p.print]);
+  await screen.findByText("BATCH-1");
+  expect(screen.getByRole("button", { name: "Print" })).toBeTruthy();
+});
+
+it("filters by issue dates and prints the issued-by-product report for them", async () => {
+  const user = userEvent.setup();
+  const { reads, writes } = open([p.view, p.print]);
+  await screen.findByText("BATCH-1");
+  fireEvent.change(screen.getByLabelText("Issued from"), { target: { value: "2026-02-01" } });
+  fireEvent.change(screen.getByLabelText("Issued to"), { target: { value: "2026-02-28" } });
+  await waitFor(() => expect(reads.some((read) => read.startsWith("/api/v1/issued-bmrs?") && read.includes("issuedFrom=2026-02-01") && read.includes("issuedTo=2026-02-28"))).toBe(true));
+  await openMenu("Print");
+  await user.click(screen.getByRole("menuitem", { name: "Issued by product" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(await within(dialog).findByRole("cell", { name: "Zinvite (P1)" })).toBeTruthy();
+  expect(within(dialog).getByText((text) => text.includes(`${formatDate("2026-02-01") ?? ""} – ${formatDate("2026-02-28") ?? ""}`))).toBeTruthy();
+  expect(reads.some((read) => read.startsWith("/api/v1/issued-bmrs/register?") && read.includes("issuedFrom=2026-02-01"))).toBe(true);
+  expect(writes).toEqual([]);
+});
+
+it("refuses an end date before the start date without asking the server", async () => {
+  const { reads } = open([p.view, p.print]);
+  await screen.findByText("BATCH-1");
+  const before = reads.length;
+  fireEvent.change(screen.getByLabelText("Issued from"), { target: { value: "2026-02-10" } });
+  fireEvent.change(screen.getByLabelText("Issued to"), { target: { value: "2026-02-01" } });
+  expect(await screen.findByText("The end date is before the start date.")).toBeTruthy();
+  expect(reads.slice(before).some((read) => read.includes("issuedTo=2026-02-01"))).toBe(false);
 });
