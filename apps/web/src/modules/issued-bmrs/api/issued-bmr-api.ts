@@ -6,5 +6,5 @@ export const issuedBmrApi = productionApi.enhanceEndpoints({ endpoints: {
   correctIssuedBmrBatchNumber: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [...liveTags]); },
   reviewIssuedBmrRevision: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error) => error ? [] : [...liveTags]); },
 } });
-export const { useListIssuedBmrRecordsQuery, useGetIssuedBmrHistoryQuery, useCorrectIssuedBmrBatchNumberMutation,
+export const { useListIssuedBmrRecordsQuery, useGetIssuedBmrHistoryQuery, useGetIssuedBmrRegisterQuery, useCorrectIssuedBmrBatchNumberMutation,
   useRequestIssuedBmrRevisionMutation, useReviewIssuedBmrRevisionMutation } = issuedBmrApi;
