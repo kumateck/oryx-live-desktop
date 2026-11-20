@@ -45,6 +45,7 @@ const labels: Readonly<Record<string, string>> = {
   "Service Quotation Response": "Service Quote Responses",
   "Department Employee Export": "Export Department Staff",
   "Shift Schedule Report Upload": "Upload Shift Reports",
+  "Issue BMR/BPR": "Issuance (BMR & BPR)",
 };
 
 function convert(item: SourceItem, parentId: string, seen: Set<string>): CatalogItem {
