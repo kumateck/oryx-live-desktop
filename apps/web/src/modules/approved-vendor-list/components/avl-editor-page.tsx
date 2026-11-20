@@ -15,6 +15,7 @@ import { useCreateVendorListMutation, useReviseVendorListMutation, useUpdateVend
 import { ListStatus, detailSchema, draftFromLine, lineProblem, lineRequest, monthLabel, summariesSchema, type DraftLine, type ListDetail } from "../lib/avl";
 import { avlAudit, avlKeys, avlRoot } from "../lib/keys";
 import { LineDialog } from "./avl-line-dialog";
+import { randomId } from "@/shared/ids/random-id";
 
 export type EditorMode = "new" | "revise" | "edit";
 const column = dataTableColumns<DraftLine>();
@@ -56,7 +57,7 @@ export function VendorListEditorPage({ mode }: { mode: EditorMode }) {
     setAnnexure(source.annexureNumber ?? "");
     setRevision(String(mode === "revise" ? source.revisionNumber + 1 : source.revisionNumber));
     setSupersedes(mode === "revise" ? String(source.revisionNumber) : source.supersedesRevision === null ? "" : String(source.supersedesRevision));
-    setLines(source.lines.map((line) => mode === "revise" ? { ...draftFromLine(line), key: crypto.randomUUID() } : draftFromLine(line)));
+    setLines(source.lines.map((line) => mode === "revise" ? { ...draftFromLine(line), key: randomId() } : draftFromLine(line)));
   }, [source, loaded, mode]);
   const menu = (line: DraftLine) => [
     { id: "edit", label: "Change", icon: Pencil, require: keyFor[mode], onSelect: () => setEditing(line) },
