@@ -1,7 +1,7 @@
 // Import only the reviewed finished-goods additions and changed DTOs; retain other approved contracts.
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { Contract, JsonSchema } from "./api-contract";
+import type { Contract, JsonSchema } from "./api-contract.ts";
 const file = process.argv[2];
 if (!file) throw new Error("Usage: bun scripts/import-finished-goods.ts EXPORT.json");
 const target = resolve(import.meta.dirname, "../contracts/openapi/backend.v1.json");
@@ -34,7 +34,10 @@ while (added) {
   for (const [path, item] of Object.entries(destination.paths)) if (path.startsWith("/api/v1/finished-goods")) {
     for (const operation of Object.values(item)) for (const body of [operation.requestBody, ...Object.values(operation.responses)]) {
       for (const media of Object.values(body?.content ?? {})) if (media.schema) for (const name of references(media.schema)) {
-        if (!destination.components.schemas[name]) { destination.components.schemas[name] = source.components.schemas[name]; added = true; }
+        if (!destination.components.schemas[name]) {
+          const incoming = source.components.schemas[name]; if (!incoming) throw new Error(`Missing schema ${name}`);
+          destination.components.schemas[name] = incoming; added = true;
+        }
       }
     }
   }
