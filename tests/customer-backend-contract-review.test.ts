@@ -722,7 +722,7 @@ test("the separate legacy host-Nginx verifier retains both reviewed exact docume
 test("the merged forecast and migration contracts preserve the approved predecessor and pass release validation", () => {
   const head = reviewedHead();
   // The release check reports the published file, including the latest addition stripped above.
-  const publishedDigest = contractDigest(beforeMaterialLookupContext());
+  const publishedDigest = contractDigest(object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8"))));
   stripFormulaRepairResponseId(head);
   stripSpecificationPrint(head);
   stripWorksheetFields(object(object(head.components ?? null).schemas ?? null));
