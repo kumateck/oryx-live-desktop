@@ -63,30 +63,15 @@ it("shows prices in their own currency, knows when an agreement applies, and val
 
 it("lives under Finance with its own ManageCosting permission, and is closed to roles without it", () => {
   const finance = navigationCatalog.find((group) => group.id === "finance-and-cashflow");
-  expect(finance?.items.find((item) => item.path === "/finance/costing")?.permissions).toEqual(["ManageCosting"]);
-  for (const path of ["/finance/costing", "/finance/costing/agreements", "/finance/costing/agreements/ag-1"])
+  expect(finance?.items.find((item) => item.path === "/finance/costing")?.permissions).toEqual(["CanViewCostingPriceList"]);
+  for (const path of ["/finance/costing/agreements", "/finance/costing/agreements/ag-1"])
     expect(routeAccessRule(modules, path)).toEqual({ kind: "all", permissions: ["ManageCosting"] });
   // Customer contracts alone no longer opens costing.
   const contractsOnly = { state: "authenticated" as const, permissions: new Set(["ManageCustomerContracts", "CanViewPayments"]) };
   const closed = { kind: "all", permissions: ["never"] } as const;
   expect(canAccess(routeAccessRule(modules, "/finance/costing/agreements") ?? closed, contractsOnly)).toBe(false);
-  expect(canAccess(routeAccessRule(modules, "/finance/costing") ?? closed, { ...contractsOnly, permissions: new Set(["ManageCosting"]) })).toBe(true);
+  expect(canAccess(routeAccessRule(modules, "/finance/costing") ?? closed, { ...contractsOnly, permissions: new Set(["CanViewCostingPriceList"]) })).toBe(true);
 });
-
-it("sets a list price in the currency it is priced in and shows the price history", async () => {
-  const user = userEvent.setup();
-  const page = open("/finance/costing");
-  expect(await screen.findByText("GH₵ 10.00")).toBeTruthy();
-  expect(screen.getByText("Ghana cedi (GH₵)")).toBeTruthy();
-  await openMenu("Actions for Dicnac 100");
-  await user.click(await screen.findByRole("menuitem", { name: "Set price" }));
-  const dialog = await screen.findByRole("dialog");
-  expect(await within(dialog).findByText("$ 8.00 per pack")).toBeTruthy();
-  const price = await within(dialog).findByRole("spinbutton", { name: /List price/ });
-  await user.clear(price); await user.type(price, "12.5");
-  await user.click(within(dialog).getByRole("button", { name: "Save price" }));
-  await waitFor(() => expect(page.writes()).toEqual([{ method: "PUT", path: "/api/v1/costing/list-prices/p1", search: "", body: { price: 12.5, currencyId: "ghs", priceUoM: "pack" } }]));
-}, 20_000);
 
 it("lists agreements across customers, filters by customer and edits one through its customer", async () => {
   const user = userEvent.setup();

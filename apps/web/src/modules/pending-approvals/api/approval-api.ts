@@ -1,10 +1,13 @@
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { approvalsApi } from "@/shared/api/generated/approvals";
 import { addTags } from "@/shared/api/add-tags";
 
 const queue = { type: "PendingApprovals" as const, id: "all" };
 // A decision changes the document itself, so the lists it appears in are read again.
-const decided = (_result: unknown, error: unknown) => error ? [] : [queue, "PurchaseOrderList" as const, "PurchaseOrder" as const, "BillingSheets" as const, "Shipments" as const, "MaterialDistribution" as const,
-  "RequisitionList" as const, "Requisition" as const, "ActivityBoard" as const];
+const decided = (_result: void | undefined, error: FetchBaseQueryError | undefined, args: { modelType: string }) => error ? [] : [queue, "PurchaseOrderList" as const, "PurchaseOrder" as const, "BillingSheets" as const, "Shipments" as const, "MaterialDistribution" as const,
+  "RequisitionList" as const, "Requisition" as const, "ActivityBoard" as const,
+  ...(["FinishedGoodsTransferNote", "StockAdjustment", "ProformaInvoice", "AllocateProductionOrder", "ProductionOrder", "Response"].includes(args.modelType)
+    ? [{ type: "FinishedGoods" as const, id: "all" }, { type: "ProductionOrders" as const, id: "all" }] : [])];
 
 export const approvalApi = approvalsApi.enhanceEndpoints({
   endpoints: {

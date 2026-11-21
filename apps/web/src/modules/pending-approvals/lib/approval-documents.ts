@@ -5,7 +5,8 @@ export const approvalPath = (type: string, id: string) => `${approvalsPath}/${en
 /** Seeing the queue, approving and rejecting are three permissions. */
 export const approvalPermissions = { view: "CanViewPendingApprovals", approve: "CanApprovePendingApproval", reject: "CanRejectPendingApproval" } as const;
 export const decisionPermission = (type: string, decision: Decision, stockKind: 0 | 1 | null = null): string =>
-  decision === "reject" && stockKind !== null && ["StockRequisition", "RawStockRequisition", "PackageStockRequisition"].includes(type) ? stockRejectionPermissions[stockKind]
+  type === "CostingPriceList" ? decision === "approve" ? "CanApproveCostingPriceList" : "CanRejectCostingPriceList"
+    : decision === "reject" && stockKind !== null && ["StockRequisition", "RawStockRequisition", "PackageStockRequisition"].includes(type) ? stockRejectionPermissions[stockKind]
     : type === "StockDiscrepancy" ? decision === "approve" ? "CanApproveStockDiscrepancy" : "CanRejectStockDiscrepancy"
     : type === "ShipmentDiscrepancy" ? decision === "approve" ? "CanApproveShipmentDiscrepancy" : "CanRejectShipmentDiscrepancy"
     : type === "ApprovedVendorList" ? decision === "approve" ? "CanApproveApprovedVendorList" : "CanRejectApprovedVendorList"
@@ -17,7 +18,7 @@ export const audit = { module: "Quality Assurance", subModule: "Pending Approval
 /** Documents whose content this app can show, so they can be read before they are decided. The names are the server's. */
 const readable = ["PurchaseOrder", "BillingSheet", "ShipmentDocument", "PurchaseRequisition", "TrialRequisition", "StockRequisition", "StockRequisitionIssue", "RawStockRequisition", "PackageStockRequisition", "ProductionExtraPacking",
   "FinishedGoodsTransferNote", "LeaveRequest", "OvertimeRequest", "StaffRequisition", "JobRequest", "ProductionOrder", "ProformaInvoice", "AllocateProductionOrder", "StockAdjustment", "CustomerQuotation", "SupplierPricingAgreement", "PayrollRun", "PerformanceReview",
-  "RndProject", "RndFormulation", "RndTechnologyTransfer", "Response", "StockDiscrepancy", "ShipmentDiscrepancy", "ApprovedVendorList"] as const;
+  "RndProject", "RndFormulation", "RndTechnologyTransfer", "Response", "StockDiscrepancy", "ShipmentDiscrepancy", "ApprovedVendorList", "CostingPriceList"] as const;
 export type ReadableDocument = (typeof readable)[number];
 export const isReadable = (type: string): type is ReadableDocument => (readable as readonly string[]).includes(type);
 

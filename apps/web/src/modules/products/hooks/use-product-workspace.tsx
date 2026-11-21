@@ -52,4 +52,9 @@ export function QaProductWorkspace({ children }: { children: ReactNode }) {
   }, [departmentId, id]);
   return <ProductWorkspaceContext value={workspace}>{children}</ProductWorkspaceContext>;
 }
-export function useProductWorkspace() { return useContext(ProductWorkspaceContext); }
+export function useProductWorkspace() {
+  const workspace = useContext(ProductWorkspaceContext);
+  const { id } = useParams();
+  // Both record workspaces resolve material links from the product's stored department.
+  return workspace.mode === "production" && id ? { ...workspace, lookupProductId: id } : workspace;
+}

@@ -1,3 +1,18 @@
+## Finished goods controls (2026-11-21)
+
+Implement the full customer-approved flow from FGTN generation to actual receipt,
+allocation, loading, departure, delivery and recall. Keep loading independent of
+waybill readiness, but enforce clearance at departure. Reuse FormWizard,
+FormDialog, tables, actions, print primitives and generated domain API hooks.
+No upstream production redesign. Backend migrations are applied by the user's
+pipeline, not by the agent to local/demo data. Preserve old records and require
+an evidenced reconciliation for historical stock. Backend implementation and
+validation log: `../oryx-backend/docs/finished-goods-workflow.md`.
+Implementation completed; coordinated API/desktop rollout and historical stock
+reconciliation are required. Validation and migration details are recorded in
+`docs/finished-goods.md` and the backend workflow guide. No deployment or application
+database migration was performed.
+
 # Oryx Live Desktop plan
 
 ## Production material requests (2026-11-18)
@@ -12,6 +27,37 @@ QC review shows complete questions and saved inputs alongside authoritative form
 
 Deploy both companion schema migrations and backend endpoints before activating the desktop. New template-repair view/apply keys are granted to nobody automatically. See `docs/template-repair-and-qc-follow-ups.md` for behavior, permissions and verification.
 
+
+## Costing price-list revisions (2026-11-21)
+
+Implement a versioned approved price sheet per division, following the approved
+vendor list layout and its existing shared components. Use FormWizard for all
+forms, application date/select/dialog/table components, the shared ReviewPanel,
+approval evidence and PrintPreviewDialog/PrintHeader/PrintFacts/PrintTable/
+PrintSignatures. No native form controls or new control system.
+
+Each line is a product plus its packing style; the amount is per complete pack,
+in the recorded currency. Approved revisions are immutable. A new revision
+copies its predecessor, goes through review and approval, and becomes usable
+only when both approved and its effective date has arrived. Resolve the active
+revision at read time so activation does not depend on a scheduler. Keep prior
+transaction prices unchanged and keep customer-specific agreements first.
+Separate task permissions, fresh checks before writes, optimistic concurrency,
+audit history, schema/grant migrations and coordinated typed API changes are
+required. Existing list prices remain the fallback until a division has an
+approved effective price list; once active, missing/unpriced pack styles need
+explicit pricing rather than borrowing another style's price.
+
+
+Verification completed: backend/API build, scoped workflow/pricing/permission tests,
+disposable PostgreSQL migration and concurrency checks, additive contract regression,
+route/API generation checks, frontend typecheck/build, costing/dispatch/QA regressions,
+and desktop/mobile source-backed visual review. Currency selection was exercised
+through FormWizard and saved order pack prices now flow into proforma display and
+creation. React Doctor reported no issues. No demo deployment or database migration
+was performed. The legacy navigation import could not run because the companion
+`oryx-next` checkout lacks runtime dependencies; its costing override and the matching
+generated catalog entry were updated together and covered by route/navigation tests.
 
 ## BOM density conversion (2026-11-10)
 

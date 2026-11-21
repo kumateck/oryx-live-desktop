@@ -5,6 +5,7 @@ import type { PendingReview } from "@/shared/reviews/review-schema";
  * routes of the owning modules.
  */
 const pages: Record<string, (id: string) => string> = {
+  CostingPriceList: (id) => `/finance/costing/revisions/${id}`,
   BillingSheet: (id) => `/logistics/billing-sheets/${id}`,
   StaffRequisition: (id) => `/hr/staff-requisition/${id}`,
   OvertimeRequest: (id) => `/hr/overtime-management/${id}/details`,
@@ -25,7 +26,7 @@ export function reviewDocumentPath(row: Pick<PendingReview, "modelType" | "model
   return pages[row.modelType]?.(id) ?? null;
 }
 
-const labels: Record<string, string> = { PurchaseOrder: "Purchase order", PurchaseRequisition: "Purchase requisition",
+const labels: Record<string, string> = { CostingPriceList: "Costing price list", PurchaseOrder: "Purchase order", PurchaseRequisition: "Purchase requisition",
   RawStockRequisition: "Raw material stock requisition", PackageStockRequisition: "Packaging material stock requisition",
   BillingSheet: "Billing sheet", StaffRequisition: "Staff requisition", OvertimeRequest: "Overtime request", LeaveRequest: "Leave request",
   JobRequest: "Job request", AllocateProductionOrder: "Packing list", StockRequisitionIssue: "Stock issue check", FormulaRevision: "QC formula revision",

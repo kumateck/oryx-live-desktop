@@ -29,7 +29,12 @@ function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = f
   const session = backend.fetcher.getMockImplementation();
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
-    const path = new URL(input.url).pathname;
+    const url = new URL(input.url);
+    const path = url.pathname;
+    if (path.startsWith("/api/v1/material/")) {
+      expect(url.searchParams.get("productId")).toBe(id);
+      expect(url.searchParams.get("context")).not.toBe("qa");
+    }
     if (input.method === "GET") reads.push(path);
     else writes.push({ path, body: await input.clone().text() });
     if (path === `/api/v1/product/${id}/bom`) return Response.json({ version: 2, isActive: true, billOfMaterial: { items: [
@@ -46,7 +51,8 @@ function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = f
     if (path === "/api/v1/bom") return failSave ? Response.json({ errors: [{ description: "BOM could not be saved." }] }, { status: 409 }) : Response.json("ok");
     return new Response(null, { status: 404 });
   });
-  const router = createMemoryRouter([{ path: "/", element: <BomSection productId={id} compositionSize={1} batchSize={2} /> }]);
+  const router = createMemoryRouter([{ path: "/production/products/:id/edit/bom", element: <BomSection productId={id} compositionSize={1} batchSize={2} /> }],
+    { initialEntries: [`/production/products/${id}/edit/bom`] });
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   return { writes, reads };
 }

@@ -34,7 +34,7 @@ export function useCopyProcedure(sourceProductId: string) {
 
   const copy = async (steps: readonly ProcedureStep[], targets: readonly SelectOption[]) => {
     setCopying(true);
-    const body = toRoutesRequest(steps, false);
+    const body = toRoutesRequest(steps);
     const results = await Promise.all(targets.map(async (target): Promise<CopyOutcome> => {
       const denied = permission.check();
       if (denied) return { product: target.label, error: denied };
@@ -55,7 +55,7 @@ export function useCopyProcedure(sourceProductId: string) {
       setCopying(false);
       return result;
     }
-    const response = await save({ ...procedureAudit, ...context, productId: sourceProductId, body: toRoutesRequest(steps, false) });
+    const response = await save({ ...procedureAudit, ...context, productId: sourceProductId, body: toRoutesRequest(steps) });
     const result = [{ product: sourceProductId, error: "error" in response ? apiErrorMessage(response.error) : null }];
     setOutcomes(result);
     setCopying(false);
