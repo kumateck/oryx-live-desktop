@@ -3866,6 +3866,17 @@ export type DomainEntitiesMaterialsBatchFinishedGoodsTransferNoteDto = {
   loose?: number;
   allocatedQuantity?: number;
   remainingQuantity?: number;
+  availableQuantity?: number;
+  adjustmentQuantity?: number;
+  dispatchedQuantity?: number;
+  physicalQuantity?: number;
+  reservedQuantity?: number;
+  packsPerShipperSnapshot?: number | null;
+  packingStyleSnapshot?: string | null;
+  requiresStockReconciliation?: boolean;
+  isOnHold?: boolean;
+  holdReason?: string | null;
+  qualityReleased?: boolean;
   pendingAllocatedQuantity?: number;
   approved?: boolean;
   isPartial?: boolean;

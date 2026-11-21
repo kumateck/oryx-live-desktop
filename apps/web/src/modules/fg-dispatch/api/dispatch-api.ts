@@ -8,12 +8,14 @@ const goods = { type: "FinishedGoods" as const, id: "all" };
 const changed = (_result: unknown, error: unknown) => error ? [] : [list, goods];
 
 export const dispatchApi = productionApi.enhanceEndpoints({ endpoints: {
+  getApiV1ProductionOrdersInvoice: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
+  getApiV1ProductionOrdersInvoiceById: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
   getApiV1ProductionOrdersAllocate: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, getApiV1ProductionOrdersAllocateByAllocateProductionOrderId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
   getApiV1ProductionOrdersProformaInvoice: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, getApiV1ProductionOrdersProformaInvoiceByProformaInvoiceId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
   putApiV1ProductionOrdersLoadByAllocateProductionOrderId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, putApiV1ProductionOrdersDeliverByAllocateProductionOrderId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
   postApiV1ProductionOrdersByAllocateProductionOrderIdWaybill: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); }, postApiV1ProductionOrdersProformaInvoice: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },
 } });
-export const { useGetApiV1ProductionOrdersAllocateQuery, useGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery, useLazyGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery, useGetApiV1ProductionOrdersProformaInvoiceQuery,
+export const { useGetApiV1ProductionOrdersInvoiceQuery, useGetApiV1ProductionOrdersInvoiceByIdQuery, useGetApiV1ProductionOrdersAllocateQuery, useGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery, useLazyGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery, useGetApiV1ProductionOrdersProformaInvoiceQuery,
   useGetApiV1ProductionOrdersProformaInvoiceByProformaInvoiceIdQuery, usePutApiV1ProductionOrdersLoadByAllocateProductionOrderIdMutation, usePutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdMutation,
   usePostApiV1ProductionOrdersByAllocateProductionOrderIdWaybillMutation, usePostApiV1ProductionOrdersProformaInvoiceMutation } = dispatchApi;
 export const { useGetApiV1ConfigurationByModelTypeCountQuery } = settingsApi;

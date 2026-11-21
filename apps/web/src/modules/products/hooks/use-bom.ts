@@ -44,7 +44,7 @@ export function useBom(productId: string, compositionSize: number | null, batchS
     try {
       // Recheck all linkage units before writing, including unchanged rows with a stale saved BOM unit.
       const checked = await Promise.all(lines.map(async (line) => {
-        const result = await loadUnit({ ...bomAudit, materialId: line.material.value, ...(lookupProductId ? { productId: lookupProductId } : {}) });
+        const result = await loadUnit({ ...bomAudit, ...context, materialId: line.material.value, ...(lookupProductId ? { productId: lookupProductId } : {}) });
         const parsed = materialUnitSchema.safeParse(result.data);
         return { line, unit: parsed.success ? parsed.data : null };
       }));

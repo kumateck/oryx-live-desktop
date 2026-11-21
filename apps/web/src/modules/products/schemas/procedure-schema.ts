@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { mainActions } from "../lib/procedure-actions";
+import { atrAction, mainActions } from "../lib/procedure-actions";
 
 const option = z.object({ value: z.string().min(1), label: z.string() });
 
@@ -22,6 +22,7 @@ const responsibilities = z.object({
   const seen = new Set<string>();
   step.parties.forEach((item, index) => {
     if (!item.who || !item.action) return;
+    if (item.action.value === atrAction && !item.ard) context.addIssue({ code: "custom", path: ["parties", index, "ard"], message: "Select analytical raw data and its ATR stage" });
     const key = `${item.kind}:${item.who.value}:${item.action.value}`;
     if (seen.has(key)) context.addIssue({ code: "custom", path: ["parties", index, "who"], message: "Already assigned this instruction" });
     seen.add(key);

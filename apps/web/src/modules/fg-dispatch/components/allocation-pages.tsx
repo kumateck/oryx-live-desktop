@@ -11,6 +11,7 @@ import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, Dia
 import { Spinner } from "@/components/ui/spinner";
 import { ConfirmActionDialog, TableMenu, TableMenuHeader } from "@/shared/actions";
 import { NoAccess } from "@/shared/auth/no-access";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useAccess } from "@/shared/auth/use-access";
 import { useGeneratedCode } from "@/shared/codes/use-generated-code";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
@@ -31,26 +32,42 @@ import { useGetApiV1ProductionOrdersAllocateByAllocateProductionOrderIdQuery, us
 import { allocationKinds, allocationPath, allocationsPath, audit, dispatchPermissions, nextStep, packingRows, packingTotals, stepLabels, type AllocationKind, type DispatchStep } from "../lib/dispatch";
 import { allocationRowsSchema, allocationSchema, waybillSchema, type Allocation, type WaybillValues } from "../schemas/dispatch-schema";
 import { PackingListPrint, PackingListTable } from "./packing-list-view";
+import { CostingConfirmationDialog } from "./costing-confirmation-dialog";
+import { GoodsActionDialog, goodsKeys } from "./goods-action-dialog";
+import { useGetApiV1FinishedGoodsAllocationsByIdDocumentsQuery } from "../api/goods-api";
+import { DeliveryEvidence } from "./delivery-evidence";
+import { AllocationDocuments } from "./allocation-documents";
 import { ProformaDialog } from "./proforma-dialog";
 import { EditPackingListDialog } from "@/modules/production-orders/components/edit-packing-list";
 import { orderPermissions } from "@/modules/production-orders/lib/orders";
 
 const waybillFields: WizardField<WaybillValues>[] = [
   { type: InputTypes.TEXT, name: "code", label: "Waybill number", required: true },
+  { type: InputTypes.TEXT, name: "vehicleRegistration", label: "Vehicle registration", required: true },
+  { type: InputTypes.TEXT, name: "driverName", label: "Driver", required: true },
+  { type: InputTypes.TEXT, name: "driverPhone", label: "Driver contact", required: true },
+  { type: InputTypes.TEXT, name: "transporter", label: "Transporter", required: true },
+  { type: InputTypes.TEXTAREA, name: "deliveryAddress", label: "Actual delivery address", required: true },
+  { type: InputTypes.TEXTAREA, name: "storageConditions", label: "Storage and transport conditions", required: true },
+  { type: InputTypes.TEXT, name: "sealNumber", label: "Seal number (where used)" },
   { type: InputTypes.RICHTEXT, name: "comment", label: "Comments" },
 ];
 function WaybillDialog({ allocation, onClose }: { allocation: Allocation; onClose: () => void }) {
+  const permission = usePermissionAction(dispatchPermissions.createWaybill);
   const [create, mutation] = usePostApiV1ProductionOrdersByAllocateProductionOrderIdWaybillMutation();
   const code = useGeneratedCode("Waybill");
+  const documents = useGetApiV1FinishedGoodsAllocationsByIdDocumentsQuery({ ...audit, id: allocation.id });
   const [message, setMessage] = useState("");
-  const form = useForm<WaybillValues>({ resolver: zodResolver(waybillSchema), defaultValues: { code: "", comment: "" } });
+  const form = useForm<WaybillValues>({ resolver: zodResolver(waybillSchema), defaultValues: { code: "", comment: "", invoiceId: "", vehicleRegistration: allocation.loadedVehicle ?? "", driverName: allocation.loadedDriver ?? "", driverPhone: allocation.loadedDriverPhone ?? "", transporter: "", deliveryAddress: allocation.customer.address ?? "", storageConditions: "", sealNumber: "" } });
   void form.formState.errors;
   // The next waybill number is suggested once; what the user types is never replaced.
   useEffect(() => { if (code.ready) void code.suggest().then((next) => { if (next && !form.getValues("code")) form.setValue("code", next, { shouldValidate: true }); }); }, [code.ready]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (documents.data?.invoiceId) form.setValue("invoiceId", documents.data.invoiceId); }, [documents.data?.invoiceId, form]);
   const busy = mutation.isLoading;
   const submit = form.handleSubmit(async (values) => {
+    const denied = permission.check(); if (denied) { setMessage(denied); return; }
     setMessage("");
-    const result = await create({ ...audit, allocateProductionOrderId: allocation.id, domainEntitiesProductionOrdersCreateProductionOrderWaybill: { code: values.code, comment: values.comment.trim() || null } });
+    const result = await create({ ...audit, allocateProductionOrderId: allocation.id, domainEntitiesProductionOrdersCreateProductionOrderWaybill: { ...values, comment: values.comment.trim() || null } });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success(`Waybill ${values.code} created`);
     onClose();
@@ -59,7 +76,7 @@ function WaybillDialog({ allocation, onClose }: { allocation: Allocation; onClos
     <DialogContent className="sm:max-w-xl">
       <DialogHeader><DialogTitle>Create waybill · {allocation.orderCode ?? "order"}</DialogTitle><DialogDescription>The waybill travels with the goods to {allocation.customer.name}.</DialogDescription></DialogHeader>
       <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
-        <DialogBody className="space-y-3"><FormWizard form={form} fields={waybillFields} />{message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}</DialogBody>
+        <DialogBody className="space-y-3"><p className="text-sm">Issued invoice: {documents.data?.invoiceCode ?? "Issue the invoice against the verified customer PO first."}</p><FormWizard form={form} fields={waybillFields} />{message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}</DialogBody>
         <DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? <><Spinner />Saving…</> : "Create waybill"}</Button></DialogFooter>
       </form>
     </DialogContent>
@@ -68,21 +85,14 @@ function WaybillDialog({ allocation, onClose }: { allocation: Allocation; onClos
 
 /** One step of getting an allocation to the customer: loading and delivery are confirmed, a waybill is filled in. */
 export function StepDialog({ step, allocation, onClose }: { step: DispatchStep; allocation: Allocation; onClose: () => void }) {
-  const [load] = usePutApiV1ProductionOrdersLoadByAllocateProductionOrderIdMutation();
-  const [deliver] = usePutApiV1ProductionOrdersDeliverByAllocateProductionOrderIdMutation();
   if (step === "waybill") return <WaybillDialog allocation={allocation} onClose={onClose} />;
-  const loading = step === "load";
-  return <ConfirmActionDialog require={stepPermission(step)} destructive={false} title={`${stepLabels[step]}: ${allocation.orderCode ?? "this order"}?`}
-    description={loading ? `The goods for ${allocation.customer.name} are recorded as loaded onto the vehicle. This cannot be undone.` : `The goods are recorded as delivered to ${allocation.customer.name}. This cannot be undone.`}
-    confirmLabel={stepLabels[step]} busyLabel="Saving…" onClose={onClose} onConfirm={async () => {
-      const result = loading ? await load({ ...audit, allocateProductionOrderId: allocation.id }) : await deliver({ ...audit, allocateProductionOrderId: allocation.id });
-      if ("error" in result) return apiErrorMessage(result.error);
-      toast.success(loading ? "Marked as loaded" : "Marked as delivered");
-      return null; }} />;
+  if (step === "costing") return <CostingConfirmationDialog allocation={allocation} onClose={onClose} />;
+  return <GoodsActionDialog action={step} allocation={allocation} onClose={onClose} />;
 }
-const stepIcons = { load: PackageCheck, waybill: FileText, deliver: Truck } as const;
+
+const stepIcons = { load: PackageCheck, waybill: FileText, costing: FileText, clear: PackageCheck, dispatch: Truck, deliver: Truck } as const;
 // Each dispatch step has its own key, which the server checks too.
-const stepPermission = (step: DispatchStep) => step === "waybill" ? dispatchPermissions.createWaybill : dispatchPermissions[step];
+const stepPermission = (step: DispatchStep) => step === "waybill" ? dispatchPermissions.createWaybill : step === "costing" ? "CanConfirmFinishedGoodsCosting" : goodsKeys[step];
 
 const column = dataTableColumns<Allocation>();
 /** Packing lists waiting for approval, or approved allocations on their way to the customer. */
@@ -107,7 +117,7 @@ export function AllocationListPage() {
     column.accessor((row) => row.customer.name, { id: "customer", header: "Customer", cell: ({ row }) => <span className="break-words">{row.original.customer.name}</span> }),
     column.accessor((row) => row.createdAt ?? "", { id: "created", header: "Created", size: 170, cell: ({ row }) => <div><div>{formatDate(row.original.createdAt) ?? "–"}</div><div className="text-xs text-muted-foreground">{row.original.products.length} {row.original.products.length === 1 ? "product" : "products"}</div></div> }),
     column.display({ id: "movement", header: "Loaded and delivered", size: 210, cell: ({ row }) => <div><div>Loaded {formatDate(row.original.loadedAt) ?? "not yet"}</div><div className="text-xs text-muted-foreground">Delivered {formatDate(row.original.deliveredAt) ?? "not yet"}</div></div> }),
-    column.display({ id: "documents", header: "Documents", size: 190, cell: ({ row }) => <div className="flex flex-wrap gap-1"><Badge variant={row.original.hasInvoice ? "default" : "outline"}>Invoice {row.original.hasInvoice ? "raised" : "missing"}</Badge>
+    column.display({ id: "documents", header: "Documents", size: 190, cell: ({ row }) => <div className="flex flex-wrap gap-1"><Badge variant={row.original.hasInvoice ? "default" : "outline"}>Proforma {row.original.hasInvoice ? "raised" : "missing"}</Badge>
       <Badge variant={row.original.hasWaybill ? "default" : "outline"}>Waybill {row.original.hasWaybill ? "raised" : "missing"}</Badge></div> }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => { const step = nextStep(row.original);
       return <TableMenu label={`Actions for order ${row.original.orderCode ?? row.original.id}`} items={[{ id: "view", label: "View", icon: Eye, to: allocationPath(row.original.id) },
@@ -116,7 +126,7 @@ export function AllocationListPage() {
   if (!allowed) return <NoAccess />;
   return <section className="page-fill">
     <div><p className="eyebrow">FG WAREHOUSE</p><h1 className="text-xl font-semibold">{config.title}</h1>
-      <p className="text-sm text-muted-foreground">{kind === 0 ? "Packing lists waiting for approval." : "Approved allocations: invoice them, load them, raise the waybill, then mark them delivered."}</p></div>
+      <p className="text-sm text-muted-foreground">{kind === 0 ? "Packing lists waiting for approval." : "Prepare the commercial documents and load in parallel; authorise departure, then record delivery."}</p></div>
     <ServerDataTable label={config.title} columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} onRowOpen={(row) => void navigate(allocationPath(row.id))}
       error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned packing lists the app could not read." : null}
@@ -132,7 +142,7 @@ export function AllocationListPage() {
 function editablePackingList(allocation: Allocation) {
   if (allocation.approved || allocation.status !== 0 || allocation.hasInvoice || allocation.hasWaybill || !allocation.orderId) return null;
   const lines = allocation.products.flatMap((product) => product.sources.flatMap((source) => product.productId && source.noteId ? [{ productId: product.productId, packingId: product.packingId, noteId: source.noteId, packs: source.quantity }] : []));
-  return lines.length > 0 ? { orderId: allocation.orderId, list: { id: allocation.id, lines } } : null;
+  return lines.length > 0 ? { orderId: allocation.orderId, list: { id: allocation.id, lines, ...(allocation.fefoExceptionReason ? { fefoExceptionReason: allocation.fefoExceptionReason } : {}) } } : null;
 }
 
 function Detail({ allocation }: { allocation: Allocation }) {
@@ -140,6 +150,7 @@ function Detail({ allocation }: { allocation: Allocation }) {
   const [invoicing, setInvoicing] = useState(false);
   const [acting, setActing] = useState<DispatchStep | null>(null);
   const [editing, setEditing] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const kind: AllocationKind = allocation.approved ? 1 : 0;
   const editable = useMemo(() => editablePackingList(allocation), [allocation]);
   const step = nextStep(allocation);
@@ -152,11 +163,11 @@ function Detail({ allocation }: { allocation: Allocation }) {
     <PageHeader title={`Packing list · ${allocation.orderCode ?? "order"}`} crumbs={[{ label: allocationKinds[kind].title, to: back }, { label: allocation.orderCode ?? "Packing list" }]} actions={<>
       <PrintButton preview={(close) => <PackingListPrint allocation={allocation} onClose={close} />} />
       {editable && has(orderPermissions.generatePackingList) ? <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil />Edit packing list</Button> : null}
-      {!allocation.hasInvoice && has(dispatchPermissions.generateProforma) ? <Button type="button" size="sm" variant="outline" onClick={() => setInvoicing(true)}><FileText />Generate proforma invoice</Button> : null}
+      {!allocation.hasInvoice && allocation.status !== 5 && has(dispatchPermissions.generateProforma) ? <Button type="button" size="sm" variant="outline" onClick={() => setInvoicing(true)}><FileText />Generate proforma invoice</Button> : null}
       {step && has(stepPermission(step)) ? <Button type="button" size="sm" onClick={() => setActing(step)}>{stepLabels[step]}</Button> : null}
     </>} />
     <div className="flex flex-wrap items-center gap-2"><Badge variant={allocation.approved ? "default" : "outline"}>{allocation.approved ? "Approved" : "Awaiting approval"}</Badge>
-      <Badge variant={allocation.hasInvoice ? "secondary" : "outline"}>Invoice {allocation.hasInvoice ? allocation.invoiceCode ?? "raised" : "missing"}</Badge><Badge variant={allocation.hasWaybill ? "secondary" : "outline"}>Waybill {allocation.hasWaybill ? "raised" : "missing"}</Badge></div>
+      <Badge variant={allocation.hasInvoice ? "secondary" : "outline"}>Proforma {allocation.hasInvoice ? allocation.invoiceCode ?? "raised" : "missing"}</Badge><Badge variant={allocation.hasWaybill ? "secondary" : "outline"}>Waybill {allocation.hasWaybill ? "raised" : "missing"}</Badge></div>
     <ReviewPanel record={review} label="packing list" keys={{ confirm: "CanReviewPackingList", return: "CanReturnPackingList", resubmit: orderPermissions.generatePackingList }} />
     {!allocation.approved && !inReview ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">This packing list is waiting for approval. It can be invoiced, loaded and shipped once it is approved.</p> : null}
     <KeyFacts>
@@ -167,7 +178,19 @@ function Detail({ allocation }: { allocation: Allocation }) {
     </KeyFacts>
     <DetailGroup title="Customer"><DetailItem label="Company" value={allocation.customer.name} /><DetailItem label="Email" value={allocation.customer.email} /><DetailItem label="Phone" value={allocation.customer.phone} /><DetailItem label="Address" value={allocation.customer.address} />
       <DetailItem label="Production order" value={allocation.orderId ? <Link className="text-primary underline-offset-2 hover:underline" to={`/crm/production-order/${allocation.orderId}`}>{allocation.orderCode ?? "Open order"}</Link> : allocation.orderCode} /></DetailGroup>
+    <AllocationDocuments allocation={allocation} />
+    <div className="flex flex-wrap gap-2">
+      {allocation.approved && !allocation.dispatchedAt && allocation.status !== 5 ? (["load", "waybill", "costing"] as const).filter((action) => action !== step && has(stepPermission(action)) &&
+        (action === "load" ? !allocation.loadedAt : action === "waybill" ? !allocation.hasWaybill : !allocation.costingConfirmedAt)).map((action) => <Button key={action} size="sm" variant="outline" onClick={() => setActing(action)}>{stepLabels[action]}</Button>) : null}
+      {!allocation.dispatchedAt && allocation.status !== 5 && has(goodsKeys.clear) && !allocation.commercialClearedAt ? <Button size="sm" variant="outline" onClick={() => setActing("clear")}>Commercial clearance</Button> : null}
+    </div>
+    {!allocation.dispatchedAt && !allocation.deliveredAt && allocation.status !== 5 && has(goodsKeys.cancel) ? <Button size="sm" variant="outline" onClick={() => setCancelling(true)}>Cancel / count goods back</Button> : null}
+    {cancelling ? <GoodsActionDialog action="cancel" allocation={allocation} onClose={() => setCancelling(false)} /> : null}
+    <KeyFacts><KeyFact label="Vehicle / bay" value={allocation.loadedVehicle ?? "Not loaded"} note={allocation.loadingLocation ?? undefined} />
+      <KeyFact label="Departed" value={formatDateTime(allocation.dispatchedAt) ?? "On site"} note={allocation.exitReference ?? undefined} />
+      <KeyFact label="Commercial clearance" value={formatDateTime(allocation.commercialClearedAt) ?? "Pending"} /></KeyFacts>
     <PackingListTable allocation={allocation} />
+    {allocation.deliveredAt ? <DeliveryEvidence allocation={allocation} /> : null}
     {invoicing ? <ProformaDialog allocation={allocation} onClose={() => setInvoicing(false)} /> : null}
     {acting ? <StepDialog key={acting} step={acting} allocation={allocation} onClose={() => setActing(null)} /> : null}
     {editing && editable ? <EditPackingListDialog orderId={editable.orderId} list={editable.list} onClose={() => setEditing(false)} /> : null}

@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { useLocation } from "react-router";
 import { useAccess } from "../../shared/auth/use-access";
+import { withProductRecalls } from "../product-recalls/navigation";
 import { navigationCatalog } from "./catalog.generated";
 import { activeNavigation, visibleNavigation } from "./navigation-model";
 import { availableNavigation, pagePath } from "./availability";
 
 const concretePages = Object.keys(import.meta.glob("../../pages/**/page.tsx")).map(pagePath);
-const availableCatalog = availableNavigation(navigationCatalog, concretePages);
+const availableCatalog = availableNavigation(withProductRecalls(navigationCatalog), concretePages);
 
 /** The sidebar groups this user may see and the entry matching the current address. */
 export function useNavigation() {

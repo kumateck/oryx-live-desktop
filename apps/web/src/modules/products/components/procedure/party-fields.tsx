@@ -20,7 +20,7 @@ function PartyRow({ form, index, users, roles, ard, onRemove }: {
       required: true, placeholder: role ? "Select a role" : "Select a user" },
     { type: InputTypes.SELECT, name: `parties.${index}.action`, label: "Instruction", mode: "single", source: "sync", options: actionOptions, required: true,
       placeholder: "Select an instruction" },
-    ...(action?.value === atrAction ? [{ type: InputTypes.SELECT, name: `parties.${index}.ard`, label: "Analytical raw data", mode: "single", source: "sync", options: ard,
+    ...(action?.value === atrAction ? [{ type: InputTypes.SELECT, name: `parties.${index}.ard`, label: "Analytical raw data / ATR stage", required: true, mode: "single", source: "sync", options: ard,
       placeholder: ard.length ? "Select analytical raw data" : "This product has none yet" } satisfies WizardField<ProcedureStepFormValues>] : []),
   ];
   return <li className="rounded-md border p-3">

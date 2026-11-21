@@ -1,3 +1,9 @@
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
+import { InputTypes } from "@/shared/forms/input-types";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { useEffect, useMemo, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -12,7 +18,7 @@ import { formatMonthYear } from "@/shared/format/dates";
 import { countText } from "@/shared/packing/fg-quantity";
 import { packsFrom, shipperSplit } from "@/shared/packing/packs";
 import { useLazyGetApiV1ProductionScheduleApprovedProductsProductByProductIdQuery, usePostApiV1ProductionOrdersAllocateMutation, usePutApiV1ProductionOrdersAllocateByAllocateProductionOrderIdMutation } from "../api/order-api";
-import { audit, packingProblems, startingPacks, type BatchPick } from "../lib/orders";
+import { audit, orderPermissions, packingProblems, startingPacks, type BatchPick } from "../lib/orders";
 import { batchesSchema, type ApprovedBatch, type ProductionOrder } from "../schemas/order-schema";
 
 /**
@@ -23,14 +29,20 @@ import { batchesSchema, type ApprovedBatch, type ProductionOrder } from "../sche
 const asCount = (packs: number, perShipper: number) => countText({ ...shipperSplit(packs, perShipper), units: 0 });
 
 /** A packing list being changed: its id and the packs it already takes, per product line and batch. */
-export interface EditedPackingList { id: string; lines: readonly { productId: string; packingId: string | null; noteId: string; packs: number }[] }
+export interface EditedPackingList { fefoExceptionReason?: string; id: string; lines: readonly { productId: string; packingId: string | null; noteId: string; packs: number }[] }
 
 /** Packs a list already holds, keyed by whatever `key` picks out. Editing gives them back before the new list is checked. */
 const held = (lines: EditedPackingList["lines"], key: (line: EditedPackingList["lines"][number]) => string) =>
   lines.reduce((map, line) => map.set(key(line), (map.get(key(line)) ?? 0) + line.packs), new Map<string, number>());
 const lineKeyOf = (line: { productId: string; packingId: string | null }) => `${line.productId}|${line.packingId ?? ""}`;
 
+const exceptionSchema = z.object({ fefoExceptionReason: z.string().max(500) });
+type ExceptionValues = z.infer<typeof exceptionSchema>;
+const exceptionFields: WizardField<ExceptionValues>[] = [{ type: InputTypes.TEXTAREA, name: "fefoExceptionReason", label: "Authorised FEFO exception reason (when bypassing earlier-expiring available stock)" }];
+
 export function PackingListDialog({ order, editing, onClose }: { order: ProductionOrder; editing?: EditedPackingList; onClose: () => void }) {
+  const permission = usePermissionAction(orderPermissions.generatePackingList);
+  const form = useForm<ExceptionValues>({ resolver: zodResolver(exceptionSchema), defaultValues: { fefoExceptionReason: editing?.fefoExceptionReason ?? "" } });
   const heldByLine = useMemo(() => held(editing?.lines ?? [], lineKeyOf), [editing]);
   const heldByNote = useMemo(() => held(editing?.lines ?? [], (line) => line.noteId), [editing]);
   // When editing, the list's own packs count as still to pack and as free in their batches again.
@@ -57,7 +69,7 @@ export function PackingListDialog({ order, editing, onClose }: { order: Producti
     if (result.error) { setProblems([apiErrorMessage(result.error)]); return; }
     const parsed = batchesSchema.safeParse(result.data ?? null);
     // Only batches packed the way the order asks, with packs still free.
-    setOffered(parsed.success ? withHeld(parsed.data).filter((batch) => batch.free > 0 && (chosen.packingId ? batch.packingId === chosen.packingId : batch.perShipper === chosen.perShipper)) : []);
+    setOffered(parsed.success ? withHeld(parsed.data).filter((batch) => batch.eligible && batch.free > 0 && (chosen.packingId ? batch.packingId === chosen.packingId : batch.perShipper === chosen.perShipper)) : []);
   };
   const addBatch = (noteId: string) => {
     const batch = offered.find((item) => item.noteId === noteId);
@@ -94,10 +106,12 @@ export function PackingListDialog({ order, editing, onClose }: { order: Producti
   }, [editing?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const total = picks.reduce((sum, pick) => sum + (Number.isFinite(pick.packs) ? pick.packs : 0), 0);
   const submit = async () => {
+    if (!await form.trigger()) return;
+    const denied = permission.check(); if (denied) { setProblems([denied]); return; }
     const found = packingProblems(picks, open, known);
     setProblems(found);
     if (found.length > 0) return;
-    const request = { productionOrderId: order.id,
+    const request = { productionOrderId: order.id, fefoExceptionReason: form.getValues("fefoExceptionReason").trim() || null,
       // One entry per product and packing style, carrying every batch it is packed from.
       products: open.flatMap((item) => { const mine = picks.filter((pick) => pick.lineKey === item.key);
         return mine.length > 0 && item.productId && item.packingId ? [{ productId: item.productId, productPackingId: item.packingId, fulfilledQuantities: mine.map((pick) => ({ finishedGoodsTransferNoteId: pick.noteId, quantity: pick.packs })) }] : []; }) };
@@ -138,10 +152,11 @@ export function PackingListDialog({ order, editing, onClose }: { order: Producti
               <td className="py-1.5 text-right">{batch ? asCount(batch.free, batch.perShipper) : "–"}</td><td className="py-1.5 text-right">{batch?.perShipper || "–"}</td>
               <td className="py-1.5 pl-3">{field("shippers")}</td><td className="py-1.5 pl-3">{field("loose")}</td><td className="py-1.5 text-right font-medium">{pick.packs.toLocaleString()}</td>
               <td className="py-1.5 text-right"><Button type="button" size="icon-sm" variant="ghost" className="text-destructive" aria-label={`Remove batch ${batch?.batchNumber ?? index + 1}`} disabled={busy} onClick={() => setPicks((current) => current.filter((entry) => entry.key !== pick.key))}><Trash2 /></Button></td></tr>; })}</tbody></table></div>
+        <FormWizard form={form} fields={exceptionFields} />
         <p role="status" className="text-sm">Total on this list <span className="font-semibold">{total.toLocaleString()} packs</span></p>
         {problems.length > 0 ? <ul role="alert" className="list-disc space-y-0.5 pl-5 text-sm text-destructive">{problems.map((problem) => <li key={problem}>{problem}</li>)}</ul> : null}
       </DialogBody>
-      <DialogFooter><Button type="button" variant="outline" disabled={saving} onClick={onClose}>Cancel</Button><Button type="button" disabled={busy || picks.length === 0} onClick={() => void submit()}>{saving ? <><Spinner />Saving…</> : editing ? "Save changes" : "Create packing list"}</Button></DialogFooter>
+      <DialogFooter><Button type="button" variant="outline" disabled={saving} onClick={onClose}>Cancel</Button><Button type="button" disabled={busy || !permission.allowed || picks.length === 0} onClick={() => void submit()}>{saving ? <><Spinner />Saving…</> : editing ? "Save changes" : "Create packing list"}</Button></DialogFooter>
     </DialogContent>
   </Dialog>;
 }

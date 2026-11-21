@@ -1,0 +1,158 @@
+{
+  "addedPaths": [
+    "/api/v1/finished-goods/allocations/{id}/cancel",
+    "/api/v1/finished-goods/allocations/{id}/clearance",
+    "/api/v1/finished-goods/allocations/{id}/costing",
+    "/api/v1/finished-goods/allocations/{id}/delivery",
+    "/api/v1/finished-goods/allocations/{id}/dispatch",
+    "/api/v1/finished-goods/allocations/{id}/documents",
+    "/api/v1/finished-goods/allocations/{id}/load",
+    "/api/v1/finished-goods/allocations/{id}/waybill-print",
+    "/api/v1/finished-goods/invoices/{id}/void",
+    "/api/v1/finished-goods/proformas/{id}/verify-po",
+    "/api/v1/finished-goods/recall-batches",
+    "/api/v1/finished-goods/recalls",
+    "/api/v1/finished-goods/recalls/{id}",
+    "/api/v1/finished-goods/recalls/{id}/authority-decision",
+    "/api/v1/finished-goods/recalls/{id}/close",
+    "/api/v1/finished-goods/recalls/{id}/contacts",
+    "/api/v1/finished-goods/recalls/{id}/dispose-stock",
+    "/api/v1/finished-goods/recalls/{id}/print",
+    "/api/v1/finished-goods/recalls/{id}/recoveries",
+    "/api/v1/finished-goods/recalls/{id}/recoveries/{recoveryId}/dispose",
+    "/api/v1/finished-goods/recalls/{id}/reopen",
+    "/api/v1/finished-goods/recalls/{id}/replacement-orders",
+    "/api/v1/finished-goods/recalls/{id}/settlement-options",
+    "/api/v1/finished-goods/recalls/{id}/settlements",
+    "/api/v1/finished-goods/transfers/{id}/hold",
+    "/api/v1/finished-goods/transfers/{id}/reconcile",
+    "/api/v1/finished-goods/transfers/{id}/reconciliation",
+    "/api/v1/finished-goods/transfers/{id}/release-hold"
+  ],
+  "addedSchemas": [
+    "APP.Services.FinishedGoods.FinishedGoodsBatchOptionDto",
+    "APP.Services.FinishedGoods.FinishedGoodsCostBasisDto",
+    "APP.Services.FinishedGoods.FinishedGoodsDocumentsDto",
+    "APP.Services.FinishedGoods.FinishedGoodsInvoiceHistoryDto",
+    "APP.Services.FinishedGoods.FinishedGoodsReconciliationAllocationDto",
+    "APP.Services.FinishedGoods.FinishedGoodsSettlementCurrencyDto",
+    "APP.Services.FinishedGoods.FinishedGoodsSettlementOptionDto",
+    "APP.Services.FinishedGoods.FinishedGoodsWaybillLineDto",
+    "APP.Services.FinishedGoods.FinishedGoodsWaybillPrintDto",
+    "APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSummaryDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+    "DOMAIN.Entities.FinishedGoods.CloseFinishedGoodsRecallRequest",
+    "DOMAIN.Entities.FinishedGoods.CreateFinishedGoodsRecallRequest",
+    "DOMAIN.Entities.FinishedGoods.DisposeRecalledStockRequest",
+    "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallDetailDto",
+    "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallHistoryDto",
+    "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallRecoveryDto",
+    "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSettlementDto",
+    "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallStockDto",
+    "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSummaryDto",
+    "DOMAIN.Entities.FinishedGoods.FinishedGoodsTraceDto",
+    "DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest",
+    "DOMAIN.Entities.FinishedGoods.ReconcileFinishedGoodsDeparture",
+    "DOMAIN.Entities.FinishedGoods.ReconcileFinishedGoodsStockRequest",
+    "DOMAIN.Entities.FinishedGoods.RecordProductRecallSettlementRequest",
+    "DOMAIN.Entities.FinishedGoods.RecordRecallContactRequest",
+    "DOMAIN.Entities.FinishedGoods.RecordRecallRecoveryRequest",
+    "DOMAIN.Entities.FinishedGoods.UpdateFinishedGoodsRecallDecisionRequest",
+    "DOMAIN.Entities.Materials.Batch.ApprovedProductStockDto",
+    "DOMAIN.Entities.ProductionOrders.ClearFinishedGoodsDispatchRequest",
+    "DOMAIN.Entities.ProductionOrders.ConfirmFinishedGoodsCostingRequest",
+    "DOMAIN.Entities.ProductionOrders.DeliverFinishedGoodsRequest",
+    "DOMAIN.Entities.ProductionOrders.DispatchFinishedGoodsRequest",
+    "DOMAIN.Entities.ProductionOrders.FinishedGoodsCostingLine",
+    "DOMAIN.Entities.ProductionOrders.FinishedGoodsDeliveryLine",
+    "DOMAIN.Entities.ProductionOrders.LoadFinishedGoodsRequest",
+    "DOMAIN.Entities.ProformaInvoices.VerifyFinishedGoodsCustomerPoLine",
+    "DOMAIN.Entities.ProformaInvoices.VerifyFinishedGoodsCustomerPoRequest"
+  ],
+  "addedFields": {
+    "DOMAIN.Entities.Invoices.CreateInvoice": [
+      "code"
+    ],
+    "DOMAIN.Entities.Invoices.InvoiceDto": [
+      "code",
+      "voidReason",
+      "voided",
+      "voidedAt",
+      "voidedById"
+    ],
+    "DOMAIN.Entities.Materials.Batch.ApprovedProductDto": [
+      "stocks"
+    ],
+    "DOMAIN.Entities.Materials.Batch.FinishedGoodsTransferNoteDto": [
+      "adjustmentQuantity",
+      "availableQuantity",
+      "dispatchedQuantity",
+      "holdReason",
+      "isOnHold",
+      "packingStyleSnapshot",
+      "packsPerShipperSnapshot",
+      "physicalQuantity",
+      "qualityReleased",
+      "requiresStockReconciliation",
+      "reservedQuantity"
+    ],
+    "DOMAIN.Entities.ProductionOrders.AllocateProductionOrderDto": [
+      "commercialClearanceReason",
+      "commercialClearedAt",
+      "costingConfirmedAt",
+      "deliveryCondition",
+      "deliveryEvidence",
+      "deliveryLines",
+      "deliveryReceiver",
+      "dispatchedAt",
+      "exitReference",
+      "fefoExceptionReason",
+      "loadedDriver",
+      "loadedDriverPhone",
+      "loadedVehicle",
+      "loadingInspectionReference",
+      "loadingLocation"
+    ],
+    "DOMAIN.Entities.ProductionOrders.AllocateProductionOrderRequest": [
+      "fefoExceptionReason"
+    ],
+    "DOMAIN.Entities.ProductionOrders.CreateProductionOrderWaybill": [
+      "deliveryAddress",
+      "driverName",
+      "driverPhone",
+      "invoiceId",
+      "sealNumber",
+      "storageConditions",
+      "transporter",
+      "vehicleRegistration"
+    ],
+    "DOMAIN.Entities.ProductionOrders.ProductionOrderWaybillDto": [
+      "deliveryAddress",
+      "driverName",
+      "driverPhone",
+      "invoiceId",
+      "sealNumber",
+      "storageConditions",
+      "transporter",
+      "vehicleRegistration"
+    ],
+    "DOMAIN.Entities.ProformaInvoices.ProformaInvoiceDto": [
+      "approved",
+      "customerPoAttachmentId",
+      "customerPoDate",
+      "customerPoNumber",
+      "customerPoVerifiedAt",
+      "customerPoVerifiedById",
+      "invoiceIssuedAt",
+      "issuedInvoiceCode",
+      "issuedInvoiceId"
+    ]
+  },
+  "previousEnums": {
+    "DOMAIN.Entities.ProductionOrders.AllocateProductionOrderStatus": [
+      0,
+      1,
+      2,
+      3
+    ]
+  }
+}
