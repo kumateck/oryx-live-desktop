@@ -40,7 +40,7 @@ export function ProformaDialog({ allocation, onClose }: { allocation: Allocation
     if (!current.data.approved) { setMessage("This allocation is still waiting for its own approval, so it cannot be invoiced yet."); return; }
     if (current.data.hasInvoice) { setMessage("A proforma invoice has already been raised for this allocation."); return; }
     const result = await save({ ...invoiceAudit, domainEntitiesProformaInvoicesCreateProformaInvoice: { code: number, allocateProductionOrderId: current.data.id,
-      products: current.data.products.flatMap((product) => product.productId ? [{ productId: product.productId, quantity: product.quantity }] : []) } });
+      products: current.data.products.flatMap((product) => product.productId ? [{ productId: product.productId, productPackingId: product.packingId, quantity: product.quantity }] : []) } });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success(`Proforma invoice ${number} raised`);
     onClose();

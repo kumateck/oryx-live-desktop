@@ -43,8 +43,11 @@ function open(permissions: string[], address = "/qa/products", productDepartment
     if (path === `/api/v1/product/${id}/bom`) return Response.json({ version: 2, isActive: true, billOfMaterial: { items: [
       { id: "line-shells", order: 1, baseQuantity: 50, baseUoM: { id: "old-mg", symbol: "mg" }, material: { id: "shells", name, code: "RMG033" } },
     ] } });
-    if (path === "/api/v1/material/shells/uom") return Response.json({ id: "linked-piece", symbol: "piece" });
-    if (path === "/api/v1/material/department") return Response.json({ data: [], pageIndex: 1, pageCount: 1 });
+    if (path === "/api/v1/material/shells/uom") return url.searchParams.get("context") === "qa"
+      ? Response.json({ id: "linked-piece", symbol: "piece" }) : new Response(null, { status: 403 });
+    if (path === "/api/v1/material/department") return Response.json({ data: [
+      { material: { id: "sucrose", name: "Sucrose", code: "RM-S" }, uoM: { id: "linked-g", symbol: "g" } },
+    ], pageIndex: 1, pageCount: 1 });
     if (path === "/api/v1/bom") return Response.json("ok");
     if (path === "/api/v1/verification") return new Response(null, { status: 204 });
     return new Response(null, { status: 404 });
@@ -118,6 +121,7 @@ it("uses the product's linkage for QA BOM editing and rechecks that unit before 
   const lookups = calls.filter(call => call.path === "/api/v1/material/shells/uom");
   expect(lookups.length).toBeGreaterThanOrEqual(2);
   expect(lookups.every(call => call.search.includes(`productId=${id}`))).toBe(true);
+  expect(lookups.every(call => new URLSearchParams(call.search).get("context") === "qa")).toBe(true);
   expect(calls.find(call => call.path === "/api/v1/bom")?.body).toContain('"baseUoMId":"linked-piece"');
   expect(screen.getByRole("link", { name: "Packing materials" }).getAttribute("href")).toContain(`departmentId=${departmentId}`);
 });
@@ -128,6 +132,18 @@ it("uses product-scoped materials in the QA picker", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Add material" }));
   fireEvent.click(await screen.findByRole("combobox", { name: /Material/ }));
   await waitFor(() => expect(calls.find(call => call.path === "/api/v1/material/department")?.search).toContain(`productId=${id}`));
+  expect(new URLSearchParams(calls.find(call => call.path === "/api/v1/material/department")?.search).get("context")).toBe("qa");
+});
+
+it("uses the QA department-material choice's included unit without another unit request", async () => {
+  const { calls } = open([...view, ...edit], `/qa/products/${id}/edit/bom?departmentId=${departmentId}`);
+  await screen.findByText(name);
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Add material" }));
+  await user.click(await screen.findByRole("combobox", { name: /Material/ }));
+  await user.click(await screen.findByRole("option", { name: "RM-S - Sucrose" }));
+  expect(await screen.findByRole("spinbutton", { name: "Unit quantity (g)" })).toBeTruthy();
+  expect(calls.some(call => call.path === "/api/v1/material/sucrose/uom")).toBe(false);
 });
 
 it("allows explicitly granted QA verification without changing the active department", async () => {

@@ -1,6 +1,6 @@
 import { formatMoney } from "@/shared/procurement/price";
 
-/** Finance → Costing on the role permissions page. The backend guards every costing and pricing-agreement endpoint with it. */
+/** Legacy price lookup and customer agreement management. Versioned price lists use their own task keys. */
 export const costingPermissions = { manage: "ManageCosting" } as const;
 export const costingAudit = { module: "Finance", subModule: "Costing" } as const;
 export const costingPath = "/finance/costing";

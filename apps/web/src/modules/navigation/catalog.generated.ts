@@ -182,7 +182,7 @@ export const navigationCatalog = [
         "label": "Costing",
         "path": "/finance/costing",
         "permissions": [
-          "ManageCosting"
+          "CanViewCostingPriceList"
         ]
       }
     ]

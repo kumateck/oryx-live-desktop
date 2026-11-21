@@ -13,7 +13,7 @@ export const materialKind = { raw: 0, packaging: 1 } as const;
  * material offered so the form can fill in its code, unit, and specification when one is chosen.
  */
 export function useMaterialOptions(kind: 0 | 1, audit: { module: string; subModule: string }) {
-  const { lookupProductId } = useProductWorkspace();
+  const { context, lookupProductId } = useProductWorkspace();
   const [load] = useLazyGetApiV1MaterialDepartmentQuery();
   const seen = useRef(new Map<string, MaterialFacts>());
 
@@ -28,7 +28,7 @@ export function useMaterialOptions(kind: 0 | 1, audit: { module: string; subModu
   }, []);
 
   const loader = useCallback((exclude: readonly string[]): SelectLoader => async (search, page, signal) => {
-    const request = load({ ...audit, searchQuery: search, page, pageSize: 20, kind, ...(lookupProductId ? { productId: lookupProductId } : {}) });
+    const request = load({ ...audit, ...context, searchQuery: search, page, pageSize: 20, kind, ...(lookupProductId ? { productId: lookupProductId } : {}) });
     signal.addEventListener("abort", () => request.abort(), { once: true });
     const result = await request.unwrap();
     const materials = (result.data ?? []).flatMap((item) => {
@@ -42,7 +42,7 @@ export function useMaterialOptions(kind: 0 | 1, audit: { module: string; subModu
       hasNext: current < (result.pageCount ?? current),
       hasPrevious: current > 1,
     };
-  }, [load, kind, audit, lookupProductId, remember]);
+  }, [load, kind, audit, context, lookupProductId, remember]);
 
   const facts = useCallback((id: string | undefined) => id ? seen.current.get(id) ?? null : null, []);
   return { loader, facts };
@@ -50,11 +50,11 @@ export function useMaterialOptions(kind: 0 | 1, audit: { module: string; subModu
 
 /** Read every matching page afresh: a picker cache or its first page is not density authority. */
 export function useBomDensity(materialId: string | undefined, search: string, audit: { module: string; subModule: string }) {
-  const { lookupProductId } = useProductWorkspace();
+  const { context, lookupProductId } = useProductWorkspace();
   const [load] = useLazyGetApiV1MaterialDepartmentQuery();
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{ key: string; density: number | null; problem: string | null; failed: boolean } | null>(null);
-  const key = JSON.stringify([materialId, search, lookupProductId, attempt]);
+  const key = JSON.stringify([materialId, search, context.context, lookupProductId, attempt]);
   const { module, subModule } = audit;
   useEffect(() => {
     if (!materialId) return;
@@ -63,7 +63,7 @@ export function useBomDensity(materialId: string | undefined, search: string, au
     const read = async () => {
       try {
         for (let page = 1; active; page += 1) {
-          const request = load({ module, subModule, searchQuery: search, page, pageSize: 20,
+          const request = load({ module, subModule, ...context, searchQuery: search, page, pageSize: 20,
             kind: materialKind.raw, ...(lookupProductId ? { productId: lookupProductId } : {}) }, false);
           cancel = request.abort;
           const response = await request.unwrap();
@@ -89,7 +89,7 @@ export function useBomDensity(materialId: string | undefined, search: string, au
     };
     void read();
     return () => { active = false; cancel(); };
-  }, [key, materialId, search, lookupProductId, module, subModule, load]);
+  }, [key, materialId, search, context, lookupProductId, module, subModule, load]);
   const current = result?.key === key ? result : null;
   return { density: current?.density ?? null, problem: current?.problem ?? null,
     loading: Boolean(materialId) && !current, failed: current?.failed ?? false,

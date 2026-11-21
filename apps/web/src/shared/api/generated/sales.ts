@@ -353,6 +353,7 @@ const injectedRtkApi = api.injectEndpoints({
           searchQuery: queryArg.searchQuery,
           departmentId: queryArg.departmentId,
           currencyId: queryArg.currencyId,
+          division: queryArg.division,
         },
       }),
     }),
@@ -412,6 +413,163 @@ const injectedRtkApi = api.injectEndpoints({
       providesTags: (_result, _error, queryArg) => [{ type: "costing/pricing-agreement", id: queryArg.id }],
       query: (queryArg) => ({
         url: `/api/v1/costing/pricing-agreements/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1CostingPriceListsProducts: build.query<
+      GetApiV1CostingPriceListsProductsApiResponse,
+      GetApiV1CostingPriceListsProductsApiArg
+    >({
+      providesTags: [{ type: "costing/price-list", id: "LIST" }, { type: "costing", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/costing/price-lists/products`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          division: queryArg.division,
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          searchQuery: queryArg.searchQuery,
+        },
+      }),
+    }),
+    getApiV1CostingPriceLists: build.query<
+      GetApiV1CostingPriceListsApiResponse,
+      GetApiV1CostingPriceListsApiArg
+    >({
+      providesTags: [{ type: "costing/price-list", id: "LIST" }, { type: "costing", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/costing/price-lists`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          division: queryArg.division,
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          searchQuery: queryArg.searchQuery,
+        },
+      }),
+    }),
+    postApiV1CostingPriceLists: build.mutation<
+      PostApiV1CostingPriceListsApiResponse,
+      PostApiV1CostingPriceListsApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "costing/price-list", id: "LIST" }, { type: "costing", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/costing/price-lists`,
+        method: "POST",
+        body: queryArg.domainEntitiesCostingPrepareCostingPriceListRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1CostingPriceListsById: build.query<
+      GetApiV1CostingPriceListsByIdApiResponse,
+      GetApiV1CostingPriceListsByIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "costing/price-list", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/costing/price-lists/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1CostingPriceListsById: build.mutation<
+      PutApiV1CostingPriceListsByIdApiResponse,
+      PutApiV1CostingPriceListsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "costing/price-list", id: "LIST" }, { type: "costing", id: "LIST" }, { type: "costing/price-list", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/costing/price-lists/${queryArg.id}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesCostingUpdateCostingPriceListRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1CostingPriceListsByIdLines: build.query<
+      GetApiV1CostingPriceListsByIdLinesApiResponse,
+      GetApiV1CostingPriceListsByIdLinesApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "costing/price-list", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/costing/price-lists/${queryArg.id}/lines`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          searchQuery: queryArg.searchQuery,
+        },
+      }),
+    }),
+    putApiV1CostingPriceListsByIdLines: build.mutation<
+      PutApiV1CostingPriceListsByIdLinesApiResponse,
+      PutApiV1CostingPriceListsByIdLinesApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "costing/price-list", id: "LIST" }, { type: "costing", id: "LIST" }, { type: "costing/price-list", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/costing/price-lists/${queryArg.id}/lines`,
+        method: "PUT",
+        body: queryArg.domainEntitiesCostingSaveCostingPriceListLineRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1CostingPriceListsByIdPrint: build.query<
+      GetApiV1CostingPriceListsByIdPrintApiResponse,
+      GetApiV1CostingPriceListsByIdPrintApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "costing/price-list", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/costing/price-lists/${queryArg.id}/print`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1CostingPriceListsRevise: build.mutation<
+      PostApiV1CostingPriceListsReviseApiResponse,
+      PostApiV1CostingPriceListsReviseApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "costing/price-list", id: "LIST" }, { type: "costing", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/costing/price-lists/revise`,
+        method: "POST",
+        body: queryArg.domainEntitiesCostingPrepareCostingPriceListRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1CostingPriceListsByIdSubmit: build.mutation<
+      PostApiV1CostingPriceListsByIdSubmitApiResponse,
+      PostApiV1CostingPriceListsByIdSubmitApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "costing/price-list", id: "LIST" }, { type: "costing", id: "LIST" }, { type: "costing/price-list", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/costing/price-lists/${queryArg.id}/submit`,
+        method: "POST",
+        body: queryArg.domainEntitiesCostingSubmitCostingPriceListRequest,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -641,6 +799,7 @@ export type GetApiV1CostingListPricesApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  division?: DomainEntitiesProductsDivision;
 };
 export type GetApiV1CostingListPricesByProductIdHistoryApiResponse =
   /** status 200 OK */ DomainEntitiesCostingListPriceHistoryDto[];
@@ -682,6 +841,105 @@ export type GetApiV1CostingPricingAgreementsByIdApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+};
+export type GetApiV1CostingPriceListsProductsApiResponse =
+  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesCostingCostingPackingOptionDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
+export type GetApiV1CostingPriceListsProductsApiArg = {
+  division?: DomainEntitiesProductsDivision;
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1CostingPriceListsApiResponse =
+  /** status 200 OK */ DomainEntitiesCostingCostingPriceListPageDto;
+export type GetApiV1CostingPriceListsApiArg = {
+  division?: DomainEntitiesProductsDivision;
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1CostingPriceListsApiResponse =
+  /** status 201 Created */ string;
+export type PostApiV1CostingPriceListsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesCostingPrepareCostingPriceListRequest: DomainEntitiesCostingPrepareCostingPriceListRequest;
+};
+export type GetApiV1CostingPriceListsByIdApiResponse =
+  /** status 200 OK */ DomainEntitiesCostingCostingPriceListDetailDto;
+export type GetApiV1CostingPriceListsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PutApiV1CostingPriceListsByIdApiResponse = void;
+export type PutApiV1CostingPriceListsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesCostingUpdateCostingPriceListRequest: DomainEntitiesCostingUpdateCostingPriceListRequest;
+};
+export type GetApiV1CostingPriceListsByIdLinesApiResponse =
+  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesCostingCostingPriceListLineDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
+export type GetApiV1CostingPriceListsByIdLinesApiArg = {
+  id: string;
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PutApiV1CostingPriceListsByIdLinesApiResponse = void;
+export type PutApiV1CostingPriceListsByIdLinesApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesCostingSaveCostingPriceListLineRequest: DomainEntitiesCostingSaveCostingPriceListLineRequest;
+};
+export type GetApiV1CostingPriceListsByIdPrintApiResponse =
+  /** status 200 OK */ DomainEntitiesCostingCostingPriceListPrintDto;
+export type GetApiV1CostingPriceListsByIdPrintApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1CostingPriceListsReviseApiResponse =
+  /** status 201 Created */ string;
+export type PostApiV1CostingPriceListsReviseApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesCostingPrepareCostingPriceListRequest: DomainEntitiesCostingPrepareCostingPriceListRequest;
+};
+export type PostApiV1CostingPriceListsByIdSubmitApiResponse = void;
+export type PostApiV1CostingPriceListsByIdSubmitApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesCostingSubmitCostingPriceListRequest: DomainEntitiesCostingSubmitCostingPriceListRequest;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -983,6 +1241,141 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
+export type DomainEntitiesCostingCostingPackingOptionDto = {
+  productId?: string;
+  productPackingId?: string;
+  productCode?: string | null;
+  productName?: string | null;
+  packingStyle?: string | null;
+};
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesCostingCostingPackingOptionDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+  {
+    data?: DomainEntitiesCostingCostingPackingOptionDto[] | null;
+    pageIndex?: number;
+    pageCount?: number;
+    totalRecordCount?: number;
+    numberOfPagesToShow?: number;
+    startPageIndex?: number;
+    stopPageIndex?: number;
+  };
+export type DomainEntitiesCostingCostingPriceListStatus = 0 | 1 | 3 | 4;
+export type DomainEntitiesReviewsDocumentReviewStatus = 0 | 1 | 2;
+export type DomainEntitiesCostingCostingPriceListSummaryDto = {
+  id?: string;
+  division?: DomainEntitiesProductsDivision;
+  documentNumber?: string | null;
+  revisionNumber?: number;
+  previousRevisionId?: string | null;
+  supersedesRevision?: number | null;
+  effectiveFrom?: string;
+  revisionReason?: string | null;
+  status?: DomainEntitiesCostingCostingPriceListStatus;
+  stage?: string | null;
+  reviewStatus?: DomainEntitiesReviewsDocumentReviewStatus;
+  version?: number;
+  lineCount?: number;
+  preparedBy?: string | null;
+  createdAt?: string;
+  approvedAt?: string | null;
+};
+export type DomainEntitiesCostingCostingPriceListPageDto = {
+  data?: DomainEntitiesCostingCostingPriceListSummaryDto[] | null;
+  pageIndex?: number;
+  pageCount?: number;
+  totalRecordCount?: number;
+  numberOfPagesToShow?: number;
+  startPageIndex?: number;
+  stopPageIndex?: number;
+  latestApproved?: DomainEntitiesCostingCostingPriceListSummaryDto;
+  openRevisionId?: string | null;
+  nextRevisionNumber?: number;
+};
+export type DomainEntitiesCostingPrepareCostingPriceListRequest = {
+  division?: DomainEntitiesProductsDivision;
+  documentNumber: string;
+  revisionNumber?: number;
+  effectiveFrom?: string;
+  revisionReason: string;
+  previousRevisionId?: string | null;
+};
+export type DomainEntitiesCostingCostingPriceListSignatoryDto = {
+  name?: string | null;
+  designation?: string | null;
+  signature?: string | null;
+  signedAt?: string | null;
+};
+export type DomainEntitiesCostingCostingPriceListDetailDto = {
+  id?: string;
+  division?: DomainEntitiesProductsDivision;
+  documentNumber?: string | null;
+  revisionNumber?: number;
+  previousRevisionId?: string | null;
+  supersedesRevision?: number | null;
+  effectiveFrom?: string;
+  revisionReason?: string | null;
+  status?: DomainEntitiesCostingCostingPriceListStatus;
+  stage?: string | null;
+  reviewStatus?: DomainEntitiesReviewsDocumentReviewStatus;
+  version?: number;
+  lineCount?: number;
+  preparedBy?: string | null;
+  createdAt?: string;
+  approvedAt?: string | null;
+  preparedBySignatory?: DomainEntitiesCostingCostingPriceListSignatoryDto;
+  checkedBy?: DomainEntitiesCostingCostingPriceListSignatoryDto;
+  approvedBy?: DomainEntitiesCostingCostingPriceListSignatoryDto;
+};
+export type DomainEntitiesCostingUpdateCostingPriceListRequest = {
+  division?: DomainEntitiesProductsDivision;
+  documentNumber: string;
+  revisionNumber?: number;
+  effectiveFrom?: string;
+  revisionReason: string;
+  previousRevisionId?: string | null;
+  version?: number;
+};
+export type DomainEntitiesCostingCostingPriceListLineDto = {
+  id?: string;
+  productId?: string;
+  productPackingId?: string;
+  packingStyle?: string | null;
+  productCode?: string | null;
+  productName?: string | null;
+  price?: number | null;
+  previousPrice?: number | null;
+  previousCurrencySymbol?: string | null;
+  previousPriceUoM?: string | null;
+  previousCurrencyId?: string | null;
+  priceUoM?: string | null;
+  currencyId?: string | null;
+  currencyName?: string | null;
+  currencySymbol?: string | null;
+};
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesCostingCostingPriceListLineDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+  {
+    data?: DomainEntitiesCostingCostingPriceListLineDto[] | null;
+    pageIndex?: number;
+    pageCount?: number;
+    totalRecordCount?: number;
+    numberOfPagesToShow?: number;
+    startPageIndex?: number;
+    stopPageIndex?: number;
+  };
+export type DomainEntitiesCostingSaveCostingPriceListLineRequest = {
+  version?: number;
+  productId?: string;
+  productPackingId?: string;
+  price?: number | null;
+  priceUoM?: string | null;
+  currencyId?: string | null;
+};
+export type DomainEntitiesCostingCostingPriceListPrintDto = {
+  revision?: DomainEntitiesCostingCostingPriceListDetailDto;
+  lines?: DomainEntitiesCostingCostingPriceListLineDto[] | null;
+};
+export type DomainEntitiesCostingSubmitCostingPriceListRequest = {
+  version?: number;
+};
 export const {
   usePostApiV1CustomersMutation,
   useGetApiV1CustomersQuery,
@@ -1027,4 +1420,19 @@ export const {
   useLazyGetApiV1CostingPricingAgreementsQuery,
   useGetApiV1CostingPricingAgreementsByIdQuery,
   useLazyGetApiV1CostingPricingAgreementsByIdQuery,
+  useGetApiV1CostingPriceListsProductsQuery,
+  useLazyGetApiV1CostingPriceListsProductsQuery,
+  useGetApiV1CostingPriceListsQuery,
+  useLazyGetApiV1CostingPriceListsQuery,
+  usePostApiV1CostingPriceListsMutation,
+  useGetApiV1CostingPriceListsByIdQuery,
+  useLazyGetApiV1CostingPriceListsByIdQuery,
+  usePutApiV1CostingPriceListsByIdMutation,
+  useGetApiV1CostingPriceListsByIdLinesQuery,
+  useLazyGetApiV1CostingPriceListsByIdLinesQuery,
+  usePutApiV1CostingPriceListsByIdLinesMutation,
+  useGetApiV1CostingPriceListsByIdPrintQuery,
+  useLazyGetApiV1CostingPriceListsByIdPrintQuery,
+  usePostApiV1CostingPriceListsReviseMutation,
+  usePostApiV1CostingPriceListsByIdSubmitMutation,
 } = injectedRtkApi;

@@ -147,3 +147,10 @@ The shared answer sheet renders section and field descriptions through `RichText
 A specialized field shows a named loading state. A failed import/render shows **Retry field** and reports the error through the application error reporter; retry remounts only that renderer and preserves the form's other unsaved answers. Universal worksheets use container queries to stack inputs at narrow content widths, assign unique input IDs, and omit empty input groups and data tables. Calculation overflow stays within its section.
 
 The answer-sheet interaction tests exercise rich descriptions, the Loss on Drying calculation, Assay inputs/table readings, serialized answer values, and disabled fieldsets. Custom-field recovery has a separate regression test. Permissions, assignment checks, required-answer validation, draft writes, final submission, and backend audit responsibilities retain their existing contracts.
+
+Product procedure copying retains responsible instructions and resolves each ATR
+to the destination product's own analytical raw data at the same stage and analysis
+type. The selected ATR stage is required in the existing FormWizard editor. A
+missing or ambiguous destination stage is reported without replacing that product's
+procedure; the copy review lists the associated instructions and stage labels.
+See the backend's `docs/product-procedure-copy.md` for permissions and atomicity.

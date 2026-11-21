@@ -30,8 +30,10 @@ const text = z.string().nullish().transform((value) => value?.trim() || null);
 const amount = z.number().nullish().transform((value) => typeof value === "number" && Number.isFinite(value) ? value : 0);
 const show = (value: number, unit: string | null) => toLargestUnit(value, unit, "calculated")?.text ?? value.toLocaleString();
 
-const productRows = z.array(z.object({ product: z.object({ id: z.string().nullish(), code: text, name: text, division: z.number().nullish() }).nullish(), totalQuantity: amount, totalRemainingQuantity: amount, totalLoose: amount })).nullish()
-  .transform((value) => (value ?? []).flatMap((entry) => entry.product?.id ? [{ id: entry.product.id, code: entry.product.code, name: entry.product.name ?? "Unnamed product", division: entry.product.division ?? null, total: entry.totalQuantity, remaining: entry.totalRemainingQuantity, loose: entry.totalLoose }] : []));
+const stockRow = z.object({ transferNoteId: z.string(), productPackingId: text, packingStyle: text, baseUnit: text,
+  quantityPerPack: amount, packsPerShipper: z.number().nullish(), sent: amount, received: amount, physical: amount, reserved: amount, available: amount, dispatched: amount, quarantinedReturns: amount });
+const productRows = z.array(z.object({ product: z.object({ id: z.string().nullish(), code: text, name: text, division: z.number().nullish() }).nullish(), totalQuantity: amount, totalRemainingQuantity: amount, totalLoose: amount, stocks: z.array(stockRow).default([]) })).nullish()
+  .transform((value) => (value ?? []).flatMap((entry) => entry.product?.id ? [{ id: entry.product.id, code: entry.product.code, name: entry.product.name ?? "Unnamed product", division: entry.product.division ?? null, total: entry.totalQuantity, remaining: entry.totalRemainingQuantity, loose: entry.totalLoose, stocks: entry.stocks }] : []));
 type ApprovedProduct = z.infer<typeof productRows>[number];
 
 type StockPart = "transferred" | "received" | "remaining";
@@ -48,23 +50,30 @@ export function stockSummary(notes: readonly Pick<TransferNote, "total" | "recei
   return { ...totals, baseName: notes[0]?.layout.baseName ?? null, packings: [...new Set(notes.flatMap((note) => note.packing ? [`${note.packing}${note.perShipper ? ` (${note.perShipper} per shipper)` : ""}`] : []))] };
 }
 
-/** One product's packing or stock, read from its approved transfers. Each row reads its own, and the answers are cached. */
-function PackingCell({ productId, part, empty = false }: { productId: string; part: "packing" | StockPart; empty?: boolean }) {
-  const query = useGetApiV1ProductionScheduleApprovedProductsByProductIdQuery({ ...audit, productId });
-  const summary = useMemo(() => { const parsed = noteRowsSchema.safeParse(query.data ?? []); return parsed.success ? stockSummary(parsed.data) : null; }, [query.data]);
-  if (query.isLoading) return <span className="inline-block h-4 w-16 animate-pulse rounded bg-muted" />;
-  if (!summary) return <span className="text-muted-foreground">–</span>;
-  if (part === "packing") return <span className="break-words">{summary.packings.join(", ") || "–"}</span>;
-  return <span className={part === "transferred" ? undefined : empty ? "font-medium text-destructive" : "font-medium"}>{countText(summary[part], summary.baseName)}</span>;
+/** Each packing style retains its own balance and conversion; no extra request per row. */
+function StockCell({ row, part }: { row: ApprovedProduct; part: "packing" | "sent" | "received" | "physical" | "reserved" | "available" }) {
+  const groups = new Map<string, { name: string; base: string | null; count: FgCount; invalid: boolean }>();
+  for (const stock of row.stocks) {
+    const key = `${stock.productPackingId}/${stock.quantityPerPack}/${stock.packsPerShipper}`;
+    const previous = groups.get(key);
+    const count = part === "packing" ? emptyCount() : fgCount(stock[part], {
+      baseUnitsPerPack: stock.quantityPerPack, perShipper: stock.packsPerShipper ?? null, packName: stock.packingStyle, baseName: stock.baseUnit,
+    });
+    const invalid = part !== "packing" && (stock[part] < 0 || count === null);
+    groups.set(key, { invalid: Boolean(previous?.invalid || invalid), name: stock.packingStyle ?? "Packing style missing", base: stock.baseUnit, count: addCounts(previous?.count ?? emptyCount(), count ?? emptyCount()) });
+  }
+  return <div className="space-y-1">{[...groups].map(([key, group]) => <div key={key}>{part === "packing" ? group.name : group.invalid ? "Reconcile packing units and count" : countText(group.count, group.base)}</div>)}</div>;
 }
 
 const column = dataTableColumns<ApprovedProduct>();
 const columns = column.columns([
   column.accessor("name", { header: "Product", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.name}</div><div className="text-xs text-muted-foreground">{row.original.code ?? "No code"}</div></div> }),
-  column.display({ id: "packing", header: "Packing", cell: ({ row }) => <PackingCell productId={row.original.id} part="packing" /> }),
-  column.accessor("total", { header: "Transferred", size: 210, cell: ({ row }) => <PackingCell productId={row.original.id} part="transferred" /> }),
-  column.display({ id: "received", header: "Received", size: 210, cell: ({ row }) => <PackingCell productId={row.original.id} part="received" /> }),
-  column.accessor("remaining", { header: "Remaining", size: 210, cell: ({ row }) => <PackingCell productId={row.original.id} part="remaining" empty={row.original.remaining === 0} /> }),
+  column.display({ id: "packing", header: "Packing", cell: ({ row }) => <StockCell row={row.original} part="packing" /> }),
+  column.accessor("total", { header: "Transferred", size: 210, cell: ({ row }) => <StockCell row={row.original} part="sent" /> }),
+  column.display({ id: "received", header: "Received", size: 210, cell: ({ row }) => <StockCell row={row.original} part="received" /> }),
+  column.display({ id: "physical", header: "On site", size: 210, cell: ({ row }) => <StockCell row={row.original} part="physical" /> }),
+  column.display({ id: "reserved", header: "Reserved", size: 210, cell: ({ row }) => <StockCell row={row.original} part="reserved" /> }),
+  column.accessor("remaining", { header: "Available", size: 210, cell: ({ row }) => <StockCell row={row.original} part="available" /> }),
   column.display({ id: "actions", header: TableMenuHeader, size: 56, cell: ({ row }) => <TableMenu label={`Actions for ${row.original.name}`} items={[
     { id: "packing", label: "View packing style", icon: PackageOpen, require: viewPermission, to: approvedProductPackingPath(row.original.id) },
     { id: "open", label: "Open product", icon: Eye, require: viewPermission, to: `${approvedProductsPath}/${row.original.id}` },
@@ -120,7 +129,10 @@ const stockColumns = stockColumn.columns([
   stockColumn.display({ id: "packing", header: "Packing", cell: ({ row }) => <div><div>{row.original.packing ?? "–"}</div><div className="text-xs text-muted-foreground">{row.original.perShipper ? `${row.original.perShipper} per shipper` : "No shipper size"}</div></div> }),
   stockColumn.accessor("total", { header: "Transferred", size: 190, cell: ({ row }) => fgText(row.original.total, row.original.layout) }),
   stockColumn.accessor("received", { header: "Received", size: 190, cell: ({ row }) => fgText(row.original.received, row.original.layout) }),
-  stockColumn.accessor("remaining", { header: "Remaining", size: 190, cell: ({ row }) => <span className={row.original.remaining === 0 ? "font-medium text-destructive" : "font-medium"}>{fgText(row.original.remaining, row.original.layout)}</span> }),
+  stockColumn.accessor("physical", { header: "On site", size: 190, cell: ({ row }) => fgText(row.original.physical, row.original.layout) }),
+  stockColumn.accessor("reserved", { header: "Reserved", size: 190, cell: ({ row }) => fgText(row.original.reserved, row.original.layout) }),
+  stockColumn.display({ id: "release", header: "Quality", cell: ({ row }) => row.original.needsReconciliation ? "Historical stock: reconcile first" : row.original.held ? row.original.holdReason ?? "On hold" : row.original.released ? "Released" : "Awaiting release" }),
+  stockColumn.accessor("available", { header: "Available", size: 190, cell: ({ row }) => <span className={row.original.remaining === 0 ? "font-medium text-destructive" : "font-medium"}>{fgText(row.original.available, row.original.layout)}</span> }),
 ]);
 const binRows = z.array(z.object({ id: z.string().nullish(), createdAt: z.string().nullish(), description: text, wayBill: text, arNumber: text, quantityReceived: amount, quantityIssued: amount, balanceQuantity: amount, uoM: z.object({ symbol: text }).nullish(),
   batch: z.object({ batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish() }).nullish() })).nullish().transform((value) => (value ?? []).map((entry, index) => ({ ...entry, id: entry.id ?? `entry-${index}`, unit: entry.uoM?.symbol ?? null })));

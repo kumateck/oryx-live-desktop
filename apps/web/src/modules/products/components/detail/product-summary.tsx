@@ -2,16 +2,9 @@ import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { DetailGroup, DetailItem } from "@/shared/detail/detail-list";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
-import { formatQuantityNumber, toLargestUnit } from "@/shared/units/quantity";
+import { toLargestUnit } from "@/shared/units/quantity";
 import { divisionLabel } from "../../lib/product-access";
 import type { ProductDetail } from "../../schemas/product-detail-schema";
-
-function price(product: ProductDetail): string | null {
-  if (product.price === null) return null;
-  // An entered amount: shown exactly as saved.
-  const amount = formatQuantityNumber(product.price, "entered");
-  return product.priceUoM ? `${amount} per ${product.priceUoM}` : amount;
-}
 
 export function ProductSummary({ product }: { product: ProductDetail }) {
   const unit = product.baseUoM?.symbol ?? null;
@@ -37,7 +30,7 @@ export function ProductSummary({ product }: { product: ProductDetail }) {
       <DetailItem label="Composition size" value={toLargestUnit(product.baseQuantity, unit)?.text} />
       <DetailItem label="Full batch size" value={toLargestUnit(product.fullBatchSize, unit)?.text} />
       <DetailItem label="Base unit" value={product.baseUoM ? [product.baseUoM.name, product.baseUoM.symbol ? `(${product.baseUoM.symbol})` : null].filter(Boolean).join(" ") : null} />
-      <DetailItem label="List price" value={<>{price(product) ?? "Not priced"} <Link className="text-xs text-primary underline-offset-2 hover:underline" to="/finance/costing">Set in Finance → Costing</Link></>} />
+      <DetailItem label="Pack prices" value={<Link className="text-primary underline-offset-2 hover:underline" to={`/finance/costing?division=${product.division}`}>View by packing style in Finance → Costing</Link>} />
     </DetailGroup>
     <DetailGroup title="Production">
       <DetailItem label="Equipment" value={equipment?.name} />
@@ -47,9 +40,9 @@ export function ProductSummary({ product }: { product: ProductDetail }) {
       <DetailItem label="Bill of materials" value={bom ? <Badge variant={bom.isActive ? "secondary" : "outline"}>{bom.isActive ? "Active" : "Inactive"}</Badge> : "None"} />
     </DetailGroup>
     <DetailGroup title="Packaging">
-      <DetailItem label="Primary pack" value={product.primaryPackDescription} />
-      <DetailItem label="Secondary pack" value={product.secondaryPackDescription} />
-      <DetailItem label="Tertiary pack" value={product.tertiaryPackDescription} />
+      <DetailItem label="Primary pack" value={product.primaryPackDescription ? <RichTextView html={product.primaryPackDescription} /> : null} />
+      <DetailItem label="Secondary pack" value={product.secondaryPackDescription ? <RichTextView html={product.secondaryPackDescription} /> : null} />
+      <DetailItem label="Tertiary pack" value={product.tertiaryPackDescription ? <RichTextView html={product.tertiaryPackDescription} /> : null} />
     </DetailGroup>
     {/* The product form saves label claims in the description field. */}
     {product.description || product.labelClaim ? <section className="min-w-0 rounded-lg border bg-card p-4">

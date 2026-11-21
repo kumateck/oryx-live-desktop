@@ -26,7 +26,7 @@ it("checks what the store received as yield, entered as shippers and loose packs
   const schema = approveSchema({ total: 1_600_200, layout: dicnac });
   expect(schema.safeParse({ shippers: 100, loose: 1, notes: "" }).success).toBe(true);
   expect(schema.safeParse({ shippers: 100, loose: 2, notes: "" }).error?.issues[0]?.message).toBe("That is more than was sent (100 shippers · 1 loose)");
-  expect(schema.safeParse({ shippers: Number.NaN, loose: Number.NaN, notes: "" }).error?.issues[0]?.message).toBe("Enter what was received");
+  expect(schema.safeParse({ shippers: Number.NaN, loose: Number.NaN, notes: "" }).error?.issues[0]?.message).toBe("Enter what was received or explain a zero receipt");
   const incomplete = fgLayout({ packPerShipper: 80, packingLists: [{ uom: { name: "Shipper" }, quantity: 7, order: 1 }] });
   expect(approveSchema({ total: 100, layout: incomplete }).safeParse({ shippers: 1, loose: 0, notes: "" }).error?.issues[0]?.message).toContain("does not say how many units fill a pack");
 });
@@ -54,7 +54,7 @@ function open(address: string, permissions: string[]) {
     calls.push({ method: input.method, path: url.pathname, search: url.search, ...(input.method !== "GET" ? { body: await input.clone().json().catch(() => null) } : {}) });
     if (url.pathname === "/api/v1/production-schedule/finished-goods-transfer-note") return Response.json({ data: [note], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
     if (url.pathname === "/api/v1/production-schedule/finished-goods-transfer-note/n1/approve") return new Response(null, { status: 204 });
-    if (url.pathname === "/api/v1/production-schedule/approved-products") return Response.json([{ product: { id: "p1", code: "FP-1", name: "Dicnac 100" }, totalQuantity: 250, totalRemainingQuantity: 90 }]);
+    if (url.pathname === "/api/v1/production-schedule/approved-products") return Response.json([{ product: { id: "p1", code: "FP-1", name: "Dicnac 100" }, totalQuantity: 250, totalRemainingQuantity: 90, stocks: [{ transferNoteId: "n1", productPackingId: "k1", packingStyle: "10 x 10", quantityPerPack: 1, packsPerShipper: 100, sent: 250, received: 240, physical: 240, reserved: 150, available: 90 }] }]);
     if (url.pathname === "/api/v1/production-schedule/approved-products/p1") return Response.json([{ ...note, isApproved: true, quantityReceived: 240 }]);
     return new Response(null, { status: 404 });
   });
@@ -69,28 +69,29 @@ it("approves a transfer with what was counted in, only with the approve permissi
   expect(await screen.findByText("2 shippers · 50 loose")).toBeTruthy();
   expect(screen.getByText(new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(new Date(2028, 0, 1)))).toBeTruthy();
   await openMenu("Actions for batch B-1");
-  expect(screen.queryByRole("menuitem", { name: "Approve" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Receive" })).toBeNull();
   cleanup();
   const calls = open("/warehouse/finished-goods-transfer-notes", ["CanViewFgtn", "CanApproveFgtn"]);
   await screen.findByText("2 shippers · 50 loose");
   await openMenu("Actions for batch B-1");
-  await user.click(await screen.findByRole("menuitem", { name: "Approve" }));
+  await user.click(await screen.findByRole("menuitem", { name: "Receive" }));
   const dialog = await screen.findByRole("dialog");
   const loose = await within(dialog).findByRole("spinbutton", { name: /Loose packs received/ });
   await user.clear(loose);
   await user.type(loose, "40");
   expect(await within(dialog).findByText(/0 shippers · 10 loose fewer than sent/)).toBeTruthy();
   expect(calls.filter((call) => call.method !== "GET")).toEqual([]);
-  await user.click(within(dialog).getByRole("button", { name: "Approve transfer" }));
-  await waitFor(() => expect(calls.find((call) => call.method === "PUT")?.body).toEqual({ quantityReceived: 240, notes: null }));
+  await user.type(within(dialog).getByRole("textbox", { name: /Notes|reason/i }), "Count discrepancy DR-1");
+  await user.click(within(dialog).getByRole("button", { name: "Receive transfer" }));
+  await waitFor(() => expect(calls.find((call) => call.method === "PUT")?.body).toEqual({ quantityReceived: 240, notes: "Count discrepancy DR-1" }));
 }, 20_000);
 
 it("lists approved products with transferred, received and remaining in shippers and loose packs", async () => {
   open("/warehouse/approved-products", ["CanViewApprovedProducts"]);
   expect(await screen.findByText("Dicnac 100")).toBeTruthy();
-  expect(await screen.findByText("10 x 10 (100 per shipper)")).toBeTruthy();
+  expect(await screen.findByText("10 x 10")).toBeTruthy();
   expect(screen.getByText("2 shippers · 50 loose")).toBeTruthy();
-  expect(screen.getByText("2 shippers · 40 loose")).toBeTruthy();
-  expect(screen.getByText("0 shippers · 0 loose")).toBeTruthy();
+  expect(screen.getAllByText("2 shippers · 40 loose")[0]).toBeTruthy();
+  expect(screen.getByText("0 shippers · 90 loose")).toBeTruthy();
   expect(screen.queryByRole("columnheader", { name: /Shippers and loose/ })).toBeNull();
 });

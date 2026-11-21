@@ -42,7 +42,6 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
   const [substituteUnits, setSubstituteUnits] = useState<Readonly<Record<string, MaterialUnit | null>>>({});
   const onSubstituteUnit = useCallback((id: string, unit: MaterialUnit | null) =>
     setSubstituteUnits((current) => current[id]?.id === unit?.id && current[id]?.symbol === unit?.symbol ? current : { ...current, [id]: unit }), []);
-  const savedUnit = (id: string) => editing?.substitutes.find((item) => item.value === id)?.unit ?? null;
   // The chosen material's details: looked up from the picker, or kept from the line being edited.
   const facts: MaterialFacts | null = materialFacts(material?.value)
     ?? (editing && editing.material.value === material?.value ? { code: editing.code, category: editing.category, specification: editing.specification, unit: editing.linkedUnit ?? editing.unit } : null);
@@ -112,7 +111,7 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
             <h3 className="text-sm font-semibold">Substitute quantities</h3>
             <p className="text-xs text-muted-foreground">A substitute can differ in strength or water content, so enter how much of each replaces this material.</p>
             {(substitutes ?? []).map((item) => <SubstituteQuantity key={`${item.value}-${useDensityConversion ? "mg" : "stock"}`} form={form} substitute={item}
-              known={useDensityConversion ? null : savedUnit(item.value)} density={useDensityConversion === true}
+              known={useDensityConversion ? null : materialFacts(item.value)?.unit ?? null} density={useDensityConversion === true}
               compositionSize={compositionSize} batchSize={batchSize} onUnit={onSubstituteUnit} />)}
           </section> : null}
           {useDensityConversion && (density.failed || density.problem) ? <p role="alert" className="flex items-center gap-2 text-sm text-destructive">

@@ -18,7 +18,7 @@ it("reads saved steps in their saved order and drops steps with no operation", (
   expect(hasOperation(steps, "op-pack", "r2")).toBe(false);
 });
 
-it("numbers steps by position and leaves analytical raw data out of a copy", () => {
+it("numbers steps by position and retains actions and ATR links for destination-stage matching", () => {
   const steps = fromSavedRoutes(saved);
   expect(toRoutesRequest(steps)).toEqual([
     { operationId: "op-test", order: 1, isCritical: true, estimatedTime: "2 hours", workCenters: [{ workCenterId: "w1" }],
@@ -26,7 +26,7 @@ it("numbers steps by position and leaves analytical raw data out of a copy", () 
     { operationId: "op-pack", order: 2, isCritical: false, estimatedTime: null, workCenters: [{ workCenterId: "w2" }],
       responsibleUsers: [], responsibleRoles: [{ roleId: "role-1", action: 2, productAnalyticalRawDataId: null }] },
   ]);
-  expect(toRoutesRequest(steps, false)[0]?.responsibleUsers?.[0]?.productAnalyticalRawDataId).toBeNull();
+  expect(toRoutesRequest(steps)[0]?.responsibleUsers?.[0]).toMatchObject({ action: 7, productAnalyticalRawDataId: "ard-1" });
 });
 
 const base = { operation: { value: "op", label: "Op" }, workCenters: [{ value: "w1", label: "Lab" }], estimatedTime: null };
@@ -65,4 +65,9 @@ it("refuses a main instruction on an automated step", () => {
 it("drops analytical raw data from an instruction that is not ATR", () => {
   const values = procedureStepFormSchema.parse({ ...base, isCritical: true, parties: [{ kind: "user", who, action: { value: "2", label: "Full return" }, ard: { value: "a", label: "A" } }] });
   expect(stepFromForm(values, "k").parties[0]?.ard).toBeNull();
+});
+
+it("requires the ATR stage instead of silently saving an incomplete ATR instruction", () => {
+  expect(messages({ ...base, isCritical: true, parties: [{ kind: "role", who, action: { value: "7", label: "ATR" }, ard: null }] }))
+    .toContain("parties.0.ard: Select analytical raw data and its ATR stage");
 });
