@@ -8,6 +8,8 @@ const decided = (_result: void | undefined, error: FetchBaseQueryError | undefin
   "RequisitionList" as const, "Requisition" as const, "ActivityBoard" as const,
   ...(["FinishedGoodsTransferNote", "StockAdjustment", "ProformaInvoice", "AllocateProductionOrder", "ProductionOrder", "Response"].includes(args.modelType)
     ? [{ type: "FinishedGoods" as const, id: "all" }, { type: "ProductionOrders" as const, id: "all" }] : [])];
+// Stored-kind stock rejection endpoints do not accept the generic approval modelType argument.
+const rejectedStock = (result: void | undefined, error: FetchBaseQueryError | undefined) => decided(result, error, { modelType: "StockRequisition" });
 
 export const approvalApi = approvalsApi.enhanceEndpoints({
   endpoints: {
@@ -15,8 +17,8 @@ export const approvalApi = approvalsApi.enhanceEndpoints({
     getApiV1ApprovalMyPendingStats: (definition) => { definition.providesTags = addTags(definition.providesTags, [queue]); },
     getApiV1ApprovalMyPendingDocumentCounts: (definition) => { definition.providesTags = addTags(definition.providesTags, [queue]); },
     getApiV1ApprovalMyPendingByModelTypeAndModelId: (definition) => { definition.providesTags = addTags(definition.providesTags, [queue]); },
-    rejectProductionRawStockRequisition: d => { d.invalidatesTags = addTags(d.invalidatesTags, decided); },
-    rejectProductionPackagingStockRequisition: d => { d.invalidatesTags = addTags(d.invalidatesTags, decided); },
+    rejectProductionRawStockRequisition: d => { d.invalidatesTags = addTags(d.invalidatesTags, rejectedStock); },
+    rejectProductionPackagingStockRequisition: d => { d.invalidatesTags = addTags(d.invalidatesTags, rejectedStock); },
     postApiV1ApprovalApproveByModelTypeAndModelId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, decided); },
     postApiV1ApprovalRejectByModelTypeAndModelId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, decided); },
   },
