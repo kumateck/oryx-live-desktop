@@ -7,6 +7,7 @@ import { audit, type ReadableDocument } from "../lib/approval-documents";
 export interface EvidenceSubject { type: ReadableDocument; id: string; supplierId: string | null }
 export interface DecisionEvidence { entries: { url: string; data: JsonValue }[] }
 const paths: Record<ReadableDocument, string> = {
+  CostingPriceList: "costing/price-lists",
   StockDiscrepancy: "stock-discrepancy", ShipmentDiscrepancy: "procurement/shipment-discrepancy",
   PurchaseOrder: "procurement/purchase-order", BillingSheet: "procurement/billing-sheet", ShipmentDocument: "procurement/shipment-document",
   PurchaseRequisition: "requisition", TrialRequisition: "requisition", StockRequisition: "requisition", StockRequisitionIssue: "requisition/issue", RawStockRequisition: "requisition", PackageStockRequisition: "requisition",

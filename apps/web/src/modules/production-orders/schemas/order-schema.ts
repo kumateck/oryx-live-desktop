@@ -37,7 +37,7 @@ const date = z.string().nullish().transform((value) => value && new Date(value).
  * notes), the same rule the server uses. Free stock already excludes packing lists waiting for approval: the
  * server takes stock when a packing list is created.
  */
-export const batchesSchema = z.object({ finishedGoodsTransferNotes: z.array(z.object({ id: z.string().nullish(), isApproved: z.boolean().nullish(), totalQuantity: amount, remainingQuantity: amount, quantityPerPack: amount,
+export const batchesSchema = z.object({ finishedGoodsTransferNotes: z.array(z.object({ id: z.string().nullish(), isApproved: z.boolean().nullish(), approved: z.boolean().nullish(), qualityReleased: z.boolean().nullish(), isOnHold: z.boolean().nullish(), requiresStockReconciliation: z.boolean().nullish(), availableQuantity: amount, packingStyleSnapshot: text, packsPerShipperSnapshot: z.number().nullish(), totalQuantity: amount, remainingQuantity: amount, quantityPerPack: amount,
   productPacking: z.object({ id: z.string().nullish(), name: text, packPerShipper: z.number().nullish(), basePackingUoM: z.object({ name: z.string().nullish(), symbol: z.string().nullish() }).nullish(),
     packingLists: z.array(z.object({ uom: z.object({ name: z.string().nullish(), symbol: z.string().nullish() }).nullish(), quantity: z.number().nullish(), order: z.number().nullish() })).nullish() }).nullish(),
   batchManufacturingRecord: z.object({ id: z.string().nullish(), batchNumber: text, manufacturingDate: date, expiryDate: date }).nullish() })).nullish() }).nullish()
@@ -45,8 +45,9 @@ export const batchesSchema = z.object({ finishedGoodsTransferNotes: z.array(z.ob
     const layout = fgLayout(note.productPacking);
     const perPack = note.quantityPerPack > 0 ? note.quantityPerPack : layout.baseUnitsPerPack;
     return [{ noteId: note.id, batchNumber: note.batchManufacturingRecord?.batchNumber ?? null,
-      made: note.batchManufacturingRecord?.manufacturingDate ?? null, expires: note.batchManufacturingRecord?.expiryDate ?? null, packingId: note.productPacking?.id ?? null, packing: note.productPacking?.name ?? null,
-      perShipper: layout.perShipper ?? 0, perPack,
+      made: note.batchManufacturingRecord?.manufacturingDate ?? null, expires: note.batchManufacturingRecord?.expiryDate ?? null, packingId: note.productPacking?.id ?? null, packing: note.packingStyleSnapshot ?? note.productPacking?.name ?? null,
+      perShipper: note.packsPerShipperSnapshot ?? layout.perShipper ?? 0, perPack,
+      eligible: note.approved === true && note.qualityReleased === true && note.isOnHold !== true && note.requiresStockReconciliation !== true && Boolean(note.batchManufacturingRecord?.expiryDate && note.batchManufacturingRecord.expiryDate.slice(0, 10) > new Date().toISOString().slice(0, 10)),
       // Whole packs only: units short of a pack cannot go on a packing list.
-      free: perPack ? Math.floor(Math.max(0, note.remainingQuantity) / perPack + 1e-9) : 0 }]; }));
+      free: perPack ? Math.floor(Math.max(0, note.availableQuantity) / perPack + 1e-9) : 0 }]; }));
 export type ApprovedBatch = z.infer<typeof batchesSchema>[number];

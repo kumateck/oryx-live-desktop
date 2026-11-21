@@ -20,7 +20,7 @@ afterEach(() => { cleanup(); forgetSession(); });
 
 it("orders the steps to the customer, groups a packing list and prices lines at the agreement in effect", () => {
   const at = (approved: boolean, loadedAt: string | null, hasWaybill: boolean, deliveredAt: string | null = null) => ({ approved, loadedAt, hasWaybill, deliveredAt });
-  expect([nextStep(at(false, null, false)), nextStep(at(true, null, false)), nextStep(at(true, "2026-10-01", false)), nextStep(at(true, "2026-10-01", true)), nextStep(at(true, "2026-10-01", true, "2026-10-02"))]).toEqual([null, "load", "waybill", "deliver", null]);
+  expect([nextStep(at(false, null, false)), nextStep(at(true, null, false)), nextStep(at(true, "2026-10-01", false)), nextStep(at(true, "2026-10-01", true)), nextStep(at(true, "2026-10-01", true, "2026-10-02"))]).toEqual([null, "load", "waybill", "costing", null]);
   const source = (quantity: number, batch: string, perShipper = 100) => ({ quantity, batch, made: null, expires: null, packing: "10 x 10", perShipper });
   const rows = packingRows([{ name: "Zinc", sources: [source(40, "B-9", 0)] }, { name: "Dicnac", sources: [source(250, "B-10"), source(120, "B-2")] }]);
   expect(rows.map((row) => [row.product, row.batch, row.shippers, row.loose])).toEqual([["Dicnac", "B-2", 1, 20], ["Dicnac", "B-10", 2, 50], ["Zinc", "B-9", 0, 40]]);
@@ -48,7 +48,7 @@ const allocation = (extra: object = {}) => ({ id: "a-1", approved: true, loadedA
 const productionOrder = { id: "o-1", code: "PO-9", status: 1, approved: true, customer: { id: "c-1", name: "Acme Pharmacy" },
   products: [{ product: { id: "p1", code: "FP-1", name: "Dicnac 100" }, totalOrderQuantity: 400, fulfilledQuantities: [{ quantity: 370 }], fulfilled: false, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 } }] };
 // Stock after this list took its packs: B-10 has none left, B-2 has 30 more.
-const batch = (id: string, number: string, remaining: number) => ({ id, isApproved: true, totalQuantity: 1000, remainingQuantity: remaining, quantityPerPack: 1, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 }, batchManufacturingRecord: { batchNumber: number } });
+const batch = (id: string, number: string, remaining: number) => ({ id, isApproved: true, approved: true, qualityReleased: true, availableQuantity: remaining, totalQuantity: 1000, remainingQuantity: remaining, quantityPerPack: 1, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 }, batchManufacturingRecord: { batchNumber: number, expiryDate: "2035-01-31T00:00:00Z" } });
 const batches = { finishedGoodsTransferNotes: [batch("n1", "B-10", 0), batch("n2", "B-2", 30)] };
 const awaitingApproval = () => allocation({ approved: false, status: 0, products: [{ product: { id: "p1", name: "Dicnac 100", code: "FP-1", price: 9 }, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 },
   fulfilledQuantities: [{ quantity: 250, finishedGoodsTransferNote: { id: "n1" }, batchPackagingRecord: { batchNumber: "B-10" } }, { quantity: 120, finishedGoodsTransferNote: { id: "n2" }, batchPackagingRecord: { batchNumber: "B-2" } }] }] });
@@ -62,9 +62,10 @@ function open(address: string, permissions: string[], record: object = allocatio
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const url = new URL(input.url);
     calls.push({ method: input.method, path: url.pathname, search: url.search, ...(input.method !== "GET" ? { body: await input.clone().json().catch(() => null) } : {}) });
+    if (url.pathname === "/api/v1/finished-goods/allocations/a-1/documents") return Response.json({});
     if (url.pathname === "/api/v1/production-orders/allocate" && input.method === "GET") return Response.json({ data: [record], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
     if (url.pathname === "/api/v1/production-orders/allocate/a-1" && input.method === "GET") return Response.json(record);
-    if (url.pathname === "/api/v1/production-orders/load/a-1") return new Response(null, { status: 204 });
+    if (url.pathname === "/api/v1/finished-goods/allocations/a-1/load") return new Response(null, { status: 204 });
     if (url.pathname === "/api/v1/production-orders/allocate/a-1" && input.method === "PUT") return new Response(null, { status: 204 });
     if (url.pathname === "/api/v1/production-orders/o-1") return Response.json(productionOrder);
     if (url.pathname === "/api/v1/production-schedule/approved-products/product/p1") return Response.json(batches);
@@ -92,10 +93,13 @@ it("lists packing lists and allocations behind their own permissions and loads a
   expect(await screen.findByText("Acme Pharmacy")).toBeTruthy();
   expect(calls.find((call) => call.path === "/api/v1/production-orders/allocate")?.search).toContain("approved=true");
   await openMenu("Actions for order PO-9");
-  await user.click(await screen.findByRole("menuitem", { name: "Mark as loaded" }));
+  await user.click(await screen.findByRole("menuitem", { name: "Record loading" }));
   expect(writes(calls)).toEqual([]);
-  await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Mark as loaded" }));
-  await waitFor(() => expect(writes(calls)).toEqual(["PUT /api/v1/production-orders/load/a-1"]));
+  const loading = within(await screen.findByRole("dialog"));
+  for (const [name, value] of [["Vehicle registration", "GR-1"], ["Driver", "Driver"], ["Driver contact", "0244"], ["Loading bay / location", "Bay 1"], ["Vehicle inspection reference", "INSP-1"]] as const) await user.type(await loading.findByRole("textbox", { name: new RegExp(`^${name}(?:\\s*\\*)?$`) }), value);
+  await user.click(loading.getByRole("checkbox"));
+  await user.click(loading.getByRole("button", { name: "Record loading" }));
+  await waitFor(() => expect(writes(calls)).toEqual(["POST /api/v1/finished-goods/allocations/a-1/load"]));
 }, 20_000);
 
 it("raises a proforma invoice only when Generate is pressed, at the customer's agreed price", async () => {
@@ -154,8 +158,23 @@ it("does not offer editing once a packing list is approved", async () => {
 it("marks the goods as loaded from the proforma invoice, before the purchase order is attached", async () => {
   const user = userEvent.setup();
   const { calls } = open("/crm/proforma-invoice/pi-1", ["CanViewProformaInvoice", "CanViewInvoice", "CanLoadFinishedGoods"]);
-  await user.click(await screen.findByRole("button", { name: "Mark as loaded" }));
+  await user.click(await screen.findByRole("button", { name: "Record loading" }));
   expect(writes(calls)).toEqual([]);
-  await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Mark as loaded" }));
-  await waitFor(() => expect(writes(calls)).toEqual(["PUT /api/v1/production-orders/load/a-1"]));
+  const loading = within(await screen.findByRole("dialog"));
+  for (const [name, value] of [["Vehicle registration", "GR-1"], ["Driver", "Driver"], ["Driver contact", "0244"], ["Loading bay / location", "Bay 1"], ["Vehicle inspection reference", "INSP-1"]] as const) await user.type(await loading.findByRole("textbox", { name: new RegExp(`^${name}(?:\\s*\\*)?$`) }), value);
+  await user.click(loading.getByRole("checkbox"));
+  await user.click(loading.getByRole("button", { name: "Record loading" }));
+  await waitFor(() => expect(writes(calls)).toEqual(["POST /api/v1/finished-goods/allocations/a-1/load"]));
 }, 20_000);
+
+it("keeps saved pack price and currency through proforma generation without querying agreements", async () => {
+  const record=allocation({ products: [{ unitPrice:7, priceCurrencyId:"cur", priceListRevisionId:"rev21",
+    product:{id:"p1",name:"Dicnac 100",code:"FP-1",price:99},productPacking:{id:"k1",name:"10 x 10",packPerShipper:100},
+    fulfilledQuantities:[{quantity:370,batchPackagingRecord:{batchNumber:"B-10"}}] }] });
+  const { calls }=open("/crm/allocations/a-1",["CanViewInvoice","CanGenerateProformaInvoice"],record);
+  await screen.findByText("B-10");
+  await userEvent.click(await screen.findByRole("button",{name:"Generate proforma invoice"}));
+  const dialog=await screen.findByRole("dialog");
+  expect(await within(dialog).findByText("GHS 7.00")).toBeTruthy();
+  expect(calls.some(call=>call.path.includes("pricing-agreements"))).toBe(false);
+});

@@ -8,23 +8,27 @@ export const audit = { module: "Finished Goods Warehouse", subModule: "Allocatio
 export const invoiceAudit = { module: "Finished Goods Warehouse", subModule: "Proforma Invoices" } as const;
 export const dispatchPermissions = { packingLists: "CanViewPackingList", allocations: "CanViewInvoice", generateProforma: "CanGenerateProformaInvoice", viewProforma: "CanViewProformaInvoice", sendProforma: "CanSendProformaInvoice",
   viewInvoice: "CanViewInvoice", createWaybill: "CanCreateWaybillForFgw",
-  load: "CanLoadFinishedGoods", deliver: "CanDeliverFinishedGoods" } as const;
+  clear: "CanClearFinishedGoodsDispatch", dispatch: "CanDispatchFinishedGoods", load: "CanLoadFinishedGoods", deliver: "CanDeliverFinishedGoods" } as const;
 /** A packing list is an allocation still waiting for approval (0); once approved it is an allocation ready to be invoiced and shipped (1). */
 export type AllocationKind = 0 | 1;
 export const allocationKinds: Record<AllocationKind, { title: string; permission: string }> = { 0: { title: "Packing lists", permission: dispatchPermissions.packingLists }, 1: { title: "Allocations", permission: dispatchPermissions.allocations } };
 /** The numbers are the server's. */
 export const invoiceStatus = { pending: 0, sent: 1, invoice: 2 } as const;
-export const invoiceStatusLabels: Record<number, { label: string; note: string }> = { 0: { label: "Pending", note: "Created and ready to send to the customer." }, 1: { label: "Sent to customer", note: "Emailed to the customer. Attach their purchase order to turn it into an invoice." },
-  2: { label: "Invoiced", note: "The customer's purchase order is attached." } };
+export const invoiceStatusLabels: Record<number, { label: string; note: string }> = { 0: { label: "Pending", note: "Created and ready to send to the customer." }, 1: { label: "Sent to customer", note: "Recorded as sent. Attach and verify the customer PO, then issue its invoice." },
+  2: { label: "Invoiced", note: "A separate invoice is linked to the verified customer PO." } };
 
-export interface AllocationLike { approved: boolean; loadedAt: string | null; deliveredAt: string | null; hasWaybill: boolean }
-export type DispatchStep = "load" | "waybill" | "deliver";
-export const stepLabels: Record<DispatchStep, string> = { load: "Mark as loaded", waybill: "Create waybill", deliver: "Mark as delivered" };
+export interface AllocationLike { costingConfirmedAt?: string | null; dispatchedAt?: string | null; commercialClearedAt?: string | null; status?: number; approved: boolean; loadedAt: string | null; deliveredAt: string | null; hasWaybill: boolean }
+export type DispatchStep = "load" | "waybill" | "costing" | "clear" | "dispatch" | "deliver";
+export const stepLabels: Record<DispatchStep, string> = { load: "Record loading", waybill: "Create waybill", costing: "Confirm costing", clear: "Clear for departure", dispatch: "Record departure", deliver: "Record delivery" };
 /** What comes next for an allocation: it is loaded once approved, given a waybill once loaded, and delivered once it has a waybill. */
 export function nextStep(allocation: AllocationLike): DispatchStep | null {
-  if (!allocation.approved || allocation.deliveredAt) return null;
+  if (!allocation.approved || allocation.deliveredAt || allocation.status === 5) return null;
+  if (allocation.dispatchedAt) return "deliver";
   if (!allocation.loadedAt) return "load";
-  return allocation.hasWaybill ? "deliver" : "waybill";
+  if (!allocation.hasWaybill) return "waybill";
+  if (!allocation.costingConfirmedAt) return "costing";
+  if (!allocation.commercialClearedAt) return "clear";
+  return "dispatch";
 }
 
 export interface PackingRow { key: string; product: string; batch: string | null; made: string | null; expires: string | null; packing: string | null; perShipper: number; shippers: number; loose: number; packs: number }
@@ -43,7 +47,7 @@ export function packingGroups(rows: readonly PackingRow[]): { product: string; r
 export const packingTotals = (rows: readonly PackingRow[]) => rows.reduce((sum, row) => ({ packs: sum.packs + row.packs, shippers: sum.shippers + row.shippers, loose: sum.loose + row.loose }), { packs: 0, shippers: 0, loose: 0 });
 
 export interface Agreement { id: string; productId: string; productPackingId: string; agreedPrice: number; currency: { id: string | null; name: string | null; symbol: string | null } | null; effectiveFrom: string; effectiveTo?: string | null | undefined }
-export interface PricedLine { key: string; productName: string; genericName: string | null; code: string | null; quantity: number; perShipper: number; unitPrice: number; currency: string | null; currencyKey: string; source: "agreement" | "default" }
+export interface PricedLine { packingStyle?: string | null; key: string; productName: string; genericName: string | null; code: string | null; quantity: number; perShipper: number; unitPrice: number; currency: string | null; currencyKey: string; source: "agreement" | "default" | "saved" }
 const time = (value: string | null | undefined) => { const date = value ? new Date(value) : null; return date && !Number.isNaN(date.getTime()) ? date.getTime() : null; };
 /** The customer's agreed price for a product and packing style on a date: the newest agreement in effect that day. */
 export function agreementFor(agreements: readonly Agreement[], productId: string | null, packingId: string | null, asOf: string | null): Agreement | null {
@@ -51,7 +55,7 @@ export function agreementFor(agreements: readonly Agreement[], productId: string
   return agreements.filter((item) => { const from = time(item.effectiveFrom); const to = time(item.effectiveTo); return item.productId === productId && item.productPackingId === packingId && from !== null && from <= on && (to === null || to >= on); })
     .sort((a, b) => (time(b.effectiveFrom) ?? 0) - (time(a.effectiveFrom) ?? 0))[0] ?? null;
 }
-interface LineInput { key: string; productId: string | null; productName: string; genericName: string | null; code: string | null; packingId: string | null; quantity: number; perShipper?: number; listPrice: number | null; listCurrencyId: string | null }
+interface LineInput { packingStyle?: string | null; savedUnitPrice?: number | null; savedCurrencyId?: string | null; key: string; productId: string | null; productName: string; genericName: string | null; code: string | null; packingId: string | null; quantity: number; perShipper?: number; listPrice: number | null; listCurrencyId: string | null }
 /** Currency labels by id, for the currency a list price was set in. */
 export type CurrencyLabels = ReadonlyMap<string, string>;
 /**
@@ -59,11 +63,17 @@ export type CurrencyLabels = ReadonlyMap<string, string>;
  * currency that price was set in (Finance → Costing). A price is never converted or relabelled in another currency.
  */
 export function priceLines(lines: readonly LineInput[], agreements: readonly Agreement[], asOf: string | null, currencies: CurrencyLabels): PricedLine[] {
-  return lines.map((line) => { const agreement = agreementFor(agreements, line.productId, line.packingId, asOf);
+  return lines.map((line) => {
+    if (line.savedUnitPrice !== null && line.savedUnitPrice !== undefined && line.savedCurrencyId) return {
+      key: line.key, productName: line.productName, genericName: line.genericName, code: line.code, quantity: line.quantity,
+      perShipper: line.perShipper ?? 0, unitPrice: line.savedUnitPrice, currency: currencies.get(line.savedCurrencyId) ?? null,
+      currencyKey: line.savedCurrencyId, packingStyle: line.packingStyle ?? null, source: "saved" as const,
+    };
+    const agreement = agreementFor(agreements, line.productId, line.packingId, asOf);
     const currency = agreement ? agreement.currency?.symbol ?? agreement.currency?.name ?? null : line.listCurrencyId ? currencies.get(line.listCurrencyId) ?? null : null;
     const currencyKey = agreement ? agreement.currency?.id ?? currency ?? "" : line.listCurrencyId ?? "";
     return { key: line.key, productName: line.productName, genericName: line.genericName, code: line.code, quantity: line.quantity, perShipper: line.perShipper ?? 0, unitPrice: agreement && Number.isFinite(agreement.agreedPrice) ? agreement.agreedPrice : line.listPrice ?? 0,
-      currency, currencyKey, source: agreement ? "agreement" : "default" }; });
+      currency, currencyKey, packingStyle: line.packingStyle ?? null, source: agreement ? "agreement" : "default" }; });
 }
 /** What the lines come to, one total per currency: amounts in different currencies are never added. */
 export function totalsByCurrency(lines: readonly PricedLine[]): { currency: string | null; amount: number }[] {

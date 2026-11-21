@@ -60,11 +60,11 @@ const actionNumber = (value: string) => Number(value) as DomainEntitiesRoutesOpe
 
 /**
  * The request that replaces a product's procedure. Steps are numbered by position.
- * `keepArd` is false when copying to another product: analytical raw data belongs to the product it was created for.
+ * ATR links are retained so the server can select the destination product's matching stage when copying.
  */
-export function toRoutesRequest(steps: readonly ProcedureStep[], keepArd = true): DomainEntitiesRoutesCreateRouteRequest[] {
+export function toRoutesRequest(steps: readonly ProcedureStep[]): DomainEntitiesRoutesCreateRouteRequest[] {
   const parties = (step: ProcedureStep, kind: "user" | "role") => step.parties.filter((item) => item.kind === kind)
-    .map((item) => ({ action: actionNumber(item.action.value), productAnalyticalRawDataId: keepArd ? item.ard?.value ?? null : null, id: item.who.value }));
+    .map((item) => ({ action: actionNumber(item.action.value), productAnalyticalRawDataId: item.action.value === atrAction ? item.ard?.value ?? null : null, id: item.who.value }));
   return steps.map((step, index) => ({
     operationId: step.operation.value, order: index + 1, isCritical: step.isCritical, estimatedTime: step.estimatedTime || null,
     workCenters: step.workCenters.map((center) => ({ workCenterId: center.value })),

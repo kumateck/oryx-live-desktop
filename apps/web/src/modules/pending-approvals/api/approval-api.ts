@@ -1,10 +1,15 @@
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { approvalsApi } from "@/shared/api/generated/approvals";
 import { addTags } from "@/shared/api/add-tags";
 
 const queue = { type: "PendingApprovals" as const, id: "all" };
 // A decision changes the document itself, so the lists it appears in are read again.
-const decided = (_result: unknown, error: unknown) => error ? [] : [queue, "PurchaseOrderList" as const, "PurchaseOrder" as const, "BillingSheets" as const, "Shipments" as const, "MaterialDistribution" as const,
-  "RequisitionList" as const, "Requisition" as const, "ActivityBoard" as const];
+const decided = (_result: void | undefined, error: FetchBaseQueryError | undefined, args: { modelType: string }) => error ? [] : [queue, "PurchaseOrderList" as const, "PurchaseOrder" as const, "BillingSheets" as const, "Shipments" as const, "MaterialDistribution" as const,
+  "RequisitionList" as const, "Requisition" as const, "ActivityBoard" as const,
+  ...(["FinishedGoodsTransferNote", "StockAdjustment", "ProformaInvoice", "AllocateProductionOrder", "ProductionOrder", "Response"].includes(args.modelType)
+    ? [{ type: "FinishedGoods" as const, id: "all" }, { type: "ProductionOrders" as const, id: "all" }] : [])];
+// Stored-kind stock rejection endpoints do not accept the generic approval modelType argument.
+const rejectedStock = (result: void | undefined, error: FetchBaseQueryError | undefined) => decided(result, error, { modelType: "StockRequisition" });
 
 export const approvalApi = approvalsApi.enhanceEndpoints({
   endpoints: {
@@ -12,8 +17,8 @@ export const approvalApi = approvalsApi.enhanceEndpoints({
     getApiV1ApprovalMyPendingStats: (definition) => { definition.providesTags = addTags(definition.providesTags, [queue]); },
     getApiV1ApprovalMyPendingDocumentCounts: (definition) => { definition.providesTags = addTags(definition.providesTags, [queue]); },
     getApiV1ApprovalMyPendingByModelTypeAndModelId: (definition) => { definition.providesTags = addTags(definition.providesTags, [queue]); },
-    rejectProductionRawStockRequisition: d => { d.invalidatesTags = addTags(d.invalidatesTags, decided); },
-    rejectProductionPackagingStockRequisition: d => { d.invalidatesTags = addTags(d.invalidatesTags, decided); },
+    rejectProductionRawStockRequisition: d => { d.invalidatesTags = addTags(d.invalidatesTags, rejectedStock); },
+    rejectProductionPackagingStockRequisition: d => { d.invalidatesTags = addTags(d.invalidatesTags, rejectedStock); },
     postApiV1ApprovalApproveByModelTypeAndModelId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, decided); },
     postApiV1ApprovalRejectByModelTypeAndModelId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, decided); },
   },

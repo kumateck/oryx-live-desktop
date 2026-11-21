@@ -125,7 +125,7 @@ settings.items.splice(ownPasswordIndex + 1, 0, { id: "system-settings.change-use
 // It has its own permission, ManageCosting (Finance → Costing on the role permissions page).
 const finance = catalog.find((group) => group.id === "finance-and-cashflow");
 if (!finance) throw new Error("Finance navigation group is missing.");
-finance.items.push({ id: "finance-and-cashflow.costing", label: "Costing", path: "/finance/costing", permissions: ["ManageCosting"] });
+finance.items.push({ id: "finance-and-cashflow.costing", label: "Costing", path: "/finance/costing", permissions: ["CanViewCostingPriceList"] });
 
 const productionPlanning = catalog.find((group) => group.id === "production-planning");
 if (!productionPlanning) throw new Error("Production Planning navigation group is missing.");

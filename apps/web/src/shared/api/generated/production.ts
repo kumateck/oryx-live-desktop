@@ -1985,6 +1985,436 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    postApiV1FinishedGoodsProformasByIdVerifyPo: build.mutation<
+      PostApiV1FinishedGoodsProformasByIdVerifyPoApiResponse,
+      PostApiV1FinishedGoodsProformasByIdVerifyPoApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/proforma", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/proforma", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/proformas/${queryArg.id}/verify-po`,
+        method: "POST",
+        body: queryArg.domainEntitiesProformaInvoicesVerifyFinishedGoodsCustomerPoRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsAllocationsByIdClearance: build.mutation<
+      PostApiV1FinishedGoodsAllocationsByIdClearanceApiResponse,
+      PostApiV1FinishedGoodsAllocationsByIdClearanceApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/allocation", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/allocation", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/allocations/${queryArg.id}/clearance`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductionOrdersClearFinishedGoodsDispatchRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsAllocationsByIdDispatch: build.mutation<
+      PostApiV1FinishedGoodsAllocationsByIdDispatchApiResponse,
+      PostApiV1FinishedGoodsAllocationsByIdDispatchApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/allocation", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/allocation", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/allocations/${queryArg.id}/dispatch`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductionOrdersDispatchFinishedGoodsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsAllocationsByIdDelivery: build.mutation<
+      PostApiV1FinishedGoodsAllocationsByIdDeliveryApiResponse,
+      PostApiV1FinishedGoodsAllocationsByIdDeliveryApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/allocation", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/allocation", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/allocations/${queryArg.id}/delivery`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductionOrdersDeliverFinishedGoodsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsTransfersByIdHold: build.mutation<
+      PostApiV1FinishedGoodsTransfersByIdHoldApiResponse,
+      PostApiV1FinishedGoodsTransfersByIdHoldApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/transfer", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/transfer", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/transfers/${queryArg.id}/hold`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsRecallEvidenceRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsTransfersByIdReleaseHold: build.mutation<
+      PostApiV1FinishedGoodsTransfersByIdReleaseHoldApiResponse,
+      PostApiV1FinishedGoodsTransfersByIdReleaseHoldApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/transfer", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/transfer", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/transfers/${queryArg.id}/release-hold`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsRecallEvidenceRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1FinishedGoodsRecalls: build.query<
+      GetApiV1FinishedGoodsRecallsApiResponse,
+      GetApiV1FinishedGoodsRecallsApiArg
+    >({
+      providesTags: [{ type: "finished-good/recall", id: "LIST" }, { type: "finished-good", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          searchQuery: queryArg.searchQuery,
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          division: queryArg.division,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsRecalls: build.mutation<
+      PostApiV1FinishedGoodsRecallsApiResponse,
+      PostApiV1FinishedGoodsRecallsApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "finished-good/recall", id: "LIST" }, { type: "finished-good", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsCreateFinishedGoodsRecallRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1FinishedGoodsRecallsById: build.query<
+      GetApiV1FinishedGoodsRecallsByIdApiResponse,
+      GetApiV1FinishedGoodsRecallsByIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "finished-good/recall", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1FinishedGoodsRecallsByIdPrint: build.query<
+      GetApiV1FinishedGoodsRecallsByIdPrintApiResponse,
+      GetApiV1FinishedGoodsRecallsByIdPrintApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "finished-good/recall", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}/print`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsRecallsByIdContacts: build.mutation<
+      PostApiV1FinishedGoodsRecallsByIdContactsApiResponse,
+      PostApiV1FinishedGoodsRecallsByIdContactsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/recall", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/recall", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}/contacts`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsRecordRecallContactRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsRecallsByIdRecoveries: build.mutation<
+      PostApiV1FinishedGoodsRecallsByIdRecoveriesApiResponse,
+      PostApiV1FinishedGoodsRecallsByIdRecoveriesApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/recall", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/recall", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}/recoveries`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsRecordRecallRecoveryRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsRecallsByIdRecoveriesAndRecoveryIdDispose:
+      build.mutation<
+        PostApiV1FinishedGoodsRecallsByIdRecoveriesAndRecoveryIdDisposeApiResponse,
+        PostApiV1FinishedGoodsRecallsByIdRecoveriesAndRecoveryIdDisposeApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/finished-goods/recalls/${queryArg.id}/recoveries/${queryArg.recoveryId}/dispose`,
+          method: "POST",
+          body: queryArg.domainEntitiesFinishedGoodsRecallEvidenceRequest,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
+    postApiV1FinishedGoodsRecallsByIdClose: build.mutation<
+      PostApiV1FinishedGoodsRecallsByIdCloseApiResponse,
+      PostApiV1FinishedGoodsRecallsByIdCloseApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/recall", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/recall", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}/close`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsCloseFinishedGoodsRecallRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsInvoicesByIdVoid: build.mutation<
+      PostApiV1FinishedGoodsInvoicesByIdVoidApiResponse,
+      PostApiV1FinishedGoodsInvoicesByIdVoidApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/invoice", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/invoice", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/invoices/${queryArg.id}/void`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsRecallEvidenceRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsAllocationsByIdCancel: build.mutation<
+      PostApiV1FinishedGoodsAllocationsByIdCancelApiResponse,
+      PostApiV1FinishedGoodsAllocationsByIdCancelApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/allocation", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/allocation", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/allocations/${queryArg.id}/cancel`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsRecallEvidenceRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsRecallsByIdDisposeStock: build.mutation<
+      PostApiV1FinishedGoodsRecallsByIdDisposeStockApiResponse,
+      PostApiV1FinishedGoodsRecallsByIdDisposeStockApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/recall", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/recall", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}/dispose-stock`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsDisposeRecalledStockRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsTransfersByIdReconcile: build.mutation<
+      PostApiV1FinishedGoodsTransfersByIdReconcileApiResponse,
+      PostApiV1FinishedGoodsTransfersByIdReconcileApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/transfer", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/transfer", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/transfers/${queryArg.id}/reconcile`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsReconcileFinishedGoodsStockRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsAllocationsByIdLoad: build.mutation<
+      PostApiV1FinishedGoodsAllocationsByIdLoadApiResponse,
+      PostApiV1FinishedGoodsAllocationsByIdLoadApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/allocation", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/allocation", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/allocations/${queryArg.id}/load`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductionOrdersLoadFinishedGoodsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1FinishedGoodsAllocationsByIdDocuments: build.query<
+      GetApiV1FinishedGoodsAllocationsByIdDocumentsApiResponse,
+      GetApiV1FinishedGoodsAllocationsByIdDocumentsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "finished-good/allocation", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/allocations/${queryArg.id}/documents`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1FinishedGoodsRecallBatches: build.query<
+      GetApiV1FinishedGoodsRecallBatchesApiResponse,
+      GetApiV1FinishedGoodsRecallBatchesApiArg
+    >({
+      providesTags: [{ type: "finished-good/recall-batch", id: "LIST" }, { type: "finished-good", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recall-batches`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          searchQuery: queryArg.searchQuery,
+        },
+      }),
+    }),
+    getApiV1FinishedGoodsTransfersByIdReconciliation: build.query<
+      GetApiV1FinishedGoodsTransfersByIdReconciliationApiResponse,
+      GetApiV1FinishedGoodsTransfersByIdReconciliationApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "finished-good/transfer", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/transfers/${queryArg.id}/reconciliation`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsAllocationsByIdCosting: build.mutation<
+      PostApiV1FinishedGoodsAllocationsByIdCostingApiResponse,
+      PostApiV1FinishedGoodsAllocationsByIdCostingApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/allocation", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/allocation", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/allocations/${queryArg.id}/costing`,
+        method: "POST",
+        body: queryArg.domainEntitiesProductionOrdersConfirmFinishedGoodsCostingRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsRecallsByIdSettlements: build.mutation<
+      PostApiV1FinishedGoodsRecallsByIdSettlementsApiResponse,
+      PostApiV1FinishedGoodsRecallsByIdSettlementsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/recall", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/recall", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}/settlements`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsRecordProductRecallSettlementRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1FinishedGoodsAllocationsByIdWaybillPrint: build.query<
+      GetApiV1FinishedGoodsAllocationsByIdWaybillPrintApiResponse,
+      GetApiV1FinishedGoodsAllocationsByIdWaybillPrintApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "finished-good/allocation", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/allocations/${queryArg.id}/waybill-print`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1FinishedGoodsRecallsByIdSettlementOptions: build.query<
+      GetApiV1FinishedGoodsRecallsByIdSettlementOptionsApiResponse,
+      GetApiV1FinishedGoodsRecallsByIdSettlementOptionsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "finished-good/recall", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}/settlement-options`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1FinishedGoodsRecallsByIdReplacementOrders: build.query<
+      GetApiV1FinishedGoodsRecallsByIdReplacementOrdersApiResponse,
+      GetApiV1FinishedGoodsRecallsByIdReplacementOrdersApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "finished-good/recall", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}/replacement-orders`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          invoiceId: queryArg.invoiceId,
+          searchQuery: queryArg.searchQuery,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsRecallsByIdReopen: build.mutation<
+      PostApiV1FinishedGoodsRecallsByIdReopenApiResponse,
+      PostApiV1FinishedGoodsRecallsByIdReopenApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/recall", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/recall", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}/reopen`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsRecallEvidenceRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1FinishedGoodsRecallsByIdAuthorityDecision: build.mutation<
+      PostApiV1FinishedGoodsRecallsByIdAuthorityDecisionApiResponse,
+      PostApiV1FinishedGoodsRecallsByIdAuthorityDecisionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "finished-good/recall", id: "LIST" }, { type: "finished-good", id: "LIST" }, { type: "finished-good/recall", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/finished-goods/recalls/${queryArg.id}/authority-decision`,
+        method: "POST",
+        body: queryArg.domainEntitiesFinishedGoodsUpdateFinishedGoodsRecallDecisionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -3352,6 +3782,273 @@ export type GetIssuedBmrRegisterApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type PostApiV1FinishedGoodsProformasByIdVerifyPoApiResponse = void;
+export type PostApiV1FinishedGoodsProformasByIdVerifyPoApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProformaInvoicesVerifyFinishedGoodsCustomerPoRequest: DomainEntitiesProformaInvoicesVerifyFinishedGoodsCustomerPoRequest;
+};
+export type PostApiV1FinishedGoodsAllocationsByIdClearanceApiResponse = void;
+export type PostApiV1FinishedGoodsAllocationsByIdClearanceApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductionOrdersClearFinishedGoodsDispatchRequest: DomainEntitiesProductionOrdersClearFinishedGoodsDispatchRequest;
+};
+export type PostApiV1FinishedGoodsAllocationsByIdDispatchApiResponse = void;
+export type PostApiV1FinishedGoodsAllocationsByIdDispatchApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductionOrdersDispatchFinishedGoodsRequest: DomainEntitiesProductionOrdersDispatchFinishedGoodsRequest;
+};
+export type PostApiV1FinishedGoodsAllocationsByIdDeliveryApiResponse = void;
+export type PostApiV1FinishedGoodsAllocationsByIdDeliveryApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductionOrdersDeliverFinishedGoodsRequest: DomainEntitiesProductionOrdersDeliverFinishedGoodsRequest;
+};
+export type PostApiV1FinishedGoodsTransfersByIdHoldApiResponse = void;
+export type PostApiV1FinishedGoodsTransfersByIdHoldApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsRecallEvidenceRequest: DomainEntitiesFinishedGoodsRecallEvidenceRequest;
+};
+export type PostApiV1FinishedGoodsTransfersByIdReleaseHoldApiResponse = void;
+export type PostApiV1FinishedGoodsTransfersByIdReleaseHoldApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsRecallEvidenceRequest: DomainEntitiesFinishedGoodsRecallEvidenceRequest;
+};
+export type GetApiV1FinishedGoodsRecallsApiResponse =
+  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesFinishedGoodsFinishedGoodsRecallSummaryDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
+export type GetApiV1FinishedGoodsRecallsApiArg = {
+  searchQuery?: string;
+  page?: number;
+  pageSize?: number;
+  division?: DomainEntitiesProductsDivision;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1FinishedGoodsRecallsApiResponse = void;
+export type PostApiV1FinishedGoodsRecallsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsCreateFinishedGoodsRecallRequest: DomainEntitiesFinishedGoodsCreateFinishedGoodsRecallRequest;
+};
+export type GetApiV1FinishedGoodsRecallsByIdApiResponse =
+  /** status 200 OK */ DomainEntitiesFinishedGoodsFinishedGoodsRecallDetailDto;
+export type GetApiV1FinishedGoodsRecallsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1FinishedGoodsRecallsByIdPrintApiResponse =
+  /** status 200 OK */ DomainEntitiesFinishedGoodsFinishedGoodsRecallDetailDto;
+export type GetApiV1FinishedGoodsRecallsByIdPrintApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1FinishedGoodsRecallsByIdContactsApiResponse = void;
+export type PostApiV1FinishedGoodsRecallsByIdContactsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsRecordRecallContactRequest: DomainEntitiesFinishedGoodsRecordRecallContactRequest;
+};
+export type PostApiV1FinishedGoodsRecallsByIdRecoveriesApiResponse = void;
+export type PostApiV1FinishedGoodsRecallsByIdRecoveriesApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsRecordRecallRecoveryRequest: DomainEntitiesFinishedGoodsRecordRecallRecoveryRequest;
+};
+export type PostApiV1FinishedGoodsRecallsByIdRecoveriesAndRecoveryIdDisposeApiResponse = void;
+export type PostApiV1FinishedGoodsRecallsByIdRecoveriesAndRecoveryIdDisposeApiArg =
+  {
+    id: string;
+    recoveryId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+    domainEntitiesFinishedGoodsRecallEvidenceRequest: DomainEntitiesFinishedGoodsRecallEvidenceRequest;
+  };
+export type PostApiV1FinishedGoodsRecallsByIdCloseApiResponse = void;
+export type PostApiV1FinishedGoodsRecallsByIdCloseApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsCloseFinishedGoodsRecallRequest: DomainEntitiesFinishedGoodsCloseFinishedGoodsRecallRequest;
+};
+export type PostApiV1FinishedGoodsInvoicesByIdVoidApiResponse = void;
+export type PostApiV1FinishedGoodsInvoicesByIdVoidApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsRecallEvidenceRequest: DomainEntitiesFinishedGoodsRecallEvidenceRequest;
+};
+export type PostApiV1FinishedGoodsAllocationsByIdCancelApiResponse = void;
+export type PostApiV1FinishedGoodsAllocationsByIdCancelApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsRecallEvidenceRequest: DomainEntitiesFinishedGoodsRecallEvidenceRequest;
+};
+export type PostApiV1FinishedGoodsRecallsByIdDisposeStockApiResponse = void;
+export type PostApiV1FinishedGoodsRecallsByIdDisposeStockApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsDisposeRecalledStockRequest: DomainEntitiesFinishedGoodsDisposeRecalledStockRequest;
+};
+export type PostApiV1FinishedGoodsTransfersByIdReconcileApiResponse = void;
+export type PostApiV1FinishedGoodsTransfersByIdReconcileApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsReconcileFinishedGoodsStockRequest: DomainEntitiesFinishedGoodsReconcileFinishedGoodsStockRequest;
+};
+export type PostApiV1FinishedGoodsAllocationsByIdLoadApiResponse = void;
+export type PostApiV1FinishedGoodsAllocationsByIdLoadApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductionOrdersLoadFinishedGoodsRequest: DomainEntitiesProductionOrdersLoadFinishedGoodsRequest;
+};
+export type GetApiV1FinishedGoodsAllocationsByIdDocumentsApiResponse =
+  /** status 200 OK */ AppServicesFinishedGoodsFinishedGoodsDocumentsDto;
+export type GetApiV1FinishedGoodsAllocationsByIdDocumentsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1FinishedGoodsRecallBatchesApiResponse =
+  /** status 200 OK */ AppServicesFinishedGoodsFinishedGoodsBatchOptionDto[];
+export type GetApiV1FinishedGoodsRecallBatchesApiArg = {
+  searchQuery?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1FinishedGoodsTransfersByIdReconciliationApiResponse =
+  /** status 200 OK */ AppServicesFinishedGoodsFinishedGoodsReconciliationAllocationDto[];
+export type GetApiV1FinishedGoodsTransfersByIdReconciliationApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1FinishedGoodsAllocationsByIdCostingApiResponse = void;
+export type PostApiV1FinishedGoodsAllocationsByIdCostingApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductionOrdersConfirmFinishedGoodsCostingRequest: DomainEntitiesProductionOrdersConfirmFinishedGoodsCostingRequest;
+};
+export type PostApiV1FinishedGoodsRecallsByIdSettlementsApiResponse = void;
+export type PostApiV1FinishedGoodsRecallsByIdSettlementsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsRecordProductRecallSettlementRequest: DomainEntitiesFinishedGoodsRecordProductRecallSettlementRequest;
+};
+export type GetApiV1FinishedGoodsAllocationsByIdWaybillPrintApiResponse =
+  /** status 200 OK */ AppServicesFinishedGoodsFinishedGoodsWaybillPrintDto;
+export type GetApiV1FinishedGoodsAllocationsByIdWaybillPrintApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1FinishedGoodsRecallsByIdSettlementOptionsApiResponse =
+  /** status 200 OK */ AppServicesFinishedGoodsFinishedGoodsSettlementOptionDto[];
+export type GetApiV1FinishedGoodsRecallsByIdSettlementOptionsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1FinishedGoodsRecallsByIdReplacementOrdersApiResponse =
+  /** status 200 OK */ AppServicesFinishedGoodsFinishedGoodsBatchOptionDto[];
+export type GetApiV1FinishedGoodsRecallsByIdReplacementOrdersApiArg = {
+  id: string;
+  invoiceId?: string;
+  searchQuery?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1FinishedGoodsRecallsByIdReopenApiResponse = void;
+export type PostApiV1FinishedGoodsRecallsByIdReopenApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsRecallEvidenceRequest: DomainEntitiesFinishedGoodsRecallEvidenceRequest;
+};
+export type PostApiV1FinishedGoodsRecallsByIdAuthorityDecisionApiResponse = void;
+export type PostApiV1FinishedGoodsRecallsByIdAuthorityDecisionApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFinishedGoodsUpdateFinishedGoodsRecallDecisionRequest: DomainEntitiesFinishedGoodsUpdateFinishedGoodsRecallDecisionRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -3599,12 +4296,19 @@ export type DomainEntitiesProductionOrdersProductionOrderDetailDto = {
 export type DomainEntitiesProformaInvoicesCreateProformaInvoiceProduct = {
   productId?: string;
   quantity?: number;
+  productPackingId?: string | null;
 };
 export type DomainEntitiesProformaInvoicesCreateProformaInvoice = {
   code?: string | null;
   allocateProductionOrderId?: string;
   products?:
     DomainEntitiesProformaInvoicesCreateProformaInvoiceProduct[] | null;
+};
+export type DomainEntitiesProductionOrdersFinishedGoodsDeliveryLine = {
+  finishedGoodsTransferNoteId?: string;
+  acceptedYield?: number;
+  damagedYield?: number;
+  shortYield?: number;
 };
 export type DomainEntitiesProductionOrdersProductionOrderListDto = {
   id?: string;
@@ -3881,6 +4585,17 @@ export type DomainEntitiesMaterialsBatchFinishedGoodsTransferNoteDto = {
   loose?: number;
   allocatedQuantity?: number;
   remainingQuantity?: number;
+  availableQuantity?: number;
+  adjustmentQuantity?: number;
+  dispatchedQuantity?: number;
+  physicalQuantity?: number;
+  reservedQuantity?: number;
+  packsPerShipperSnapshot?: number | null;
+  packingStyleSnapshot?: string | null;
+  requiresStockReconciliation?: boolean;
+  isOnHold?: boolean;
+  holdReason?: string | null;
+  qualityReleased?: boolean;
   pendingAllocatedQuantity?: number;
   approved?: boolean;
   isPartial?: boolean;
@@ -3907,10 +4622,29 @@ export type DomainEntitiesProductionOrdersAllocateProductionOrderProductDto = {
   productPacking?: DomainEntitiesProductsProductPackingDto;
   fulfilledQuantities?:
     DomainEntitiesProductionOrdersAllocateProductQuantityDto[] | null;
+  unitPrice?: number | null;
+  priceCurrencyId?: string | null;
+  priceListRevisionId?: string | null;
 };
 export type DomainEntitiesProductionOrdersAllocateProductionOrderStatus =
-  0 | 1 | 2 | 3;
+  0 | 1 | 2 | 3 | 4 | 5;
 export type DomainEntitiesProductionOrdersAllocateProductionOrderDto = {
+  fefoExceptionReason?: string | null;
+  costingConfirmedAt?: string | null;
+  loadedVehicle?: string | null;
+  loadedDriver?: string | null;
+  loadedDriverPhone?: string | null;
+  loadingLocation?: string | null;
+  loadingInspectionReference?: string | null;
+  dispatchedAt?: string | null;
+  exitReference?: string | null;
+  commercialClearedAt?: string | null;
+  commercialClearanceReason?: string | null;
+  deliveryReceiver?: string | null;
+  deliveryEvidence?: string | null;
+  deliveryCondition?: string | null;
+  deliveryLines?:
+    DomainEntitiesProductionOrdersFinishedGoodsDeliveryLine[] | null;
   id?: string;
   productionOrder?: DomainEntitiesProductionOrdersProductionOrderListDto;
   invoiceCode?: string | null;
@@ -3931,11 +4665,24 @@ export type DomainEntitiesProformaInvoicesProformaInvoiceProductDto = {
   createdAt?: string;
   product?: DomainEntitiesProductsProductListDto;
   quantity?: number;
+  productPackingId?: string | null;
+  unitPrice?: number | null;
+  priceCurrencyId?: string | null;
+  priceListRevisionId?: string | null;
 };
 export type DomainEntitiesProformaInvoicesProformaInvoiceDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
   createdAt?: string;
+  approved?: boolean;
+  issuedInvoiceId?: string | null;
+  issuedInvoiceCode?: string | null;
+  invoiceIssuedAt?: string | null;
+  customerPoNumber?: string | null;
+  customerPoDate?: string | null;
+  customerPoAttachmentId?: string | null;
+  customerPoVerifiedAt?: string | null;
+  customerPoVerifiedById?: string | null;
   code?: string | null;
   allocateProductionOrder?: DomainEntitiesProductionOrdersAllocateProductionOrderDto;
   status?: DomainEntitiesProformaInvoicesProformaInvoiceStatus;
@@ -3956,6 +4703,7 @@ export type DomainEntitiesInvoicesCreateInvoiceAmount = {
   amount?: number;
 };
 export type DomainEntitiesInvoicesCreateInvoice = {
+  code?: string | null;
   proformaInvoiceId?: string;
   customerId?: string;
   termsOfPaymentId?: string | null;
@@ -3982,6 +4730,11 @@ export type DomainEntitiesInvoicesInvoiceDto = {
   createdBy?: DomainEntitiesUsersUserDto;
   createdAt?: string;
   attachments?: DomainEntitiesAttachmentsAttachmentDto[] | null;
+  voided?: boolean;
+  voidReason?: string | null;
+  voidedAt?: string | null;
+  voidedById?: string | null;
+  code?: string | null;
   proformaInvoice?: DomainEntitiesProformaInvoicesProformaInvoiceDto;
   customer?: DomainEntitiesCustomersCustomerDto;
   status?: DomainEntitiesInvoicesInvoiceStatus;
@@ -4012,6 +4765,7 @@ export type DomainEntitiesProductionOrdersAllocateProductionOrderProductRequest 
       DomainEntitiesProductionOrdersAllocateProductQuantityRequest[] | null;
   };
 export type DomainEntitiesProductionOrdersAllocateProductionOrderRequest = {
+  fefoExceptionReason?: string | null;
   productionOrderId?: string;
   products?:
     | DomainEntitiesProductionOrdersAllocateProductionOrderProductRequest[]
@@ -4028,10 +4782,26 @@ export type AppUtilsPaginateable601SystemCollectionsGenericList601DomainEntities
     stopPageIndex?: number;
   };
 export type DomainEntitiesProductionOrdersCreateProductionOrderWaybill = {
+  invoiceId?: string;
+  vehicleRegistration?: string | null;
+  driverName?: string | null;
+  driverPhone?: string | null;
+  transporter?: string | null;
+  deliveryAddress?: string | null;
+  storageConditions?: string | null;
+  sealNumber?: string | null;
   code?: string | null;
   comment?: string | null;
 };
 export type DomainEntitiesProductionOrdersProductionOrderWaybillDto = {
+  invoiceId?: string;
+  vehicleRegistration?: string | null;
+  driverName?: string | null;
+  driverPhone?: string | null;
+  transporter?: string | null;
+  deliveryAddress?: string | null;
+  storageConditions?: string | null;
+  sealNumber?: string | null;
   id?: string;
   code?: string | null;
   allocateProductionOrder?: DomainEntitiesProductionOrdersAllocateProductionOrderDto;
@@ -5213,7 +5983,23 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     startPageIndex?: number;
     stopPageIndex?: number;
   };
+export type DomainEntitiesMaterialsBatchApprovedProductStockDto = {
+  transferNoteId?: string;
+  productPackingId?: string | null;
+  packingStyle?: string | null;
+  baseUnit?: string | null;
+  quantityPerPack?: number;
+  packsPerShipper?: number | null;
+  sent?: number;
+  received?: number;
+  physical?: number;
+  reserved?: number;
+  available?: number;
+  dispatched?: number;
+  quarantinedReturns?: number;
+};
 export type DomainEntitiesMaterialsBatchApprovedProductDto = {
+  stocks?: DomainEntitiesMaterialsBatchApprovedProductStockDto[] | null;
   product?: DomainEntitiesProductsProductListDto;
   totalQuantity?: number;
   totalRemainingQuantity?: number;
@@ -5716,6 +6502,312 @@ export type DomainEntitiesProductsProductionIssuedBmrRegister = {
   total?: number;
   truncated?: boolean;
 };
+export type DomainEntitiesProformaInvoicesVerifyFinishedGoodsCustomerPoLine = {
+  proformaInvoiceProductId?: string;
+  quantity?: number;
+  unitPrice?: number;
+  currencyId?: string;
+};
+export type DomainEntitiesProformaInvoicesVerifyFinishedGoodsCustomerPoRequest =
+  {
+    customerPoNumber?: string | null;
+    customerPoDate?: string;
+    attachmentId?: string;
+    lines?:
+      DomainEntitiesProformaInvoicesVerifyFinishedGoodsCustomerPoLine[] | null;
+  };
+export type DomainEntitiesProductionOrdersClearFinishedGoodsDispatchRequest = {
+  reason?: string | null;
+  paymentOrCreditConfirmed?: boolean;
+  customerAuthorisationReference?: string | null;
+  minimumRemainingShelfLifeDays?: number;
+};
+export type DomainEntitiesProductionOrdersDispatchFinishedGoodsRequest = {
+  exitReference?: string | null;
+  vehicleInspected?: boolean;
+  conditionsConfirmed?: boolean;
+};
+export type DomainEntitiesProductionOrdersDeliverFinishedGoodsRequest = {
+  receiverName?: string | null;
+  evidenceReference?: string | null;
+  conditionNotes?: string | null;
+  lines?: DomainEntitiesProductionOrdersFinishedGoodsDeliveryLine[] | null;
+};
+export type DomainEntitiesFinishedGoodsRecallEvidenceRequest = {
+  evidence?: string | null;
+};
+export type DomainEntitiesFinishedGoodsFinishedGoodsRecallSummaryDto = {
+  id?: string;
+  code?: string | null;
+  batchManufacturingRecordId?: string;
+  batchNumber?: string | null;
+  productName?: string | null;
+  reason?: string | null;
+  regulatoryClassification?: string | null;
+  authorityReference?: string | null;
+  closed?: boolean;
+  createdAt?: string;
+  closedAt?: string | null;
+  closureReport?: string | null;
+  unrecoverableYield?: number;
+  unrecoverableReason?: string | null;
+};
+export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesFinishedGoodsFinishedGoodsRecallSummaryDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
+  {
+    data?: DomainEntitiesFinishedGoodsFinishedGoodsRecallSummaryDto[] | null;
+    pageIndex?: number;
+    pageCount?: number;
+    totalRecordCount?: number;
+    numberOfPagesToShow?: number;
+    startPageIndex?: number;
+    stopPageIndex?: number;
+  };
+export type DomainEntitiesFinishedGoodsCreateFinishedGoodsRecallRequest = {
+  batchManufacturingRecordId?: string;
+  code?: string | null;
+  reason?: string | null;
+  regulatoryClassification?: string | null;
+  authorityReference?: string | null;
+};
+export type DomainEntitiesFinishedGoodsFinishedGoodsRecallHistoryDto = {
+  id?: string;
+  event?: string | null;
+  evidence?: string | null;
+  actor?: string | null;
+  at?: string;
+};
+export type DomainEntitiesFinishedGoodsFinishedGoodsRecallSettlementDto = {
+  id?: string;
+  invoiceCode?: string | null;
+  kind?: string | null;
+  amount?: number;
+  currency?: string | null;
+  reference?: string | null;
+  evidence?: string | null;
+  replacementProductionOrderId?: string | null;
+  createdAt?: string;
+};
+export type DomainEntitiesFinishedGoodsFinishedGoodsTraceDto = {
+  allocationId?: string;
+  transferNoteId?: string;
+  transferNoteNumber?: string | null;
+  batchNumber?: string | null;
+  productName?: string | null;
+  packingStyle?: string | null;
+  customer?: string | null;
+  contact?: string | null;
+  deliveryAddress?: string | null;
+  stage?: string | null;
+  packs?: number;
+  yield?: number;
+  waybill?: string | null;
+  vehicle?: string | null;
+  dispatchedAt?: string | null;
+  deliveredAt?: string | null;
+  notified?: boolean;
+  acknowledged?: boolean;
+  effectivenessConfirmed?: boolean;
+  recoveredYield?: number;
+};
+export type DomainEntitiesFinishedGoodsFinishedGoodsRecallRecoveryDto = {
+  id?: string;
+  allocationId?: string;
+  finishedGoodsTransferNoteId?: string;
+  quantity?: number;
+  evidence?: string | null;
+  condition?: string | null;
+  disposed?: boolean;
+  dispositionEvidence?: string | null;
+};
+export type DomainEntitiesFinishedGoodsFinishedGoodsRecallStockDto = {
+  transferNoteId?: string;
+  transferNoteNumber?: string | null;
+  packingStyle?: string | null;
+  unitsPerPack?: number;
+  physical?: number;
+  reserved?: number;
+  quarantinedReturns?: number;
+};
+export type DomainEntitiesFinishedGoodsFinishedGoodsRecallDetailDto = {
+  id?: string;
+  code?: string | null;
+  batchManufacturingRecordId?: string;
+  batchNumber?: string | null;
+  productName?: string | null;
+  reason?: string | null;
+  regulatoryClassification?: string | null;
+  authorityReference?: string | null;
+  closed?: boolean;
+  createdAt?: string;
+  closedAt?: string | null;
+  closureReport?: string | null;
+  unrecoverableYield?: number;
+  unrecoverableReason?: string | null;
+  transferVariance?: number;
+  history?: DomainEntitiesFinishedGoodsFinishedGoodsRecallHistoryDto[] | null;
+  settlements?:
+    DomainEntitiesFinishedGoodsFinishedGoodsRecallSettlementDto[] | null;
+  consignments?: DomainEntitiesFinishedGoodsFinishedGoodsTraceDto[] | null;
+  recoveries?:
+    DomainEntitiesFinishedGoodsFinishedGoodsRecallRecoveryDto[] | null;
+  stocks?: DomainEntitiesFinishedGoodsFinishedGoodsRecallStockDto[] | null;
+  onSiteYield?: number;
+  dispatchedYield?: number;
+  recoveredYield?: number;
+};
+export type DomainEntitiesFinishedGoodsRecordRecallContactRequest = {
+  allocationId?: string;
+  acknowledged?: boolean;
+  effectivenessConfirmed?: boolean;
+  evidence?: string | null;
+};
+export type DomainEntitiesFinishedGoodsRecordRecallRecoveryRequest = {
+  allocationId?: string;
+  finishedGoodsTransferNoteId?: string;
+  quantity?: number;
+  evidence?: string | null;
+  condition?: string | null;
+};
+export type DomainEntitiesFinishedGoodsCloseFinishedGoodsRecallRequest = {
+  evidence?: string | null;
+  unrecoverableYield?: number;
+  unrecoverableReason?: string | null;
+};
+export type DomainEntitiesFinishedGoodsDisposeRecalledStockRequest = {
+  transferNoteId?: string;
+  quantity?: number;
+  evidence?: string | null;
+};
+export type DomainEntitiesFinishedGoodsReconcileFinishedGoodsDeparture = {
+  allocationId?: string;
+  departedAt?: string;
+  evidence?: string | null;
+};
+export type DomainEntitiesFinishedGoodsReconcileFinishedGoodsStockRequest = {
+  countedPhysicalYield?: number;
+  verifiedUnitsPerPack?: number;
+  verifiedPacksPerShipper?: number;
+  verifiedPackingStyleName?: string | null;
+  evidence?: string | null;
+  departures?:
+    DomainEntitiesFinishedGoodsReconcileFinishedGoodsDeparture[] | null;
+};
+export type DomainEntitiesProductionOrdersLoadFinishedGoodsRequest = {
+  vehicleRegistration?: string | null;
+  driverName?: string | null;
+  driverPhone?: string | null;
+  loadingLocation?: string | null;
+  inspectionReference?: string | null;
+  conditionsConfirmed?: boolean;
+};
+export type AppServicesFinishedGoodsFinishedGoodsInvoiceHistoryDto = {
+  id?: string;
+  code?: string | null;
+  voided?: boolean;
+  voidedAt?: string | null;
+  createdAt?: string;
+  voidReason?: string | null;
+};
+export type AppServicesFinishedGoodsFinishedGoodsCostBasisDto = {
+  productId?: string;
+  productPackingId?: string;
+  manufacturingCostPerPack?: number;
+  currencyId?: string;
+  currencyLabel?: string | null;
+  approvedCostBasisReference?: string | null;
+};
+export type AppServicesFinishedGoodsFinishedGoodsDocumentsDto = {
+  invoiceHistory?:
+    AppServicesFinishedGoodsFinishedGoodsInvoiceHistoryDto[] | null;
+  costingConfirmedAt?: string | null;
+  costingLines?: AppServicesFinishedGoodsFinishedGoodsCostBasisDto[] | null;
+  proformaId?: string | null;
+  proformaCode?: string | null;
+  customerPoNumber?: string | null;
+  customerPoVerifiedAt?: string | null;
+  invoiceId?: string | null;
+  invoiceCode?: string | null;
+  waybillId?: string | null;
+  waybillCode?: string | null;
+  vehicle?: string | null;
+  driver?: string | null;
+  driverPhone?: string | null;
+  transporter?: string | null;
+  deliveryAddress?: string | null;
+  storageConditions?: string | null;
+  seal?: string | null;
+};
+export type AppServicesFinishedGoodsFinishedGoodsBatchOptionDto = {
+  id?: string;
+  batchNumber?: string | null;
+  productName?: string | null;
+};
+export type AppServicesFinishedGoodsFinishedGoodsReconciliationAllocationDto = {
+  id?: string;
+  orderCode?: string | null;
+  customer?: string | null;
+  packs?: number;
+  deliveredAt?: string | null;
+  dispatchedAt?: string | null;
+  loadedAt?: string | null;
+  cancelled?: boolean;
+  departureEvidence?: string | null;
+};
+export type DomainEntitiesProductionOrdersFinishedGoodsCostingLine = {
+  productId?: string;
+  productPackingId?: string;
+  manufacturingCostPerPack?: number;
+  currencyId?: string;
+  approvedCostBasisReference?: string | null;
+};
+export type DomainEntitiesProductionOrdersConfirmFinishedGoodsCostingRequest = {
+  approvedBasisConfirmed?: boolean;
+  lines?: DomainEntitiesProductionOrdersFinishedGoodsCostingLine[] | null;
+};
+export type DomainEntitiesFinishedGoodsRecordProductRecallSettlementRequest = {
+  invoiceId?: string;
+  kind?: string | null;
+  amount?: number;
+  currencyId?: string;
+  reference?: string | null;
+  evidence?: string | null;
+  replacementProductionOrderId?: string | null;
+};
+export type AppServicesFinishedGoodsFinishedGoodsWaybillLineDto = {
+  product?: string | null;
+  packingStyle?: string | null;
+  batch?: string | null;
+  expiry?: string | null;
+  packs?: number;
+  baseUnits?: number;
+};
+export type AppServicesFinishedGoodsFinishedGoodsWaybillPrintDto = {
+  documents?: AppServicesFinishedGoodsFinishedGoodsDocumentsDto;
+  customer?: string | null;
+  customerPhone?: string | null;
+  orderCode?: string | null;
+  departedAt?: string | null;
+  exitReference?: string | null;
+  lines?: AppServicesFinishedGoodsFinishedGoodsWaybillLineDto[] | null;
+};
+export type AppServicesFinishedGoodsFinishedGoodsSettlementCurrencyDto = {
+  id?: string;
+  label?: string | null;
+  invoicedAmount?: number;
+};
+export type AppServicesFinishedGoodsFinishedGoodsSettlementOptionDto = {
+  invoiceId?: string;
+  code?: string | null;
+  customer?: string | null;
+  currencies?:
+    AppServicesFinishedGoodsFinishedGoodsSettlementCurrencyDto[] | null;
+};
+export type DomainEntitiesFinishedGoodsUpdateFinishedGoodsRecallDecisionRequest =
+  {
+    regulatoryClassification?: string | null;
+    authorityReference?: string | null;
+    evidence?: string | null;
+  };
 export const {
   usePostApiV1ProductionOrdersMutation,
   useGetApiV1ProductionOrdersQuery,
@@ -5922,4 +7014,42 @@ export const {
   useLazyListUpcomingBatchAlternativesQuery,
   useGetIssuedBmrRegisterQuery,
   useLazyGetIssuedBmrRegisterQuery,
+  usePostApiV1FinishedGoodsProformasByIdVerifyPoMutation,
+  usePostApiV1FinishedGoodsAllocationsByIdClearanceMutation,
+  usePostApiV1FinishedGoodsAllocationsByIdDispatchMutation,
+  usePostApiV1FinishedGoodsAllocationsByIdDeliveryMutation,
+  usePostApiV1FinishedGoodsTransfersByIdHoldMutation,
+  usePostApiV1FinishedGoodsTransfersByIdReleaseHoldMutation,
+  useGetApiV1FinishedGoodsRecallsQuery,
+  useLazyGetApiV1FinishedGoodsRecallsQuery,
+  usePostApiV1FinishedGoodsRecallsMutation,
+  useGetApiV1FinishedGoodsRecallsByIdQuery,
+  useLazyGetApiV1FinishedGoodsRecallsByIdQuery,
+  useGetApiV1FinishedGoodsRecallsByIdPrintQuery,
+  useLazyGetApiV1FinishedGoodsRecallsByIdPrintQuery,
+  usePostApiV1FinishedGoodsRecallsByIdContactsMutation,
+  usePostApiV1FinishedGoodsRecallsByIdRecoveriesMutation,
+  usePostApiV1FinishedGoodsRecallsByIdRecoveriesAndRecoveryIdDisposeMutation,
+  usePostApiV1FinishedGoodsRecallsByIdCloseMutation,
+  usePostApiV1FinishedGoodsInvoicesByIdVoidMutation,
+  usePostApiV1FinishedGoodsAllocationsByIdCancelMutation,
+  usePostApiV1FinishedGoodsRecallsByIdDisposeStockMutation,
+  usePostApiV1FinishedGoodsTransfersByIdReconcileMutation,
+  usePostApiV1FinishedGoodsAllocationsByIdLoadMutation,
+  useGetApiV1FinishedGoodsAllocationsByIdDocumentsQuery,
+  useLazyGetApiV1FinishedGoodsAllocationsByIdDocumentsQuery,
+  useGetApiV1FinishedGoodsRecallBatchesQuery,
+  useLazyGetApiV1FinishedGoodsRecallBatchesQuery,
+  useGetApiV1FinishedGoodsTransfersByIdReconciliationQuery,
+  useLazyGetApiV1FinishedGoodsTransfersByIdReconciliationQuery,
+  usePostApiV1FinishedGoodsAllocationsByIdCostingMutation,
+  usePostApiV1FinishedGoodsRecallsByIdSettlementsMutation,
+  useGetApiV1FinishedGoodsAllocationsByIdWaybillPrintQuery,
+  useLazyGetApiV1FinishedGoodsAllocationsByIdWaybillPrintQuery,
+  useGetApiV1FinishedGoodsRecallsByIdSettlementOptionsQuery,
+  useLazyGetApiV1FinishedGoodsRecallsByIdSettlementOptionsQuery,
+  useGetApiV1FinishedGoodsRecallsByIdReplacementOrdersQuery,
+  useLazyGetApiV1FinishedGoodsRecallsByIdReplacementOrdersQuery,
+  usePostApiV1FinishedGoodsRecallsByIdReopenMutation,
+  usePostApiV1FinishedGoodsRecallsByIdAuthorityDecisionMutation,
 } = injectedRtkApi;

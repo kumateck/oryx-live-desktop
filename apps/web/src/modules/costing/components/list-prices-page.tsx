@@ -1,11 +1,14 @@
 import { useMemo, useState } from "react";
 import { Pencil } from "lucide-react";
+import { useSearchParams } from "react-router";
+import { useAccess } from "@/shared/auth/use-access";
 import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDate } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { usePageSearch } from "@/shared/search/page-search";
+import { KindSwitch } from "@/shared/reference-data/kind-switch";
 import { useGetApiV1CostingListPricesQuery, type ListPrice } from "../api/costing-api";
 import { useCurrencyOptions } from "../hooks/use-costing-choices";
 import { costingAudit, costingPermissions, currencyName, priceIn } from "../lib/costing";
@@ -13,12 +16,19 @@ import { CostingTabs } from "./costing-tabs";
 import { ListPriceDialog } from "./list-price-dialog";
 
 const column = dataTableColumns<ListPrice>();
+const divisionTabs = [{ value: 0 }, { value: 1 }] as const;
+const divisionLabels = { 0: "Beta-lactam", 1: "Non-beta-lactam" } as const;
 
 /** Every product's list price, in the currency it is priced in. */
 export function ListPricesPage() {
+  const [params, setParams] = useSearchParams();
+  const { context } = useAccess();
+  const chooseDivision = context.state === "authenticated" && context.departmentType !== 0;
+  const division = params.get("division") === "1" ? 1 : 0;
   const search = usePageSearch("products", false);
-  const table = useServerTable({ pageSize: 30, resetKey: search });
-  const query = useGetApiV1CostingListPricesQuery({ ...costingAudit, page: table.page, pageSize: table.pageSize, searchQuery: search });
+  const table = useServerTable({ pageSize: 30, resetKey: `${search}|${chooseDivision ? division : "department"}` });
+  const query = useGetApiV1CostingListPricesQuery({ ...costingAudit, page: table.page, pageSize: table.pageSize, searchQuery: search,
+    ...(chooseDivision ? { division } : {}) });
   const rows = useMemo(() => query.currentData?.data ?? [], [query.currentData]);
   const meta = pageMeta(query.currentData, table, rows.length);
   const currencies = useCurrencyOptions();
@@ -35,6 +45,8 @@ export function ListPricesPage() {
   return <section className="page-fill">
     <PageHeader title="Costing" crumbs={[{ label: "Finance" }, { label: "Costing" }]} />
     <CostingTabs />
+    {chooseDivision ? <KindSwitch tabs={divisionTabs} kind={division} labels={divisionLabels} label="Division"
+      onSelect={(value) => setParams((current) => { const next = new URLSearchParams(current); next.set("division", String(value)); return next; }, { replace: true })} /> : null}
     <ServerDataTable label="List prices" columns={columns} rows={rows} getRowId={(row) => row.productId ?? ""} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows}
       onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange} loading={query.isLoading} refreshing={query.isFetching && !query.isLoading}
       error={query.error ? apiErrorMessage(query.error) : null} onRetry={() => void query.refetch()} onRowOpen={(row) => setEditing(row)}

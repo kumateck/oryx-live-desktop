@@ -64,7 +64,7 @@ export function CopyProcedureDialog({ productId, departmentId, action, steps, on
   }, [product?.value]);
   const activeSteps = info.mode === "to" ? steps : sourceSteps ?? [];
   const failed = copier.outcomes?.filter((item) => item.error) ?? [];
-  const dropsArd = activeSteps.some((step) => step.parties.some((item) => item.ard));
+  const hasAtr = activeSteps.some((step) => step.parties.some((item) => item.action.value === "7"));
 
   const loadSource = async () => {
     if (!product) return;
@@ -97,13 +97,13 @@ export function CopyProcedureDialog({ productId, departmentId, action, steps, on
           <ul role="alert" className="space-y-1">{failed.map((item) => <li key={item.product} className="break-words text-destructive">{item.product}: {item.error}</li>)}</ul>
         </div> : review ? <div className="space-y-3 text-sm">
           <p className="rounded-md border border-destructive/40 bg-destructive/5 p-3">This replaces the whole existing procedure {info.mode === "to" ? "on each selected product" : "on this product"}. It cannot be undone.</p>
-          {dropsArd ? <p className="text-muted-foreground">Analytical raw data belongs to each product and is not copied. Set it on each product's ATR instruction afterwards.</p> : null}
+          {hasAtr ? <p className="text-muted-foreground">Associated actions and ATR stages are copied. Each ATR selects the target product’s analytical raw data at the same stage and analysis type. A product with a missing or ambiguous stage is reported without replacing its procedure.</p> : null}
           <p className="rounded-md border bg-muted/30 px-3 py-2">{info.mode === "to" ? "Destination department" : "Source department"}: <span className="font-medium">{selectedDepartmentLabel}</span></p>
           <div className="grid gap-3 md:grid-cols-2">
             <div><h3 className="mb-1 font-medium">{info.mode === "to" ? `Target products (${products.length})` : `Source product: ${product?.label ?? ""}`}</h3>
               {info.mode === "to" ? <ul className="max-h-60 space-y-1 overflow-y-auto">{products.map((item) => <li key={item.value} className="break-words rounded-md border px-3 py-2 font-medium">{item.label}</li>)}</ul> : null}</div>
             <div><h3 className="mb-1 font-medium">Procedure steps ({activeSteps.length})</h3>
-              <ol className="max-h-60 list-decimal space-y-1 overflow-y-auto pl-5">{activeSteps.map((step) => <li key={step.key} className="break-words">{step.operation.label}<span className="text-muted-foreground"> · {step.isCritical ? "Critical" : "Automated"}</span></li>)}</ol></div>
+              <ol className="max-h-60 list-decimal space-y-1 overflow-y-auto pl-5">{activeSteps.map((step) => <li key={step.key} className="break-words">{step.operation.label}<span className="text-muted-foreground"> · {step.isCritical ? "Critical" : "Automated"}</span><ul className="pl-3 text-xs text-muted-foreground">{step.parties.map((party) => <li key={`${party.kind}:${party.who.value}:${party.action.value}:${party.ard?.value ?? ""}`}>{party.who.label} · {party.action.label}{party.ard ? ` · ${party.ard.label}` : ""}</li>)}</ul></li>)}</ol></div>
           </div>
         </div> : <>
           {departmentsQuery.isError ? <p role="alert" className="text-sm text-destructive">Departments could not be loaded. Close and reopen this dialog to retry.</p> : null}

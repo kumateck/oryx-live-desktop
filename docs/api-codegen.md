@@ -432,3 +432,40 @@ Regenerate with `bun run api:generate`. Typed digest
 additions reproduces `aa0c7ce5…ace5af`. Deploy the backend and its `GrantOperationDepartmentLinkKeys`
 data migration first. An operation links to one production department; it must be unlinked
 before it is linked elsewhere.
+
+## Product material lookup context (2026-11-21)
+
+The existing `GET /api/v1/material/department` and
+`GET /api/v1/material/{materialId}/uom` accept optional `context=qa` for QA
+product pages; Production uses the default context. QA requests also carry
+`productId`, and the backend loads that product's active production department.
+Each context checks its own BOM or packing-material view key for the material
+kind. Edit permissions remain separate and are checked when saving.
+
+The picker already returns the department material link with its `UoM`. Reuse
+that unit when selecting a material; never use the purchase unit or a saved BOM
+unit as linkage authority. Existing rows without verified link data use the
+existing unit lookup. No endpoint or permission key is added, and no role grants
+or database migration are needed. Deploy the matching backend and desktop
+changes together. The typed source contract digest is
+`3592428f01ea4a0e0e1d39c7419ff46a1728e2f473a83cf3ac20c695824110fa`.
+Removing only the two optional context parameters reproduces the preceding
+contract exactly. The local compatibility policy records this reviewed contract;
+this change does not deploy either application or change live role grants.
+
+
+Versioned costing (2026-11-21) adds seven paths under `/api/v1/costing/price-lists`, fifteen owned schemas, optional division filtering on the legacy price lookup, and optional saved price/packing provenance on allocation and invoice inputs/outputs. Only these changes were merged from the companion backend export. Removing these additions reproduces the reviewed `3592428f01ea4a0e0e1d39c7419ff46a1728e2f473a83cf3ac20c695824110fa` contract. The resulting contract is `7fb7cdc24ac0e27cd44afd20a18568c91d900620568b0104673f6511f279088e`. See [costing](costing.md) for workflow, permissions and migration ordering.
+
+## Finished-goods integration review (21 November 2026)
+
+Combined the finished-goods, costing and material context additions with current
+`development`, retaining every existing issued-register, vendor-list, stock,
+QC repair and operation-department contract review. Removing only this work's
+additions reproduces the approved `6fb1587bcddbb7f4765ec5903a49a185a15794d6a0dbf2bbb7d1f1c7d183b520`
+contract. The merged material-context predecessor is
+`014f1ea1bd6abb85ec092620319d7e3f9655e2d9717355b0a381be07a5a15bd7`;
+adding costing gives `86104d8759092ceec330de43d3aded8420dda15a869d600c8c71a47d28fbf119`.
+The full contract is `4de3b27dd44baafb881ae47d3cfd4489fb3023fb0db7a3090764eadd83539083`.
+All clients and the untyped-operation report were regenerated from that source.
+The shared review-status schema remains owned by both the existing vendor-list
+contract and costing and is retained when testing the costing predecessor.
