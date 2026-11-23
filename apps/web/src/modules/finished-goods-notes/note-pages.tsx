@@ -1,3 +1,4 @@
+import { StockQualityActions } from "@/modules/fg-dispatch/public";
 import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Check, Eye } from "lucide-react";
@@ -28,7 +29,7 @@ import { approveSchema, audit, notePath, notePermissions, noteRowsSchema, noteSc
 const fields: WizardField<ApproveValues>[] = [
   { type: InputTypes.NUMBER, name: "shippers", label: "Shippers received", min: 0, step: 1 },
   { type: InputTypes.NUMBER, name: "loose", label: "Loose packs received", min: 0, step: 1 },
-  { type: InputTypes.RICHTEXT, name: "notes", label: "Notes", className: "md:col-span-2" },
+  { type: InputTypes.TEXTAREA, name: "notes", label: "Notes / discrepancy evidence", className: "md:col-span-2" },
 ];
 /** The store counts in what production sent and approves the note with what it actually received. */
 export function ApproveNoteDialog({ note, onClose }: { note: TransferNote; onClose: () => void }) {
@@ -54,7 +55,7 @@ export function ApproveNoteDialog({ note, onClose }: { note: TransferNote; onClo
   });
   return <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
     <DialogContent className="sm:max-w-2xl">
-      <DialogHeader><DialogTitle>Approve transfer · {note.productName}</DialogTitle><DialogDescription>Batch {note.batchNumber ?? "–"}. Enter what the store counted in; it cannot be more than was sent. This cannot be undone.</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>Receive transfer · {note.productName}</DialogTitle><DialogDescription>Batch {note.batchNumber ?? "–"}. Enter what the store counted in; it cannot be more than was sent. This cannot be undone.</DialogDescription></DialogHeader>
       <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         <DialogBody className="space-y-3">
           <KeyFacts><KeyFact label="Shippers sent" value={sent.shippers.toLocaleString()} note={note.perShipper ? `${note.perShipper.toLocaleString()} packs each` : "No shipper size"} /><KeyFact label="Loose sent" value={sent.loose.toLocaleString()} note={note.packing ?? undefined} />
@@ -65,7 +66,7 @@ export function ApproveNoteDialog({ note, onClose }: { note: TransferNote; onClo
           </> : <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">The packing style {note.packing ? `“${note.packing}” ` : ""}does not say how many units fill a pack, so this transfer cannot be counted in shippers and loose. Complete the packing style on the product first.</p>}
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>
-        <DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy || !countable}>{busy ? <><Spinner />Approving…</> : "Approve transfer"}</Button></DialogFooter>
+        <DialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy || !countable}>{busy ? <><Spinner />Receiving…</> : "Receive transfer"}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>;
@@ -95,7 +96,7 @@ export function NoteListPage() {
     column.accessor("received", { header: "Received", size: 210, cell: ({ row }) => row.original.approved ? fgText(row.original.received, row.original.layout) : <span className="text-muted-foreground">Not yet</span> }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => <TableMenu label={`Actions for batch ${row.original.batchNumber ?? row.original.id}`} items={[
       { id: "view", label: "View", icon: Eye, to: notePath(row.original.id) },
-      !row.original.approved && { id: "approve", label: "Approve", icon: Check, require: notePermissions.approve, onSelect: () => setApproving(row.original) },
+      !row.original.approved && { id: "approve", label: "Receive", icon: Check, require: notePermissions.approve, onSelect: () => setApproving(row.original) },
     ]} /> }),
   ]), []);
   return <section className="page-fill">
@@ -140,6 +141,8 @@ function Detail({ note }: { note: TransferNote }) {
         <DetailItem label={`${note.layout.baseName ? note.layout.baseName : "Units"} per pack`} value={note.layout.baseUnitsPerPack ? note.layout.baseUnitsPerPack.toLocaleString() : null} />
       </DetailGroup>
     </div>
+    <StockQualityActions id={note.id} received={note.approved} needsReconciliation={note.needsReconciliation} held={note.held}
+      unitsPerPack={note.layout.baseUnitsPerPack ?? 0} packsPerShipper={note.perShipper} packingName={note.packing ?? ""} />
     {note.notes ? <section className="space-y-1 rounded-lg border bg-card p-4"><h2 className="text-sm font-semibold">Notes</h2><RichTextView html={note.notes} className="text-sm" /></section> : null}
     {approving ? <ApproveNoteDialog note={note} onClose={() => setApproving(false)} /> : null}
   </article>;

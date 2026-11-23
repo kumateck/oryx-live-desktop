@@ -18,7 +18,7 @@ const routes = [
     responsibleUsers: [], responsibleRoles: [{ role: { id: "role-1", name: "Operator" }, action: 2 }] },
 ];
 
-function open(saved: object[] = routes) {
+function open(saved: object[] = routes, analyticalRawData: object[] = []) {
   const backend = stubBackend({ permissions: ["CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure"] });
   rememberSession();
   const calls: { method: string; path: string; body: string }[] = [];
@@ -30,7 +30,7 @@ function open(saved: object[] = routes) {
     if (path === `/api/v1/product/${id}/routes`) return input.method === "GET" ? Response.json(saved) : new Response(null, { status: 204 });
     if (path === "/api/v1/collection/operations") return Response.json([{ id: "op-test", name: "Testing" }, { id: "op-pack", name: "Packing" }, { id: "op-mix", name: "Mixing" }]);
     if (path === "/api/v1/collection") return Response.json({ WorkCenter: [{ id: "w1", name: "Lab" }], Role: [{ id: "role-1", name: "Operator" }], User: [{ id: "u1", name: "Ama" }] });
-    if (path === `/api/v1/product-ard/product/${id}`) return Response.json([]);
+    if (path === `/api/v1/product-ard/product/${id}`) return Response.json(analyticalRawData);
     return new Response(null, { status: 404 });
   });
   const router = createMemoryRouter([{ path: "/", element: <ProcedureSection productId={id} departmentId="dept-1" /> }]);
@@ -100,4 +100,15 @@ it("refuses to save an empty procedure", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Save procedure" }));
   expect((await screen.findByRole("alert")).textContent).toBe("Add at least one step.");
   expect(calls).toEqual([]);
+});
+
+it("opens a copied ATR with its destination document and stage already selected", async () => {
+  const ard = { id: "target-bulk-ard", stage: 1, productStandardTestProcedure: { stpNumber: "STP-TARGET" } };
+  open([{ ...routes[0], responsibleUsers: [{ user: { id: "u1", name: "Ama" }, action: 7, productAnalyticalRawData: ard }], responsibleRoles: [] }], [ard]);
+  await chooseAction("Actions for Testing", "Edit");
+  const dialog = within(await screen.findByRole("dialog"));
+  expect(await dialog.findByRole("combobox", { name: /Analytical raw data \/ ATR stage/ })).toBeTruthy();
+  expect(dialog.getByRole("combobox", { name: /Analytical raw data \/ ATR stage/ }).textContent).toContain("STP-TARGET (Bulk)");
+  fireEvent.click(dialog.getByRole("button", { name: "Update step" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 });

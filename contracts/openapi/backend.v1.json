@@ -32675,6 +32675,13 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -32848,6 +32855,13 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -113029,6 +113043,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "division",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Products.Division"
+            }
           }
         ],
         "responses": {
@@ -121041,6 +121062,2735 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/costing/price-lists/products": {
+      "get": {
+        "tags": [
+          "Costing"
+        ],
+        "parameters": [
+          {
+            "name": "division",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Products.Division"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "searchQuery",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Costing.CostingPackingOptionDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Costing.CostingPackingOptionDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Costing.CostingPackingOptionDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/costing/price-lists": {
+      "get": {
+        "tags": [
+          "Costing"
+        ],
+        "parameters": [
+          {
+            "name": "division",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Products.Division"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "searchQuery",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListPageDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListPageDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListPageDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Costing"
+        ],
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.PrepareCostingPriceListRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.PrepareCostingPriceListRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.PrepareCostingPriceListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/costing/price-lists/{id}": {
+      "get": {
+        "tags": [
+          "Costing"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListDetailDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Costing"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.UpdateCostingPriceListRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.UpdateCostingPriceListRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.UpdateCostingPriceListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/costing/price-lists/{id}/lines": {
+      "get": {
+        "tags": [
+          "Costing"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30
+            }
+          },
+          {
+            "name": "searchQuery",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Costing.CostingPriceListLineDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Costing.CostingPriceListLineDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Costing.CostingPriceListLineDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Costing"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.SaveCostingPriceListLineRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.SaveCostingPriceListLineRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.SaveCostingPriceListLineRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/costing/price-lists/{id}/print": {
+      "get": {
+        "tags": [
+          "Costing"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListPrintDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListPrintDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListPrintDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/costing/price-lists/revise": {
+      "post": {
+        "tags": [
+          "Costing"
+        ],
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.PrepareCostingPriceListRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.PrepareCostingPriceListRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.PrepareCostingPriceListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/costing/price-lists/{id}/submit": {
+      "post": {
+        "tags": [
+          "Costing"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.SubmitCostingPriceListRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.SubmitCostingPriceListRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.Costing.SubmitCostingPriceListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/proformas/{id}/verify-po": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProformaInvoices.VerifyFinishedGoodsCustomerPoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProformaInvoices.VerifyFinishedGoodsCustomerPoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProformaInvoices.VerifyFinishedGoodsCustomerPoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/allocations/{id}/clearance": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.ClearFinishedGoodsDispatchRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.ClearFinishedGoodsDispatchRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.ClearFinishedGoodsDispatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/allocations/{id}/dispatch": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.DispatchFinishedGoodsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.DispatchFinishedGoodsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.DispatchFinishedGoodsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/allocations/{id}/delivery": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.DeliverFinishedGoodsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.DeliverFinishedGoodsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.DeliverFinishedGoodsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/transfers/{id}/hold": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/transfers/{id}/release-hold": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls": {
+      "get": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "searchQuery",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30
+            }
+          },
+          {
+            "name": "division",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Products.Division"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSummaryDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSummaryDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSummaryDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.CreateFinishedGoodsRecallRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.CreateFinishedGoodsRecallRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.CreateFinishedGoodsRecallRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}": {
+      "get": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/print": {
+      "get": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/contacts": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecordRecallContactRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecordRecallContactRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecordRecallContactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/recoveries": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecordRecallRecoveryRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecordRecallRecoveryRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecordRecallRecoveryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/recoveries/{recoveryId}/dispose": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recoveryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/close": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.CloseFinishedGoodsRecallRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.CloseFinishedGoodsRecallRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.CloseFinishedGoodsRecallRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/invoices/{id}/void": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/allocations/{id}/cancel": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/dispose-stock": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.DisposeRecalledStockRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.DisposeRecalledStockRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.DisposeRecalledStockRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/transfers/{id}/reconcile": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.ReconcileFinishedGoodsStockRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.ReconcileFinishedGoodsStockRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.ReconcileFinishedGoodsStockRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/allocations/{id}/load": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.LoadFinishedGoodsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.LoadFinishedGoodsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.LoadFinishedGoodsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/allocations/{id}/documents": {
+      "get": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsDocumentsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsDocumentsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsDocumentsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recall-batches": {
+      "get": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "searchQuery",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsBatchOptionDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsBatchOptionDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsBatchOptionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/transfers/{id}/reconciliation": {
+      "get": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsReconciliationAllocationDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsReconciliationAllocationDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsReconciliationAllocationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/allocations/{id}/costing": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.ConfirmFinishedGoodsCostingRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.ConfirmFinishedGoodsCostingRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.ConfirmFinishedGoodsCostingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/settlements": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecordProductRecallSettlementRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecordProductRecallSettlementRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecordProductRecallSettlementRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/allocations/{id}/waybill-print": {
+      "get": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsWaybillPrintDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsWaybillPrintDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsWaybillPrintDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/settlement-options": {
+      "get": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsSettlementOptionDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsSettlementOptionDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsSettlementOptionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/replacement-orders": {
+      "get": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "invoiceId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "searchQuery",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsBatchOptionDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsBatchOptionDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsBatchOptionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/reopen": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/finished-goods/recalls/{id}/authority-decision": {
+      "post": {
+        "tags": [
+          "FinishedGoods"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.UpdateFinishedGoodsRecallDecisionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.UpdateFinishedGoodsRecallDecisionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.UpdateFinishedGoodsRecallDecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
           }
         }
       }
@@ -138015,6 +140765,10 @@
       "DOMAIN.Entities.Invoices.CreateInvoice": {
         "type": "object",
         "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
           "proformaInvoiceId": {
             "type": "string",
             "format": "uuid"
@@ -138095,6 +140849,27 @@
             "items": {
               "$ref": "#/components/schemas/DOMAIN.Entities.Attachments.AttachmentDto"
             },
+            "nullable": true
+          },
+          "voided": {
+            "type": "boolean"
+          },
+          "voidReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "voidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "voidedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
             "nullable": true
           },
           "proformaInvoice": {
@@ -143392,6 +146167,13 @@
       "DOMAIN.Entities.Materials.Batch.ApprovedProductDto": {
         "type": "object",
         "properties": {
+          "stocks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Materials.Batch.ApprovedProductStockDto"
+            },
+            "nullable": true
+          },
           "product": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Products.ProductListDto"
           },
@@ -144134,6 +146916,48 @@
           "remainingQuantity": {
             "type": "number",
             "format": "double"
+          },
+          "availableQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "adjustmentQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "dispatchedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "physicalQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "reservedQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "packsPerShipperSnapshot": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "packingStyleSnapshot": {
+            "type": "string",
+            "nullable": true
+          },
+          "requiresStockReconciliation": {
+            "type": "boolean"
+          },
+          "isOnHold": {
+            "type": "boolean"
+          },
+          "holdReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "qualityReleased": {
+            "type": "boolean"
           },
           "pendingAllocatedQuantity": {
             "type": "number",
@@ -151130,6 +153954,72 @@
       "DOMAIN.Entities.ProductionOrders.AllocateProductionOrderDto": {
         "type": "object",
         "properties": {
+          "fefoExceptionReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "costingConfirmedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "loadedVehicle": {
+            "type": "string",
+            "nullable": true
+          },
+          "loadedDriver": {
+            "type": "string",
+            "nullable": true
+          },
+          "loadedDriverPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "loadingLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "loadingInspectionReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "dispatchedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "exitReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "commercialClearedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "commercialClearanceReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryReceiver": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryEvidence": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryCondition": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryLines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.FinishedGoodsDeliveryLine"
+            },
+            "nullable": true
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -151192,6 +154082,21 @@
               "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.AllocateProductQuantityDto"
             },
             "nullable": true
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "priceCurrencyId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "priceListRevisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -151223,6 +154128,10 @@
       "DOMAIN.Entities.ProductionOrders.AllocateProductionOrderRequest": {
         "type": "object",
         "properties": {
+          "fefoExceptionReason": {
+            "type": "string",
+            "nullable": true
+          },
           "productionOrderId": {
             "type": "string",
             "format": "uuid"
@@ -151242,7 +154151,9 @@
           0,
           1,
           2,
-          3
+          3,
+          4,
+          5
         ],
         "type": "integer",
         "format": "int32"
@@ -151306,6 +154217,38 @@
       "DOMAIN.Entities.ProductionOrders.CreateProductionOrderWaybill": {
         "type": "object",
         "properties": {
+          "invoiceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "vehicleRegistration": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverName": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "transporter": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "storageConditions": {
+            "type": "string",
+            "nullable": true
+          },
+          "sealNumber": {
+            "type": "string",
+            "nullable": true
+          },
           "code": {
             "maxLength": 1000,
             "minLength": 0,
@@ -151624,6 +154567,38 @@
       "DOMAIN.Entities.ProductionOrders.ProductionOrderWaybillDto": {
         "type": "object",
         "properties": {
+          "invoiceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "vehicleRegistration": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverName": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "transporter": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "storageConditions": {
+            "type": "string",
+            "nullable": true
+          },
+          "sealNumber": {
+            "type": "string",
+            "nullable": true
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -156898,6 +159873,11 @@
           "quantity": {
             "type": "number",
             "format": "double"
+          },
+          "productPackingId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -156915,6 +159895,47 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "issuedInvoiceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "issuedInvoiceCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "invoiceIssuedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "customerPoNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerPoDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "customerPoAttachmentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "customerPoVerifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "customerPoVerifiedById": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           },
           "code": {
             "type": "string",
@@ -156956,6 +159977,26 @@
           "quantity": {
             "type": "number",
             "format": "double"
+          },
+          "productPackingId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "priceCurrencyId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "priceListRevisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -186525,6 +189566,1790 @@
           "lastIssuedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.SubmitCostingPriceListRequest": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.CostingPriceListSignatoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "designation": {
+            "type": "string",
+            "nullable": true
+          },
+          "signature": {
+            "type": "string",
+            "nullable": true
+          },
+          "signedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.CostingPriceListStatus": {
+        "enum": [
+          0,
+          1,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "DOMAIN.Entities.Costing.CostingPackingOptionDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productPackingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "packingStyle": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Costing.CostingPackingOptionDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPackingOptionDto"
+            },
+            "nullable": true
+          },
+          "pageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRecordCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numberOfPagesToShow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stopPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.CostingPriceListDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "division": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Products.Division"
+          },
+          "documentNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "previousRevisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "supersedesRevision": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revisionReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListStatus"
+          },
+          "stage": {
+            "type": "string",
+            "nullable": true
+          },
+          "reviewStatus": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reviews.DocumentReviewStatus"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lineCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "preparedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "preparedBySignatory": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListSignatoryDto"
+          },
+          "checkedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListSignatoryDto"
+          },
+          "approvedBy": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListSignatoryDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.UpdateCostingPriceListRequest": {
+        "required": [
+          "documentNumber",
+          "revisionReason"
+        ],
+        "type": "object",
+        "properties": {
+          "division": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Products.Division"
+          },
+          "documentNumber": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "revisionNumber": {
+            "maximum": 100000,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revisionReason": {
+            "maxLength": 2000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "previousRevisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.CostingPriceListLineDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productPackingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packingStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "productCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "previousPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "previousCurrencySymbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "previousPriceUoM": {
+            "type": "string",
+            "nullable": true
+          },
+          "previousCurrencyId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "priceUoM": {
+            "type": "string",
+            "nullable": true
+          },
+          "currencyId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "currencyName": {
+            "type": "string",
+            "nullable": true
+          },
+          "currencySymbol": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Costing.CostingPriceListLineDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListLineDto"
+            },
+            "nullable": true
+          },
+          "pageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRecordCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numberOfPagesToShow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stopPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.CostingPriceListSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "division": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Products.Division"
+          },
+          "documentNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "previousRevisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "supersedesRevision": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revisionReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListStatus"
+          },
+          "stage": {
+            "type": "string",
+            "nullable": true
+          },
+          "reviewStatus": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Reviews.DocumentReviewStatus"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lineCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "preparedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.CostingPriceListPrintDto": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListDetailDto"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListLineDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.PrepareCostingPriceListRequest": {
+        "required": [
+          "documentNumber",
+          "revisionReason"
+        ],
+        "type": "object",
+        "properties": {
+          "division": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Products.Division"
+          },
+          "documentNumber": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "revisionNumber": {
+            "maximum": 100000,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revisionReason": {
+            "maxLength": 2000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "previousRevisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.CostingPriceListPageDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListSummaryDto"
+            },
+            "nullable": true
+          },
+          "pageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRecordCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numberOfPagesToShow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stopPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "latestApproved": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Costing.CostingPriceListSummaryDto"
+          },
+          "openRevisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "nextRevisionNumber": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Costing.SaveCostingPriceListLineRequest": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productPackingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "price": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "priceUoM": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "currencyId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.CloseFinishedGoodsRecallRequest": {
+        "type": "object",
+        "properties": {
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          },
+          "unrecoverableYield": {
+            "type": "number",
+            "format": "double"
+          },
+          "unrecoverableReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.CreateFinishedGoodsRecallRequest": {
+        "type": "object",
+        "properties": {
+          "batchManufacturingRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "regulatoryClassification": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorityReference": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.DisposeRecalledStockRequest": {
+        "type": "object",
+        "properties": {
+          "transferNoteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchManufacturingRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "regulatoryClassification": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorityReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "closed": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "closureReport": {
+            "type": "string",
+            "nullable": true
+          },
+          "unrecoverableYield": {
+            "type": "number",
+            "format": "double"
+          },
+          "unrecoverableReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "transferVariance": {
+            "type": "number",
+            "format": "double"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallHistoryDto"
+            },
+            "nullable": true
+          },
+          "settlements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSettlementDto"
+            },
+            "nullable": true
+          },
+          "consignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsTraceDto"
+            },
+            "nullable": true
+          },
+          "recoveries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallRecoveryDto"
+            },
+            "nullable": true
+          },
+          "stocks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallStockDto"
+            },
+            "nullable": true
+          },
+          "onSiteYield": {
+            "type": "number",
+            "format": "double"
+          },
+          "dispatchedYield": {
+            "type": "number",
+            "format": "double"
+          },
+          "recoveredYield": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallRecoveryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "allocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "finishedGoodsTransferNoteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          },
+          "condition": {
+            "type": "string",
+            "nullable": true
+          },
+          "disposed": {
+            "type": "boolean"
+          },
+          "dispositionEvidence": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchManufacturingRecordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "regulatoryClassification": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorityReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "closed": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "closureReport": {
+            "type": "string",
+            "nullable": true
+          },
+          "unrecoverableYield": {
+            "type": "number",
+            "format": "double"
+          },
+          "unrecoverableReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.FinishedGoodsTraceDto": {
+        "type": "object",
+        "properties": {
+          "allocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "transferNoteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "transferNoteNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "packingStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "customer": {
+            "type": "string",
+            "nullable": true
+          },
+          "contact": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "stage": {
+            "type": "string",
+            "nullable": true
+          },
+          "packs": {
+            "type": "number",
+            "format": "double"
+          },
+          "yield": {
+            "type": "number",
+            "format": "double"
+          },
+          "waybill": {
+            "type": "string",
+            "nullable": true
+          },
+          "vehicle": {
+            "type": "string",
+            "nullable": true
+          },
+          "dispatchedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "deliveredAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "notified": {
+            "type": "boolean"
+          },
+          "acknowledged": {
+            "type": "boolean"
+          },
+          "effectivenessConfirmed": {
+            "type": "boolean"
+          },
+          "recoveredYield": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.RecallEvidenceRequest": {
+        "type": "object",
+        "properties": {
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.ReconcileFinishedGoodsDeparture": {
+        "type": "object",
+        "properties": {
+          "allocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "departedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.ReconcileFinishedGoodsStockRequest": {
+        "type": "object",
+        "properties": {
+          "countedPhysicalYield": {
+            "type": "number",
+            "format": "double"
+          },
+          "verifiedUnitsPerPack": {
+            "type": "number",
+            "format": "double"
+          },
+          "verifiedPacksPerShipper": {
+            "type": "number",
+            "format": "double"
+          },
+          "verifiedPackingStyleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          },
+          "departures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.ReconcileFinishedGoodsDeparture"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.RecordRecallContactRequest": {
+        "type": "object",
+        "properties": {
+          "allocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acknowledged": {
+            "type": "boolean"
+          },
+          "effectivenessConfirmed": {
+            "type": "boolean"
+          },
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.RecordRecallRecoveryRequest": {
+        "type": "object",
+        "properties": {
+          "allocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "finishedGoodsTransferNoteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          },
+          "condition": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.Materials.Batch.ApprovedProductStockDto": {
+        "type": "object",
+        "properties": {
+          "transferNoteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productPackingId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "packingStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "baseUnit": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantityPerPack": {
+            "type": "number",
+            "format": "double"
+          },
+          "packsPerShipper": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "sent": {
+            "type": "number",
+            "format": "double"
+          },
+          "received": {
+            "type": "number",
+            "format": "double"
+          },
+          "physical": {
+            "type": "number",
+            "format": "double"
+          },
+          "reserved": {
+            "type": "number",
+            "format": "double"
+          },
+          "available": {
+            "type": "number",
+            "format": "double"
+          },
+          "dispatched": {
+            "type": "number",
+            "format": "double"
+          },
+          "quarantinedReturns": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProformaInvoices.VerifyFinishedGoodsCustomerPoRequest": {
+        "type": "object",
+        "properties": {
+          "customerPoNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerPoDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "attachmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.ProformaInvoices.VerifyFinishedGoodsCustomerPoLine"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProductionOrders.ClearFinishedGoodsDispatchRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "paymentOrCreditConfirmed": {
+            "type": "boolean"
+          },
+          "customerAuthorisationReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "minimumRemainingShelfLifeDays": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProductionOrders.DispatchFinishedGoodsRequest": {
+        "type": "object",
+        "properties": {
+          "exitReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "vehicleInspected": {
+            "type": "boolean"
+          },
+          "conditionsConfirmed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProductionOrders.DeliverFinishedGoodsRequest": {
+        "type": "object",
+        "properties": {
+          "receiverName": {
+            "type": "string",
+            "nullable": true
+          },
+          "evidenceReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "conditionNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.FinishedGoodsDeliveryLine"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProductionOrders.LoadFinishedGoodsRequest": {
+        "type": "object",
+        "properties": {
+          "vehicleRegistration": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverName": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "loadingLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "inspectionReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "conditionsConfirmed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProductionOrders.FinishedGoodsDeliveryLine": {
+        "type": "object",
+        "properties": {
+          "finishedGoodsTransferNoteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptedYield": {
+            "type": "number",
+            "format": "double"
+          },
+          "damagedYield": {
+            "type": "number",
+            "format": "double"
+          },
+          "shortYield": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProformaInvoices.VerifyFinishedGoodsCustomerPoLine": {
+        "type": "object",
+        "properties": {
+          "proformaInvoiceProductId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "currencyId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.FinishedGoods.FinishedGoodsBatchOptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batchNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.FinishedGoods.FinishedGoodsCostBasisDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productPackingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "manufacturingCostPerPack": {
+            "type": "number",
+            "format": "double"
+          },
+          "currencyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currencyLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvedCostBasisReference": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.FinishedGoods.FinishedGoodsDocumentsDto": {
+        "type": "object",
+        "properties": {
+          "invoiceHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsInvoiceHistoryDto"
+            },
+            "nullable": true
+          },
+          "costingConfirmedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "costingLines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsCostBasisDto"
+            },
+            "nullable": true
+          },
+          "proformaId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "proformaCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerPoNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerPoVerifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "invoiceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "invoiceCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "waybillId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "waybillCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "vehicle": {
+            "type": "string",
+            "nullable": true
+          },
+          "driver": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "transporter": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "storageConditions": {
+            "type": "string",
+            "nullable": true
+          },
+          "seal": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.FinishedGoods.FinishedGoodsInvoiceHistoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "voided": {
+            "type": "boolean"
+          },
+          "voidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "voidReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.FinishedGoods.FinishedGoodsReconciliationAllocationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "customer": {
+            "type": "string",
+            "nullable": true
+          },
+          "packs": {
+            "type": "number",
+            "format": "double"
+          },
+          "deliveredAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "dispatchedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "loadedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "departureEvidence": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.FinishedGoods.FinishedGoodsSettlementCurrencyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "invoicedAmount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.FinishedGoods.FinishedGoodsSettlementOptionDto": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "customer": {
+            "type": "string",
+            "nullable": true
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsSettlementCurrencyDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.FinishedGoods.FinishedGoodsWaybillLineDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "type": "string",
+            "nullable": true
+          },
+          "packingStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "batch": {
+            "type": "string",
+            "nullable": true
+          },
+          "expiry": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "packs": {
+            "type": "number",
+            "format": "double"
+          },
+          "baseUnits": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Services.FinishedGoods.FinishedGoodsWaybillPrintDto": {
+        "type": "object",
+        "properties": {
+          "documents": {
+            "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsDocumentsDto"
+          },
+          "customer": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "departedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "exitReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/APP.Services.FinishedGoods.FinishedGoodsWaybillLineDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSummaryDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSummaryDto"
+            },
+            "nullable": true
+          },
+          "pageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRecordCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numberOfPagesToShow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stopPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallHistoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "event": {
+            "type": "string",
+            "nullable": true
+          },
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          },
+          "actor": {
+            "type": "string",
+            "nullable": true
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallSettlementDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "invoiceCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "kind": {
+            "type": "string",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "reference": {
+            "type": "string",
+            "nullable": true
+          },
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          },
+          "replacementProductionOrderId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.FinishedGoodsRecallStockDto": {
+        "type": "object",
+        "properties": {
+          "transferNoteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "transferNoteNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "packingStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitsPerPack": {
+            "type": "number",
+            "format": "double"
+          },
+          "physical": {
+            "type": "number",
+            "format": "double"
+          },
+          "reserved": {
+            "type": "number",
+            "format": "double"
+          },
+          "quarantinedReturns": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.RecordProductRecallSettlementRequest": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currencyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string",
+            "nullable": true
+          },
+          "evidence": {
+            "type": "string",
+            "nullable": true
+          },
+          "replacementProductionOrderId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProductionOrders.ConfirmFinishedGoodsCostingRequest": {
+        "type": "object",
+        "properties": {
+          "approvedBasisConfirmed": {
+            "type": "boolean"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.ProductionOrders.FinishedGoodsCostingLine"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.ProductionOrders.FinishedGoodsCostingLine": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productPackingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "manufacturingCostPerPack": {
+            "type": "number",
+            "format": "double"
+          },
+          "currencyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvedCostBasisReference": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DOMAIN.Entities.FinishedGoods.UpdateFinishedGoodsRecallDecisionRequest": {
+        "type": "object",
+        "properties": {
+          "regulatoryClassification": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorityReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "evidence": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

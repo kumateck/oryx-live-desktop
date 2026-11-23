@@ -41,6 +41,49 @@ function auditHeaderReview(document: ObjectValue) {
   return { normalized, paths: Object.keys(paths).length, operations, headers };
 }
 
+/** Finished goods adds only its owned paths, DTO fields and two allocation statuses. */
+function stripFinishedGoods(document: ObjectValue) {
+  const scope = object(parse(readFileSync("contracts/openapi/reviewed/finished-goods-scope.json", "utf8")));
+  const paths = object(document.paths ?? null);
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const path of Array.isArray(scope.addedPaths) ? scope.addedPaths : []) if (typeof path === "string") delete paths[path];
+  for (const name of Array.isArray(scope.addedSchemas) ? scope.addedSchemas : []) if (typeof name === "string") delete schemas[name];
+  for (const [name, fields] of Object.entries(object(scope.addedFields ?? null))) {
+    const schema = object(schemas[name] ?? null);
+    for (const field of Array.isArray(fields) ? fields : []) if (typeof field === "string") delete object(schema.properties ?? null)[field];
+  }
+  for (const [name, values] of Object.entries(object(scope.previousEnums ?? null))) object(schemas[name] ?? null).enum = values;
+}
+
+/** Versioned division price sheets and optional saved-price provenance are additive. */
+const costingSchemas = ["APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Costing.CostingPackingOptionDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]", "APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Costing.CostingPriceListLineDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]", "DOMAIN.Entities.Costing.CostingPackingOptionDto", "DOMAIN.Entities.Costing.CostingPriceListDetailDto", "DOMAIN.Entities.Costing.CostingPriceListLineDto", "DOMAIN.Entities.Costing.CostingPriceListPageDto", "DOMAIN.Entities.Costing.CostingPriceListPrintDto", "DOMAIN.Entities.Costing.CostingPriceListSignatoryDto", "DOMAIN.Entities.Costing.CostingPriceListStatus", "DOMAIN.Entities.Costing.CostingPriceListSummaryDto", "DOMAIN.Entities.Costing.PrepareCostingPriceListRequest", "DOMAIN.Entities.Costing.SaveCostingPriceListLineRequest", "DOMAIN.Entities.Costing.SubmitCostingPriceListRequest", "DOMAIN.Entities.Costing.UpdateCostingPriceListRequest"] as const;
+const costingFields: Record<string, readonly string[]> = {"DOMAIN.Entities.ProductionOrders.AllocateProductionOrderProductDto": ["unitPrice", "priceCurrencyId", "priceListRevisionId"],"DOMAIN.Entities.ProformaInvoices.CreateProformaInvoiceProduct": ["productPackingId"], "DOMAIN.Entities.ProformaInvoices.ProformaInvoiceProductDto": ["productPackingId", "unitPrice", "priceCurrencyId", "priceListRevisionId"]};
+function stripVersionedCosting(document: ObjectValue) {
+  stripFinishedGoods(document);
+  const paths = object(document.paths ?? null);
+  for (const path of Object.keys(paths)) if (path.startsWith("/api/v1/costing/price-lists")) delete paths[path];
+  const operation = object(object(paths["/api/v1/costing/list-prices"] ?? null).get ?? null);
+  if (Array.isArray(operation.parameters)) operation.parameters = operation.parameters.filter((entry) => object(entry).name !== "division");
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of costingSchemas) delete schemas[name];
+  for (const [name,fields] of Object.entries(costingFields)) for (const field of fields) delete object(object(schemas[name] ?? null).properties ?? null)[field];
+}
+
+/** Historical contract reviews exclude only the two optional material-lookup context parameters. */
+const materialLookupPaths = ["/api/v1/material/department", "/api/v1/material/{materialId}/uom"] as const;
+function stripMaterialLookupContext(document: ObjectValue) {
+  stripVersionedCosting(document);
+  for (const path of materialLookupPaths) {
+    const operation = object(object(object(document.paths ?? null)[path] ?? null).get ?? null);
+    if (Array.isArray(operation.parameters)) operation.parameters = operation.parameters.filter((entry) => object(entry).name !== "context");
+  }
+}
+function beforeMaterialLookupContext() {
+  const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripMaterialLookupContext(document);
+  return document;
+}
+
 /** BOM substitute quantities and the store's material choice (2026-11-14): one path, five owned schemas, eight optional fields. */
 const bomSubstituteFields: Record<string, readonly string[]> = {
   "DOMAIN.Entities.BillOfMaterials.BillOfMaterialItemSubstitute": ["baseQuantity", "baseUoMId", "baseUoM", "prescribedQuantity"],
@@ -245,7 +288,7 @@ function stripOperationDepartments(document: ObjectValue) {
 
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
-  const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const document = beforeMaterialLookupContext();
   stripIssuedRegister(document);
   stripSubstituteReasons(document);
   stripApprovedVendorList(document);
@@ -815,7 +858,7 @@ test("stock count reporting adds only a typed read with department, kind and exp
 });
 
 test("BOM substitute quantities add one typed read/choose path and optional fields, preserving the approved predecessor", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -853,7 +896,7 @@ test("BOM substitute quantities add one typed read/choose path and optional fiel
 });
 
 test("a specification revision requires a reason and returns it on the specification and its history", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -889,7 +932,7 @@ test("a specification revision requires a reason and returns it on the specifica
 });
 
 test("the store's requisition list adds only an optional issued filter, preserving the approved predecessor", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -918,7 +961,7 @@ test("the store's requisition list adds only an optional issued filter, preservi
 });
 
 test("packaging issue quantity adds one typed PUT and optional line fields, preserving the approved predecessor", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -949,7 +992,7 @@ test("packaging issue quantity adds one typed PUT and optional line fields, pres
 });
 
 test("IT approval transfer adds only a typed read of the users on approval documents, preserving the approved predecessor", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -973,7 +1016,7 @@ test("IT approval transfer adds only a typed read of the users on approval docum
 });
 
 test("material retests add an AR number, read-only retest fields and three statuses, preserving the approved predecessor", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -997,7 +1040,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 });
 
  test("QC repair, partial reassignment and packaging quantities preserve the approved predecessor", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1024,7 +1067,7 @@ test("material retests add an AR number, read-only retest fields and three statu
 });
 
 test("upcoming batch issues add two typed reads and the started batch a swap may name, preserving the approved predecessor", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1046,7 +1089,7 @@ test("upcoming batch issues add two typed reads and the started batch a swap may
 });
 
 test("the combined QC repair and upcoming-issues contract is reviewed without dropping either addition", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1068,7 +1111,7 @@ test("the combined QC repair and upcoming-issues contract is reviewed without dr
 });
 
 test("Unstart leftovers add only two typed variant repair paths and owned DTOs", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1090,7 +1133,7 @@ test("Unstart leftovers add only two typed variant repair paths and owned DTOs",
 
 
 test("shared density combines with the reviewed Unstart reservation contract", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1106,7 +1149,7 @@ test("shared density combines with the reviewed Unstart reservation contract", (
   assert.equal(contractDigest(current), "8740d29923b194db052c53a97aff5fcdf863b619e8317a3b5c1c95bb7b433f4b");
 });
 test("Unstart reservations combine with the reviewed shared-density contract", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1131,7 +1174,7 @@ function stripProductionFollowups(document: ObjectValue) {
 }
 
 test("production follow-ups add two rejection operations and optional warehouse quantities only", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1150,7 +1193,7 @@ test("production follow-ups add two rejection operations and optional warehouse 
 });
 
 test("pre-COA correction imports three typed variant paths, a required reason and history only", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1169,7 +1212,7 @@ test("pre-COA correction imports three typed variant paths, a required reason an
 });
 
 test("operation departments add a typed link and unlink and optional department fields only", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1187,7 +1230,7 @@ test("operation departments add a typed link and unlink and optional department 
 });
 
 test("transfer rejection adds a required reason body, optional supplier and rejection fields and a department-stock unit only", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1204,7 +1247,7 @@ test("transfer rejection adds a required reason body, optional supplier and reje
 });
 
 test("cross-store units and substitutes add an optional unit, optional substitute fields and an optional start body only", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   stripApprovedVendorList(current);
@@ -1219,7 +1262,7 @@ test("cross-store units and substitutes add an optional unit, optional substitut
 });
 
 test("the approved vendor list adds typed list, read, print, options, mapping, eligibility, create, revise and correct operations only", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   stripSubstituteReasons(current);
   const digest = contractDigest(current);
@@ -1238,7 +1281,7 @@ test("the approved vendor list adds typed list, read, print, options, mapping, e
 });
 
 test("substitute reasons add one optional field to the batch material and forecast rows only", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   stripIssuedRegister(current);
   const digest = contractDigest(current);
   assert.equal(digest, "a49aa7b16b9748debe24ac90081168a61c465fce5087be12c18bdf8b5034860e");
@@ -1250,7 +1293,7 @@ test("substitute reasons add one optional field to the batch material and foreca
 });
 
 test("the issued register adds optional list filters and one typed read operation only", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialLookupContext();
   const digest = contractDigest(current);
   assert.equal(digest, "6fb1587bcddbb7f4765ec5903a49a185a15794d6a0dbf2bbb7d1f1c7d183b520");
   checkCompatibility(hostConfig, policy, digest);
@@ -1258,4 +1301,35 @@ test("the issued register adds optional list filters and one typed read operatio
   assert.deepEqual(current.security, reviewedImport().security);
   stripIssuedRegister(current);
   assert.equal(contractDigest(current), "a49aa7b16b9748debe24ac90081168a61c465fce5087be12c18bdf8b5034860e");
+});
+
+test("material lookups add only optional page context, preserving all preceding contracts", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  for (const path of materialLookupPaths) {
+    const operation = object(object(object(current.paths ?? null)[path] ?? null).get ?? null);
+    assert.ok(Array.isArray(operation.parameters));
+    const context = operation.parameters.map((entry) => object(entry)).filter((entry) => entry.name === "context");
+    assert.equal(context.length, 1);
+    assert.deepEqual(context[0], { name: "context", in: "query", schema: { type: "string" } });
+  }
+  stripMaterialLookupContext(current);
+  assert.equal(contractDigest(current), "6fb1587bcddbb7f4765ec5903a49a185a15794d6a0dbf2bbb7d1f1c7d183b520");
+});
+
+test("versioned costing adds scoped pack-price documents without changing previous contracts", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const paths = object(current.paths ?? null);
+  assert.equal(Object.keys(paths).filter(path => path.startsWith("/api/v1/costing/price-lists")).length,7);
+  stripVersionedCosting(current);
+  assert.equal(contractDigest(current), "014f1ea1bd6abb85ec092620319d7e3f9655e2d9717355b0a381be07a5a15bd7");
+});
+
+test("finished goods has typed workflow endpoints and preserves the reviewed costing predecessor", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const paths = object(current.paths ?? null);
+  assert.equal(Object.keys(paths).filter(path => path.startsWith("/api/v1/finished-goods/")).length, 28);
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  assert.deepEqual(object(schemas["DOMAIN.Entities.ProductionOrders.AllocateProductionOrderStatus"] ?? null).enum, [0, 1, 2, 3, 4, 5]);
+  stripFinishedGoods(current);
+  assert.equal(contractDigest(current), "86104d8759092ceec330de43d3aded8420dda15a869d600c8c71a47d28fbf119");
 });

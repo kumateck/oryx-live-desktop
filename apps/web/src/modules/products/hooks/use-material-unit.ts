@@ -6,10 +6,10 @@ type UnitState = { status: "ready"; unit: MaterialUnit } | { status: "loading" |
 
 /** The endpoint reads the product-scoped or authenticated user's department linkage, never the material's purchase UOM. */
 export function useMaterialUnit(materialId: string | undefined, known: MaterialUnit | null, audit: MaterialUnitAudit) {
-  const { lookupProductId } = useProductWorkspace();
-  // QA rechecks saved units against the product department rather than trusting an old line.
-  const verified = materialUnitSchema.safeParse(lookupProductId ? null : known);
-  const query = useGetApiV1MaterialByMaterialIdUomQuery({ ...audit, materialId: materialId ?? "", ...(lookupProductId ? { productId: lookupProductId } : {}) }, { skip: !materialId || verified.success });
+  const { context, lookupProductId } = useProductWorkspace();
+  // Known units come from department-material links, so selecting a linked material needs no extra unit request.
+  const verified = materialUnitSchema.safeParse(known);
+  const query = useGetApiV1MaterialByMaterialIdUomQuery({ ...audit, ...context, materialId: materialId ?? "", ...(lookupProductId ? { productId: lookupProductId } : {}) }, { skip: !materialId || verified.success });
   // The controller advertises a list, but GetUnitOfMeasureForMaterialDepartment returns one DTO.
   // Validate the actual response outside generated transport code and fail closed on an unreadable unit.
   const parsed = materialUnitSchema.safeParse(query.currentData);

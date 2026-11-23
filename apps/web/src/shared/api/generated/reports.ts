@@ -4912,7 +4912,7 @@ export type DomainEntitiesReportsFinishedGoodsTransferNotesInvoicedProductsSumma
     itemAmount?: number;
   };
 export type DomainEntitiesProductionOrdersAllocateProductionOrderStatus =
-  0 | 1 | 2 | 3;
+  0 | 1 | 2 | 3 | 4 | 5;
 export type DomainEntitiesReportsFinishedGoodsTransferNotesInvoicedProductsDetailedReportDto =
   {
     no?: number;

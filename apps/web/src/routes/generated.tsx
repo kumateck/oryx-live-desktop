@@ -258,6 +258,11 @@ export const routes: RouteObject[] = [
             { path: ":id", Component: Outlet, children: [
               { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/agreements/[id]/page")).default }) }
             ] }
+          ] },
+          { path: "revisions", Component: Outlet, children: [
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/finance/costing/revisions/[id]/page")).default }) }
+            ] }
           ] }
         ] },
         { path: "payment-approvals", Component: Outlet, children: [
@@ -1281,6 +1286,12 @@ export const routes: RouteObject[] = [
           ] },
           { path: "new", Component: Outlet, children: [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/migration-top-ups/new/page")).default }) }
+          ] }
+        ] },
+        { path: "product-recalls", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/product-recalls/page")).default }) },
+          { path: ":id", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/warehouse/product-recalls/[id]/page")).default }) }
           ] }
         ] },
         { path: "production-forecast", Component: Outlet, children: [

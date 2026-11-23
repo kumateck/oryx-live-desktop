@@ -1,31 +1,39 @@
 # Finance costing
 
-Costing is a Finance module at `/finance/costing` (sidebar: Finance & Cashflow → Costing). It holds what each product is priced at, and in which currency. It replaces the Pricing tab of the customer workspace.
+Finance & Cashflow → Costing lists division price-list revisions, following the Approved Vendor List document pattern. Each row is a whole division revision. Opening it shows searchable, paged product pack prices. Forms use the existing FormDialog/FormWizard, Select and DatePicker; printing uses PrintPreviewDialog and the shared print sheet.
 
-| Page | Route | Shows |
+| Page | Route | Access |
 | --- | --- | --- |
-| List prices | `/finance/costing` | Every product's current list price, the currency it is priced in, its unit and since when. "Set price" records a new price in a chosen currency and shows the price history. |
-| Customer agreements | `/finance/costing/agreements` | Agreements across all customers, with `?customer=<id>` to show one customer and `?state=active` for those in effect today. "Add agreement" opens the editor. |
-| Agreement | `/finance/costing/agreements/:id` | Price, currency, customer, packing style, period and notes, with Edit and Remove. |
+| Price-list revisions | `/finance/costing?division=0` or `division=1` | `CanViewCostingPriceList` |
+| Revision and its pack prices | `/finance/costing/revisions/:id` | `CanViewCostingPriceList` |
+| Customer agreements | `/finance/costing/agreements` and `/:id` | `ManageCosting` |
 
-All three need `ManageCosting`, granted under Finance → Costing on the role permissions page (`modules/costing/manifest.ts`, the sidebar entry, and every costing and pricing-agreement endpoint on the backend). The backend migration gave it to every role that had `ManageCustomerContracts`. Agreements are still saved through the customer endpoints; there is no approval step for them.
+## Revisions and dates
 
-The permissions page lists modules as the backend sends them, so the new Finance section (payments, cashflow reports and costing) appears there with no desktop change.
+Prepare a draft for the division, set the document number, revision number, effective date and reason, then set its pack prices. Only one draft or pending revision can exist per division. The revision source and open-state information come from the server independently of the table's current page and search.
 
-## Currency
+Send for review opens the existing document review workflow. A required `CostingPriceList` approval workflow must be configured first. A reviewer may return it for correction; confirmed revisions go to their assigned human approval stages. Approved and rejected revisions are immutable. “New revision” copies the latest approved document, including an approved future revision, and requires a later number and effective date.
 
-- An agreement and a list price each record the currency they are in. The editors require it ("Priced in").
-- Prices are never converted. A price without a currency is shown as such (`10.00 · no currency`) rather than borrowing another currency.
-- Quotations: when the customer has a preferred currency and a product's price on record is in another currency, the server refuses the price and the quotation line shows its reason; the user enters the price or adds an agreement in the customer's currency. A customer with no preferred currency gets a quotation in the one currency its prices are in.
-- FG dispatch proforma and invoice lines take the agreement's currency, or else the list price's own currency (previously the customer's), and total per currency.
-- The invoiced products report export includes a Currency column.
+An approved revision becomes current only when its effective date and approval time have both arrived. Dates are calendar dates at midnight UTC. Approval after the effective date takes effect at approval time. Earlier approved revisions remain current until then; historical rows are retained as superseded. No scheduled job or rewrite of product master prices is required.
 
-## Moved from the product forms
+## Packing styles and currency
 
-Products no longer ask for a price when created or edited; the edit form leaves the list price as it is. The product detail shows the list price read-only with a link to Costing. A product without a list price shows "Not priced" in Costing, and a quotation for it needs an agreement or a typed unit price.
+Every line is one **product + packing style**, priced per complete pack. A 100 ml bottle and a carton of 24 bottles have separate amounts; one style never borrows another's price. “Priced in” chooses the line's configured currency. Amounts are stored exactly as entered, without conversion. The saved currency name and symbol are snapshots and appear beside current/previous amounts and in print.
 
-## Moved from the customer workspace
+The initial draft includes active packing styles in the division. Legacy product prices seed only a product with exactly one active style; styles on multi-style products start unpriced. Subsequent revisions copy the predecessor. Add a newly introduced style with “Add product pack”, whose choices search product name, code and style within the revision's division. Mark unwanted styles “Leave this packing style unpriced”.
 
-The customer workspace no longer has a Pricing tab. For users with `ManageCosting`, its header links to "Pricing agreements" (the customer's agreements in Costing), and a saved link to `?tab=pricing` redirects there. The shared form dialog the pricing editor used moved to `shared/forms/form-dialog.tsx`.
+Customer-specific agreements still take precedence. Once a division has an effective approved list, an absent or unpriced style cannot fall back to a different style or old product price. Before the first approved revision becomes effective, legacy pricing remains available. New quotation/order lines retain their chosen amount and revision reference. Orders with a saved amount/currency carry them into fulfilment; migrated historical invoices retain their prior amounts.
 
-The backend side, including the migration that backfills existing list prices to the base currency, is described in the backend's `docs/finance-costing.md`.
+The product details link to pack prices in Finance instead of showing a potentially stale product-level amount. Older direct price-setting endpoints refuse price changes once a division has revision documents.
+
+## Printing
+
+The Print action has its own permission and requests only the selected document when opened. The landscape sheet shows document/revision/effective-date/status, product code/name, packing style, amount with currency, and prepared/checked/approved signatures. Draft, scheduled and superseded documents show their status rather than being presented as current.
+
+## Permissions and deployment
+
+All ten keys are under Finance → Costing: `CanViewCostingPriceList`, `CanCreateCostingPriceList`, `CanEditCostingPriceList`, `CanReviseCostingPriceList`, `CanSubmitCostingPriceList`, `CanReviewCostingPriceList`, `CanReturnCostingPriceList`, `CanApproveCostingPriceList`, `CanRejectCostingPriceList`, `CanPrintCostingPriceList`.
+
+Deploy the backend and additive migrations before this desktop change. Existing `ManageCosting` roles receive view/create/edit/revise/submit/print grants with the same access types. Review/return/approve/reject are new oversight tasks granted to nobody by the migration; configure these and the required approval stages through the existing access/workflow settings. Customer agreement management keeps its existing permission and behavior.
+
+The list reads are scalar projections with server search and pagination. They do not fetch warehouse, equipment, inventory or BOM graphs. Only explicit print loads all snapshot lines of the selected revision. The legacy product price lookup also now uses a narrow projection, stable ordering, search, department/currency and optional division filters.

@@ -8,7 +8,7 @@ export const audit = { module: "Settings", subModule: "Approvals" } as const;
 
 /** Documents a workflow can be set up for. The names are the server's. */
 const documents = ["PurchaseRequisition", "TrialRequisition", "StockRequisition", "PurchaseOrder", "BillingSheet", "ShipmentDocument", "ProductionExtraPacking", "FinishedGoodsTransferNote", "StockAdjustment", "ProductionOrder",
-  "AllocateProductionOrder", "ProformaInvoice", "CustomerQuotation", "SupplierPricingAgreement", "Payment", "LeaveRequest", "OvertimeRequest", "StaffRequisition", "JobRequest", "PayrollRun", "PerformanceReview",
+  "AllocateProductionOrder", "ProformaInvoice", "CostingPriceList", "CustomerQuotation", "SupplierPricingAgreement", "Payment", "LeaveRequest", "OvertimeRequest", "StaffRequisition", "JobRequest", "PayrollRun", "PerformanceReview",
   "RndProject", "RndFormulation", "RndTechnologyTransfer", "QcStandardTestProcedure", "QcWorksheetTemplate", "QcSpecification", "QcWorksheetInstance", "QcOosCase"] as const;
 
 /**
