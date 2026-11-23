@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { GitBranchPlus, Pencil, Printer } from "lucide-react";
+import { GitBranchPlus, Pencil, Printer, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { TableMenu, type ActionItem } from "@/shared/actions";
@@ -12,8 +12,10 @@ import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useVendorListPrintQuery, useVendorListQuery } from "../api/avl-api";
 import { ListStatus, ReviewStatus, detailSchema, monthLabel, stageLabel, type ListDetail, type ListLine, type Signatory } from "../lib/avl";
 import { avlAudit, avlKeys, avlModelType, avlRoot } from "../lib/keys";
+import { avlActionPermissions } from "../manifest";
 import { stageVariant } from "./avl-list-page";
 import { VendorListPrint } from "./avl-print";
+import { DeleteVendorListDialog } from "./avl-delete-dialog";
 
 const column = dataTableColumns<ListLine>();
 
@@ -33,13 +35,15 @@ function PrintFromServer({ id, onClose }: { id: string; onClose: () => void }) {
   return <VendorListPrint list={parsed.data} onClose={onClose} />;
 }
 
-function useActions(list: ListDetail | null, onPrint: () => void): ActionItem[] {
+function useActions(list: ListDetail | null, onPrint: () => void, onDelete: () => void): ActionItem[] {
   const navigate = useNavigate();
   if (!list) return [];
   const inReview = list.status === ListStatus.Pending && (list.reviewStatus === ReviewStatus.AwaitingReview || list.reviewStatus === ReviewStatus.Returned);
   const items: ActionItem[] = [{ id: "print", label: "Print", icon: Printer, require: avlKeys.print, onSelect: onPrint }];
   if (inReview) items.push({ id: "correct", label: "Correct list", icon: Pencil, require: avlKeys.edit, onSelect: () => void navigate(`${avlRoot}/${list.id}/edit`) });
   if (list.status === ListStatus.Approved) items.push({ id: "revise", label: "New revision", icon: GitBranchPlus, require: avlKeys.revise, onSelect: () => void navigate(`${avlRoot}/revise`) });
+  if (list.status === ListStatus.Superseded) items.push({ id: "delete", label: "Delete revision", icon: Trash2, destructive: true, separated: true,
+    require: avlActionPermissions.delete, onSelect: onDelete });
   return items;
 }
 
@@ -49,8 +53,10 @@ export function VendorListDetailPage() {
   const query = useVendorListQuery({ ...avlAudit, id }, { skip: !id, refetchOnMountOrArgChange: true });
   const parsed = useMemo(() => query.data ? detailSchema.safeParse(query.data) : null, [query.data]);
   const [printing, setPrinting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const navigate = useNavigate();
   const list = parsed?.success ? parsed.data : null;
-  const actions = useActions(list, () => setPrinting(true));
+  const actions = useActions(list, () => setPrinting(true), () => setDeleting(true));
   const columns = useMemo(() => column.columns([
     column.accessor((r) => r.materialCode ?? "", { id: "code", header: "Item code", size: 110 }),
     column.accessor((r) => r.materialName ?? "", { id: "material", header: "Material" }),
@@ -83,5 +89,6 @@ export function VendorListDetailPage() {
     <ReviewPanel record={{ modelType: avlModelType, modelId: list.id }} label="approved vendor list"
       keys={{ confirm: avlKeys.review, return: avlKeys.return, resubmit: avlKeys.edit }} onChanged={() => void query.refetch()} />
     {printing ? <PrintFromServer id={list.id} onClose={() => setPrinting(false)} /> : null}
+    {deleting ? <DeleteVendorListDialog list={list} onClose={() => setDeleting(false)} onDeleted={() => void navigate(avlRoot)} /> : null}
   </article>;
 }

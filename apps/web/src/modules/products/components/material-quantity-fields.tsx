@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useController, type FieldPathByValue, type FieldValues, type UseFormReturn } from "react-hook-form";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,6 +20,12 @@ function QuantityInput<T extends FieldValues>({ form, field: definition, unit, e
   const id = useId();
   const { field, fieldState } = useController({ control: form.control, name: definition.name });
   const [text, setText] = useState(() => typeof field.value === "number" && Number.isFinite(field.value) ? String(convertUnit(field.value, unit.symbol, entryUnit) ?? "") : "");
+  const lastValue = useRef<number>(typeof field.value === "number" ? field.value : Number.NaN);
+  useEffect(() => {
+    if (Object.is(lastValue.current, field.value)) return;
+    lastValue.current = typeof field.value === "number" ? field.value : Number.NaN;
+    setText(typeof field.value === "number" && Number.isFinite(field.value) ? String(convertUnit(field.value, unit.symbol, entryUnit) ?? "") : "");
+  }, [entryUnit, field.value, unit.symbol]);
   const { label, required, description } = definition;
   const error = fieldState.error?.message;
   return <FieldFrame id={id} label={`${label} (${entryUnit})`} required={required} description={description} error={error}>
@@ -28,7 +34,9 @@ function QuantityInput<T extends FieldValues>({ form, field: definition, unit, e
         onBlur={field.onBlur} aria-required={required} aria-invalid={Boolean(error)}
         aria-describedby={fieldDescription(id, description, error)} onChange={(event) => {
           setText(event.currentTarget.value);
-          field.onChange(convertUnit(event.currentTarget.valueAsNumber, entryUnit, unit.symbol) ?? Number.NaN);
+          const value = convertUnit(event.currentTarget.valueAsNumber, entryUnit, unit.symbol) ?? Number.NaN;
+          lastValue.current = value;
+          field.onChange(value);
         }} />
       <InputGroupAddon align="inline-end"><InputGroupText>{entryUnit}</InputGroupText></InputGroupAddon>
     </InputGroup>
@@ -41,8 +49,8 @@ export function MaterialQuantityFields<T extends FieldValues>({ form, unit, fiel
 }) {
   const [entryUnit, setEntryUnit] = useState(() => relatedUnits(unit.symbol).find((symbol) => symbol.toLowerCase() === unit.symbol.toLowerCase()) ?? unit.symbol);
   const id = useId();
-  const convertible = ["mg", "ml"].includes(unit.symbol.toLowerCase());
-  const units = convertible ? relatedUnits(unit.symbol) : [unit.symbol];
+  const units = relatedUnits(unit.symbol);
+  const convertible = units.length > 1;
   return <div className="space-y-4">
     {convertible ? <FieldFrame id={id} label="Enter quantities in" description={description}>
       <Select value={entryUnit} onValueChange={(symbol) => { if (units.includes(symbol)) setEntryUnit(symbol); }}>

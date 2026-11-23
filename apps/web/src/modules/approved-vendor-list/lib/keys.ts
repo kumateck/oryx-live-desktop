@@ -3,6 +3,7 @@ export const avlKeys = {
   view: "CanViewApprovedVendorList", create: "CanCreateApprovedVendorList", edit: "CanEditApprovedVendorList",
   revise: "CanReviseApprovedVendorList", review: "CanReviewApprovedVendorList", return: "CanReturnApprovedVendorList",
   print: "CanPrintApprovedVendorList",
+  delete: "CanDeleteApprovedVendorList",
 } as const;
 export const avlRoot = "/qa/approved-vendor-list";
 export const avlAudit = { module: "Quality Assurance", subModule: "Approved Vendor List" } as const;

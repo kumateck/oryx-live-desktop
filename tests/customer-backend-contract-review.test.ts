@@ -43,6 +43,7 @@ function auditHeaderReview(document: ObjectValue) {
 
 /** Finished goods adds only its owned paths, DTO fields and two allocation statuses. */
 function stripFinishedGoods(document: ObjectValue) {
+  stripVendorListDelete(document);
   const scope = object(parse(readFileSync("contracts/openapi/reviewed/finished-goods-scope.json", "utf8")));
   const paths = object(document.paths ?? null);
   const schemas = object(object(document.components ?? null).schemas ?? null);
@@ -53,6 +54,11 @@ function stripFinishedGoods(document: ObjectValue) {
     for (const field of Array.isArray(fields) ? fields : []) if (typeof field === "string") delete object(schema.properties ?? null)[field];
   }
   for (const [name, values] of Object.entries(object(scope.previousEnums ?? null))) object(schemas[name] ?? null).enum = values;
+}
+
+/** Superseded vendor-list deletion adds one operation without changing existing document contracts. */
+function stripVendorListDelete(document: ObjectValue) {
+  delete object(object(document.paths ?? null)["/api/v1/approved-vendor-list/{id}"] ?? null).delete;
 }
 
 /** Versioned division price sheets and optional saved-price provenance are additive. */
@@ -1332,4 +1338,16 @@ test("finished goods has typed workflow endpoints and preserves the reviewed cos
   assert.deepEqual(object(schemas["DOMAIN.Entities.ProductionOrders.AllocateProductionOrderStatus"] ?? null).enum, [0, 1, 2, 3, 4, 5]);
   stripFinishedGoods(current);
   assert.equal(contractDigest(current), "86104d8759092ceec330de43d3aded8420dda15a869d600c8c71a47d28fbf119");
+});
+
+test("superseded vendor-list deletion adds only a typed delete operation", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const path = object(object(current.paths ?? null)["/api/v1/approved-vendor-list/{id}"] ?? null);
+  assert.deepEqual(Object.keys(path).sort(), ["delete", "get", "put"]);
+  const operation = object(path.delete ?? null);
+  assert.ok(object(operation.responses ?? null)["204"]);
+  assert.ok(object(operation.responses ?? null)["403"]);
+  assert.ok(object(operation.responses ?? null)["409"]);
+  stripVendorListDelete(current);
+  assert.equal(contractDigest(current), "4de3b27dd44baafb881ae47d3cfd4489fb3023fb0db7a3090764eadd83539083");
 });

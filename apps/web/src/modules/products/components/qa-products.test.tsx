@@ -114,6 +114,8 @@ it("uses the product's linkage for QA BOM editing and rechecks that unit before 
   await chooseAction(`Actions for ${name}`, "Edit");
   const dialog = await screen.findByRole("dialog");
   expect(await within(dialog).findByRole("spinbutton", { name: "Unit quantity (piece)" })).toBeTruthy();
+  // The legacy saved mg amount cannot be relabelled as pieces; confirm the counted quantity explicitly.
+  fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Unit quantity (piece)" }), { target: { value: "50" } });
   fireEvent.click(within(dialog).getByRole("button", { name: "Update material" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   fireEvent.click(screen.getByRole("button", { name: "Save bill of materials" }));

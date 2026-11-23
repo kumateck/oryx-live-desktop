@@ -19,9 +19,13 @@ The print follows the paper layout: the material table with #, Item code, Materi
 
 ## Review and approval
 
+Superseded revisions offer **Delete revision** in the table's row menu and on the detail page. This requires the separate `CanDeleteApprovedVendorList` permission under Quality Assurance → Approved Vendor List, granted to nobody automatically. The confirmation rechecks access before sending `DELETE approved-vendor-list/{id}`. Success refreshes the revision list and returns an open detail to that list. A changed status or server refusal keeps the confirmation open with the reason. The backend retains history and later revision links, and the current approved list continues to govern procurement. Current, Pending and Rejected revisions have no delete action.
+
 Saving opens the document review. Checking happens in the Review panel (`CanReviewApprovedVendorList` / `CanReturnApprovedVendorList`), and the item also appears in My Pending Reviews. Approval goes through Pending Approvals as `ApprovedVendorList`, with `CanApproveApprovedVendorList` / `CanRejectApprovedVendorList`. Configure the approval workflow (General Manager QA) under Settings → Approvals. Without a workflow the list is approved automatically on check and carries no "Approved by".
 
 ## Procurement
+
+The superseded-deletion contract (23 November 2026) is imported with `bun scripts/import-approved-vendor-list-delete.ts EXPORT.json`, followed by `bun run api:generate` and `bun run api:check`. It adds only `DELETE /api/v1/approved-vendor-list/{id}`; removing that operation reproduces the preceding `4de3b27d…39083` contract exactly. The reviewed source digest is `1d528fdcdfa83245abf471694dd7a95ced8e47aafa3c4e2f05a11a8df7a091a8`, retained alongside all preceding fingerprints. Deploy the matching backend before activating this desktop action, and explicitly assign its delete permission. This source change performs no customer deployment or database change.
 
 `shared/procurement/approved-vendors.ts` reads `POST approved-vendor-list/eligibility` (`CanViewApprovedVendorEligibility`) and disables what the current list does not allow:
 
