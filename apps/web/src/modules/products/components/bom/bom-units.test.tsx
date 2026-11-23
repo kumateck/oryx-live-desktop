@@ -18,8 +18,9 @@ afterEach(() => { cleanup(); forgetSession(); });
 const id = "658da105-a506-44a9-8ff5-8d005a54f294";
 const name = "Gelatin Capsule Shells - Zinvite";
 
-function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = false, densityResponse }: {
+function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = false, densityResponse, savedSymbol, substitute }: {
   symbol?: string; quantity?: number; unitResponse?: () => Response; failSave?: boolean; densityResponse?: (page: number) => Response | Promise<Response>;
+  savedSymbol?: string; substitute?: { symbol: string; savedSymbol: string; quantity: number };
 } = {}) {
   const backend = stubBackend({ permissions: ["CanEditProductionProductInfo", "CanAddProductionProductBom", "CanEditProductionProductBom", "CanDeleteProductionProductBom", "CanArchiveProductionProductBom", "CanAddProductionProductPackingMaterials", "CanEditProductionProductPackingMaterials", "CanDeleteProductionProductPackingMaterials", "CanAddProductionProductPackingStyles", "CanEditProductionProductPackingStyles", "CanDeleteProductionProductPackingStyles", "CanEditProductionProductPackingOrder", "CanAddProductionProductProcedure", "CanEditProductionProductProcedure", "CanDeleteProductionProductProcedure"] });
   rememberSession();
@@ -38,10 +39,12 @@ function open({ symbol = "piece", quantity = 500_000, unitResponse, failSave = f
     if (input.method === "GET") reads.push(path);
     else writes.push({ path, body: await input.clone().text() });
     if (path === `/api/v1/product/${id}/bom`) return Response.json({ version: 2, isActive: true, billOfMaterial: { items: [
-      { id: "line-shells", order: 1, baseQuantity: quantity, useDensityConversion: Boolean(densityResponse), baseUoM: { id: "old-mg", symbol: "mg" },
-        material: { id: "shells", name, code: "RMG033" } },
+      { id: "line-shells", order: 1, baseQuantity: quantity, useDensityConversion: Boolean(densityResponse), baseUoM: { id: `saved-${savedSymbol ?? symbol}`, symbol: savedSymbol ?? (densityResponse ? "mg" : symbol) },
+        material: { id: "shells", name, code: "RMG033" }, substitutes: substitute ? [{ substituteMaterial: { id: "sub", name: "Alternate material" },
+          baseQuantity: substitute.quantity, baseUoM: { id: `saved-${substitute.savedSymbol}`, symbol: substitute.savedSymbol } }] : [] },
     ] } });
     if (path === "/api/v1/material/shells/uom") return unitResponse ? unitResponse() : Response.json(unit);
+    if (path === "/api/v1/material/sub/uom" && substitute) return Response.json({ id: `linked-${substitute.symbol}`, symbol: substitute.symbol });
     if (path === "/api/v1/material/department" && densityResponse) return densityResponse(Number(new URL(input.url).searchParams.get("page") ?? 1));
     if (path === "/api/v1/material/department") return Response.json({ data: [
       { material: { id: "shells", name, code: "RMG033" }, uoM: unit },
@@ -76,12 +79,12 @@ async function updateAndSave(dialog: HTMLElement) {
   fireEvent.click(screen.getByRole("button", { name: "Save bill of materials" }));
 }
 
-it("uses RMG033's linked piece unit instead of its saved mg unit in the table, edit and save", async () => {
+it("keeps a counted material in its linked piece unit in the table, edit and save", async () => {
   const { writes, reads } = open();
   expect(await screen.findByText("500,000 piece")).toBeTruthy();
   expect(screen.getByText("1,000,000 piece")).toBeTruthy();
   expect(screen.queryByText("500 g")).toBeNull();
-  expect(reads.filter((path) => path.endsWith("/uom"))).toHaveLength(1);
+  expect(reads.filter((path) => path.endsWith("/uom"))).toHaveLength(0);
   const dialog = await edit("piece");
   expect(within(dialog).queryByRole("combobox", { name: "Enter quantities in" })).toBeNull();
   expect(within(dialog).getByRole("spinbutton", { name: "Unit quantity (piece)" })).toHaveProperty("value", "500000");
@@ -94,13 +97,17 @@ it.each([
   ["mg", "kg", "2.3456789", 2_345_678.9],
   ["ml", "L", "2.3456789", 2345.6789],
   ["ML", "L", "2.3456789", 2345.6789],
+  ["g", "kg", "2.3456789", 2345.6789],
+  ["kg", "g", "2345.6789", 2.3456789],
+  ["L", "ml", "2345.6789", 2.3456789],
 ] as const)("converts %s entry through %s and saves the linked quantity without losing entered digits", async (symbol, entry, value, expected) => {
   const { writes } = open({ symbol, quantity: 1500 });
-  const dialog = await edit(symbol.toLowerCase());
+  const linkedSymbol = symbol.toLowerCase() === "l" ? "L" : symbol.toLowerCase();
+  const dialog = await edit(linkedSymbol);
   await selectUnit(entry);
   fireEvent.change(within(dialog).getByRole("spinbutton", { name: `Unit quantity (${entry})` }), { target: { value } });
-  await selectUnit(symbol.toLowerCase());
-  expect(within(dialog).getByRole("spinbutton", { name: `Unit quantity (${symbol.toLowerCase()})` })).toHaveProperty("value", String(expected));
+  await selectUnit(linkedSymbol);
+  expect(within(dialog).getByRole("spinbutton", { name: `Unit quantity (${linkedSymbol})` })).toHaveProperty("value", String(expected));
   await updateAndSave(dialog);
   await waitFor(() => expect(writes).toHaveLength(1));
   expect(JSON.parse(writes[0]?.body ?? "{}").items[0]).toMatchObject({ baseUoMId: `linked-${symbol}`, baseQuantity: expected, prescribedQuantity: expected * 2 });
@@ -178,6 +185,37 @@ it("loads and retries verified density when editing a persisted conversion", asy
   expect(JSON.parse(writes[0]?.body ?? "{}").items[0]).toMatchObject({
     useDensityConversion: true, baseUoMId: null, baseQuantity: 500_000, prescribedQuantity: 1_000_000,
   });
+});
+
+it("requires a saved mass quantity to be reviewed before using a liquid department unit", async () => {
+  const { writes } = open({ symbol: "ml", savedSymbol: "mg", quantity: 75000 });
+  expect(await screen.findByText("75 g")).toBeTruthy();
+  const dialog = await edit("ml");
+  expect(within(dialog).getByRole("spinbutton", { name: "Unit quantity (ml)" })).toHaveProperty("value", "");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Update material" }));
+  expect(writes).toHaveLength(0);
+  fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Unit quantity (ml)" }), { target: { value: "37500" } });
+  await updateAndSave(dialog);
+  await waitFor(() => expect(writes).toHaveLength(1));
+  expect(JSON.parse(writes[0]?.body ?? "{}").items[0]).toMatchObject({ baseUoMId: "linked-ml", baseQuantity: 37500, prescribedQuantity: 75000 });
+});
+
+it("loads the substitute's own linked unit, converts its saved quantity, and saves both independent quantities", async () => {
+  const { writes, reads } = open({ symbol: "ml", quantity: 500, substitute: { symbol: "g", savedSymbol: "mg", quantity: 2000 } });
+  const dialog = await edit("ml");
+  const substitute = within(dialog).getByRole("group", { name: "Alternate material" });
+  expect(await within(substitute).findByRole("spinbutton", { name: "Unit quantity (g)" })).toHaveProperty("value", "2");
+  const user = userEvent.setup();
+  await user.click(within(substitute).getByRole("combobox", { name: "Enter quantities in" }));
+  expect(screen.queryByRole("option", { name: "L" })).toBeNull();
+  await user.click(screen.getByRole("option", { name: "kg" }));
+  fireEvent.change(within(substitute).getByRole("spinbutton", { name: "Unit quantity (kg)" }), { target: { value: "0.0123456789" } });
+  expect(within(dialog).getByRole("spinbutton", { name: "Unit quantity (ml)" })).toHaveProperty("value", "500");
+  await updateAndSave(dialog);
+  await waitFor(() => expect(writes).toHaveLength(1));
+  expect(reads.filter(path => path.endsWith('/sub/uom')).length).toBeGreaterThan(0);
+  expect(JSON.parse(writes[0]?.body ?? "{}").items[0]).toMatchObject({ baseUoMId: "linked-ml", baseQuantity: 500,
+    substitutes: [{ materialId: "sub", baseUoMId: "linked-g", baseQuantity: 12.3456789, prescribedQuantity: 24.6913578 }] });
 });
 
 it("finds a saved density beyond the first matching search page", async () => {

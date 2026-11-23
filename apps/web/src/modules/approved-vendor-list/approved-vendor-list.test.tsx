@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, expect, it, vi } from "vitest";
@@ -7,7 +7,7 @@ import { decisionPermission } from "@/modules/pending-approvals/lib/approval-doc
 import { reviewDocumentPath } from "@/modules/pending-reviews/lib/review-documents";
 import { ApiProvider } from "@/shared/api/api-provider";
 import { canAccess } from "@/shared/auth/access";
-import { SessionProvider } from "@/shared/auth/session-provider";
+import { SessionProvider, useSession } from "@/shared/auth/session-provider";
 import { manufacturerRefusal, markOptions, supplierRefusal } from "@/shared/procurement/approved-vendors";
 import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
 import { openMenu } from "@/test/menu";
@@ -32,7 +32,7 @@ const detail = (status: number, extra: Record<string, unknown> = {}) => ({ ...su
     quantityPerPack: 25, approvalDate: "2024-06-01T00:00:00Z", validityDate: "2027-06-01T00:00:00Z", lapsed: false }],
   preparedBySignatory: { name: "Ama Owusu", designation: "Officer QA", signedAt: "2026-11-19T00:00:00Z" } });
 
-function open(element: ReactNode, granted: string[], data: { lists?: unknown[]; list?: unknown } = {}, path = "/x/l1") {
+function open(element: ReactNode, granted: string[], data: { lists?: unknown[]; list?: unknown; deleteStatus?: number } = {}, path = "/x/l1") {
   const backend = stubBackend({ permissions: granted });
   const auth = backend.fetcher.getMockImplementation();
   const calls: { path: string; method: string; body: unknown }[] = [];
@@ -40,6 +40,9 @@ function open(element: ReactNode, granted: string[], data: { lists?: unknown[]; 
     if (!(input instanceof Request)) return auth ? auth(input, init) : new Response(null, { status: 500 });
     const url = new URL(input.url);
     calls.push({ path: url.pathname, method: input.method, body: input.method === "GET" ? null : await input.clone().json().catch(() => null) });
+    if (input.method === "DELETE") return data.deleteStatus
+      ? Response.json({ title: "Conflict", errors: [{ code: "ApprovedVendorList.NotSuperseded", description: "Only a superseded approved vendor list can be deleted." }] }, { status: data.deleteStatus })
+      : new Response(null, { status: 204 });
     if (input.method !== "GET") return Response.json("l2", { status: 201 });
     if (url.pathname === "/api/v1/approved-vendor-list") return Response.json(data.lists ?? []);
     if (url.pathname === "/api/v1/approved-vendor-list/l1") return Response.json(data.list ?? detail(1));
@@ -47,9 +50,10 @@ function open(element: ReactNode, granted: string[], data: { lists?: unknown[]; 
     return new Response(null, { status: 404 });
   });
   rememberSession();
-  const router = createMemoryRouter([{ path: "/x/:id?", element }], { initialEntries: [path] });
+  const router = createMemoryRouter([{ path: "/x/:id?", element }, { path: "/qa/approved-vendor-list", element: <p>Vendor list overview</p> },
+    { path: "/qa/approved-vendor-list/:id/details", element: <p>Saved revision details</p> }], { initialEntries: [path] });
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
-  return { writes: () => calls.filter((c) => c.method !== "GET") };
+  return { backend, writes: () => calls.filter((c) => c.method !== "GET"), reads: () => calls.filter((c) => c.method === "GET") };
 }
 afterEach(() => { cleanup(); forgetSession(); vi.unstubAllGlobals(); });
 
@@ -102,6 +106,65 @@ it("offers correction and printing only with their keys", async () => {
   expect(screen.getByRole("menuitem", { name: "Print" })).toBeTruthy();
 });
 
+it("offers deletion only for a superseded revision and only with its own permission", async () => {
+  const denied = open(<VendorListDetailPage />, [view, "CanEditApprovedVendorList"], { list: detail(2) });
+  await screen.findByRole("heading", { name: "Revision 17" });
+  expect(screen.queryByRole("button", { name: /Actions for Revision 17/ })).toBeNull();
+  expect(denied.writes()).toHaveLength(0);
+  for (const status of [0, 1, 3]) {
+    cleanup(); forgetSession();
+    open(<VendorListDetailPage />, [view, "CanDeleteApprovedVendorList"], { list: detail(status) });
+    await screen.findByRole("heading", { name: "Revision 17" });
+    expect(screen.queryByRole("button", { name: /Actions for Revision 17/ })).toBeNull();
+  }
+});
+
+it("confirms deleting a superseded detail revision and returns to the overview", async () => {
+  const allowed = open(<VendorListDetailPage />, [view, "CanDeleteApprovedVendorList"], { list: detail(2) });
+  await openMenu(/Actions for Revision 17/);
+  fireEvent.click(screen.getByRole("menuitem", { name: "Delete revision" }));
+  await screen.findByRole("dialog", { name: "Delete revision 17?" });
+  expect(allowed.writes()).toHaveLength(0);
+  fireEvent.click(screen.getByRole("button", { name: "Delete revision" }));
+  await screen.findByText("Vendor list overview");
+  expect(allowed.writes()).toMatchObject([{ path: "/api/v1/approved-vendor-list/l1", method: "DELETE" }]);
+});
+
+it("deletes from the revision table and refreshes the cached list", async () => {
+  const allowed = open(<VendorListsPage />, [view, "CanDeleteApprovedVendorList"], { lists: [summary(2)] });
+  await openMenu(/Actions for revision 17/);
+  fireEvent.click(screen.getByRole("menuitem", { name: "Delete revision" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Delete revision" }));
+  await waitFor(() => expect(allowed.writes()).toHaveLength(1));
+  await waitFor(() => expect(allowed.reads().filter(call => call.path === "/api/v1/approved-vendor-list").length).toBeGreaterThan(1));
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it("keeps the confirmation open with the server's status refusal", async () => {
+  open(<VendorListDetailPage />, [view, "CanDeleteApprovedVendorList"], { list: detail(2), deleteStatus: 409 });
+  await openMenu(/Actions for Revision 17/);
+  fireEvent.click(screen.getByRole("menuitem", { name: "Delete revision" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Delete revision" }));
+  expect((await screen.findByRole("alert")).textContent).toContain("Only a superseded approved vendor list can be deleted.");
+  expect(screen.getByRole("dialog")).toBeTruthy();
+});
+
+it("refuses an open delete confirmation after the grant is revoked", async () => {
+  function Refresh() {
+    const { refresh } = useSession();
+    return <button type="button" onClick={() => void refresh()}>Refresh access</button>;
+  }
+  const allowed = open(<><Refresh /><VendorListDetailPage /></>, [view, "CanDeleteApprovedVendorList"], { list: detail(2) });
+  await openMenu(/Actions for Revision 17/);
+  fireEvent.click(screen.getByRole("menuitem", { name: "Delete revision" }));
+  await screen.findByRole("dialog");
+  allowed.backend.set({ permissions: [view] });
+  fireEvent.click(screen.getByText("Refresh access"));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Delete revision" }).hasAttribute("disabled")).toBe(true));
+  fireEvent.click(screen.getByRole("button", { name: "Delete revision" }));
+  expect(allowed.writes()).toHaveLength(0);
+});
+
 it("sends a correction only with the edit key, with the review version it was opened at", async () => {
   const denied = open(<VendorListEditorPage mode="edit" />, [view], { list: detail(0, { reviewStatus: 1 }) });
   const save = await screen.findByRole("button", { name: "Save correction" });
@@ -113,6 +176,7 @@ it("sends a correction only with the edit key, with the review version it was op
   await waitFor(() => expect(allowed.writes()).toHaveLength(1));
   expect(allowed.writes()[0]).toMatchObject({ path: "/api/v1/approved-vendor-list/l1", method: "PUT", body: { revisionNumber: 17, reviewVersion: 3,
     lines: [{ materialId: "m1", manufacturerId: "mf1", supplierId: "s1", quantityPerPack: 25, approvalDate: "2024-06-01", validityDate: "2027-06-01" }] } });
+  await screen.findByText("Saved revision details");
 });
 
 it("checks lines, names stages and prints months as on paper", () => {
