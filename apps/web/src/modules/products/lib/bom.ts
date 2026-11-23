@@ -2,6 +2,7 @@ import type { DomainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest } 
 import type { SavedBom } from "../schemas/bom-schema";
 import { batchQuantity } from "./product-detail";
 import type { MaterialUnit } from "./material-unit";
+import { convertUnit } from "@/shared/units/quantity";
 
 interface Option { value: string; label: string }
 
@@ -11,6 +12,42 @@ export interface BomSubstitute extends Option {
   baseQuantity: number | null;
   /** The substitute's department stock unit (mg when the line uses density conversion); null until known. */
   unit: { id: string; symbol: string } | null;
+  linkedUnit?: MaterialUnit;
+}
+
+/** Convert a saved amount into its own material's current linked unit, never just relabel it. */
+export function linkedBomQuantity(quantity: number | null, source: MaterialUnit | null, target: MaterialUnit): number | null {
+  return quantity === null || !source ? null : convertUnit(quantity, source.symbol, target.symbol);
+}
+
+/** Preflight every main and substitute link. The request remains in linked units; the server normalizes storage. */
+export function verifyBomUnits(lines: readonly BomLine[], units: ReadonlyMap<string, MaterialUnit>): { lines: BomLine[]; problems: string[] } {
+  const problems: string[] = [];
+  const verify = (name: string, quantity: number | null, source: MaterialUnit | null, linked: MaterialUnit | undefined,
+    target: MaterialUnit | undefined, density: boolean) => {
+    if (!target) { problems.push(`Could not verify the department-linked unit for ${name}. Retry before saving.`); return null; }
+    if (linked && (linked.id !== target.id || linked.symbol.toLowerCase() !== target.symbol.toLowerCase())) {
+      problems.push(`A department-linked unit changed for ${name}. Reload and review the quantities before saving.`); return null;
+    }
+    if (density) return quantity;
+    const converted = linkedBomQuantity(quantity, source, target);
+    if (converted === null || !Number.isFinite(converted) || converted <= 0)
+      problems.push(`${name}: review and enter the quantity in the department unit (${target.symbol}) before saving. The saved unit (${source?.symbol || "missing"}) cannot be converted.`);
+    return converted;
+  };
+  const verified = lines.map(line => {
+    const unit = units.get(line.material.value);
+    const quantity = verify(line.material.label, line.baseQuantity, line.unit, line.linkedUnit, unit, line.useDensityConversion);
+    const substitutes = line.substitutes.map(sub => {
+      const target = units.get(sub.value);
+      const converted = verify(sub.label, sub.baseQuantity, sub.unit, sub.linkedUnit, target, line.useDensityConversion);
+      return { ...sub, baseQuantity: converted, unit: line.useDensityConversion ? sub.unit : target ?? sub.unit,
+        ...(target ? { linkedUnit: target } : {}) };
+    });
+    return { ...line, baseQuantity: quantity ?? Number.NaN, unit: line.useDensityConversion ? line.unit : unit ?? line.unit,
+      ...(unit ? { linkedUnit: unit } : {}), substitutes };
+  });
+  return { lines: verified, problems };
 }
 
 /** One material of a bill of materials being edited. `key` identifies the row on the page. */
