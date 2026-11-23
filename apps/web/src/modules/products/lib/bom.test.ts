@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { bomItemFormSchema, savedBomSchema } from "../schemas/bom-schema";
-import { bomProblems, fromSavedBom, hasMaterial, toBomRequest } from "./bom";
+import { bomProblems, fromSavedBom, hasMaterial, toBomRequest, verifyBomUnits } from "./bom";
 
 const saved = savedBomSchema.parse({ version: 3, isActive: true, billOfMaterial: { items: [
   { id: "b2", order: 2, baseQuantity: 2, grade: "BP", baseUoM: { id: "u-g", symbol: "g" },
@@ -12,6 +12,22 @@ const saved = savedBomSchema.parse({ version: 3, isActive: true, billOfMaterial:
   { id: "b3", order: 3, baseQuantity: 1, material: null },
 ] } });
 const lines = fromSavedBom(saved);
+
+it("rechecks every substitute's link and refuses stale or incompatible units before sending a BOM", () => {
+  const primary = lines[0];
+  if (!primary) throw new Error("Missing fixture");
+  const mg = { id: "u-mg", symbol: "mg" };
+  const grams = { id: "u-g", symbol: "g" };
+  const units = new Map([[primary.material.value, mg], ["m-alt", grams]]);
+  const verified = verifyBomUnits([primary], units);
+  expect(verified.problems).toEqual([]);
+  expect(verified.lines[0]?.substitutes[0]).toMatchObject({ baseQuantity: 0.08, unit: grams });
+  const stale = { ...primary, substitutes: primary.substitutes.map(sub => ({ ...sub, linkedUnit: mg })) };
+  expect(verifyBomUnits([stale], units).problems.join(" ")).toContain("department-linked unit changed");
+  const incompatible = verifyBomUnits([primary], new Map([[primary.material.value, mg], ["m-alt", { id: "ml", symbol: "ml" }]]));
+  expect(incompatible.problems.join(" ")).toContain("saved unit (mg) cannot be converted");
+  expect(verifyBomUnits([primary], new Map([[primary.material.value, mg]])).problems.join(" ")).toContain("Could not verify the department-linked unit for Albendazole micronised");
+});
 
 it("reads the saved formula in step order and skips lines without a material", () => {
   expect(lines.map((line) => line.material.label)).toEqual(["Albendazole", "Sugar"]);
