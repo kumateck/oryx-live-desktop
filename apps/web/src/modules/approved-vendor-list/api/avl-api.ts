@@ -10,4 +10,5 @@ export const {
   usePostApiV1ApprovedVendorListMutation: useCreateVendorListMutation,
   usePostApiV1ApprovedVendorListReviseMutation: useReviseVendorListMutation,
   usePutApiV1ApprovedVendorListByIdMutation: useUpdateVendorListMutation,
+  useDeleteApiV1ApprovedVendorListByIdMutation: useDeleteVendorListMutation,
 } = procurementApi;

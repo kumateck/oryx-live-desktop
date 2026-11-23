@@ -1,8 +1,9 @@
-import { useMemo } from "react";
-import { FilePlus2, GitBranchPlus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { FilePlus2, GitBranchPlus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { useAccess } from "@/shared/auth/use-access";
 import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
@@ -10,6 +11,8 @@ import { formatDate } from "@/shared/format/dates";
 import { useVendorListsQuery } from "../api/avl-api";
 import { ListStatus, stageLabel, summariesSchema, type ListSummary } from "../lib/avl";
 import { avlAudit, avlKeys, avlRoot } from "../lib/keys";
+import { avlActionPermissions } from "../manifest";
+import { DeleteVendorListDialog } from "./avl-delete-dialog";
 
 const column = dataTableColumns<ListSummary>();
 export const stageVariant = (row: Pick<ListSummary, "status">) => row.status === ListStatus.Approved ? "default" as const
@@ -19,6 +22,7 @@ export const stageVariant = (row: Pick<ListSummary, "status">) => row.status ===
 export function VendorListsPage() {
   const navigate = useNavigate();
   const { has } = useAccess();
+  const [deleting, setDeleting] = useState<ListSummary | null>(null);
   const query = useVendorListsQuery({ ...avlAudit }, { refetchOnMountOrArgChange: 30 });
   const parsed = useMemo(() => query.data ? summariesSchema.safeParse(query.data) : null, [query.data]);
   const rows = useMemo(() => parsed?.success ? parsed.data : [], [parsed]);
@@ -33,7 +37,11 @@ export function VendorListsPage() {
     column.accessor((r) => r.createdAt ?? "", { id: "created", header: "Prepared", size: 120, cell: ({ row }) => formatDate(row.original.createdAt) ?? "–" }),
     column.accessor((r) => r.approvedAt ?? "", { id: "approved", header: "Approved", size: 120, cell: ({ row }) => formatDate(row.original.approvedAt) ?? "–" }),
     column.accessor("status", { header: "Status", size: 190, cell: ({ row }) => <Badge variant={stageVariant(row.original)}>{stageLabel(row.original.status, row.original.reviewStatus)}</Badge> }),
-  ]), []);
+    ...(has(avlActionPermissions.delete) ? [column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />,
+      cell: ({ row }) => row.original.status === ListStatus.Superseded ? <TableMenu label={`Actions for revision ${row.original.revisionNumber}`} items={[
+        { id: "delete", label: "Delete revision", icon: Trash2, destructive: true, require: avlActionPermissions.delete, onSelect: () => setDeleting(row.original) },
+      ]} /> : null })] : []),
+  ]), [has]);
   return <section className="page-fill">
     <header className="flex flex-wrap items-start justify-between gap-3"><div><p className="eyebrow">QUALITY ASSURANCE</p>
       <h1 className="text-xl font-semibold">Approved vendor list</h1>
@@ -48,5 +56,6 @@ export function VendorListsPage() {
       onRowOpen={(r) => void navigate(`${avlRoot}/${r.id}/details`)}
       error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned lists the app could not read." : null}
       emptyTitle="No approved vendor list yet" emptyDescription="Prepare the first list from the current paper revision." />
+    {deleting ? <DeleteVendorListDialog list={deleting} onClose={() => setDeleting(null)} /> : null}
   </section>;
 }
