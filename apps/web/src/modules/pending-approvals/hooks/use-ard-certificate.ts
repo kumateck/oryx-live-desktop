@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { z } from "zod";
 import { analyticalApi } from "@/shared/api/generated/analytical";
-import { formsApi } from "@/shared/api/generated/forms";
+import { coaResponseApi as formsApi } from "@/shared/ard-view/coa-response-api";
 import { productionApi } from "@/shared/api/generated/production";
 import type { CertificateFacts } from "../components/details/ard-document";
 import { queryState } from "../components/details/detail-state";
@@ -35,7 +35,7 @@ const atrSchema = z.object({ id: z.string().nullish() }).nullish();
  * and by printing a generated certificate from the test request list.
  */
 export function useArdCertificate(id: string, options: { rejection?: boolean } = {}) {
-  const query = useGetApiV1FormResponsesByFormResponseIdQuery({ ...audit, formResponseId: id });
+  const query = useGetApiV1FormResponsesByFormResponseIdQuery({ ...audit, formResponseId: id }, { refetchOnMountOrArgChange: true });
   const response = useParsed(responseSchema, query.data);
   const formId = response?.form?.id ?? null;
   const materialBatchId = response?.materialBatch?.id ?? null;
@@ -60,7 +60,7 @@ export function useArdCertificate(id: string, options: { rejection?: boolean } =
   const recorded = useMemo(() => {
     // The batch may carry answers from other data sheets; only this one's are being approved.
     const own = (batchAnswers ?? []).filter((entry) => !entry.responseId || entry.responseId === id);
-    return answersByField(own.length > 0 ? own : response?.formResponses ?? []);
+    return answersByField(response?.formResponses.length ? response.formResponses : own);
   }, [batchAnswers, response, id]);
   const signatories = useMemo(() => ardSignatories(id, response?.formResponses ?? [], batchAnswers ?? [], response?.checkedBy, response?.approvedBy), [id, response, batchAnswers]);
   const sections = useMemo(() => [...(form?.sections ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [form]);
@@ -76,7 +76,7 @@ export function useArdCertificate(id: string, options: { rejection?: boolean } =
   // An investigation or certificate is made only once the results are rejected or approved.
   const atr = options.rejection || approved ? parsedAtr : null;
   const coaTarget = materialBatchId ? { materialBatchId } : atr?.id ? { analyticalTestRequestId: atr.id } : null;
-  const certificateSections = sections.map((section) => ({ id: section.id, name: section.name, description: section.description, groupName: section.groupName,
+  const certificateSections = sections.map((section) => ({ id: section.id, name: section.name, description: section.description, value: section.value, groupName: section.groupName,
     fields: [...(section.fields ?? [])].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0)) }));
 
   const isMaterial = Boolean(materialBatchId);

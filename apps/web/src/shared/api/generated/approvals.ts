@@ -197,6 +197,7 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
+          "If-Match": queryArg["If-Match"],
         },
       }),
     }),
@@ -429,6 +430,8 @@ export type PostApiV1ApprovalApproveByModelTypeAndModelIdApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  /** Pending product COA reporting evidence token returned by the response detail. Required when approving configured assay reporting. */
+  "If-Match"?: string;
   domainEntitiesApprovalsApprovalRequestBody: DomainEntitiesApprovalsApprovalRequestBody;
 };
 export type PostApiV1ApprovalRejectByModelTypeAndModelIdApiResponse = void;

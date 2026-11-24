@@ -1,5 +1,5 @@
 import { analyticalApi } from "@/shared/api/generated/analytical";
-import { formsApi } from "@/shared/api/generated/forms";
+import { coaResponseApi as formsApi } from "@/shared/ard-view/coa-response-api";
 import { addTags } from "@/shared/api/add-tags";
 
 const list = { type: "Atrs" as const, id: "all" };

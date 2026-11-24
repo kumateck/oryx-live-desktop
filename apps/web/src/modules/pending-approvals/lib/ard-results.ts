@@ -15,6 +15,10 @@ export function answersByField<T extends RecordedAnswer>(responses: readonly T[]
 export const saysFails = (value: string | null | undefined) => /does not comply|not compl/i.test(value ?? "");
 
 export function answerFails(answer: RecordedAnswer | undefined): boolean {
+  if (answer?.coaReportingError) return true;
+  const reported = answer?.coaReportedResults;
+  if (reported?.length && reported.every(result => result.converted))
+    return reported.some(result => result.complies !== true);
   return Boolean(answer?.coaReportingError) || Boolean(answer?.coaReportedResults?.some(result => result.converted && result.complies === false))
     || answer?.complies === false || saysFails(answer?.value);
 }
