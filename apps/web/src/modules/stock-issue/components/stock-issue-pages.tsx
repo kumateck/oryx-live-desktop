@@ -9,6 +9,7 @@ import { ConfirmActionDialog } from "@/shared/actions";
 import { NoAccess } from "@/shared/auth/no-access";
 import { useAccess } from "@/shared/auth/use-access";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
+import { SearchableFilterSelect } from "@/shared/forms/searchable-filter-select";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDateTime } from "@/shared/format/dates";
@@ -23,7 +24,7 @@ import { RichTextView, richTextToPlain } from "@/shared/rich-text/rich-text-view
 import { usePageSearch } from "@/shared/search/page-search";
 import { whitePlaceboPreparationPath } from "@/shared/production/white-placebo-path";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
-import { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation } from "../api/stock-issue-api";
+import { useGetRawStockIssueQueueQuery, useGetPackagingStockIssueQueueQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation } from "../api/stock-issue-api";
 import { audit, issueQueues, type IssueQueue, checkNote, issueBlock, issueCheckKeys, issuePermissions, issueRequisitionPath, stockIssueListPath, stockIssuePath, viewPermissions } from "../lib/stock-issue";
 import { stockRequisitionRowsSchema, stockRequisitionSchema, type StockRequisition } from "../schemas/stock-issue-schema";
 import { AlternativeBatches } from "./alternative-batches";
@@ -53,27 +54,35 @@ const columns = column.columns([
 export function StockIssueListPage() {
   const navigate = useNavigate();
   const { kind, select, tabs } = useKindTabs(viewPermissions);
+  const [product, setProduct] = useState<string>();
   const [queue, setQueue] = useState<IssueQueue>("awaiting");
   const shown = issueQueues.find((entry) => entry.value === queue) ?? issueQueues[0];
   const [busy, setBusy] = useState(false);
   const search = usePageSearch("stock requisitions", busy);
-  const table = useServerTable({ pageSize: 50, resetKey: `${search}|${kind}|${queue}` });
-  // Type 0 is a stock requisition.
-  const query = useGetApiV1RequisitionDepartmentQuery({ ...audit, type: 0, kind: kind ?? 0, page: table.page, pageSize: table.pageSize, searchQuery: search,
-    ...(shown.issued === undefined ? {} : { issued: shown.issued }) }, { skip: kind === null });
-  const parsed = useMemo(() => query.data ? stockRequisitionRowsSchema.safeParse(query.data.data ?? []) : null, [query.data]);
+  const table = useServerTable({ pageSize: 50, resetKey: `${search}|${kind}|${queue}|${product ?? ""}` });
+  const args = { ...audit, page: table.page, pageSize: table.pageSize, searchQuery: search,
+    ...(shown.issued === undefined ? {} : { issued: shown.issued }), ...(product ? { productId: product } : {}) };
+  const raw = useGetRawStockIssueQueueQuery(args, { skip: kind !== 0 });
+  const packaging = useGetPackagingStockIssueQueueQuery(args, { skip: kind !== 1 });
+  const query = kind === 1 ? packaging : raw;
+  const parsed = useMemo(() => query.currentData ? stockRequisitionRowsSchema.safeParse(query.currentData.requisitions?.data ?? []) : null, [query.currentData]);
   const rows = useMemo(() => parsed?.success ? parsed.data : [], [parsed]);
-  const meta = pageMeta(query.data, table, rows.length);
+  const products = (query.currentData?.products ?? []).flatMap((item) => item.id ? [{ value: item.id, label: [item.code, item.name].filter(Boolean).join(" · ") }] : []);
+  const meta = pageMeta(query.currentData?.requisitions, table, rows.length);
   useEffect(() => { setBusy(query.isFetching); }, [query.isFetching]);
   return <section className="page-fill">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><p className="eyebrow">WAREHOUSE</p><h1 className="text-xl font-semibold">Issue stock requisitions</h1></div>
       <div className="flex flex-wrap items-center gap-3">
         <div role="group" aria-label="Requisition status" className="flex gap-1">{issueQueues.map((entry) =>
-          <Button key={entry.value} type="button" size="sm" variant={queue === entry.value ? "default" : "outline"} aria-pressed={queue === entry.value} onClick={() => setQueue(entry.value)}>{entry.label}</Button>)}</div>
-        <KindSwitch tabs={tabs} kind={kind} onSelect={select} />
+          <Button key={entry.value} type="button" size="sm" variant={queue === entry.value ? "default" : "outline"} aria-pressed={queue === entry.value} onClick={() => { setProduct(undefined); setQueue(entry.value); }}>{entry.label}</Button>)}</div>
+        <KindSwitch tabs={tabs} kind={kind} onSelect={(next) => { setProduct(undefined); select(next); }} />
         {kind !== null ? <UnstartLeftoverRepair key={kind} kind={kind} /> : null}
       </div>
+    </div>
+    <div className="flex flex-wrap items-center gap-3">
+      <SearchableFilterSelect label="Product" all="All products" value={product} options={products} onChange={setProduct} loading={query.isFetching} className="w-full sm:w-80" />
+      <p className="text-xs text-muted-foreground">Oldest requests first</p>
     </div>
     <ServerDataTable label="Stock requisitions" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows} onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange}
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} onRowOpen={(row) => void navigate(row.whitePlaceboPreparationId ? whitePlaceboPreparationPath(row.whitePlaceboPreparationId) : issueRequisitionPath(row.id, kind ?? 0))}

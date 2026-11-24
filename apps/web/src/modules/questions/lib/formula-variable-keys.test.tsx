@@ -2,13 +2,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { act, cleanup, render, renderHook, screen } from "@testing-library/react";
 import { useForm } from "react-hook-form";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
 import TheAduseiFormula from "@/shared/formula/ui/types/expression";
 import { buildFormulaRevisionDraft } from "@/shared/formula/builder/definition-adapter";
 import { parseUniversalNamedExpressions } from "@/shared/formula/builder/universal-named-expressions";
 import { FormulaType, QuestionType } from "@/shared/questions/question-types";
 import { formulaDefaults, formulaScopeOptions, questionFormulaSchema, type QuestionFormulaValues } from "../schemas/formula-question-schema";
 import { buildFormulaOptionValue, canonicalVariableKey, scopeFieldName, toFormulaValues, universalEditorDefinition } from "./formula-question";
+
+// These pure editor tests insert tokens locally; save authorization is tested by the owning form.
+vi.mock("@/shared/auth/use-access", () => ({ useAccess: () => ({ allows: () => true, allowsNow: () => true }) }));
 
 const universal = (extra: Record<string, unknown> = {}) => JSON.stringify({
   type: 3, expression: "(:sampleAvg/:standardAvg)*(:sampleInput.wt/:standardInput.wt)*:wt",
@@ -72,11 +76,15 @@ describe("formula variable keys", () => {
     expect(option.standardInputs).toEqual([{ label: "Weight (g)", value: "", key: "wt" }]);
   });
 
-  it("shows dot-free names in the builder's available variables", () => {
+  it("shows dot-free names in the builder's available variables", async () => {
+    const user = userEvent.setup();
     const stored = universal({ headers: ["Standard", "Sample 1", "Sample 2"], firstColumnPurpose: "standard", standardInput: true, sampleInput: true });
     render(<TheAduseiFormula type={FormulaType.Universal} value={toFormulaValues(question, stored).expression} onChange={() => {}} />);
-    expect(screen.getByText(":standardWeight")).toBeTruthy();
-    expect(screen.getByText(":sampleWeight")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: /Standard variable/ }));
+    expect(screen.getByRole("menuitem", { name: /:standardWeight/ })).toBeTruthy();
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: /Sample variable/ }));
+    expect(screen.getByRole("menuitem", { name: /:sampleWeight/ })).toBeTruthy();
     expect(screen.queryByText(":standardInput.wt")).toBeNull();
     expect(screen.queryByText(":sampleInput.wt")).toBeNull();
   });

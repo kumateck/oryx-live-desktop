@@ -52,6 +52,7 @@ import {
   type ConcentrationUnit,
 } from "@/shared/formula/builder/universal-variable-keys";
 import { ConcentrationUnitField } from "./concentration-unit-field";
+import { AvailableVariables } from "./available-variables";
 import type {
   VarMapWithLabels,
   FirstColumnPurpose,
@@ -1199,34 +1200,9 @@ const ExpressionPanel: React.FC<Props> = ({
                     }
                   }
 
-                  return items.map((item) => (
-                    <button
-                      type="button"
-                      key={item.key}
-                      onClick={() => insertAtCursor(`:${item.key}`)}
-                      className="w-full flex items-center justify-between bg-muted/30 hover:bg-muted border border-border hover:border-border rounded px-2.5 py-1.5 transition-colors group"
-                      disabled={disabled}
-                    >
-                      <span className="text-xs font-semibold text-foreground group-hover:text-info">
-                        :{item.key}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground group-hover:text-info">
-                          {item.label}
-                        </span>
-                        {item.isTemplate && (
-                          <span className="text-xs font-bold text-info bg-muted border border-border rounded px-2 py-0.5">
-                            auto
-                          </span>
-                        )}
-                        {!item.isTemplate && (
-                          <span className="text-xs font-bold text-foreground bg-background border border-border rounded px-2 py-0.5 min-w-[60px] text-center">
-                            {formatNumber(item.value, false)}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  ));
+                  return <AvailableVariables items={items} disabled={disabled}
+                    onInsert={(key) => insertAtCursor(`:${key}`)}
+                    formatValue={(value) => formatNumber(value, false)} />;
                 })()
               )}
             </div>

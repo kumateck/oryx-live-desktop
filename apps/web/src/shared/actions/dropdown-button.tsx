@@ -24,7 +24,7 @@ export function DropdownButton({ label, icon: Icon, items, variant = "outline", 
   const visible = useVisibleActions(items);
   if (visible.length === 0) return null;
   return <DropdownMenu>
-    <DropdownMenuTrigger asChild>
+    <DropdownMenuTrigger asChild disabled={disabled}>
       <Button type="button" variant={variant} size={size} disabled={disabled}>{Icon ? <Icon /> : null}{label}<ChevronDown className="opacity-60" /></Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align={align}><ActionMenuItems items={visible} /></DropdownMenuContent>

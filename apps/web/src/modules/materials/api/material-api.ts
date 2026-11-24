@@ -8,6 +8,8 @@ const relinked = (_result: unknown, error: unknown) => error ? [] : [links, list
 
 export const materialApi = materialsApi.enhanceEndpoints({
   endpoints: {
+    clearRawMaterialDensity: definition => { definition.invalidatesTags = addTags(definition.invalidatesTags, relinked); },
+    clearPackagingMaterialDensity: definition => { definition.invalidatesTags = addTags(definition.invalidatesTags, relinked); },
     getApiV1Material: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
     getApiV1MaterialByMaterialId: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
     postApiV1Material: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, changed); },

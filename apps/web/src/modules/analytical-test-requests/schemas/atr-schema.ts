@@ -6,7 +6,7 @@ const product = z.object({ id: z.string().nullish(), name: text, code: text, lab
 
 /** A request to test a product batch at one stage of production. */
 export const atrSchema = z.object({
-  id: z.string().min(1), status: z.number().nullish(), stage: z.number().nullish(), isRetest: z.boolean().nullish(),
+  id: z.string().min(1), coaStatus: text, status: z.number().nullish(), stage: z.number().nullish(), isRetest: z.boolean().nullish(),
   createdAt: z.string().nullish(), createdBy: person,
   manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish(), arNumber: text, issueNumber: text, sampledQuantity: text, numberOfContainers: z.number().nullish(),
   sampledBy: person, sampledAt: z.string().nullish(), testedAt: z.string().nullish(), testedBy: person, acknowledgedAt: z.string().nullish(), assignedAt: z.string().nullish(), assignees: z.array(z.object({ firstName: text, lastName: text })).nullish(),
@@ -14,7 +14,7 @@ export const atrSchema = z.object({
   productionScheduleProduct: z.object({ productionSchedule: z.object({ code: text }).nullish(), product, productPacking: z.object({ name: text }).nullish() }).nullish(),
   productionActivityStep: z.object({ id: z.string().nullish(), order: z.number().nullish() }).nullish(),
 }).transform((atr) => ({
-  id: atr.id, status: atr.status ?? null, stage: atr.stage ?? null, isRetest: atr.isRetest ?? false, made: atr.manufacturingDate ?? null, expires: atr.expiryDate ?? null,
+  id: atr.id, coaStatus: atr.coaStatus, status: atr.status ?? null, stage: atr.stage ?? null, isRetest: atr.isRetest ?? false, made: atr.manufacturingDate ?? null, expires: atr.expiryDate ?? null,
   requestedAt: atr.createdAt ?? null, requestedBy: atr.createdBy,
   arNumber: atr.arNumber, issueNumber: atr.issueNumber, sampledQuantity: atr.sampledQuantity, containers: atr.numberOfContainers ?? null, sampledBy: atr.sampledBy, sampledAt: atr.sampledAt ?? null,
   testedAt: atr.testedAt ?? null, testedBy: atr.testedBy, acknowledgedAt: atr.acknowledgedAt ?? null, assignedAt: atr.assignedAt ?? null,

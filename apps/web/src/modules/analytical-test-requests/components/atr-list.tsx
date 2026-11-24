@@ -60,6 +60,8 @@ export function AtrListPage() {
       <div className="text-muted-foreground">{row.original.assignedAt ? `Assigned ${formatDate(row.original.assignedAt) ?? ""}` : row.original.acknowledgedAt ? `Received ${formatDateTime(row.original.acknowledgedAt) ?? ""}` : ""}</div></div> }),
     column.accessor((row) => row.status ?? -1, { id: "status", header: "Status", size: 130, cell: ({ row }) => <div className="space-y-1"><Badge variant="outline">{atrStatusLabels[row.original.status ?? -1] ?? "Unknown"}</Badge>
       {row.original.isRetest ? <Badge variant="secondary">Retest</Badge> : null}</div> }),
+    column.accessor(row => row.coaStatus ?? "Not reported", { id: "coa", header: "COA status", size: 170,
+      cell: ({ row }) => <Badge variant={row.original.coaStatus === "Approved" ? "default" : row.original.coaStatus === "Revision required" ? "destructive" : "outline"}>{row.original.coaStatus ?? "Not reported"}</Badge> }),
     column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => { const atr = row.original; const actions = atrActions(atr.status, atr.isRetest, atr.analysts.length > 0);
       return <TableMenu label={`Actions for ${atr.product} ${atr.batchNumber ?? ""}`} items={[
         actions.has("sample") && { id: "sample", label: "Take sample", icon: Pipette, require: atrPermissions.sample, onSelect: () => setOpen({ kind: "sample", atr }) },

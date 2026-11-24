@@ -1,3 +1,4 @@
+import { testVariableLabel } from "@/shared/formula/display/variable-labels";
 import ExpressionRenderer from "@/shared/formula/ui/math/expression-view";
 
 interface VariablesPanelProps {
@@ -35,7 +36,7 @@ export const VariablesPanel = ({
             className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2"
           >
             <span className="text-sm text-foreground">
-              {labels[key] || key} ({key}):
+              {testVariableLabel(key, labels[key])} ({key}):
             </span>
             <input
               id={`value-${key}`}
@@ -44,7 +45,7 @@ export const VariablesPanel = ({
               value={varInputs[key] ?? ""}
               onChange={(event) => onVarChange(key, event.target.value)}
               className="min-w-0 flex-1 rounded-none border-0 border-b border-border bg-background px-2.5 py-1.5 text-sm text-foreground transition-all focus:rounded focus:border focus:border-border focus:outline-none focus:ring-1 focus:ring-info/40"
-              aria-label={`Value for ${labels[key] || key} (${key})`}
+              aria-label={`Value for ${testVariableLabel(key, labels[key])} (${key})`}
             />
           </label>
         ))}

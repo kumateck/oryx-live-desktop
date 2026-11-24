@@ -4868,6 +4868,7 @@ export type DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto = {
   isRetest?: boolean;
   testedAt?: string | null;
   testedBy?: DomainEntitiesUsersUserDto;
+  coaStatus?: string | null;
 };
 export type DomainEntitiesProductsProductionProductionStepAnalysisDto = {
   request?: DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto;

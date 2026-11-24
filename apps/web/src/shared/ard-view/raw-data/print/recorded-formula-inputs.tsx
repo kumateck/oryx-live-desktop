@@ -1,3 +1,4 @@
+import { testVariableLabel } from "@/shared/formula/display/variable-labels";
 import { UniformityPreview } from "@/shared/ard-view/response/print/preview/uniformity";
 import FormulaPrintPreview from "./formula-print-preview";
 import ExpressionRenderer from "@/shared/formula/ui/math/expression-view";
@@ -58,7 +59,7 @@ export function RecordedFormulaInputs({ value, option }: { value: string; option
       <span className="font-medium">{path === "sampleInputs" ? "Sample" : "Reading"} {index + 1}: </span>{renderValue(child, `${path}.${index}`)}
     </li>)}</ol>;
     if (object(entry)) return <dl className="space-y-1">{Object.entries(entry).filter(([key]) => !derived.has(key) && !["standardinputs", "sampleinputs", "tabledata", "manualvars"].includes(key)).map(([key, child]) => <div key={key} className="min-w-0 break-words">
-      <dt className="font-medium">{labels.get(key) ?? humanize(key)}</dt><dd className="pl-3">{renderValue(child, path ? `${path}.${key}` : key)}</dd>
+      <dt className="font-medium">{testVariableLabel(key, labels.get(key)) === key ? humanize(key) : testVariableLabel(key, labels.get(key))}</dt><dd className="pl-3">{renderValue(child, path ? `${path}.${key}` : key)}</dd>
     </div>)}</dl>;
     return <span className="whitespace-pre-wrap break-words">{entry === null || entry === "" ? "—" : String(entry)}</span>;
   };

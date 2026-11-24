@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
@@ -9,6 +9,7 @@ import { SessionRequestError } from "@/shared/auth/session-api";
 import { useSession, type SignedOutReason } from "@/shared/auth/session-provider";
 import { forgotPasswordPath } from "../lib/auth-paths";
 import { returnPath } from "../lib/return-path";
+import { rememberedEmail, rememberEmail } from "../lib/remembered-email";
 import { AuthShell } from "./auth-shell";
 import { loginSchema, type LoginValues } from "../schemas/login-schema";
 import { InputTypes } from "@/shared/forms/input-types";
@@ -16,6 +17,7 @@ import { InputTypes } from "@/shared/forms/input-types";
 const fields = [
   { type: InputTypes.EMAIL, name: "email", label: "Email address", autoComplete: "username", required: true },
   { type: InputTypes.PASSWORD, name: "password", label: "Password", autoComplete: "current-password", required: true },
+  { type: InputTypes.CHECKBOX, name: "rememberEmail", label: "Remember my email", description: "Use this email the next time you sign in on this device." },
 ] as const satisfies readonly WizardField<LoginValues>[];
 
 function signedOutNotice(reason: SignedOutReason | null): string | null {
@@ -31,7 +33,10 @@ export function LoginScreen() {
   const [params] = useSearchParams();
   const [message, setMessage] = useState("");
   const destination = returnPath(params.get("next"));
-  const form = useForm<LoginValues>({ resolver: zodResolver(loginSchema), defaultValues: { email: "", password: "" } });
+  const [savedEmail] = useState(rememberedEmail);
+  const form = useForm<LoginValues>({ resolver: zodResolver(loginSchema), defaultValues: { email: savedEmail, password: "", rememberEmail: Boolean(savedEmail) } });
+  const remember = form.watch("rememberEmail");
+  useEffect(() => { if (!remember) rememberEmail("", false); }, [remember]);
 
   if (state.status === "authenticated") return <Navigate to={destination} replace />;
   if (state.status === "loading") return <div className="boot-state" role="status"><Spinner />Checking your session…</div>;
@@ -40,11 +45,12 @@ export function LoginScreen() {
     <Button type="button" variant="outline" onClick={() => void retry()}>Retry</Button>
   </div>;
 
-  const submit = form.handleSubmit(async ({ email, password }) => {
+  const submit = form.handleSubmit(async ({ email, password, rememberEmail: enabled }) => {
     setMessage("");
     try {
       await login(email.trim(), password);
-      form.reset({ email: "", password: "" });
+      rememberEmail(email, enabled);
+      form.reset({ email: enabled ? email.trim() : "", password: "", rememberEmail: enabled });
       void navigate(destination, { replace: true });
     } catch (error) {
       // Never keep a rejected password in the form; the user retypes it.

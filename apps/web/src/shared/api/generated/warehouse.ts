@@ -1387,6 +1387,46 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getRawStockIssueQueue: build.query<
+      GetRawStockIssueQueueApiResponse,
+      GetRawStockIssueQueueApiArg
+    >({
+      providesTags: [{ type: "stock-issue/raw", id: "LIST" }, { type: "stock-issue", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/stock-issue/raw`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          searchQuery: queryArg.searchQuery,
+          issued: queryArg.issued,
+          productId: queryArg.productId,
+        },
+      }),
+    }),
+    getPackagingStockIssueQueue: build.query<
+      GetPackagingStockIssueQueueApiResponse,
+      GetPackagingStockIssueQueueApiArg
+    >({
+      providesTags: [{ type: "stock-issue/packaging", id: "LIST" }, { type: "stock-issue", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/stock-issue/packaging`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          page: queryArg.page,
+          pageSize: queryArg.pageSize,
+          searchQuery: queryArg.searchQuery,
+          issued: queryArg.issued,
+          productId: queryArg.productId,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2337,6 +2377,32 @@ export type RepairPackagingUnstartLeftoversApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesRequisitionsRepairUnstartLeftoversRequest: DomainEntitiesRequisitionsRepairUnstartLeftoversRequest;
+};
+export type GetRawStockIssueQueueApiResponse =
+  /** status 200 OK */ ApiControllersStockIssueQueueDtoRead;
+export type GetRawStockIssueQueueApiArg = {
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  issued?: boolean;
+  productId?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetPackagingStockIssueQueueApiResponse =
+  /** status 200 OK */ ApiControllersStockIssueQueueDtoRead;
+export type GetPackagingStockIssueQueueApiArg = {
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  issued?: boolean;
+  productId?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -4545,6 +4611,14 @@ export type DomainEntitiesRequisitionsRepairUnstartLeftoversRequest = {
   reason: string;
   requisitionIds: string[];
 };
+export type ApiControllersStockIssueQueueDto = {
+  requisitions?: AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesRequisitionsRequisitionDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E;
+  products?: SharedCollectionItemDto[] | null;
+};
+export type ApiControllersStockIssueQueueDtoRead = {
+  requisitions?: AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesRequisitionsRequisitionDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798ERead;
+  products?: SharedCollectionItemDto[] | null;
+};
 export const {
   usePostApiV1DamagedGoodsMutation,
   useGetApiV1DamagedGoodsQuery,
@@ -4690,4 +4764,8 @@ export const {
   usePreviewPackagingUnstartLeftoversQuery,
   useLazyPreviewPackagingUnstartLeftoversQuery,
   useRepairPackagingUnstartLeftoversMutation,
+  useGetRawStockIssueQueueQuery,
+  useLazyGetRawStockIssueQueueQuery,
+  useGetPackagingStockIssueQueueQuery,
+  useLazyGetPackagingStockIssueQueueQuery,
 } = injectedRtkApi;
