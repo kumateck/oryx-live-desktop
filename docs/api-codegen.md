@@ -1,3 +1,7 @@
+Combined frontend contract: `a9df0b96e20cea76d95d5e1f35b1bf01db171111c879c35ea17dff1ecc141f86` adds the two density DELETE endpoints to the reviewed queue/pending-COA contract. Removing only those endpoints restores `ac2f9bb8…4d49`.
+
+Density clearing adds only two kind-specific material density DELETE endpoints. Import with `bun scripts/import-clear-density.ts EXPORT.json`. Digest `c0e8c054c821a04e2e8fba72260a09bbaac721eebe81999654944c72c2655f67` preserves predecessor `0ea14c2c…4382`. Deploy the backend audit migration first; see [density clearing](material-density-clearing.md).
+
 Combined queue/pending-COA review: source digest `ac2f9bb848dbf7bfac8288eed035c43d3c15f1a7a35d699818b33169e48d4d49` preserves both independently reviewed contracts. Removing queue additions restores `0ea14c2c…4382`; removing pending-COA additions restores `c0869629…65b3`.
 
 Warehouse queue visibility (2026-11-24) adds raw/packaging stock-issue queue GETs, the owned queue DTO and optional COA subject/status fields. Import with `bun scripts/import-warehouse-visibility.ts EXPORT.json`. Reviewed digest `c086962947f8bd43225d8a487f07ffd7c0afc150b4b65964e408fc39410465b3`; removing these additions reproduces `6fd6d54f…0150`. See [queue visibility](warehouse-queue-visibility.md).

@@ -65,7 +65,13 @@ function stripPendingCoaReview(document: ObjectValue) {
   if (Array.isArray(operation.parameters)) operation.parameters = operation.parameters.filter(parameter => object(parameter).name !== "If-Match");
 }
 
+function stripClearMaterialDensity(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  for (const kind of ["raw", "packaging"]) delete paths[`/api/v1/material/${kind}/{materialId}/density`];
+}
+
 function stripWarehouseVisibility(document: ObjectValue) {
+  stripClearMaterialDensity(document);
   const paths = object(document.paths ?? null);
   delete paths["/api/v1/stock-issue/raw"];
   delete paths["/api/v1/stock-issue/packaging"];
@@ -1422,9 +1428,23 @@ test("warehouse queue visibility adds only scoped queue reads and optional certi
 
 test("combined queue and pending-COA contracts preserve both independently reviewed predecessors", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripClearMaterialDensity(current);
   const queueOnly = object(parse(JSON.stringify(current)));
   stripPendingCoaReview(queueOnly);
   assert.equal(contractDigest(queueOnly), "c086962947f8bd43225d8a487f07ffd7c0afc150b4b65964e408fc39410465b3");
   stripWarehouseVisibility(current);
   assert.equal(contractDigest(current), "0ea14c2cec5f976c94d1d8c924404e9c4df677ab1896aa09bd26a4f705674382");
+});
+
+test("combined density and queue contracts preserve the reviewed queue contract", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  assert.equal(contractDigest(current), "a9df0b96e20cea76d95d5e1f35b1bf01db171111c879c35ea17dff1ecc141f86");
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+  for (const kind of ["raw", "packaging"]) {
+    const path = object(object(current.paths ?? null)[`/api/v1/material/${kind}/{materialId}/density`] ?? null);
+    assert.deepEqual(Object.keys(path), ["delete"]);
+    assert.ok(object(object(path.delete ?? null).responses ?? null)["204"]);
+  }
+  stripClearMaterialDensity(current);
+  assert.equal(contractDigest(current), "ac2f9bb848dbf7bfac8288eed035c43d3c15f1a7a35d699818b33169e48d4d49");
 });

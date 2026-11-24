@@ -138,6 +138,8 @@ export const generatedTagTypes = [
   "material/holding",
   "material/material-spec",
   "material/not-linked-to-ard",
+  "material/packaging",
+  "material/raw",
   "material/reject",
   "material/shelf",
   "onboarding",

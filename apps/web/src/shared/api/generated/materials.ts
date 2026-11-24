@@ -1313,6 +1313,34 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    clearRawMaterialDensity: build.mutation<
+      ClearRawMaterialDensityApiResponse,
+      ClearRawMaterialDensityApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material/raw", id: "LIST" }, { type: "material", id: "LIST" }, { type: "material/raw", id: queryArg.materialId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/material/raw/${queryArg.materialId}/density`,
+        method: "DELETE",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    clearPackagingMaterialDensity: build.mutation<
+      ClearPackagingMaterialDensityApiResponse,
+      ClearPackagingMaterialDensityApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material/packaging", id: "LIST" }, { type: "material", id: "LIST" }, { type: "material/packaging", id: queryArg.materialId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/material/packaging/${queryArg.materialId}/density`,
+        method: "DELETE",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2235,6 +2263,22 @@ export type ReleasePackagingUnstartReservationsApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesProductsProductionReleaseUnstartReservationsRequest: DomainEntitiesProductsProductionReleaseUnstartReservationsRequest;
+};
+export type ClearRawMaterialDensityApiResponse = void;
+export type ClearRawMaterialDensityApiArg = {
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ClearPackagingMaterialDensityApiResponse = void;
+export type ClearPackagingMaterialDensityApiArg = {
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -3892,4 +3936,6 @@ export const {
   usePreviewPackagingUnstartReservationsQuery,
   useLazyPreviewPackagingUnstartReservationsQuery,
   useReleasePackagingUnstartReservationsMutation,
+  useClearRawMaterialDensityMutation,
+  useClearPackagingMaterialDensityMutation,
 } = injectedRtkApi;
