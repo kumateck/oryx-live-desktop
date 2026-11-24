@@ -1,3 +1,7 @@
+## Remember sign-in email (2026-11-24)
+
+Add an opt-in local email preference through the shared FormWizard checkbox. Store only the email after successful sign-in, prefill it on the next sign-in with an empty password, and remove the saved email when the option is unchecked. Keep session token storage and backend authentication unchanged. Preference storage failures do not block sign-in.
+
 ## Pending COAs use current reporting (2026-11-24)
 
 Use the latest verified assay reporting configuration for every unapproved product COA, including already submitted certificates. Freeze results only after final approval. Reporting edits start a fresh pending review round while preserving historical decisions; approval checks the reviewed response token against current settings/results and captures the current values. Refresh mounted COA/evidence readers after configuration changes and prefer current response evidence over older batch-query data.
