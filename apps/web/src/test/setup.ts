@@ -1,3 +1,5 @@
+import { setTimeout as settleTimers } from "node:timers/promises";
+import { afterAll } from "vitest";
 import { configure } from "@testing-library/react";
 
 // Lazy field chunks can take longer when several suites run together; preserve
@@ -17,3 +19,10 @@ if (typeof globalThis.ResizeObserver === "undefined") {
 if (typeof Element !== "undefined" && typeof Element.prototype.scrollIntoView !== "function") {
   Element.prototype.scrollIntoView = function scrollIntoView(): void {};
 }
+
+// RTK's animation-frame batcher also schedules a 100 ms fallback. Let that
+// callback settle while jsdom still exists; tearing down its globals first
+// leaves a late callback trying to call the removed cancelAnimationFrame.
+afterAll(async () => {
+  if (typeof window !== "undefined") await settleTimers(120);
+});
