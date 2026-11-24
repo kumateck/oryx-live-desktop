@@ -41,11 +41,11 @@ export default function AssayReportingPanel({ specificationId, onClose }: { spec
     <DialogHeader><DialogTitle>COA assay reporting</DialogTitle><DialogDescription>{configuration
       ? `${configuration.productName} · ${configuration.specificationNumber} · ${testStageLabel(configuration.testStage)}`
       : "Product-specific reporting settings"}</DialogDescription></DialogHeader>
-    <DialogBody className="space-y-3"><p className="text-sm text-muted-foreground">Each assay output is configured independently for this product. Other products can reuse the same template with different reporting settings. Outputs on the original basis keep their existing reporting.</p>
+    <DialogBody className="space-y-3"><p className="text-sm text-muted-foreground">Select the assay output used on this product’s test worksheet. Each output has its own reporting settings for this product.</p>
       <ClientDataTable label="Assay reporting outputs" columns={columns} rows={rows} getRowId={row => row.key}
         loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()}
         error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The reporting settings could not be read." : null}
-        emptyTitle="No assay outputs" emptyDescription="Add a formula to the product's selected template before configuring reporting." />
+        emptyTitle="No assay outputs" emptyDescription="The product’s test worksheet needs a formula output before reporting can be configured." />
     </DialogBody><DialogFooter><Button type="button" variant="outline" onClick={onClose}>Close</Button></DialogFooter>
   </DialogContent></Dialog>;
 }

@@ -38,9 +38,9 @@ export function VendorListsPage() {
     column.accessor((r) => r.approvedAt ?? "", { id: "approved", header: "Approved", size: 120, cell: ({ row }) => formatDate(row.original.approvedAt) ?? "–" }),
     column.accessor("status", { header: "Status", size: 190, cell: ({ row }) => <Badge variant={stageVariant(row.original)}>{stageLabel(row.original.status, row.original.reviewStatus)}</Badge> }),
     ...(has(avlActionPermissions.delete) ? [column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />,
-      cell: ({ row }) => row.original.status === ListStatus.Superseded ? <TableMenu label={`Actions for revision ${row.original.revisionNumber}`} items={[
+      cell: ({ row }) => <TableMenu label={`Actions for revision ${row.original.revisionNumber}`} items={[
         { id: "delete", label: "Delete revision", icon: Trash2, destructive: true, require: avlActionPermissions.delete, onSelect: () => setDeleting(row.original) },
-      ]} /> : null })] : []),
+      ]} /> })] : []),
   ]), [has]);
   return <section className="page-fill">
     <header className="flex flex-wrap items-start justify-between gap-3"><div><p className="eyebrow">QUALITY ASSURANCE</p>

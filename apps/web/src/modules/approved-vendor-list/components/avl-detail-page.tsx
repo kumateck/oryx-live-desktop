@@ -42,7 +42,7 @@ function useActions(list: ListDetail | null, onPrint: () => void, onDelete: () =
   const items: ActionItem[] = [{ id: "print", label: "Print", icon: Printer, require: avlKeys.print, onSelect: onPrint }];
   if (inReview) items.push({ id: "correct", label: "Correct list", icon: Pencil, require: avlKeys.edit, onSelect: () => void navigate(`${avlRoot}/${list.id}/edit`) });
   if (list.status === ListStatus.Approved) items.push({ id: "revise", label: "New revision", icon: GitBranchPlus, require: avlKeys.revise, onSelect: () => void navigate(`${avlRoot}/revise`) });
-  if (list.status === ListStatus.Superseded) items.push({ id: "delete", label: "Delete revision", icon: Trash2, destructive: true, separated: true,
+  items.push({ id: "delete", label: "Delete revision", icon: Trash2, destructive: true, separated: true,
     require: avlActionPermissions.delete, onSelect: onDelete });
   return items;
 }
