@@ -110,6 +110,7 @@ const FormulaPrintPreview = ({
             parsed,
             "sample",
             input,
+            sampleIndex + 1,
           ).label,
           input.key,
         ),
