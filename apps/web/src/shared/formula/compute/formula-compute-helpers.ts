@@ -6,8 +6,7 @@ import type {
   ManualVarsMap,
 } from "@/shared/formula/ui/types/expression/universal/types";
 import {
-  CONCENTRATION_INPUT_KEY,
-  concentrationAliasesFor,
+  inputAliasKeysFor,
   configuredUniversalInputVariableKeys,
   isWeightInputKey,
   sampleInputTemplateVariableKey,
@@ -151,9 +150,8 @@ export const buildInputVariables = (
   sampleInputs: LabeledInputField[][],
 ) => {
   const varsMap: Record<string, string | number> = {};
-  const aliases = concentrationAliasesFor(
-    parsed,
-  );
+  const standardAliases = inputAliasKeysFor(parsed, "standard");
+  const sampleAliases = inputAliasKeysFor(parsed, "sample");
   const standardInputsEnabled =
     parsed?.standardInput ?? Boolean(parsed?.standardInputs?.length);
   const sampleInputsEnabled =
@@ -167,8 +165,8 @@ export const buildInputVariables = (
       const value = input.value === "" ? "" : Number(input.value);
       varsMap[`standardInput.${input.key}`] = value;
       varsMap[standardInputVariableKey(input.key)] = value;
-      if (aliases?.standardWeightKey && isWeightInputKey(input.key))
-        varsMap[standardInputVariableKey(CONCENTRATION_INPUT_KEY)] = value;
+      if (isWeightInputKey(input.key))
+        for (const alias of standardAliases) varsMap[standardInputVariableKey(alias)] = value;
     });
   }
   if (sampleInputsEnabled && parsed?.sampleInputs) {
@@ -177,17 +175,14 @@ export const buildInputVariables = (
         const value = input.value === "" ? "" : Number(input.value);
         varsMap[`sampleInput${i + 1}.${input.key}`] = value;
         varsMap[sampleInputVariableKey(i + 1, input.key)] = value;
-        const concentration =
-          aliases?.sampleWeightKey && isWeightInputKey(input.key);
-        if (concentration)
-          varsMap[sampleInputVariableKey(i + 1, CONCENTRATION_INPUT_KEY)] =
-            value;
+        const aliases = isWeightInputKey(input.key) ? sampleAliases : [];
+        for (const alias of aliases)
+          varsMap[sampleInputVariableKey(i + 1, alias)] = value;
         if (i === 0) {
           varsMap[`sampleInput.${input.key}`] = value;
           varsMap[sampleInputTemplateVariableKey(input.key)] = value;
-          if (concentration)
-            varsMap[sampleInputTemplateVariableKey(CONCENTRATION_INPUT_KEY)] =
-              value;
+          for (const alias of aliases)
+            varsMap[sampleInputTemplateVariableKey(alias)] = value;
         }
       });
     });

@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildFormulaRevisionDraft } from "../definition-adapter";
-import { concentrationUnitForEditing, weightInputPresentation } from "../universal-variable-keys";
+import { concentrationUnitForEditing, measurementAliasesForEditing, weightInputPresentation } from "../universal-variable-keys";
 import { compileFormulaDefinitionV1 } from "../../core/definition";
 import { evaluateCompiledFormulaV1 } from "../../core/evaluate";
 import { FORMULA_V1_EVALUATION_LIMITS, FORMULA_V1_RUNTIME_LIMITS } from "../../core/runtime-limits";
@@ -26,7 +26,7 @@ const config = (expression: string): ExpressionExtract => ({
 });
 afterEach(cleanup);
 
-describe("the two concentration aliases", () => {
+describe("aliases for the shared standard and sample inputs", () => {
   it.each([
     [":standardConc/:sampleConc", ":standardWeight/:sampleWeight", [4, 2]],
     ["(:standardConc+:standardWeight)/(:sampleConc+:sampleWeight)", "(:standardWeight+:standardWeight)/(:sampleWeight+:sampleWeight)", [4, 2]],
@@ -49,6 +49,71 @@ describe("the two concentration aliases", () => {
     expect(evaluated.results.map(({ roundedResult }) => Number(roundedResult))).toEqual(expected);
     expect(isManualVarKey("standardConc", {}, new Set(), parsed)).toBe(false);
     expect(isManualVarKey("sample2Conc", {}, new Set(), parsed)).toBe(false);
+  });
+
+  it("evaluates all five spellings with a single input per standard and sample", async () => {
+    const suffixes = ["Weight", "Conc", "Absorbance", "PeakAreas", "TitreValue"];
+    const sum = (prefix: string) => suffixes.map(suffix => `:${prefix}${suffix}`).join("+");
+    const expression = `(${sum("standard")})/(${sum("sample")})`;
+    const parsed = { ...config(expression), measurementAliases: measurementAliasesForEditing({}) };
+    const equivalent = config("(:standardWeight+:standardWeight+:standardWeight+:standardWeight+:standardWeight)/(:sampleWeight+:sampleWeight+:sampleWeight+:sampleWeight+:sampleWeight)");
+    const draft = await buildFormulaRevisionDraft(JSON.stringify(parsed), "Universal");
+    const weight = await buildFormulaRevisionDraft(JSON.stringify(equivalent), "Universal");
+    expect(draft.definitionHash).toBe(weight.definitionHash);
+    expect(draft.definition.variables.map(({ key }) => key)).toEqual(["sample1Weight", "sample2Weight", "standardWeight"]);
+    const inputs = buildInputVariables(parsed, [input("8")], [[input("2")], [input("4")]]);
+    for (const suffix of suffixes) {
+      expect(inputs[`standard${suffix}`]).toBe(8);
+      expect(inputs[`sample1${suffix}`]).toBe(2);
+      expect(inputs[`sample2${suffix}`]).toBe(4);
+    }
+    const preview = computeFormulaResults({ parsed, inputVariables: inputs, headers: parsed.headers ?? [], data: [], tableVars: {}, manualVars: {} });
+    expect(preview.map(({ result }) => result)).toEqual([4, 2]);
+    render(<WorksheetInputs parsed={parsed} headers={parsed.headers ?? []} standardInputs={[input()]} sampleInputs={[[input()], [input()]]}
+      manualVars={{}} manualVarKeys={[]} onManualVarChange={vi.fn()} onStandardInputChange={vi.fn()} onSampleInputChange={vi.fn()} />);
+    expect(screen.getAllByRole("textbox")).toHaveLength(3);
+    expect(screen.getByRole("textbox", { name: /Sample 2 Weight \/ Concentration \/ Absorbance \/ Peak Areas \/ Titre Value/ })).toBeTruthy();
+  });
+
+  it("keeps an older measurement variable independent when the editor opens it", async () => {
+    const parsed = { ...config(":standardWeight/:sampleAbsorbance"), manualVarLabels: { sampleAbsorbance: "Blank-adjusted absorbance" } };
+    expect(measurementAliasesForEditing(parsed)).toEqual(["peakAreas", "titreValue"]);
+    const draft = await buildFormulaRevisionDraft(JSON.stringify(parsed), "Universal");
+    expect(draft.definition.variables.map(({ key }) => key)).toContain("sampleAbsorbance");
+  });
+
+  it("resolves measurement aliases inside per-sample named expressions", async () => {
+    const parsed = { ...config(":ratio"), measurementAliases: measurementAliasesForEditing({}),
+      namedExpressionsEnabled: true, namedExpressions: [
+        { key: "ratio", label: "Ratio", expression: ":standardAbsorbance/:samplePeakAreas", scope: 1 },
+      ] };
+    const draft = await buildFormulaRevisionDraft(JSON.stringify(parsed), "Universal");
+    expect(draft.definition.derivedExpressions?.map(({ expression }) => expression)).toEqual([":standardWeight/:sample1Weight", ":standardWeight/:sample2Weight"]);
+    expect(draft.definition.variables.map(({ label }) => label)).toEqual(["Sample 1 Peak Areas", "Sample 2 Peak Areas", "Standard Absorbance"]);
+  });
+
+  it("offers all five aliases and persists an alias inserted from the real editor menu", async () => {
+    const saved = vi.fn<(value: string) => void>();
+    const user = userEvent.setup();
+    render(<TheAduseiFormula type={FormulaType.Universal} value={JSON.stringify(config(":standardWeight/:sampleWeight"))} onChange={saved} />);
+    await user.click(screen.getByRole("button", { name: "Standard variable (5 aliases)" }));
+    expect(screen.getAllByRole("menuitem")).toHaveLength(5);
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Sample variable (5 aliases)" }));
+    expect(screen.getAllByRole("menuitem")).toHaveLength(5);
+    const expression = screen.getByPlaceholderText(/Use :variables/);
+    if (!(expression instanceof HTMLTextAreaElement)) throw new Error("Expected the expression editor");
+    expression.setSelectionRange(":standardWeight/".length, expression.value.length);
+    await user.click(screen.getByRole("menuitem", { name: /:samplePeakAreas/ }));
+    expect(expression.value).toBe(":standardWeight/:samplePeakAreas");
+    await waitFor(() => {
+      const raw = saved.mock.lastCall?.[0];
+      if (!raw) throw new Error("The builder did not emit its saved configuration");
+      const payload: ExpressionExtract = JSON.parse(raw);
+      expect(payload.expression).toContain(":samplePeakAreas");
+      expect(payload.measurementAliases).toEqual(["peakAreas"]);
+      expect(payload.manualVarLabels).not.toHaveProperty("samplePeakAreas");
+    });
   });
 
   it("resolves aliases inside per-sample named expressions", async () => {
