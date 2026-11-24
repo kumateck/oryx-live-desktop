@@ -1,3 +1,4 @@
+import { testVariableLabel } from "@/shared/formula/display/variable-labels";
 import { useCallback, useEffect, useMemo } from "react";
 import { sanitizeNumber, sanitizeString } from "@/shared/ard-view/legacy";
 import {
@@ -37,7 +38,7 @@ interface FormulaPrintPreviewProps {
 
 const resolveFormulaLabel = (label?: string, key?: string) => {
   const safeLabel = sanitizeString(label);
-  return safeLabel || sanitizeString(key);
+  return testVariableLabel(sanitizeString(key), safeLabel);
 };
 
 const resolveFormulaValue = (value: unknown) => {
@@ -175,10 +176,9 @@ const FormulaPrintPreview = ({
   const mergedManualEntries = useMemo(() => {
     const entries = Object.entries(manualVars).map(([key, value]) => ({
       key,
-      label: resolveFormulaLabel(
-        parsed?.manualVarLabels?.[key] || value.label,
-        (extractedVars as VarMapWithLabels)?.[key]?.label || key,
-      ),
+      label: testVariableLabel(key,
+        parsed?.manualVarLabels?.[key] || value.label || (extractedVars as VarMapWithLabels)?.[key]?.label,
+        parsed),
       value: resolveFormulaValue(value.raw),
     }));
 
@@ -192,7 +192,7 @@ const FormulaPrintPreview = ({
       const extracted = (extractedVars as VarMapWithLabels)?.[key];
       entries.push({
         key,
-        label: sanitizeString(extracted?.label) || key,
+        label: testVariableLabel(key, parsed?.manualVarLabels?.[key] || sanitizeString(extracted?.label), parsed),
         value: "",
       });
     });

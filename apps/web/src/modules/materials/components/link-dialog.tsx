@@ -15,6 +15,8 @@ import { usePostApiV1MaterialDepartmentMutation } from "../api/material-api";
 import { audit, enteredLevel, levelUnit, materialPermissions, storedLevel } from "../lib/materials";
 import { linkFormSchema, type LinkFormValues, type MaterialLink } from "../schemas/material-schema";
 
+import { ClearMaterialDensity } from "./clear-material-density";
+
 const { usePostApiV1CollectionMutation } = settingsApi;
 export interface LinkTarget { id: string; name: string; code: string; kind: MaterialKind }
 
@@ -29,11 +31,12 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
   useEffect(() => { void loadUnits({ ...audit, body: ["UnitOfMeasure"] }); }, [loadUnits]);
   const [save, saving] = usePostApiV1MaterialDepartmentMutation();
   const [message, setMessage] = useState("");
+  const [densityCleared, setDensityCleared] = useState(false);
   const options = useMemo(() => (units.data?.UnitOfMeasure ?? []).flatMap((item) => item.id && (item.symbol || item.name) ? [{ value: item.id, label: item.symbol?.trim() || item.name?.trim() || "Unit" }] : []), [units.data]);
   const densityOptions = options.filter(({ label }) => label.toLowerCase() === "g/ml");
   const densityUnit = densityOptions.find(({ value }) => value === link?.densityUnitId)
     ?? (densityOptions.length === 1 ? densityOptions[0] : undefined);
-  const savedDensity = link?.densityUnitSymbol?.trim().toLowerCase() === "g/ml" && link.densityUnitId
+  const savedDensity = !densityCleared && link?.densityUnitSymbol?.trim().toLowerCase() === "g/ml" && link.densityUnitId
     ? link.density : undefined;
   const start = link ? { minimum: enteredLevel(link.minimum, link.unit), reorder: enteredLevel(link.reorder, link.unit), maximum: enteredLevel(link.maximum, link.unit) } : null;
   const form = useForm<LinkFormValues>({ resolver: zodResolver(linkFormSchema), defaultValues: { unit: link?.unitId && link.unit ? { value: link.unitId, label: link.unit } : null,
@@ -81,13 +84,17 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
       <form noValidate onSubmit={(event) => { event.stopPropagation(); void submit(event); }} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         <DialogBody className="space-y-3">
           {units.error ? <p role="alert" className="text-sm text-destructive">{apiErrorMessage(units.error)}</p> : null}
-          {link && link.density > 0 && savedDensity === undefined ? <p className="text-sm text-muted-foreground">
+          {!densityCleared && link && link.density > 0 && savedDensity === undefined ? <p className="text-sm text-muted-foreground">
             Saved density: {link.density} {link.densityUnitSymbol ?? "(unit not recorded)"}.
           </p> : null}
           {units.isSuccess && !densityUnit ? <p className="text-sm text-muted-foreground">
             To record a density for BOM conversion, configure one active unit with the symbol g/mL.
           </p> : null}
           <FormWizard form={form} fields={fields} className="md:grid-cols-3" />
+          {!densityCleared && link && link.density > 0 ? <ClearMaterialDensity material={material} onCleared={() => {
+            setDensityCleared(true);
+            form.setValue("density", Number.NaN);
+          }} /> : null}
           <p className="text-xs text-muted-foreground">Stock at or below the re-order level should be bought again; it should not fall below the minimum or rise above the maximum.</p>
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         </DialogBody>

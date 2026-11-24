@@ -8,13 +8,13 @@ const entity = z.object({ id: z.string().nullish(), contentRevision: z.number().
   // Set when the request waits for someone who delegated their approvals to the user.
   onBehalfOf: z.object({ name: text }).nullish(),
   // The production batch a stock requisition was raised for (optional: older servers do not send it).
-  batchNumber: text.optional(), productName: text.optional() });
+  batchNumber: text.optional(), productName: text.optional(), productCode: text.optional(), productStage: z.number().int().nullish(), materialName: text.optional(), materialCode: text.optional() });
 
 function read(entry: z.infer<typeof entity>) {
   if (!entry.id || !entry.modelType) return null;
   return { id: entry.id, type: entry.modelType, contentRevision: entry.contentRevision ?? null, supplierId: entry.supplierId ?? null, code: entry.code, createdAt: entry.createdAt ?? null, department: entry.department?.name ?? null, requestedBy: entry.requestedBy,
     onBehalfOf: entry.onBehalfOf ? entry.onBehalfOf.name ?? "someone who delegated to you" : null,
-    batchNumber: entry.batchNumber ?? null, productName: entry.productName ?? null,
+    batchNumber: entry.batchNumber ?? null, productName: entry.productName ?? null, productCode: entry.productCode ?? null, productStage: entry.productStage ?? null, materialName: entry.materialName ?? null, materialCode: entry.materialCode ?? null,
     logs: (entry.approvalLogs ?? []).map((log, index) => ({ key: `log-${index}`, by: log.user?.name ?? null, at: log.approvedAt ?? null, status: log.status ?? 0, comments: log.comments })) };
 }
 /** A document waiting for the signed-in user's decision, with what earlier approvers said. */

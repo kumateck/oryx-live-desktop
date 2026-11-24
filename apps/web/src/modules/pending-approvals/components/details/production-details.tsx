@@ -150,7 +150,8 @@ const adjustmentColumns = adjustmentColumn.columns([
   adjustmentColumn.accessor((row) => row.physicalCount ?? 0, { id: "counted", header: "Counted", size: 140, cell: ({ row }) => quantity(row.original.physicalCount, row.original.uom?.symbol) }),
   adjustmentColumn.accessor((row) => row.variance ?? 0, { id: "variance", header: "Difference", size: 140, cell: ({ row }) => { const variance = row.original.variance;
     return <span className={variance !== null && variance < 0 ? "font-medium text-destructive" : "font-medium"}>{variance !== null && variance > 0 ? "+" : ""}{quantity(variance, row.original.uom?.symbol)}</span>; } }),
-  adjustmentColumn.accessor((row) => row.reasonCode ?? "", { id: "reason", header: "Reason", cell: ({ row }) => <div className="min-w-0"><div>{spaced(row.original.reasonCode)}</div>{row.original.notes ? <div className="break-words text-xs text-muted-foreground">{row.original.notes}</div> : null}</div> }),
+  adjustmentColumn.accessor((row) => row.reasonCode ?? "", { id: "reason", header: "Reason", cell: ({ row }) => spaced(row.original.reasonCode) }),
+  adjustmentColumn.accessor((row) => row.notes ?? "", { id: "notes", header: "Note", size: 300, cell: ({ row }) => <div className="whitespace-pre-wrap break-words text-sm">{row.original.notes || "–"}</div> }),
 ]);
 /** A stock count that disagrees with the system: approving it changes the recorded stock to what was counted. */
 export function StockAdjustmentDetails({ id }: { id: string }) {
