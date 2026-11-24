@@ -1,4 +1,5 @@
 import type { ModuleManifest } from "../contract";
+export { assayReportingKeys as assayReportingPermissions } from "./lib/assay-reporting-keys";
 
 const all = (...permissions: string[]) => ({ kind: "all" as const, permissions });
 // Product specifications by test stage (intermediate, bulk, finished): the template a product is tested on and each test's reference.

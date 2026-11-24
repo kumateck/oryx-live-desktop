@@ -1,3 +1,4 @@
+import { reportedResultSchema } from "@/shared/ard-view/raw-data/coa-reporting";
 import { z } from "zod";
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
@@ -5,9 +6,9 @@ export const ardPersonSchema = z.object({ id: z.string().nullish(), firstName: t
 // `reference` is where the test's specification comes from (for example BP 2024 or In-house), printed on the COA.
 const question = z.object({ label: text, type: z.number().nullish(), reference: text, options: z.array(z.object({ name: text })).nullish() });
 export const ardFieldSchema = z.object({ id: z.string().nullish(), rank: z.number().nullish(), description: z.string().nullish(), question: question.nullish() });
-export const ardFormSchema = z.object({ sections: z.array(z.object({ id: z.string().nullish(), name: text, description: text, groupName: text, order: z.number().nullish(),
+export const ardFormSchema = z.object({ sections: z.array(z.object({ id: z.string().nullish(), name: text, description: text, value: text, groupName: text, order: z.number().nullish(),
   fields: z.array(ardFieldSchema).nullish() })).nullish() });
-export const ardAnswerSchema = z.object({ responseId: z.string().nullish(), value: text, complies: z.boolean().nullish(), formField: ardFieldSchema.nullish(),
+export const ardAnswerSchema = z.object({ coaReportedResults: z.array(reportedResultSchema).nullish(), coaReportingError: z.string().nullish(), responseId: z.string().nullish(), value: text, complies: z.boolean().nullish(), formField: ardFieldSchema.nullish(),
   createdBy: ardPersonSchema,
   attachments: z.array(z.object({ name: text, link: text })).nullish(),
   formulaGoverned: z.boolean().nullish(), formulaResultFinalized: z.boolean().nullish(), formulaExecutionId: z.string().nullish(), formulaDisplayResultsJson: z.string().nullish() });
@@ -15,4 +16,4 @@ export const ardAnswersSchema = z.array(ardAnswerSchema).nullish().transform((va
 export type ArdResultField = z.infer<typeof ardFieldSchema>;
 export type ArdAnswer = z.infer<typeof ardAnswerSchema>;
 export type ArdPerson = z.infer<typeof ardPersonSchema>;
-export interface ArdResultSection { id?: string | null | undefined; name: string | null; description: string | null; groupName?: string | null | undefined; fields: readonly ArdResultField[] }
+export interface ArdResultSection { id?: string | null | undefined; name: string | null; description: string | null; value?: string | null | undefined; groupName?: string | null | undefined; fields: readonly ArdResultField[] }

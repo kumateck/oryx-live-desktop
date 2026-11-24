@@ -4,15 +4,18 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 interface CoaComplianceControlProps {
   formSectionId: string;
   complies: boolean;
+  disabled?: boolean | undefined;
   onComplianceChange?: ((formSectionId: string, complies: boolean) => void) | undefined;
 }
 
 const CoaComplianceControl = ({
   formSectionId,
   complies,
+  disabled,
   onComplianceChange,
 }: CoaComplianceControlProps) => (
   <RadioGroup
+    disabled={disabled}
     value={complies ? "complies" : "not-complies"}
     onValueChange={(value: string) =>
       onComplianceChange?.(formSectionId, value === "complies")

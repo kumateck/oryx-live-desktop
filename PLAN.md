@@ -1,3 +1,9 @@
+## Product-specific assay COA reporting (2026-11-24)
+
+Opt in separately for each product specification, test stage, formula field and stable output key. Shared templates and specification numbers never share reporting rules. Preserve the source percentage of labelled strength; calculate selected outputs as source / 100 * nominal % w/v concentration. Each configured output has explicit inclusive % w/v limits and display precision; compare before rounding. Reuse the authoritative formula engine and existing form, table, dialog and print components.
+
+The product specification detail page offers a permission-gated COA assay reporting editor. Changes require a reason, a fresh configuration token and current edit grants; they invalidate specification verification. Certificate submission requires the selected specification to be approved, captures immutable rules/source/converted values and applies the converted verdict server-side. Already submitted historical tests keep their original interpretation. Missing, stale or incompatible source results block submission. Deploy the companion schema and additive API changes first.
+
 ## Finished goods controls (2026-11-21)
 
 Implement the full customer-approved flow from FGTN generation to actual receipt,

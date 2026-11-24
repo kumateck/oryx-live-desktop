@@ -1,3 +1,4 @@
+import { hasCoaReporting } from "./coa-reporting";
 import { QuestionType, sanitizeNumber, sanitizeString } from "@/shared/ard-view/legacy";
 import {
   CertificateOfAnalysisComplies,
@@ -13,6 +14,7 @@ import {
 
 export type CoaComplianceItem = CertificateOfAnalysisComplies & {
   requiresReview?: boolean | undefined;
+  reportingLocked?: boolean | undefined;
 };
 
 const normalizeText = (value?: string | null) =>
@@ -120,13 +122,24 @@ export const buildCoaCompliancePayload = (
     const fieldResults = (section.fields ?? []).flatMap((field) => {
       const response = field.id ? responseMap.get(field.id) : undefined;
       if (!response) return [];
+      if (hasCoaReporting(response)) {
+        if (response.coaReportingError) return [{ complies: false, isCertain: false }];
+        return (response.coaReportedResults ?? []).map(result => result.converted
+          ? { complies: result.complies === true, isCertain: result.complies !== null && result.complies !== undefined }
+          : inferCompliance(sanitizeString(section.description), result.displayValue ?? ""));
+      }
       const result = getFieldResult(response, section);
       return (Array.isArray(result) ? result : [result]).map((value) =>
         inferCompliance(sanitizeString(section.description), sanitizeString(value)));
     });
 
+    const answers = (section.fields ?? []).flatMap(field => { const answer = field.id ? responseMap.get(field.id) : null; return answer ? [answer] : []; });
+    const reportingFailure = answers.some(answer => Boolean(answer.coaReportingError) || answer.coaReportedResults?.some(result => result.converted && result.complies === false));
+    const fullyReported = answers.length > 0 && answers.length === (section.fields ?? []).length
+      && answers.every(answer => (answer.coaReportedResults?.length ?? 0) > 0 && answer.coaReportedResults?.every(result => result.converted));
     return [
       {
+        ...(reportingFailure || fullyReported ? { reportingLocked: true } : {}),
         formSectionId,
         complies: fieldResults.length
           ? fieldResults.every((item) => item.complies)
