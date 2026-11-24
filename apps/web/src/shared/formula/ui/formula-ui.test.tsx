@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import TheAduseiFormula from "./types/expression";
 import { TheAduseiEvaluation } from "./types/evaluate";
+
+// These pure editor tests insert tokens locally; save authorization is tested by the owning form.
+vi.mock("@/shared/auth/use-access", () => ({ useAccess: () => ({ allows: () => true, allowsNow: () => true }) }));
 
 afterEach(cleanup);
 const simple = JSON.stringify({ type: 0, expression: ":weight * :factor" });

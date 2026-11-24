@@ -1,3 +1,4 @@
+import { testVariableLabel } from "@/shared/formula/display/variable-labels";
 import type { DomainEntitiesFormsRequestCreateQuestionRequest } from "@/shared/api/generated/forms";
 import type { FormQuestion } from "@/shared/form-response/form-model";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
@@ -108,7 +109,7 @@ export function formulaQuestionRequest(values: QuestionFormulaValues, expression
 /** Every detected variable gets a scope; new ones start as "inside this formula". */
 export const resolveVariableScopes = (variables: readonly { key: string }[], current: Readonly<Record<string, SelectOption>>) =>
   Object.fromEntries(variables.map(({ key }) => { const field = scopeFieldName(key); return [field, current[field] ?? formulaScopeOptions[0]]; }));
-export const readableVariableName = (variable: { key: string; label: string }) => (variable.label === variable.key ? variable.key : variable.label)
+export const readableVariableName = (variable: { key: string; label: string }) => testVariableLabel(variable.key, variable.label)
   .replaceAll(".", " — ").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/([A-Za-z])(\d+)/g, "$1 $2").replace(/\bavg\b/gi, "Average").replace(/^./, (character) => character.toUpperCase());
 
 /** The revision to show: the newest of what the server lists and what was just saved, so a stale list never hides the saved draft. */

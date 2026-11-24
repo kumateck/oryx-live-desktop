@@ -1,3 +1,4 @@
+import { testVariableLabel } from "@/shared/formula/display/variable-labels";
 import React, {
   useCallback,
   useDeferredValue,
@@ -946,7 +947,7 @@ export const UniversalEvaluate: React.FC<Props> = ({
                       raw: "",
                       evaluated: null,
                     };
-                    const displayLabel = mv.label || k;
+                    const displayLabel = testVariableLabel(k, mv.label, parsed);
                     return (
                       <div
                         key={k}

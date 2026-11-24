@@ -2881,6 +2881,7 @@ export type DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto = {
   isRetest?: boolean;
   testedAt?: string | null;
   testedBy?: DomainEntitiesUsersUserDto;
+  coaStatus?: string | null;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesAnalyticalTestRequestsAnalyticalTestRequestDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {

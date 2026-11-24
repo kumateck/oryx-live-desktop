@@ -1,3 +1,4 @@
+import { testVariableLabel } from "@/shared/formula/display/variable-labels";
 import { useMemo } from "react";
 import { FormulaRoundingKind } from "../core/contracts";
 import { formulaDefinitionV1Schema } from "../core/decode";
@@ -31,7 +32,7 @@ export function FormulaDefinitionView({ definition }: { definition: unknown }) {
         <div className="overflow-x-auto rounded bg-muted/50 px-2 py-3"><ExpressionView expression={item.expression} inline /></div></div>)}</div></div> : null}
     <div className="space-y-2"><h3 className="font-semibold">Inputs</h3>
       <div className="grid gap-2 md:grid-cols-2">{variables.map((variable) => <div key={variable.key} className="rounded-md border bg-background p-3 text-sm">
-        <div className="flex items-center justify-between gap-2"><span>{variable.label || variable.key}</span><span className="font-mono text-xs text-muted-foreground">{variable.key}</span></div>
+        <div className="flex items-center justify-between gap-2"><span>{testVariableLabel(variable.key, variable.label)}</span><span className="font-mono text-xs text-muted-foreground">{variable.key}</span></div>
         <p className="text-xs text-muted-foreground">{variable.required ? "Required" : "Optional"}{unitText(variable.unit)}</p></div>)}</div>
       {precisionPolicy ? <p className="text-xs text-muted-foreground">Inputs are taken to {precisionPolicy.inputDecimalPlaces} decimal places; table calculations to {precisionPolicy.tableCalculationDecimalPlaces}.</p> : null}</div>
     {evidence}
