@@ -19,6 +19,8 @@ import {
   canonicalInputKey,
   concentrationUnitForEditing,
   DEFAULT_CONCENTRATION_UNIT,
+  measurementAliasesForEditing,
+  usedMeasurementAliases,
 } from "@/shared/formula/builder/universal-variable-keys";
 
 const PURPOSE_LABEL: Record<FirstColumnPurpose, string> = {
@@ -53,6 +55,7 @@ const defaultSettings = (
   namedExpressions: [],
   variableKeyFormat: UniversalVariableKeyFormat.CanonicalAlphanumeric,
   concentrationUnit: DEFAULT_CONCENTRATION_UNIT,
+  measurementAliases: measurementAliasesForEditing({}),
   manualVarLabels: {},
   manualVars: {},
   noOfReadings: 5,
@@ -235,6 +238,7 @@ export const UniversalConfig: React.FC<TheAduseiFormulaProps> = ({
           variableKeyFormat:
             parsed.variableKeyFormat ?? UniversalVariableKeyFormat.LegacyDotted,
           concentrationUnit: concentrationUnitForEditing(parsed),
+          measurementAliases: measurementAliasesForEditing(parsed),
         };
         return next;
       });
@@ -303,6 +307,7 @@ export const UniversalConfig: React.FC<TheAduseiFormulaProps> = ({
           variableKeyFormat:
             parsed.variableKeyFormat ?? UniversalVariableKeyFormat.LegacyDotted,
           concentrationUnit: concentrationUnitForEditing(parsed),
+          measurementAliases: measurementAliasesForEditing(parsed),
           columnExpressions: parsed.columnExpressions ?? {},
           rowHeaders: restoredRowHeaders,
         };
@@ -518,6 +523,9 @@ export const UniversalConfig: React.FC<TheAduseiFormulaProps> = ({
             namedExpressions: snapshot.settings.namedExpressions,
             variableKeyFormat: snapshot.settings.variableKeyFormat,
             concentrationUnit: snapshot.settings.concentrationUnit,
+            measurementAliases: usedMeasurementAliases({
+              ...snapshot.settings, expression, standardInputs: snapshot.standardInputs, sampleInputs: snapshot.sampleInputs,
+            }),
 
             // manualVars: manualVars, // current manual vars (raw + evaluated)
             tableData: snapshot.tableData, // includes latest cell edits

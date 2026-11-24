@@ -77,6 +77,19 @@ export const CONCENTRATION_INPUT_KEY = "conc";
 const WEIGHT_INPUT_KEY = "weight";
 const CONCENTRATION_TOKEN = /:(?:standard|sample\d*)Conc\b/;
 
+export const MEASUREMENT_ALIAS_LABELS = {
+  absorbance: "Absorbance",
+  peakAreas: "Peak Areas",
+  titreValue: "Titre Value",
+} as const;
+export type MeasurementAlias = keyof typeof MEASUREMENT_ALIAS_LABELS;
+const measurementAliasKeys: MeasurementAlias[] = ["absorbance", "peakAreas", "titreValue"];
+type InputAlias = typeof CONCENTRATION_INPUT_KEY | MeasurementAlias;
+export type WeightInputRole = "standard" | "sample";
+
+const inputAliasToken = (key: string, role = "(?:standard|sample[0-9]*)") =>
+  new RegExp(`:${role}${upperFirst(key)}\\b`, "g");
+
 export const isConcentrationUnit = (
   value: UniversalConfig[string],
 ): value is ConcentrationUnit =>
@@ -147,6 +160,57 @@ const configurationExpressionText = (config: InputConfig) => {
   return [main, ...named, ...manual].join("\n");
 };
 
+/** Opt in on edit only when an older formula has not claimed that alias for a separate variable. */
+export const measurementAliasesForEditing = (config: InputConfig): MeasurementAlias[] => {
+  const declared = [
+    ...objectKeys(config.constants),
+    ...objectKeys(config.manualVars),
+    ...objectKeys(config.manualVarLabels),
+    ...configuredInputKeys(config.namedExpressions),
+  ];
+  const text = [configurationExpressionText(config), ...declared.map(key => `:${key}`)].join(" ");
+  return measurementAliasKeys.filter(key =>
+    (Array.isArray(config.measurementAliases) && config.measurementAliases.includes(key)) ||
+    (!inputAliasToken(key).test(text) && !declared.includes(key)),
+  );
+};
+
+const measurementInputAliases = (config: InputConfig, role: WeightInputRole): MeasurementAlias[] => {
+  if (variableKeyFormatFor(config) !== UniversalVariableKeyFormat.CanonicalAlphanumeric ||
+      !Array.isArray(config.measurementAliases)) return [];
+  const inputs = role === "standard" ? config.standardInputs : config.sampleInputs;
+  const enabled = role === "standard"
+    ? config.standardInput !== false && config.standardInTable !== false
+    : config.sampleInput !== false;
+  const firstInputs = role === "sample" && Array.isArray(inputs) ? inputs[0] : inputs;
+  if (!enabled || !weightKeyIn(firstInputs)) return [];
+  const realKeys = configuredInputKeys(inputs).map(key => key.toLowerCase());
+  const selected = config.measurementAliases;
+  return measurementAliasKeys.filter(key => selected.includes(key) && !realKeys.includes(key.toLowerCase()));
+};
+
+export const inputAliasKeysFor = (config: InputConfig | null | undefined, role: WeightInputRole): InputAlias[] => {
+  if (!config) return [];
+  const concentration = concentrationAliasesFor(config);
+  const weightKey = role === "standard" ? concentration?.standardWeightKey : concentration?.sampleWeightKey;
+  const measurement = measurementInputAliases(config, role);
+  return weightKey ? [CONCENTRATION_INPUT_KEY, ...measurement] : measurement;
+};
+
+export const usedMeasurementAliases = (config: InputConfig): MeasurementAlias[] | undefined => {
+  const text = configurationExpressionText(config);
+  const standard = measurementInputAliases(config, "standard");
+  const sample = measurementInputAliases(config, "sample");
+  const used = measurementAliasKeys.filter(key =>
+    (standard.includes(key) && inputAliasToken(key, "standard").test(text)) ||
+    (sample.includes(key) && inputAliasToken(key, "sample[0-9]*").test(text)),
+  );
+  return used.length ? used : undefined;
+};
+
+export const isBoundSampleAlias = (key: string, config: InputConfig) =>
+  inputAliasKeysFor(config, "sample").some(alias => new RegExp(`^sample[0-9]*${upperFirst(alias)}$`).test(key));
+
 /** Whether a configuration's expressions use :standardConc, :sampleConc or :sampleNConc. */
 export const usesConcentrationTokens = (config: InputConfig) =>
   CONCENTRATION_TOKEN.test(configurationExpressionText(config));
@@ -165,117 +229,102 @@ export const concentrationUnitForEditing = (
     : DEFAULT_CONCENTRATION_UNIT;
 };
 
-/** Whether a variable key is a concentration alias the configuration has switched on. */
-export const isConcentrationAliasKey = (
-  key: string,
-  config?: InputConfig | null,
-) => {
-  const aliases = concentrationAliasesFor(config);
-  if (!aliases) return false;
-  if (key === standardInputVariableKey(CONCENTRATION_INPUT_KEY))
-    return aliases.standardWeightKey !== null;
-  return /^sample\d*Conc$/.test(key) && aliases.sampleWeightKey !== null;
-};
-
 /**
- * Rewrites the concentration aliases to the weight keys they stand for, so the governed definition, its hash and
- * every server calculation are exactly those of the same formula written with the weight keys.
+ * Normalize the alias spelling before building the governed formula. Every alias
+ * uses the existing weight variable, including its input validation and value.
  */
-export const resolveConcentrationAliases = (
+export const resolveUniversalInputAliases = (
   expression: string,
   config: InputConfig,
 ) => {
-  const aliases = concentrationAliasesFor(config);
-  if (!aliases) return expression;
-  const { standardWeightKey, sampleWeightKey } = aliases;
+  const standardWeight = weightKeyIn(config.standardInputs);
+  const samples = Array.isArray(config.sampleInputs) ? config.sampleInputs : [];
   let resolved = expression;
-  if (standardWeightKey)
-    resolved = resolved.replace(
-      /:standardConc\b/g,
-      `:${standardInputVariableKey(standardWeightKey)}`,
-    );
-  if (sampleWeightKey)
-    resolved = resolved.replace(/:sample(\d*)Conc\b/g, (_match, sample: string) =>
-      sample
-        ? `:${sampleInputVariableKey(Number(sample), sampleWeightKey)}`
-        : `:${sampleInputTemplateVariableKey(sampleWeightKey)}`,
-    );
+  if (standardWeight) {
+    for (const alias of inputAliasKeysFor(config, "standard")) {
+      resolved = resolved.replace(inputAliasToken(alias, "standard"), `:${standardInputVariableKey(standardWeight)}`);
+    }
+  }
+  for (const alias of inputAliasKeysFor(config, "sample")) {
+    resolved = resolved.replace(inputAliasToken(alias, "sample([0-9]*)"), (token, index: string) => {
+      const weight = weightKeyIn(samples[index ? Number(index) - 1 : 0]);
+      if (!weight) return token;
+      return index ? `:${sampleInputVariableKey(Number(index), weight)}` : `:${sampleInputTemplateVariableKey(weight)}`;
+    });
+  }
   return resolved;
 };
 
-/** One sample's input keys for expanding :sampleWeight-style tokens, including the concentration alias when it is on. */
-export const sampleExpansionInputKeys = (
-  config: InputConfig,
-  sample: number,
-) => {
+/** Input keys eligible for template expansion for this particular sample. */
+export const sampleExpansionInputKeys = (config: InputConfig, sample: number) => {
   const keys = Array.isArray(config.sampleInputs)
     ? configuredInputKeys(config.sampleInputs[sample - 1])
     : [];
-  return concentrationAliasesFor(config)?.sampleWeightKey &&
-    keys.some(isWeightInputKey)
-    ? [...keys, CONCENTRATION_INPUT_KEY]
-    : keys;
+  return keys.some(isWeightInputKey) ? [...keys, ...inputAliasKeysFor(config, "sample")] : keys;
 };
 
-export type WeightInputRole = "standard" | "sample";
-
-/**
- * How the worksheet names the weight input: by the key the formula uses. A formula that uses only the
- * concentration alias shows "Concentration (unit)", one that uses both shows "Weight / Concentration", and every
- * other input keeps its saved label and key.
- */
+/** Name the one worksheet field using the aliases that read from it. */
 export const weightInputPresentation = (
   config: InputConfig | null | undefined,
   role: WeightInputRole,
   input: { key: string; label: string },
+  sampleNumber?: number,
 ) => {
   const unchanged = { label: input.label, key: input.key };
   const aliases = concentrationAliasesFor(config);
-  if (!config || !aliases || !isWeightInputKey(input.key)) return unchanged;
-  if (
-    (role === "standard" ? aliases.standardWeightKey : aliases.sampleWeightKey) ===
-    null
-  )
-    return unchanged;
+  if (!config || !isWeightInputKey(input.key)) return unchanged;
   const text = canonicalizeUniversalInputTokens(
     configurationExpressionText(config),
   );
   const weightName = upperFirst(canonicalInputKey(input.key));
-  const usesConcentration =
-    role === "standard"
-      ? /:standardConc\b/.test(text)
-      : /:sample\d*Conc\b/.test(text);
-  if (!usesConcentration) return unchanged;
-  const usesWeight =
-    role === "standard"
-      ? new RegExp(`:standard${weightName}\\b`).test(text)
-      : new RegExp(`:sample\\d*${weightName}\\b`).test(text) ||
-        /:sampleInput\b/.test(text);
-  return usesWeight
-    ? {
-        label: `${role === "standard" ? "Standard " : ""}Weight / Concentration (${input.label.match(/\(([^)]+)\)\s*$/)?.[1] ?? "g"} or ${aliases.unit})`,
-        key: `${input.key} / ${CONCENTRATION_INPUT_KEY}`,
-      }
-    : { label: `${role === "standard" ? "Standard " : ""}Concentration (${aliases.unit})`, key: CONCENTRATION_INPUT_KEY };
+  const tokenRole = role === "standard" ? "standard" : sampleNumber ? `sample(?:${sampleNumber})?` : "sample[0-9]*";
+  const selected = inputAliasKeysFor(config, role).filter(alias => inputAliasToken(alias, tokenRole).test(text));
+  if (!selected.length) return unchanged;
+  const usesWeight = inputAliasToken(weightName, tokenRole).test(text) ||
+    (role === "sample" && /:sampleInput\b/.test(text));
+  const names = selected.map(alias => alias === CONCENTRATION_INPUT_KEY
+    ? "Concentration"
+    : MEASUREMENT_ALIAS_LABELS[alias]);
+  const sourceUnit = input.label.match(/\(([^)]+)\)\s*$/)?.[1] ?? "g";
+  const units = [
+    ...(usesWeight ? [sourceUnit] : []),
+    ...(aliases && selected.includes(CONCENTRATION_INPUT_KEY) ? [aliases.unit] : []),
+  ];
+  return {
+    label: `${role === "standard" ? "Standard " : ""}${[...(usesWeight ? ["Weight"] : []), ...names].join(" / ")}${units.length ? ` (${units.join(" or ")})` : ""}`,
+    key: [...(usesWeight ? [input.key] : []), ...selected].join(" / "),
+  };
+};
+
+/** Present the authored input name while retaining the governed variable's canonical key. */
+export const universalInputVariableLabel = (config: InputConfig, key: string) => {
+  const match = /^(standard|sample([1-9][0-9]*))Weight$/.exec(key);
+  if (!match) return canonicalVariableLabel(key);
+  const sample = match[2] ? Number(match[2]) : undefined;
+  const fields = sample === undefined ? config.standardInputs
+    : Array.isArray(config.sampleInputs) ? config.sampleInputs[sample - 1] : undefined;
+  if (!Array.isArray(fields)) return canonicalVariableLabel(key);
+  for (const field of fields) {
+    if (!field || typeof field !== "object") continue;
+    if (!("key" in field) || typeof field.key !== "string" || !isWeightInputKey(field.key)) continue;
+    const label = "label" in field && typeof field.label === "string" ? field.label : "Weight";
+    const shown = weightInputPresentation(config, sample === undefined ? "standard" : "sample", { key: field.key, label }, sample);
+    if (shown.key !== field.key) return sample === undefined ? shown.label : `Sample ${sample} ${shown.label}`;
+  }
+  return canonicalVariableLabel(key);
 };
 
 export const configuredUniversalInputVariableKeys = (
   config: InputConfig,
 ) => {
   const keys = new Set<string>();
-  const aliases = concentrationAliasesFor(config);
   for (const key of configuredInputKeys(config.standardInputs))
     keys.add(standardInputVariableKey(key));
-  if (aliases?.standardWeightKey)
-    keys.add(standardInputVariableKey(CONCENTRATION_INPUT_KEY));
+  for (const alias of inputAliasKeysFor(config, "standard"))
+    keys.add(standardInputVariableKey(alias));
   if (Array.isArray(config.sampleInputs)) {
-    config.sampleInputs.forEach((sample, index) => {
-      const sampleKeys = configuredInputKeys(sample);
-      const withAlias =
-        aliases?.sampleWeightKey && sampleKeys.some(isWeightInputKey)
-          ? [...sampleKeys, CONCENTRATION_INPUT_KEY]
-          : sampleKeys;
-      for (const key of withAlias) {
+    config.sampleInputs.forEach((_sample, index) => {
+      for (const key of sampleExpansionInputKeys(config, index + 1)) {
         keys.add(sampleInputTemplateVariableKey(key));
         keys.add(sampleInputVariableKey(index + 1, key));
       }

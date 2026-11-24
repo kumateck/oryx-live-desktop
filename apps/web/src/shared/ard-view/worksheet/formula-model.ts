@@ -123,11 +123,11 @@ function universalWorksheet(settings: string, value: string, auth: Authority, bl
     return { avg: roundHalfAwayFromZero(raw.avg, places), sd: roundHalfAwayFromZero(raw.sd, places), rsd: roundHalfAwayFromZero(raw.rsd, places) };
   });
 
-  const input = (role: "standard" | "sample", field: LabeledInputField, recordedValue: string | undefined): WorksheetEntry =>
-    ({ key: field.key, label: testVariableLabel(field.key, weightInputPresentation(parsed, role, field).label, parsed), value: recordedValue ?? "" });
+  const input = (role: "standard" | "sample", field: LabeledInputField, recordedValue: string | undefined, sampleNumber?: number): WorksheetEntry =>
+    ({ key: field.key, label: testVariableLabel(field.key, weightInputPresentation(parsed, role, field, sampleNumber).label, parsed), value: recordedValue ?? "" });
   const standardInputs = (parsed.standardInput === false ? [] : parsed.standardInputs ?? []).map((field) => input("standard", field, response?.standardInputs?.[field.key]));
   const samples = (parsed.sampleInput === false ? [] : parsed.sampleInputs ?? []).map((fields, index) =>
-    ({ label: `Sample ${index + 1}`, entries: fields.map((field) => input("sample", field, response?.sampleInputs?.[index]?.[field.key])) }));
+    ({ label: `Sample ${index + 1}`, entries: fields.map((field) => input("sample", field, response?.sampleInputs?.[index]?.[field.key], index + 1)) }));
 
   const manual = coerceManualVars(response?.manualVars);
   const expression = normalizeFormulaExpressionText(parsed.expression);

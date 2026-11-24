@@ -19,6 +19,12 @@ describe("formula repair", () => {
   it("never turns table statistics or per-sample weights into manual inputs", () => {
     expect(manualRepairVariables(JSON.stringify(settings), ":sampleAvg/:standardAvg+:sample2SD+:R1sample+:sampleInput.wt+:standardInput.wt")).toEqual([]);
   });
+  it("recognizes all configured aliases without asking for separate manual values", () => {
+    const raw = JSON.stringify({ ...settings, variableKeyFormat: 1, concentrationUnit: "mg/mL",
+      measurementAliases: ["absorbance", "peakAreas", "titreValue"] });
+    expect(manualRepairVariables(raw, ":standardAbsorbance+:standardConc+:sampleWeight+:sample1PeakAreas+:sample2TitreValue+:purity"))
+      .toEqual(["purity"]);
+  });
   const incomplete: { permissions: string[] }[] = [[], ["CanViewQuestions"], ["CanEditQuestions"], ["CanRepairQuestionFormula"], ["CanRepairTestFormula"]]
     .map(permissions => ({ permissions }));
   it.each(incomplete)("denies incomplete repair access: $permissions", ({ permissions }) => {

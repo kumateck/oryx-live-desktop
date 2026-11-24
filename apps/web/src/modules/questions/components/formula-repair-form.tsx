@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
+import { testVariableLabel } from "@/shared/formula/display/variable-labels";
 import { ExpressionView } from "@/shared/formula/ui/math/expression-view";
 import { useFormulaRepair } from "../hooks/use-formula-repair";
 import { repairTestKey, type FormulaRepairValues, type RepairContext, type RepairProblem } from "../schemas/formula-repair-schema";
@@ -42,13 +43,13 @@ export function FormulaRepairForm({ context, atr, field, refresh, onBack, onAppl
       {context.blockers.map(text => <p key={text} role="alert" className="text-sm text-destructive">{text}</p>)}
       {page.approved ? <>
         {page.manualKeys.length ? <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">{page.manualKeys.map(key => <div key={key} className="flex gap-2">
-          <dt className="text-muted-foreground">:{key}</dt><dd className="min-w-0 break-words">{page.approved?.labels[key] ?? key}</dd></div>)}</dl> : null}
+          <dt className="text-muted-foreground">:{key}</dt><dd className="min-w-0 break-words">{testVariableLabel(key, page.approved?.labels[key])}</dd></div>)}</dl> : null}
         <p className="text-sm text-muted-foreground">This is the reviewed and approved formula. To change it, create a new revision of the question.</p>
       </> : <>
         <FormWizard form={form} fields={fields} />
         {page.manualKeys.length ? <fieldset className="space-y-2"><legend className="text-sm font-medium">Manual inputs required by this expression</legend>
           <div className="grid gap-3 sm:grid-cols-2">{page.manualKeys.map(key => <label key={key} className="space-y-1 text-sm">
-            <span>:{key} — input label</span><Input {...form.register(`labels.${key}`)} placeholder={key} disabled={page.busy} maxLength={200} />
+            <span>:{key} — input label</span><Input {...form.register(`labels.${key}`)} placeholder={testVariableLabel(key)} disabled={page.busy} maxLength={200} />
           </label>)}</div></fieldset> : null}
       </>}
     </section>
