@@ -7,7 +7,7 @@ const displayField = (field: ArdResultField): FormFieldDto => ({
   ...(field.id ? { id: field.id } : {}), ...(field.rank != null ? { rank: field.rank } : {}),
   ...(field.description != null ? { description: field.description } : {}),
   ...(field.question ? { question: {
-    label: field.question.label, ...(isQuestionType(field.question.type) ? { type: field.question.type } : {}),
+    label: field.question.label, reference: field.question.reference ?? null, ...(isQuestionType(field.question.type) ? { type: field.question.type } : {}),
     options: (field.question.options ?? []).map((option) => ({ name: option.name })),
   } } : {}),
 });
@@ -15,10 +15,11 @@ const displayField = (field: ArdResultField): FormFieldDto => ({
 /** Retain recorded evidence when adapting the approval API to the shared Next worksheet. */
 export function ardDisplayData(sections: readonly ArdResultSection[], recorded: ReadonlyMap<string, RecordedAnswer>) {
   const displaySections: FormSectionDto[] = sections.map((section) => ({
-    ...(section.id ? { id: section.id } : {}), name: section.name, description: section.description,
+    ...(section.id ? { id: section.id } : {}), name: section.name, description: section.description, value: section.value ?? null,
     ...(section.groupName != null ? { groupName: section.groupName } : {}), fields: section.fields.map(displayField),
   }));
   const responses: FormResponseDto[] = [...recorded.values()].map((answer) => ({
+    coaReportedResults: answer.coaReportedResults ? [...answer.coaReportedResults] : [], coaReportingError: answer.coaReportingError ?? null,
     value: answer.value, ...(answer.responseId ? { responseId: answer.responseId } : {}),
     ...(answer.formField ? { formField: displayField(answer.formField) } : {}),
     ...(answer.complies != null ? { complies: answer.complies } : {}),

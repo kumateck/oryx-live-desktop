@@ -56,8 +56,20 @@ function stripFinishedGoods(document: ObjectValue) {
   for (const [name, values] of Object.entries(object(scope.previousEnums ?? null))) object(schemas[name] ?? null).enum = values;
 }
 
+/** Product assay reporting adds only its owned operation/schemas and optional recorded-result fields. */
+const assayReportingSchemas = ["DOMAIN.Entities.ProductSpecifications.AssayOutputDto", "DOMAIN.Entities.ProductSpecifications.AssayReportedResultDto", "DOMAIN.Entities.ProductSpecifications.AssayReportingConfigurationDto", "DOMAIN.Entities.ProductSpecifications.AssayReportingFieldDto", "DOMAIN.Entities.ProductSpecifications.AssayReportingRule", "DOMAIN.Entities.ProductSpecifications.SaveAssayReportingRequest"] as const;
+function stripAssayReporting(document: ObjectValue) {
+  delete object(document.paths ?? null)["/api/v1/product-specifications/{id}/assay-reporting"];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of assayReportingSchemas) delete schemas[name];
+  const properties = object(object(schemas["DOMAIN.Entities.Forms.FormResponseDto"] ?? null).properties ?? null);
+  delete properties.coaReportedResults;
+  delete properties.coaReportingError;
+}
+
 /** Superseded vendor-list deletion adds one operation without changing existing document contracts. */
 function stripVendorListDelete(document: ObjectValue) {
+  stripAssayReporting(document);
   delete object(object(document.paths ?? null)["/api/v1/approved-vendor-list/{id}"] ?? null).delete;
 }
 
@@ -1350,4 +1362,15 @@ test("superseded vendor-list deletion adds only a typed delete operation", () =>
   assert.ok(object(operation.responses ?? null)["409"]);
   stripVendorListDelete(current);
   assert.equal(contractDigest(current), "4de3b27dd44baafb881ae47d3cfd4489fb3023fb0db7a3090764eadd83539083");
+});
+
+test("per-product assay reporting is additive and leaves every previously reviewed operation intact", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+  const path = object(object(current.paths ?? null)["/api/v1/product-specifications/{id}/assay-reporting"] ?? null);
+  assert.deepEqual(Object.keys(path).sort(), ["get", "put"]);
+  assert.ok(object(object(path.put ?? null).responses ?? null)["409"]);
+  assert.deepEqual(current.security, reviewedImport().security);
+  stripAssayReporting(current);
+  assert.equal(contractDigest(current), "1d528fdcdfa83245abf471694dd7a95ced8e47aafa3c4e2f05a11a8df7a091a8");
 });

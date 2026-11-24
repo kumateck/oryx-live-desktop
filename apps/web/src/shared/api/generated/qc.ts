@@ -3549,6 +3549,21 @@ export type DomainEntitiesAttachmentsAttachmentDto = {
   id?: string;
   reference?: string | null;
 };
+export type DomainEntitiesProductSpecificationsAssayReportedResultDto = {
+  key?: string | null;
+  label?: string | null;
+  sourceValue?: number;
+  value?: number;
+  displayValue?: string | null;
+  unit?: string | null;
+  minimum?: number;
+  maximum?: number;
+  complies?: boolean | null;
+  nominalConcentration?: number;
+  definitionHash?: string | null;
+  converted?: boolean;
+  decimalPlaces?: number;
+};
 export type DomainEntitiesFormsFormResponseDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -3568,6 +3583,9 @@ export type DomainEntitiesFormsFormResponseDto = {
   formulaDisplayResultsJson?: string | null;
   formulaRepairPending?: boolean;
   formulaRepairEvaluated?: boolean;
+  coaReportedResults?:
+    DomainEntitiesProductSpecificationsAssayReportedResultDto[] | null;
+  coaReportingError?: string | null;
 };
 export type DomainEntitiesFormsFormDto = {
   id?: string;

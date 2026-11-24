@@ -1450,6 +1450,34 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getProductAssayReporting: build.query<
+      GetProductAssayReportingApiResponse,
+      GetProductAssayReportingApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-specification", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/product-specifications/${queryArg.id}/assay-reporting`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    saveProductAssayReporting: build.mutation<
+      SaveProductAssayReportingApiResponse,
+      SaveProductAssayReportingApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-specification", id: "LIST" }, { type: "product-specification", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/product-specifications/${queryArg.id}/assay-reporting`,
+        method: "PUT",
+        body: queryArg.domainEntitiesProductSpecificationsSaveAssayReportingRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2379,6 +2407,25 @@ export type GetProductSpecificationPrintHistoryApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetProductAssayReportingApiResponse =
+  /** status 200 OK */ DomainEntitiesProductSpecificationsAssayReportingConfigurationDto;
+export type GetProductAssayReportingApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type SaveProductAssayReportingApiResponse =
+  /** status 200 OK */ DomainEntitiesProductSpecificationsAssayReportingConfigurationDto;
+export type SaveProductAssayReportingApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesProductSpecificationsSaveAssayReportingRequest: DomainEntitiesProductSpecificationsSaveAssayReportingRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -2693,6 +2740,21 @@ export type DomainEntitiesFormsFormSectionDto = {
   complies?: boolean;
   analysisType?: DomainEntitiesQualityRoutinesAnalysisType;
 };
+export type DomainEntitiesProductSpecificationsAssayReportedResultDto = {
+  key?: string | null;
+  label?: string | null;
+  sourceValue?: number;
+  value?: number;
+  displayValue?: string | null;
+  unit?: string | null;
+  minimum?: number;
+  maximum?: number;
+  complies?: boolean | null;
+  nominalConcentration?: number;
+  definitionHash?: string | null;
+  converted?: boolean;
+  decimalPlaces?: number;
+};
 export type DomainEntitiesFormsFormResponseDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -2712,6 +2774,9 @@ export type DomainEntitiesFormsFormResponseDto = {
   formulaDisplayResultsJson?: string | null;
   formulaRepairPending?: boolean;
   formulaRepairEvaluated?: boolean;
+  coaReportedResults?:
+    DomainEntitiesProductSpecificationsAssayReportedResultDto[] | null;
+  coaReportingError?: string | null;
 };
 export type DomainEntitiesFormsFormDto = {
   id?: string;
@@ -3893,6 +3958,47 @@ export type DomainEntitiesSpecificationsSpecificationPrintHistory = {
   historyAvailableFrom?: string | null;
   revisions?: DomainEntitiesSpecificationsSpecificationPrintRevision[] | null;
 };
+export type DomainEntitiesProductSpecificationsAssayOutputDto = {
+  key?: string | null;
+  label?: string | null;
+  unit?: string | null;
+  canConvert?: boolean;
+  unavailableReason?: string | null;
+};
+export type DomainEntitiesProductSpecificationsAssayReportingFieldDto = {
+  formFieldId?: string;
+  testName?: string | null;
+  label?: string | null;
+  specification?: string | null;
+  definitionHash?: string | null;
+  outputs?: DomainEntitiesProductSpecificationsAssayOutputDto[] | null;
+  unavailableReason?: string | null;
+};
+export type DomainEntitiesProductSpecificationsAssayReportingRule = {
+  formFieldId?: string;
+  resultKey?: string | null;
+  definitionHash?: string | null;
+  nominalConcentration?: number;
+  minimum?: number;
+  maximum?: number;
+  decimalPlaces?: number;
+};
+export type DomainEntitiesProductSpecificationsAssayReportingConfigurationDto =
+  {
+    specificationId?: string;
+    productId?: string;
+    productName?: string | null;
+    testStage?: number;
+    specificationNumber?: string | null;
+    token?: string | null;
+    fields?: DomainEntitiesProductSpecificationsAssayReportingFieldDto[] | null;
+    rules?: DomainEntitiesProductSpecificationsAssayReportingRule[] | null;
+  };
+export type DomainEntitiesProductSpecificationsSaveAssayReportingRequest = {
+  expectedToken?: string | null;
+  reason?: string | null;
+  rules?: DomainEntitiesProductSpecificationsAssayReportingRule[] | null;
+};
 export const {
   usePostApiV1QaAnalyticalTestsMutation,
   useGetApiV1QaAnalyticalTestsQuery,
@@ -4037,4 +4143,7 @@ export const {
   useLazyGetPackagingMaterialSpecificationPrintHistoryQuery,
   useGetProductSpecificationPrintHistoryQuery,
   useLazyGetProductSpecificationPrintHistoryQuery,
+  useGetProductAssayReportingQuery,
+  useLazyGetProductAssayReportingQuery,
+  useSaveProductAssayReportingMutation,
 } = injectedRtkApi;

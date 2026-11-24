@@ -1,3 +1,5 @@
+import { CoaReportedResults } from "@/shared/ard-view/raw-data/coa-reported-results";
+import { reportedResultSchema } from "@/shared/ard-view/raw-data/coa-reporting";
 import StoredFormulaResult from "@/shared/ard-view/raw-data/print/stored-formula-result";
 import { z } from "zod";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
@@ -22,6 +24,11 @@ export function CertificateResult({ value, unit }: { value: string; unit: string
   const normalized = normalizeFormulaResponse(value);
   let parsed: z.infer<typeof object> | null = null;
   try { const result = object.safeParse(JSON.parse(normalized)); if (result.success) parsed = result.data; } catch { /* Plain observation. */ }
+  if (parsed && "coaReportedResults" in parsed) {
+    const reported = z.array(reportedResultSchema).safeParse(parsed.coaReportedResults);
+    return reported.success ? <CoaReportedResults response={{ coaReportedResults: reported.data }} />
+      : <p role="alert">The captured assay reporting result could not be read.</p>;
+  }
   if (parsed?.formulaGoverned === true) return <StoredFormulaResult response={{
     formulaGoverned: true, formulaResultFinalized: parsed.formulaResultFinalized === true,
     formulaDisplayResultsJson: typeof parsed.formulaDisplayResultsJson === "string" ? parsed.formulaDisplayResultsJson : null,

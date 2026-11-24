@@ -20,7 +20,8 @@ const normalizeText = (value?: string | null) =>
 export const hasMeaningfulResponse = (response?: FormResponseDto) => {
   if (!response) return false;
   const value = sanitizeString(response.value);
-  return value.length > 0 || Boolean(response.attachments?.length) || Boolean(response.formulaGoverned);
+  return value.length > 0 || Boolean(response.attachments?.length) || Boolean(response.formulaGoverned)
+    || Boolean(response.coaReportingError || response.coaReportedResults?.length);
 };
 
 export const groupSections = (sections?: FormSectionDto[]) => {
