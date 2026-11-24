@@ -1,3 +1,4 @@
+import { testStageLabel } from "@/shared/specifications/specification-rules";
 import { useAccess } from "@/shared/auth/use-access";
 import { useMemo } from "react";
 import { ChevronRight, RefreshCw } from "lucide-react";
@@ -38,7 +39,10 @@ function DocumentCards({ documents }: { documents: readonly { type: string; coun
 
 const column = dataTableColumns<PendingApproval>();
 const columns = column.columns([
-  column.accessor((row) => row.code ?? "", { id: "code", header: "Document", cell: ({ row }) => <span className="break-words font-medium">{row.original.code ?? "No number"}</span> }),
+  column.accessor((row) => row.code ?? "", { id: "code", header: "Document", cell: ({ row }) => row.original.type === "Response" ? <div className="min-w-0 space-y-1">
+    <div className="break-words font-medium">{row.original.productName ?? row.original.materialName ?? "Certificate of analysis"}</div>
+    <div className="break-words text-sm">{[row.original.productCode ?? row.original.materialCode, row.original.batchNumber ? `Batch ${row.original.batchNumber}` : "Batch not recorded", row.original.productStage !== null ? testStageLabel(row.original.productStage) : null].filter(Boolean).join(" · ")}</div>
+  </div> : <span className="break-words font-medium">{row.original.code ?? "No number"}</span> }),
   // Stock requisitions name the production batch they were raised for, so it can be checked before deciding.
   column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Production batch", cell: ({ row }) => row.original.batchNumber
     ? <div className="min-w-0"><div className="break-words font-medium">{row.original.batchNumber}</div>{row.original.productName ? <div className="break-words text-xs text-muted-foreground">{row.original.productName}</div> : null}</div>

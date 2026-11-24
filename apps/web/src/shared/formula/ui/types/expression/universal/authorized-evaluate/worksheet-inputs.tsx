@@ -1,3 +1,4 @@
+import { testVariableLabel } from "@/shared/formula/display/variable-labels";
 import { useId } from "react";
 import { Input } from "@/components/ui/input";
 import { weightInputPresentation } from "@/shared/formula/builder/universal-variable-keys";
@@ -93,7 +94,7 @@ export const WorksheetInputs = ({
             <InputRow
               key={key}
               id={`manual-${key}`}
-              label={`${variable.label || key} (${key})`}
+              label={`${testVariableLabel(key, variable.label, parsed)} (${key})`}
               value={variable.raw}
               onChange={(value) => onManualVarChange(key, value)}
             />
@@ -123,7 +124,7 @@ export const WorksheetInputs = ({
             <InputRow
               key={input.key}
               id={`standard-${input.key}`}
-              label={`${shown.label} (${shown.key})`}
+              label={`${testVariableLabel(shown.key, shown.label, parsed)} (${shown.key})`}
               value={input.value}
               onChange={(value) => onStandardInputChange(index, value)}
             />
@@ -143,7 +144,7 @@ export const WorksheetInputs = ({
               <InputRow
                 key={`${sampleIndex}-${input.key}`}
                 id={`sample-${sampleIndex}-${input.key}`}
-                label={`${headers[sampleIndex + (parsed.standardInTable ? 1 : 0)] || `Sample ${sampleIndex + 1}`} ${shown.label} (${shown.key})`}
+                label={`${headers[sampleIndex + (parsed.standardInTable ? 1 : 0)] || `Sample ${sampleIndex + 1}`} ${testVariableLabel(shown.key, shown.label, parsed)} (${shown.key})`}
                 value={input.value}
                 onChange={(value) =>
                   onSampleInputChange(sampleIndex, inputIndex, value)

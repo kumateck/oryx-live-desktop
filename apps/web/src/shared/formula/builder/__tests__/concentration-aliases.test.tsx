@@ -13,6 +13,9 @@ import type { ExpressionExtract } from "../../ui/types/expression/universal/type
 import TheAduseiFormula from "../../ui/types/expression";
 import { FormulaType } from "@/shared/questions/question-types";
 
+// These pure editor tests insert tokens locally; save authorization is tested by the owning form.
+vi.mock("@/shared/auth/use-access", () => ({ useAccess: () => ({ allows: () => true, allowsNow: () => true }) }));
+
 const input = (value = "") => ({ key: "wt", label: "Weight (g)", value });
 const config = (expression: string): ExpressionExtract => ({
   expression, variableKeyFormat: 1, concentrationUnit: "mg/mL",
@@ -85,10 +88,14 @@ describe("the two concentration aliases", () => {
     const saved = vi.fn<(value: string) => void>();
     const user = userEvent.setup();
     render(<TheAduseiFormula type={FormulaType.Universal} value={JSON.stringify(config(":standardConc/:sampleConc"))} onChange={saved} />);
-    expect(screen.getByText(":standardConc")).toBeTruthy();
-    expect(screen.getByText(":sampleConc")).toBeTruthy();
-    expect(screen.getByText("Standard Concentration (mg/mL)")).toBeTruthy();
-    expect(screen.getByText("Sample Concentration (mg/mL) (auto)")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: /Standard variable/ }));
+    expect(screen.getByRole("menuitem", { name: /:standardConc/ })).toBeTruthy();
+    expect(screen.getByText(/^Standard Concentration \(mg\/mL\)/)).toBeTruthy();
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: /Sample variable/ }));
+    expect(screen.getByRole("menuitem", { name: /:sampleConc/ })).toBeTruthy();
+    expect(screen.getByText("Sample Concentration (mg/mL)")).toBeTruthy();
+    await user.keyboard("{Escape}");
     const unitField = screen.getByRole("combobox", { name: "Concentration unit" });
     unitField.focus();
     await user.keyboard("{ArrowDown}");

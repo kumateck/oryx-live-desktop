@@ -646,6 +646,10 @@ export type DomainEntitiesApprovalsApprovalEntity = {
   requestedBy?: DomainEntitiesUsersUserDto;
   onBehalfOf?: SharedCollectionItemDto;
   contentRevision?: number | null;
+  productCode?: string | null;
+  productStage?: number | null;
+  materialName?: string | null;
+  materialCode?: string | null;
 };
 export type DomainEntitiesFormsResponseRejectionOutcome = 0 | 1;
 export type DomainEntitiesApprovalsApprovalRequestBody = {
