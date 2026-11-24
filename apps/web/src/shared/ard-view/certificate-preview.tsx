@@ -1,3 +1,4 @@
+import { CoaReportingSpecification } from "./raw-data/coa-reported-results";
 import { CertificateSignatures, type CertificateSignatories } from "./certificate-signatures";
 import { useMemo } from "react";
 import { formatDate, formatMonthYear } from "@/shared/format/dates";
@@ -53,10 +54,11 @@ export function CertificatePreview({ kind, facts, extra = [], sections, response
             return <tr key={section.id ?? index} className="align-top [&:not(:last-child)>td]:border-b"><td className="px-3 py-3 text-center text-xs text-muted-foreground">{index + 1}</td>
               <td className="px-3 py-3 font-medium"><RichTextView html={section.name} /></td>
               <td className="px-3 py-3"><div className="break-words">{getResponsesForSection(section.fields ?? [], responseMap)}</div></td>
-              <td className="px-3 py-3">{section.id ? <div className="min-w-0 space-y-2"><CoaComplianceControl formSectionId={section.id} complies={item?.complies === true} onComplianceChange={onCompliance} />
+              <td className="px-3 py-3">{section.id ? <div className="min-w-0 space-y-2"><CoaComplianceControl formSectionId={section.id} complies={item?.complies === true} disabled={item?.reportingLocked} onComplianceChange={onCompliance} />
+                {item?.reportingLocked ? <p className="text-xs text-muted-foreground">Determined by the recorded assay reporting limits.</p> : null}
                 {item?.requiresReview ? <p className="text-xs text-warning">Review required: result cannot be assessed automatically.</p> : null}</div> : "–"}</td>
-              <td className="px-3 py-3"><div className="break-words"><RichTextView html={section.description} /></div></td>
-              <td className="px-3 py-3 break-words text-xs">{testReference(section.fields)}</td></tr>; })}</tbody>
+              <td className="px-3 py-3"><div className="break-words"><CoaReportingSpecification fields={section.fields ?? []} responses={responseMap} original={section.description ?? ""} /></div></td>
+              <td className="px-3 py-3 break-words text-xs">{testReference(section.fields, section.value)}</td></tr>; })}</tbody>
         </table></div>
       </section>
       <section className="rounded-md border bg-muted/20 px-4 py-3"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Overall assessment</p>

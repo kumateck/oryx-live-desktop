@@ -1,5 +1,6 @@
 import type { ModuleManifest } from "../contract";
 import { avlKeys as k } from "./lib/keys";
+export const avlActionPermissions = { delete: k.delete } as const;
 // QA's approved manufacturer list for raw materials (QAD/SOP/007/A03-06). Its current revision restricts procurement.
 export const manifest = {
   id: "approved-vendor-list", label: "Approved vendor list", root: "/qa/approved-vendor-list", order: 72,

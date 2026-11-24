@@ -54,3 +54,11 @@ it("preserves the exact stored result text and does not duplicate a percent unit
   expect(screen.getByText("99.8700%")).toBeTruthy();
   expect(screen.queryByText("%", { exact: true })).toBeNull();
 });
+
+it("prints the issued product certificate's frozen conversion instead of its original worksheet inputs", () => {
+  render(<CertificateResult value={JSON.stringify({ originalResponse: '{"assay":101.39}', coaReportedResults: [{ key: "average", label: "Average content",
+    sourceValue: 101.39, value: 2.43336, displayValue: "2.4334", unit: "% w/v", minimum: 2.32, maximum: 2.52, complies: true,
+    nominalConcentration: 2.4, definitionHash: "hash", converted: true }] })} unit="%" />);
+  expect(screen.getByText(/2.4334 % w\/v/)).toBeTruthy();
+  expect(screen.queryByText(/101.39/)).toBeNull();
+});

@@ -1,4 +1,7 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { Skeleton } from "@/shared/skeleton/skeleton";
+import { assayReportingPermissions } from "../manifest";
+const AssayReportingPanel = lazy(() => import("./assay-reporting-panel"));
 import { BadgeCheck, ClipboardCheck, Pencil } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Link, useNavigate, useParams } from "react-router";
@@ -38,6 +41,7 @@ const itemName = (specification: Specification) => specification.item ? `${speci
 export function ProductSpecificationDetailPage() {
   const { specification, tests, refreshing, unavailable } = useSpecification();
   const [approving, setApproving] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const approval = useApproveSpecification(VerifiableSpecification.Product, productSpecificationChanged, audit);
   if (refreshing) return <DetailPageSkeleton label="Loading specification" />;
   if (!specification || unavailable) return unavailable;
@@ -48,10 +52,14 @@ export function ProductSpecificationDetailPage() {
         <KeyFact label="Stage" value={testStageLabel(specification.testStage)} note={specification.item?.genericName ?? undefined} /></>}
       actions={<>
         <SpecificationPrintAction kind="product" title="Product specification" specification={specification} sections={tests.sections} />
+        <PermissionGuard require={assayReportingPermissions.view}><Button variant="outline" onClick={() => setReporting(true)}>COA assay reporting</Button></PermissionGuard>
         {!specification.isVerified ? <PermissionGuard require={specPermissions.verify}><Button variant="outline" onClick={() => setApproving(true)}><BadgeCheck />Approve</Button></PermissionGuard> : null}
         <PermissionGuard require={completePermission}><Button asChild variant="outline"><Link to={completePath(specification.id)}><ClipboardCheck />Set test references</Link></Button></PermissionGuard>
         <PermissionGuard require={specPermissions.edit}><Button asChild><Link to={editPath(specification.id)}><Pencil />Edit</Link></Button></PermissionGuard>
       </>} />
+    {reporting ? <PermissionGuard require={assayReportingPermissions.view}><Suspense fallback={<Skeleton className="h-32" />}>
+      <AssayReportingPanel specificationId={specification.id} onClose={() => setReporting(false)} />
+    </Suspense></PermissionGuard> : null}
     {approving ? <ConfirmActionDialog require={specPermissions.verify} destructive={false} title={`Approve ${specification.number}?`}
       description="Approving marks the specification as checked. Analysts test against it from then on." confirmLabel="Approve" busyLabel="Approving…" onClose={() => setApproving(false)}
       onConfirm={async () => { const error = await approval.approve(specification.id); if (!error) { setApproving(false); toast.success("Specification approved"); } return error; }} /> : null}

@@ -1195,6 +1195,20 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    deleteApiV1ApprovedVendorListById: build.mutation<
+      DeleteApiV1ApprovedVendorListByIdApiResponse,
+      DeleteApiV1ApprovedVendorListByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "approved-vendor-list", id: "LIST" }, { type: "approved-vendor-list", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list/${queryArg.id}`,
+        method: "DELETE",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
     getApiV1ApprovedVendorListByIdPrint: build.query<
       GetApiV1ApprovedVendorListByIdPrintApiResponse,
       GetApiV1ApprovedVendorListByIdPrintApiArg
@@ -2117,6 +2131,14 @@ export type PutApiV1ApprovedVendorListByIdApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesApprovedVendorListsSaveApprovedVendorListRequest: DomainEntitiesApprovedVendorListsSaveApprovedVendorListRequest;
+};
+export type DeleteApiV1ApprovedVendorListByIdApiResponse = void;
+export type DeleteApiV1ApprovedVendorListByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
 };
 export type GetApiV1ApprovedVendorListByIdPrintApiResponse =
   /** status 200 OK */ DomainEntitiesApprovedVendorListsApprovedVendorListDto;
@@ -3356,6 +3378,7 @@ export const {
   useGetApiV1ApprovedVendorListByIdQuery,
   useLazyGetApiV1ApprovedVendorListByIdQuery,
   usePutApiV1ApprovedVendorListByIdMutation,
+  useDeleteApiV1ApprovedVendorListByIdMutation,
   useGetApiV1ApprovedVendorListByIdPrintQuery,
   useLazyGetApiV1ApprovedVendorListByIdPrintQuery,
   useGetApiV1ApprovedVendorListOptionsQuery,

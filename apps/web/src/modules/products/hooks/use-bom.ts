@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useGetApiV1ProductByProductIdBomQuery, useLazyGetApiV1MaterialByMaterialIdUomQuery, usePostApiV1BomMutation, usePutApiV1ProductByProductIdBomArchiveMutation } from "../api/product-api";
-import { bomProblems, fromSavedBom, toBomRequest, type BomLine } from "../lib/bom";
+import { bomProblems, fromSavedBom, toBomRequest, verifyBomUnits, type BomLine } from "../lib/bom";
 import { savedBomSchema } from "../schemas/bom-schema";
 import { materialUnitSchema } from "../lib/material-unit";
 
@@ -43,21 +43,17 @@ export function useBom(productId: string, compositionSize: number | null, batchS
     setPreparing(true);
     try {
       // Recheck all linkage units before writing, including unchanged rows with a stale saved BOM unit.
-      const checked = await Promise.all(lines.map(async (line) => {
-        const result = await loadUnit({ ...bomAudit, ...context, materialId: line.material.value, ...(lookupProductId ? { productId: lookupProductId } : {}) });
+      const ids = [...new Set(lines.flatMap(line => [line.material.value, ...line.substitutes.map(sub => sub.value)]))];
+      const checked = await Promise.all(ids.map(async materialId => {
+        const result = await loadUnit({ ...bomAudit, ...context, materialId, ...(lookupProductId ? { productId: lookupProductId } : {}) });
         const parsed = materialUnitSchema.safeParse(result.data);
-        return { line, unit: parsed.success ? parsed.data : null };
+        return { materialId, unit: parsed.success ? parsed.data : null };
       }));
-      const missing = checked.filter((item) => !item.unit).map((item) => item.line.material.label);
-      if (missing.length) { setMessage(`Could not verify the department-linked unit for: ${missing.join(", ")}. Retry before saving.`); return; }
-      const changed = checked.filter(({ line, unit }) => line.linkedUnit && unit
-        && (line.linkedUnit.id !== unit.id || line.linkedUnit.symbol.toLowerCase() !== unit.symbol.toLowerCase()));
-      if (changed.length) { setMessage("A department-linked unit changed while this BOM was being edited. Reload and review the quantities before saving."); return; }
-      const verified = checked.flatMap(({ line, unit }) => unit ? [{ ...line,
-        unit: line.useDensityConversion ? { id: "", symbol: "mg" } : unit, linkedUnit: unit }] : []);
+      const verified = verifyBomUnits(lines, new Map(checked.flatMap(item => item.unit ? [[item.materialId, item.unit] as const] : [])));
+      if (verified.problems.length) { setMessage(verified.problems.join(" ")); return; }
       const revoked = permission.check();
       if (revoked) { setMessage(revoked); return; }
-      const result = await save({ ...bomAudit, ...context, domainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest: toBomRequest(productId, verified, compositionSize, batchSize) });
+      const result = await save({ ...bomAudit, ...context, domainEntitiesBillOfMaterialsRequestCreateBillOfMaterialRequest: toBomRequest(productId, verified.lines, compositionSize, batchSize) });
       if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
       setDraft(null);
       toast.success("Bill of materials saved");
