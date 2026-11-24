@@ -1889,6 +1889,7 @@ export type DomainEntitiesFormsResponseDetailDto = {
   effectiveForm?: DomainEntitiesFormsFormDto;
   approvedBy?: DomainEntitiesUsersUserDto;
   approvedAt?: string | null;
+  coaReportingToken?: string | null;
 };
 export type DomainEntitiesFormsRequestCreateQuestionOptionsRequest = {
   name?: string | null;

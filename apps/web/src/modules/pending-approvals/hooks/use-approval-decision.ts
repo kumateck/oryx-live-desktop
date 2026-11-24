@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { isProductionStockDocument, stockRejectionKind } from "../lib/stock-rejection";
 import { useVerifiedMutation } from "@/shared/workflows/use-verified-mutation";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
@@ -29,8 +30,11 @@ export function useApprovalDecision(approval: PendingApproval, decision: Decisio
       const current = approvalSchema.parse(record);
       if (!current || current.id !== approval.id || current.type !== type) throw new Error("This request is no longer assigned to you.");
       return { approval: current, evidence: currentEvidence };
-    }, async () => {
-      const arg = { ...audit, modelType: type, modelId: approval.id, domainEntitiesApprovalsApprovalRequestBody: {
+    }, async fresh => {
+      const responseEvidence = type === "Response" ? fresh.evidence.entries.find(entry => entry.url === `/api/v1/form/responses/${encodeURIComponent(approval.id)}`) : null;
+      const reporting = z.object({ coaReportingToken: z.string().nullish() }).safeParse(responseEvidence?.data);
+      const reportingToken = reporting.success ? reporting.data.coaReportingToken : null;
+      const arg = { ...audit, modelType: type, modelId: approval.id, ...(decision === "approve" && reportingToken ? { "If-Match": `"${reportingToken}"` } : {}), domainEntitiesApprovalsApprovalRequestBody: {
         ...(type === "StockRequisition" ? { contentRevision: approval.contentRevision ?? 0 } : {}),
         comments: comments.trim() || null, ...(type === "Response" && decision === "reject" && outcome !== null ? { responseRejectionOutcome: outcome } : {}),
       } };

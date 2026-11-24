@@ -22,7 +22,7 @@ const paths: Record<ReadableDocument, string> = {
 const responseSubject = z.object({ form: z.object({ id: z.string().min(1) }), materialBatch: z.object({ id: z.string().min(1) }).nullish(), batchManufacturingRecord: z.object({ id: z.string().min(1) }).nullish() });
 
 /** Structural JSON is evidence only, never a DTO used to render or mutate business data. */
-export const decisionEvidenceApi = api.injectEndpoints({ endpoints: (build) => ({
+export const decisionEvidenceApi = api.enhanceEndpoints({ addTagTypes: ["ProductCoaReporting"] }).injectEndpoints({ endpoints: (build) => ({
   decisionEvidence: build.query<DecisionEvidence, EvidenceSubject>({
     async queryFn(subject, _context, _options, baseQuery) {
       const read = async (path: string) => {
@@ -52,6 +52,6 @@ export const decisionEvidenceApi = api.injectEndpoints({ endpoints: (build) => (
         return { error: { status: "CUSTOM_ERROR", error: error instanceof Error ? error.message : "Approval evidence could not be verified." } };
       }
     },
-    providesTags: [{ type: "PendingApprovals", id: "all" }],
+    providesTags: (_result, _error, subject) => [{ type: "PendingApprovals", id: "all" }, ...(subject.type === "Response" ? [{ type: "ProductCoaReporting" as const, id: "all" }] : [])],
   }),
 }) });
