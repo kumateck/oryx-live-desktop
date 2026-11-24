@@ -28,7 +28,7 @@ function open(kind: 0 | 1, allowed = true, failFirst = false) {
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const path = new URL(input.url).pathname;
-    if (path === "/api/v1/requisition/department") { queueReads++; return Response.json({ data: [], pageIndex: 1, pageCount: 1, totalRecordCount: 0 }); }
+    if (path === `/api/v1/stock-issue/${kind === 0 ? "raw" : "packaging"}`) { queueReads++; return Response.json({ requisitions: { data: [], pageIndex: 1, pageCount: 1, totalRecordCount: 0 }, products: [] }); }
     if (path === `/api/v1/unstart-leftovers/${kind === 0 ? "raw" : "packaging"}`) {
       if (input.method === "GET") { previewReads++; return Response.json(preview()); }
       writes.push(await input.clone().json());
