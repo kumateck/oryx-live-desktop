@@ -139,6 +139,7 @@ export const WorksheetInputs = ({
               parsed,
               "sample",
               input,
+              sampleIndex + 1,
             );
             return (
               <InputRow

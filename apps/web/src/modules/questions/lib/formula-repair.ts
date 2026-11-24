@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { configuredUniversalInputVariableKeys, variableKeyFormatFor, UniversalVariableKeyFormat } from "@/shared/formula/builder/universal-variable-keys";
+import { testVariableLabel } from "@/shared/formula/display/variable-labels";
 
 type Json = z.infer<ReturnType<typeof z.json>>;
 type JsonObject = { [key: string]: Json };
@@ -37,8 +39,10 @@ export function manualRepairVariables(raw: string, expression: string): string[]
   const { payload } = decode(read(raw));
   if (Number(payload.type ?? 0) !== 3) return [];
   const constants = object(payload.constants) ? payload.constants : {};
+  const inputKeys = variableKeyFormatFor(payload) === UniversalVariableKeyFormat.CanonicalAlphanumeric
+    ? configuredUniversalInputVariableKeys(payload) : new Set<string>();
   return [...new Set([...expression.matchAll(/:([A-Za-z][A-Za-z0-9_.]*)/g)].flatMap(match => match[1] ? [match[1]] : []))]
-    .filter(key => !(key in constants) && !/^(standard|sample\d*)(Avg|SD|RSD)$/.test(key)
+    .filter(key => !inputKeys.has(key) && !(key in constants) && !/^(standard|sample\d*)(Avg|SD|RSD)$/.test(key)
       && !/^(standardInput|sampleInput\d*)\./.test(key) && !/^R\d+(standard|sample\d*)$/.test(key));
 }
 
@@ -46,6 +50,6 @@ export function repairedFormulaDefinition(raw: string, expression: string, label
   const { payload, write } = decode(read(raw));
   const manualKeys = manualRepairVariables(raw, expression);
   return write({ ...payload, expression: expression.trim(), ...(Number(payload.type ?? 0) === 3
-    ? { manualVarLabels: Object.fromEntries(manualKeys.map(key => [key, labels[key]?.trim() || key])) } : {}) });
+    ? { manualVarLabels: Object.fromEntries(manualKeys.map(key => [key, testVariableLabel(key, labels[key])])) } : {}) });
 }
 

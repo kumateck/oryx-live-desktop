@@ -20,9 +20,9 @@ import {
 import {
   ALPHANUMERIC_VARIABLE_KEY,
   assertCanonicalUniversalConfigKeys,
-  canonicalVariableLabel,
   canonicalizeUniversalInputTokens,
-  resolveConcentrationAliases,
+  resolveUniversalInputAliases,
+  universalInputVariableLabel,
   UniversalVariableKeyFormat,
   variableKeyFormatFor,
 } from "./universal-variable-keys";
@@ -60,10 +60,10 @@ export const buildUniversalDefinition = async (
   const canonicalKeys =
     variableKeyFormatFor(config) ===
     UniversalVariableKeyFormat.CanonicalAlphanumeric;
-  // Concentration aliases become the weight keys here, so the definition and its hash match the weight formula.
+  // Input aliases normalize to the weight keys before the definition and hash are built.
   const normalizeInputTokens = (expression: string) =>
     canonicalKeys
-      ? resolveConcentrationAliases(
+      ? resolveUniversalInputAliases(
           canonicalizeUniversalInputTokens(expression),
           config,
         )
@@ -191,7 +191,7 @@ export const buildUniversalDefinition = async (
     },
     variables: [...variables].sort().map((key) => ({
       key,
-      label: canonicalKeys ? canonicalVariableLabel(key) : key,
+      label: canonicalKeys ? universalInputVariableLabel(config, key) : key,
       dataType: FormulaDataType.Decimal,
       valueShape: FormulaValueShape.Scalar,
       scope: variableScopeFor(config, key),

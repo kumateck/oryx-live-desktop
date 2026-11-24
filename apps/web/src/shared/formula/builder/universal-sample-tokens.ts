@@ -1,7 +1,7 @@
 import {
   canonicalizeUniversalInputTokens,
   expandCanonicalSampleInputTokens,
-  resolveConcentrationAliases,
+  resolveUniversalInputAliases,
   sampleInputVariableKey,
   UniversalVariableKeyFormat,
   variableKeyFormatFor,
@@ -41,7 +41,7 @@ export const expandUniversalSampleExpression = (
           },
         )
       : [];
-    const canonical = resolveConcentrationAliases(
+    const canonical = resolveUniversalInputAliases(
       canonicalizeUniversalInputTokens(expression),
       config,
     );

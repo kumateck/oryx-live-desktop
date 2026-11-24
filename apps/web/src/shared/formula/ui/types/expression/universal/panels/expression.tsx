@@ -43,7 +43,11 @@ import { buildInputVariables } from "@/shared/formula/compute/formula-compute-he
 import {
   CONCENTRATION_INPUT_KEY,
   concentrationAliasesFor,
-  isConcentrationAliasKey,
+  configuredUniversalInputVariableKeys,
+  inputAliasKeysFor,
+  isWeightInputKey,
+  MEASUREMENT_ALIAS_LABELS,
+  usedMeasurementAliases,
   sampleExpansionInputKeys,
   sampleInputTemplateVariableKey,
   standardInputVariableKey,
@@ -263,56 +267,16 @@ const ExpressionPanel: React.FC<Props> = ({
     [constants, onConstantsChange],
   );
 
-  // Insert token helpers
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const insertAtCursor = useCallback(
-    (text: string) => {
-      const ta = textareaRef.current;
-      if (!ta) {
-        onExpressionChange(expression + text);
-        return;
-      }
-      const start = ta.selectionStart ?? ta.value.length;
-      const end = ta.selectionEnd ?? start;
-      const before = ta.value.slice(0, start);
-      const after = ta.value.slice(end);
-      const next = before + text + after;
-      onExpressionChange(next);
-      requestAnimationFrame(() => {
-        ta.focus();
-        const pos = start + text.length;
-        ta.setSelectionRange(pos, pos);
-      });
-    },
-    [expression, onExpressionChange],
-  );
-  const handleKeyButton = useCallback(
-    (key: string) => insertAtCursor(`:${key}`),
-    [insertAtCursor],
-  );
-
-  const handleInsertCellVariable = useCallback(
-    (rowIdx: number, colIdx: number) => {
-      const isSampleCol = colIdx >= (snapshot.settings.standardInTable ? 1 : 0);
-      if (isSampleCol) {
-        insertAtCursor(`:R${rowIdx + 1}sample`);
-      } else {
-        const slug = headerToSlug(headers[colIdx] || `Col${colIdx + 1}`);
-        insertAtCursor(`:R${rowIdx + 1}${slug}`);
-      }
-    },
-    [headers, insertAtCursor, snapshot.settings.standardInTable],
-  );
-
-  // The configuration as it will be saved, for the concentration aliases (:standardConc, :sampleConc).
+  // Use the frozen input configuration to resolve aliases in the editor.
   const aliasConfig = useMemo(
     () => ({
       ...snapshot.settings,
       standardInputs: snapshot.standardInputs,
       sampleInputs: snapshot.sampleInputs,
       expression,
+      constants,
     }),
-    [snapshot, expression],
+    [snapshot, expression, constants],
   );
   // Inputs as variables derived from frozen snapshot
   const inputVariables = useMemo(() => {
@@ -345,14 +309,7 @@ const ExpressionPanel: React.FC<Props> = ({
     const namedKeys = new Set(
       snapshot.settings.namedExpressions.map(({ key }) => key),
     );
-    const canonicalInputKeys = new Set([
-      ...snapshot.standardInputs.map(({ key }) =>
-        standardInputVariableKey(key),
-      ),
-      ...(snapshot.sampleInputs[0] ?? []).map(({ key }) =>
-        sampleInputTemplateVariableKey(key),
-      ),
-    ]);
+    const canonicalInputKeys = configuredUniversalInputVariableKeys(aliasConfig);
     return varKeys.filter((key) => {
       if (
         key === "sampleAvg" ||
@@ -367,7 +324,6 @@ const ExpressionPanel: React.FC<Props> = ({
         return false;
       if (key in tableVars || key in constants) return false;
       if (canonicalInputKeys.has(key)) return false;
-      if (isConcentrationAliasKey(key, aliasConfig)) return false;
       if (namedKeys.has(key)) return false;
       if (/^R\d+[A-Za-z0-9]+$/.test(key)) return false; // cell token pattern
       return true;
@@ -433,11 +389,9 @@ const ExpressionPanel: React.FC<Props> = ({
 
         expr = inlineUniversalNamedExpressions(
           expr,
-          parseUniversalNamedExpressions(
-            snapshot.settings as unknown as Record<string, unknown>,
-          ),
+          parseUniversalNamedExpressions(aliasConfig),
           sampleNumber,
-          snapshot.settings as unknown as Record<string, unknown>,
+          aliasConfig,
         );
         expr = expandAutoSampleTemplates(
           expr,
@@ -594,6 +548,7 @@ const ExpressionPanel: React.FC<Props> = ({
         headers.length - (snapshot.settings.standardInTable ? 1 : 0),
       numberOfReadings: data.length,
       firstColumnPurpose: snapshot.settings.firstColumnPurpose,
+      measurementAliases: usedMeasurementAliases({ ...aliasConfig, expression: nextExpression }),
       // Saved only when the formula uses an alias, so other formulas' saved configuration is unchanged.
       concentrationUnit: usesConcentrationTokens({
         ...aliasConfig,
@@ -621,6 +576,47 @@ const ExpressionPanel: React.FC<Props> = ({
       onEmit(buildPayload(nextExpression));
     },
     [buildPayload, onEmit, onExpressionChange],
+  );
+
+  // Insert token helpers
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const insertAtCursor = useCallback(
+    (text: string) => {
+      const ta = textareaRef.current;
+      if (!ta) {
+        handleMainExpressionChange(expression + text);
+        return;
+      }
+      const start = ta.selectionStart ?? ta.value.length;
+      const end = ta.selectionEnd ?? start;
+      const before = ta.value.slice(0, start);
+      const after = ta.value.slice(end);
+      const next = before + text + after;
+      handleMainExpressionChange(next);
+      requestAnimationFrame(() => {
+        ta.focus();
+        const pos = start + text.length;
+        ta.setSelectionRange(pos, pos);
+      });
+    },
+    [expression, handleMainExpressionChange],
+  );
+  const handleKeyButton = useCallback(
+    (key: string) => insertAtCursor(`:${key}`),
+    [insertAtCursor],
+  );
+
+  const handleInsertCellVariable = useCallback(
+    (rowIdx: number, colIdx: number) => {
+      const isSampleCol = colIdx >= (snapshot.settings.standardInTable ? 1 : 0);
+      if (isSampleCol) {
+        insertAtCursor(`:R${rowIdx + 1}sample`);
+      } else {
+        const slug = headerToSlug(headers[colIdx] || `Col${colIdx + 1}`);
+        insertAtCursor(`:R${rowIdx + 1}${slug}`);
+      }
+    },
+    [headers, insertAtCursor, snapshot.settings.standardInTable],
   );
 
   // Emit up full payload (only happens in Expression stage; container ensures emit)
@@ -1126,15 +1122,17 @@ const ExpressionPanel: React.FC<Props> = ({
                         isTemplate: true,
                       });
                     });
-                    if (concentrationAliases?.sampleWeightKey)
+                    for (const alias of inputAliasKeysFor(aliasConfig, "sample")) {
+                      const description = alias === CONCENTRATION_INPUT_KEY
+                        ? `Concentration (${concentrationAliases?.unit})`
+                        : MEASUREMENT_ALIAS_LABELS[alias];
                       items.push({
-                        key: sampleInputTemplateVariableKey(
-                          CONCENTRATION_INPUT_KEY,
-                        ),
-                        label: `Sample Concentration (${concentrationAliases.unit}) (auto)`,
+                        key: sampleInputTemplateVariableKey(alias),
+                        label: `Sample ${description} (auto)`,
                         value: null,
                         isTemplate: true,
                       });
+                    }
                   }
 
                   // Standard inputs
@@ -1154,22 +1152,20 @@ const ExpressionPanel: React.FC<Props> = ({
                         isTemplate: false,
                       });
                     });
-                    const standardWeight = concentrationAliases?.standardWeightKey
-                      ? snapshot.standardInputs.find(
-                          (input) =>
-                            input.key === concentrationAliases.standardWeightKey,
-                        )
-                      : undefined;
-                    if (concentrationAliases && standardWeight)
-                      items.push({
-                        key: standardInputVariableKey(CONCENTRATION_INPUT_KEY),
-                        label: `${PURPOSE_LABEL[snapshot.settings.firstColumnPurpose]} Concentration (${concentrationAliases.unit})`,
-                        value:
-                          standardWeight.value === ""
-                            ? ""
-                            : Number(standardWeight.value),
-                        isTemplate: false,
-                      });
+                    const standardWeight = snapshot.standardInputs.find(input => isWeightInputKey(input.key));
+                    if (standardWeight) {
+                      for (const alias of inputAliasKeysFor(aliasConfig, "standard")) {
+                        const description = alias === CONCENTRATION_INPUT_KEY
+                          ? `Concentration (${concentrationAliases?.unit})`
+                          : MEASUREMENT_ALIAS_LABELS[alias];
+                        items.push({
+                          key: standardInputVariableKey(alias),
+                          label: `${PURPOSE_LABEL[snapshot.settings.firstColumnPurpose]} ${description}`,
+                          value: standardWeight.value === "" ? "" : Number(standardWeight.value),
+                          isTemplate: false,
+                        });
+                      }
+                    }
                   }
 
                   // Standard stats
