@@ -22,6 +22,7 @@ const eligibilityApi = api.injectEndpoints({ endpoints: (build) => ({
     query: (materialIds) => ({ url: "/api/v1/approved-vendor-list/eligibility", method: "POST", body: { materialIds },
       headers: { Module: "Procurement", SubModule: "Approved Vendor List" } }),
     transformResponse: (data: z.input<typeof eligibilitySchema>) => eligibilitySchema.parse(data),
+    providesTags: [{ type: "approved-vendor-list", id: "LIST" }],
   }),
 }) });
 

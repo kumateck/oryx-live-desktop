@@ -8,7 +8,7 @@ import { reviewDocumentPath } from "@/modules/pending-reviews/lib/review-documen
 import { ApiProvider } from "@/shared/api/api-provider";
 import { canAccess } from "@/shared/auth/access";
 import { SessionProvider, useSession } from "@/shared/auth/session-provider";
-import { manufacturerRefusal, markOptions, supplierRefusal } from "@/shared/procurement/approved-vendors";
+import { manufacturerRefusal, markOptions, supplierRefusal, useApprovedVendors } from "@/shared/procurement/approved-vendors";
 import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
 import { openMenu } from "@/test/menu";
 import { modules } from "../registry";
@@ -36,13 +36,18 @@ function open(element: ReactNode, granted: string[], data: { lists?: unknown[]; 
   const backend = stubBackend({ permissions: granted });
   const auth = backend.fetcher.getMockImplementation();
   const calls: { path: string; method: string; body: unknown }[] = [];
+  let deleted = false;
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return auth ? auth(input, init) : new Response(null, { status: 500 });
     const url = new URL(input.url);
     calls.push({ path: url.pathname, method: input.method, body: input.method === "GET" ? null : await input.clone().json().catch(() => null) });
-    if (input.method === "DELETE") return data.deleteStatus
-      ? Response.json({ title: "Conflict", errors: [{ code: "ApprovedVendorList.NotSuperseded", description: "Only a superseded approved vendor list can be deleted." }] }, { status: data.deleteStatus })
-      : new Response(null, { status: 204 });
+    if (input.method === "DELETE") {
+      if (data.deleteStatus) return Response.json({ title: "Conflict", errors: [{ code: "Maintenance.Changed", description: "The record or its references changed during validation." }] }, { status: data.deleteStatus });
+      deleted = true;
+      return new Response(null, { status: 204 });
+    }
+    if (url.pathname === "/api/v1/approved-vendor-list/eligibility")
+      return Response.json([{ materialId: "m1", restricted: !deleted, approved: [] }]);
     if (input.method !== "GET") return Response.json("l2", { status: 201 });
     if (url.pathname === "/api/v1/approved-vendor-list") return Response.json(data.lists ?? []);
     if (url.pathname === "/api/v1/approved-vendor-list/l1") return Response.json(data.list ?? detail(1));
@@ -106,24 +111,19 @@ it("offers correction and printing only with their keys", async () => {
   expect(screen.getByRole("menuitem", { name: "Print" })).toBeTruthy();
 });
 
-it("offers deletion only for a superseded revision and only with its own permission", async () => {
-  const denied = open(<VendorListDetailPage />, [view, "CanEditApprovedVendorList"], { list: detail(2) });
+it("requires the delete permission even for an editor", async () => {
+  const denied = open(<VendorListDetailPage />, [view, "CanEditApprovedVendorList"], { list: detail(1) });
   await screen.findByRole("heading", { name: "Revision 17" });
   expect(screen.queryByRole("button", { name: /Actions for Revision 17/ })).toBeNull();
   expect(denied.writes()).toHaveLength(0);
-  for (const status of [0, 1, 3]) {
-    cleanup(); forgetSession();
-    open(<VendorListDetailPage />, [view, "CanDeleteApprovedVendorList"], { list: detail(status) });
-    await screen.findByRole("heading", { name: "Revision 17" });
-    expect(screen.queryByRole("button", { name: /Actions for Revision 17/ })).toBeNull();
-  }
 });
 
-it("confirms deleting a superseded detail revision and returns to the overview", async () => {
-  const allowed = open(<VendorListDetailPage />, [view, "CanDeleteApprovedVendorList"], { list: detail(2) });
+it.each([0, 1, 2, 3])("confirms deleting a revision in status %s and returns to the overview", async (status) => {
+  const allowed = open(<VendorListDetailPage />, [view, "CanDeleteApprovedVendorList"], { list: detail(status) });
   await openMenu(/Actions for Revision 17/);
   fireEvent.click(screen.getByRole("menuitem", { name: "Delete revision" }));
   await screen.findByRole("dialog", { name: "Delete revision 17?" });
+  expect(screen.getByText(/Deleting the current approved revision removes its procurement restrictions/)).toBeTruthy();
   expect(allowed.writes()).toHaveLength(0);
   fireEvent.click(screen.getByRole("button", { name: "Delete revision" }));
   await screen.findByText("Vendor list overview");
@@ -131,7 +131,7 @@ it("confirms deleting a superseded detail revision and returns to the overview",
 });
 
 it("deletes from the revision table and refreshes the cached list", async () => {
-  const allowed = open(<VendorListsPage />, [view, "CanDeleteApprovedVendorList"], { lists: [summary(2)] });
+  const allowed = open(<VendorListsPage />, [view, "CanDeleteApprovedVendorList"], { lists: [summary(0, { reviewStatus: 0 })] });
   await openMenu(/Actions for revision 17/);
   fireEvent.click(screen.getByRole("menuitem", { name: "Delete revision" }));
   fireEvent.click(await screen.findByRole("button", { name: "Delete revision" }));
@@ -140,12 +140,25 @@ it("deletes from the revision table and refreshes the cached list", async () => 
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 
+it("refreshes procurement eligibility after the current revision is deleted", async () => {
+  function Eligibility() {
+    const material = useApprovedVendors(["m1"]).get("m1");
+    return material ? <p>{material.restricted ? "Vendors restricted" : "Vendors unrestricted"}</p> : null;
+  }
+  open(<><Eligibility /><VendorListsPage /></>, [view, "CanDeleteApprovedVendorList", "CanViewApprovedVendorEligibility"], { lists: [summary(1)] });
+  await screen.findByText("Vendors restricted");
+  await openMenu(/Actions for revision 17/);
+  fireEvent.click(screen.getByRole("menuitem", { name: "Delete revision" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Delete revision" }));
+  await screen.findByText("Vendors unrestricted");
+});
+
 it("keeps the confirmation open with the server's status refusal", async () => {
   open(<VendorListDetailPage />, [view, "CanDeleteApprovedVendorList"], { list: detail(2), deleteStatus: 409 });
   await openMenu(/Actions for Revision 17/);
   fireEvent.click(screen.getByRole("menuitem", { name: "Delete revision" }));
   fireEvent.click(await screen.findByRole("button", { name: "Delete revision" }));
-  expect((await screen.findByRole("alert")).textContent).toContain("Only a superseded approved vendor list can be deleted.");
+  expect((await screen.findByRole("alert")).textContent).toContain("The record or its references changed during validation.");
   expect(screen.getByRole("dialog")).toBeTruthy();
 });
 
