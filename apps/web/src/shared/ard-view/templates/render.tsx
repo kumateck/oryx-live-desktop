@@ -1,3 +1,5 @@
+import { CoaReportedResults } from "../raw-data/coa-reported-results";
+import { hasCoaReporting } from "../raw-data/coa-reporting";
 import { selectedOptionLabels } from "@/shared/ard-view/response/selected-options";
 import StoredFormulaResult from "@/shared/ard-view/raw-data/print/stored-formula-result";
 import { isGovernedFormulaResponse } from "@/shared/ard-view/raw-data/governed-formula-result";
@@ -17,6 +19,7 @@ export const renderSpecificationResult = (
   response: FormResponseDto,
   templateField: FormFieldDto,
 ) => {
+  if (hasCoaReporting(response)) return <CoaReportedResults response={response} />;
   if (isGovernedFormulaResponse(response)) return <StoredFormulaResult response={response} preferAverage />;
   const questionType = sanitizeNumber(templateField.question?.type ?? response.formField?.question?.type);
   if ([QuestionType.Dropdown, QuestionType.SingleChoice, QuestionType.Checkbox].some(type => questionType === sanitizeNumber(type))) {

@@ -1,3 +1,4 @@
+import { CoaReportingSpecification } from "../../raw-data/coa-reported-results";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import { sanitizeString } from "@/shared/ard-view/legacy";
 import {
@@ -152,9 +153,7 @@ const TestSpecification: React.FC<ProductTestTableProps> = ({
                       <div className="space-y-5">
                         {row.sections.map((section) => (
                           <div key={section.id} className="leading-relaxed">
-                            <RichTextView
-                              html={sanitizeString(section.description)}
-                            />
+                            <CoaReportingSpecification fields={section.fields ?? []} responses={responseMap} original={sanitizeString(section.description)} />
                           </div>
                         ))}
                       </div>
@@ -185,9 +184,7 @@ const TestSpecification: React.FC<ProductTestTableProps> = ({
                     {noResponse ? "" : result}
                   </td>
                   <td className="border border-border print:border-black px-3 py-2 align-top">
-                    <RichTextView
-                      html={sanitizeString(section.description)}
-                    />
+                    <CoaReportingSpecification fields={section.fields ?? []} responses={responseMap} original={sanitizeString(section.description)} />
                   </td>
                 </tr>
               );
