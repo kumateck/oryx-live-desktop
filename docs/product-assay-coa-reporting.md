@@ -1,0 +1,17 @@
+# Product assay COA reporting
+
+Open Quality Control → Product specifications → the individual product specification → COA assay reporting. Each formula output is listed separately, including same-named assays. Edit reporting through its row action. Conversion is off by default; enabling it requires the nominal % w/v concentration, that output's lower and upper % w/v specification limits, decimal places and a change reason. The existing template remains reusable across products. Even products sharing a specification number keep their own rules.
+
+Only percentage-of-labelled-strength source results can use `source / 100 * nominal concentration`. For 120 mg/5 mL, the nominal concentration is 2.4% w/v. For 125 mg/5 mL it is 2.5% w/v. Other positive values can be configured. Saving clears specification verification; approve that product specification again before generating a certificate. The editor retains a refused save and requires reload after a concurrent change. Unsupported or obsolete outputs stay visible so their rules can be reviewed or disabled.
+
+The backend returns converted results and exact verdicts to the test preview, QC summary, approval and print views. The original worksheet readings remain available. Configured limits are printed with the converted output. Compliance uses the unrounded result; display precision cannot turn a failure into a pass. Fully governed conversion verdicts cannot be manually changed in preview. A reporting error prevents generation and shows the reason.
+
+Certificate submission snapshots the reporting evidence on the server. Later changes do not change the captured conversion. Previously submitted tests retain their original interpretation. A correction/retest uses the existing new-response workflow.
+
+`CanViewProductAssayReporting` gates the detail action and query. `CanEditProductAssayReporting` gates row actions and is checked again inside the validated submit callback. Both keys are defined and enforced by the companion backend. Its grant migration preserves existing specification access types. Deploy that schema/grant migration and backend before this UI.
+
+The narrow import is `bun scripts/import-assay-reporting.ts EXPORT.json`, followed by `bun run api:generate` and `bun run api:check`. It adds only the two reporting operations, their owned schemas and the two reporting fields on FormResponseDto. It preserves all previously reviewed operations and schemas.
+
+COA review and print use the per-test references saved through Set test references, with question-level references as a fallback. Stored numeric codes display as BP, USP, Ph. Int. and In-house. Literal reference editions are preserved. The approval adapter retains those references. Issued commercial certificates retain both the captured assay reporting evidence and the reference resolved at issue time.
+
+Validation: 48 focused UI tests and 43 additive-contract review tests passed. Root, web, desktop, gateway and formula-service typechecks passed (workspace dependency links were required in the isolated worktree); API/route checks and production web build passed. Source-backed browser checks covered the panel and editor at four viewport sizes down to 854×480 and a converted COA preview with BP reference. React Doctor completed with ten warnings in existing components (complexity, existing index keys and component exports), with no errors; new reporting components had no findings. No release/deployment validation was run because these changes have not been published.
