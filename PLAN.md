@@ -1,3 +1,7 @@
+## Pending COAs use current reporting (2026-11-24)
+
+Use the latest verified assay reporting configuration for every unapproved product COA, including already submitted certificates. Freeze results only after final approval. Reporting edits start a fresh pending review round while preserving historical decisions; approval checks the reviewed response token against current settings/results and captures the current values. Refresh mounted COA/evidence readers after configuration changes and prefer current response evidence over older batch-query data.
+
 ## Product-specific assay COA reporting (2026-11-24)
 
 Opt in separately for each product specification, test stage, formula field and stable output key. Shared templates and specification numbers never share reporting rules. Preserve the source percentage of labelled strength; calculate selected outputs as source / 100 * nominal % w/v concentration. Each configured output has explicit inclusive % w/v limits and display precision; compare before rounding. Reuse the authoritative formula engine and existing form, table, dialog and print components.
