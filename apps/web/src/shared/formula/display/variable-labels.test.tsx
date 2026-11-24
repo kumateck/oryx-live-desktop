@@ -44,6 +44,31 @@ describe("reserved test-variable descriptions", () => {
     expect(screen.getByRole("textbox", { name: "Sample 2 Titre Value (sample2TitreValue)" })).toBeTruthy();
   });
 
+  it("keeps each shared value and its authored alias label through viewing and printing", () => {
+    const weight = { key: "wt", label: "Weight (g)", value: "" };
+    const settings = {
+      type: 3, variableKeyFormat: 1, measurementAliases: ["absorbance", "peakAreas", "titreValue"],
+      expression: ":standardAbsorbance+:samplePeakAreas+:sample2TitreValue", headers: ["Standard", "Sample 1", "Sample 2"],
+      standardInTable: true, standardInput: true, sampleInput: true,
+      standardInputs: [weight], sampleInputs: [[weight], [weight]],
+    };
+    const definition = JSON.stringify(settings);
+    const value = JSON.stringify({ settings, standardInputs: { wt: "0.8" }, sampleInputs: [{ wt: "0.4" }, { wt: "0.2" }] });
+    const field = { id: "shared-inputs", question: { type: QuestionType.Formula, options: [{ name: definition }] } };
+    const view = formulaView(field, { value }, false);
+    if (view.kind !== "worksheet") throw new Error(view.kind);
+    expect(view.variables).toEqual([]);
+    expect(view.standardInputs).toEqual([{ key: "wt", label: "Standard Absorbance", value: "0.8" }]);
+    expect(view.samples.map(sample => sample.entries)).toEqual([
+      [{ key: "wt", label: "Peak Areas", value: "0.4" }],
+      [{ key: "wt", label: "Peak Areas / Titre Value", value: "0.2" }],
+    ]);
+    render(<RecordedFormulaInputs value={value} option={{ name: definition }} />);
+    expect(screen.getByText("Standard Absorbance: 0.8")).toBeTruthy();
+    expect(screen.getByText(/Peak Areas: 0.4/)).toBeTruthy();
+    expect(screen.getByText(/Peak Areas \/ Titre Value: 0.2/)).toBeTruthy();
+  });
+
   it("uses the same defaults for saved-test viewing and printing without rewriting recorded data", async () => {
     const value = JSON.stringify({ settings, manualVars });
     const field = { id: "assay-labels", question: { type: QuestionType.Formula, options: [{ name: JSON.stringify(settings) }] } };
