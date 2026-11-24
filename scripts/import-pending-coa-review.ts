@@ -1,0 +1,23 @@
+import { readFile, writeFile } from "node:fs/promises";
+import { object, parse } from "../deploy/customer-server/data.ts";
+
+const sourcePath = process.argv[2];
+if (!sourcePath) throw new Error("Pass a metadata-only backend OpenAPI export.");
+const source = object(parse(await readFile(sourcePath, "utf8")));
+const target = new URL("../contracts/openapi/backend.v1.json", import.meta.url);
+const document = object(parse(await readFile(target, "utf8")));
+const schemas = object(object(document.components ?? null).schemas ?? null);
+const sourceSchemas = object(object(source.components ?? null).schemas ?? null);
+const name = "DOMAIN.Entities.Forms.ResponseDetailDto";
+const properties = object(object(schemas[name] ?? null).properties ?? null);
+const sourceProperties = object(object(sourceSchemas[name] ?? null).properties ?? null);
+if (!sourceProperties.coaReportingToken) throw new Error("Missing COA review token.");
+properties.coaReportingToken = sourceProperties.coaReportingToken;
+const path = "/api/v1/approval/approve/{modelType}/{modelId}";
+const operation = object(object(object(document.paths ?? null)[path] ?? null).post ?? null);
+const sourceOperation = object(object(object(source.paths ?? null)[path] ?? null).post ?? null);
+if (!Array.isArray(sourceOperation.parameters) || !Array.isArray(operation.parameters)) throw new Error("Missing approval parameters.");
+const header = sourceOperation.parameters.find(parameter => object(parameter).in === "header" && object(parameter).name === "If-Match");
+if (!header) throw new Error("Missing If-Match review header.");
+operation.parameters = [...operation.parameters.filter(parameter => object(parameter).name !== "If-Match"), header];
+await writeFile(target, JSON.stringify(document, null, 2) + "\n");

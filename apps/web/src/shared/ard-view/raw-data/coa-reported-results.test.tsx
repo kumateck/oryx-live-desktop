@@ -50,3 +50,18 @@ it("retains saved per-test references through the approval certificate schema an
   render(<ArdResultsTable sections={sections} recorded={recorded} certificate />);
   expect(screen.getByRole("cell", { name: "BP" })).toBeTruthy();
 });
+
+it("uses the latest passing converted verdict on a pending COA even when its stored percentage verdict failed", () => {
+  const form = ardFormSchema.parse({ sections: [section] });
+  const sections = (form.sections ?? []).map(section => ({ ...section, fields: section.fields ?? [] }));
+  const recorded = answersByField(ardAnswersSchema.parse([{ ...response, complies: false }]));
+  render(<ArdResultsTable sections={sections} recorded={recorded} certificate />);
+  expect(screen.getByRole("cell", { name: "Complies" })).toBeTruthy();
+  expect(screen.queryByRole("cell", { name: "Does not comply" })).toBeNull();
+});
+
+it("shows the current conversion while clearly requiring specification approval before it can be signed", () => {
+  render(renderSpecificationResult({ ...response, coaReportingError: "Approve the product specification before approving this COA." }, field));
+  expect(screen.getByText(/2.4334 % w\/v/)).toBeTruthy();
+  expect(screen.getByRole("alert").textContent).toContain("Approve the product specification");
+});

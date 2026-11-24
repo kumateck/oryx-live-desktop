@@ -471,3 +471,5 @@ The full contract is `4de3b27dd44baafb881ae47d3cfd4489fb3023fb0db7a3090764eadd83
 All clients and the untyped-operation report were regenerated from that source.
 The shared review-status schema remains owned by both the existing vendor-list
 contract and costing and is retained when testing the costing predecessor.
+
+Pending COA review adds only `ResponseDetailDto.coaReportingToken` and the optional `If-Match` approval header. Import with `bun scripts/import-pending-coa-review.ts EXPORT.json`. Removing those two additions restores reviewed predecessor `6fd6d54f02a89cf876f59bdb801e585884b0d6b3c02e65e1bf7d0122f0290150`; the reviewed source digest is `0ea14c2cec5f976c94d1d8c924404e9c4df677ab1896aa09bd26a4f705674382`.

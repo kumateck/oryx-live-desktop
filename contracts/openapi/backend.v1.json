@@ -2862,6 +2862,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "description": "Pending product COA reporting evidence token returned by the response detail. Required when approving configured assay reporting.",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -137528,6 +137536,10 @@
           "approvedAt": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "coaReportingToken": {
+            "type": "string",
             "nullable": true
           }
         },

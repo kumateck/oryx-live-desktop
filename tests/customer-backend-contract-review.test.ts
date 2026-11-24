@@ -58,7 +58,15 @@ function stripFinishedGoods(document: ObjectValue) {
 
 /** Product assay reporting adds only its owned operation/schemas and optional recorded-result fields. */
 const assayReportingSchemas = ["DOMAIN.Entities.ProductSpecifications.AssayOutputDto", "DOMAIN.Entities.ProductSpecifications.AssayReportedResultDto", "DOMAIN.Entities.ProductSpecifications.AssayReportingConfigurationDto", "DOMAIN.Entities.ProductSpecifications.AssayReportingFieldDto", "DOMAIN.Entities.ProductSpecifications.AssayReportingRule", "DOMAIN.Entities.ProductSpecifications.SaveAssayReportingRequest"] as const;
+function stripPendingCoaReview(document: ObjectValue) {
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete object(object(schemas["DOMAIN.Entities.Forms.ResponseDetailDto"] ?? null).properties ?? null).coaReportingToken;
+  const operation = object(object(object(document.paths ?? null)["/api/v1/approval/approve/{modelType}/{modelId}"] ?? null).post ?? null);
+  if (Array.isArray(operation.parameters)) operation.parameters = operation.parameters.filter(parameter => object(parameter).name !== "If-Match");
+}
+
 function stripAssayReporting(document: ObjectValue) {
+  stripPendingCoaReview(document);
   delete object(document.paths ?? null)["/api/v1/product-specifications/{id}/assay-reporting"];
   const schemas = object(object(document.components ?? null).schemas ?? null);
   for (const name of assayReportingSchemas) delete schemas[name];
@@ -1373,4 +1381,14 @@ test("per-product assay reporting is additive and leaves every previously review
   assert.deepEqual(current.security, reviewedImport().security);
   stripAssayReporting(current);
   assert.equal(contractDigest(current), "1d528fdcdfa83245abf471694dd7a95ced8e47aafa3c4e2f05a11a8df7a091a8");
+});
+
+test("pending COA review adds only an optional evidence token and conditional approval header", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  assert.ok(object(object(schemas["DOMAIN.Entities.Forms.ResponseDetailDto"] ?? null).properties ?? null).coaReportingToken);
+  const operation = object(object(object(current.paths ?? null)["/api/v1/approval/approve/{modelType}/{modelId}"] ?? null).post ?? null);
+  assert.ok(Array.isArray(operation.parameters) && operation.parameters.some(parameter => object(parameter).name === "If-Match"));
+  stripPendingCoaReview(current);
+  assert.equal(contractDigest(current), "6fd6d54f02a89cf876f59bdb801e585884b0d6b3c02e65e1bf7d0122f0290150");
 });
