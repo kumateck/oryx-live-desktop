@@ -1,3 +1,7 @@
+## Formula variable display (2026-11-24)
+
+Reuse the shared DropdownButton for supplied input aliases, with exact keys and descriptions. Keep local insertion repeatable and preserve calculation behavior. Supply reserved-key label defaults consistently across test entry, viewing, printing and review; preserve custom labels and stored evidence. See `docs/formula-variable-alias-display.md`.
+
 ## Warehouse and certificate queues (2026-11-24)
 
 Reuse the server datatable and searchable product selector for the issue queue. Filter before pagination, oldest requests first. Identify each COA by its subject, code, batch and product stage; show generation/approval status separately from ATR testing status. Adjustment notes receive their own labelled column. See `docs/warehouse-queue-visibility.md`.

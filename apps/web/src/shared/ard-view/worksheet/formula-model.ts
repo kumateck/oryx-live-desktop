@@ -1,3 +1,4 @@
+import { testVariableLabel } from "@/shared/formula/display/variable-labels";
 import type { FormFieldDto, FormResponseDto } from "@/shared/ard-view/dto";
 import { formatFormulaEquationResult } from "@/shared/ard-view/raw-data/print/formula-result-display";
 import { buildReadingLabels } from "@/shared/ard-view/raw-data/print/formula-print-utils";
@@ -123,7 +124,7 @@ function universalWorksheet(settings: string, value: string, auth: Authority, bl
   });
 
   const input = (role: "standard" | "sample", field: LabeledInputField, recordedValue: string | undefined): WorksheetEntry =>
-    ({ key: field.key, label: weightInputPresentation(parsed, role, field).label || field.key, value: recordedValue ?? "" });
+    ({ key: field.key, label: testVariableLabel(field.key, weightInputPresentation(parsed, role, field).label, parsed), value: recordedValue ?? "" });
   const standardInputs = (parsed.standardInput === false ? [] : parsed.standardInputs ?? []).map((field) => input("standard", field, response?.standardInputs?.[field.key]));
   const samples = (parsed.sampleInput === false ? [] : parsed.sampleInputs ?? []).map((fields, index) =>
     ({ label: `Sample ${index + 1}`, entries: fields.map((field) => input("sample", field, response?.sampleInputs?.[index]?.[field.key])) }));
@@ -131,10 +132,10 @@ function universalWorksheet(settings: string, value: string, auth: Authority, bl
   const manual = coerceManualVars(response?.manualVars);
   const expression = normalizeFormulaExpressionText(parsed.expression);
   const keys = [...new Set([...expression.matchAll(/:([A-Za-z0-9_.]+)/g)].map((match) => match[1] ?? ""))];
-  const variables: WorksheetEntry[] = Object.entries(manual).map(([key, entry]) => ({ key, label: parsed.manualVarLabels?.[key] || entry.label || key, value: entry.raw }));
+  const variables: WorksheetEntry[] = Object.entries(manual).map(([key, entry]) => ({ key, label: testVariableLabel(key, parsed.manualVarLabels?.[key] || entry.label, parsed), value: entry.raw }));
   for (const key of keys) {
     if (key && !variables.some((entry) => entry.key === key) && isManualVarKey(key, parsed.constants, undefined, parsed))
-      variables.push({ key, label: parsed.manualVarLabels?.[key] || key, value: "" });
+      variables.push({ key, label: testVariableLabel(key, parsed.manualVarLabels?.[key], parsed), value: "" });
   }
   const constants = Object.entries(parsed.constants ?? {}).map(([key, constant]) => ({ key, label: key, value: String(constant) }));
 
@@ -173,7 +174,7 @@ function simpleWorksheet(settings: string, value: string, auth: Authority, blank
   const recorded = blank ? {} : parseSimpleFormulaResponse(value);
   const variables = extractFormulaVariables(expression, constantValues).map((key) => {
     const raw = recorded[key];
-    return { key, label: parsed.manualVarLabels?.[key] || key, value: raw === undefined || raw === null ? "" : String(raw) };
+    return { key, label: testVariableLabel(key, parsed.manualVarLabels?.[key], parsed), value: raw === undefined || raw === null ? "" : String(raw) };
   });
   const constants = Object.entries(constantValues).map(([key, constant]) => ({ key, label: key, value: String(constant) }));
   const percent = Boolean(parsed.percentageResults ?? parsed.percent);
