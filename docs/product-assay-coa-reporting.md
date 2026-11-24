@@ -6,7 +6,7 @@ Only percentage-of-labelled-strength source results can use `source / 100 * nomi
 
 The backend returns converted results and exact verdicts to the test preview, QC summary, approval and print views. The original worksheet readings remain available. Configured limits are printed with the converted output. Compliance uses the unrounded result; display precision cannot turn a failure into a pass. Fully governed conversion verdicts cannot be manually changed in preview. A reporting error prevents generation and shows the reason.
 
-Certificate submission snapshots the reporting evidence on the server. Later changes do not change the captured conversion. Previously submitted tests retain their original interpretation. A correction/retest uses the existing new-response workflow.
+Unapproved certificates always display the latest reporting settings, including certificates already awaiting approval. Reporting edits start a fresh review round and retain previous decisions in history. Final approval captures the reviewed conversion; later changes do not affect approved COAs. Approved historical tests without conversion evidence retain their original interpretation. A correction/retest uses the existing new-response workflow.
 
 `CanViewProductAssayReporting` gates the detail action and query. `CanEditProductAssayReporting` gates row actions and is checked again inside the validated submit callback. Both keys are defined and enforced by the companion backend. Its grant migration preserves existing specification access types. Deploy that schema/grant migration and backend before this UI.
 
@@ -15,3 +15,9 @@ The narrow import is `bun scripts/import-assay-reporting.ts EXPORT.json`, follow
 COA review and print use the per-test references saved through Set test references, with question-level references as a fallback. Stored numeric codes display as BP, USP, Ph. Int. and In-house. Literal reference editions are preserved. The approval adapter retains those references. Issued commercial certificates retain both the captured assay reporting evidence and the reference resolved at issue time.
 
 Validation: 48 focused UI tests and 43 additive-contract review tests passed. Root, web, desktop, gateway and formula-service typechecks passed (workspace dependency links were required in the isolated worktree); API/route checks and production web build passed. Source-backed browser checks covered the panel and editor at four viewport sizes down to 854×480 and a converted COA preview with BP reference. React Doctor completed with ten warnings in existing components (complexity, existing index keys and component exports), with no errors; new reporting components had no findings. No release/deployment validation was run because these changes have not been published.
+
+Pending-COA correction: current response evidence takes precedence over cached batch answers, and a fully converted verdict takes precedence over its old percentage verdict. Saving reporting settings refreshes mounted certificate and decision-evidence readers. Approval sends the reviewed `coaReportingToken` in `If-Match`; stale evidence requires reload and review. The narrow contract import is `bun scripts/import-pending-coa-review.ts EXPORT.json`, followed by API generation/checks.
+
+An unverified specification can still be previewed with its current converted result and an approval warning. COA submission and QA approval remain blocked until that specification is verified.
+
+Correction validation: 35 focused UI tests and 44 additive contract checks passed. All workspace typechecks and API/route checks passed. React Doctor reported only the existing complexity warning in the certificate hook.
