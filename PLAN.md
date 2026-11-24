@@ -1,3 +1,7 @@
+## Warehouse and certificate queues (2026-11-24)
+
+Reuse the server datatable and searchable product selector for the issue queue. Filter before pagination, oldest requests first. Identify each COA by its subject, code, batch and product stage; show generation/approval status separately from ATR testing status. Adjustment notes receive their own labelled column. See `docs/warehouse-queue-visibility.md`.
+
 ## Pending COAs use current reporting (2026-11-24)
 
 Use the latest verified assay reporting configuration for every unapproved product COA, including already submitted certificates. Freeze results only after final approval. Reporting edits start a fresh pending review round while preserving historical decisions; approval checks the reviewed response token against current settings/results and captures the current values. Refresh mounted COA/evidence readers after configuration changes and prefer current response evidence over older batch-query data.

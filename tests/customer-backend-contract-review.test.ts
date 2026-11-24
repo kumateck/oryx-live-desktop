@@ -65,7 +65,19 @@ function stripPendingCoaReview(document: ObjectValue) {
   if (Array.isArray(operation.parameters)) operation.parameters = operation.parameters.filter(parameter => object(parameter).name !== "If-Match");
 }
 
+function stripWarehouseVisibility(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  delete paths["/api/v1/stock-issue/raw"];
+  delete paths["/api/v1/stock-issue/packaging"];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete schemas["API.Controllers.StockIssueQueueDto"];
+  for (const field of ["productCode", "productStage", "materialName", "materialCode"])
+    delete object(object(schemas["DOMAIN.Entities.Approvals.ApprovalEntity"] ?? null).properties ?? null)[field];
+  delete object(object(schemas["DOMAIN.Entities.AnalyticalTestRequests.AnalyticalTestRequestDto"] ?? null).properties ?? null).coaStatus;
+}
+
 function stripAssayReporting(document: ObjectValue) {
+  stripWarehouseVisibility(document);
   stripPendingCoaReview(document);
   delete object(document.paths ?? null)["/api/v1/product-specifications/{id}/assay-reporting"];
   const schemas = object(object(document.components ?? null).schemas ?? null);
@@ -1385,10 +1397,34 @@ test("per-product assay reporting is additive and leaves every previously review
 
 test("pending COA review adds only an optional evidence token and conditional approval header", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripWarehouseVisibility(current);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   assert.ok(object(object(schemas["DOMAIN.Entities.Forms.ResponseDetailDto"] ?? null).properties ?? null).coaReportingToken);
   const operation = object(object(object(current.paths ?? null)["/api/v1/approval/approve/{modelType}/{modelId}"] ?? null).post ?? null);
   assert.ok(Array.isArray(operation.parameters) && operation.parameters.some(parameter => object(parameter).name === "If-Match"));
   stripPendingCoaReview(current);
   assert.equal(contractDigest(current), "6fd6d54f02a89cf876f59bdb801e585884b0d6b3c02e65e1bf7d0122f0290150");
+});
+
+test("warehouse queue visibility adds only scoped queue reads and optional certificate identity/status fields", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+  for (const kind of ["raw", "packaging"]) {
+    const path = object(object(current.paths ?? null)[`/api/v1/stock-issue/${kind}`] ?? null);
+    assert.deepEqual(Object.keys(path), ["get"]);
+    const parameters = object(path.get ?? null).parameters;
+    assert.ok(Array.isArray(parameters));
+    assert.ok(parameters.some(parameter => object(parameter).name === "productId"));
+  }
+  stripWarehouseVisibility(current);
+  assert.equal(contractDigest(current), "0ea14c2cec5f976c94d1d8c924404e9c4df677ab1896aa09bd26a4f705674382");
+});
+
+test("combined queue and pending-COA contracts preserve both independently reviewed predecessors", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const queueOnly = object(parse(JSON.stringify(current)));
+  stripPendingCoaReview(queueOnly);
+  assert.equal(contractDigest(queueOnly), "c086962947f8bd43225d8a487f07ffd7c0afc150b4b65964e408fc39410465b3");
+  stripWarehouseVisibility(current);
+  assert.equal(contractDigest(current), "0ea14c2cec5f976c94d1d8c924404e9c4df677ab1896aa09bd26a4f705674382");
 });

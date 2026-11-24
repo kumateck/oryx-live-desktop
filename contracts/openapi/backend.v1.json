@@ -124137,6 +124137,186 @@
           }
         }
       }
+    },
+    "/api/v1/stock-issue/raw": {
+      "get": {
+        "tags": [
+          "Requisition"
+        ],
+        "operationId": "GetRawStockIssueQueue",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "searchQuery",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "issued",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/API.Controllers.StockIssueQueueDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/API.Controllers.StockIssueQueueDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/API.Controllers.StockIssueQueueDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stock-issue/packaging": {
+      "get": {
+        "tags": [
+          "Requisition"
+        ],
+        "operationId": "GetPackagingStockIssueQueue",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "searchQuery",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "issued",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Module",
+            "in": "header",
+            "description": "The module this request falls under",
+            "example": "Warehouse",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SubModule",
+            "in": "header",
+            "description": "The sub module this request falls under",
+            "example": "PurchaseOrder",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/API.Controllers.StockIssueQueueDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/API.Controllers.StockIssueQueueDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/API.Controllers.StockIssueQueueDto"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -130079,6 +130259,10 @@
           },
           "testedBy": {
             "$ref": "#/components/schemas/DOMAIN.Entities.Users.UserDto"
+          },
+          "coaStatus": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -130411,6 +130595,23 @@
           "contentRevision": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          },
+          "productCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "productStage": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "materialName": {
+            "type": "string",
+            "nullable": true
+          },
+          "materialCode": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -191926,6 +192127,22 @@
           "decimalPlaces": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "API.Controllers.StockIssueQueueDto": {
+        "type": "object",
+        "properties": {
+          "requisitions": {
+            "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.Requisitions.RequisitionDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SHARED.CollectionItemDto"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false

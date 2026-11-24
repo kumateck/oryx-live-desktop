@@ -7,6 +7,8 @@ const swaps = { type: "SwapRequests" as const, id: "all" };
 
 export const stockIssueApi = warehouseApi.enhanceEndpoints({
   endpoints: {
+    getRawStockIssueQueue: (definition) => { definition.providesTags = addTags(definition.providesTags, [list, "RequisitionList"]); },
+    getPackagingStockIssueQueue: (definition) => { definition.providesTags = addTags(definition.providesTags, [list, "RequisitionList"]); },
     getApiV1RequisitionDepartment: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
     // Issuing moves the stock to production, so shelves and the requisition itself change.
     postApiV1RequisitionIssueStockRequisitionByStockRequisitionId: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [list, { type: "Requisition", id: arg.stockRequisitionId }, "RequisitionList", "StockOnShelves", "ActivityBoard"]); },
@@ -23,6 +25,6 @@ export const stockIssueApi = warehouseApi.enhanceEndpoints({
 });
 export const { useGetApiV1RequisitionByRequisitionIdMaterialOptionsQuery, usePostApiV1RequisitionByRequisitionIdMaterialOptionsMutation,
   usePutApiV1RequisitionByRequisitionIdItemsAndItemIdIssuedQuantityMutation } = stockIssueApi;
-export const { useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation, useGetApiV1RequisitionByRequisitionIdAlternativeBatchesQuery, useGetApiV1WarehouseSwapQuery,
+export const { useGetRawStockIssueQueueQuery, useGetPackagingStockIssueQueueQuery, useGetApiV1RequisitionDepartmentQuery, usePostApiV1RequisitionIssueStockRequisitionByStockRequisitionIdMutation, useGetApiV1RequisitionByRequisitionIdAlternativeBatchesQuery, useGetApiV1WarehouseSwapQuery,
   usePostApiV1WarehouseSwapMutation } = stockIssueApi;
 export const { useLazyGetApiV1MaterialByMaterialIdShelfQuery } = materialsApi;

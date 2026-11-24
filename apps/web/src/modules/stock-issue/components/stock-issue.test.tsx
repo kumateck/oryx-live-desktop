@@ -48,10 +48,10 @@ function open(address: string, permissions: string[], record: object = requisiti
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const path = new URL(input.url).pathname;
     calls.push({ method: input.method, path, ...(input.method === "POST" && path.endsWith("/swap") || input.method === "PUT" ? { body: await input.clone().json() } : {}),
-      ...(path === "/api/v1/requisition/department" ? { search: new URL(input.url).search } : {}) });
+      ...(path.startsWith("/api/v1/stock-issue/") ? { search: new URL(input.url).search } : {}) });
     const other = extra(path, input.method);
     if (other) return other;
-    if (path === "/api/v1/requisition/department") return Response.json({ data: [requisition("sr-1"), requisition("sr-2", { approved: false, status: 0 })], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
+    if (path.startsWith("/api/v1/stock-issue/")) return Response.json({ requisitions: { data: [requisition("sr-1"), requisition("sr-2", { approved: false, status: 0 })], pageIndex: 1, pageCount: 1, totalRecordCount: 2 }, products: [{ id: "p-1", code: "NL-001", name: "Paracetamol syrup" }, { id: "p-2", code: "NL-021", name: "X’feron" }] });
     if (path === "/api/v1/requisition/sr-1") return Response.json(record);
     if (path === "/api/v1/requisition/issue-stock-requisition/sr-1") return new Response(null, { status: 204 });
     return new Response(null, { status: 404 });
@@ -73,7 +73,7 @@ it("separates requisitions awaiting issue from issued ones, awaiting first", asy
   const user = userEvent.setup();
   const { calls } = open("/warehouse/stock-requisition", ["CanViewRawMaterialRequisitions"]);
   expect(await screen.findByText("SR-1")).toBeTruthy();
-  const listed = () => calls.filter((call) => call.path === "/api/v1/requisition/department").map((call) => new URLSearchParams(call.search).get("issued"));
+  const listed = () => calls.filter((call) => call.path.startsWith("/api/v1/stock-issue/")).map((call) => new URLSearchParams(call.search).get("issued"));
   const status = within(screen.getByRole("group", { name: "Requisition status" }));
   expect(status.getByRole("button", { name: "Awaiting issue" }).getAttribute("aria-pressed")).toBe("true");
   expect(listed().at(-1)).toBe("false");
@@ -341,4 +341,20 @@ it("lets the packing store issue a packaging substitute, pack for pack, only wit
   await user.type(within(dialog).getByLabelText("Reason"), "Amber bottles are short");
   await user.click(within(dialog).getByRole("button", { name: "Issue Clear bottle" }));
   await waitFor(() => expect(writes(allowed.calls)).toEqual([{ method: "POST", path: "/api/v1/requisition/sr-1/material-options" }]));
+}, 20_000);
+
+it("filters the full issue queue by a product code and can return to all products", async () => {
+  const user = userEvent.setup();
+  const { calls } = open("/warehouse/stock-requisition", ["CanViewRawMaterialRequisitions"]);
+  expect(await screen.findByText("SR-1")).toBeTruthy();
+  expect(screen.getByText("Oldest requests first")).toBeTruthy();
+  await user.click(screen.getByRole("combobox", { name: "Product" }));
+  await user.click(await screen.findByRole("option", { name: "NL-021 · X’feron" }));
+  await waitFor(() => expect(calls.some((call) => call.path === "/api/v1/stock-issue/raw" && new URLSearchParams(call.search).get("productId") === "p-2")).toBe(true));
+  expect(calls.some((call) => call.path === "/api/v1/stock-issue/packaging")).toBe(false);
+  await user.click(screen.getByRole("combobox", { name: "Product" }));
+  await user.click(await screen.findByRole("option", { name: "All products" }));
+  await waitFor(() => expect(screen.getByRole("combobox", { name: "Product" }).textContent).toContain("All products"));
+  // Returning to all products may reuse the already cached unfiltered queue.
+  expect(screen.getByText("SR-1")).toBeTruthy();
 }, 20_000);
