@@ -34,6 +34,6 @@ This source review does not approve a customer deployment fingerprint.
 The RMG001/RMG002 data correction is a separately guarded, evidence-producing
 operation. See [material identity repair](rmg001-material-identity-repair.md).
 
-Validation: 36 focused frontend tests, a production web build, all workspace typechecks, 44 additive contract-review checks, current generated API output, and React Doctor with no findings. Source components passed visual checks at 1366×768, 1280×720, 1024×576 and 854×480 without window overflow. Exact-commit Docker release validation and publishing remain deferred at the user’s request while local Docker storage is read-only. No deployment was performed.
+Validation: 36 focused frontend tests, a production web build, all workspace typechecks, 44 additive contract-review checks, current generated API output, and React Doctor with no findings. Source components passed visual checks at 1366×768, 1280×720, 1024×576 and 854×480 without window overflow. Publishing requires the exact-commit Docker customer-release validation; its result is recorded in the pull request. No deployment was performed.
 
 Companion backend: https://github.com/kumateck/oryx-backend/pull/1942.
