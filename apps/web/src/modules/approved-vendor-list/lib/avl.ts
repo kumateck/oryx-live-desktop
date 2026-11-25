@@ -2,8 +2,8 @@ import { z } from "zod";
 import { formatMonthYear } from "@/shared/date-pickers/date-utils";
 import type { DomainEntitiesApprovedVendorListsSaveApprovedVendorListLineRequest as LineRequest } from "@/shared/api/generated/procurement";
 
-export const ListStatus = { Pending: 0, Approved: 1, Superseded: 2, Rejected: 3 } as const;
-const statusNames = ["Being prepared", "Current", "Superseded", "Rejected"];
+export const ListStatus = { Pending: 0, Approved: 1, Superseded: 2, Rejected: 3, Draft: 4 } as const;
+const statusNames = ["Being prepared", "Current", "Superseded", "Rejected", "Draft"];
 export const listStatusLabel = (status: number) => statusNames[status] ?? `Unknown (${String(status)})`;
 export const ReviewStatus = { AwaitingReview: 0, Returned: 1, Confirmed: 2 } as const;
 /** Where a list being prepared stands: in review, returned, or (review confirmed) awaiting approval. */
@@ -26,12 +26,14 @@ const signatory = z.object({ name: text, designation: text, signature: text, sig
 export type Signatory = NonNullable<z.infer<typeof signatory>>;
 export const lineSchema = z.object({
   id: z.string(), order: z.number().catch(0), materialId: z.string(), materialCode: text, materialName: text,
-  manufacturerId: z.string(), manufacturerName: text, manufacturerAddress: text, supplierId: z.string(), supplierName: text,
+  manufacturerId: text, manufacturerName: text, manufacturerAddress: text, supplierId: text, supplierName: text,
+  newSupplierAddress: text, newSupplierType: z.union([z.literal(0), z.literal(1)]).nullish(),
   quantityPerPack: z.number(), approvalDate: month, validityDate: month, lapsed: z.boolean().catch(false),
 });
 export type ListLine = z.infer<typeof lineSchema>;
 export const detailSchema = summarySchema.extend({
   previousRevisionId: text, supersededAt: text, reviewVersion: z.number().nullish().transform((v) => v ?? null),
+  draftVersion: z.number().int().nonnegative().optional(),
   lines: z.array(lineSchema).nullish().transform((lines) => lines ?? []),
   preparedBySignatory: signatory, checkedBy: signatory, approvedBy: signatory,
 });
@@ -52,7 +54,8 @@ export function draftFromLine(line: ListLine): DraftLine {
   return {
     key: line.id, materialId: line.materialId, materialLabel: materialLabel(line.materialCode, line.materialName),
     manufacturer: { id: line.manufacturerId, name: line.manufacturerName ?? "Unnamed", address: line.manufacturerAddress },
-    supplier: { id: line.supplierId, name: line.supplierName ?? "Unnamed" },
+    supplier: line.supplierId ? { id: line.supplierId, name: line.supplierName ?? "Unnamed" }
+      : { id: null, name: line.supplierName ?? "", address: line.newSupplierAddress, type: line.newSupplierType ?? 0 },
     quantityPerPack: String(line.quantityPerPack), approvalMonth: line.approvalDate, validityMonth: line.validityDate,
   };
 }
@@ -76,7 +79,7 @@ export function lineProblem(line: DraftLine, others: readonly DraftLine[]): stri
   const quantity = Number(line.quantityPerPack);
   if (!line.quantityPerPack.trim() || !Number.isFinite(quantity) || quantity <= 0) return "Enter the quantity per pack in kg.";
   if (!line.approvalMonth || !line.validityMonth) return "Choose the approval and validity months.";
-  if (line.validityMonth < line.approvalMonth) return "The validity month cannot be before the approval month.";
+  if (line.validityMonth <= line.approvalMonth) return "The validity month must be after the approval month.";
   const same = (a: DraftLine) => a.key !== line.key && a.materialId === line.materialId
     && a.manufacturer.name.trim().toLowerCase() === line.manufacturer.name.trim().toLowerCase()
     && a.supplier.name.trim().toLowerCase() === line.supplier.name.trim().toLowerCase();

@@ -1,4 +1,23 @@
+import { addTags } from "@/shared/api/add-tags";
 import { procurementApi } from "@/shared/api/generated/procurement";
+import { avlModelType } from "../lib/keys";
+
+const vendorListApi = procurementApi.enhanceEndpoints({
+  endpoints: {
+    postApiV1ApprovedVendorListByIdSubmit: (definition) => {
+      definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, { id }) => error ? [] : [
+        { type: "DocumentReview", id: `${avlModelType}:${id}` }, { type: "PendingReviews", id: "all" },
+      ]);
+    },
+    deleteApiV1ApprovedVendorListById: (definition) => {
+      definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, { id }) => error ? [] : [
+        { type: "DocumentReview", id: `${avlModelType}:${id}` },
+        { type: "PendingReviews", id: "all" },
+        { type: "PendingApprovals", id: "all" },
+      ]);
+    },
+  },
+});
 
 // The approved vendor list's endpoints. Only this module's components import them.
 export const {
@@ -9,6 +28,8 @@ export const {
   useLazyGetApiV1ApprovedVendorListMappingsByMaterialIdQuery: useLazyVendorMappingsQuery,
   usePostApiV1ApprovedVendorListMutation: useCreateVendorListMutation,
   usePostApiV1ApprovedVendorListReviseMutation: useReviseVendorListMutation,
+  usePutApiV1ApprovedVendorListByIdDraftMutation: useSaveVendorListDraftMutation,
+  usePostApiV1ApprovedVendorListByIdSubmitMutation: useSubmitVendorListDraftMutation,
   usePutApiV1ApprovedVendorListByIdMutation: useUpdateVendorListMutation,
   useDeleteApiV1ApprovedVendorListByIdMutation: useDeleteVendorListMutation,
-} = procurementApi;
+} = vendorListApi;

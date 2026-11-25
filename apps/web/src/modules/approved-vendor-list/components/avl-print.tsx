@@ -30,9 +30,9 @@ export function VendorListPrint({ list, onClose }: { list: ListDetail; onClose: 
     ]} />
     <PrintTable columns={columns} rows={list.lines} rowKey={(line) => line.id} empty="No materials on this list." />
     <PrintSignatures signers={[
-      signer("Prepared by (Officer QA)", list.preparedBySignatory),
-      signer("Checked by (Deputy Manager QA)", list.checkedBy),
-      signer("Approved by (General Manager QA)", list.approvedBy),
+      signer("Prepared by", list.preparedBySignatory),
+      signer("Checked by", list.checkedBy),
+      signer("Approved by", list.approvedBy),
     ]} />
   </PrintPreviewDialog>;
 }

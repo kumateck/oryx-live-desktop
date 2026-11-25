@@ -27,7 +27,7 @@ export function VendorListsPage() {
   const parsed = useMemo(() => query.data ? summariesSchema.safeParse(query.data) : null, [query.data]);
   const rows = useMemo(() => parsed?.success ? parsed.data : [], [parsed]);
   const current = rows.find((row) => row.status === ListStatus.Approved) ?? null;
-  const pending = rows.some((row) => row.status === ListStatus.Pending);
+  const pending = rows.some((row) => row.status === ListStatus.Pending || row.status === ListStatus.Draft);
   const columns = useMemo(() => column.columns([
     column.accessor("revisionNumber", { header: "Revision", size: 100, cell: ({ row }) => <span className="font-medium">Rev. {row.original.revisionNumber}</span> }),
     column.accessor((r) => r.supersedesRevision ?? -1, { id: "supersedes", header: "Supersedes", size: 110, cell: ({ row }) => row.original.supersedesRevision ?? "–" }),
@@ -38,9 +38,9 @@ export function VendorListsPage() {
     column.accessor((r) => r.approvedAt ?? "", { id: "approved", header: "Approved", size: 120, cell: ({ row }) => formatDate(row.original.approvedAt) ?? "–" }),
     column.accessor("status", { header: "Status", size: 190, cell: ({ row }) => <Badge variant={stageVariant(row.original)}>{stageLabel(row.original.status, row.original.reviewStatus)}</Badge> }),
     ...(has(avlActionPermissions.delete) ? [column.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />,
-      cell: ({ row }) => row.original.status === ListStatus.Superseded ? <TableMenu label={`Actions for revision ${row.original.revisionNumber}`} items={[
+      cell: ({ row }) => <TableMenu label={`Actions for revision ${row.original.revisionNumber}`} items={[
         { id: "delete", label: "Delete revision", icon: Trash2, destructive: true, require: avlActionPermissions.delete, onSelect: () => setDeleting(row.original) },
-      ]} /> : null })] : []),
+      ]} /> })] : []),
   ]), [has]);
   return <section className="page-fill">
     <header className="flex flex-wrap items-start justify-between gap-3"><div><p className="eyebrow">QUALITY ASSURANCE</p>
@@ -50,7 +50,7 @@ export function VendorListsPage() {
         {current && !pending && has(avlKeys.revise) ? <Button size="sm" onClick={() => void navigate(`${avlRoot}/revise`)}><GitBranchPlus />New revision</Button> : null}
         {!current && !pending && has(avlKeys.create) && parsed?.success ? <Button size="sm" onClick={() => void navigate(`${avlRoot}/new`)}><FilePlus2 />Prepare list</Button> : null}
       </div></header>
-    {pending ? <p className="text-sm text-muted-foreground">A revision is being prepared. A new one can start once it is approved or rejected.</p> : null}
+    {pending ? <p className="text-sm text-muted-foreground">A revision is already in preparation.</p> : null}
     <ClientDataTable label="Approved vendor list revisions" columns={columns} rows={rows} getRowId={(r) => r.id}
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()}
       onRowOpen={(r) => void navigate(`${avlRoot}/${r.id}/details`)}
