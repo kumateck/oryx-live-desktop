@@ -40,7 +40,7 @@ export type TransferNote = z.infer<typeof noteRowsSchema>[number];
 // An empty number field reports "not a number"; it counts as none.
 const count = (message: string) => z.number().or(z.nan()).refine((value) => Number.isNaN(value) || (Number.isInteger(value) && value >= 0), message);
 /** The store enters shippers and loose packs. They are checked as yield: never nothing, never more than was sent. */
-export const approveSchema = (noteLike: Pick<TransferNote, "total" | "layout">) => z.object({ shippers: count("Enter a whole number of shippers, 0 or more"), loose: count("Enter a whole number of loose packs, 0 or more"), units: z.number().int().nonnegative().optional(), notes: z.string().max(500, "Use at most 500 characters and cite the supporting report") })
+export const approveSchema = (noteLike: Pick<TransferNote, "total" | "layout">) => z.object({ shippers: count("Enter a whole number of shippers, 0 or more"), loose: count("Enter a whole number of loose packs, 0 or more"), units: count("Enter a whole number of loose units, 0 or more").transform(value => Number.isNaN(value) ? 0 : value).optional(), notes: z.string().max(500, "Use at most 500 characters and cite the supporting report") })
   .superRefine((value, context) => {
     const received = yieldOf(value.shippers, value.loose, noteLike.layout, value.units ?? 0);
     if (received === null) context.addIssue({ code: "custom", path: ["shippers"], message: "The packing style does not say how many units fill a pack, so shippers cannot be counted" });

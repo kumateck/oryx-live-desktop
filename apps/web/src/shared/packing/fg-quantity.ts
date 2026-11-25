@@ -48,8 +48,9 @@ export function fgCount(yieldUnits: number, layout: FgLayout): FgCount | null {
 /** The yield the store counted: shippers and loose packs as entered, in base units. Null when the packing style cannot convert. */
 export function yieldOf(shippers: number, loose: number, layout: FgLayout, units = 0): number | null {
   if (!canCount(layout)) return null;
-  if (!Number.isFinite(units) || units < 0) return null;
-  return clean(packsFrom(shippers, loose, layout.perShipper) * (layout.baseUnitsPerPack as number) + units);
+  const remainder = Number.isNaN(units) ? 0 : units;
+  if (!Number.isFinite(remainder) || remainder < 0) return null;
+  return clean(packsFrom(shippers, loose, layout.perShipper) * (layout.baseUnitsPerPack as number) + remainder);
 }
 
 /** Adds counts that were each worked out with their own packing style. Loose packs are not merged into shippers across styles or batches. */

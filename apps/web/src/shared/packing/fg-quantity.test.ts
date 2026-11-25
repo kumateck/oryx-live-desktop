@@ -9,6 +9,7 @@ it("re-expresses an existing stock balance using the edited hierarchy, including
   const layout = fgStockLayout(style, stock);
   expect(fgCount(3_500_005, layout)).toEqual({ shippers: 9722, loose: 4, units: 5 });
   expect(yieldOf(9722, 4, layout, 5)).toBe(3_500_005);
+  expect(yieldOf(9722, 4, layout, Number.NaN)).toBe(3_500_000);
   expect(fgStockLayout({ ...style, packPerShipper: 17 }, stock).baseUnitsPerPack).toBeNull();
   expect(fgStockLayout(null, stock).baseUnitsPerPack).toBe(1);
 });

@@ -75,7 +75,7 @@ it("shows transferred quantity and pending receipt instead of four misleading ze
   expect(screen.getByText("Not yet received")).toBeTruthy();
 });
 
-it("receives the exact base quantity using current cartons, shippers and leftover tubes", async () => {
+it.each([false, true])("receives current cartons, shippers and leftover tubes with a cleared remainder: %s", async clearRemainder => {
   const shown = { ...note, totalQuantity: 3_500_005, packsPerShipperSnapshot: 360, productPacking: {
     ...note.productPacking, packPerShipper: 18, basePackingUoM: { name: "Tube" }, packingLists: [
       { uom: { name: "Shipper" }, quantity: 18, order: 1 }, { uom: { name: "Outer Carton" }, quantity: 20, order: 2 },
@@ -86,9 +86,14 @@ it("receives the exact base quantity using current cartons, shippers and leftove
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Receive transfer" }));
   const dialog = await screen.findByRole("dialog");
-  expect(await within(dialog).findByRole("spinbutton", { name: /Loose tubes received/ })).toHaveProperty("value", "5");
+  const remainder = await within(dialog).findByRole("spinbutton", { name: /Loose tubes received/ });
+  expect(remainder).toHaveProperty("value", "5");
+  if (clearRemainder) {
+    await user.clear(remainder);
+    await user.type(within(dialog).getByRole("textbox", { name: /Notes/ }), "Five loose tubes not received");
+  }
   await user.click(within(dialog).getByRole("button", { name: "Receive transfer" }));
-  await waitFor(() => expect(calls.find(call => call.method === "PUT")?.body).toEqual({ quantityReceived: 3_500_005, notes: null }));
+  await waitFor(() => expect(calls.find(call => call.method === "PUT")?.body).toEqual({ quantityReceived: clearRemainder ? 3_500_000 : 3_500_005, notes: clearRemainder ? "Five loose tubes not received" : null }));
 });
 
 it("approves a transfer with what was counted in, only with the approve permission", async () => {
