@@ -1,15 +1,17 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { GitBranchPlus, Pencil, Printer, Trash2 } from "lucide-react";
+import { GitBranchPlus, Pencil, Printer, Send, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { TableMenu, type ActionItem } from "@/shared/actions";
+import { ConfirmActionDialog, TableMenu, type ActionItem } from "@/shared/actions";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { ClientDataTable, dataTableColumns } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDate } from "@/shared/format/dates";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { ReviewPanel } from "@/shared/reviews/review-panel";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
-import { useVendorListPrintQuery, useVendorListQuery } from "../api/avl-api";
+import { useSubmitVendorListDraftMutation, useVendorListPrintQuery, useVendorListQuery } from "../api/avl-api";
 import { ListStatus, ReviewStatus, detailSchema, monthLabel, stageLabel, type ListDetail, type ListLine, type Signatory } from "../lib/avl";
 import { avlAudit, avlKeys, avlModelType, avlRoot } from "../lib/keys";
 import { avlActionPermissions } from "../manifest";
@@ -35,11 +37,16 @@ function PrintFromServer({ id, onClose }: { id: string; onClose: () => void }) {
   return <VendorListPrint list={parsed.data} onClose={onClose} />;
 }
 
-function useActions(list: ListDetail | null, onPrint: () => void, onDelete: () => void): ActionItem[] {
+function useActions(list: ListDetail | null, onPrint: () => void, onDelete: () => void, onSubmit: () => void): ActionItem[] {
   const navigate = useNavigate();
   if (!list) return [];
   const inReview = list.status === ListStatus.Pending && (list.reviewStatus === ReviewStatus.AwaitingReview || list.reviewStatus === ReviewStatus.Returned);
   const items: ActionItem[] = [{ id: "print", label: "Print", icon: Printer, require: avlKeys.print, onSelect: onPrint }];
+  if (list.status === ListStatus.Draft) {
+    items.push({ id: "edit-draft", label: "Edit draft", icon: Pencil, require: avlKeys.editDraft, onSelect: () => void navigate(`${avlRoot}/${list.id}/draft`) });
+    items.push({ id: "submit", label: "Submit for review", icon: Send, require: avlKeys.submit,
+      disabled: list.lines.length === 0 || list.draftVersion === undefined, onSelect: onSubmit });
+  }
   if (inReview) items.push({ id: "correct", label: "Correct list", icon: Pencil, require: avlKeys.edit, onSelect: () => void navigate(`${avlRoot}/${list.id}/edit`) });
   if (list.status === ListStatus.Approved) items.push({ id: "revise", label: "New revision", icon: GitBranchPlus, require: avlKeys.revise, onSelect: () => void navigate(`${avlRoot}/revise`) });
   items.push({ id: "delete", label: "Delete revision", icon: Trash2, destructive: true, separated: true,
@@ -54,9 +61,10 @@ export function VendorListDetailPage() {
   const parsed = useMemo(() => query.data ? detailSchema.safeParse(query.data) : null, [query.data]);
   const [printing, setPrinting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const list = parsed?.success ? parsed.data : null;
-  const actions = useActions(list, () => setPrinting(true), () => setDeleting(true));
+  const actions = useActions(list, () => setPrinting(true), () => setDeleting(true), () => setSubmitting(true));
   const columns = useMemo(() => column.columns([
     column.accessor((r) => r.materialCode ?? "", { id: "code", header: "Item code", size: 110 }),
     column.accessor((r) => r.materialName ?? "", { id: "material", header: "Material" }),
@@ -86,9 +94,26 @@ export function VendorListDetailPage() {
     </section>
     <ClientDataTable label="Materials" columns={columns} rows={list.lines} getRowId={(r) => r.id} fill={false} emptyTitle="No materials on this list" />
     {/* The "Checked by" step; Correct list edits it while it is in review. */}
-    <ReviewPanel record={{ modelType: avlModelType, modelId: list.id }} label="approved vendor list"
-      keys={{ confirm: avlKeys.review, return: avlKeys.return, resubmit: avlKeys.edit }} onChanged={() => void query.refetch()} />
+    {list.status !== ListStatus.Draft ? <ReviewPanel record={{ modelType: avlModelType, modelId: list.id }} label="approved vendor list"
+      keys={{ confirm: avlKeys.review, return: avlKeys.return, resubmit: avlKeys.edit }} onChanged={() => void query.refetch()} /> : null}
+    {submitting && list.status === ListStatus.Draft ? <SubmitDraft list={list} onClose={() => setSubmitting(false)} /> : null}
     {printing ? <PrintFromServer id={list.id} onClose={() => setPrinting(false)} /> : null}
     {deleting ? <DeleteVendorListDialog list={list} onClose={() => setDeleting(false)} onDeleted={() => void navigate(avlRoot)} /> : null}
   </article>;
+}
+
+function SubmitDraft({ list, onClose }: { list: ListDetail; onClose: () => void }) {
+  const [submit] = useSubmitVendorListDraftMutation();
+  const permission = usePermissionAction(avlKeys.submit);
+  return <ConfirmActionDialog require={avlKeys.submit} destructive={false} title="Submit draft for review?"
+    description="The saved revision will go to the reviewer. New manufacturers and suppliers on the draft are created on submission."
+    confirmLabel="Submit for review" busyLabel="Submitting…" onClose={onClose} onConfirm={async () => {
+      const denied = permission.check();
+      if (denied) return denied;
+      const result = await submit({ ...avlAudit, id: list.id,
+        domainEntitiesApprovedVendorListsSubmitApprovedVendorListRequest: { draftVersion: list.draftVersion ?? null } });
+      if ("error" in result) return apiErrorMessage(result.error);
+      toast.success("Draft submitted for review");
+      return null;
+    }} />;
 }
