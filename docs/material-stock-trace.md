@@ -18,7 +18,7 @@ Reviewed contract digest: `ed5a4dba5d3d9e8ff51a650289ef4ec833d8b457a9f859be7fd20
 
 Full return is available from an open batch board before consumption, even when only one material kind has been issued. It cancels the batch, releases unissued holds, and sends issued stock to Material returns for warehouse shelf allocation. It does not instantly restore shelves. The server rechecks actual issues, consumption, stock evidence and permissions. Zero-difference quantity repair stays disabled and explains why.
 
-COA/worksheet/approval/print result views show an existing average as its value and unit alone, with one matching specification range. Saved inputs stay available as evidence. Pending Edit COA is visible to its authorized original preparer from results and approval details; approved certificates remain read-only.
+Specification summary, COA, approval and print result views show an existing average as its value and unit alone, with one matching specification range. COA reporting does not reach the worksheet: each worksheet keeps its own formula, specification text, sample results, calculations and average exactly as recorded. Pending Edit COA is visible to its authorized original preparer from results and approval details; approved certificates remain read-only.
 
 ## Pending finished goods receipt
 
