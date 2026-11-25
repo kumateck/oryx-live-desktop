@@ -35,12 +35,13 @@ const detail = (status: number, extra: Record<string, unknown> = {}) => ({ ...su
 function open(element: ReactNode, granted: string[], data: { lists?: unknown[]; list?: unknown; deleteStatus?: number } = {}, path = "/x/l1") {
   const backend = stubBackend({ permissions: granted });
   const auth = backend.fetcher.getMockImplementation();
-  const calls: { path: string; method: string; body: unknown }[] = [];
+  const calls: { path: string; method: string; body: unknown; reason?: string }[] = [];
   let deleted = false;
   backend.fetcher.mockImplementation(async (input, init) => {
     if (!(input instanceof Request)) return auth ? auth(input, init) : new Response(null, { status: 500 });
     const url = new URL(input.url);
-    calls.push({ path: url.pathname, method: input.method, body: input.method === "GET" ? null : await input.clone().json().catch(() => null) });
+    calls.push({ path: url.pathname, method: input.method, body: input.method === "GET" ? null : await input.clone().json().catch(() => null),
+      ...(url.searchParams.has("reason") ? { reason: url.searchParams.get("reason") ?? "" } : {}) });
     if (input.method === "DELETE") {
       if (data.deleteStatus) return Response.json({ title: "Conflict", errors: [{ code: "Maintenance.Changed", description: "The record or its references changed during validation." }] }, { status: data.deleteStatus });
       deleted = true;
@@ -48,6 +49,7 @@ function open(element: ReactNode, granted: string[], data: { lists?: unknown[]; 
     }
     if (url.pathname === "/api/v1/approved-vendor-list/eligibility")
       return Response.json([{ materialId: "m1", restricted: !deleted, approved: [] }]);
+    if (url.pathname.endsWith("/draft") || url.pathname.endsWith("/submit")) return new Response(null, { status: 204 });
     if (input.method !== "GET") return Response.json("l2", { status: 201 });
     if (url.pathname === "/api/v1/approved-vendor-list") return Response.json(data.lists ?? []);
     if (url.pathname === "/api/v1/approved-vendor-list/l1") return Response.json(data.list ?? detail(1));
@@ -73,6 +75,8 @@ it("guards each page with the key for its task", () => {
   expect(can("/qa/approved-vendor-list/revise", [view, "CanReviseApprovedVendorList"])).toBe(true);
   expect(can("/qa/approved-vendor-list/l1/edit", [view, "CanReviseApprovedVendorList"])).toBe(false);
   expect(can("/qa/approved-vendor-list/l1/edit", [view, "CanEditApprovedVendorList"])).toBe(true);
+  expect(can("/qa/approved-vendor-list/l1/draft", [view, "CanEditApprovedVendorList"])).toBe(false);
+  expect(can("/qa/approved-vendor-list/l1/draft", [view, "CanEditApprovedVendorListDraft"])).toBe(true);
 });
 
 it("offers the first list only with the create key", async () => {
@@ -192,11 +196,76 @@ it("sends a correction only with the edit key, with the review version it was op
   await screen.findByText("Saved revision details");
 });
 
+it("saves the first revision as an empty draft", async () => {
+  const allowed = open(<VendorListEditorPage mode="new" />, [view, "CanCreateApprovedVendorList"], {}, "/x");
+  fireEvent.change(await screen.findByLabelText("Revision No."), { target: { value: "17" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+  await screen.findByText("Saved revision details");
+  expect(allowed.writes()).toMatchObject([{ path: "/api/v1/approved-vendor-list", method: "POST", body: { revisionNumber: 17, lines: [] } }]);
+});
+
+it("saves a draft with its version and proposed manufacturer and supplier", async () => {
+  const original = detail(4, { draftVersion: 2 });
+  const list = { ...original, lines: original.lines.map((line) => ({
+    ...line, manufacturerId: null, manufacturerName: "New Pharma", manufacturerAddress: "Hyderabad",
+    supplierId: null, supplierName: "New Traders", newSupplierAddress: "Accra", newSupplierType: 0,
+  })) };
+  const denied = open(<VendorListEditorPage mode="draft" />, [view, "CanEditApprovedVendorList"], { list });
+  expect((await screen.findByRole<HTMLButtonElement>("button", { name: "Save draft" })).disabled).toBe(true);
+  expect(denied.writes()).toHaveLength(0);
+  cleanup(); forgetSession();
+  const allowed = open(<VendorListEditorPage mode="draft" />, [view, "CanEditApprovedVendorListDraft"], { list });
+  fireEvent.click(await screen.findByRole("button", { name: "Save draft" }));
+  await screen.findByText("Saved revision details");
+  expect(allowed.writes()).toMatchObject([{ path: "/api/v1/approved-vendor-list/l1/draft", method: "PUT", body: {
+    draftVersion: 2, lines: [{
+      materialId: "m1", newManufacturer: { name: "New Pharma", address: "Hyderabad" },
+      newSupplier: { name: "New Traders", address: "Accra", type: 0 },
+    }],
+  } }]);
+});
+
+it("requires the submit permission and sends the saved draft version after confirmation", async () => {
+  const list = detail(4, { draftVersion: 2 });
+  const denied = open(<VendorListDetailPage />, [view, "CanEditApprovedVendorListDraft"], { list });
+  await openMenu(/Actions for Revision 17/);
+  expect(screen.getByRole("menuitem", { name: "Edit draft" })).toBeTruthy();
+  expect(screen.queryByRole("menuitem", { name: "Submit for review" })).toBeNull();
+  expect(denied.writes()).toHaveLength(0);
+  cleanup(); forgetSession();
+
+  const allowed = open(<VendorListDetailPage />, [view, "CanSubmitApprovedVendorList"], { list });
+  await openMenu(/Actions for Revision 17/);
+  fireEvent.click(screen.getByRole("menuitem", { name: "Submit for review" }));
+  await screen.findByRole("dialog", { name: "Submit draft for review?" });
+  expect(allowed.writes()).toHaveLength(0);
+  fireEvent.click(screen.getByRole("button", { name: "Submit for review" }));
+  await waitFor(() => expect(allowed.writes()).toMatchObject([
+    { path: "/api/v1/approved-vendor-list/l1/submit", method: "POST", body: { draftVersion: 2 } },
+  ]));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+});
+
+it("requires a reason when deleting a draft", async () => {
+  const allowed = open(<VendorListDetailPage />, [view, "CanDeleteApprovedVendorList"], { list: detail(4, { draftVersion: 2 }) });
+  await openMenu(/Actions for Revision 17/);
+  fireEvent.click(screen.getByRole("menuitem", { name: "Delete revision" }));
+  const confirm = await screen.findByRole("button", { name: "Delete revision" });
+  fireEvent.click(confirm);
+  expect((await screen.findByRole("alert")).textContent).toContain("Enter a reason for deleting the draft.");
+  expect(allowed.writes()).toHaveLength(0);
+  fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Wrong list" } });
+  fireEvent.click(confirm);
+  await screen.findByText("Vendor list overview");
+  expect(allowed.writes()).toMatchObject([{ path: "/api/v1/approved-vendor-list/l1", method: "DELETE", reason: "Wrong list" }]);
+});
+
 it("checks lines, names stages and prints months as on paper", () => {
   const line: DraftLine = { key: "a", materialId: "m1", materialLabel: "RMA002", manufacturer: { id: null, name: "New Pharma", address: "Hyderabad" },
     supplier: { id: null, name: "New Traders", address: null, type: 0 }, quantityPerPack: "25", approvalMonth: "2024-06", validityMonth: "2027-06" };
   expect(lineProblem(line, [line])).toBeNull();
-  expect(lineProblem({ ...line, validityMonth: "2024-05" }, [])).toMatch(/cannot be before/);
+  expect(lineProblem({ ...line, validityMonth: "2024-05" }, [])).toMatch(/must be after/);
+  expect(lineProblem({ ...line, validityMonth: "2024-06" }, [])).toMatch(/must be after/);
   expect(lineProblem({ ...line, quantityPerPack: "0" }, [])).toMatch(/quantity per pack/);
   expect(lineProblem({ ...line, key: "b" }, [line])).toMatch(/already on the list/);
   expect(lineRequest(line)).toMatchObject({ newManufacturer: { name: "New Pharma", address: "Hyderabad" }, newSupplier: { name: "New Traders", type: 0 } });
