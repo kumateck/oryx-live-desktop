@@ -21,6 +21,14 @@ export const emptyCount = (): FgCount => ({ shippers: 0, loose: 0, units: 0 });
 export const fgLayout = (style: SavedStyle | null | undefined): FgLayout =>
   style ? packingLayout(style) : { perShipper: null, baseUnitsPerPack: null, packName: null, baseName: null };
 
+/** Stock balances keep their base-unit quantity, but use the latest linked hierarchy for counting. */
+export function fgStockLayout(style: SavedStyle | null | undefined, recorded: { unitsPerPack: number; packsPerShipper: number | null | undefined }): FgLayout {
+  const current = fgLayout(style);
+  return { ...current, perShipper: style ? current.perShipper : recorded.packsPerShipper ?? null,
+    baseUnitsPerPack: style?.packingLists?.length ? current.baseUnitsPerPack
+      : recorded.unitsPerPack > 0 ? recorded.unitsPerPack : current.baseUnitsPerPack };
+}
+
 /** Whether a layout can turn yield into packs. Without it, quantities cannot be shown or entered as shippers and loose. */
 export const canCount = (layout: FgLayout): boolean => typeof layout.baseUnitsPerPack === "number" && Number.isFinite(layout.baseUnitsPerPack) && layout.baseUnitsPerPack > 0;
 
@@ -38,9 +46,11 @@ export function fgCount(yieldUnits: number, layout: FgLayout): FgCount | null {
 }
 
 /** The yield the store counted: shippers and loose packs as entered, in base units. Null when the packing style cannot convert. */
-export function yieldOf(shippers: number, loose: number, layout: FgLayout): number | null {
+export function yieldOf(shippers: number, loose: number, layout: FgLayout, units = 0): number | null {
   if (!canCount(layout)) return null;
-  return clean(packsFrom(shippers, loose, layout.perShipper) * (layout.baseUnitsPerPack as number));
+  const remainder = Number.isNaN(units) ? 0 : units;
+  if (!Number.isFinite(remainder) || remainder < 0) return null;
+  return clean(packsFrom(shippers, loose, layout.perShipper) * (layout.baseUnitsPerPack as number) + remainder);
 }
 
 /** Adds counts that were each worked out with their own packing style. Loose packs are not merged into shippers across styles or batches. */

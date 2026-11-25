@@ -73,6 +73,14 @@ it("keeps approved certificates read-only and shows no edit for someone else's c
     <CertificateRequestButtons response={pending} onRequested={() => {}} />
   </>, ["CanEditProductCertificateOfAnalysis", "CanRequestProductCertificateReview"]);
   await screen.findByRole("button", { name: "Request review" });
-  expect(screen.queryByRole("button", { name: "Edit certificate" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Edit COA" })).toBeNull();
+  expect(screen.getByText(/Only the original preparer can edit/)).toBeTruthy();
   expect(writes).toEqual([]);
+});
+
+it("exposes Edit COA for the original preparer before approval without waiting for a correction request", async () => {
+  mount(<PendingCertificateEditButton response={pending} sections={sections} compliance={compliance} onSaved={() => {}} />,
+    ["CanEditProductCertificateOfAnalysis"]);
+  fireEvent.click(await screen.findByRole("button", { name: "Edit COA" }));
+  expect(await screen.findByRole("dialog", { name: "Edit certificate" })).toBeTruthy();
 });

@@ -105,6 +105,8 @@ const vendorApproval: CatalogItem[] = [
 
 // Every supported collection is independently accessible, including units, sites,
 // and shifts. Keep the catalog and module guard on the same permission contract.
+settings?.items.push({ id: "system-settings.production-board-order", label: "Production board order", path: "/settings/production-board-order",
+  permissions: ["CanViewDepartmentProductionBoardOrder"] });
 const collectionsEntry = settings?.items.find((item) => item.path === "/settings/config");
 if (!collectionsEntry) throw new Error("Configuration Collections navigation entry is missing.");
 collectionsEntry.permissions = [...collectionViewPermissions];

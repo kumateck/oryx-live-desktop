@@ -9,6 +9,7 @@ export const allocationPath = `${transfersPath}/allocation`;
 export const audit = { module: "Warehouse", subModule: "Stock Transfer Issues" } as const;
 export const viewPermissions: Record<MaterialKind, string> = { 0: "CanViewRawMaterialTransferList", 1: "CanViewPackagingMaterialTransferList" };
 export const issuePermissions: Record<MaterialKind, string> = { 0: "CanIssueRawMaterialStockTransfers", 1: "CanIssuePackagingMaterialStockTransfers" };
+export const assignPermissions: Record<MaterialKind, string> = { 0: "CanAssignRawMaterialStockTransfers", 1: "CanAssignPackagingMaterialStockTransfers" };
 /** Refusing a transfer the store cannot supply; the server also requires the supplying department. */
 export const rejectPermission = "CanRejectIncomingStockTransferRequest";
 

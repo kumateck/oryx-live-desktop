@@ -10,6 +10,8 @@ import { CoaReportingSpecification } from "./coa-reported-results";
 import { ArdResultsTable } from "@/modules/pending-approvals/components/details/ard-results-table";
 import { answersByField } from "@/modules/pending-approvals/lib/ard-results";
 import { ardAnswersSchema, ardFormSchema } from "@/modules/pending-approvals/schemas/ard-result-schema";
+import TestSpecification from "../templates/specification";
+import { WorksheetTests } from "../worksheet/worksheet-tests";
 
 afterEach(cleanup);
 const field = { id: "field-a", question: { type: QuestionType.Formula, options: [{ name: '{"type":0,"expression":":assay","decimalPlaces":2}' }] } };
@@ -67,14 +69,15 @@ it("shows the current conversion while clearly requiring specification approval 
   expect(screen.getByRole("alert").textContent).toContain("Approve the product specification");
 });
 
-it("shows the final assay and its matching range on the certificate, while keeping sample readings in the worksheet", () => {
+it("shows only the average value and range in the worksheet summary, certificate and approval", () => {
   const average = response.coaReportedResults?.[0];
   if (!average) throw new Error("Expected the fixture's average");
   const sample = { ...average, key: "sample1", label: "Sample 1", displayValue: "103.9180", converted: false, unit: "%" };
   const mixed = { ...response, coaReportedResults: [sample, { ...sample, key: "sample2", label: "Sample 2", displayValue: "103.6517" }, average] };
   const { unmount } = render(renderSpecificationResult(mixed, field));
-  expect(screen.getByText("Sample 1:")).toBeTruthy();
-  expect(screen.getByText("Average content:")).toBeTruthy();
+  expect(screen.getByText("2.4334 % w/v")).toBeTruthy();
+  expect(screen.queryByText(/Sample [12]|Average|103\.9180|103\.6517/)).toBeNull();
+  expect(buildCoaCompliancePayload([section], [{ ...mixed, complies: false }])).toMatchObject([{ complies: true, reportingLocked: true }]);
   unmount();
 
   const form = ardFormSchema.parse({ sections: [section] });
@@ -95,14 +98,33 @@ it("shows the final assay and its matching range on the certificate, while keepi
   verifyAssayRow();
 });
 
-it("preserves independently configured results and results with no aggregate", () => {
+it("shows the average alone when present and retains results with no aggregate", () => {
   const average = response.coaReportedResults?.[0];
   if (!average) throw new Error("Expected the fixture's average");
   const independent = { ...average, key: "sample1", label: "Sample 1", displayValue: "2.44" };
   const { rerender } = render(renderSpecificationResult({ ...response, coaReportedResults: [independent, average] }, field, { certificate: true }));
-  expect(screen.getByText("Sample 1:")).toBeTruthy();
-  expect(screen.getByText("2.44 % w/v")).toBeTruthy();
+  expect(screen.queryByText("Sample 1:")).toBeNull();
+  expect(screen.queryByText("2.44 % w/v")).toBeNull();
+  expect(screen.getByText("2.4334 % w/v")).toBeTruthy();
   expect(screen.queryByText(/Average/)).toBeNull();
   rerender(renderSpecificationResult({ ...response, coaReportedResults: [{ ...independent, converted: false }] }, field, { certificate: true }));
   expect(screen.getByText("Sample 1:")).toBeTruthy();
+});
+
+it("uses the average verdict for worksheet remarks and prints no sample outputs or average label", () => {
+  const average = response.coaReportedResults?.[0];
+  if (!average) throw new Error("Expected average");
+  const mixed = { ...response, complies: true, coaReportedResults: [
+    { ...average, key: "sample1", label: "Sample 1", converted: false, displayValue: "103.9180", unit: "%" },
+    { ...average, value: 2.59, displayValue: "2.59", complies: false },
+  ] };
+  const { rerender } = render(<TestSpecification sections={[section]} responses={[mixed]} />);
+  expect(screen.getByText("The sample does not comply with the specification.")).toBeTruthy();
+  expect(screen.queryByText(/Sample 1|Average|103\.9180/)).toBeNull();
+  const passing = { ...mixed, coaReportedResults: [average] };
+  rerender(<TestSpecification sections={[section]} responses={[passing]} />);
+  expect(screen.getByText("The sample complies with the specification.")).toBeTruthy();
+  rerender(<WorksheetTests sections={[section]} responses={[passing]} />);
+  expect(screen.getAllByText("2.4334 % w/v").length).toBeGreaterThan(0);
+  expect(screen.queryByText(/Average content|Average:|Sample 1:/)).toBeNull();
 });

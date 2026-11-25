@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ConfirmActionDialog } from "@/shared/actions/confirm-action-dialog";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { useAccess } from "@/shared/auth/use-access";
+import { Link } from "react-router";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { useGetApiV1CollectionByItemTypeQuery, useDeleteApiV1CollectionByItemTypeAndItemIdMutation, useDeleteApiV1CollectionUomByUomIdMutation } from "../api/collection-api";
 import { OperationDepartmentDialogs, type DepartmentAction } from "./operation-department-dialogs";
@@ -53,6 +54,7 @@ export function CollectionPanel({ definition, audit = collectionAudit, addLabel 
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>{showHeading ? <h2 className="text-base font-semibold">{definition.label}</h2> : null}<p className="text-xs text-muted-foreground">{showHeading ? `${definition.group} · ` : ""}{all.length} items</p></div>
       <div className="flex min-w-0 flex-wrap gap-2">
+        {definition.id === "operations" ? <PermissionGuard require="CanViewDepartmentProductionBoardOrder"><Button asChild size="sm" variant="outline"><Link to="/settings/production-board-order">Board order</Link></Button></PermissionGuard> : null}
         <Input aria-label={`Search ${definition.label.toLowerCase()}`} placeholder="Search items…" value={search} onChange={(event) => setSearch(event.target.value)} className="w-full sm:w-56" />
         {definition.mode !== "read-only" ? <PermissionGuard require={definition.permissions.create}>
           <Button size="sm" disabled={!parsed?.success || Boolean(error)} onClick={() => setEditing({ kind: "create" })}>{addLabel}</Button>
