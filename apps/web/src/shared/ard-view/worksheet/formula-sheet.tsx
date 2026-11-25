@@ -48,9 +48,6 @@ function Readings({ table, blank }: { table: ReadingsTable; blank: boolean }) {
  */
 export function FormulaSheet({ view, title }: { view: FormulaWorksheet; title?: string | undefined }) {
   const { blank } = view;
-  const averages = view.results.filter(result => /^(average|mean)(?:[ _-]+(?:content|result|assay))?$/i.test(result.label.trim()));
-  const results = averages.length ? averages : view.results;
-  const calculations = averages.length ? [] : view.calculations;
   const inputs = [
     { title: "Constants", entries: view.constants },
     { title: "Recorded variables", entries: view.variables },
@@ -65,8 +62,8 @@ export function FormulaSheet({ view, title }: { view: FormulaWorksheet; title?: 
     <div className="break-inside-avoid space-y-2">
       <p className={heading}>Formula</p>
       <ExpressionView print expression={view.expression} option={{ append100: view.percent }} className="justify-center rounded-md border border-border bg-muted/30 py-2 text-base" />
-      {calculations.length ? <table className="w-full border-collapse text-sm" aria-label="Calculations"><tbody>
-        {calculations.map((calculation, index) => <tr key={`${calculation.label}-${index}`}>
+      {view.calculations.length ? <table className="w-full border-collapse text-sm" aria-label="Calculations"><tbody>
+        {view.calculations.map((calculation, index) => <tr key={`${calculation.label}-${index}`}>
           <th scope="row" className={`${cell} w-28 text-left font-semibold`}>{calculation.label}</th>
           <td className={cell}>{blank
             ? <span aria-hidden className="block h-7 border-b border-dashed border-border" />
@@ -77,10 +74,10 @@ export function FormulaSheet({ view, title }: { view: FormulaWorksheet; title?: 
         </tr>)}
       </tbody></table> : null}
     </div>
-    {results.length || blank ? <dl className="flex flex-wrap justify-end gap-2 break-inside-avoid" aria-label="Results">
-      {(blank ? [{ label: "Result", value: "", primary: true }] : results).map((line) => <div key={line.label}
+    {view.results.length || blank ? <dl className="flex flex-wrap justify-end gap-2 break-inside-avoid" aria-label="Results">
+      {(blank ? [{ label: "Result", value: "", primary: true }] : view.results).map((line) => <div key={line.label}
         className={`flex min-w-40 items-baseline justify-between gap-3 rounded-md border px-3 py-1.5 ${line.primary ? "border-foreground/60 font-semibold" : "border-border"}`}>
-        <dt className={averages.length ? "sr-only" : undefined}>{averages.length ? "Result" : line.label}</dt><dd className="tabular-nums">{blank ? <span aria-hidden className="inline-block h-4 w-24 border-b border-border" /> : line.value}</dd>
+        <dt>{line.label}</dt><dd className="tabular-nums">{blank ? <span aria-hidden className="inline-block h-4 w-24 border-b border-border" /> : line.value}</dd>
       </div>)}
     </dl> : null}
     {view.notice ? <p className="text-xs text-muted-foreground">{view.notice}</p> : null}
