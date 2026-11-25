@@ -18,6 +18,7 @@ const cell = "border px-2 py-1.5 align-top text-sm";
 /** The certificate as issued: a fixed copy of the approved, reportable results. */
 function CertificateSheet({ certificate, heading, subtitle, showPoint }: { certificate: Certificate; heading: string; subtitle: string; showPoint: boolean }) {
   const rows = certificateRows(certificate.rowsJson);
+  const notes = [...new Set(rows?.flatMap(row => row.notes ? [row.notes] : []) ?? [])];
   return <div className="space-y-4 bg-white p-4 text-black">
     <header className="text-center"><p className="text-sm font-semibold">QUALITY CONTROL DEPARTMENT</p><h2 className="text-lg font-bold uppercase">{heading}</h2>
       <p className="font-medium">{certificate.certificateCode ?? "–"}</p><p className="text-sm">{subtitle}</p></header>
@@ -28,6 +29,8 @@ function CertificateSheet({ certificate, heading, subtitle, showPoint }: { certi
         <tbody>{rows.map((row) => <tr key={row.key}><td className={cell}>{analysisLabel(row.analysisType)}{row.group ? <span className="block text-xs">{row.group}</span> : null}</td>
           {showPoint ? <td className={cell}>{row.sampleIdentity ?? "–"}</td> : null}<td className={cell}><RichTextView html={row.label} /></td><td className={cell}><CertificateSpecification value={row.result} original={row.specification ?? ""} /></td>
           <td className={cell}><CertificateResult value={row.result} unit={row.unit} /></td><td className={cell}>{row.reference || "–"}</td></tr>)}</tbody></table>}
+    {notes.length ? <section className="space-y-1"><h3 className="font-semibold">Certificate notes</h3>
+      {notes.map(note => <p key={note} className="whitespace-pre-wrap break-words">{note}</p>)}</section> : null}
     <p className="text-xs">Issued {formatDateTime(certificate.issuedAt) ?? "–"}. This certificate is a fixed copy of the approved reportable results.</p>
   </div>;
 }

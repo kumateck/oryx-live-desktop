@@ -20,9 +20,10 @@ export const certificateComment = (items: readonly CoaComplianceItem[], subject:
  * A certificate of analysis as it will be issued: the batch, each test with its result and specification, and whether it complies.
  * Compliance is inferred from the result against the specification and can be corrected test by test before the certificate is generated.
  */
-export function CertificatePreview({ kind, facts, extra = [], sections, responses, compliance, onCompliance, signatories }: {
+export function CertificatePreview({ kind, facts, extra = [], sections, responses, compliance, onCompliance, editable = true, notes, signatories }: {
   kind: "Material" | "Product"; facts: CertificateFacts; extra?: readonly { label: string; value: string | null }[]; sections: readonly FormSectionDto[]; responses: readonly FormResponseDto[]; compliance: readonly CoaComplianceItem[];
   signatories?: CertificateSignatories | undefined;
+  editable?: boolean; notes?: string | null | undefined;
   onCompliance: (sectionId: string, complies: boolean) => void;
 }) {
   const responseMap = useMemo(() => getBestResponseMap([...responses]), [responses]);
@@ -54,7 +55,7 @@ export function CertificatePreview({ kind, facts, extra = [], sections, response
             return <tr key={section.id ?? index} className="align-top [&:not(:last-child)>td]:border-b"><td className="px-3 py-3 text-center text-xs text-muted-foreground">{index + 1}</td>
               <td className="px-3 py-3 font-medium"><RichTextView html={section.name} /></td>
               <td className="px-3 py-3"><div className="break-words">{getResponsesForSection(section.fields ?? [], responseMap, { certificate: true })}</div></td>
-              <td className="px-3 py-3">{section.id ? <div className="min-w-0 space-y-2"><CoaComplianceControl formSectionId={section.id} complies={item?.complies === true} disabled={item?.reportingLocked} onComplianceChange={onCompliance} />
+              <td className="px-3 py-3">{section.id ? <div className="min-w-0 space-y-2"><CoaComplianceControl formSectionId={section.id} complies={item?.complies === true} disabled={!editable || item?.reportingLocked} onComplianceChange={onCompliance} />
                 {item?.reportingLocked ? <p className="text-xs text-muted-foreground">Determined by the recorded assay reporting limits.</p> : null}
                 {item?.requiresReview ? <p className="text-xs text-warning">Review required: result cannot be assessed automatically.</p> : null}</div> : "–"}</td>
               <td className="px-3 py-3"><div className="break-words"><CoaReportingSpecification certificate fields={section.fields ?? []} responses={responseMap} original={section.description ?? ""} /></div></td>
@@ -63,6 +64,7 @@ export function CertificatePreview({ kind, facts, extra = [], sections, response
       </section>
       <section className="rounded-md border bg-muted/20 px-4 py-3"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Overall assessment</p>
         <p className="mt-1 font-medium">{certificateComment(compliance, kind)}</p></section>
+      {notes ? <section className="space-y-1"><h3 className="font-semibold">Certificate notes</h3><p className="whitespace-pre-wrap break-words">{notes}</p></section> : null}
       <CertificateSignatures signatories={signatories} />
     </div>
   </article>;
