@@ -10,6 +10,7 @@ import "./ard-document.css";
 export type CertificateSection = ArdResultSection;
 export interface CertificateFacts {
   kind: "material" | "product"; name: string | null; code: string | null; batch: string | null; manufactured: string | null | undefined; expires: string | null | undefined;
+  notes?: string | null | undefined;
   arNumber: string | null; specNumber: string | null; sampled: string | null | undefined; analysed: string | null | undefined;
 }
 
@@ -29,6 +30,7 @@ export function ArdDocument({ facts, sections, recorded, signatories, worksheet 
       { label: "Sampled", value: formatDate(facts.sampled) }, { label: "Analysed", value: formatDate(facts.analysed) },
     ]} />
     <ArdResultsTable sections={sections} recorded={recorded} certificate={!worksheet} />
+    {!worksheet && facts.notes ? <div className="space-y-1"><h3 className="font-semibold">Certificate notes</h3><p className="whitespace-pre-wrap break-words">{facts.notes}</p></div> : null}
     <ArdSignatures signatories={signatories} />
   </div>;
 }

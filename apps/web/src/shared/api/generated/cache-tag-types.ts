@@ -154,6 +154,7 @@ export const generatedTagTypes = [
   "payment/cashflow-summary",
   "payment/currency-configuration",
   "payment/exchange-rate",
+  "pending-certificate",
   "performance",
   "performance/goal",
   "permission",

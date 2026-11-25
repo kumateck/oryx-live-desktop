@@ -40,7 +40,7 @@ export const apiDomains: readonly ApiDomain[] = [
     "ProductSpecification", "ProductStandardTestProcedure", "SpecificationPrint", "StpDocument",
   ] },
   { id: "qa", exportName: "qaApi", tags: ["QualityAudit"] },
-  { id: "forms", exportName: "formsApi", tags: ["Form", "FormRevision", "FormulaDefinition", "FormulaQuestion", "FormulaRuntime", "FormulaRepair", "TemplateRepair", "TestFieldReassignment", "TestCorrection"] },
+  { id: "forms", exportName: "formsApi", tags: ["Form", "FormRevision", "FormulaDefinition", "FormulaQuestion", "FormulaRuntime", "FormulaRepair", "TemplateRepair", "TestFieldReassignment", "TestCorrection", "PendingCertificate"] },
   { id: "templates", exportName: "templatesApi", tags: [
     "Procedure", "TemplateActivity", "TemplateAdoption", "TemplateArea", "TemplateForm", "TemplateQuestion",
     "TemplateSection", "TemplateSharing", "TemplateWorkflow",
