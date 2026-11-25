@@ -113,6 +113,27 @@ function stripVersionedCosting(document: ObjectValue) {
   for (const [name,fields] of Object.entries(costingFields)) for (const field of fields) delete object(object(schemas[name] ?? null).properties ?? null)[field];
 }
 
+/** Earlier contract reviews predate the vendor-list draft workflow. */
+function beforeVendorListDrafts() {
+  const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const paths = object(document.paths ?? null);
+  const root = "/api/v1/approved-vendor-list/{id}";
+  delete paths[`${root}/draft`];
+  delete paths[`${root}/submit`];
+  const deletion = object(object(paths[root] ?? null).delete ?? null);
+  if (Array.isArray(deletion.parameters)) deletion.parameters = deletion.parameters.filter(parameter => object(parameter).name !== "reason");
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  const prefix = "DOMAIN.Entities.ApprovedVendorLists.";
+  delete schemas[prefix + "SaveApprovedVendorListDraftRequest"];
+  delete schemas[prefix + "SubmitApprovedVendorListRequest"];
+  object(schemas[prefix + "ApprovedVendorListStatus"] ?? null).enum = [0, 1, 2, 3];
+  delete object(object(schemas[prefix + "ApprovedVendorListDto"] ?? null).properties ?? null).draftVersion;
+  const fields = object(object(schemas[prefix + "ApprovedVendorListLineDto"] ?? null).properties ?? null);
+  for (const field of ["newManufacturer", "newSupplier", "newSupplierAddress", "newSupplierType"]) delete fields[field];
+  for (const field of ["manufacturerId", "supplierId"]) delete object(fields[field] ?? null).nullable;
+  return document;
+}
+
 /** Historical contract reviews exclude only the two optional material-lookup context parameters. */
 const materialLookupPaths = ["/api/v1/material/department", "/api/v1/material/{materialId}/uom"] as const;
 function stripMaterialLookupContext(document: ObjectValue) {
@@ -123,7 +144,7 @@ function stripMaterialLookupContext(document: ObjectValue) {
   }
 }
 function beforeMaterialLookupContext() {
-  const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const document = beforeVendorListDrafts();
   stripMaterialLookupContext(document);
   return document;
 }
@@ -1348,7 +1369,7 @@ test("the issued register adds optional list filters and one typed read operatio
 });
 
 test("material lookups add only optional page context, preserving all preceding contracts", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeVendorListDrafts();
   for (const path of materialLookupPaths) {
     const operation = object(object(object(current.paths ?? null)[path] ?? null).get ?? null);
     assert.ok(Array.isArray(operation.parameters));
@@ -1361,7 +1382,7 @@ test("material lookups add only optional page context, preserving all preceding 
 });
 
 test("versioned costing adds scoped pack-price documents without changing previous contracts", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeVendorListDrafts();
   const paths = object(current.paths ?? null);
   assert.equal(Object.keys(paths).filter(path => path.startsWith("/api/v1/costing/price-lists")).length,7);
   stripVersionedCosting(current);
@@ -1369,7 +1390,7 @@ test("versioned costing adds scoped pack-price documents without changing previo
 });
 
 test("finished goods has typed workflow endpoints and preserves the reviewed costing predecessor", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeVendorListDrafts();
   const paths = object(current.paths ?? null);
   assert.equal(Object.keys(paths).filter(path => path.startsWith("/api/v1/finished-goods/")).length, 28);
   const schemas = object(object(current.components ?? null).schemas ?? null);
@@ -1379,7 +1400,7 @@ test("finished goods has typed workflow endpoints and preserves the reviewed cos
 });
 
 test("superseded vendor-list deletion adds only a typed delete operation", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeVendorListDrafts();
   const path = object(object(current.paths ?? null)["/api/v1/approved-vendor-list/{id}"] ?? null);
   assert.deepEqual(Object.keys(path).sort(), ["delete", "get", "put"]);
   const operation = object(path.delete ?? null);
@@ -1391,7 +1412,7 @@ test("superseded vendor-list deletion adds only a typed delete operation", () =>
 });
 
 test("per-product assay reporting is additive and leaves every previously reviewed operation intact", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeVendorListDrafts();
   checkCompatibility(hostConfig, policy, contractDigest(current));
   const path = object(object(current.paths ?? null)["/api/v1/product-specifications/{id}/assay-reporting"] ?? null);
   assert.deepEqual(Object.keys(path).sort(), ["get", "put"]);
@@ -1402,7 +1423,7 @@ test("per-product assay reporting is additive and leaves every previously review
 });
 
 test("pending COA review adds only an optional evidence token and conditional approval header", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeVendorListDrafts();
   stripWarehouseVisibility(current);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   assert.ok(object(object(schemas["DOMAIN.Entities.Forms.ResponseDetailDto"] ?? null).properties ?? null).coaReportingToken);
@@ -1413,7 +1434,7 @@ test("pending COA review adds only an optional evidence token and conditional ap
 });
 
 test("warehouse queue visibility adds only scoped queue reads and optional certificate identity/status fields", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeVendorListDrafts();
   checkCompatibility(hostConfig, policy, contractDigest(current));
   for (const kind of ["raw", "packaging"]) {
     const path = object(object(current.paths ?? null)[`/api/v1/stock-issue/${kind}`] ?? null);
@@ -1427,7 +1448,7 @@ test("warehouse queue visibility adds only scoped queue reads and optional certi
 });
 
 test("combined queue and pending-COA contracts preserve both independently reviewed predecessors", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeVendorListDrafts();
   stripClearMaterialDensity(current);
   const queueOnly = object(parse(JSON.stringify(current)));
   stripPendingCoaReview(queueOnly);
@@ -1437,7 +1458,7 @@ test("combined queue and pending-COA contracts preserve both independently revie
 });
 
 test("combined density and queue contracts preserve the reviewed queue contract", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeVendorListDrafts();
   assert.equal(contractDigest(current), "a9df0b96e20cea76d95d5e1f35b1bf01db171111c879c35ea17dff1ecc141f86");
   checkCompatibility(hostConfig, policy, contractDigest(current));
   for (const kind of ["raw", "packaging"]) {
@@ -1447,4 +1468,17 @@ test("combined density and queue contracts preserve the reviewed queue contract"
   }
   stripClearMaterialDensity(current);
   assert.equal(contractDigest(current), "ac2f9bb848dbf7bfac8288eed035c43d3c15f1a7a35d699818b33169e48d4d49");
+});
+
+
+test("vendor-list draft changes preserve the previous reviewed contract", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const paths = object(current.paths ?? null);
+  const root = "/api/v1/approved-vendor-list/{id}";
+  assert.ok(object(paths[`${root}/draft`] ?? null).put);
+  assert.ok(object(paths[`${root}/submit`] ?? null).post);
+  const digest = contractDigest(current);
+  assert.equal(digest, "c52621b3f8d8ebc6c969be4afd1cbe0719e95a9712d0beea3283166b7a473757");
+  checkCompatibility(hostConfig, policy, digest);
+  assert.equal(contractDigest(beforeVendorListDrafts()), "a9df0b96e20cea76d95d5e1f35b1bf01db171111c879c35ea17dff1ecc141f86");
 });

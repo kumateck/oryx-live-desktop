@@ -1207,6 +1207,9 @@ const injectedRtkApi = api.injectEndpoints({
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
         },
+        params: {
+          reason: queryArg.reason,
+        },
       }),
     }),
     getApiV1ApprovedVendorListByIdPrint: build.query<
@@ -1272,6 +1275,36 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/v1/approved-vendor-list/revise`,
         method: "POST",
         body: queryArg.domainEntitiesApprovedVendorListsReviseApprovedVendorListRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1ApprovedVendorListByIdDraft: build.mutation<
+      PutApiV1ApprovedVendorListByIdDraftApiResponse,
+      PutApiV1ApprovedVendorListByIdDraftApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "approved-vendor-list", id: "LIST" }, { type: "approved-vendor-list", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list/${queryArg.id}/draft`,
+        method: "PUT",
+        body: queryArg.domainEntitiesApprovedVendorListsSaveApprovedVendorListDraftRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1ApprovedVendorListByIdSubmit: build.mutation<
+      PostApiV1ApprovedVendorListByIdSubmitApiResponse,
+      PostApiV1ApprovedVendorListByIdSubmitApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "approved-vendor-list", id: "LIST" }, { type: "approved-vendor-list", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/approved-vendor-list/${queryArg.id}/submit`,
+        method: "POST",
+        body: queryArg.domainEntitiesApprovedVendorListsSubmitApprovedVendorListRequest,
         headers: {
           Module: queryArg["module"],
           SubModule: queryArg.subModule,
@@ -2139,6 +2172,7 @@ export type DeleteApiV1ApprovedVendorListByIdApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+  reason?: string;
 };
 export type GetApiV1ApprovedVendorListByIdPrintApiResponse =
   /** status 200 OK */ DomainEntitiesApprovedVendorListsApprovedVendorListDto;
@@ -2183,6 +2217,24 @@ export type PostApiV1ApprovedVendorListReviseApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
   domainEntitiesApprovedVendorListsReviseApprovedVendorListRequest: DomainEntitiesApprovedVendorListsReviseApprovedVendorListRequest;
+};
+export type PutApiV1ApprovedVendorListByIdDraftApiResponse = void;
+export type PutApiV1ApprovedVendorListByIdDraftApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesApprovedVendorListsSaveApprovedVendorListDraftRequest: DomainEntitiesApprovedVendorListsSaveApprovedVendorListDraftRequest;
+};
+export type PostApiV1ApprovedVendorListByIdSubmitApiResponse = void;
+export type PostApiV1ApprovedVendorListByIdSubmitApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesApprovedVendorListsSubmitApprovedVendorListRequest: DomainEntitiesApprovedVendorListsSubmitApprovedVendorListRequest;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -3132,7 +3184,7 @@ export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainE
     stopPageIndex?: number;
   };
 export type DomainEntitiesApprovedVendorListsApprovedVendorListStatus =
-  0 | 1 | 2 | 3;
+  0 | 1 | 2 | 3 | 4;
 export type DomainEntitiesReviewsDocumentReviewStatus = 0 | 1 | 2;
 export type DomainEntitiesApprovedVendorListsApprovedVendorListSummaryDto = {
   id?: string;
@@ -3180,15 +3232,19 @@ export type DomainEntitiesApprovedVendorListsApprovedVendorListLineDto = {
   materialId?: string;
   materialCode?: string | null;
   materialName?: string | null;
-  manufacturerId?: string;
+  manufacturerId?: string | null;
   manufacturerName?: string | null;
   manufacturerAddress?: string | null;
-  supplierId?: string;
+  supplierId?: string | null;
   supplierName?: string | null;
   quantityPerPack?: number;
   approvalDate?: string;
   validityDate?: string;
   lapsed?: boolean;
+  newManufacturer?: boolean;
+  newSupplier?: boolean;
+  newSupplierAddress?: string | null;
+  newSupplierType?: DomainEntitiesProcurementSuppliersSupplierType;
 };
 export type DomainEntitiesApprovedVendorListsApprovedVendorListSignatoryDto = {
   userId?: string;
@@ -3215,6 +3271,7 @@ export type DomainEntitiesApprovedVendorListsApprovedVendorListDto = {
   preparedBySignatory?: DomainEntitiesApprovedVendorListsApprovedVendorListSignatoryDto;
   checkedBy?: DomainEntitiesApprovedVendorListsApprovedVendorListSignatoryDto;
   approvedBy?: DomainEntitiesApprovedVendorListsApprovedVendorListSignatoryDto;
+  draftVersion?: number;
 };
 export type DomainEntitiesApprovedVendorListsApprovedVendorOptionDto = {
   id?: string;
@@ -3259,6 +3316,19 @@ export type DomainEntitiesApprovedVendorListsReviseApprovedVendorListRequest = {
   revisionNumber?: number;
   lines?:
     DomainEntitiesApprovedVendorListsSaveApprovedVendorListLineRequest[] | null;
+};
+export type DomainEntitiesApprovedVendorListsSaveApprovedVendorListDraftRequest =
+  {
+    annexureNumber: string;
+    revisionNumber?: number;
+    supersedesRevision?: number | null;
+    draftVersion?: number | null;
+    lines?:
+      | DomainEntitiesApprovedVendorListsSaveApprovedVendorListLineRequest[]
+      | null;
+  };
+export type DomainEntitiesApprovedVendorListsSubmitApprovedVendorListRequest = {
+  draftVersion?: number | null;
 };
 export const {
   usePostApiV1ProcurementManufacturerMutation,
@@ -3387,4 +3457,6 @@ export const {
   useLazyGetApiV1ApprovedVendorListMappingsByMaterialIdQuery,
   usePostApiV1ApprovedVendorListEligibilityMutation,
   usePostApiV1ApprovedVendorListReviseMutation,
+  usePutApiV1ApprovedVendorListByIdDraftMutation,
+  usePostApiV1ApprovedVendorListByIdSubmitMutation,
 } = injectedRtkApi;

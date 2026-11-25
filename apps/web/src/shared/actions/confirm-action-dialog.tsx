@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
@@ -10,7 +10,8 @@ import { permissionDeniedMessage, usePermissionAction } from "../auth/use-permis
  * while it should show. `onConfirm` returns the reason it failed, or null when it worked; a failure
  * keeps the dialog open with the reason.
  */
-export function ConfirmActionDialog({ title, description, confirmLabel, busyLabel, destructive = true, require, onConfirm, onClose }: {
+export function ConfirmActionDialog({ title, description, confirmLabel, busyLabel, destructive = true, require, onConfirm, onClose, children }: {
+  children?: ReactNode;
   title: string;
   description: string;
   confirmLabel: string;
@@ -35,6 +36,7 @@ export function ConfirmActionDialog({ title, description, confirmLabel, busyLabe
   return <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}><DialogContent>
     <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
     <DialogBody className="space-y-3"><DialogDescription className="break-words">{description}</DialogDescription>
+      {children}
       {error || !permission.allowed ? <p role="alert" className="break-words text-sm text-destructive">{error || permissionDeniedMessage}</p> : null}</DialogBody>
     <DialogFooter>
       <Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button>
