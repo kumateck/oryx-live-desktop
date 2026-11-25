@@ -79,6 +79,7 @@ const rowSchema = z.record(z.string(), z.unknown()).transform((row) => {
   const pick = (...keys: string[]) => { for (const key of keys) { const value = row[key]; if (value !== undefined && value !== null) return String(value); } return null; };
   const analysis = Number(pick("analysisType", "AnalysisType") ?? 0);
   return { analysisType: analysis, sampleIdentity: pick("sampleIdentity", "SampleIdentity"), label: pick("displayLabel", "DisplayLabel") ?? "Test", group: pick("groupName", "GroupName"),
+    notes: pick("certificateNotes", "CertificateNotes"),
     specification: pick("specificationText", "SpecificationText") ?? "", unit: pick("unit", "Unit"), reference: pick("reference", "Reference"), result: pick("result", "Result") ?? "",
     key: `${pick("trackId", "TrackId") ?? ""}/${pick("formFieldId", "FormFieldId") ?? ""}/${String(analysis)}` };
 });

@@ -1,3 +1,5 @@
+import { CertificateRequestButtons } from "@/shared/ard-view/pending-certificate-actions";
+import { useNavigate } from "react-router";
 import { useMemo, useState } from "react";
 import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +20,7 @@ import { ArdWorksheet } from "./ard-worksheet";
 import { ardAnswersSchema as answers, ardFormSchema as formSchema, ardPersonSchema as person } from "../../schemas/ard-result-schema";
 import { ardSignatories } from "../../lib/ard-signatories";
 import { answerFails, answersByField } from "../../lib/ard-results";
-import { audit } from "../../lib/approval-documents";
+import { approvalListPath, audit } from "../../lib/approval-documents";
 import { ArdCertificate, printCertificatePermission } from "./ard-certificate";
 import { DetailState, fullName, quantity, queryState } from "./detail-state";
 import { oosPermission, StartOosDialog } from "./start-oos-dialog";
@@ -32,6 +34,7 @@ export interface ArdRejection { reason: string | null; code: string | null }
  */
 export function ArdDetails({ id, rejection = null }: { id: string; rejection?: ArdRejection | null }) {
   const { has } = useAccess();
+  const navigate = useNavigate();
   const [startingOos, setStartingOos] = useState(false);
   const { query, response, state, loading, failures, approved, atr, atrQuery, coaTarget, sections, certificateSections, recorded, signatories, facts: loadedFacts,
     material, batch, product, ard, materialBatchId } = useArdCertificate(id, { rejection: Boolean(rejection) });
@@ -41,6 +44,7 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
     const { name, batch: batchNumber } = facts;
     return <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
+        <CertificateRequestButtons response={query.data} onRequested={() => void navigate(approvalListPath("Response"))} />
         {rejection && has(oosPermission) ? <Button type="button" size="sm" variant="outline" className="text-destructive" onClick={() => setStartingOos(true)}><TriangleAlert />Start OOS investigation</Button> : null}
         {coaTarget ? <GenerateCoaButton approved={approved} target={coaTarget} /> : null}
         {sections.length > 0 ? <>

@@ -35,7 +35,7 @@ export function useApprovalDecision(approval: PendingApproval, decision: Decisio
       const reporting = z.object({ coaReportingToken: z.string().nullish() }).safeParse(responseEvidence?.data);
       const reportingToken = reporting.success ? reporting.data.coaReportingToken : null;
       const arg = { ...audit, modelType: type, modelId: approval.id, ...(decision === "approve" && reportingToken ? { "If-Match": `"${reportingToken}"` } : {}), domainEntitiesApprovalsApprovalRequestBody: {
-        ...(type === "StockRequisition" ? { contentRevision: approval.contentRevision ?? 0 } : {}),
+        ...(type === "StockRequisition" || type === "Response" && (approval.contentRevision ?? 0) > 0 ? { contentRevision: approval.contentRevision ?? 0 } : {}),
         comments: comments.trim() || null, ...(type === "Response" && decision === "reject" && outcome !== null ? { responseRejectionOutcome: outcome } : {}),
       } };
       if (decision === "reject" && isProductionStockDocument(type) && stockKind !== null) {

@@ -151,3 +151,17 @@ export const buildCoaCompliancePayload = (
     ];
   });
 };
+
+/** A submitted certificate shows its saved decisions for tests that can be edited by the preparer. */
+export function recordedCoaCompliance(sections: FormSectionDto[], responses: FormResponseDto[]): CoaComplianceItem[] {
+  const responseMap = getBestResponseMap(responses);
+  return buildCoaCompliancePayload(sections, responses).map(item => {
+    if (item.reportingLocked) return item;
+    const section = sections.find(entry => entry.id === item.formSectionId);
+    const saved = (section?.fields ?? []).flatMap(field => {
+      const answer = field.id ? responseMap.get(field.id) : null;
+      return typeof answer?.complies === "boolean" ? [answer.complies] : [];
+    });
+    return saved.length ? { ...item, complies: saved.every(Boolean), requiresReview: false } : item;
+  });
+}
