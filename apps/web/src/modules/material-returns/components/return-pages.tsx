@@ -22,6 +22,7 @@ import { usePageSearch } from "@/shared/search/page-search";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { audit, restocked, restockedLabels, returnNoteRowsSchema, returnNoteSchema, returnPath, returnsPath, type ReturnLine, type ReturnNote } from "../returns";
 import { addTags } from "@/shared/api/add-tags";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 
 const tag = { type: "MaterialReturns" as const, id: "all" };
 const { useGetApiV1ProductionScheduleMaterialReturnNoteQuery, useGetApiV1ProductionScheduleMaterialReturnNoteByMaterialReturnNoteIdQuery } = productionApi.enhanceEndpoints({ endpoints: {
@@ -75,6 +76,7 @@ function Detail({ id }: { id: string }) {
   const query = useGetApiV1ProductionScheduleMaterialReturnNoteByMaterialReturnNoteIdQuery({ ...audit, materialReturnNoteId: id });
   const note = useMemo(() => { const parsed = returnNoteSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data : null; }, [query.data]);
   const [placing, setPlacing] = useState<ReturnLine | null>(null);
+  const placementPermission = usePermissionAction(shelvePermissions[placing?.kind ?? 0]);
   const [shelve] = usePostApiV1MaterialBatchSupplyMutation();
   const columns = useMemo(() => lineColumn.columns([
     lineColumn.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div></div> }),
@@ -109,7 +111,8 @@ function Detail({ id }: { id: string }) {
     </KeyFacts>
     <ClientDataTable label="Returned materials" columns={columns} rows={note.lines} getRowId={(row) => row.key} fill={false} emptyTitle="No materials on this note" />
     {placing?.batchId ? <PlaceStockDialog stock={placing} kind={placing.kind} title="Put returned material on shelves" description="Place the whole quantity, on one shelf or split over several." onClose={() => setPlacing(null)}
-      onPlace={async (shelves) => { const result = await shelve({ ...audit, domainEntitiesMaterialsBatchSupplyMaterialBatchRequest: { materialBatchId: placing.batchId ?? "", materialReturnNoteId: note.id, shelfMaterialBatches: shelves } });
+      onPlace={async (shelves) => { const denied = placementPermission.check(); if (denied) return denied;
+        const result = await shelve({ ...audit, domainEntitiesMaterialsBatchSupplyMaterialBatchRequest: { materialBatchId: placing.batchId ?? "", materialReturnNoteId: note.id, shelfMaterialBatches: shelves } });
         return "error" in result ? apiErrorMessage(result.error) : null; }} /> : null}
   </article>;
 }

@@ -11,10 +11,16 @@ export const approvedMaterialApi = materialsApi.enhanceEndpoints({
     getApiV1MaterialByMaterialIdBatchesV2AndDepartmentId: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves]); },
     getApiV1MaterialByMaterialIdShelf: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves]); },
     getApiV1MaterialByMaterialIdReserved: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves]); },
+    getRawMaterialStockTrace: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves]); },
+    getPackagingMaterialStockTrace: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves]); },
+    getRawMaterialStockTracePrint: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves]); },
+    getPackagingMaterialStockTracePrint: (definition) => { definition.providesTags = addTags(definition.providesTags, [shelves]); },
   },
 });
 export const {
   useGetApiV1MaterialApprovedMaterialsQuery, useGetApiV1MaterialByMaterialIdQuery, useGetApiV1MaterialByMaterialIdBatchesV2AndDepartmentIdQuery,
   useGetApiV1MaterialByMaterialIdReservedQuery,
+  useGetRawMaterialStockTraceQuery, useGetPackagingMaterialStockTraceQuery,
+  useGetRawMaterialStockTracePrintQuery, useGetPackagingMaterialStockTracePrintQuery,
 } = approvedMaterialApi;
 export const { useGetApiV1WarehouseBincardinformationByMaterialIdAndDepartmentIdQuery } = warehouseApi;

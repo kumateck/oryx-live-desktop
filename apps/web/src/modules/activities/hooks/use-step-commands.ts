@@ -59,7 +59,7 @@ export function useStepCommands(stepId: string, batchId: string | null) {
     try {
       const result = await returnAll({ module: "Production", subModule: "Returns", productionScheduleProductId: batchId, reason });
       if ("error" in result) return apiErrorMessage(result.error);
-      toast.success("Materials returned and production cancelled");
+      toast.success("Batch cancelled. Issued stock is awaiting warehouse receipt and shelving.");
       return null;
     } finally { setBusy(null); }
   };

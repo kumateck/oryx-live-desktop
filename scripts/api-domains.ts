@@ -13,13 +13,13 @@ export const apiDomains: readonly ApiDomain[] = [
   { id: "identity", exportName: "identityApi", tags: ["User", "Role", "Permission", "Department"] },
   { id: "approvals", exportName: "approvalsApi", tags: ["Approval", "PendingApprovalDocumentCounts", "PendingRevisionApproval", "ProductionStockRequisition"] },
   { id: "settings", exportName: "settingsApi", tags: [
-    "ActivityLog", "Alert", "Collection", "CompanyWorkingDays", "Configuration", "Country", "File", "Holiday", "WorkingHoursPolicy",
+    "ActivityLog", "Alert", "Collection", "ProductionBoardOrder", "CompanyWorkingDays", "Configuration", "Country", "File", "Holiday", "WorkingHoursPolicy",
   ] },
   { id: "hr", exportName: "hrApi", tags: [
     "AttendanceRecord", "Designation", "Employee", "Onboarding", "LeaveEntitlement", "LeaveRequest", "LeaveType", "OvertimeRequest",
     "Payroll", "Performance", "ShiftCategory", "ShiftSchedule", "ShiftType", "StaffRequisition",
   ] },
-  { id: "materials", exportName: "materialsApi", tags: ["Material", "BillOfMaterial", "StockMigration", "WhitePlacebo", "UnstartReservations"] },
+  { id: "materials", exportName: "materialsApi", tags: ["Material", "MaterialStockTrace", "BillOfMaterial", "StockMigration", "WhitePlacebo", "UnstartReservations"] },
   { id: "products", exportName: "productsApi", tags: ["Product"] },
   { id: "production", exportName: "productionApi", tags: ["FinishedGoods", "ProductionSchedule", "ProductionOrder", "WorkOrder", "IssuedMaterialRepair", "ProductionUnstart", "ProductionScheduleBulkRepair", "ReservationRepair"] },
   { id: "warehouse", exportName: "warehouseApi", tags: ["Warehouse", "Requisition", "UnstartLeftovers", "StockAdjustment", "StockDiscrepancy", "DamagedStocks"] },

@@ -1,4 +1,5 @@
 import { CoaReportingSpecification } from "../../raw-data/coa-reported-results";
+import { recordedCoaCompliance } from "../../raw-data/coa-compliance";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import { sanitizeString } from "@/shared/ard-view/legacy";
 import {
@@ -74,17 +75,12 @@ const TestSpecification: React.FC<ProductTestTableProps> = ({
 
   // Generate remarks automatically based on compliance
   const generateRemarks = (): string => {
-    if (remarksText) return remarksText;
-
-    const allResponses = responses?.map((r) => r?.value?.toLowerCase());
-    const hasNonCompliance = allResponses?.some(
-      (val) =>
-        val?.includes("does not comply") || val?.includes("not complies"),
-    );
-
-    return hasNonCompliance
-      ? "The above sample received Does not Complies with respect to specification."
-      : "The above sample received Complies with respect to specification.";
+    const decisions = recordedCoaCompliance(sections ?? [], responses ?? []);
+    if (decisions.some(item => item.complies === false && !item.requiresReview))
+      return "The sample does not comply with the specification.";
+    if (!decisions.length || decisions.some(item => item.requiresReview || item.complies !== true))
+      return "Compliance is not confirmed. Review the missing or unresolved test results.";
+    return remarksText || "The sample complies with the specification.";
   };
 
   return (

@@ -54,7 +54,7 @@ export function StockByBatchTable({ materialId, departmentId }: Props) {
 const cardColumn = dataTableColumns<BinCardRow>();
 const cardColumns = cardColumn.columns([
   cardColumn.accessor((row) => row.date ?? "", { id: "date", header: "Date", size: 130, cell: ({ row }) => formatDate(row.original.date) ?? dash }),
-  cardColumn.display({ id: "reference", header: "Reference", cell: ({ row }) => <div className="min-w-0"><div className="break-words">{row.original.requisition ? `Requisition ${row.original.requisition}` : row.original.wayBill ? `Waybill ${row.original.wayBill}` : "No reference"}</div>
+  cardColumn.display({ id: "reference", header: "Reference", cell: ({ row }) => <div className="min-w-0"><div className="break-words">{row.original.requisition ? `Requisition ${row.original.requisition}` : row.original.wayBill ? `Waybill ${row.original.wayBill}` : row.original.description ?? "No reference"}</div>
     <div className="text-xs text-muted-foreground">AR {row.original.arNumber ?? "–"}</div></div> }),
   cardColumn.display({ id: "source", header: "Supplied by", cell: ({ row }) => row.original.supplier || row.original.manufacturer ? <div className="min-w-0"><div className="break-words">{row.original.supplier ?? "–"}</div>
     <div className="break-words text-xs text-muted-foreground">Made by {row.original.manufacturer ?? "–"}</div></div> : dash }),

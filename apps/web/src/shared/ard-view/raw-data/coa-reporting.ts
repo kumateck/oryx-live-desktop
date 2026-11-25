@@ -11,8 +11,8 @@ export function isAssayAverage(result: Pick<ReportedResult, "key" | "label">): b
 }
 
 export function certificateReportedResults(results: readonly ReportedResult[]): readonly ReportedResult[] {
-  if (!results.some(isAssayAverage)) return results;
-  return results.filter(result => result.converted || !/^sample\s+\d+$/i.test(result.label?.trim() ?? ""));
+  const averages = results.filter(isAssayAverage);
+  return averages.length ? averages : results;
 }
 
 export function hasCoaReporting(response: FormResponseDto): boolean {
