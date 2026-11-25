@@ -23,3 +23,5 @@ COA/worksheet/approval/print result views show an existing average as its value 
 ## Pending finished goods receipt
 
 A production-approved FGTN that has not been received by the warehouse shows its actual **Transferred** quantity and **Awaiting warehouse receipt**. Allocation and stock balance explain that receipt is pending. **Receive transfer** opens the existing counted receipt workflow. It does not turn transferred quantities into warehouse stock before receipt. Once received, the existing received, allocated, pending allocation and remaining summaries apply.
+
+Finished-goods stock counts use the current linked packing hierarchy after a style update. See [current-stock-packing.md](current-stock-packing.md) for immediate cache refresh, unchanged base quantities and historical conversion evidence.

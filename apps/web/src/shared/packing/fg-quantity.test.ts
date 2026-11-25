@@ -1,5 +1,17 @@
 import { expect, it } from "vitest";
-import { addCounts, countText, fgCount, fgLayout, fgText, yieldOf } from "./fg-quantity";
+import { addCounts, countText, fgCount, fgLayout, fgStockLayout, fgText, yieldOf } from "./fg-quantity";
+
+it("re-expresses an existing stock balance using the edited hierarchy, including loose tubes", () => {
+  const stock = { unitsPerPack: 1, packsPerShipper: 360 };
+  const style = { packPerShipper: 18, basePackingUoM: { name: "Tube" }, packingLists: [
+    { uom: { name: "Shipper" }, quantity: 18, order: 1 }, { uom: { name: "Outer Carton" }, quantity: 20, order: 2 },
+  ] };
+  const layout = fgStockLayout(style, stock);
+  expect(fgCount(3_500_005, layout)).toEqual({ shippers: 9722, loose: 4, units: 5 });
+  expect(yieldOf(9722, 4, layout, 5)).toBe(3_500_005);
+  expect(fgStockLayout({ ...style, packPerShipper: 17 }, stock).baseUnitsPerPack).toBeNull();
+  expect(fgStockLayout(null, stock).baseUnitsPerPack).toBe(1);
+});
 
 // One shipper holds 80 boxes; a box is 20 strips of 10 tablets (200 tablets).
 const dicnac = fgLayout({ packPerShipper: 80, basePackingUoM: { name: "Tablet" }, packingLists: [{ uom: { name: "Shipper" }, quantity: 80, order: 1 }, { uom: { name: "Box" }, quantity: 20, order: 2 }, { uom: { name: "Strip" }, quantity: 10, order: 3 }] });

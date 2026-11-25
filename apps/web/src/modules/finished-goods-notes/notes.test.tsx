@@ -44,7 +44,7 @@ it("adds up a product's stock per transfer, each with its own packing style", ()
 const note = { id: "n1", isApproved: false, totalQuantity: 250, quantityPerPack: 1, remainingQuantity: 0, productPacking: { id: "k1", name: "10 x 10", packPerShipper: 100 },
   batchManufacturingRecord: { batchNumber: "B-1", manufacturingDate: "2026-01-15T00:00:00Z", expiryDate: "2028-01-31T00:00:00Z", productionScheduleProduct: { product: { id: "p1", name: "Dicnac 100", code: "FP-1" } } } };
 interface Call { method: string; path: string; search: string; body?: unknown }
-function open(address: string, permissions: string[]) {
+function open(address: string, permissions: string[], shown = note) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: Call[] = [];
@@ -53,8 +53,8 @@ function open(address: string, permissions: string[]) {
     if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 500 });
     const url = new URL(input.url);
     calls.push({ method: input.method, path: url.pathname, search: url.search, ...(input.method !== "GET" ? { body: await input.clone().json().catch(() => null) } : {}) });
-    if (url.pathname === "/api/v1/production-schedule/finished-goods-transfer-note") return Response.json({ data: [note], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
-    if (url.pathname === "/api/v1/production-schedule/finished-goods-transfer-note/n1") return Response.json(note);
+    if (url.pathname === "/api/v1/production-schedule/finished-goods-transfer-note") return Response.json({ data: [shown], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
+    if (url.pathname === "/api/v1/production-schedule/finished-goods-transfer-note/n1") return Response.json(shown);
     if (url.pathname === "/api/v1/production-schedule/finished-goods-transfer-note/n1/approve") return new Response(null, { status: 204 });
     if (url.pathname === "/api/v1/production-schedule/approved-products") return Response.json([{ product: { id: "p1", code: "FP-1", name: "Dicnac 100" }, totalQuantity: 250, totalRemainingQuantity: 90, stocks: [{ transferNoteId: "n1", productPackingId: "k1", packingStyle: "10 x 10", quantityPerPack: 1, packsPerShipper: 100, sent: 250, received: 240, physical: 240, reserved: 150, available: 90 }] }]);
     if (url.pathname === "/api/v1/production-schedule/approved-products/p1") return Response.json([{ ...note, isApproved: true, quantityReceived: 240 }]);
@@ -73,6 +73,22 @@ it("shows transferred quantity and pending receipt instead of four misleading ze
   expect(screen.getByRole("button", { name: "Receive transfer" })).toBeTruthy();
   expect(screen.queryByText("0 shippers · 0 loose")).toBeNull();
   expect(screen.getByText("Not yet received")).toBeTruthy();
+});
+
+it("receives the exact base quantity using current cartons, shippers and leftover tubes", async () => {
+  const shown = { ...note, totalQuantity: 3_500_005, packsPerShipperSnapshot: 360, productPacking: {
+    ...note.productPacking, packPerShipper: 18, basePackingUoM: { name: "Tube" }, packingLists: [
+      { uom: { name: "Shipper" }, quantity: 18, order: 1 }, { uom: { name: "Outer Carton" }, quantity: 20, order: 2 },
+    ],
+  } };
+  const calls = open("/warehouse/finished-goods-transfer-notes/n1", ["CanViewFgtn", "CanApproveFgtn"], shown);
+  expect((await screen.findAllByText("9,722 shippers · 4 loose · 5 tubes")).length).toBeGreaterThan(0);
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Receive transfer" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(await within(dialog).findByRole("spinbutton", { name: /Loose tubes received/ })).toHaveProperty("value", "5");
+  await user.click(within(dialog).getByRole("button", { name: "Receive transfer" }));
+  await waitFor(() => expect(calls.find(call => call.method === "PUT")?.body).toEqual({ quantityReceived: 3_500_005, notes: null }));
 });
 
 it("approves a transfer with what was counted in, only with the approve permission", async () => {

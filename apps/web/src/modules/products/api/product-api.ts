@@ -32,11 +32,11 @@ export const productApi = productsApi.enhanceEndpoints({
     ]); },
     getApiV1ProductByProductIdPacking: (definition) => { definition.providesTags = addTags(definition.providesTags, (_result, _error, arg) => [{ type: "ProductPacking", id: arg.productId }]); },
     postApiV1ProductByProductIdPacking: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [packagingRequirementsTag,
-      { type: "ProductPacking", id: arg.productId }, { type: "Product", id: arg.productId },
+      { type: "ProductPacking", id: arg.productId }, { type: "Product", id: arg.productId }, { type: "FinishedGoods", id: "all" },
     ]); },
     // The finished goods warehouse saves the same packing styles through its own endpoint and permission.
     postApiV1ProductByProductIdPackingApprovedProduct: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_result, error, arg) => error ? [] : [packagingRequirementsTag,
-      { type: "ProductPacking", id: arg.productId }, { type: "Product", id: arg.productId },
+      { type: "ProductPacking", id: arg.productId }, { type: "Product", id: arg.productId }, { type: "FinishedGoods", id: "all" },
     ]); },
   },
 });

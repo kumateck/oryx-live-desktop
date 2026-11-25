@@ -11,6 +11,7 @@ import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, Dia
 import { Spinner } from "@/components/ui/spinner";
 import { TableMenu, TableMenuHeader } from "@/shared/actions";
 import { useAccess } from "@/shared/auth/use-access";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { DetailGroup, DetailItem } from "@/shared/detail/detail-list";
 import { KeyFact, KeyFacts } from "@/shared/detail/key-facts";
@@ -26,28 +27,33 @@ import { canCount, countText, emptyCount, fgCount, fgText, yieldOf } from "@/sha
 import { approveSchema, audit, notePath, notePermissions, noteRowsSchema, noteSchema, notesPath, useApproveTransferNoteMutation, useGetApiV1ProductionScheduleFinishedGoodsTransferNoteByIdQuery,
   useGetApiV1ProductionScheduleFinishedGoodsTransferNoteQuery, type ApproveValues, type TransferNote } from "./notes";
 
-const fields: WizardField<ApproveValues>[] = [
+const fields = (baseName: string | null, perPack: number | null): WizardField<ApproveValues>[] => [
   { type: InputTypes.NUMBER, name: "shippers", label: "Shippers received", min: 0, step: 1 },
   { type: InputTypes.NUMBER, name: "loose", label: "Loose packs received", min: 0, step: 1 },
+  ...(perPack && perPack > 1 ? [{ type: InputTypes.NUMBER, name: "units", label: `Loose ${baseName?.toLowerCase() ?? "base unit"}s received outside a pack`, min: 0, step: 1 } satisfies WizardField<ApproveValues>] : []),
   { type: InputTypes.TEXTAREA, name: "notes", label: "Notes / discrepancy evidence", className: "md:col-span-2" },
 ];
 /** The store counts in what production sent and approves the note with what it actually received. */
 export function ApproveNoteDialog({ note, onClose }: { note: TransferNote; onClose: () => void }) {
   const [approve, mutation] = useApproveTransferNoteMutation();
+  const permission = usePermissionAction(notePermissions.approve);
   const [message, setMessage] = useState("");
   // The note holds yield; the store sees and enters shippers and loose packs.
   const sent = fgCount(note.total, note.layout) ?? emptyCount();
   const countable = canCount(note.layout);
-  const form = useForm<ApproveValues>({ resolver: zodResolver(approveSchema(note)), defaultValues: { shippers: sent.shippers, loose: sent.loose, notes: "" } });
+  const receiptFields = useMemo(() => fields(note.layout.baseName, note.layout.baseUnitsPerPack), [note.layout.baseName, note.layout.baseUnitsPerPack]);
+  const form = useForm<ApproveValues>({ resolver: zodResolver(approveSchema(note)), defaultValues: { shippers: sent.shippers, loose: sent.loose, units: sent.units, notes: "" } });
   void form.formState.errors;
-  const [shippers, loose] = useWatch({ control: form.control, name: ["shippers", "loose"] });
-  const received = yieldOf(shippers, loose, note.layout) ?? 0;
+  const [shippers, loose, units] = useWatch({ control: form.control, name: ["shippers", "loose", "units"] });
+  const received = yieldOf(shippers, loose, note.layout, units ?? 0) ?? 0;
   const short = received > 0 && received < note.total ? fgCount(note.total - received, note.layout) : null;
   const busy = mutation.isLoading;
   const submit = form.handleSubmit(async (values) => {
     setMessage("");
-    const quantityReceived = yieldOf(values.shippers, values.loose, note.layout);
+    const quantityReceived = yieldOf(values.shippers, values.loose, note.layout, values.units ?? 0);
     if (quantityReceived === null) return;
+    const denied = permission.check();
+    if (denied) { setMessage(denied); return; }
     const result = await approve({ id: note.id, quantityReceived, notes: values.notes.trim() || null });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success(`Transfer of ${note.productName} approved`, { description: `${fgText(quantityReceived, note.layout)} received into the finished goods store.` });
@@ -61,7 +67,7 @@ export function ApproveNoteDialog({ note, onClose }: { note: TransferNote; onClo
           <KeyFacts><KeyFact label="Shippers sent" value={sent.shippers.toLocaleString()} note={note.perShipper ? `${note.perShipper.toLocaleString()} packs each` : "No shipper size"} /><KeyFact label="Loose sent" value={sent.loose.toLocaleString()} note={note.packing ?? undefined} />
             {sent.units > 0 ? <KeyFact label="Units over" value={sent.units.toLocaleString()} note="Do not fill a pack" /> : null}</KeyFacts>
           {countable ? <>
-            <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
+            <FormWizard form={form} fields={receiptFields} className="md:grid-cols-2" />
             <p role="status" className="text-sm">Received <span className="font-semibold">{countText(fgCount(received, note.layout) ?? emptyCount(), note.layout.baseName)}</span>{short ? <span className="text-amber-700 dark:text-amber-400"> · {countText(short, note.layout.baseName)} fewer than sent</span> : null}</p>
           </> : <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">The packing style {note.packing ? `“${note.packing}” ` : ""}does not say how many units fill a pack, so this transfer cannot be counted in shippers and loose. Complete the packing style on the product first.</p>}
           {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
