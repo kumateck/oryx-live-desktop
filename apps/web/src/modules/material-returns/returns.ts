@@ -20,9 +20,16 @@ const note = z.object({ id: z.string().nullish(), returnDate: z.string().nullish
 function read(entry: z.infer<typeof note>) {
   if (!entry.id) return null;
   const full = entry.isFullReturn === true;
-  // A full return sends back everything that was reserved; a partial one names its own quantities.
-  const lines = full ? (entry.fullReturns ?? []).map((item) => ({ returned: item.returned === true, quantity: item.materialBatchReservedQuantity?.quantity ?? 0, batch: item.materialBatchReservedQuantity?.materialBatch, material: item.materialBatchReservedQuantity?.materialBatch?.material, unit: item.materialBatchReservedQuantity?.materialBatch?.uoM }))
+  // Full returns contain only issued, unconsumed allocations; unissued holds are released without a return line.
+  const allocations = full ? (entry.fullReturns ?? []).map((item) => ({ returned: item.returned === true, quantity: item.materialBatchReservedQuantity?.quantity ?? 0, batch: item.materialBatchReservedQuantity?.materialBatch, material: item.materialBatchReservedQuantity?.materialBatch?.material, unit: item.materialBatchReservedQuantity?.materialBatch?.uoM }))
     : (entry.partialReturns ?? []).map((item) => ({ returned: item.returned === true, quantity: item.quantity, batch: item.materialBatch, material: item.material ?? item.materialBatch?.material, unit: item.uoM ?? item.materialBatch?.uoM }));
+  const groups = new Map<string, typeof allocations[number]>();
+  for (const [index, line] of allocations.entries()) {
+    const key = full && line.batch?.id ? `${line.batch.id}:${line.unit?.id}:${line.returned}` : `line-${index}`;
+    const previous = groups.get(key);
+    groups.set(key, previous ? { ...previous, quantity: previous.quantity + line.quantity } : line);
+  }
+  const lines = [...groups.values()];
   return { id: entry.id, returnDate: entry.returnDate ?? null, batchNumber: entry.batchNumber, full, product: entry.productionScheduleProduct?.product?.name ?? null, productCode: entry.productionScheduleProduct?.product?.code ?? null,
     schedule: entry.productionScheduleProduct?.productionSchedule?.code ?? null, returnedBy: [entry.createdBy?.firstName, entry.createdBy?.lastName].filter(Boolean).join(" ") || null, department: entry.createdBy?.department?.name ?? null,
     lines: lines.map((line, index) => ({ key: `${line.batch?.id ?? "line"}-${index}`, batchId: line.batch?.id ?? null, batchNumber: line.batch?.batchNumber ?? null, materialName: line.material?.name ?? "Unnamed material", materialCode: line.material?.code ?? null,

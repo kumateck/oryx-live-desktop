@@ -96,11 +96,11 @@ it("asks for the tick before a new style is added", async () => {
   expect(onSubmit).not.toHaveBeenCalled();
 });
 
-it("shows each unit's hint above its row", () => {
+it("shows each unit's hint below its row", () => {
   open();
   const hintRow = screen.getByTestId("unit-hint-2");
   const quantity = screen.getByLabelText("Quantity of unit 2");
-  expect(hintRow.compareDocumentPosition(quantity) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(hintRow.compareDocumentPosition(quantity) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
 });
 
 it("offers no trial quantity input", () => {

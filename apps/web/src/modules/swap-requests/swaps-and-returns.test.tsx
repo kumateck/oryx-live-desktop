@@ -26,9 +26,18 @@ it("reads swaps and return notes, and holds a swap whose sides differ", () => {
   const parsed = returnNoteSchema.parse(note)!;
   expect(restocked(parsed)).toBe("part");
   expect(restocked({ lines: parsed.lines.map((line) => ({ ...line, returned: true })) })).toBe("all");
-  // A full return takes its quantities from what was reserved.
+  // Full-return lines carry the issued allocations selected by the backend.
   expect(returnNoteSchema.parse({ id: "rn-2", isFullReturn: true, fullReturns: [{ returned: false, materialBatchReservedQuantity: { quantity: 7, materialBatch: { id: "b9", batchNumber: "B-9", uoM: { id: "u", symbol: "kg" }, material: { name: "Maize starch", kind: 1 } } } }] })?.lines)
     .toEqual([{ key: "b9-0", batchId: "b9", batchNumber: "B-9", materialName: "Maize starch", materialCode: null, kind: 1, quantity: 7, unit: "kg", unitId: "u", returned: false }]);
+});
+
+it("combines outstanding allocations of the same lot for one complete warehouse receipt", () => {
+  const allocation = { returned: false, materialBatchReservedQuantity: { quantity: 7,
+    materialBatch: { id: "same-lot", uoM: { id: "unit", symbol: "piece" }, material: { name: "Bottle", kind: 1 } } } };
+  const parsed = returnNoteSchema.parse({ id: "return", isFullReturn: true, fullReturns: [allocation,
+    { ...allocation, materialBatchReservedQuantity: { ...allocation.materialBatchReservedQuantity, quantity: 3 } }] });
+  expect(parsed?.lines).toHaveLength(1);
+  expect(parsed?.lines[0]?.quantity).toBe(10);
 });
 
 interface Call { method: string; path: string }

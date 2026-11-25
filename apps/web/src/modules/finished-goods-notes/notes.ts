@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { countText, fgCount, fgLayout, yieldOf } from "@/shared/packing/fg-quantity";
+import { countText, fgCount, fgStockLayout, yieldOf } from "@/shared/packing/fg-quantity";
 import { api } from "@/shared/api/base-api";
 import { productionApi } from "@/shared/api/generated/production";
 import { addTags } from "@/shared/api/add-tags";
@@ -24,15 +24,11 @@ const note = z.object({ id: z.string().nullish(), createdAt: z.string().nullish(
 function read(entry: z.infer<typeof note>) {
   if (!entry.id) return null;
   const product = entry.batchManufacturingRecord?.productionScheduleProduct?.product;
-  // Every quantity on a note is yield (base units produced). The packing style turns it into shippers and loose packs.
-  // The units in one pack saved on the note win over the packing style, as on the server, so a later edit to the
-  // style cannot change what this stock means. Older notes without one fall back to the style.
-  const styled = fgLayout(entry.productPacking);
-  const layout = { ...styled, perShipper: entry.packsPerShipperSnapshot ?? styled.perShipper, baseUnitsPerPack: entry.quantityPerPack > 0 ? entry.quantityPerPack : styled.baseUnitsPerPack };
+  const layout = fgStockLayout(entry.productPacking, { unitsPerPack: entry.quantityPerPack, packsPerShipper: entry.packsPerShipperSnapshot });
   return { id: entry.id, number: entry.transferNoteNumber, createdAt: entry.createdAt ?? null, createdBy: [entry.createdBy?.firstName, entry.createdBy?.lastName].filter(Boolean).join(" ") || null, from: entry.fromWarehouse?.name ?? null, to: entry.toWarehouse?.name ?? null,
     productId: product?.id ?? null, productName: product?.name ?? "Unnamed product", productCode: product?.code ?? null, genericName: product?.genericName ?? null, category: product?.category?.name ?? null,
     batchNumber: entry.batchManufacturingRecord?.batchNumber ?? null, made: entry.batchManufacturingRecord?.manufacturingDate ?? null, expires: entry.batchManufacturingRecord?.expiryDate ?? null,
-    packing: entry.packingStyleSnapshot ?? entry.productPacking?.name ?? null, perShipper: layout.perShipper ?? 0, layout, unit: entry.uoM?.symbol ?? null, total: entry.totalQuantity, received: entry.quantityReceived,
+    packing: entry.productPacking?.name ?? entry.packingStyleSnapshot ?? null, perShipper: layout.perShipper ?? 0, layout, unit: entry.uoM?.symbol ?? null, total: entry.totalQuantity, received: entry.quantityReceived,
     needsReconciliation: entry.requiresStockReconciliation === true, physical: entry.physicalQuantity, reserved: entry.reservedQuantity, available: entry.availableQuantity, dispatched: entry.dispatchedQuantity, held: entry.isOnHold === true, holdReason: entry.holdReason, released: entry.qualityReleased === true,
     loose: entry.loose, allocated: entry.allocatedQuantity, remaining: entry.remainingQuantity, pending: entry.pendingAllocatedQuantity, notes: entry.notes, qar: entry.qarNumber, approved: entry.isApproved === true };
 }
@@ -44,16 +40,16 @@ export type TransferNote = z.infer<typeof noteRowsSchema>[number];
 // An empty number field reports "not a number"; it counts as none.
 const count = (message: string) => z.number().or(z.nan()).refine((value) => Number.isNaN(value) || (Number.isInteger(value) && value >= 0), message);
 /** The store enters shippers and loose packs. They are checked as yield: never nothing, never more than was sent. */
-export const approveSchema = (noteLike: Pick<TransferNote, "total" | "layout">) => z.object({ shippers: count("Enter a whole number of shippers, 0 or more"), loose: count("Enter a whole number of loose packs, 0 or more"), notes: z.string().max(500, "Use at most 500 characters and cite the supporting report") })
+export const approveSchema = (noteLike: Pick<TransferNote, "total" | "layout">) => z.object({ shippers: count("Enter a whole number of shippers, 0 or more"), loose: count("Enter a whole number of loose packs, 0 or more"), units: count("Enter a whole number of loose units, 0 or more").transform(value => Number.isNaN(value) ? 0 : value).optional(), notes: z.string().max(500, "Use at most 500 characters and cite the supporting report") })
   .superRefine((value, context) => {
-    const received = yieldOf(value.shippers, value.loose, noteLike.layout);
+    const received = yieldOf(value.shippers, value.loose, noteLike.layout, value.units ?? 0);
     if (received === null) context.addIssue({ code: "custom", path: ["shippers"], message: "The packing style does not say how many units fill a pack, so shippers cannot be counted" });
     else if (received === 0 && !value.notes.trim()) context.addIssue({ code: "custom", path: ["shippers"], message: "Enter what was received or explain a zero receipt" });
     else if (received < noteLike.total && !value.notes.trim()) context.addIssue({ code: "custom", path: ["notes"], message: "Explain the shortage or discrepancy" });
     else if (received > noteLike.total) { const sent = fgCount(noteLike.total, noteLike.layout);
       context.addIssue({ code: "custom", path: ["shippers"], message: `That is more than was sent (${sent ? countText(sent, noteLike.layout.baseName) : "–"})` }); }
   });
-export interface ApproveValues { shippers: number; loose: number; notes: string }
+export type ApproveValues = z.infer<ReturnType<typeof approveSchema>>;
 
 const list = { type: "FinishedGoods" as const, id: "all" };
 export const noteApi = productionApi.enhanceEndpoints({ endpoints: { getApiV1ProductionScheduleFinishedGoodsTransferNote: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); }, getApiV1ProductionScheduleFinishedGoodsTransferNoteById: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },

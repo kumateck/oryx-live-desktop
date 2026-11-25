@@ -48,14 +48,14 @@ export type ShelfBatchRow = Omit<z.infer<typeof shelfBatchRowsSchema>[number], "
 
 /** One entry on a material's bin card: stock received or issued, and the balance after it. */
 export const binCardRowsSchema = z.array(z.object({
-  id: z.string().nullish(), createdAt: z.string().nullish(), wayBill: text, arNumber: text, supplier: text, manufacturer: text, warehouseName: text, requisitionCode: text, productBatchNumber: text,
+  id: z.string().nullish(), createdAt: z.string().nullish(), description: text, wayBill: text, arNumber: text, supplier: text, manufacturer: text, warehouseName: text, requisitionCode: text, productBatchNumber: text,
   quantityReceived: amount, quantityIssued: amount, balanceQuantity: amount, uoM: z.object({ symbol: text }).nullish(),
   materialBatch: z.object({ batchNumber: text, manufacturingDate: z.string().nullish(), expiryDate: z.string().nullish() }).nullish(), product: z.object({ name: text }).nullish(),
 })).nullish().transform((value) => (value ?? []).map((item, index) => {
   // The server writes "N/A" where there is nothing to record.
   const real = (entry: string | null) => entry && entry !== "N/A" ? entry : null;
   return { id: item.id ?? `entry-${index}`, date: item.createdAt ?? null, wayBill: real(item.wayBill), arNumber: real(item.arNumber), supplier: real(item.supplier), manufacturer: real(item.manufacturer),
-    warehouse: item.warehouseName, requisition: item.requisitionCode, productBatch: item.productBatchNumber, product: item.product?.name ?? null,
+    warehouse: item.warehouseName, description: item.description, requisition: item.requisitionCode, productBatch: item.productBatchNumber, product: item.product?.name ?? null,
     received: item.quantityReceived, issued: item.quantityIssued, balance: item.balanceQuantity, unit: item.uoM?.symbol ?? null,
     batchNumber: item.materialBatch?.batchNumber ?? null, manufacturingDate: item.materialBatch?.manufacturingDate ?? null, expiryDate: item.materialBatch?.expiryDate ?? null };
 }));

@@ -142,6 +142,7 @@ export function AtrResultsPage() {
   const worksheet = <AtrWorksheet atr={sheet.rawAtr} specNumber={sheet.ard?.specNumber ?? null} stpNumber={sheet.ard?.productStandardTestProcedure?.stpNumber ?? null} form={sheet.rawForm} responses={sheet.responses} blank={false} />;
   return <Frame sheet={sheet} title="Analytical raw data">
     <div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="outline" disabled={!sheet.rawForm} onClick={() => setPrinting(true)}>Print</Button>
+      <PendingCertificateEditButton response={sheet.responseDetail} sections={sections} compliance={inferred} onSaved={sheet.reload} />
       <PermissionGuard require={atrPermissions.check}><Button type="button" disabled={!sheet.rawForm} onClick={() => { sheet.reload(); setPreviewing(true); }}>
         {sheet.certificate.canGenerate ? "Preview certificate" : `View certificate · ${sheet.certificate.label}`}</Button></PermissionGuard></div>
     {sheet.responseId ? <TestCorrectionPanel responseId={sheet.responseId} kind="product" canReturn={atr?.status === 4 && sheet.certificate.canGenerate}

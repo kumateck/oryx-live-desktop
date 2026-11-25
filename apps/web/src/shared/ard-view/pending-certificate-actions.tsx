@@ -52,10 +52,13 @@ export function PendingCertificateEditButton({ response, sections, compliance, o
   const user = useCurrentUser();
   const { has } = useAccess();
   const subject = kind(response?.coaSubjectKind);
-  if (!response?.id || subject === null || !pending(response) || !user?.id || response.checkedBy?.id !== user.id
+  if (!response?.id || subject === null || !pending(response) || !user?.id
     || !has(edits[subject].permission)) return null;
+  if (response.checkedBy?.id !== user.id) return <p role="status" className="text-sm text-muted-foreground">
+    Only the original preparer can edit this pending certificate. An assigned approver can request a correction.
+  </p>;
   return <>
-    <Button type="button" onClick={() => setOpen(true)}>{response.coaReturnKind ? "Review and resubmit" : "Edit certificate"}</Button>
+    <Button type="button" onClick={() => setOpen(true)}>{response.coaReturnKind ? "Review and resubmit" : "Edit COA"}</Button>
     {open ? <CertificateEditDialog response={response} id={response.id} subject={subject} sections={sections} compliance={compliance}
       onClose={() => setOpen(false)} onSaved={onSaved} /> : null}
   </>;

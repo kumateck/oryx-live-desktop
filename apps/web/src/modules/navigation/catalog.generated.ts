@@ -2320,6 +2320,14 @@ export const navigationCatalog = [
         "permissions": [
           "CanViewCodeSettings"
         ]
+      },
+      {
+        "id": "system-settings.production-board-order",
+        "label": "Production board order",
+        "path": "/settings/production-board-order",
+        "permissions": [
+          "CanViewDepartmentProductionBoardOrder"
+        ]
       }
     ]
   },
@@ -2368,7 +2376,15 @@ export const navigationCatalog = [
           "CanViewBmrIssuedReport",
           "CanViewStockCountSheetReport",
           "CanViewExpiredStockReport",
-          "CanViewApprovedManufacturerListReport"
+          "CanViewApprovedManufacturerListReport",
+          "CanViewBmrIssuedByProductReport",
+          "CanViewStockIssuedReport",
+          "CanViewProductionMonthlyReport",
+          "CanViewProductionScheduleSummaryReport",
+          "CanViewProductionBatchValueReport",
+          "CanExportProductSpecification",
+          "CanExportRawMaterialSpecification",
+          "CanExportPackagingMaterialSpecification"
         ]
       }
     ]

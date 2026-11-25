@@ -752,6 +752,34 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getDepartmentProductionBoardOrder: build.query<
+      GetDepartmentProductionBoardOrderApiResponse,
+      GetDepartmentProductionBoardOrderApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "production-board-order", id: queryArg.departmentId }],
+      query: (queryArg) => ({
+        url: `/api/v1/production-board-order/${queryArg.departmentId}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    saveDepartmentProductionBoardOrder: build.mutation<
+      SaveDepartmentProductionBoardOrderApiResponse,
+      SaveDepartmentProductionBoardOrderApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "production-board-order", id: "LIST" }, { type: "production-board-order", id: queryArg.departmentId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/production-board-order/${queryArg.departmentId}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesBaseSaveProductionBoardOrder,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -1266,6 +1294,24 @@ export type DeleteApiV1CollectionOperationsByOperationIdDepartmentApiArg = {
   /** The sub module this request falls under */
   subModule?: string;
 };
+export type GetDepartmentProductionBoardOrderApiResponse =
+  /** status 200 OK */ DomainEntitiesBaseProductionBoardOrderDto;
+export type GetDepartmentProductionBoardOrderApiArg = {
+  departmentId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type SaveDepartmentProductionBoardOrderApiResponse = void;
+export type SaveDepartmentProductionBoardOrderApiArg = {
+  departmentId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesBaseSaveProductionBoardOrder: DomainEntitiesBaseSaveProductionBoardOrder;
+};
 export type DomainEntitiesUsersBsonUserDto = {
   id?: string;
   firstName?: string | null;
@@ -1591,6 +1637,21 @@ export type DomainEntitiesShiftAssignmentsWorkingHoursPolicyDto = {
   effectiveFrom?: string;
   effectiveTo?: string | null;
 };
+export type DomainEntitiesBaseProductionBoardOperationDto = {
+  id?: string;
+  name?: string | null;
+  order?: number;
+};
+export type DomainEntitiesBaseProductionBoardOrderDto = {
+  departmentId?: string;
+  departmentName?: string | null;
+  version?: string | null;
+  operations?: DomainEntitiesBaseProductionBoardOperationDto[] | null;
+};
+export type DomainEntitiesBaseSaveProductionBoardOrder = {
+  version?: string | null;
+  operationIds?: string[] | null;
+};
 export const {
   useGetApiV1ActivityLogQuery,
   useLazyGetApiV1ActivityLogQuery,
@@ -1664,4 +1725,7 @@ export const {
   useDeleteApiV1WorkingHoursPolicyByIdMutation,
   usePutApiV1CollectionOperationsByOperationIdDepartmentAndDepartmentIdMutation,
   useDeleteApiV1CollectionOperationsByOperationIdDepartmentMutation,
+  useGetDepartmentProductionBoardOrderQuery,
+  useLazyGetDepartmentProductionBoardOrderQuery,
+  useSaveDepartmentProductionBoardOrderMutation,
 } = injectedRtkApi;
