@@ -1,7 +1,7 @@
 // The backend's keys for the approved vendor list (oryx-backend PermissionKeys, Quality Assurance → Approved Vendor List).
 export const avlKeys = {
   view: "CanViewApprovedVendorList", create: "CanCreateApprovedVendorList", edit: "CanEditApprovedVendorList",
-  revise: "CanReviseApprovedVendorList", review: "CanReviewApprovedVendorList", return: "CanReturnApprovedVendorList",
+  revise: "CanReviseApprovedVendorList", editDraft: "CanEditApprovedVendorListDraft", submit: "CanSubmitApprovedVendorList", review: "CanReviewApprovedVendorList", return: "CanReturnApprovedVendorList",
   print: "CanPrintApprovedVendorList",
   delete: "CanDeleteApprovedVendorList",
 } as const;

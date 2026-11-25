@@ -1,3 +1,5 @@
+Vendor-list drafts add typed save and submit operations, draft versions and options for unmapped suppliers and manufacturers. Import with `bun scripts/import-vendor-list-drafts.ts EXPORT.json`, then regenerate and check. Reviewed fingerprint `c52621b3f8d8ebc6c969be4afd1cbe0719e95a9712d0beea3283166b7a473757`. Apply the companion backend migrations before activating the UI.
+
 Combined frontend contract: `a9df0b96e20cea76d95d5e1f35b1bf01db171111c879c35ea17dff1ecc141f86` adds the two density DELETE endpoints to the reviewed queue/pending-COA contract. Removing only those endpoints restores `ac2f9bb8…4d49`.
 
 Density clearing adds only two kind-specific material density DELETE endpoints. Import with `bun scripts/import-clear-density.ts EXPORT.json`. Digest `c0e8c054c821a04e2e8fba72260a09bbaac721eebe81999654944c72c2655f67` preserves predecessor `0ea14c2c…4382`. Deploy the backend audit migration first; see [density clearing](material-density-clearing.md).

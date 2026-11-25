@@ -8,6 +8,7 @@ export const manifest = {
   routes: [
     { pattern: "/qa/approved-vendor-list/new", access: { kind: "all", permissions: [k.view, k.create] } },
     { pattern: "/qa/approved-vendor-list/revise", access: { kind: "all", permissions: [k.view, k.revise] } },
+    { pattern: "/qa/approved-vendor-list/:id/draft", access: { kind: "all", permissions: [k.view, k.editDraft] } },
     { pattern: "/qa/approved-vendor-list/:id/edit", access: { kind: "all", permissions: [k.view, k.edit] } },
   ],
 } satisfies ModuleManifest<"approved-vendor-list", "/qa/approved-vendor-list">;
