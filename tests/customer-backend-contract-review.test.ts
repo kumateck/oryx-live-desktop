@@ -113,8 +113,26 @@ function stripVersionedCosting(document: ObjectValue) {
   for (const [name,fields] of Object.entries(costingFields)) for (const field of fields) delete object(object(schemas[name] ?? null).properties ?? null)[field];
 }
 
-function beforePendingCertificateChanges() {
+function beforeProductionBoardOrder() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  delete object(document.paths ?? null)["/api/v1/production-board-order/{departmentId}"];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of ["ProductionBoardOrderDto", "ProductionBoardOperationDto", "SaveProductionBoardOrder"])
+    delete schemas["DOMAIN.Entities.Base." + name];
+  return document;
+}
+
+function beforeMaterialStockTrace() {
+  const document = beforeProductionBoardOrder();
+  const paths = object(document.paths ?? null);
+  for (const path of Object.keys(paths)) if (path.startsWith("/api/v1/material-stock-trace/")) delete paths[path];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.Materials.Batch.MaterialStockTrace")) delete schemas[name];
+  return document;
+}
+
+function beforePendingCertificateChanges() {
+  const document = beforeMaterialStockTrace();
   const paths = object(document.paths ?? null);
   for (const path of Object.keys(paths)) {
     if (path.startsWith("/api/v1/pending-certificates/")) delete paths[path];
@@ -459,6 +477,20 @@ test("unsaved formula repair allows a null response ID and preserves the reviewe
   checkCompatibility(hostConfig, policy, contractDigest(current));
   stripFormulaRepairResponseId(current);
   assert.equal(contractDigest(current), "b25205abc57a22c778b7d1d54adde27e529a30a149a9d2c2c287a53e6af7d755");
+});
+
+test("material stock trace adds only kind-specific full snapshot view and print operations", () => {
+  const current = beforeProductionBoardOrder();
+  const paths = object(current.paths ?? null);
+  for (const kind of ["raw", "packaging"]) for (const suffix of ["", "/print"]) {
+    const operation = object(paths[`/api/v1/material-stock-trace/${kind}/{materialId}${suffix}`] ?? null);
+    assert.deepEqual(Object.keys(operation), ["get"]);
+    assert.ok(object(operation.get ?? null).operationId);
+  }
+  const digest = contractDigest(current);
+  assert.equal(digest, "ed5a4dba5d3d9e8ff51a650289ef4ec833d8b457a9f859be7fd205af072faa93");
+  checkCompatibility(hostConfig, policy, digest);
+  assert.equal(contractDigest(beforeMaterialStockTrace()), "f98896c0e66ab885fdcaf8049301dad3bb0476ed46f26e85566e97474ba0b643");
 });
 
 function stripSpecificationPrint(document: ObjectValue) {
@@ -1502,7 +1534,7 @@ test("vendor-list draft changes preserve the previous reviewed contract", () => 
 
 
 test("pending certificate changes add only typed subject-specific actions and certificate state", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforeMaterialStockTrace();
   const paths = object(current.paths ?? null);
   for (const subject of ["product", "raw-material", "packaging-material"]) {
     const root = `/api/v1/pending-certificates/{responseId}/${subject}`;
@@ -1514,4 +1546,15 @@ test("pending certificate changes add only typed subject-specific actions and ce
   assert.equal(digest, "f98896c0e66ab885fdcaf8049301dad3bb0476ed46f26e85566e97474ba0b643");
   checkCompatibility(hostConfig, policy, digest);
   assert.equal(contractDigest(beforePendingCertificateChanges()), "c52621b3f8d8ebc6c969be4afd1cbe0719e95a9712d0beea3283166b7a473757");
+});
+
+
+test("production board ordering adds only its department-scoped read and write contract", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const path = object(object(current.paths ?? null)["/api/v1/production-board-order/{departmentId}"] ?? null);
+  assert.deepEqual(Object.keys(path).sort(), ["get", "put"]);
+  assert.equal(object(path.get ?? null).operationId, "GetDepartmentProductionBoardOrder");
+  assert.equal(object(path.put ?? null).operationId, "SaveDepartmentProductionBoardOrder");
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+  assert.equal(contractDigest(beforeProductionBoardOrder()), "ed5a4dba5d3d9e8ff51a650289ef4ec833d8b457a9f859be7fd205af072faa93");
 });

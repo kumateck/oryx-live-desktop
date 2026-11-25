@@ -1,4 +1,4 @@
-import type { CoaReportedResult } from "@/shared/ard-view/raw-data/coa-reporting";
+import { certificateReportedResults, type CoaReportedResult } from "@/shared/ard-view/raw-data/coa-reporting";
 import type { ArdResultField } from "../schemas/ard-result-schema";
 
 /** A recorded answer on analytical raw data: its text, and whether the analyst marked it as complying. */
@@ -16,7 +16,7 @@ export const saysFails = (value: string | null | undefined) => /does not comply|
 
 export function answerFails(answer: RecordedAnswer | undefined): boolean {
   if (answer?.coaReportingError) return true;
-  const reported = answer?.coaReportedResults;
+  const reported = certificateReportedResults(answer?.coaReportedResults ?? []);
   if (reported?.length && reported.every(result => result.converted))
     return reported.some(result => result.complies !== true);
   return Boolean(answer?.coaReportingError) || Boolean(answer?.coaReportedResults?.some(result => result.converted && result.complies === false))

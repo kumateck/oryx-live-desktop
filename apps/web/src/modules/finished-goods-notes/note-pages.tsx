@@ -119,15 +119,20 @@ function Detail({ note }: { note: TransferNote }) {
   const show = (value: number) => fgText(value, note.layout);
   return <article className="min-w-0 space-y-4">
     <PageHeader title={note.productName} crumbs={[{ label: "Finished goods transfer notes", to: notesPath }, { label: note.number ?? note.batchNumber ?? "Transfer note" }]}
-      actions={!note.approved && has(notePermissions.approve) ? <Button type="button" size="sm" onClick={() => setApproving(true)}><Check />Approve</Button> : null} />
-    <div className="flex flex-wrap items-center gap-2"><Badge variant={note.approved ? "default" : "outline"}>{note.approved ? "Approved" : "Pending approval"}</Badge>
+      actions={!note.approved && has(notePermissions.approve) ? <Button type="button" size="sm" onClick={() => setApproving(true)}><Check />Receive transfer</Button> : null} />
+    <div className="flex flex-wrap items-center gap-2"><Badge variant={note.approved ? "default" : "outline"}>{note.approved ? "Approved" : "Awaiting warehouse receipt"}</Badge>
       <span className="text-sm text-muted-foreground">{[note.number, `Created ${formatDate(note.createdAt) ?? "on an unrecorded date"}`, note.createdBy ? `by ${note.createdBy}` : null, note.qar ? `QAR ${note.qar}` : null].filter(Boolean).join(" · ")}</span></div>
-    <KeyFacts>
+    {!note.approved ? <KeyFacts>
+      <KeyFact label="Transferred" value={show(note.total)} />
+      <KeyFact label="Received" value="Awaiting warehouse receipt" />
+      <KeyFact label="Allocation" value="Available after receipt" />
+      <KeyFact label="Stock balance" value="Not yet received" />
+    </KeyFacts> : <KeyFacts>
       <KeyFact label="Received" value={show(note.received)} />
       <KeyFact label="Allocated" value={show(note.allocated)} />
       <KeyFact label="Pending allocation" value={show(note.pending)} state={note.pending > 0 ? "soon" : "none"} />
       <KeyFact label="Remaining" value={show(note.remaining)} />
-    </KeyFacts>
+    </KeyFacts>}
     <section aria-label="Transfer route" className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4 text-sm">
       <div><p className="text-xs text-muted-foreground">From</p><p className="font-medium">{note.from ?? "–"}</p></div><ArrowRight aria-hidden="true" className="size-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">To</p><p className="font-medium">{note.to ?? "–"}</p></div></section>
     <div className="grid gap-3 lg:grid-cols-2">

@@ -64,20 +64,19 @@ it("shows the screenshot's unresolved sample-weight reading without substituting
   expect(screen.queryByText("0.00%")).toBeNull();
 });
 
-it("uses only the authoritative average in the specification summary and preserves all inputs/results in the worksheet", () => {
+it("uses only the authoritative average throughout results and preserves the recorded worksheet inputs", () => {
   const answer = { ...wrappedAssayAnswer, formulaGoverned: true, formulaResultFinalized: true,
     formulaDisplayResultsJson: JSON.stringify([{ key: "sample1", value: "103.92", unit: "%" }, { key: "sample2", value: "103.65", unit: "%" }, { key: "average", value: "103.78", unit: "%" }]) };
   const { container } = render(<ArdTemplateBody sections={[assaySection]} responses={[answer]} showRemarks={false} />);
   const tables = container.querySelectorAll("table");
   expect(tables[0]?.textContent).toContain("103.78 %");
   expect(tables[0]?.textContent).not.toContain("103.92");
-  const calculations = screen.getByRole("table", { name: "Calculations" });
-  if (!(calculations instanceof HTMLTableElement)) throw new Error("Calculations is not a table");
-  expect(calculations.rows[0]?.textContent).toContain("103.92 %");
-  expect(calculations.rows[1]?.textContent).toContain("103.65 %");
+  expect(screen.queryByRole("table", { name: "Calculations" })).toBeNull();
   expect(container.textContent).toContain("0.02");
   expect(container.textContent).toContain("0.35");
-  expect(container.textContent).toContain("103.92 %");
+  expect(container.textContent).not.toContain("103.92 %");
+  expect(container.textContent).not.toContain("103.65 %");
+  expect(within(screen.getByLabelText("Results")).queryByText("Average")).toBeNull();
   expect(container.querySelector("input, textarea")).toBeNull();
 });
 
@@ -124,7 +123,7 @@ it("renders saved universal worksheet inputs in the entry layout without configu
   expect(screen.getByText("0.4470")).toBeTruthy();
   // Governed: the stored average is the result, and no bare "=" is left without a number.
   expect(within(screen.getByLabelText("Results")).getByText("103.78 %")).toBeTruthy();
-  expect(screen.getByRole("table", { name: "Calculations" }).textContent).not.toMatch(/=\s*$/);
+  expect(screen.queryByRole("table", { name: "Calculations" })).toBeNull();
   expect(screen.queryByText(/Hidden standard/)).toBeNull();
   expect(container.textContent).not.toContain('"averageAllResults"');
   expect(container.querySelector("input, textarea, select, button")).toBeNull();

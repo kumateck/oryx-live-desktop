@@ -5,6 +5,7 @@ import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, expect, it } from "vitest";
 import ApprovedProductsRoute from "../../pages/(workspace)/warehouse/approved-products/page";
 import TransferNotesRoute from "../../pages/(workspace)/warehouse/finished-goods-transfer-notes/page";
+import { NoteDetailPage } from "./note-pages";
 import { ApiProvider } from "../../shared/api/api-provider";
 import { SessionProvider } from "../../shared/auth/session-provider";
 import { forgetSession, rememberSession, stubBackend } from "../../test/backend";
@@ -53,15 +54,26 @@ function open(address: string, permissions: string[]) {
     const url = new URL(input.url);
     calls.push({ method: input.method, path: url.pathname, search: url.search, ...(input.method !== "GET" ? { body: await input.clone().json().catch(() => null) } : {}) });
     if (url.pathname === "/api/v1/production-schedule/finished-goods-transfer-note") return Response.json({ data: [note], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
+    if (url.pathname === "/api/v1/production-schedule/finished-goods-transfer-note/n1") return Response.json(note);
     if (url.pathname === "/api/v1/production-schedule/finished-goods-transfer-note/n1/approve") return new Response(null, { status: 204 });
     if (url.pathname === "/api/v1/production-schedule/approved-products") return Response.json([{ product: { id: "p1", code: "FP-1", name: "Dicnac 100" }, totalQuantity: 250, totalRemainingQuantity: 90, stocks: [{ transferNoteId: "n1", productPackingId: "k1", packingStyle: "10 x 10", quantityPerPack: 1, packsPerShipper: 100, sent: 250, received: 240, physical: 240, reserved: 150, available: 90 }] }]);
     if (url.pathname === "/api/v1/production-schedule/approved-products/p1") return Response.json([{ ...note, isApproved: true, quantityReceived: 240 }]);
     return new Response(null, { status: 404 });
   });
-  const router = createMemoryRouter([{ path: "/warehouse/finished-goods-transfer-notes", element: <TransferNotesRoute /> }, { path: "/warehouse/approved-products", element: <ApprovedProductsRoute /> }], { initialEntries: [address] });
+  const router = createMemoryRouter([{ path: "/warehouse/finished-goods-transfer-notes", element: <TransferNotesRoute /> },
+    { path: "/warehouse/finished-goods-transfer-notes/:id", element: <NoteDetailPage /> }, { path: "/warehouse/approved-products", element: <ApprovedProductsRoute /> }], { initialEntries: [address] });
   render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   return calls;
 }
+
+it("shows transferred quantity and pending receipt instead of four misleading zero balances", async () => {
+  open("/warehouse/finished-goods-transfer-notes/n1", ["CanViewFgtn", "CanApproveFgtn"]);
+  expect((await screen.findAllByText("2 shippers · 50 loose")).length).toBeGreaterThan(0);
+  expect(screen.getAllByText("Awaiting warehouse receipt").length).toBeGreaterThan(0);
+  expect(screen.getByRole("button", { name: "Receive transfer" })).toBeTruthy();
+  expect(screen.queryByText("0 shippers · 0 loose")).toBeNull();
+  expect(screen.getByText("Not yet received")).toBeTruthy();
+});
 
 it("approves a transfer with what was counted in, only with the approve permission", async () => {
   const user = userEvent.setup();

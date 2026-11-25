@@ -1341,6 +1341,74 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getRawMaterialStockTrace: build.query<
+      GetRawMaterialStockTraceApiResponse,
+      GetRawMaterialStockTraceApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-stock-trace/raw", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/material-stock-trace/raw/${queryArg.materialId}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          departmentId: queryArg.departmentId,
+          since: queryArg.since,
+        },
+      }),
+    }),
+    getPackagingMaterialStockTrace: build.query<
+      GetPackagingMaterialStockTraceApiResponse,
+      GetPackagingMaterialStockTraceApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-stock-trace/packaging", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/material-stock-trace/packaging/${queryArg.materialId}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          departmentId: queryArg.departmentId,
+          since: queryArg.since,
+        },
+      }),
+    }),
+    getRawMaterialStockTracePrint: build.query<
+      GetRawMaterialStockTracePrintApiResponse,
+      GetRawMaterialStockTracePrintApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-stock-trace/raw", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/material-stock-trace/raw/${queryArg.materialId}/print`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          departmentId: queryArg.departmentId,
+          since: queryArg.since,
+        },
+      }),
+    }),
+    getPackagingMaterialStockTracePrint: build.query<
+      GetPackagingMaterialStockTracePrintApiResponse,
+      GetPackagingMaterialStockTracePrintApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-stock-trace/packaging", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/material-stock-trace/packaging/${queryArg.materialId}/print`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          departmentId: queryArg.departmentId,
+          since: queryArg.since,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2275,6 +2343,50 @@ export type ClearRawMaterialDensityApiArg = {
 export type ClearPackagingMaterialDensityApiResponse = void;
 export type ClearPackagingMaterialDensityApiArg = {
   materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetRawMaterialStockTraceApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsBatchMaterialStockTraceDto;
+export type GetRawMaterialStockTraceApiArg = {
+  materialId: string;
+  departmentId?: string;
+  since?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetPackagingMaterialStockTraceApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsBatchMaterialStockTraceDto;
+export type GetPackagingMaterialStockTraceApiArg = {
+  materialId: string;
+  departmentId?: string;
+  since?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetRawMaterialStockTracePrintApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsBatchMaterialStockTraceDto;
+export type GetRawMaterialStockTracePrintApiArg = {
+  materialId: string;
+  departmentId?: string;
+  since?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetPackagingMaterialStockTracePrintApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsBatchMaterialStockTraceDto;
+export type GetPackagingMaterialStockTracePrintApiArg = {
+  materialId: string;
+  departmentId?: string;
+  since?: string;
   /** The module this request falls under */
   module?: string;
   /** The sub module this request falls under */
@@ -3806,6 +3918,73 @@ export type DomainEntitiesProductsProductionReleaseUnstartReservationsRequest =
     reason: string;
     reservationIds: string[];
   };
+export type DomainEntitiesMaterialsBatchMaterialStockTraceState =
+  0 | 1 | 2 | 3 | 4;
+export type DomainEntitiesMaterialsBatchMaterialStockTraceRow = {
+  id?: string;
+  materialBatchId?: string;
+  materialBatchNumber?: string | null;
+  state?: DomainEntitiesMaterialsBatchMaterialStockTraceState;
+  quantity?: number;
+  unit?: string | null;
+  warehouse?: string | null;
+  shelf?: string | null;
+  reference?: string | null;
+  product?: string | null;
+  productBatchNumber?: string | null;
+  occurredAt?: string | null;
+  actor?: string | null;
+  evidence?: string | null;
+  arNumber?: string | null;
+  manufacturingDate?: string | null;
+  expiryDate?: string | null;
+  effectiveExpiryDate?: string | null;
+};
+export type DomainEntitiesMaterialsBatchMaterialStockTraceLedgerRow = {
+  id?: string;
+  materialBatchId?: string;
+  materialBatchNumber?: string | null;
+  occurredAt?: string;
+  description?: string | null;
+  reference?: string | null;
+  arNumber?: string | null;
+  warehouse?: string | null;
+  product?: string | null;
+  productBatchNumber?: string | null;
+  unit?: string | null;
+  received?: number;
+  issued?: number;
+  balance?: number;
+};
+export type DomainEntitiesMaterialsBatchMaterialStockTraceDto = {
+  materialId?: string;
+  materialCode?: string | null;
+  materialName?: string | null;
+  materialKind?: DomainEntitiesMaterialsMaterialKind;
+  category?: string | null;
+  pharmacopoeia?: string | null;
+  departmentId?: string;
+  departmentName?: string | null;
+  unit?: string | null;
+  periodStart?: string;
+  generatedAt?: string;
+  openingBalance?: number;
+  received?: number;
+  issued?: number;
+  ledgerClosing?: number;
+  storeStock?: number;
+  reservedStock?: number;
+  freeStock?: number;
+  expiredStock?: number;
+  unavailableStock?: number;
+  productionFloorStock?: number;
+  consumedStock?: number;
+  inTransitStock?: number;
+  ledgerGap?: number;
+  gaps?: string[] | null;
+  rows?: DomainEntitiesMaterialsBatchMaterialStockTraceRow[] | null;
+  ledgerRows?: DomainEntitiesMaterialsBatchMaterialStockTraceLedgerRow[] | null;
+};
 export const {
   usePostApiV1BomMutation,
   usePutApiV1BomByBillOfMaterialIdMutation,
@@ -3938,4 +4117,12 @@ export const {
   useReleasePackagingUnstartReservationsMutation,
   useClearRawMaterialDensityMutation,
   useClearPackagingMaterialDensityMutation,
+  useGetRawMaterialStockTraceQuery,
+  useLazyGetRawMaterialStockTraceQuery,
+  useGetPackagingMaterialStockTraceQuery,
+  useLazyGetPackagingMaterialStockTraceQuery,
+  useGetRawMaterialStockTracePrintQuery,
+  useLazyGetRawMaterialStockTracePrintQuery,
+  useGetPackagingMaterialStockTracePrintQuery,
+  useLazyGetPackagingMaterialStockTracePrintQuery,
 } = injectedRtkApi;

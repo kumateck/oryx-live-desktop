@@ -44,7 +44,6 @@ export const renderSpecificationResult = (
   if (hasAverage) {
     return (
       <span className="text-sm font-semibold">
-        {certificate ? null : "Average content: "}
         {formatCompactFormulaResult(
           compact.average,
           compact.decimalPlaces,

@@ -20,6 +20,16 @@ const makePreview = () => ({ batchId: "b1", batchNumber: "BFC4K338", kind: 1, re
       lots: [{ materialBatchId: "lot2", shelfId: "s1", batchNumber: "PVC-LOT", adjustment: 94_999_905 }] },
   ] });
 
+it("explains the disabled zero-adjustment repair without submitting a reversal", async () => {
+  const preview = makePreview();
+  preview.hasChanges = false; preview.canApply = false;
+  preview.rows = preview.rows.map(row => ({ ...row, targetQuantity: row.beforeQuantity, adjustment: 0, lots: [] }));
+  const { calls } = open({ preview });
+  expect(await screen.findByText(/Apply stock repair is disabled because/)).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Apply stock repair" })).toHaveProperty("disabled", true);
+  expect(calls).toHaveLength(0);
+});
+
 function open({ permission = true, menu = false, preview = makePreview(), failFirst = false, malformed = false } = {}) {
   const backend = stubBackend({ permissions: ["CanViewPlannedProducts", "CanUpdateProductionStep", "CanReturnProductionMaterials", "CanRecordFinalPacking", "CanCreateFgtn", "CanRequestExtraPacking", ...(permission ? ["CanRepairIssuedPackaging"] : [])] });
   rememberSession();
