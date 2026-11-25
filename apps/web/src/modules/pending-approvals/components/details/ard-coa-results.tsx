@@ -17,7 +17,7 @@ export function ArdCoaResults({ sections, recorded, data }: {
       <th key={label} scope="col" className={index === 0 ? "w-10" : undefined}>{label}</th>)}</tr></thead>
     <tbody>{data.sections.map((section, index) => <tr key={section.id ?? index}>
       <td>{index + 1}</td><td><RichTextView html={section.name} /></td>
-      <td>{getResponsesForSection(section.fields ?? [], responses)}</td><td><CoaReportingSpecification fields={section.fields ?? []} responses={responses} original={section.description ?? ""} /></td>
+      <td>{getResponsesForSection(section.fields ?? [], responses, { certificate: true })}</td><td><CoaReportingSpecification certificate fields={section.fields ?? []} responses={responses} original={section.description ?? ""} /></td>
       <td>{complianceLabels[testCompliance((sections[index]?.fields ?? []).map((field) => field.id), recorded)]}</td>
       <td>{testReference(sections[index]?.fields, sections[index]?.value)}</td>
     </tr>)}</tbody>

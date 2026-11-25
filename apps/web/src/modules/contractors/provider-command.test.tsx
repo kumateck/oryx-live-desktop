@@ -71,6 +71,8 @@ it("detects the old backend that accepts edits without updating service associat
   await save();
   expect((await screen.findByRole("alert")).textContent).toMatch(/associations were not confirmed/);
   await save();
+  expect(await screen.findByText(/A change was already sent/)).toBeTruthy();
+  await waitFor(() => expect(screen.getByRole("button").hasAttribute("disabled")).toBe(false));
   expect(page.writes).toHaveLength(1);
 });
 it("refuses stale evidence before a write", async () => {
@@ -86,5 +88,7 @@ it("does not replay refused writes", async () => {
   await save();
   await screen.findByRole("alert");
   await save();
+  expect(await screen.findByText(/A change was already sent/)).toBeTruthy();
+  await waitFor(() => expect(screen.getByRole("button").hasAttribute("disabled")).toBe(false));
   expect(page.writes).toHaveLength(1);
 });

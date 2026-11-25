@@ -940,6 +940,141 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    savePendingProductCertificate: build.mutation<
+      SavePendingProductCertificateApiResponse,
+      SavePendingProductCertificateApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "pending-certificate", id: "LIST" }, { type: "pending-certificate", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/pending-certificates/${queryArg.responseId}/product`,
+        method: "PUT",
+        body: queryArg.domainEntitiesFormsSavePendingCertificate,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    requestProductCertificateReview: build.mutation<
+      RequestProductCertificateReviewApiResponse,
+      RequestProductCertificateReviewApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "pending-certificate", id: "LIST" }, { type: "pending-certificate", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/pending-certificates/${queryArg.responseId}/product/review-request`,
+        method: "POST",
+        body: queryArg.domainEntitiesFormsRequestCertificateChange,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    requestProductCertificateCorrection: build.mutation<
+      RequestProductCertificateCorrectionApiResponse,
+      RequestProductCertificateCorrectionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "pending-certificate", id: "LIST" }, { type: "pending-certificate", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/pending-certificates/${queryArg.responseId}/product/correction-request`,
+        method: "POST",
+        body: queryArg.domainEntitiesFormsRequestCertificateChange,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    savePendingRawMaterialCertificate: build.mutation<
+      SavePendingRawMaterialCertificateApiResponse,
+      SavePendingRawMaterialCertificateApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "pending-certificate", id: "LIST" }, { type: "pending-certificate", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/pending-certificates/${queryArg.responseId}/raw-material`,
+        method: "PUT",
+        body: queryArg.domainEntitiesFormsSavePendingCertificate,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    requestRawMaterialCertificateReview: build.mutation<
+      RequestRawMaterialCertificateReviewApiResponse,
+      RequestRawMaterialCertificateReviewApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "pending-certificate", id: "LIST" }, { type: "pending-certificate", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/pending-certificates/${queryArg.responseId}/raw-material/review-request`,
+        method: "POST",
+        body: queryArg.domainEntitiesFormsRequestCertificateChange,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    requestRawMaterialCertificateCorrection: build.mutation<
+      RequestRawMaterialCertificateCorrectionApiResponse,
+      RequestRawMaterialCertificateCorrectionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "pending-certificate", id: "LIST" }, { type: "pending-certificate", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/pending-certificates/${queryArg.responseId}/raw-material/correction-request`,
+        method: "POST",
+        body: queryArg.domainEntitiesFormsRequestCertificateChange,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    savePendingPackagingMaterialCertificate: build.mutation<
+      SavePendingPackagingMaterialCertificateApiResponse,
+      SavePendingPackagingMaterialCertificateApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "pending-certificate", id: "LIST" }, { type: "pending-certificate", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/pending-certificates/${queryArg.responseId}/packaging-material`,
+        method: "PUT",
+        body: queryArg.domainEntitiesFormsSavePendingCertificate,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    requestPackagingMaterialCertificateReview: build.mutation<
+      RequestPackagingMaterialCertificateReviewApiResponse,
+      RequestPackagingMaterialCertificateReviewApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "pending-certificate", id: "LIST" }, { type: "pending-certificate", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/pending-certificates/${queryArg.responseId}/packaging-material/review-request`,
+        method: "POST",
+        body: queryArg.domainEntitiesFormsRequestCertificateChange,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    requestPackagingMaterialCertificateCorrection: build.mutation<
+      RequestPackagingMaterialCertificateCorrectionApiResponse,
+      RequestPackagingMaterialCertificateCorrectionApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "pending-certificate", id: "LIST" }, { type: "pending-certificate", id: queryArg.responseId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/pending-certificates/${queryArg.responseId}/packaging-material/correction-request`,
+        method: "POST",
+        body: queryArg.domainEntitiesFormsRequestCertificateChange,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -1586,6 +1721,87 @@ export type ReturnPackagingMaterialTestForCorrectionApiArg = {
   subModule?: string;
   appServicesFormsReturnTestForCorrectionRequest: AppServicesFormsReturnTestForCorrectionRequest;
 };
+export type SavePendingProductCertificateApiResponse = void;
+export type SavePendingProductCertificateApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsSavePendingCertificate: DomainEntitiesFormsSavePendingCertificate;
+};
+export type RequestProductCertificateReviewApiResponse = void;
+export type RequestProductCertificateReviewApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsRequestCertificateChange: DomainEntitiesFormsRequestCertificateChange;
+};
+export type RequestProductCertificateCorrectionApiResponse = void;
+export type RequestProductCertificateCorrectionApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsRequestCertificateChange: DomainEntitiesFormsRequestCertificateChange;
+};
+export type SavePendingRawMaterialCertificateApiResponse = void;
+export type SavePendingRawMaterialCertificateApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsSavePendingCertificate: DomainEntitiesFormsSavePendingCertificate;
+};
+export type RequestRawMaterialCertificateReviewApiResponse = void;
+export type RequestRawMaterialCertificateReviewApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsRequestCertificateChange: DomainEntitiesFormsRequestCertificateChange;
+};
+export type RequestRawMaterialCertificateCorrectionApiResponse = void;
+export type RequestRawMaterialCertificateCorrectionApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsRequestCertificateChange: DomainEntitiesFormsRequestCertificateChange;
+};
+export type SavePendingPackagingMaterialCertificateApiResponse = void;
+export type SavePendingPackagingMaterialCertificateApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsSavePendingCertificate: DomainEntitiesFormsSavePendingCertificate;
+};
+export type RequestPackagingMaterialCertificateReviewApiResponse = void;
+export type RequestPackagingMaterialCertificateReviewApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsRequestCertificateChange: DomainEntitiesFormsRequestCertificateChange;
+};
+export type RequestPackagingMaterialCertificateCorrectionApiResponse = void;
+export type RequestPackagingMaterialCertificateCorrectionApiArg = {
+  responseId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsRequestCertificateChange: DomainEntitiesFormsRequestCertificateChange;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -1871,6 +2087,7 @@ export type DomainEntitiesFormsRequestSubmitFormSectionValue = {
   formSectionId?: string;
   value?: string | null;
 };
+export type DomainEntitiesFormsCertificateReturnKind = 1 | 2;
 export type DomainEntitiesFormsResponseDetailDto = {
   id?: string;
   createdBy?: DomainEntitiesUsersUserDto;
@@ -1890,6 +2107,11 @@ export type DomainEntitiesFormsResponseDetailDto = {
   approvedBy?: DomainEntitiesUsersUserDto;
   approvedAt?: string | null;
   coaReportingToken?: string | null;
+  coaSubjectKind?: number | null;
+  coaVersion?: number;
+  coaReturnKind?: DomainEntitiesFormsCertificateReturnKind;
+  coaReturnReason?: string | null;
+  certificateNotes?: string | null;
 };
 export type DomainEntitiesFormsRequestCreateQuestionOptionsRequest = {
   name?: string | null;
@@ -2164,6 +2386,16 @@ export type AppServicesFormsTestCorrectionStateDto = {
 export type AppServicesFormsReturnTestForCorrectionRequest = {
   reason: string;
 };
+export type DomainEntitiesFormsSavePendingCertificate = {
+  version?: number;
+  reason: string;
+  notes?: string | null;
+  compliance: DomainEntitiesFormsCertificateOfAnalysisComplies[];
+};
+export type DomainEntitiesFormsRequestCertificateChange = {
+  version?: number;
+  reason: string;
+};
 export const {
   usePostApiV1FormMutation,
   useGetApiV1FormQuery,
@@ -2249,4 +2481,13 @@ export const {
   useGetPackagingMaterialTestCorrectionHistoryQuery,
   useLazyGetPackagingMaterialTestCorrectionHistoryQuery,
   useReturnPackagingMaterialTestForCorrectionMutation,
+  useSavePendingProductCertificateMutation,
+  useRequestProductCertificateReviewMutation,
+  useRequestProductCertificateCorrectionMutation,
+  useSavePendingRawMaterialCertificateMutation,
+  useRequestRawMaterialCertificateReviewMutation,
+  useRequestRawMaterialCertificateCorrectionMutation,
+  useSavePendingPackagingMaterialCertificateMutation,
+  useRequestPackagingMaterialCertificateReviewMutation,
+  useRequestPackagingMaterialCertificateCorrectionMutation,
 } = injectedRtkApi;

@@ -7,7 +7,7 @@ import { SessionProvider } from "@/shared/auth/session-provider";
 import { ApiProvider } from "@/shared/api/api-provider";
 import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
 import { CommercialCertificatePage } from "@/modules/commercial-certificates/components/commercial-certificate-page";
-import { CertificateResult } from "./certificate-result";
+import { CertificateResult, CertificateSpecification } from "./certificate-result";
 
 afterEach(() => { cleanup(); forgetSession(); });
 it("renders the issued COA route and print preview from its frozen result rows", async () => {
@@ -56,9 +56,13 @@ it("preserves the exact stored result text and does not duplicate a percent unit
 });
 
 it("prints the issued product certificate's frozen conversion instead of its original worksheet inputs", () => {
-  render(<CertificateResult value={JSON.stringify({ originalResponse: '{"assay":101.39}', coaReportedResults: [{ key: "average", label: "Average content",
-    sourceValue: 101.39, value: 2.43336, displayValue: "2.4334", unit: "% w/v", minimum: 2.32, maximum: 2.52, complies: true,
-    nominalConcentration: 2.4, definitionHash: "hash", converted: true }] })} unit="%" />);
-  expect(screen.getByText(/2.4334 % w\/v/)).toBeTruthy();
-  expect(screen.queryByText(/101.39/)).toBeNull();
+  const average = { key: "average", label: "Average", sourceValue: 101.39, value: 2.43336, displayValue: "2.4334",
+    unit: "% w/v", minimum: 2.32, maximum: 2.52, complies: true, nominalConcentration: 2.4, definitionHash: "hash", converted: true };
+  const value = JSON.stringify({ originalResponse: '{"assay":101.39}', coaReportedResults: [
+    { ...average, key: "sample1", label: "Sample 1", displayValue: "101.39", converted: false }, average,
+  ] });
+  render(<><CertificateResult value={value} unit="%" /><CertificateSpecification value={value} original="98–102%<br/>Average: 2.32–2.52 % w/v" /></>);
+  expect(screen.getByText("2.4334 % w/v")).toBeTruthy();
+  expect(screen.getByText("2.32–2.52 % w/v")).toBeTruthy();
+  expect(screen.queryByText(/Sample 1|Average|101\.39|98–102%/)).toBeNull();
 });
