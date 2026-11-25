@@ -113,9 +113,26 @@ function stripVersionedCosting(document: ObjectValue) {
   for (const [name,fields] of Object.entries(costingFields)) for (const field of fields) delete object(object(schemas[name] ?? null).properties ?? null)[field];
 }
 
+function beforePendingCertificateChanges() {
+  const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const paths = object(document.paths ?? null);
+  for (const path of Object.keys(paths)) {
+    if (path.startsWith("/api/v1/pending-certificates/")) delete paths[path];
+  }
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  const prefix = "DOMAIN.Entities.Forms.";
+  for (const name of ["CertificateReturnKind", "RequestCertificateChange", "SavePendingCertificate"]) delete schemas[prefix + name];
+  const detail = object(object(schemas[prefix + "ResponseDetailDto"] ?? null).properties ?? null);
+  for (const field of ["coaSubjectKind", "coaVersion", "coaReturnKind", "coaReturnReason", "certificateNotes"]) delete detail[field];
+  const notification = object(schemas["DOMAIN.Entities.Notifications.NotificationType"] ?? null);
+  if (!Array.isArray(notification.enum)) throw new Error("Notification enum is missing.");
+  notification.enum = notification.enum.filter(value => value !== 21);
+  return document;
+}
+
 /** Earlier contract reviews predate the vendor-list draft workflow. */
 function beforeVendorListDrafts() {
-  const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const document = beforePendingCertificateChanges();
   const paths = object(document.paths ?? null);
   const root = "/api/v1/approved-vendor-list/{id}";
   delete paths[`${root}/draft`];
@@ -1472,7 +1489,7 @@ test("combined density and queue contracts preserve the reviewed queue contract"
 
 
 test("vendor-list draft changes preserve the previous reviewed contract", () => {
-  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const current = beforePendingCertificateChanges();
   const paths = object(current.paths ?? null);
   const root = "/api/v1/approved-vendor-list/{id}";
   assert.ok(object(paths[`${root}/draft`] ?? null).put);
@@ -1481,4 +1498,20 @@ test("vendor-list draft changes preserve the previous reviewed contract", () => 
   assert.equal(digest, "c52621b3f8d8ebc6c969be4afd1cbe0719e95a9712d0beea3283166b7a473757");
   checkCompatibility(hostConfig, policy, digest);
   assert.equal(contractDigest(beforeVendorListDrafts()), "a9df0b96e20cea76d95d5e1f35b1bf01db171111c879c35ea17dff1ecc141f86");
+});
+
+
+test("pending certificate changes add only typed subject-specific actions and certificate state", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const paths = object(current.paths ?? null);
+  for (const subject of ["product", "raw-material", "packaging-material"]) {
+    const root = `/api/v1/pending-certificates/{responseId}/${subject}`;
+    assert.ok(object(paths[root] ?? null).put);
+    assert.ok(object(paths[`${root}/review-request`] ?? null).post);
+    assert.ok(object(paths[`${root}/correction-request`] ?? null).post);
+  }
+  const digest = contractDigest(current);
+  assert.equal(digest, "f98896c0e66ab885fdcaf8049301dad3bb0476ed46f26e85566e97474ba0b643");
+  checkCompatibility(hostConfig, policy, digest);
+  assert.equal(contractDigest(beforePendingCertificateChanges()), "c52621b3f8d8ebc6c969be4afd1cbe0719e95a9712d0beea3283166b7a473757");
 });

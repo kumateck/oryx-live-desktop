@@ -86,7 +86,7 @@ export function useArdCertificate(id: string, options: { rejection?: boolean } =
     const batchNumber = isMaterial ? material?.materialBatch?.batchNumber ?? null : batch?.batchNumber ?? response.batchManufacturingRecord?.code ?? null;
     const facts: CertificateFacts = {
           kind: isMaterial ? "material" : "product", name, code: isMaterial ? material?.materialBatch?.material?.code ?? response.materialBatch?.code ?? null : batch?.productionScheduleProduct?.product?.code ?? null,
-          batch: batchNumber, manufactured: isMaterial ? material?.materialBatch?.manufacturingDate : batch?.manufacturingDate, expires: isMaterial ? material?.materialBatch?.expiryDate : batch?.expiryDate,
+          notes: query.data?.certificateNotes, batch: batchNumber, manufactured: isMaterial ? material?.materialBatch?.manufacturingDate : batch?.manufacturingDate, expires: isMaterial ? material?.materialBatch?.expiryDate : batch?.expiryDate,
           arNumber: isMaterial ? material?.arNumber ?? null : product?.arNumber ?? null, specNumber: isMaterial ? material?.specNumber ?? null : product?.specNumber ?? ard?.specNumber ?? null,
           sampled: isMaterial ? material?.sampledDate : product?.sampledDate, analysed: (isMaterial ? material?.materialBatch?.analysedDate : product?.analysedDate) ?? response.checkedAt };
     return facts;

@@ -1,3 +1,5 @@
+Pending certificate edits and requests add typed product, raw material and packaging actions with versioned certificate fields. Import with `bun scripts/import-pending-certificate-changes.ts EXPORT.json`, then regenerate and check. The reviewed combined digest is `f98896c0e66ab885fdcaf8049301dad3bb0476ed46f26e85566e97474ba0b643`. Deploy both companion backend workflows and their migrations before activating this desktop release.
+
 Vendor-list drafts add typed save and submit operations, draft versions and options for unmapped suppliers and manufacturers. Import with `bun scripts/import-vendor-list-drafts.ts EXPORT.json`, then regenerate and check. Reviewed fingerprint `c52621b3f8d8ebc6c969be4afd1cbe0719e95a9712d0beea3283166b7a473757`. Apply the companion backend migrations before activating the UI.
 
 Combined frontend contract: `a9df0b96e20cea76d95d5e1f35b1bf01db171111c879c35ea17dff1ecc141f86` adds the two density DELETE endpoints to the reviewed queue/pending-COA contract. Removing only those endpoints restores `ac2f9bb8…4d49`.

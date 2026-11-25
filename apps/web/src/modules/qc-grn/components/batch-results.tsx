@@ -1,3 +1,4 @@
+import { CertificateChangeRequestNotice, PendingCertificateEditButton } from "@/shared/ard-view/pending-certificate-actions";
 import { TestCorrectionPanel } from "@/shared/qc/test-correction-panel";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useEffect, useMemo, useState } from "react";
@@ -9,7 +10,7 @@ import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, Dia
 import { Spinner } from "@/components/ui/spinner";
 import { certificateSignatories } from "@/shared/ard-view/certificate-signatures";
 import { CertificatePreview } from "@/shared/ard-view/certificate-preview";
-import { buildCoaCompliancePayload, type CoaComplianceItem } from "@/shared/ard-view/raw-data/coa-compliance";
+import { buildCoaCompliancePayload, recordedCoaCompliance, type CoaComplianceItem } from "@/shared/ard-view/raw-data/coa-compliance";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
@@ -39,7 +40,10 @@ export function BatchResultsPage() {
   const responseId = sheet.responses.find(answer => answer.responseId)?.responseId;
   const responseDetail = qcGrnFormsApi.useGetApiV1FormResponsesByFormResponseIdQuery(responseId ? { ...qcGrnAudit, formResponseId: responseId } : skipToken);
   const sections = useMemo(() => sheet.rawForm?.sections ?? [], [sheet.rawForm]);
-  const inferred = useMemo(() => buildCoaCompliancePayload(sections, sheet.responses), [sections, sheet.responses]);
+  const submitted = Boolean(responseDetail.currentData?.checkedAt);
+  const canGenerate = Boolean(responseDetail.currentData && !submitted && !responseDetail.currentData.approved && !responseDetail.currentData.rejected);
+  const inferred = useMemo(() => submitted ? recordedCoaCompliance(sections, sheet.responses)
+    : buildCoaCompliancePayload(sections, sheet.responses), [sections, sheet.responses, submitted]);
   const [compliance, setCompliance] = useState<CoaComplianceItem[]>([]);
   useEffect(() => { setCompliance(inferred); }, [inferred]);
   const sample = samplingSchema.safeParse(route.sampling ?? sampling.data ?? null);
@@ -51,6 +55,7 @@ export function BatchResultsPage() {
     setMessage("");
     const denied = permission.check();
     if (denied) { setMessage(denied); return; }
+    if (!canGenerate) return;
     const result = await generate({ ...qcGrnAudit, materialBatchId: route.batchId, body: compliance.flatMap((item) => item.formSectionId ? [{ formSectionId: item.formSectionId, complies: item.complies ?? false }] : []) });
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
     toast.success("Certificate of analysis generated");
@@ -59,19 +64,21 @@ export function BatchResultsPage() {
   return <BatchFrame sheet={sheet} title="Analytical raw data" crumb="Results">
     <div className="flex flex-wrap justify-end gap-2">
       <Button type="button" variant="outline" disabled={!sheet.rawForm} onClick={() => setPrinting(true)}>Print</Button>
-      <PermissionGuard require={qcPermissions.check[route.kind]}><Button type="button" disabled={!sheet.rawForm} onClick={() => { void sheet.reload(); setPreviewing(true); }}>Preview certificate</Button></PermissionGuard>
+      <PermissionGuard require={qcPermissions.check[route.kind]}><Button type="button" disabled={!sheet.rawForm} onClick={() => { void sheet.reload(); setPreviewing(true); }}>{submitted ? "View certificate" : "Preview certificate"}</Button></PermissionGuard>
     </div>
     {sheet.responseId ? <TestCorrectionPanel responseId={sheet.responseId} kind={route.kind === 0 ? "raw" : "packaging"} canReturn={Boolean((route.submitted ?? batchQuery.data?.status === 9) && responseDetail.currentData && !responseDetail.currentData.checkedAt && !responseDetail.currentData.approved && !responseDetail.currentData.rejected)}
       onReturned={() => { toast.success("Test returned to the analyst for correction"); void navigate(route.notePath); }} /> : null}
     {sheet.formMissing ? <p className="text-sm text-muted-foreground">This material has no test form linked.</p> : <BatchWorksheet details={sheet.details} form={sheet.rawForm} responses={sheet.responses} blank={false} />}
     {printing ? <PrintPreviewDialog title="Analytical raw data" onClose={() => setPrinting(false)}><BatchWorksheet details={sheet.details} form={sheet.rawForm} responses={sheet.responses} blank={false} /></PrintPreviewDialog> : null}
     {previewing ? <Dialog open onOpenChange={(open) => { if (!open && !generating.isLoading) setPreviewing(false); }}><DialogContent className="sm:max-w-5xl">
-      <DialogHeader><DialogTitle>Certificate of analysis</DialogTitle><DialogDescription>Check each test's compliance, then generate the certificate. The batch is approved or rejected through its approval.</DialogDescription></DialogHeader>
-      <DialogBody><CertificatePreview kind="Material" signatories={certificateSignatories(sheet.responses, responseDetail.currentData ?? null)} facts={facts} sections={sections} responses={sheet.responses} compliance={compliance}
+      <DialogHeader><DialogTitle>Certificate of analysis</DialogTitle><DialogDescription>{submitted ? "Certificate submitted" : "Check each test's compliance, then submit the certificate for approval."}</DialogDescription></DialogHeader>
+      <DialogBody><CertificateChangeRequestNotice response={responseDetail.currentData} />
+        <CertificatePreview kind="Material" editable={canGenerate} notes={responseDetail.currentData?.certificateNotes} signatories={certificateSignatories(sheet.responses, responseDetail.currentData ?? null)} facts={facts} sections={sections} responses={sheet.responses} compliance={compliance}
         onCompliance={(sectionId, complies) => setCompliance((list) => list.map((item) => item.formSectionId === sectionId ? { ...item, complies, requiresReview: false } : item))} />
         {message ? <p role="alert" className="mt-2 text-sm text-destructive">{message}</p> : null}</DialogBody>
       <DialogFooter><Button type="button" variant="outline" disabled={generating.isLoading} onClick={() => setPreviewing(false)}>Cancel</Button>
-        <Button type="button" disabled={generating.isLoading || compliance.length === 0} onClick={() => void issue()}>{generating.isLoading ? <><Spinner />Generating…</> : "Generate certificate"}</Button></DialogFooter>
+        <PendingCertificateEditButton response={responseDetail.currentData} sections={sections} compliance={inferred} onSaved={sheet.reload} />
+        {canGenerate ? <Button type="button" disabled={generating.isLoading || compliance.length === 0} onClick={() => void issue()}>{generating.isLoading ? <><Spinner />Generating…</> : "Generate certificate"}</Button> : null}</DialogFooter>
     </DialogContent></Dialog> : null}
   </BatchFrame>;
 }

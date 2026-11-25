@@ -10,7 +10,7 @@ import { atrApi, atrFormsApi } from "../api/atr-api";
 import { atrAudit } from "../lib/atr";
 import { ardForStage, atrSchema, productArdsSchema } from "../schemas/atr-schema";
 
-const responseSchema = z.object({ checkedAt: z.string().nullish(), approved: z.boolean().nullish(), rejected: z.boolean().nullish(), hasPendingApproval: z.boolean().nullish(),
+const responseSchema = z.object({ checkedAt: z.string().nullish(), approved: z.boolean().nullish(), rejected: z.boolean().nullish(), hasPendingApproval: z.boolean().nullish(), coaReturnKind: z.number().nullish(),
   formResponses: storedAnswerRowsSchema.nullish() });
 
 /** Where the certificate of a product test stands, from its response. Only an unchecked response can have its certificate generated. */
@@ -18,6 +18,7 @@ export function certificateState(response: z.infer<typeof responseSchema> | null
   if (!response) return { canGenerate: false, label: "No test response" };
   if (response.approved) return { canGenerate: false, label: "Certificate approved" };
   if (response.rejected) return { canGenerate: false, label: "Revision required" };
+  if (response.coaReturnKind) return { canGenerate: false, label: response.coaReturnKind === 1 ? "Review requested" : "Correction requested" };
   if (response.hasPendingApproval) return { canGenerate: false, label: "Pending approval" };
   if (response.checkedAt) return { canGenerate: false, label: "Certificate submitted" };
   return { canGenerate: true, label: "Generate certificate" };

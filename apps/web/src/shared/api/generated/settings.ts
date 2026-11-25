@@ -1327,7 +1327,8 @@ export type DomainEntitiesNotificationsNotificationType =
   | 17
   | 18
   | 19
-  | 20;
+  | 20
+  | 21;
 export type DomainEntitiesAlertsAlertType = 0 | 1;
 export type DomainEntitiesAlertsCreateAlertRequest = {
   title?: string | null;

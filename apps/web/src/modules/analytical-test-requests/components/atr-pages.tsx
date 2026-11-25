@@ -1,3 +1,4 @@
+import { CertificateChangeRequestNotice, PendingCertificateEditButton } from "@/shared/ard-view/pending-certificate-actions";
 import { TestCorrectionPanel } from "@/shared/qc/test-correction-panel";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -8,7 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { certificateSignatories } from "@/shared/ard-view/certificate-signatures";
 import { CertificatePreview } from "@/shared/ard-view/certificate-preview";
 import { AtrRequestSection } from "@/shared/qc/atr-request-section";
-import { buildCoaCompliancePayload, type CoaComplianceItem } from "@/shared/ard-view/raw-data/coa-compliance";
+import { buildCoaCompliancePayload, recordedCoaCompliance, type CoaComplianceItem } from "@/shared/ard-view/raw-data/coa-compliance";
 import { ProductSummary } from "@/shared/ard-view/templates/sumary/product";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
 import { useCurrentUser } from "@/shared/auth/session-provider";
@@ -121,7 +122,9 @@ export function AtrResultsPage() {
   const [previewing, setPreviewing] = useState(false);
   const [message, setMessage] = useState("");
   const sections = useMemo(() => sheet.rawForm?.sections ?? [], [sheet.rawForm]);
-  const inferred = useMemo(() => buildCoaCompliancePayload(sections, sheet.responses), [sections, sheet.responses]);
+  const submitted = Boolean(sheet.responseDetail?.checkedAt);
+  const inferred = useMemo(() => submitted ? recordedCoaCompliance(sections, sheet.responses)
+    : buildCoaCompliancePayload(sections, sheet.responses), [sections, sheet.responses, submitted]);
   const [compliance, setCompliance] = useState<CoaComplianceItem[]>([]);
   useEffect(() => { setCompliance(inferred); }, [inferred]);
   const atr = sheet.atr;
@@ -147,7 +150,9 @@ export function AtrResultsPage() {
     {printing ? <PrintPreviewDialog title="Product analytical raw data" onClose={() => setPrinting(false)}>{worksheet}</PrintPreviewDialog> : null}
     {previewing && atr ? <Dialog open onOpenChange={(open) => { if (!open && !generating.isLoading) setPreviewing(false); }}><DialogContent className="sm:max-w-5xl">
       <DialogHeader><DialogTitle>Certificate of analysis</DialogTitle><DialogDescription>{sheet.certificate.canGenerate ? "Check each test's compliance, then submit the certificate for approval." : sheet.certificate.label}</DialogDescription></DialogHeader>
-      <DialogBody><CertificatePreview kind="Product" sections={sections} responses={sheet.responses} compliance={compliance}
+      <DialogBody><CertificateChangeRequestNotice response={sheet.responseDetail} />
+        <CertificatePreview kind="Product" sections={sections} responses={sheet.responses} compliance={compliance}
+          editable={sheet.certificate.canGenerate} notes={sheet.responseDetail?.certificateNotes}
         signatories={certificateSignatories(sheet.responses, sheet.responseDetail)}
         facts={{ received: atr.acknowledgedAt, batchNumber: atr.batchNumber, made: atr.made, expires: atr.expires, arNumber: atr.arNumber, sampled: atr.sampledAt, analysed: atr.testedAt, subject: `${atr.product}${atr.productCode ? ` · ${atr.productCode}` : ""}` }}
         extra={[{ label: "Composition", value: atr.composition }, { label: "Pack style", value: atr.packing }, { label: "Shelf life", value: atr.shelfLife }]}
@@ -155,6 +160,7 @@ export function AtrResultsPage() {
         {message ? <p role="alert" className="mt-2 text-sm text-destructive">{message}</p> : null}
         <div className="mt-6 border-t pt-4"><AtrRequestSection data={sheet.rawAtr} response={sheet.responseDetail} /></div></DialogBody>
       <DialogFooter><Button type="button" variant="outline" disabled={generating.isLoading} onClick={() => setPreviewing(false)}>Close</Button>
+        <PendingCertificateEditButton response={sheet.responseDetail} sections={sections} compliance={inferred} onSaved={sheet.reload} />
         {sheet.certificate.canGenerate ? <Button type="button" disabled={generating.isLoading || compliance.length === 0} onClick={() => void issue()}>{generating.isLoading ? <><Spinner />Submitting…</> : "Generate certificate"}</Button> : null}</DialogFooter>
     </DialogContent></Dialog> : null}
   </Frame>;
