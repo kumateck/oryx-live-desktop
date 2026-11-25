@@ -111,7 +111,7 @@ it("shows the average alone when present and retains results with no aggregate",
   expect(screen.getByText("Sample 1:")).toBeTruthy();
 });
 
-it("uses the average verdict for worksheet remarks and prints no sample outputs or average label", () => {
+it("uses the average verdict for specification remarks and prints no sample outputs or average label", () => {
   const average = response.coaReportedResults?.[0];
   if (!average) throw new Error("Expected average");
   const mixed = { ...response, complies: true, coaReportedResults: [
@@ -124,7 +124,12 @@ it("uses the average verdict for worksheet remarks and prints no sample outputs 
   const passing = { ...mixed, coaReportedResults: [average] };
   rerender(<TestSpecification sections={[section]} responses={[passing]} />);
   expect(screen.getByText("The sample complies with the specification.")).toBeTruthy();
-  rerender(<WorksheetTests sections={[section]} responses={[passing]} />);
-  expect(screen.getAllByText("2.4334 % w/v").length).toBeGreaterThan(0);
-  expect(screen.queryByText(/Average content|Average:|Sample 1:/)).toBeNull();
+});
+
+it("leaves the worksheet on its own formula result and specification; COA reporting does not reach it", () => {
+  const { container } = render(<WorksheetTests sections={[section]} responses={[response]} />);
+  expect(container.textContent).toContain("101.39");
+  expect(container.textContent).toContain("(2.32 to 2.52)% w/v");
+  expect(container.textContent).not.toContain("2.4334");
+  expect(container.textContent).not.toContain("2.32–2.52 % w/v");
 });

@@ -13,8 +13,6 @@ import { RichTextView, richTextToPlain } from "@/shared/rich-text/rich-text-view
 import { answerLabel, answerLayout, answeredField, isChoiceQuestion, showsSectionResult } from "./answer-layout";
 import { formulaView } from "./formula-model";
 import { FormulaSheet } from "./formula-sheet";
-import { certificateReportedResults } from "../raw-data/coa-reporting";
-import { CoaReportingSpecification } from "../raw-data/coa-reported-results";
 
 const label = "text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground";
 const line = <span aria-hidden className="block h-5 border-b border-border" />;
@@ -29,14 +27,7 @@ function instrumentText(instrument: FormSectionDto["instrument"]): string {
 /** A formula answer laid out in full; uniformity tables and unreadable configurations keep their own views. */
 function FormulaAnswer({ field, response, blank, title }: { field: FormFieldDto; response: FormResponseDto | undefined; blank: boolean; title: string }) {
   const view = useMemo(() => formulaView(field, response, blank), [field, response, blank]);
-  if (view.kind === "worksheet") {
-    const reported = blank ? [] : certificateReportedResults(response?.coaReportedResults ?? []);
-    const shown = reported.length ? { ...view, calculations: [], results: reported.map(result => ({
-      label: result.label ?? result.key ?? "Result", value: `${result.displayValue} ${result.unit}`, primary: true,
-    })) } : view;
-    return <><FormulaSheet view={shown} title={title} />
-      {response?.coaReportingError ? <p role="alert" className="text-destructive">{response.coaReportingError}</p> : null}</>;
-  }
+  if (view.kind === "worksheet") return <FormulaSheet view={view} title={title} />;
   if (view.kind === "uniformity" || !response || blank) return <ViewFormulaQuestion questionOption={field.question?.options?.[0]} />;
   return <ViewFormulaQuestion questionOption={response.formField?.question?.options?.[0]} responseRecord={response} response={response.value} />;
 }
@@ -102,8 +93,8 @@ function WorksheetTest({ section, number, responses, blank }: { section: FormSec
     </header>
     {/* Two columns only when there is a calculated result beside the specification; otherwise the specification spans the test. */}
     {specification || withResult ? <dl className={cn("grid gap-x-6 gap-y-2 border-b border-border px-3 py-2 text-sm", specification && withResult && "sm:grid-cols-2 print:grid-cols-2")}>
-      {specification ? <div className="min-w-0"><dt className={label}>Specification</dt><dd><CoaReportingSpecification fields={fields} responses={responses} original={specification} /></dd></div> : null}
-      {withResult ? <div className="min-w-0"><dt className={label}>Result</dt><dd className="font-semibold">{blank ? line : getResponsesForSection(answers, responses)}</dd></div> : null}
+      {specification ? <div className="min-w-0"><dt className={label}>Specification</dt><dd><RichTextView html={specification} className="[&_p]:m-0" /></dd></div> : null}
+      {withResult ? <div className="min-w-0"><dt className={label}>Result</dt><dd className="font-semibold">{blank ? line : getResponsesForSection(answers, responses, { worksheet: true })}</dd></div> : null}
     </dl> : null}
     <div className="space-y-3 px-3 py-2.5 text-sm">
       {answers.length ? answers.map((field) => <Answer key={field.id} section={section} field={field} blank={blank} response={field.id ? responses.get(field.id) : undefined} />)
