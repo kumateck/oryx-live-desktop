@@ -53,11 +53,11 @@ export function CertificatePreview({ kind, facts, extra = [], sections, response
           <tbody>{sections.map((section, index) => { const item = compliance.find((entry) => entry.formSectionId === section.id);
             return <tr key={section.id ?? index} className="align-top [&:not(:last-child)>td]:border-b"><td className="px-3 py-3 text-center text-xs text-muted-foreground">{index + 1}</td>
               <td className="px-3 py-3 font-medium"><RichTextView html={section.name} /></td>
-              <td className="px-3 py-3"><div className="break-words">{getResponsesForSection(section.fields ?? [], responseMap)}</div></td>
+              <td className="px-3 py-3"><div className="break-words">{getResponsesForSection(section.fields ?? [], responseMap, { certificate: true })}</div></td>
               <td className="px-3 py-3">{section.id ? <div className="min-w-0 space-y-2"><CoaComplianceControl formSectionId={section.id} complies={item?.complies === true} disabled={item?.reportingLocked} onComplianceChange={onCompliance} />
                 {item?.reportingLocked ? <p className="text-xs text-muted-foreground">Determined by the recorded assay reporting limits.</p> : null}
                 {item?.requiresReview ? <p className="text-xs text-warning">Review required: result cannot be assessed automatically.</p> : null}</div> : "–"}</td>
-              <td className="px-3 py-3"><div className="break-words"><CoaReportingSpecification fields={section.fields ?? []} responses={responseMap} original={section.description ?? ""} /></div></td>
+              <td className="px-3 py-3"><div className="break-words"><CoaReportingSpecification certificate fields={section.fields ?? []} responses={responseMap} original={section.description ?? ""} /></div></td>
               <td className="px-3 py-3 break-words text-xs">{testReference(section.fields, section.value)}</td></tr>; })}</tbody>
         </table></div>
       </section>
