@@ -110652,23 +110652,43 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.BinCards.BinCardInformationDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                  "$ref": "#/components/schemas/APP.Utils.BinCardPage"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.BinCards.BinCardInformationDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                  "$ref": "#/components/schemas/APP.Utils.BinCardPage"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.BinCards.BinCardInformationDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                  "$ref": "#/components/schemas/APP.Utils.BinCardPage"
                 }
               }
             }
           },
           "400": {
             "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "text/plain": {
                 "schema": {
@@ -126762,43 +126782,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
-            },
-            "nullable": true
-          },
-          "pageIndex": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalRecordCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "numberOfPagesToShow": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "startPageIndex": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "stopPageIndex": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.BinCards.BinCardInformationDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DOMAIN.Entities.BinCards.BinCardInformationDto"
             },
             "nullable": true
           },
@@ -193972,6 +193955,103 @@
               "format": "uuid"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Utils.BinCardPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.BinCards.BinCardInformationDto"
+            },
+            "nullable": true
+          },
+          "pageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRecordCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numberOfPagesToShow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stopPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Base.UnitOfMeasureDto"
+          },
+          "received": {
+            "type": "number",
+            "format": "double"
+          },
+          "issued": {
+            "type": "number",
+            "format": "double"
+          },
+          "closing": {
+            "type": "number",
+            "format": "double"
+          },
+          "shelfStock": {
+            "type": "number",
+            "format": "double"
+          },
+          "difference": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.BinCards.BinCardInformationDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DOMAIN.Entities.BinCards.BinCardInformationDto"
+            },
+            "nullable": true
+          },
+          "pageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRecordCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numberOfPagesToShow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startPageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stopPageIndex": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false

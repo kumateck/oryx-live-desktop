@@ -1,6 +1,6 @@
 import type { ModuleManifest } from "../contract";
 import { permissionTabs } from "../../shared/auth/permission-tabs";
-import { approvedMaterialPermissions } from "./lib/approved-material-access";
+import { approvedMaterialPermissions, binCardPermission } from "./lib/approved-material-access";
 
 export const manifest = {
   query: permissionTabs(approvedMaterialPermissions),
@@ -17,7 +17,8 @@ export const manifest = {
       key: "tab",
       choices: [
         // Each view serves separate raw and packaging variants; the stored material selects the exact key in the component and API.
-        ...["stock", "bin-card", "reserved"].map((value) => ({ value, access: { kind: "some" as const, permissions: ["CanViewApprovedRawMaterials", "CanViewApprovedPackagingMaterials"] } })),
+        { value: "bin-card", access: binCardPermission },
+        ...["stock", "reserved"].map((value) => ({ value, access: { kind: "some" as const, permissions: ["CanViewApprovedRawMaterials", "CanViewApprovedPackagingMaterials"] } })),
         ...["floor", "consumed", "reconciliation"].map((value) => ({ value, access: { kind: "some" as const, permissions: ["CanViewRawMaterialStockTrace", "CanViewPackagingMaterialStockTrace"] } })),
       ],
     },
