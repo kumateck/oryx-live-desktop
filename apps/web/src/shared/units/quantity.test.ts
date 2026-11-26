@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { formatQuantityNumber, smallestUnit, toLargestUnit } from "./quantity";
+import { convertWithDensity, formatQuantityNumber, smallestUnit, toLargestUnit } from "./quantity";
 
 it("shows a quantity in the largest unit that keeps it at 1 or more", () => {
   expect(toLargestUnit(2_500_000, "mg")?.text).toBe("2.5 kg");
@@ -47,4 +47,12 @@ it("reads units sent by name, as some reports do", () => {
   expect(smallestUnit("Kilogram")).toBe("mg");
   expect(smallestUnit("L")).toBe("ml");
   expect(smallestUnit(" pcs ")).toBe("pcs");
+});
+
+it("crosses between mass and volume only with a density", () => {
+  expect(convertWithDensity(652.1739130434783, "ml", "g", 1.15)).toBeCloseTo(750, 6);
+  expect(convertWithDensity(750_000, "mg", "ml", 1.15)).toBeCloseTo(652.1739, 4);
+  expect(convertWithDensity(2, "L", "kg", 1.261)).toBeCloseTo(2.522, 9);
+  expect(convertWithDensity(2, "kg", "g", null)).toBe(2_000);
+  expect([convertWithDensity(1, "ml", "g", null), convertWithDensity(1, "ml", "g", 0), convertWithDensity(1, "pcs", "g", 1)]).toEqual([null, null, null]);
 });

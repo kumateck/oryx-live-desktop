@@ -121,3 +121,20 @@ export function convertUnit(value: number, from: string | null | undefined, to: 
   if (!family || family !== familyOf(to)) return null;
   return fromSmallestUnit(toSmallestUnit(value, from), to);
 }
+
+/**
+ * A quantity in one unit expressed in another, crossing between mass and volume with a density in g/mL
+ * (750 g of a 1.15 g/mL liquid is 652.17 ml). Null when the units cannot be converted, or a crossing has no density.
+ */
+export function convertWithDensity(value: number, from: string | null | undefined, to: string | null | undefined, densityGramsPerMilliliter: number | null | undefined): number | null {
+  const direct = convertUnit(value, from, to);
+  if (direct !== null) return direct;
+  const source = familyOf(from);
+  const target = familyOf(to);
+  if (!source || !target || !densityGramsPerMilliliter || !(densityGramsPerMilliliter > 0)) return null;
+  const smallest = toSmallestUnit(value, from);
+  // 1 ml at 1 g/mL weighs 1,000 mg.
+  if (source === volume && target === mass) return fromSmallestUnit(smallest * densityGramsPerMilliliter * 1_000, to);
+  if (source === mass && target === volume) return fromSmallestUnit(smallest / (densityGramsPerMilliliter * 1_000), to);
+  return null;
+}
