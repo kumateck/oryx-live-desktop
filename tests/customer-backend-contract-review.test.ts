@@ -113,8 +113,22 @@ function stripVersionedCosting(document: ObjectValue) {
   for (const [name,fields] of Object.entries(costingFields)) for (const field of fields) delete object(object(schemas[name] ?? null).properties ?? null)[field];
 }
 
+function stripCountingUnit(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  for (const path of Object.keys(paths)) if (path.includes("/counting-unit")) delete paths[path];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of [
+    "MaterialCountingUnitPreview",
+    "CountingUnitValue",
+    "CountingUnitRecord",
+    "ChangeMaterialCountingUnit",
+    "MaterialCountingUnitResult",
+  ]) delete schemas[`DOMAIN.Entities.Materials.${name}`];
+}
+
 function beforeProductionBoardOrder() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripCountingUnit(document);
   delete object(document.paths ?? null)["/api/v1/production-board-order/{departmentId}"];
   const schemas = object(object(document.components ?? null).schemas ?? null);
   for (const name of ["ProductionBoardOrderDto", "ProductionBoardOperationDto", "SaveProductionBoardOrder"])
@@ -389,6 +403,7 @@ function stripOperationDepartments(document: ObjectValue) {
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = beforeMaterialLookupContext();
+  stripCountingUnit(document);
   stripIssuedRegister(document);
   stripSubstituteReasons(document);
   stripApprovedVendorList(document);
