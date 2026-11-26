@@ -61,6 +61,16 @@ export const binCardRowsSchema = z.array(z.object({
 }));
 export type BinCardRow = z.infer<typeof binCardRowsSchema>[number];
 
+/**
+ * Totals of the whole store bin card in the department's unit, replayed by the server from every posted movement.
+ * Received − issued = closing; closing − shelf stock = difference. Older servers send none of these.
+ */
+export const binCardTotalsSchema = z.object({
+  unit: z.object({ symbol: text }).nullish(), received: z.number(), issued: z.number(), closing: z.number(), shelfStock: z.number(), difference: z.number(),
+}).transform((value) => ({ unit: value.unit?.symbol ?? null, received: value.received, issued: value.issued, closing: value.closing,
+  shelfStock: value.shelfStock, difference: value.difference }));
+export type BinCardTotals = z.infer<typeof binCardTotalsSchema>;
+
 /** Stock set aside for a production batch. */
 export const reservedRowsSchema = z.array(z.object({
   schedule: text, dateTime: z.string().nullish(), productName: text, productCode: text, productBatchNumber: text, materialBatchNumber: text, arNumber: text, uomSymbol: text,

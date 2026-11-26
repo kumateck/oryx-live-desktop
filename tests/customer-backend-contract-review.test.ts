@@ -126,9 +126,41 @@ function stripCountingUnit(document: ObjectValue) {
   ]) delete schemas[`DOMAIN.Entities.Materials.${name}`];
 }
 
+function stripBinCardPage(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  if (schemas["APP.Utils.BinCardPage"] === undefined) return;
+
+  const oldPage = "APP.Utils.Paginateable`1[[System.Collections.Generic.IEnumerable`1[[DOMAIN.Entities.BinCards.BinCardInformationDto, DOMAIN, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]";
+  const operation = object(object(paths["/api/v1/warehouse/bincardinformation/{materialId}/{departmentId}"] ?? null).get ?? null);
+  const responses = object(operation.responses ?? null);
+  const response = object(responses["200"] ?? null);
+  for (const content of Object.values(object(response.content ?? null))) {
+    const schema = object(content).schema;
+    if (schema !== undefined && object(schema).$ref === "#/components/schemas/APP.Utils.BinCardPage")
+      object(content).schema = { $ref: `#/components/schemas/${oldPage}` };
+  }
+  delete responses["409"];
+  delete schemas["APP.Utils.BinCardPage"];
+  schemas[oldPage] = {
+    type: "object",
+    properties: {
+      data: { type: "array", items: { $ref: "#/components/schemas/DOMAIN.Entities.BinCards.BinCardInformationDto" }, nullable: true },
+      pageIndex: { type: "integer", format: "int32" },
+      pageCount: { type: "integer", format: "int32" },
+      totalRecordCount: { type: "integer", format: "int32" },
+      numberOfPagesToShow: { type: "integer", format: "int32" },
+      startPageIndex: { type: "integer", format: "int32" },
+      stopPageIndex: { type: "integer", format: "int32" },
+    },
+    additionalProperties: false,
+  };
+}
+
 function beforeProductionBoardOrder() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripCountingUnit(document);
+  stripBinCardPage(document);
   delete object(document.paths ?? null)["/api/v1/production-board-order/{departmentId}"];
   const schemas = object(object(document.components ?? null).schemas ?? null);
   for (const name of ["ProductionBoardOrderDto", "ProductionBoardOperationDto", "SaveProductionBoardOrder"])
@@ -404,6 +436,7 @@ function stripOperationDepartments(document: ObjectValue) {
 function reviewedHead() {
   const document = beforeMaterialLookupContext();
   stripCountingUnit(document);
+  stripBinCardPage(document);
   stripIssuedRegister(document);
   stripSubstituteReasons(document);
   stripApprovedVendorList(document);
