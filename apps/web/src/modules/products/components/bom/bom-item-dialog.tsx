@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
-import { toLargestUnit } from "@/shared/units/quantity";
+import { convertUnit, isVolumeUnit, toLargestUnit } from "@/shared/units/quantity";
 import { Skeleton } from "@/shared/skeleton/skeleton";
 import { bomAudit } from "../../hooks/use-bom";
 import { materialKind, useBomDensity, useMaterialOptions } from "../../hooks/use-material-options";
@@ -45,9 +45,10 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
   // The chosen material's details: looked up from the picker, or kept from the line being edited.
   const facts: MaterialFacts | null = materialFacts(material?.value)
     ?? (editing && editing.material.value === material?.value ? { code: editing.code, category: editing.category, specification: editing.specification, unit: editing.linkedUnit ?? editing.unit } : null);
-  const density = useBomDensity(useDensityConversion ? material?.value : undefined, facts?.code || material?.label || "", bomAudit);
   const knownUnit = editing?.material.value === material?.value ? null : materialFacts(material?.value)?.unit ?? null;
   const linked = useMaterialUnit(material?.value, knownUnit, bomAudit);
+  const needsDensity = useDensityConversion && isVolumeUnit(linked.unit?.symbol);
+  const density = useBomDensity(needsDensity ? material?.value : undefined, facts?.code || material?.label || "", bomAudit);
   const used = useMemo(() => lines.filter((line) => line.key !== editing?.key).map((line) => line.material.value), [lines, editing]);
   const chosen = material?.value;
   const previousMaterial = useRef(material?.value);
@@ -87,8 +88,8 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
   const fields = useMemo(() => [
     { type: InputTypes.SELECT, name: "material", label: "Material", mode: "single", source: "async", loadOptions: loadMaterials, required: true,
       placeholder: "Select a raw material", searchPlaceholder: "Search by name or code", className: "md:col-span-2" },
-    { type: InputTypes.SWITCH, name: "useDensityConversion", label: "Convert BOM mg to stock volume using density", className: "md:col-span-2",
-      description: "Use the measured department density to convert the BOM amount from mg into the linked stock unit." },
+    { type: InputTypes.SWITCH, name: "useDensityConversion", label: "Specify BOM quantities in mg", className: "md:col-span-2",
+      description: "The BOM uses mg. For a material counted by volume, the conversion uses its verified density." },
     { type: InputTypes.TEXT, name: "grade", label: "Grade", placeholder: "For example BP, USP" },
     { type: InputTypes.SELECT, name: "substitutes", label: "Substitute materials", mode: "multiple", source: "async",
       loadOptions: loadSubstitutes, placeholder: "None", searchPlaceholder: "Search by name or code", className: "md:col-span-2",
@@ -98,10 +99,10 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
   const submit = form.handleSubmit((values) => {
     if (hasMaterial(lines, values.material.value, editing?.key ?? null)) { form.setError("material", { message: "This material is already in the formula" }); return; }
     if (!facts || !linked.unit) { form.setError("material", { message: "Set a unit on the department material linkage before entering quantities." }); return; }
-    if (values.useDensityConversion && (density.loading || density.failed)) return;
-    if (values.useDensityConversion && (density.density === null
-      || massVolumeConversion(1, "mg", linked.unit.symbol, density.density) === null)) {
-      form.setError("useDensityConversion", { message: density.problem ?? "Density conversion requires a liquid stock unit (mL or L) on this department’s material link." });
+    if (values.useDensityConversion && needsDensity && (density.loading || density.failed)) return;
+    if (values.useDensityConversion && convertUnit(1, "mg", linked.unit.symbol) === null
+      && (density.density === null || massVolumeConversion(1, "mg", linked.unit.symbol, density.density) === null)) {
+      form.setError("useDensityConversion", { message: density.problem ?? "Choose a mass unit, or record a verified density in g/mL for a volume unit." });
       return;
     }
     const chosen = values.substitutes ?? [];
@@ -117,8 +118,9 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
   const sourceUnit = useDensityConversion ? { id: "mg", symbol: "mg" } : linked.unit;
   const perBatchQuantity = batchQuantity(typeof quantity === "number" && Number.isFinite(quantity) ? quantity : null, compositionSize, batchSize);
   const perBatch = sourceUnit ? toLargestUnit(perBatchQuantity, sourceUnit.symbol, "calculated") : null;
-  const convertedPerBatch = useDensityConversion && linked.unit && !density.loading && !density.failed && perBatchQuantity !== null && density.density !== null
-    ? massVolumeConversion(perBatchQuantity, "mg", linked.unit.symbol, density.density) : null;
+  const convertedPerBatch = useDensityConversion && linked.unit && perBatchQuantity !== null
+    ? convertUnit(perBatchQuantity, "mg", linked.unit.symbol) ?? (density.density === null ? null
+      : massVolumeConversion(perBatchQuantity, "mg", linked.unit.symbol, density.density)) : null;
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
     <DialogContent className="sm:max-w-2xl">
@@ -141,13 +143,13 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
               saved={editing?.substitutes.find(sub => sub.value === item.value) ?? null}
               compositionSize={compositionSize} batchSize={batchSize} onUnit={onSubstituteUnit} />)}
           </section> : null}
-          {useDensityConversion && (density.failed || density.problem) ? <p role="alert" className="flex items-center gap-2 text-sm text-destructive">
+          {needsDensity && (density.failed || density.problem) ? <p role="alert" className="flex items-center gap-2 text-sm text-destructive">
             {density.problem ?? "The material density could not be loaded."}
             <Button type="button" size="sm" variant="outline" onClick={() => { void density.retry(); }}>Retry density</Button>
           </p> : null}
           {facts ? <dl className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-md bg-muted/50 p-3 text-sm">
             <dt className="text-muted-foreground">Stock unit</dt><dd>{linked.unit?.symbol ?? "–"}</dd>
-            {useDensityConversion ? <><dt className="text-muted-foreground">Density</dt><dd>{density.loading ? "Loading…" : density.failed ? "Unavailable" : density.density && density.density > 0 ? `${density.density} g/mL` : "Set on the department material link"}</dd></> : null}
+            {needsDensity ? <><dt className="text-muted-foreground">Density</dt><dd>{density.loading ? "Loading…" : density.failed ? "Unavailable" : density.density && density.density > 0 ? `${density.density} g/mL` : "Set on the department material link"}</dd></> : null}
             <dt className="text-muted-foreground">Function</dt><dd className="break-words">{facts.category || "–"}</dd>
             <dt className="text-muted-foreground">Specification</dt><dd className="break-words">{facts.specification || "–"}</dd>
             <dt className="text-muted-foreground">Per full batch</dt><dd>{perBatch?.text ?? "–"}{useDensityConversion && convertedPerBatch !== null && linked.unit ? ` → ${toLargestUnit(convertedPerBatch, linked.unit.symbol, "calculated")?.text ?? `${convertedPerBatch} ${linked.unit.symbol}`}` : ""}</dd>
@@ -155,7 +157,7 @@ export function BomItemDialog({ editing, lines, compositionSize, batchSize, onSu
         </DialogBody>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit" disabled={Boolean(material?.value) && (linked.status !== "ready" || (useDensityConversion && (density.loading || density.failed)))}>{editing ? "Update material" : "Add material"}</Button>
+          <Button type="submit" disabled={Boolean(material?.value) && (linked.status !== "ready" || (needsDensity && (density.loading || density.failed)))}>{editing ? "Update material" : "Add material"}</Button>
         </DialogFooter>
       </form>
     </DialogContent>

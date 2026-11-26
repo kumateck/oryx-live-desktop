@@ -1409,6 +1409,68 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    previewRawMaterialCountingUnit: build.query<
+      PreviewRawMaterialCountingUnitApiResponse,
+      PreviewRawMaterialCountingUnitApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material/raw", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/material/raw/${queryArg.materialId}/counting-unit/preview`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          unitId: queryArg.unitId,
+        },
+      }),
+    }),
+    previewPackagingMaterialCountingUnit: build.query<
+      PreviewPackagingMaterialCountingUnitApiResponse,
+      PreviewPackagingMaterialCountingUnitApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material/packaging", id: queryArg.materialId }],
+      query: (queryArg) => ({
+        url: `/api/v1/material/packaging/${queryArg.materialId}/counting-unit/preview`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          unitId: queryArg.unitId,
+        },
+      }),
+    }),
+    changeRawMaterialCountingUnit: build.mutation<
+      ChangeRawMaterialCountingUnitApiResponse,
+      ChangeRawMaterialCountingUnitApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material/raw", id: "LIST" }, { type: "material", id: "LIST" }, { type: "material/raw", id: queryArg.materialId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/material/raw/${queryArg.materialId}/counting-unit`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsChangeMaterialCountingUnit,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    changePackagingMaterialCountingUnit: build.mutation<
+      ChangePackagingMaterialCountingUnitApiResponse,
+      ChangePackagingMaterialCountingUnitApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material/packaging", id: "LIST" }, { type: "material", id: "LIST" }, { type: "material/packaging", id: queryArg.materialId }]),
+      query: (queryArg) => ({
+        url: `/api/v1/material/packaging/${queryArg.materialId}/counting-unit`,
+        method: "POST",
+        body: queryArg.domainEntitiesMaterialsChangeMaterialCountingUnit,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2391,6 +2453,46 @@ export type GetPackagingMaterialStockTracePrintApiArg = {
   module?: string;
   /** The sub module this request falls under */
   subModule?: string;
+};
+export type PreviewRawMaterialCountingUnitApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsMaterialCountingUnitPreview;
+export type PreviewRawMaterialCountingUnitApiArg = {
+  materialId: string;
+  unitId?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PreviewPackagingMaterialCountingUnitApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsMaterialCountingUnitPreview;
+export type PreviewPackagingMaterialCountingUnitApiArg = {
+  materialId: string;
+  unitId?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type ChangeRawMaterialCountingUnitApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsMaterialCountingUnitResult;
+export type ChangeRawMaterialCountingUnitApiArg = {
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsChangeMaterialCountingUnit: DomainEntitiesMaterialsChangeMaterialCountingUnit;
+};
+export type ChangePackagingMaterialCountingUnitApiResponse =
+  /** status 200 OK */ DomainEntitiesMaterialsMaterialCountingUnitResult;
+export type ChangePackagingMaterialCountingUnitApiArg = {
+  materialId: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesMaterialsChangeMaterialCountingUnit: DomainEntitiesMaterialsChangeMaterialCountingUnit;
 };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -3985,6 +4087,48 @@ export type DomainEntitiesMaterialsBatchMaterialStockTraceDto = {
   rows?: DomainEntitiesMaterialsBatchMaterialStockTraceRow[] | null;
   ledgerRows?: DomainEntitiesMaterialsBatchMaterialStockTraceLedgerRow[] | null;
 };
+export type DomainEntitiesMaterialsCountingUnitValue = {
+  label?: string | null;
+  before?: number;
+  beforeUnit?: string | null;
+  after?: number;
+  afterUnit?: string | null;
+};
+export type DomainEntitiesMaterialsCountingUnitRecord = {
+  id?: string;
+  reference?: string | null;
+  values?: DomainEntitiesMaterialsCountingUnitValue[] | null;
+};
+export type DomainEntitiesMaterialsMaterialCountingUnitPreview = {
+  materialId?: string;
+  material?: string | null;
+  code?: string | null;
+  departmentId?: string;
+  fromUnitId?: string;
+  fromUnit?: string | null;
+  toUnitId?: string;
+  toUnit?: string | null;
+  densityGramsPerMilliliter?: number | null;
+  previewHash?: string | null;
+  hasChanges?: boolean;
+  levels?: DomainEntitiesMaterialsCountingUnitValue[] | null;
+  stock?: DomainEntitiesMaterialsCountingUnitValue;
+  reserved?: DomainEntitiesMaterialsCountingUnitValue;
+  batches?: DomainEntitiesMaterialsCountingUnitRecord[] | null;
+  requisitions?: DomainEntitiesMaterialsCountingUnitRecord[] | null;
+  extraRequests?: DomainEntitiesMaterialsCountingUnitRecord[] | null;
+  packaging?: DomainEntitiesMaterialsCountingUnitRecord[] | null;
+  blockers?: string[] | null;
+};
+export type DomainEntitiesMaterialsMaterialCountingUnitResult = {
+  changeId?: string;
+  changed?: boolean;
+};
+export type DomainEntitiesMaterialsChangeMaterialCountingUnit = {
+  unitId?: string;
+  previewHash: string;
+  reason: string;
+};
 export const {
   usePostApiV1BomMutation,
   usePutApiV1BomByBillOfMaterialIdMutation,
@@ -4125,4 +4269,10 @@ export const {
   useLazyGetRawMaterialStockTracePrintQuery,
   useGetPackagingMaterialStockTracePrintQuery,
   useLazyGetPackagingMaterialStockTracePrintQuery,
+  usePreviewRawMaterialCountingUnitQuery,
+  useLazyPreviewRawMaterialCountingUnitQuery,
+  usePreviewPackagingMaterialCountingUnitQuery,
+  useLazyPreviewPackagingMaterialCountingUnitQuery,
+  useChangeRawMaterialCountingUnitMutation,
+  useChangePackagingMaterialCountingUnitMutation,
 } = injectedRtkApi;
