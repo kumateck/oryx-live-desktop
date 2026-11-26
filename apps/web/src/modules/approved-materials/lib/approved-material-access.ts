@@ -6,3 +6,6 @@ export const approvedMaterialPermissions: Record<MaterialKind, string> = { 0: "C
 export const stockTracePermissions: Record<MaterialKind, string> = { 0: "CanViewRawMaterialStockTrace", 1: "CanViewPackagingMaterialStockTrace" };
 export const stockPrintPermissions: Record<MaterialKind, string> = { 0: "CanPrintRawMaterialStockTrace", 1: "CanPrintPackagingMaterialStockTrace" };
 export const audit = { module: "Warehouse", subModule: "Approved Materials" } as const;
+
+export const binCardPermission = "CanViewMaterialBinCard";
+export const binCardAccess = { kind: "all", permissions: [binCardPermission] } as const;

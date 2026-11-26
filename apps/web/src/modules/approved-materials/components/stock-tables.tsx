@@ -11,7 +11,8 @@ import {
   useGetApiV1MaterialByMaterialIdBatchesV2AndDepartmentIdQuery, useGetApiV1MaterialByMaterialIdReservedQuery, useGetApiV1WarehouseBincardinformationByMaterialIdAndDepartmentIdQuery,
 } from "../api/approved-material-api";
 import { audit } from "../lib/approved-material-access";
-import { binCardRowsSchema, reservedRowsSchema, shelfBatchRowsSchema, type BinCardRow, type ShelfBatchRow } from "../schemas/approved-material-schema";
+import { binCardRowsSchema, binCardTotalsSchema, reservedRowsSchema, shelfBatchRowsSchema, type BinCardRow, type ShelfBatchRow } from "../schemas/approved-material-schema";
+import { BinCardTotalsSummary } from "./bin-card-totals";
 import { groupReservedProducts } from "../lib/reserved-groups";
 import { UnstartReservationRepair } from "./unstart-reservation-repair";
 import { ReservedProductGroups } from "./reserved-product-groups";
@@ -67,16 +68,20 @@ const cardColumns = cardColumn.columns([
     <div className="text-xs text-muted-foreground">Batch {row.original.productBatch ?? "–"}</div></div> : dash }),
 ]);
 
-/** Every receipt and issue of the material, with the balance after each. `search` comes from the page's header search. */
+/**
+ * Every receipt and issue of the material in the department's store, newest first, with the balance after each.
+ * The server replays balances from every posted movement, so a search never changes them. `search` comes from the page's header search.
+ */
 export function BinCardTable({ materialId, departmentId, search }: Props & { search: string }) {
   const table = useServerTable({ pageSize: 20, resetKey: `${materialId}:${search}` });
   const query = useGetApiV1WarehouseBincardinformationByMaterialIdAndDepartmentIdQuery({ module: "Warehouse", subModule: "Bin Card", materialId, departmentId, page: table.page, pageSize: table.pageSize, searchQuery: search });
   const rows = useMemo(() => { const parsed = binCardRowsSchema.safeParse(query.data?.data ?? null); return parsed.success ? parsed.data : []; }, [query.data]);
+  const totals = useMemo(() => { const parsed = binCardTotalsSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data : null; }, [query.data]);
   const meta = pageMeta(query.data, table, rows.length);
-  return <ServerDataTable label="Bin card" columns={cardColumns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows}
+  return <div className="space-y-3">{totals ? <BinCardTotalsSummary totals={totals} /> : null}<ServerDataTable label="Bin card" columns={cardColumns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows}
     onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange} loading={query.isLoading} refreshing={query.isFetching && !query.isLoading}
     error={query.error ? apiErrorMessage(query.error) : null} onRetry={() => { void query.refetch(); }} fill={false}
-    emptyTitle={search.trim() ? "No entries match this search" : "No bin card entries"} />;
+    emptyTitle={search.trim() ? "No entries match this search" : "No bin card entries"} /></div>;
 }
 
 /** Stock of the material set aside for production batches that have not drawn it yet. */
