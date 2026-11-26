@@ -3,7 +3,7 @@ import { batchLines, batchPlace } from "../lib/batch-lines";
 import { batchNumber, expiredOrDue } from "../lib/stock-issue";
 import { issueDifference } from "../lib/issue-quantity";
 import type { StockLine } from "../schemas/stock-issue-schema";
-import { amount } from "./batch-breakdown";
+import { amount, conversionNote } from "./batch-breakdown";
 
 const tick = <span aria-label="To tick when picked" className="voucher-tick" />;
 
@@ -20,8 +20,8 @@ export function VoucherTable({ lines }: { lines: readonly StockLine[] }) {
       <th scope="col" style={{ width: "10%", textAlign: "right" }}>Qty from batch</th><th scope="col" style={{ width: "9%" }}>Expiry</th><th scope="col" style={{ width: "5%", textAlign: "center" }}>✓</th>
     </tr></thead>
     {lines.length === 0 ? <tbody><tr><td colSpan={9} className="print-empty">No materials on this requisition</td></tr></tbody>
-      : lines.map((line, index) => { const { batches, total, short, totalLine } = batchLines(line);
-        const span = Math.max(batches.length, 1) + (totalLine ? 1 : 0);
+      : lines.map((line, index) => { const { batches, total, short, totalLine, conversion } = batchLines(line);
+        const span = Math.max(batches.length, 1) + (totalLine ? 1 : 0) + (conversion ? 1 : 0);
         const material = <>
           <td rowSpan={span}>{index + 1}</td>
           <td rowSpan={span}>{line.materialName}<small>{line.materialCode ?? "No code"}</small>{line.substituteFor ? <small>Substitute for {line.substituteFor}</small> : null}</td>
@@ -37,13 +37,15 @@ export function VoucherTable({ lines }: { lines: readonly StockLine[] }) {
                 <td>{number === "–" ? "No batch" : number}{batch.returned ? <small>Returned stock</small> : null}</td>
                 <td>{batch.arNumber ?? "Not recorded"}</td>
                 <td>{batchPlace(batch)}</td>
-                <td style={{ textAlign: "right" }}>{amount(batch.quantity, line.unit)}</td>
+                <td style={{ textAlign: "right" }}>{amount(batch.quantity, batch.unit ?? line.unit)}</td>
                 <td>{batch.expires ? `${expired ? "Expired " : ""}${formatMonthYear(batch.expires) ?? ""}` : "No expiry"}</td>
                 <td style={{ textAlign: "center" }}>{tick}</td></tr>; })}
           {totalLine ? <tr className="voucher-total">
             <td colSpan={3} style={{ textAlign: "right" }}>{short > 0 ? "Set aside" : "Total"}</td>
-            <td style={{ textAlign: "right" }}>{amount(total, line.unit)}</td>
+            <td style={{ textAlign: "right" }}>{conversion ? amount(conversion.total, conversion.unit) : amount(total, line.unit)}</td>
             <td colSpan={2}>{short > 0 ? `${amount(short, line.unit)} short` : null}</td></tr> : null}
+          {conversion ? <tr className="voucher-total">
+            <td colSpan={6} style={{ textAlign: "right" }}><small>{conversionNote(line.issued ? line.issuedQuantity ?? line.quantity : line.quantity, line.unit, conversion)}</small></td></tr> : null}
         </tbody>; })}
   </table>;
 }
