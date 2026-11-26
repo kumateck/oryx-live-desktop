@@ -1,6 +1,7 @@
 import type { MaterialKind } from "@/shared/reference-data/kind-tabs";
 type ByKind = Record<MaterialKind, string>;
-export const materialPermissions: Record<"view" | "create" | "edit" | "remove" | "viewLinked" | "editLinked" | "unlink" | "viewUnlinked" | "link" | "density", ByKind> = {
+export const materialPermissions: Record<"view" | "create" | "edit" | "remove" | "viewLinked" | "editLinked" | "unlink" | "viewUnlinked" | "link" | "density" | "countingUnit", ByKind> = {
+  countingUnit: { 0: "CanChangeRawMaterialCountingUnit", 1: "CanChangePackagingMaterialCountingUnit" },
   density: { 0: "CanEditRawMaterialDensity", 1: "CanEditPackagingMaterialDensity" },
   view: { 0: "CanViewRawMaterials", 1: "CanViewPackagingMaterials" }, create: { 0: "CanCreateNewRawMaterials", 1: "CanCreateNewPackagingMaterials" },
   edit: { 0: "CanEditRawMaterials", 1: "CanEditPackagingMaterials" }, remove: { 0: "CanDeleteRawMaterials", 1: "CanDeletePackagingMaterials" },
