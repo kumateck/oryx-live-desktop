@@ -8,3 +8,4 @@ export const stockPrintPermissions: Record<MaterialKind, string> = { 0: "CanPrin
 export const audit = { module: "Warehouse", subModule: "Approved Materials" } as const;
 
 export const binCardPermission = "CanViewMaterialBinCard";
+export const binCardAccess = { kind: "all", permissions: [binCardPermission] } as const;

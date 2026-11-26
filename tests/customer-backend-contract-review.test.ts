@@ -137,7 +137,7 @@ function stripBinCardPage(document: ObjectValue) {
   const response = object(responses["200"] ?? null);
   for (const content of Object.values(object(response.content ?? null))) {
     const schema = object(content).schema;
-    if (object(schema).$ref === "#/components/schemas/APP.Utils.BinCardPage")
+    if (schema !== undefined && object(schema).$ref === "#/components/schemas/APP.Utils.BinCardPage")
       object(content).schema = { $ref: `#/components/schemas/${oldPage}` };
   }
   delete responses["409"];
