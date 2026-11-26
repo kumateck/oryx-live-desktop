@@ -1077,6 +1077,9 @@ export const routes: RouteObject[] = [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/manufacturers/create/page")).default }) }
           ] }
         ] },
+        { path: "production-board-order", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/production-board-order/page")).default }) }
+        ] },
         { path: "qc", Component: Outlet, children: [
           { path: "ai-extraction", Component: Outlet, children: [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/settings/qc/ai-extraction/page")).default }) }

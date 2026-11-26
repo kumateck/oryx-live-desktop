@@ -18,9 +18,10 @@ import { ReactNode } from "react";
 export const renderSpecificationResult = (
   response: FormResponseDto,
   templateField: FormFieldDto,
-  { certificate = false }: { certificate?: boolean } = {},
+  { certificate = false, worksheet = false }: { certificate?: boolean; worksheet?: boolean } = {},
 ) => {
-  if (hasCoaReporting(response)) return <CoaReportedResults response={response} certificate={certificate} />;
+  // Worksheets keep their own formula results; COA reporting applies only to specification and certificate views.
+  if (!worksheet && hasCoaReporting(response)) return <CoaReportedResults response={response} certificate={certificate} />;
   if (isGovernedFormulaResponse(response)) return <StoredFormulaResult response={response} preferAverage />;
   const questionType = sanitizeNumber(templateField.question?.type ?? response.formField?.question?.type);
   if ([QuestionType.Dropdown, QuestionType.SingleChoice, QuestionType.Checkbox].some(type => questionType === sanitizeNumber(type))) {
@@ -44,7 +45,7 @@ export const renderSpecificationResult = (
   if (hasAverage) {
     return (
       <span className="text-sm font-semibold">
-        {certificate ? null : "Average content: "}
+        {worksheet ? "Average content: " : null}
         {formatCompactFormulaResult(
           compact.average,
           compact.decimalPlaces,
@@ -110,7 +111,7 @@ const normalizeDistinctResult = (response?: FormResponseDto) => {
 export const getResponsesForSection = (
   fields: FormFieldDto[],
   responseMap: Map<string, FormResponseDto>,
-  { certificate = false }: { certificate?: boolean } = {},
+  { certificate = false, worksheet = false }: { certificate?: boolean; worksheet?: boolean } = {},
 ): ReactNode => {
   const fieldsWithResponses = fields.map((field) => ({
     field,
@@ -133,7 +134,7 @@ export const getResponsesForSection = (
 
       return (
         <div key={field.id ?? index} className="space-y-1 text-left">
-          {renderSpecificationResult(response!, field, { certificate })}
+          {renderSpecificationResult(response!, field, { certificate, worksheet })}
         </div>
       );
     },

@@ -12,6 +12,11 @@ import { forgetSession, rememberSession, stubBackend } from "../../test/backend"
 import { openMenu } from "../../test/menu";
 import { batchesInSupplyUnit, holdingRowsSchema, issueEligibility, supplyQuantity, transferIssueBlock, transferRowsSchema } from "./transfers";
 
+HTMLElement.prototype.hasPointerCapture = () => false;
+HTMLElement.prototype.setPointerCapture = () => {};
+HTMLElement.prototype.releasePointerCapture = () => {};
+HTMLElement.prototype.scrollIntoView = () => {};
+
 afterEach(() => { cleanup(); forgetSession(); });
 
 it("issues a transfer only when approved, covered, and not from expired stock", () => {
@@ -50,7 +55,7 @@ function open(address: string, permissions: string[], issued?: { history: boolea
     }
     if (url.pathname.endsWith("/stock-transfer/t1")) return Response.json({ ...transfer("t1", 0), ...(issued ? { issuedAt: "2026-10-01T10:00:00Z" } : {}) });
     if (url.pathname === "/api/v1/material/holding") return Response.json({ data: [{ id: "h1", batches: [{ quantity: 5, sourceWarehouse: { name: "Beta raw store" }, materialBatch: { id: "b1", batchNumber: "B-1", uoM: { id: "u", symbol: "kg" }, material: { name: "Lactose" } } }] }], pageIndex: 1, pageCount: 1, totalRecordCount: 1 });
-    if (url.pathname.includes("/warehouse/rack")) return Response.json([]);
+    if (url.pathname.includes("/warehouse/rack")) return Response.json([{ id: "r1", name: "Rack 1", warehouseLocation: { name: "Receiving store" }, shelves: [{ id: "s1", code: "A1" }] }]);
     return new Response(null, { status: 204 });
   });
   const router = createMemoryRouter([{ path: "/warehouse/stock-transfer-requests", element: <StockTransfersPage /> }, { path: "/warehouse/stock-transfer-requests/allocation", element: <TransferredStockPage /> },
@@ -93,15 +98,39 @@ it.each([true, false])("shows issued transfer history or its empty state without
   expect(calls.every((call) => call.method === "GET")).toBe(true);
 });
 
-it("offers shelving of transferred stock only to those who may assign stock to shelves", async () => {
-  open("/warehouse/stock-transfer-requests/allocation", ["CanViewRawMaterialTransferList"]);
+it("offers transferred stock shelving with its own assignment key, independently of issue and delivery shelving", async () => {
+  const { calls } = open("/warehouse/stock-transfer-requests/allocation", ["CanViewRawMaterialTransferList", "CanIssueRawMaterialStockTransfers", "CanAssignRawMaterialsStockToShelves", "CanAssignPackagingMaterialStockTransfers"]);
   expect(await screen.findByText("Beta raw store")).toBeTruthy();
   expect(screen.queryByRole("button", { name: /Actions for Lactose/ })).toBeNull();
+  expect(calls.every((call) => call.method === "GET")).toBe(true);
   cleanup();
-  open("/warehouse/stock-transfer-requests/allocation", ["CanViewRawMaterialTransferList", "CanAssignRawMaterialsStockToShelves"]);
+  open("/warehouse/stock-transfer-requests/allocation", ["CanViewRawMaterialTransferList", "CanAssignRawMaterialStockTransfers"]);
   await screen.findByText("Beta raw store");
   await openMenu(/Actions for Lactose/);
   expect(screen.getByRole("menuitem", { name: "Put on shelves" })).toBeTruthy();
+});
+
+it.each([
+  ["CanViewRawMaterialTransferList", "CanAssignRawMaterialStockTransfers"],
+  ["CanViewPackagingMaterialTransferList", "CanAssignPackagingMaterialStockTransfers"],
+])("shelves a received transfer with %s and its assignment key", async (view, assign) => {
+  const user = userEvent.setup();
+  const { calls } = open("/warehouse/stock-transfer-requests/allocation", [view, assign]);
+  await screen.findByText("Beta raw store");
+  await openMenu(/Actions for Lactose/);
+  await user.click(screen.getByRole("menuitem", { name: "Put on shelves" }));
+  const dialog = await screen.findByRole("dialog");
+  await user.click(await within(dialog).findByRole("combobox", { name: /Rack/ }));
+  await user.click(await screen.findByRole("option", { name: "Receiving store · Rack 1" }));
+  await user.click(within(dialog).getByRole("combobox", { name: /Shelf/ }));
+  await user.click(await screen.findByRole("option", { name: "A1" }));
+  await user.click(within(dialog).getByRole("button", { name: "Put on shelves" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(calls.filter((call) => call.method !== "GET")).toEqual([
+    expect.objectContaining({ method: "POST", path: "/api/v1/material/holding/move", body: {
+      materialBatchId: "b1", holdingMaterialId: "h1", shelfMaterialBatches: [{ warehouseLocationShelfId: "s1", quantity: 5, uomId: "u", note: "" }],
+    } }),
+  ]);
 });
 
 

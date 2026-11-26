@@ -1,4 +1,5 @@
-import { CertificateRequestButtons } from "@/shared/ard-view/pending-certificate-actions";
+import { CertificateRequestButtons, PendingCertificateEditButton } from "@/shared/ard-view/pending-certificate-actions";
+import { recordedCoaCompliance } from "@/shared/ard-view/raw-data/coa-compliance";
 import { useNavigate } from "react-router";
 import { useMemo, useState } from "react";
 import { TriangleAlert } from "lucide-react";
@@ -44,6 +45,9 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
     const { name, batch: batchNumber } = facts;
     return <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
+        <PendingCertificateEditButton response={query.data} sections={query.data?.effectiveForm?.sections ?? []}
+          compliance={recordedCoaCompliance(query.data?.effectiveForm?.sections ?? [], query.data?.formResponses ?? [])}
+          onSaved={() => { void query.refetch(); }} />
         <CertificateRequestButtons response={query.data} onRequested={() => void navigate(approvalListPath("Response"))} />
         {rejection && has(oosPermission) ? <Button type="button" size="sm" variant="outline" className="text-destructive" onClick={() => setStartingOos(true)}><TriangleAlert />Start OOS investigation</Button> : null}
         {coaTarget ? <GenerateCoaButton approved={approved} target={coaTarget} /> : null}

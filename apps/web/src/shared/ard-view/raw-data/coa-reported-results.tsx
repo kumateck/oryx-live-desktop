@@ -5,21 +5,21 @@ import { certificateReportedResults, isAssayAverage } from "./coa-reporting";
 type ReportedResult = NonNullable<FormResponseDto["coaReportedResults"]>[number];
 
 /** The API supplies the same server-calculated values to preview, approval and print. */
-export function CoaReportedResults({ response, certificate = false }: { response: FormResponseDto; certificate?: boolean }) {
+export function CoaReportedResults({ response }: { response: FormResponseDto; certificate?: boolean }) {
   const results = response.coaReportedResults ?? [];
-  const visible = certificate ? certificateReportedResults(results) : results;
+  const visible = certificateReportedResults(results);
   return <div className="space-y-1 text-sm">
     {response.coaReportingError ? <span role="alert" className="text-sm text-destructive print:text-black">{response.coaReportingError}</span> : null}
     {visible.map(result => <p key={result.key}>
-      {(!certificate || !isAssayAverage(result)) ? <span className="font-medium">{result.label}: </span> : null}
+      {!isAssayAverage(result) ? <span className="font-medium">{result.label}: </span> : null}
       {result.displayValue} {result.unit}
     </p>)}
   </div>;
 }
 
-export function CoaReportedLimit({ result, certificate = false }: { result: ReportedResult; certificate?: boolean }) {
+export function CoaReportedLimit({ result }: { result: ReportedResult; certificate?: boolean }) {
   return <p>
-    {(!certificate || !isAssayAverage(result)) ? <span className="font-medium">{result.label}: </span> : null}
+    {!isAssayAverage(result) ? <span className="font-medium">{result.label}: </span> : null}
     {result.minimum}–{result.maximum} {result.unit}
   </p>;
 }
@@ -32,7 +32,7 @@ export function CoaReportingSpecification({ fields, responses, original, certifi
     const answer = field.id ? responses.get(field.id) : null;
     if (!answer || !field.id) return [];
     const results = answer.coaReportedResults ?? [];
-    return [{ fieldId: field.id, results: certificate ? certificateReportedResults(results) : results }];
+    return [{ fieldId: field.id, results: certificateReportedResults(results) }];
   });
   const converted = entries.flatMap(({ fieldId, results }) => results.filter(result => result.converted)
     .map(result => ({ key: `${fieldId}:${result.key}`, result })));

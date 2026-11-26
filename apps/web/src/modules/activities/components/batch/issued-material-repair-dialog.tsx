@@ -19,7 +19,7 @@ function RepairEvidence({ state }: { state: RepairState }) {
     <IssuedMaterialRepairRows rows={preview?.rows ?? emptyRows} loading={loading} />
     {preview?.blockers.length ? <div role="alert" className="space-y-1 text-sm text-destructive"><p className="font-medium">This stock cannot be repaired automatically:</p>
       <ul className="list-disc space-y-1 pl-5">{[...new Set(preview.blockers)].map((blocker) => <li className="break-words" key={blocker}>{blocker}</li>)}</ul></div> : null}
-    {preview && !preview.hasChanges && preview.blockers.length === 0 ? <p role="status">The issued quantities already match the current master. No stock adjustment is needed.</p> : null}
+    {preview && !preview.hasChanges && preview.blockers.length === 0 ? <p role="status">Apply stock repair is disabled because the issued quantities already match the current master. The adjustment is zero. Reversing an issue and unstarting production requires a separate reversal review.</p> : null}
     <FormWizard form={form} fields={fields} />
     {preview?.history.length ? <section className="space-y-2"><h2 className="font-semibold">Previous repairs</h2>{preview.history.map((repair) => <div key={repair.id} className="space-y-1 border-t pt-2 text-sm">
       <p>{formatDateTime(repair.appliedAt)} · {repair.reason}</p><p className="break-all text-xs text-muted-foreground">Reference: {repair.id} · Operator: {repair.actorId}</p>

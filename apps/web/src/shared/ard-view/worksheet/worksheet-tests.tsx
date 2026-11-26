@@ -94,7 +94,7 @@ function WorksheetTest({ section, number, responses, blank }: { section: FormSec
     {/* Two columns only when there is a calculated result beside the specification; otherwise the specification spans the test. */}
     {specification || withResult ? <dl className={cn("grid gap-x-6 gap-y-2 border-b border-border px-3 py-2 text-sm", specification && withResult && "sm:grid-cols-2 print:grid-cols-2")}>
       {specification ? <div className="min-w-0"><dt className={label}>Specification</dt><dd><RichTextView html={specification} className="[&_p]:m-0" /></dd></div> : null}
-      {withResult ? <div className="min-w-0"><dt className={label}>Result</dt><dd className="font-semibold">{blank ? line : getResponsesForSection(answers, responses)}</dd></div> : null}
+      {withResult ? <div className="min-w-0"><dt className={label}>Result</dt><dd className="font-semibold">{blank ? line : getResponsesForSection(answers, responses, { worksheet: true })}</dd></div> : null}
     </dl> : null}
     <div className="space-y-3 px-3 py-2.5 text-sm">
       {answers.length ? answers.map((field) => <Answer key={field.id} section={section} field={field} blank={blank} response={field.id ? responses.get(field.id) : undefined} />)

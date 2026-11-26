@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { MapPin } from "lucide-react";
 import { PlaceStockDialog } from "@/modules/distributed-area/components/shelve-stock-dialog";
-import { shelvePermissions } from "@/modules/distributed-area/lib/distributed-access";
 import { batchNumber } from "@/modules/stock-issue/lib/stock-issue";
 import { amount } from "@/modules/stock-issue/components/batch-breakdown";
 import { TableMenu, TableMenuHeader } from "@/shared/actions";
+import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { ServerDataTable, dataTableColumns, pageMeta, useServerTable } from "@/shared/datatable";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatMonthYear } from "@/shared/format/dates";
@@ -12,7 +12,7 @@ import { KindSwitch } from "@/shared/reference-data/kind-switch";
 import { useKindTabs } from "@/shared/reference-data/kind-tabs";
 import { usePageSearch } from "@/shared/search/page-search";
 import { useGetApiV1MaterialHoldingQuery, useShelveHeldStockMutation } from "../transfer-api";
-import { audit, holdingRowsSchema, viewPermissions, type HeldStock } from "../transfers";
+import { assignPermissions, audit, holdingRowsSchema, viewPermissions, type HeldStock } from "../transfers";
 
 const column = dataTableColumns<HeldStock>();
 
@@ -29,7 +29,8 @@ export function TransferAllocationPage() {
   useEffect(() => { setBusy(query.isFetching); }, [query.isFetching]);
   const [placing, setPlacing] = useState<HeldStock | null>(null);
   const [shelve] = useShelveHeldStockMutation();
-  const permission = kind === null ? null : shelvePermissions[kind];
+  const permission = kind === null ? null : assignPermissions[kind];
+  const placement = usePermissionAction(assignPermissions[kind ?? 0]);
   const columns = useMemo(() => column.columns([
     column.accessor("materialName", { header: "Material", cell: ({ row }) => <div className="min-w-0"><div className="break-words font-medium">{row.original.materialName}</div><div className="text-xs text-muted-foreground">{row.original.materialCode ?? "No code"}</div></div> }),
     column.accessor((row) => row.batchNumber ?? "", { id: "batch", header: "Batch", size: 170, cell: ({ row }) => <div><div>{batchNumber(row.original.batchNumber)}</div><div className="text-xs text-muted-foreground">{row.original.expires ? `Expires ${formatMonthYear(row.original.expires) ?? ""}` : "No expiry date"}</div></div> }),
@@ -47,7 +48,10 @@ export function TransferAllocationPage() {
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned stock the app could not read." : null}
       emptyTitle={search.trim() ? "Nothing matches this search" : "Nothing to shelve"} emptyDescription={search.trim() ? "Search by material name or code." : "Stock another department issues to yours by transfer appears here until it is put on shelves."} />
     {placing && kind !== null ? <PlaceStockDialog stock={placing} kind={kind} title="Put transferred stock on shelves" description="Place the whole quantity, on one shelf or split over several." onClose={() => setPlacing(null)}
-      onPlace={async (shelves) => { const result = await shelve({ ...audit, body: { materialBatchId: placing.batchId, holdingMaterialId: placing.holdingId, shelfMaterialBatches: shelves } });
+      onPlace={async (shelves) => {
+        const denied = placement.check();
+        if (denied) return denied;
+        const result = await shelve({ ...audit, body: { materialBatchId: placing.batchId, holdingMaterialId: placing.holdingId, shelfMaterialBatches: shelves } });
         return "error" in result ? apiErrorMessage(result.error) : null; }} /> : null}
   </section>;
 }
