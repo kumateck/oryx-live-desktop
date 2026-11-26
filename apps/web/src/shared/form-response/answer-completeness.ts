@@ -11,6 +11,25 @@ const array = (value: JsonValue | undefined): JsonValue[] => Array.isArray(value
 const numeric = (value: JsonValue | undefined) => (typeof value === "number" || typeof value === "string" && value.trim() !== "") && Number.isFinite(Number(value));
 const numbers = (value: JsonValue | undefined, count: number) => Array.isArray(value) && value.length >= count && value.every(numeric);
 
+const blank = (value: JsonValue | undefined) => value === null || value === undefined || typeof value === "string" && value.trim() === "";
+/**
+ * Every column has at least one reading and every filled cell is a number. Columns may hold fewer readings than
+ * the table has rows (for example five standard injections and two per sample): column statistics use the filled
+ * cells only. Mirrors the server.
+ */
+function readingsComplete(table: JsonValue[], rows: number, columns: number): boolean {
+  if (table.length < rows || !table.every(Array.isArray)) return false;
+  const filled = Array.from({ length: columns }, () => false);
+  for (const row of table) {
+    for (const [index, cell] of array(row).slice(0, columns).entries()) {
+      if (blank(cell)) continue;
+      if (!numeric(cell)) return false;
+      filled[index] = true;
+    }
+  }
+  return filled.every(Boolean);
+}
+
 function read(raw: string): JsonValue {
   try { return z.json().parse(JSON.parse(raw)); } catch { return null; }
 }
@@ -61,7 +80,9 @@ export function formulaAnswerComplete(raw: string, definition: string): boolean 
   const table = array(value.tableData);
   // A formula without sample or standard columns has no readings table (the worksheet shows none), however
   // many readings its settings default to; only its manual and input values are required. Mirrors the server.
-  if (columns > 0 && (table.length < rows || !table.every(row => numbers(row, columns)))) return false;
+  // Calculated table columns evaluate cell by cell, so a worksheet with them needs every reading.
+  const everyCell = config.formulaInTable === true;
+  if (columns > 0 && (everyCell ? table.length < rows || !table.every(row => numbers(row, columns)) : !readingsComplete(table, rows, columns))) return false;
   return Object.keys(standard).length > 0 || samples.some(sample => Object.keys(object(sample)).length > 0) || manualKeys.size > 0 || table.some(row => array(row).length > 0);
 }
 

@@ -23,3 +23,21 @@ it("reads the location as a place, without repeating a shelf's own word", () => 
   expect(batchPlace({ location: "R1 (S2)" })).toBe("R1 (S2)");
   expect(batchPlace({})).toBe("Location not recorded");
 });
+
+it("totals batches kept in another unit in the line's unit, through the material's density", () => {
+  // Vanilla Liquid (requisition 01a1f4ae): 652.1739 ml asked; three lots set aside in mg, 750 g at 1.15 g/mL.
+  const vanilla = (key: string, quantity: number) => ({ ...batch(key, quantity, "2028-02-28"), unit: "mg" });
+  const lines = batchLines({ quantity: 750_000 / 1_150, unit: "ml", density: 1.15, batches: [vanilla("A", 750), vanilla("B", 744_684), vanilla("C", 4_566)] });
+  expect(lines.short).toBe(0);
+  expect(lines.total).toBeCloseTo(652.1739, 4);
+  expect(lines.conversion).toMatchObject({ unit: "mg", total: 750_000, density: 1.15 });
+  expect(lines.conversion?.required).toBeCloseTo(750_000, 3);
+  expect(lines.totalLine).toBe(true);
+  // One lot in another unit still shows the conversion; a shortfall is in the line's unit.
+  const single = batchLines({ quantity: 652.1739, unit: "ml", density: 1.15, batches: [vanilla("A", 575_000)] });
+  expect(single.totalLine).toBe(true);
+  expect(single.short).toBeCloseTo(152.1739, 4);
+  // Same family needs no density; same unit needs no conversion.
+  expect(batchLines({ quantity: 2, unit: "kg", batches: [{ ...batch("A", 2_000_000, null), unit: "mg" }] }).conversion).toMatchObject({ unit: "mg", density: null });
+  expect(batchLines({ quantity: 5, unit: "kg", batches: [{ ...batch("A", 5, null), unit: "kg" }] }).conversion).toBeNull();
+});
