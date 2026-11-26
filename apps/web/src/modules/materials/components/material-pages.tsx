@@ -1,7 +1,7 @@
 import { permissionDeniedMessage } from "@/shared/auth/use-permission-action";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDesktopTabSafety } from "@/shared/workspace-tabs/context";
-import { Eraser, Eye, Link2, Link2Off, Pencil, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Eraser, Eye, Link2, Link2Off, Pencil, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ import { useDeleteApiV1MaterialByMaterialIdMutation, useDeleteApiV1MaterialDepar
 import { draftIsEmpty, draftIssue, emptyDraft, readyLinks, unitTypesFor, type LinkDraft } from "../lib/bulk-link";
 import { audit, levelUnit, deleteBlock, materialPath, materialPermissions, materialsPath, showStock, standingLabels, stockStanding, unlinkBlock } from "../lib/materials";
 import { linkRowsSchema, materialRowsSchema, materialSchema, type Material, type MaterialLink } from "../schemas/material-schema";
+import { CountingUnitDialog } from "./counting-unit-dialog";
 import { LinkDialog } from "./link-dialog";
 import { MaterialDialog } from "./material-dialog";
 
@@ -121,6 +122,7 @@ export function LinkedMaterialsPage() {
   const meta = pageMeta(query.data, table, rows.length);
   useEffect(() => { setBusy(query.isFetching); }, [query.isFetching]);
   const [editing, setEditing] = useState<MaterialLink | null>(null);
+  const [changingUnit, setChangingUnit] = useState<MaterialLink | null>(null);
   const [unlinking, setUnlinking] = useState<MaterialLink | null>(null);
   const [unlink] = useDeleteApiV1MaterialDepartmentMutation();
   const columns = useMemo(() => linkColumn.columns([
@@ -135,6 +137,7 @@ export function LinkedMaterialsPage() {
     linkColumn.display({ id: "actions", size: 56, enableHiding: false, header: () => <TableMenuHeader />, cell: ({ row }) => { const block = unlinkBlock(row.original); const itemKind = row.original.material.kind;
       return <TableMenu label={`Actions for ${row.original.material.name}`} items={[
         { id: "levels", label: "Change stock levels", icon: SlidersHorizontal, require: materialPermissions.editLinked[itemKind], onSelect: () => setEditing(row.original) },
+        { id: "counting-unit", label: "Change counting unit", icon: ArrowLeftRight, require: materialPermissions.countingUnit[itemKind], onSelect: () => setChangingUnit(row.original) },
         { id: "unlink", label: "Unlink", icon: Link2Off, destructive: true, require: materialPermissions.unlink[itemKind], onSelect: () => setUnlinking(row.original), ...(block ? { disabled: true, disabledReason: block } : {}) },
       ]} />; } }),
   ]), []);
@@ -147,6 +150,7 @@ export function LinkedMaterialsPage() {
       loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()} error={query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The server returned materials the app could not read." : null}
       emptyTitle={search.trim() ? "No materials match this search" : "No linked materials"} emptyDescription={search.trim() ? "Search by name or code." : "Link materials from the unlinked list to start keeping stock of them."} />
     {editing ? <LinkDialog key={editing.id} material={editing.material} link={editing} onClose={() => setEditing(null)} /> : null}
+    {changingUnit ? <CountingUnitDialog key={changingUnit.id} link={changingUnit} onClose={() => setChangingUnit(null)} /> : null}
     {unlinking ? <ConfirmActionDialog require={materialPermissions.unlink[unlinking.material.kind]} title={`Unlink ${unlinking.material.name}?`} description="Your department stops keeping this material and its stock levels are removed. It can be linked again later." confirmLabel="Unlink" busyLabel="Unlinking…" onClose={() => setUnlinking(null)}
       onConfirm={async () => { const result = await unlink({ ...audit, materialId: unlinking.material.id });
         if ("error" in result) return apiErrorMessage(result.error);
