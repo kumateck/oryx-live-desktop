@@ -18,6 +18,7 @@ import {
 import type { FormulaTestCaseV1 } from "../core/test-contracts";
 import { buildDefaultFormulaTestCasesV1 } from "../core/test-suite";
 import { assertScalarAdapterSupported } from "./scalar-adapter-guard";
+import { buildUniformityDefinition } from "./uniformity-definition-adapter";
 import { buildUniversalDefinition } from "./universal-definition-adapter";
 import { variableScopeFor } from "./variable-scope";
 
@@ -63,13 +64,12 @@ const labelFor = (metadata: LegacyFormulaConfig, key: string): string => {
     : key;
 };
 
-export const buildFormulaRevisionDraft = async (
-  raw: string,
+/** A Simple formula: one scalar expression over the variables it names. */
+const buildScalarDefinition = (
+  config: LegacyFormulaConfig,
   presentationPreset: string,
-): Promise<FormulaRevisionDraft> => {
-  const config = unwrap(raw);
-  const isUniversal = presentationPreset.trim().toLowerCase() === "universal";
-  if (!isUniversal) assertScalarAdapterSupported(config, presentationPreset);
+): FormulaDefinitionV1 => {
+  assertScalarAdapterSupported(config, presentationPreset);
   const expression =
     typeof config.expression === "string" ? config.expression.trim() : "";
   const parsed = parseExpressionV1(expression, FORMULA_V1_RUNTIME_LIMITS);
@@ -82,36 +82,48 @@ export const buildFormulaRevisionDraft = async (
     throw new Error("Decimal places must be a whole number from 0 to 12.");
   const percentage = Boolean(config.percentageResults ?? config.percent);
   const variableLabels = asObject(config.variables) ?? {};
-  const definition: FormulaDefinitionV1 = isUniversal
-    ? await buildUniversalDefinition(raw)
-    : {
-        formulaLanguageVersion: FORMULA_LANGUAGE_V1,
-        numericPolicyVersion: FORMULA_NUMERIC_POLICY_V1,
-        variables: [...parsed.variables].sort().map((key) => ({
-          key,
-          label: labelFor(variableLabels, key),
-          dataType: FormulaDataType.Decimal,
-          valueShape: FormulaValueShape.Scalar,
-          scope: variableScopeFor(config, key),
-          unit: null,
-          required: true,
-        })),
-        results: [
-          {
-            key: "result",
-            label: "Result",
-            expression,
-            unit: percentage ? "%" : null,
-            numericScale: percentage
-              ? FormulaNumericScale.PercentagePoints
-              : FormulaNumericScale.Absolute,
-            rounding: {
-              kind: FormulaRoundingKind.DecimalPlaces,
-              digits: rawDigits,
-            },
-          },
-        ],
-      };
+  return {
+    formulaLanguageVersion: FORMULA_LANGUAGE_V1,
+    numericPolicyVersion: FORMULA_NUMERIC_POLICY_V1,
+    variables: [...parsed.variables].sort().map((key) => ({
+      key,
+      label: labelFor(variableLabels, key),
+      dataType: FormulaDataType.Decimal,
+      valueShape: FormulaValueShape.Scalar,
+      scope: variableScopeFor(config, key),
+      unit: null,
+      required: true,
+    })),
+    results: [
+      {
+        key: "result",
+        label: "Result",
+        expression,
+        unit: percentage ? "%" : null,
+        numericScale: percentage
+          ? FormulaNumericScale.PercentagePoints
+          : FormulaNumericScale.Absolute,
+        rounding: {
+          kind: FormulaRoundingKind.DecimalPlaces,
+          digits: rawDigits,
+        },
+      },
+    ],
+  };
+};
+
+export const buildFormulaRevisionDraft = async (
+  raw: string,
+  presentationPreset: string,
+): Promise<FormulaRevisionDraft> => {
+  const config = unwrap(raw);
+  const preset = presentationPreset.trim().toLowerCase();
+  const definition: FormulaDefinitionV1 =
+    preset === "universal"
+      ? await buildUniversalDefinition(raw)
+      : preset === "uniformity"
+        ? buildUniformityDefinition(config)
+        : buildScalarDefinition(config, presentationPreset);
   const compiled = compileFormulaDefinitionV1(
     definition,
     FORMULA_V1_RUNTIME_LIMITS,
