@@ -6,7 +6,7 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { materialKindLabels } from "@/shared/reference-data/kind-tabs";
 import { PrintButton } from "@/shared/print/print-button";
 import { usePageSearch } from "@/shared/search/page-search";
-import { approvedMaterialsPath, stockPrintPermissions, stockTracePermissions } from "../lib/approved-material-access";
+import { approvedMaterialsPath, binCardPermission, stockPrintPermissions, stockTracePermissions } from "../lib/approved-material-access";
 import { BinCardPrint } from "./bin-card-print";
 import { BinCardTable, ReservedTable, StockByBatchTable } from "./stock-tables";
 import { StockTracePanel } from "./stock-trace-panel";
@@ -24,7 +24,8 @@ export function ApprovedMaterialDetail({ material }: { material: MaterialHeader 
   const { has } = useAccess();
   const mayTrace = has(stockTracePermissions[material.kind]);
   const mayPrint = has(stockPrintPermissions[material.kind]);
-  const availableTabs = mayTrace ? [...tabs, ...traceTabs] : tabs;
+  const mayViewBinCard = has(binCardPermission);
+  const availableTabs = [...tabs.filter(({ id }) => id !== "bin-card" || mayViewBinCard), ...(mayTrace ? traceTabs : [])];
   const [active, select] = useTabParam<Tab>(availableTabs, "stock");
   // The header search filters the bin card, the one list here long enough to need it.
   const search = usePageSearch("stock records", false);
@@ -41,7 +42,7 @@ export function ApprovedMaterialDetail({ material }: { material: MaterialHeader 
       {(active === "stock" || active === "reserved") && mayPrint ? <div className="mb-3 flex justify-end"><PrintButton label={active === "stock" ? "Print stock by batch" : "Print reserved"}
         preview={(close) => <StockReportPreview material={material} departmentId={departmentId} view={active} search={search} onClose={close} />} /></div> : null}
       {active === "stock" ? <StockByBatchTable materialId={material.id} departmentId={departmentId} /> : null}
-      {active === "bin-card" ? <div className="space-y-2">{mayPrint ? <div className="flex justify-end"><PrintButton label="Print bin card" preview={(close) => <BinCardPrint material={material} departmentId={departmentId} search={search} onClose={close} />} /></div> : null}
+      {active === "bin-card" && mayViewBinCard ? <div className="space-y-2">{mayPrint ? <div className="flex justify-end"><PrintButton label="Print bin card" preview={(close) => <BinCardPrint material={material} departmentId={departmentId} search={search} onClose={close} />} /></div> : null}
         <BinCardTable materialId={material.id} departmentId={departmentId} search={search} /></div> : null}
       {active === "reserved" ? <ReservedTable materialId={material.id} departmentId={departmentId} kind={material.kind} /> : null}
       {active === "floor" || active === "consumed" || active === "reconciliation" ? <StockTracePanel materialId={material.id} departmentId={departmentId} kind={material.kind} view={active} search={search} /> : null}

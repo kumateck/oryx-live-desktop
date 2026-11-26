@@ -2232,7 +2232,7 @@ export type GetApiV1WarehouseGrnsQcApiArg = {
   subModule?: string;
 };
 export type GetApiV1WarehouseBincardinformationByMaterialIdAndDepartmentIdApiResponse =
-  /** status 200 OK */ AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesBinCardsBinCardInformationDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798ERead;
+  /** status 200 OK */ AppUtilsBinCardPageRead;
 export type GetApiV1WarehouseBincardinformationByMaterialIdAndDepartmentIdApiArg =
   {
     materialId: string;
@@ -4419,26 +4419,36 @@ export type DomainEntitiesBinCardsBinCardInformationDtoRead = {
   requisitionCode?: string | null;
   productBatchNumber?: string | null;
 };
-export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesBinCardsBinCardInformationDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
-  {
-    data?: DomainEntitiesBinCardsBinCardInformationDto[] | null;
-    pageIndex?: number;
-    pageCount?: number;
-    totalRecordCount?: number;
-    numberOfPagesToShow?: number;
-    startPageIndex?: number;
-    stopPageIndex?: number;
-  };
-export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesBinCardsBinCardInformationDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798ERead =
-  {
-    data?: DomainEntitiesBinCardsBinCardInformationDtoRead[] | null;
-    pageIndex?: number;
-    pageCount?: number;
-    totalRecordCount?: number;
-    numberOfPagesToShow?: number;
-    startPageIndex?: number;
-    stopPageIndex?: number;
-  };
+export type AppUtilsBinCardPage = {
+  data?: DomainEntitiesBinCardsBinCardInformationDto[] | null;
+  pageIndex?: number;
+  pageCount?: number;
+  totalRecordCount?: number;
+  numberOfPagesToShow?: number;
+  startPageIndex?: number;
+  stopPageIndex?: number;
+  unit?: DomainEntitiesBaseUnitOfMeasureDto;
+  received?: number;
+  issued?: number;
+  closing?: number;
+  shelfStock?: number;
+  difference?: number;
+};
+export type AppUtilsBinCardPageRead = {
+  data?: DomainEntitiesBinCardsBinCardInformationDtoRead[] | null;
+  pageIndex?: number;
+  pageCount?: number;
+  totalRecordCount?: number;
+  numberOfPagesToShow?: number;
+  startPageIndex?: number;
+  stopPageIndex?: number;
+  unit?: DomainEntitiesBaseUnitOfMeasureDto;
+  received?: number;
+  issued?: number;
+  closing?: number;
+  shelfStock?: number;
+  difference?: number;
+};
 export type DomainEntitiesBinCardsProductBinCardInformationDto = {
   id?: string;
   createdAt?: string;
