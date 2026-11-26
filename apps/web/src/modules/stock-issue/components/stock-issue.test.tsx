@@ -34,6 +34,17 @@ it("labels an issued batch with no batch number", () => {
   expect(screen.getByText("No batch")).toBeTruthy();
 });
 
+it("shows each batch in its own unit and how the requested liquid became that unit", () => {
+  // Vanilla Liquid: 652.1739 ml asked, set aside in mg. Labelled in ml, 744,684 mg read as 744.684 L.
+  const lot = (key: string, quantity: number) => ({ key, number: key, quantity, unit: "mg", expires: "2028-02-28T00:00:00Z", returned: false });
+  render(<BatchBreakdown line={{ quantity: 750_000 / 1_150, unit: "ml", density: 1.15, batches: [lot("0701202208", 750), lot("R-03503308", 744_684), lot("R-03510077", 4_566)] }} />);
+  expect(screen.getByText("744.684 g")).toBeTruthy();
+  expect(screen.getByText("750 mg")).toBeTruthy();
+  expect(screen.getByText("750 g")).toBeTruthy();
+  expect(screen.getByText("Requested 652.1739 ml at a density of 1.15 g/mL = 750 g")).toBeTruthy();
+  expect(screen.queryByText(/ L$/)).toBeNull();
+});
+
 const requisition = (id: string, extra: object = {}) => ({ id, code: id.toUpperCase(), status: 1, approved: true, createdAt: "2026-10-01T09:00:00Z", requestedBy: { firstName: "Ama", lastName: "Owusu" }, department: { name: "Production" },
   productionScheduleProduct: { batchNumber: "T081K004", product: { name: "Paracetamol syrup", code: "FP-1" }, productionSchedule: { code: "PS026" } },
   items: [{ id: "l1", quantity: 50_000_000, material: { name: "Maize starch", code: "RM-1", kind: 0 }, uoM: { symbol: "mg" },
