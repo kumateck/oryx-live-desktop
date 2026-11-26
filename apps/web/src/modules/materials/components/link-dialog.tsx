@@ -49,13 +49,13 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
   const suffix = shown ? ` (${shown})` : "";
   const canSetDensity = Boolean(densityUnit) && densityPermission.allowed;
   const fields = useMemo((): WizardField<LinkFormValues>[] => [
-    { type: InputTypes.SELECT, name: "unit", label: "Counted in", mode: "single", source: "sync", options, required: true, placeholder: units.isLoading || units.isUninitialized ? "Loading…" : "Select a unit", className: "md:col-span-3" },
+    ...(!link ? [{ type: InputTypes.SELECT, name: "unit", label: "Counted in", mode: "single", source: "sync", options, required: true, placeholder: units.isLoading || units.isUninitialized ? "Loading…" : "Select a unit", className: "md:col-span-3" } satisfies WizardField<LinkFormValues>] : []),
     ...(canSetDensity ? [{ type: InputTypes.NUMBER, name: "density", label: "Density (g/mL)", min: 0,
       description: "Shared by all warehouses and density conversions for this material. Enter a verified measurement in g/mL." } satisfies WizardField<LinkFormValues>] : []),
     { type: InputTypes.NUMBER, name: "minimum", label: `Minimum level${suffix}`, min: 0, required: true },
     { type: InputTypes.NUMBER, name: "reorder", label: `Re-order level${suffix}`, min: 0, required: true },
     { type: InputTypes.NUMBER, name: "maximum", label: `Maximum level${suffix}`, min: 0, required: true },
-  ], [options, units.isLoading, units.isUninitialized, suffix, canSetDensity]);
+  ], [options, units.isLoading, units.isUninitialized, suffix, canSetDensity, link]);
 
   const submit = form.handleSubmit(async (values) => {
     const denied = permission.check();
@@ -90,6 +90,7 @@ export function LinkDialog({ material, link, onClose }: { material: LinkTarget; 
           {units.isSuccess && !densityUnit ? <p className="text-sm text-muted-foreground">
             To record a density for BOM conversion, configure one active unit with the symbol g/mL.
           </p> : null}
+          {link ? <p className="text-sm text-muted-foreground">Counted in <span className="font-medium text-foreground">{link.unit ?? "No unit set"}</span></p> : null}
           <FormWizard form={form} fields={fields} className="md:grid-cols-3" />
           {!densityCleared && link && link.density > 0 ? <ClearMaterialDensity material={material} onCleared={() => {
             setDensityCleared(true);

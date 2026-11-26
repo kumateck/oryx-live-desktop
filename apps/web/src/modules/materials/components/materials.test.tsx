@@ -38,7 +38,7 @@ it("letters codes, converts levels and judges stock against them", () => {
 
 const material = (id: string, name: string, extra: object = {}) => ({ id, name, code: id.toUpperCase(), kind: 0, materialCategory: { id: "c1", name: "Excipient" }, totalStock: 0, alphabet: "M", ...extra });
 interface Call { method: string; path: string; body: unknown; search: string }
-function open(address: string, permissions: string[]) {
+function open(address: string, permissions: string[], kind: 0 | 1 = 0) {
   const backend = stubBackend({ permissions });
   rememberSession();
   const calls: Call[] = [];
@@ -50,8 +50,14 @@ function open(address: string, permissions: string[]) {
     calls.push({ method: input.method, path: url.pathname, body: text ? JSON.parse(text) as unknown : null, search: url.search });
     if (url.pathname === "/api/v1/material" && input.method === "GET") return Response.json({ data: [material("m1", "Maize starch"), material("m2", "Lactose", { totalStock: 500 })], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
     if (url.pathname === "/api/v1/material/department" && input.method === "GET") return Response.json({ data: [
-      { material: material("m1", "Maize starch"), uoM: { id: "u-kg", symbol: "kg" }, density: 1450, densityUoM: { id: "u-legacy", symbol: "kg/m³" }, minimumStockLevel: 10_000_000, reOrderLevel: 20_000_000, maximumStockLevel: 100_000_000, warehouseStock: 15_000_000, reservedQuantity: 10_000_000 },
+      { material: material("m1", "Maize starch", { kind }), uoM: { id: "u-kg", symbol: "kg" }, density: 1450, densityUoM: { id: "u-legacy", symbol: "kg/m³" }, minimumStockLevel: 10_000_000, reOrderLevel: 20_000_000, maximumStockLevel: 100_000_000, warehouseStock: 15_000_000, reservedQuantity: 10_000_000 },
       { material: material("m2", "Lactose"), uoM: { id: "u-kg", symbol: "kg" }, minimumStockLevel: 1_000_000, reOrderLevel: 2_000_000, maximumStockLevel: 9_000_000, warehouseStock: 0 }], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
+    if (url.pathname.endsWith("/counting-unit/preview")) return Response.json({
+      toUnitId: url.searchParams.get("unitId"), previewHash: "preview-hash", hasChanges: true, densityGramsPerMilliliter: 1.261,
+      stock: { label: "Stock", before: 15, beforeUnit: "kg", after: 11.8953, afterUnit: "L" },
+      batches: [{ id: "batch", reference: "L023K002", values: [{ label: "Glycerine", before: 150, beforeUnit: "kg", after: 118.9532, afterUnit: "L" }] }],
+    });
+    if (url.pathname.endsWith("/counting-unit")) return Response.json({ changed: true });
     if (url.pathname === "/api/v1/collection/uom/paginated") return Response.json({ data: [{ id: "u-kg", name: "Kilogram", symbol: "kg", type: 0, category: 0 }], totalRecordCount: 1 });
     if (url.pathname === "/api/v1/material/department/not-linked") return Response.json({ data: [material("m3", "Sorbitol"), material("m4", "Mannitol")], pageIndex: 1, pageCount: 1, totalRecordCount: 2 });
     if (url.pathname === "/api/v1/collection") return Response.json({ UnitOfMeasure: [{ id: "u-kg", symbol: "kg" }, { id: "u-l", symbol: "L" }, { id: "u-density", symbol: "g/mL" }] });
@@ -103,6 +109,7 @@ it("shows stock levels, updates a measured density and saves only the changed st
   await user.keyboard("{Escape}");
   await chooseAction("Actions for Maize starch", "Change stock levels");
   const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).queryByRole("combobox", { name: /Counted in/ })).toBeNull();
   const maximum = await within(dialog).findByRole("spinbutton", { name: /Maximum level \(kg\)/ });
   expect((within(dialog).getByRole("spinbutton", { name: /Minimum level/ }) as HTMLInputElement).value).toBe("10");
   const density = within(dialog).getByRole("spinbutton", { name: "Density (g/mL)" });
@@ -176,3 +183,40 @@ it("keeps stock-level editing available without allowing shared density changes"
   expect(within(dialog).queryByRole("spinbutton", { name: "Density (g/mL)" })).toBeNull();
   expect(writes(calls)).toEqual([]);
 });
+
+it.each([0, 1] as const)("requires the matching material permission before showing the counting-unit action (%s)", async (kind) => {
+  const view = kind === 0 ? "CanViewLinkedRawMaterials" : "CanViewLinkedPackagingMaterials";
+  const wrong = kind === 0 ? "CanChangePackagingMaterialCountingUnit" : "CanChangeRawMaterialCountingUnit";
+  const edit = kind === 0 ? "CanEditLinkedRawMaterials" : "CanLinkPackagingMaterials";
+  const { calls } = open(`/warehouse/materials/linked?type=${kind}`, [view, wrong, edit], kind);
+  await openMenu("Actions for Maize starch");
+  expect(screen.queryByRole("menuitem", { name: "Change counting unit" })).toBeNull();
+  expect(calls.filter(({ path }) => path.includes("/counting-unit"))).toEqual([]);
+});
+
+it.each([0, 1] as const)("reviews the conversion and sends one confirmed request for material kind %s", async (kind) => {
+  const user = userEvent.setup();
+  const [view, change, segment] = kind === 0
+    ? ["CanViewLinkedRawMaterials", "CanChangeRawMaterialCountingUnit", "raw"]
+    : ["CanViewLinkedPackagingMaterials", "CanChangePackagingMaterialCountingUnit", "packaging"];
+  const { calls } = open(`/warehouse/materials/linked?type=${kind}`, [view, change], kind);
+  await chooseAction("Actions for Maize starch", "Change counting unit");
+  const dialog = await screen.findByRole("dialog");
+  const confirm = within(dialog).getByRole("button", { name: "Confirm counting unit change" });
+  expect(confirm).toHaveProperty("disabled", true);
+  await user.click(await within(dialog).findByRole("combobox", { name: /New counting unit/ }));
+  await user.click(await screen.findByRole("option", { name: "L" }));
+  await user.click(within(dialog).getByRole("button", { name: "Preview change" }));
+  expect(await within(dialog).findByText("11.8953 L")).toBeTruthy();
+  expect(within(dialog).getByText("Batch requirements (1)")).toBeTruthy();
+  expect(writes(calls)).toEqual([]);
+  await user.click(confirm);
+  expect(await within(dialog).findByText("Enter a reason of at least five characters.")).toBeTruthy();
+  expect(writes(calls)).toEqual([]);
+  await user.type(within(dialog).getByRole("textbox", { name: /Reason for change/ }), "Counted by volume");
+  await user.click(confirm);
+  await waitFor(() => expect(writes(calls)).toEqual([expect.objectContaining({
+    method: "POST", path: `/api/v1/material/${segment}/m1/counting-unit`,
+    body: { unitId: "u-l", previewHash: "preview-hash", reason: "Counted by volume" },
+  })]));
+}, 30_000);

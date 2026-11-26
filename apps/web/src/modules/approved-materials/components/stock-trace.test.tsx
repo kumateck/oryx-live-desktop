@@ -26,7 +26,7 @@ const trace = {
 };
 afterEach(() => { cleanup(); forgetSession(); });
 let materialCase = 0;
-function open(tab: string, permissions = ["CanViewApprovedRawMaterials", "CanViewRawMaterialStockTrace", "CanPrintRawMaterialStockTrace"], failure = false) {
+function open(tab: string, permissions = ["CanViewApprovedRawMaterials", "CanViewMaterialBinCard", "CanViewRawMaterialStockTrace", "CanPrintRawMaterialStockTrace"], failure = false) {
   const selectedMaterial = { ...material, id: `m-${++materialCase}` };
   const backend = stubBackend({ permissions }); rememberSession(); const session = backend.fetcher.getMockImplementation();
   const requests: string[] = [];
@@ -44,6 +44,13 @@ function open(tab: string, permissions = ["CanViewApprovedRawMaterials", "CanVie
   render(<SessionProvider><Workspace /></SessionProvider>);
   return requests;
 }
+
+it("keeps the bin card closed without its dedicated permission", async () => {
+  const requests = open("bin-card", ["CanViewApprovedRawMaterials", "CanViewRawMaterialStockTrace"]);
+  await screen.findByRole("tab", { name: "Stock by batch" });
+  expect(screen.queryByRole("tab", { name: "Bin card" })).toBeNull();
+  expect(requests.some((path) => path.includes("/bincardinformation/"))).toBe(false);
+});
 
 it("denies trace tabs and all trace requests without the material kind's permission", async () => {
   const requests = open("consumed", ["CanViewApprovedRawMaterials", "CanViewPackagingMaterialStockTrace"]);
