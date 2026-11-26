@@ -32,11 +32,29 @@ describe("formula draft completeness", () => {
     expect(complete({ ...answer, standardInputs: {} })).toBe(false);
     expect(complete({ ...answer, standardInputs: { wt: null } })).toBe(false);
     expect(complete({ ...answer, sampleInputs: [] })).toBe(false);
-    expect(complete({ ...answer, tableData: [["1", "2"], ["3", ""]] })).toBe(false);
+    expect(complete({ ...answer, tableData: [["1", ""], ["3", ""]] })).toBe(false);
+    expect(complete({ ...answer, tableData: [["1", "2"], ["3", "x"]] })).toBe(false);
     expect(complete({ ...answer, tableData: [["1", "2"]] })).toBe(false);
     expect(complete({ ...answer, manualVars: { factor: { raw: "bad", evaluated: null } } })).toBe(false);
     expect(complete({ ...answer, manualVars: {} })).toBe(false);
     expect(complete(answer)).toBe(true);
+  });
+
+  it("accepts reading columns shorter than the table, as long as each has a reading", () => {
+    // Gel assay (ATR 01a21294): five standard injections, two per sample.
+    const gel = JSON.stringify({ type: 3, expression: "((:sampleAvg * :standardWeight * :Fillweight) / (:standardAvg * :sampleWeight * :Claim) * :purity) * 100",
+      numberOfReadings: 5, numberOfSamples: 2, standardInTable: true, headers: ["Standard", "Sample 1", "Sample 2"],
+      standardInputs: [{ key: "weight" }], sampleInputs: [[{ key: "weight" }], [{ key: "weight" }]],
+      manualVarLabels: { Fillweight: "Fill Weight", Claim: "Claim", purity: "Purity" } });
+    const entered = { standardInputs: { weight: "0.0514" }, sampleInputs: [{ weight: "5.1669" }, { weight: "5.0255" }],
+      manualVars: { Fillweight: { raw: "30.0", evaluated: 30 }, Claim: { raw: "0.300", evaluated: 0.3 }, purity: { raw: "0.992", evaluated: 0.992 } },
+      tableData: [["795.1", "820.1", "813.5"], ["795.1", "820.3", "813.9"], ["795.1", "", ""], ["794.7", "", ""], ["794.0", "", ""]] };
+    expect(formulaAnswerComplete(JSON.stringify(entered), gel)).toBe(true);
+    const emptySample = entered.tableData.map(([standard, first]) => [standard ?? "", first ?? "", ""]);
+    expect(formulaAnswerComplete(JSON.stringify({ ...entered, tableData: emptySample }), gel)).toBe(false);
+    // Calculated table columns evaluate every cell, so those worksheets still need every reading.
+    const calculated = JSON.stringify({ ...JSON.parse(gel), formulaInTable: true });
+    expect(formulaAnswerComplete(JSON.stringify(entered), calculated)).toBe(false);
   });
 
   it("accepts zero as an entered number and ignores optional label metadata", () => {
