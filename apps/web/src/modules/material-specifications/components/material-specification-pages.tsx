@@ -13,6 +13,7 @@ import { specificationValuesApi, specificationValuesTag } from "@/shared/specifi
 import { specificationSchema, type Specification } from "@/shared/specifications/specification-schema";
 import { SpecificationCompletion } from "@/shared/specifications/specification-completion";
 import { SpecificationPrintAction } from "@/shared/specifications/specification-print-action";
+import { StpTestLinksPanel } from "@/shared/stp-content";
 import { SpecificationDetail, SpecificationUnavailable } from "@/shared/specifications/specification-views";
 import { useApproveSpecification, VerifiableSpecification } from "@/shared/specifications/use-approve-specification";
 import { useSpecificationTests } from "@/shared/specifications/use-specification-tests";
@@ -56,7 +57,10 @@ export function MaterialSpecificationDetailPage() {
         {!specification.isVerified ? <PermissionGuard require={specPermissions.verify[kind]}><Button variant="outline" onClick={() => setApproving(true)}><BadgeCheck />Approve</Button></PermissionGuard> : null}
         <PermissionGuard require={completePermission(kind)}><Button asChild variant="outline"><Link to={completePath(specification.id)}><ClipboardCheck />Set test references</Link></Button></PermissionGuard>
         <PermissionGuard require={specPermissions.edit[kind]}><Button asChild><Link to={editPath(specification.id)}><Pencil />Edit</Link></Button></PermissionGuard>
-      </>} />
+      </>}>
+      {/* The STP test each specification test is performed by (structured STP revisions). */}
+      <StpTestLinksPanel specification={{ kind: "material", id: specification.id }} />
+    </SpecificationDetail>
     {limits ? <MicrobialLimitsDialog subject="material" specificationId={specification.id} onClose={() => setLimits(false)} onSaved={() => dispatch(specificationApproved(specification.id))}
       keys={{ view: specPermissions.viewMicrobialLimits[kind], edit: specPermissions.editMicrobialLimits[kind] }} /> : null}
     {approving ? <ConfirmActionDialog require={specPermissions.verify[kind]} destructive={false} title={`Approve ${specification.number}?`}
