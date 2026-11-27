@@ -44,6 +44,10 @@ function open(path: string, permissions: string[], waitForSavedReferences?: Prom
         recordedBy: "Esi Boateng", occurredAt: "2026-11-10T08:30:00Z", event: "Revised", reason: "Closure torque limit tightened.", effectiveDate: "2026-11-10T00:00:00Z" }],
     });
     if (url.pathname === "/api/v1/form/f1") return Response.json(template);
+    if (url.pathname === "/api/v1/stp-test-links/material-specification/s1") return Response.json({ kind: 1, stpNumbers: ["QCD/STP/PM/003"],
+      tests: [{ formSectionId: "a", sectionName: "Dimensions", stpNumber: "QCD/STP/PM/003", testKey: "dimensions", testNumber: "5.1", testTitle: "Dimensions", revisionNumber: 2, resolved: true },
+        { formSectionId: "b", sectionName: "Leak test", stpNumber: null, testKey: null, testNumber: null, testTitle: null, revisionNumber: null, resolved: false }],
+      options: [{ stpNumber: "QCD/STP/PM/003", revisionNumber: 2, testKey: "dimensions", testNumber: "5.1", testTitle: "Dimensions" }] });
     if (url.pathname === "/api/v1/form/section") {
       if (savedReferences.length > 1) await waitForSavedReferences;
       return Response.json({ data: savedReferences });
@@ -127,4 +131,18 @@ it("prints the saved specification with revision author, date and history", asyn
   expect(rows).toEqual([["1", "01", formatDate("2026-10-01T00:00:00Z"), "—"], ["2", "02", formatDate("2026-11-10T00:00:00Z"), "Closure torque limit tightened."]]);
   expect(preview.getByRole("button", { name: "Print" })).toHaveProperty("disabled", false);
   expect(calls).toEqual([]);
+});
+
+it("shows the STP test each test cites, and offers changing it only with the packaging edit permission", async () => {
+  open("/qc/material-specification/s1/details?type=1", ["CanViewPackagingMaterialSpecifications"]);
+  const panel = await screen.findByRole("region", { name: "STP tests" });
+  expect(within(panel).getByText(/QCD\/STP\/PM\/003 · 5.1 Dimensions/)).toBeTruthy();
+  expect(within(panel).getByText("Not cited")).toBeTruthy();
+  expect(within(panel).queryByRole("button", { name: /STP test for/ })).toBeNull();
+  cleanup(); forgetSession();
+  open("/qc/material-specification/s1/details?type=1", ["CanViewPackagingMaterialSpecifications", "CanEditRawMaterialSpecification"]);
+  expect(within(await screen.findByRole("region", { name: "STP tests" })).queryByRole("button", { name: /STP test for/ })).toBeNull();
+  cleanup(); forgetSession();
+  open("/qc/material-specification/s1/details?type=1", ["CanViewPackagingMaterialSpecifications", "CanEditPackagingMaterialSpecification"]);
+  expect(await within(await screen.findByRole("region", { name: "STP tests" })).findByRole("button", { name: "STP test for Leak test" })).toBeTruthy();
 });

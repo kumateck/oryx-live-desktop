@@ -21,6 +21,9 @@ export function reviewDocumentPath(row: Pick<PendingReview, "modelType" | "model
   if (row.modelType === "StockRequisitionIssue") return row.parentId ? `/warehouse/stock-requisition/${encodeURIComponent(row.parentId)}` : null;
   if (row.modelType === "FormulaRevision") return row.parentId ? `/qa/formula-reviews/${encodeURIComponent(row.parentId)}?revisionId=${id}` : null;
   if (row.modelType === "PurchaseOrder") return row.variant === 0 || row.variant === 1 ? `/procurement/purchase-orders/${id}?type=${row.variant}` : null;
+  // An STP revision's kind is its variant: raw and packaging under material STPs, products under product STPs.
+  if (row.modelType === "StpRevision") return row.variant === 2 ? `/qc/products-stp/revisions/${id}`
+    : row.variant === 0 || row.variant === 1 ? `/qc/material-stp/revisions/${id}?type=${String(row.variant)}` : null;
   if (row.modelType === "PurchaseRequisition" || row.modelType === "RawStockRequisition" || row.modelType === "PackageStockRequisition")
     return `/production/requisition/${id}/details`;
   return pages[row.modelType]?.(id) ?? null;
@@ -30,5 +33,5 @@ const labels: Record<string, string> = { CostingPriceList: "Costing price list",
   RawStockRequisition: "Raw material stock requisition", PackageStockRequisition: "Packaging material stock requisition",
   BillingSheet: "Billing sheet", StaffRequisition: "Staff requisition", OvertimeRequest: "Overtime request", LeaveRequest: "Leave request",
   JobRequest: "Job request", AllocateProductionOrder: "Packing list", StockRequisitionIssue: "Stock issue check", FormulaRevision: "QC formula revision",
-  ApprovedVendorList: "Approved vendor list" };
+  ApprovedVendorList: "Approved vendor list", StpRevision: "STP revision" };
 export const reviewDocumentLabel = (row: Pick<PendingReview, "modelType" | "documentLabel">) => labels[row.modelType] ?? row.documentLabel ?? row.modelType;

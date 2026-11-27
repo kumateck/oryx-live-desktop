@@ -11,6 +11,7 @@ import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { FormWizard, type WizardField } from "@/shared/forms/form-wizard";
 import { InputTypes } from "@/shared/forms/input-types";
+import { cfuUnits } from "@/shared/microbial/microbial-values";
 import { isChoiceQuestion, QuestionType } from "@/shared/questions/question-types";
 import { usePostApiV1FormQuestionMutation, usePutApiV1FormQuestionByQuestionIdMutation } from "../api/questions-api";
 import { questionPermissions, questionsAudit, standardTypes, typeOption } from "../lib/questions";
@@ -27,14 +28,17 @@ export function QuestionDialog({ question, onClose }: { question: QuestionRow | 
   const typeValue = Number(useWatch({ control: form.control, name: "type" })?.value);
   const choice = isChoiceQuestion(typeValue);
   const instrument = typeValue === QuestionType.Instrument;
+  const cfu = typeValue === QuestionType.CfuCalculation;
   useEffect(() => { if (instrument) form.setValue("isMultiSelect", true); else if (!choice) form.setValue("isMultiSelect", false); }, [choice, form, instrument]);
   const fields = useMemo<WizardField<QuestionFormValues>[]>(() => [
     { type: InputTypes.TEXT, name: "label", label: "Question", required: true, placeholder: "e.g. Description of the sample" },
     { type: InputTypes.SELECT, mode: "single", source: "sync", name: "type", label: "Question type", required: true, options: standardTypes.map(typeOption) },
     { type: InputTypes.TEXT, name: "reference", label: "Reference", placeholder: "Optional reference code" },
     { type: InputTypes.SWITCH, name: "isMultiSelect", label: "Allow more than one answer", disabled: !choice || instrument, description: instrument ? "Instrument questions always take one or more instruments." : choice ? "" : "Only choice questions offer this." },
+    ...(cfu ? [{ type: InputTypes.SELECT, mode: "single", source: "sync", name: "cfuUnit", label: "Reported in", required: true, options: cfuUnits.map((unit) => ({ value: unit, label: unit })),
+      description: "The result is the average plate count times the dilution factor, calculated from the colony count and dilution questions in the same test." } as const] : []),
     { type: InputTypes.TEXTAREA, name: "description", label: "Guidance", rows: 3, placeholder: "Optional guidance for the analyst", className: "md:col-span-2" },
-  ], [choice, instrument]);
+  ], [choice, instrument, cfu]);
   const saving = creating.isLoading || updating.isLoading;
   const optionError = form.formState.errors.options?.message ?? form.formState.errors.options?.root?.message;
   const submit = form.handleSubmit(async (values) => {

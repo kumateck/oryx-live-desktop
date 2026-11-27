@@ -1,3 +1,4 @@
+import { MicrobialLimitsDialog } from "@/shared/microbial/microbial-limits-dialog";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { Skeleton } from "@/shared/skeleton/skeleton";
 import { assayReportingPermissions } from "../manifest";
@@ -16,6 +17,7 @@ import { specificationValuesApi, specificationValuesTag } from "@/shared/specifi
 import { specificationSchema, type Specification } from "@/shared/specifications/specification-schema";
 import { SpecificationCompletion } from "@/shared/specifications/specification-completion";
 import { SpecificationPrintAction } from "@/shared/specifications/specification-print-action";
+import { StpTestLinksPanel } from "@/shared/stp-content";
 import { SpecificationDetail, SpecificationUnavailable } from "@/shared/specifications/specification-views";
 import { useApproveSpecification, VerifiableSpecification } from "@/shared/specifications/use-approve-specification";
 import { useSpecificationTests } from "@/shared/specifications/use-specification-tests";
@@ -38,10 +40,15 @@ function useSpecification() {
 }
 const itemName = (specification: Specification) => specification.item ? `${specification.item.name}${specification.item.code ? ` (${specification.item.code})` : ""}` : null;
 
+/** Microbial limits on a product specification. */
+const microbialLimitKeys = { view: "CanViewProductMicrobialLimits", edit: "CanEditProductMicrobialLimits" } as const;
+
 export function ProductSpecificationDetailPage() {
   const { specification, tests, refreshing, unavailable } = useSpecification();
   const [approving, setApproving] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [limits, setLimits] = useState(false);
+  const dispatch = useDispatch();
   const approval = useApproveSpecification(VerifiableSpecification.Product, productSpecificationChanged, audit);
   if (refreshing) return <DetailPageSkeleton label="Loading specification" />;
   if (!specification || unavailable) return unavailable;
@@ -53,10 +60,16 @@ export function ProductSpecificationDetailPage() {
       actions={<>
         <SpecificationPrintAction kind="product" title="Product specification" specification={specification} sections={tests.sections} />
         <PermissionGuard require={assayReportingPermissions.view}><Button variant="outline" onClick={() => setReporting(true)}>COA assay reporting</Button></PermissionGuard>
+        {specification.microbialForm ? <PermissionGuard require={microbialLimitKeys.view}><Button variant="outline" onClick={() => setLimits(true)}>Microbial limits</Button></PermissionGuard> : null}
         {!specification.isVerified ? <PermissionGuard require={specPermissions.verify}><Button variant="outline" onClick={() => setApproving(true)}><BadgeCheck />Approve</Button></PermissionGuard> : null}
         <PermissionGuard require={completePermission}><Button asChild variant="outline"><Link to={completePath(specification.id)}><ClipboardCheck />Set test references</Link></Button></PermissionGuard>
         <PermissionGuard require={specPermissions.edit}><Button asChild><Link to={editPath(specification.id)}><Pencil />Edit</Link></Button></PermissionGuard>
-      </>} />
+      </>}>
+      {/* The STP test each specification test is performed by (structured STP revisions). */}
+      <StpTestLinksPanel specification={{ kind: "product", id: specification.id }} />
+    </SpecificationDetail>
+    {limits ? <MicrobialLimitsDialog subject="product" specificationId={specification.id} keys={microbialLimitKeys} onClose={() => setLimits(false)}
+      onSaved={() => dispatch(productSpecificationChanged(specification.id))} /> : null}
     {reporting ? <PermissionGuard require={assayReportingPermissions.view}><Suspense fallback={<Skeleton className="h-32" />}>
       <AssayReportingPanel specificationId={specification.id} onClose={() => setReporting(false)} />
     </Suspense></PermissionGuard> : null}

@@ -36,6 +36,12 @@ it("reads an order's lines and checks a packing list against batch stock and wha
   expect([fulfilment(250, 0), fulfilment(250, 100), fulfilment(250, 250)]).toEqual(["pending", "part", "fulfilled"]);
   // Only approved batches. Free stock is whole packs of the yield left; packing lists awaiting approval already took theirs.
   expect(batchesSchema.parse(notes).map((batch) => [batch.batchNumber, batch.free])).toEqual([["B-1", 120], ["B-3", 500], ["B-5", 81], ["B-6", 720]]);
+  // Transferred when the style counted tubes (360 a shipper); the style now counts cartons (18 a shipper, 20 tubes each).
+  // Like the server, the batch is counted the way the style is now, so its shippers match the order's.
+  const tubes = notes.finishedGoodsTransferNotes.find((note) => note.id === "n6");
+  const restyled = { finishedGoodsTransferNotes: [{ ...tubes, id: "n7", availableQuantity: 3_500_005, quantityPerPack: 1, packsPerShipperSnapshot: 360, packingStyleSnapshot: "18x20x30g",
+    productPacking: { ...tubes?.productPacking, packPerShipper: 18 }, batchManufacturingRecord: { batchNumber: "BTHCG", expiryDate: "2035-01-31T00:00:00Z" } }] };
+  expect(batchesSchema.parse(restyled).map((batch) => [batch.perShipper, batch.perPack, batch.free])).toEqual([[18, 20, 175_000]]);
   const line = { key: "L", productName: "Dicnac 100", remaining: 150 };
   const batch = { noteId: "n1", batchNumber: "B-1", free: 100 };
   expect(startingPacks(line, batch, [])).toBe(100);

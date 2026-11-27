@@ -28,12 +28,16 @@ export const specificationBaseSchema = z.object({
   specificationNumber: required("specification number"), revisionNumber: required("revision"), supersedesNumber: required("number it supersedes"),
   effectiveDate: z.date({ message: "Choose the effective date." }), reviewDate: z.date({ message: "Choose the revision date." }),
   form: z.object({ value: z.string().min(1, "Choose the template."), label: z.string() }, { message: "Choose the template." }),
+  /** Optional: the template that holds the microbial tests. */
+  microbialForm: option.nullish(),
   reference: option.nullish(), description: z.string().nullish(),
   revisionReason: z.string().max(1000, "Keep the reason to 1000 characters.").optional(),
 });
 export type SpecificationBaseValues = z.infer<typeof specificationBaseSchema>;
-export function checkRevisionDate(values: { effectiveDate: Date; reviewDate: Date }, context: z.RefinementCtx) {
+export function checkRevisionDate(values: { effectiveDate: Date; reviewDate: Date; form?: { value: string } | null | undefined; microbialForm?: { value: string } | null | undefined }, context: z.RefinementCtx) {
   if (startOfDay(values.reviewDate) < earliestRevisionDate(values.effectiveDate)) context.addIssue({ code: "custom", path: ["reviewDate"], message: "The revision date must be after the effective date and after today." });
+  if (values.microbialForm?.value && values.microbialForm.value === values.form?.value)
+    context.addIssue({ code: "custom", path: ["microbialForm"], message: "Choose a different template from the chemical one, or leave it empty." });
 }
 /** Every edit of a saved specification is a revision and must say why; the server refuses it otherwise. */
 export function requireRevisionReason(values: { revisionReason?: string | undefined }, context: z.RefinementCtx) {
@@ -46,12 +50,13 @@ export const revisionReasonField = { type: InputTypes.TEXTAREA, name: "revisionR
 /** The request body. An edit keeps the saved due date; a new specification is due tomorrow, as Oryx Next set it. */
 export const specificationBody = (values: SpecificationBaseValues, savedDue: string | null = null, now = new Date()) => ({
   specificationNumber: values.specificationNumber, revisionNumber: values.revisionNumber, supersedesNumber: values.supersedesNumber,
-  effectiveDate: values.effectiveDate.toISOString(), reviewDate: values.reviewDate.toISOString(), formId: values.form.value, dueDate: savedDue ?? tomorrowIso(now),
+  effectiveDate: values.effectiveDate.toISOString(), reviewDate: values.reviewDate.toISOString(), formId: values.form.value,
+  microbialFormId: values.microbialForm?.value ?? null, dueDate: savedDue ?? tomorrowIso(now),
   reference: values.reference?.value ?? null, description: values.description ?? "",
 });
 /** A saved specification as form values; dates the server returned unreadable are left for the user to choose. */
 export function specificationDefaults(saved: { specificationNumber: string | null; revisionNumber: string | null; supersedesNumber: string | null; effectiveDate: string | null; reviewDate: string | null;
-  form: { id: string; name: string } | null; reference: string | null; description: string | null }) {
+  form: { id: string; name: string } | null; microbialForm?: { id: string; name: string } | null; reference: string | null; description: string | null }) {
   const date = (value: string | null) => { const parsed = value ? new Date(value) : null; return parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined; };
   const effectiveDate = date(saved.effectiveDate);
   const reviewDate = date(saved.reviewDate);
@@ -59,6 +64,7 @@ export function specificationDefaults(saved: { specificationNumber: string | nul
     specificationNumber: saved.specificationNumber ?? "", revisionNumber: saved.revisionNumber ?? "", supersedesNumber: saved.supersedesNumber ?? "",
     ...(effectiveDate ? { effectiveDate } : {}), ...(reviewDate ? { reviewDate } : {}),
     ...(saved.form ? { form: { value: saved.form.id, label: saved.form.name } } : {}),
+    microbialForm: saved.microbialForm ? { value: saved.microbialForm.id, label: saved.microbialForm.name } : null,
     reference: documentReference(saved.reference), description: saved.description ?? "",
   };
 }
@@ -83,3 +89,6 @@ export const testStages = [{ value: "0", label: "Intermediate" }, { value: "1", 
 export const testStageLabel = (stage: number | null | undefined) => testStages.find((item) => item.value === String(stage))?.label ?? "–";
 /** Document numbers in reading order, so "/010" follows "/009". */
 export const compareNumbers = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+/** The microbial template field, shown after the chemical one on both editors. */
+export const microbialTemplateField = { name: "microbialForm", label: "Microbial template", placeholder: "No microbial tests", searchPlaceholder: "Search templates",
+  description: "Optional. Its tests and references are kept apart from the chemical template's. A microbial ARD must use this template." } as const;

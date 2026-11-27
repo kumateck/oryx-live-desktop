@@ -8,13 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { ConfirmActionDialog } from "@/shared/actions";
 import { CellConfigDialog } from "./cell-config-dialog";
 import { TableGrid } from "./table-grid";
-import { applyCellConfig, emptyTable, maxTableSize, parseTableConfig, removeLine, resizeTable, serializeTableConfig, type TableAnswer, type TableConfig } from "./table-question";
-import { useEquipmentOptions } from "./use-equipment-options";
+import { applyCellConfig, emptyTable, maxTableSize, parseTableConfig, removeLine, resizeTable, serializeTableConfig, withLinkedValues, type TableAnswer, type TableConfig } from "./table-question";
+import { useRecordOptions } from "./use-record-options";
 
 /** Designs the grid of a table question: its size, what each cell is, and a preview of how analysts will fill it in. */
 export function TableQuestionBuilder({ value, onChange, require }: { value: string; onChange: (value: string) => void; require: string }) {
   const config = parseTableConfig(value) ?? emptyTable();
-  const loadEquipment = useEquipmentOptions();
+  const records = useRecordOptions();
   const [mode, setMode] = useState<"configure" | "preview">("configure");
   const [size, setSize] = useState({ rows: String(config.rows), cols: String(config.cols) });
   const [editing, setEditing] = useState<string | null>(null);
@@ -41,8 +41,8 @@ export function TableQuestionBuilder({ value, onChange, require }: { value: stri
       </div>
       <p className="basis-full text-xs text-muted-foreground">{mode === "configure" ? "Choose a cell to set it up. Hover a cell to delete its row or column." : "This is how analysts will see the table. Values typed here are not saved."}</p>
     </div>
-    <TableGrid config={config} mode={mode} answer={preview} labels={labels} loadEquipment={loadEquipment} onConfigure={setEditing} onRemove={setRemoving}
-      onAnswer={(key, entry, label) => { setPreview({ ...preview, [key]: entry }); if (label !== undefined) setLabels({ ...labels, [key]: label }); }} />
+    <TableGrid config={config} mode={mode} answer={preview} labels={labels} loadRecords={records.loader} onConfigure={setEditing} onRemove={setRemoving}
+      onAnswer={(key, entry, label) => { setPreview(withLinkedValues(config, preview, key, entry, records.lookup(entry))); if (label !== undefined) setLabels({ ...labels, [key]: label }); }} />
     {editing ? <CellConfigDialog cellKey={editing} config={config} onClose={() => setEditing(null)} onSave={(cell, scope, range) => { commit(applyCellConfig(config, editing, cell, scope, range)); setEditing(null); }} /> : null}
     {resizing ? <ConfirmActionDialog require={require} title={`Make a ${resizing.rows} × ${resizing.cols} grid?`} description="Every cell's setup is cleared. This cannot be undone."
       confirmLabel="Make new grid" busyLabel="Working…" onClose={() => setResizing(null)} onConfirm={async () => { commit(resizing); setPreview({}); setResizing(null); return null; }} /> : null}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { answerGrid, applyCellConfig, parseTableAnswer, parseTableConfig, removeLine, resizeTable, serializeTableConfig, type TableConfig } from "./table-question";
+import { answerGrid, applyCellConfig, linkSourceColumns, parseTableAnswer, parseTableConfig, removeLine, resizeTable, serializeTableConfig, withLinkedValues, type TableConfig } from "./table-question";
 
 const base: TableConfig = { rows: 3, cols: 3, cellConfigs: {} };
 
@@ -29,5 +29,32 @@ describe("table questions", () => {
   it("reads an answer back as headed rows of the input columns", () => {
     const config = parseTableConfig(serializeTableConfig({ rows: 3, cols: 2, cellConfigs: { "0-0": { type: "label", label: "Reading" }, "0-1": { type: "label", label: "Value" }, "1-1": { type: "input" }, "2-1": { type: "input" } } }));
     expect(answerGrid(config, { "1-1": "4.1", "2-1": " " })).toEqual({ headers: ["Value"], rows: [["4.1"]] });
+  });
+});
+
+describe("linked cells", () => {
+  // Reagents used: column 0 picks a reagent from the record list, column 1 shows its code, column 2 its name.
+  const config: TableConfig = { rows: 3, cols: 3, cellConfigs: {
+    "0-0": { type: "label", label: "Reagent" }, "0-1": { type: "label", label: "Code" },
+    ...Object.fromEntries([1, 2].flatMap((row) => [
+      [`${String(row)}-0`, { type: "select", dataSource: "async", asyncSource: "reagents" }],
+      [`${String(row)}-1`, { type: "linked", linkSource: 0, linkProperty: "code" }],
+      [`${String(row)}-2`, { type: "linked", linkSource: 0, linkProperty: "name" }],
+    ])),
+  } };
+  const agar = { name: "Soyabean-Casein Digest Agar", code: "QCD/RGT/SCDA-013" };
+
+  it("round-trips a linked cell's source and property", () => {
+    expect(parseTableConfig(serializeTableConfig(config))?.cellConfigs["1-1"]).toEqual({ type: "linked", linkSource: 0, linkProperty: "code" });
+  });
+  it("fills the linked cells of the same row from the chosen record, and clears them when the choice is cleared", () => {
+    const filled = withLinkedValues(config, { "2-1": "QCD/RGT/OTHER" }, "1-0", "id-1", agar);
+    expect(filled).toEqual({ "1-0": "id-1", "1-1": "QCD/RGT/SCDA-013", "1-2": "Soyabean-Casein Digest Agar", "2-1": "QCD/RGT/OTHER" });
+    expect(withLinkedValues(config, filled, "1-0", "", null)).toMatchObject({ "1-1": "", "1-2": "" });
+  });
+  it("offers only record-list cells of the same row as sources, and reads linked columns back", () => {
+    expect(linkSourceColumns(config, "1-1")).toEqual([0]);
+    expect(linkSourceColumns(config, "0-1")).toEqual([]);
+    expect(answerGrid(config, withLinkedValues(config, {}, "1-0", "id-1", agar)).rows).toEqual([["id-1", "QCD/RGT/SCDA-013", "Soyabean-Casein Digest Agar"]]);
   });
 });

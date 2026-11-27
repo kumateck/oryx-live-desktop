@@ -1478,6 +1478,315 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1StpRevisions: build.query<
+      GetApiV1StpRevisionsApiResponse,
+      GetApiV1StpRevisionsApiArg
+    >({
+      providesTags: [{ type: "stp-revision", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          kind: queryArg.kind,
+          stpNumber: queryArg.stpNumber,
+        },
+      }),
+    }),
+    postApiV1StpRevisions: build.mutation<
+      PostApiV1StpRevisionsApiResponse,
+      PostApiV1StpRevisionsApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "stp-revision", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions`,
+        method: "POST",
+        body: queryArg.domainEntitiesStpRevisionsCreateStpRevisionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1StpRevisionsNumbers: build.query<
+      GetApiV1StpRevisionsNumbersApiResponse,
+      GetApiV1StpRevisionsNumbersApiArg
+    >({
+      providesTags: [{ type: "stp-revision/number", id: "LIST" }, { type: "stp-revision", id: "LIST" }],
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/numbers`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          kind: queryArg.kind,
+        },
+      }),
+    }),
+    getApiV1StpRevisionsById: build.query<
+      GetApiV1StpRevisionsByIdApiResponse,
+      GetApiV1StpRevisionsByIdApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stp-revision", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/${queryArg.id}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1StpRevisionsById: build.mutation<
+      PutApiV1StpRevisionsByIdApiResponse,
+      PutApiV1StpRevisionsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stp-revision", id: "LIST" }, { type: "stp-revision", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/${queryArg.id}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesStpRevisionsUpdateStpRevisionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    deleteApiV1StpRevisionsById: build.mutation<
+      DeleteApiV1StpRevisionsByIdApiResponse,
+      DeleteApiV1StpRevisionsByIdApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stp-revision", id: "LIST" }, { type: "stp-revision", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/${queryArg.id}`,
+        method: "DELETE",
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          reason: queryArg.reason,
+        },
+      }),
+    }),
+    postApiV1StpRevisionsImport: build.mutation<
+      PostApiV1StpRevisionsImportApiResponse,
+      PostApiV1StpRevisionsImportApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "stp-revision/import", id: "LIST" }, { type: "stp-revision", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/import`,
+        method: "POST",
+        body: queryArg.body,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+        params: {
+          kind: queryArg.kind,
+        },
+      }),
+    }),
+    postApiV1StpRevisionsImportDocument: build.mutation<
+      PostApiV1StpRevisionsImportDocumentApiResponse,
+      PostApiV1StpRevisionsImportDocumentApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "stp-revision/import", id: "LIST" }, { type: "stp-revision", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/import/document`,
+        method: "POST",
+        body: queryArg.domainEntitiesStpRevisionsImportStpDocumentRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1StpRevisionsRevise: build.mutation<
+      PostApiV1StpRevisionsReviseApiResponse,
+      PostApiV1StpRevisionsReviseApiArg
+    >({
+      invalidatesTags: (_result, error) => (error ? [] : [{ type: "stp-revision/revise", id: "LIST" }, { type: "stp-revision", id: "LIST" }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/revise`,
+        method: "POST",
+        body: queryArg.domainEntitiesStpRevisionsReviseStpRevisionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    putApiV1StpRevisionsByIdDraft: build.mutation<
+      PutApiV1StpRevisionsByIdDraftApiResponse,
+      PutApiV1StpRevisionsByIdDraftApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stp-revision", id: "LIST" }, { type: "stp-revision", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/${queryArg.id}/draft`,
+        method: "PUT",
+        body: queryArg.domainEntitiesStpRevisionsSaveStpRevisionDraftRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    postApiV1StpRevisionsByIdSubmit: build.mutation<
+      PostApiV1StpRevisionsByIdSubmitApiResponse,
+      PostApiV1StpRevisionsByIdSubmitApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "stp-revision", id: "LIST" }, { type: "stp-revision", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/${queryArg.id}/submit`,
+        method: "POST",
+        body: queryArg.domainEntitiesStpRevisionsSubmitStpRevisionRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1StpRevisionsByIdDocx: build.query<
+      GetApiV1StpRevisionsByIdDocxApiResponse,
+      GetApiV1StpRevisionsByIdDocxApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stp-revision", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/${queryArg.id}/docx`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1StpRevisionsByIdPrint: build.query<
+      GetApiV1StpRevisionsByIdPrintApiResponse,
+      GetApiV1StpRevisionsByIdPrintApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stp-revision", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/${queryArg.id}/print`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationId:
+      build.query<
+        GetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdApiResponse,
+        GetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/stp-test-links/material-specification/${queryArg.materialSpecificationId}`,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
+    getApiV1StpTestLinksProductSpecificationByProductSpecificationId:
+      build.query<
+        GetApiV1StpTestLinksProductSpecificationByProductSpecificationIdApiResponse,
+        GetApiV1StpTestLinksProductSpecificationByProductSpecificationIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/stp-test-links/product-specification/${queryArg.productSpecificationId}`,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
+    putApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionId:
+      build.mutation<
+        PutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdApiResponse,
+        PutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/stp-test-links/material-specification/${queryArg.materialSpecificationId}/${queryArg.formSectionId}`,
+          method: "PUT",
+          body: queryArg.domainEntitiesStpRevisionsSaveStpTestLinkRequest,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
+    putApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionId:
+      build.mutation<
+        PutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdApiResponse,
+        PutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/stp-test-links/product-specification/${queryArg.productSpecificationId}/${queryArg.formSectionId}`,
+          method: "PUT",
+          body: queryArg.domainEntitiesStpRevisionsSaveStpTestLinkRequest,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
+    getMaterialSpecificationMicrobialLimits: build.query<
+      GetMaterialSpecificationMicrobialLimitsApiResponse,
+      GetMaterialSpecificationMicrobialLimitsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-specification", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/material-specifications/${queryArg.id}/microbial-limits`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    saveMaterialSpecificationMicrobialLimits: build.mutation<
+      SaveMaterialSpecificationMicrobialLimitsApiResponse,
+      SaveMaterialSpecificationMicrobialLimitsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-specification", id: "LIST" }, { type: "material-specification", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/material-specifications/${queryArg.id}/microbial-limits`,
+        method: "PUT",
+        body: queryArg.domainEntitiesFormsSaveMicrobialLimitsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getProductSpecificationMicrobialLimits: build.query<
+      GetProductSpecificationMicrobialLimitsApiResponse,
+      GetProductSpecificationMicrobialLimitsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-specification", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/product-specifications/${queryArg.id}/microbial-limits`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    saveProductSpecificationMicrobialLimits: build.mutation<
+      SaveProductSpecificationMicrobialLimitsApiResponse,
+      SaveProductSpecificationMicrobialLimitsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-specification", id: "LIST" }, { type: "product-specification", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/product-specifications/${queryArg.id}/microbial-limits`,
+        method: "PUT",
+        body: queryArg.domainEntitiesFormsSaveMicrobialLimitsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2426,6 +2735,205 @@ export type SaveProductAssayReportingApiArg = {
   subModule?: string;
   domainEntitiesProductSpecificationsSaveAssayReportingRequest: DomainEntitiesProductSpecificationsSaveAssayReportingRequest;
 };
+export type GetApiV1StpRevisionsApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpRevisionSummaryDto[];
+export type GetApiV1StpRevisionsApiArg = {
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  stpNumber?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1StpRevisionsApiResponse = /** status 201 Created */ string;
+export type PostApiV1StpRevisionsApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesStpRevisionsCreateStpRevisionRequest: DomainEntitiesStpRevisionsCreateStpRevisionRequest;
+};
+export type GetApiV1StpRevisionsNumbersApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpNumberOverviewDto[];
+export type GetApiV1StpRevisionsNumbersApiArg = {
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1StpRevisionsByIdApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpRevisionDto;
+export type GetApiV1StpRevisionsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PutApiV1StpRevisionsByIdApiResponse = void;
+export type PutApiV1StpRevisionsByIdApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesStpRevisionsUpdateStpRevisionRequest: DomainEntitiesStpRevisionsUpdateStpRevisionRequest;
+};
+export type DeleteApiV1StpRevisionsByIdApiResponse = void;
+export type DeleteApiV1StpRevisionsByIdApiArg = {
+  id: string;
+  reason?: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type PostApiV1StpRevisionsImportApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpImportProposalDto;
+export type PostApiV1StpRevisionsImportApiArg = {
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  body: {
+    file?: Blob;
+  };
+};
+export type PostApiV1StpRevisionsImportDocumentApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpImportProposalDto;
+export type PostApiV1StpRevisionsImportDocumentApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesStpRevisionsImportStpDocumentRequest: DomainEntitiesStpRevisionsImportStpDocumentRequest;
+};
+export type PostApiV1StpRevisionsReviseApiResponse =
+  /** status 201 Created */ string;
+export type PostApiV1StpRevisionsReviseApiArg = {
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesStpRevisionsReviseStpRevisionRequest: DomainEntitiesStpRevisionsReviseStpRevisionRequest;
+};
+export type PutApiV1StpRevisionsByIdDraftApiResponse = void;
+export type PutApiV1StpRevisionsByIdDraftApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesStpRevisionsSaveStpRevisionDraftRequest: DomainEntitiesStpRevisionsSaveStpRevisionDraftRequest;
+};
+export type PostApiV1StpRevisionsByIdSubmitApiResponse = void;
+export type PostApiV1StpRevisionsByIdSubmitApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesStpRevisionsSubmitStpRevisionRequest: DomainEntitiesStpRevisionsSubmitStpRevisionRequest;
+};
+export type GetApiV1StpRevisionsByIdDocxApiResponse = /** status 200 OK */ Blob;
+export type GetApiV1StpRevisionsByIdDocxApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1StpRevisionsByIdPrintApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpRevisionDto;
+export type GetApiV1StpRevisionsByIdPrintApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpTestLinksDto;
+export type GetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdApiArg =
+  {
+    materialSpecificationId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+  };
+export type GetApiV1StpTestLinksProductSpecificationByProductSpecificationIdApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpTestLinksDto;
+export type GetApiV1StpTestLinksProductSpecificationByProductSpecificationIdApiArg =
+  {
+    productSpecificationId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+  };
+export type PutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdApiResponse = void;
+export type PutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdApiArg =
+  {
+    materialSpecificationId: string;
+    formSectionId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+    domainEntitiesStpRevisionsSaveStpTestLinkRequest: DomainEntitiesStpRevisionsSaveStpTestLinkRequest;
+  };
+export type PutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdApiResponse = void;
+export type PutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdApiArg =
+  {
+    productSpecificationId: string;
+    formSectionId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+    domainEntitiesStpRevisionsSaveStpTestLinkRequest: DomainEntitiesStpRevisionsSaveStpTestLinkRequest;
+  };
+export type GetMaterialSpecificationMicrobialLimitsApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationMicrobialLimitsDto;
+export type GetMaterialSpecificationMicrobialLimitsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type SaveMaterialSpecificationMicrobialLimitsApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationMicrobialLimitsDto;
+export type SaveMaterialSpecificationMicrobialLimitsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsSaveMicrobialLimitsRequest: DomainEntitiesFormsSaveMicrobialLimitsRequest;
+};
+export type GetProductSpecificationMicrobialLimitsApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationMicrobialLimitsDto;
+export type GetProductSpecificationMicrobialLimitsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type SaveProductSpecificationMicrobialLimitsApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationMicrobialLimitsDto;
+export type SaveProductSpecificationMicrobialLimitsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsSaveMicrobialLimitsRequest: DomainEntitiesFormsSaveMicrobialLimitsRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -2693,7 +3201,27 @@ export type DomainEntitiesProductsEquipmentsQcEquipmentDto = {
   qualificationStatus?: DomainEntitiesProductsEquipmentsQcEquipmentQualificationStatus;
 };
 export type DomainEntitiesFormsQuestionType =
-  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20;
 export type DomainEntitiesFormsQuestionValidationType = 0 | 1 | 2 | 3;
 export type DomainEntitiesFormsQuestionOptionDto = {
   id?: string;
@@ -3328,6 +3856,7 @@ export type DomainEntitiesMaterialSpecificationsCreateMaterialSpecificationReque
     reference?: string | null;
     userId: string;
     materialIds: string[];
+    microbialFormId?: string | null;
   };
 export type DomainEntitiesMaterialSpecificationsMaterialSpecificationDto = {
   id?: string;
@@ -3349,6 +3878,8 @@ export type DomainEntitiesMaterialSpecificationsMaterialSpecificationDto = {
   material?: DomainEntitiesMaterialsMaterialDto;
   formSections?: DomainEntitiesFormsFormSectionDto[] | null;
   isVerified?: boolean;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsFormDto;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialSpecificationsMaterialSpecificationDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -3378,6 +3909,7 @@ export type DomainEntitiesMaterialSpecificationsUpdateMaterialSpecificationReque
     dueDate?: string;
     description?: string | null;
     reference?: string | null;
+    microbialFormId?: string | null;
   };
 export type AppUtilsPaginateable601SystemCollectionsGenericList601DomainEntitiesMaterialsMaterialDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -3563,6 +4095,7 @@ export type DomainEntitiesProductSpecificationsCreateProductSpecificationRequest
     dueDate?: string;
     description?: string | null;
     reference?: string | null;
+    microbialFormId?: string | null;
   };
 export type DomainEntitiesBillOfMaterialsBillOfMaterialItemSubstituteDto = {
   id?: string;
@@ -3773,6 +4306,8 @@ export type DomainEntitiesProductSpecificationsProductSpecificationDto = {
   response?: DomainEntitiesFormsResponseDto;
   formSections?: DomainEntitiesFormsFormSectionDto[] | null;
   isVerified?: boolean;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsFormDto;
 };
 export type DomainEntitiesProductSpecificationsProductSpecificationDtoRead = {
   id?: string;
@@ -3799,6 +4334,8 @@ export type DomainEntitiesProductSpecificationsProductSpecificationDtoRead = {
   response?: DomainEntitiesFormsResponseDto;
   formSections?: DomainEntitiesFormsFormSectionDto[] | null;
   isVerified?: boolean;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsFormDto;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesProductSpecificationsProductSpecificationDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -3839,6 +4376,7 @@ export type DomainEntitiesProductSpecificationsUpdateProductSpecificationRequest
     dueDate?: string;
     description?: string | null;
     reference?: string | null;
+    microbialFormId?: string | null;
   };
 export type AppUtilsPaginateable601SystemCollectionsGenericList601DomainEntitiesProductsProductListDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -4000,6 +4538,287 @@ export type DomainEntitiesProductSpecificationsSaveAssayReportingRequest = {
   reason?: string | null;
   rules?: DomainEntitiesProductSpecificationsAssayReportingRule[] | null;
 };
+export type DomainEntitiesStpRevisionsStpRevisionKind = 0 | 1 | 2;
+export type DomainEntitiesStpRevisionsStpRevisionStatus = 0 | 1 | 2 | 3 | 4;
+export type DomainEntitiesReviewsDocumentReviewStatus = 0 | 1 | 2;
+export type DomainEntitiesStpRevisionsStpRevisionSummaryDto = {
+  id?: string;
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  stpNumber?: string | null;
+  revisionNumber?: number;
+  supersedesRevision?: number | null;
+  status?: DomainEntitiesStpRevisionsStpRevisionStatus;
+  reviewStatus?: DomainEntitiesReviewsDocumentReviewStatus;
+  title?: string | null;
+  testCount?: number;
+  preparedBy?: string | null;
+  createdAt?: string;
+  approvedAt?: string | null;
+  supersededAt?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpSectionKind = 0 | 1 | 2 | 3 | 4 | 5;
+export type DomainEntitiesStpRevisionsStpSectionRequest = {
+  kind?: DomainEntitiesStpRevisionsStpSectionKind;
+  text?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpStepKind = 0 | 1 | 2;
+export type DomainEntitiesStpRevisionsStpStepRequest = {
+  kind?: DomainEntitiesStpRevisionsStpStepKind;
+  number?: string | null;
+  heading?: string | null;
+  text?: string | null;
+  referenceCode?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpTestRequest = {
+  testKey?: string | null;
+  number?: string | null;
+  title?: string | null;
+  steps?: DomainEntitiesStpRevisionsStpStepRequest[] | null;
+};
+export type DomainEntitiesStpRevisionsCreateStpRevisionRequest = {
+  revisionNumber?: number;
+  supersedesRevision?: number | null;
+  reasonForChange?: string | null;
+  title?: string | null;
+  area?: string | null;
+  reference?: string | null;
+  effectiveDate?: string | null;
+  reviewDate?: string | null;
+  issueDate?: string | null;
+  source?: string | null;
+  sections?: DomainEntitiesStpRevisionsStpSectionRequest[] | null;
+  tests?: DomainEntitiesStpRevisionsStpTestRequest[] | null;
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  stpNumber: string;
+};
+export type DomainEntitiesStpRevisionsStpNumberOverviewDto = {
+  stpNumber?: string | null;
+  current?: DomainEntitiesStpRevisionsStpRevisionSummaryDto;
+  inPreparation?: DomainEntitiesStpRevisionsStpRevisionSummaryDto;
+  revisionCount?: number;
+};
+export type DomainEntitiesStpRevisionsStpRevisionSignatoryDto = {
+  userId?: string;
+  name?: string | null;
+  designation?: string | null;
+  signature?: string | null;
+  signedAt?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpSectionDto = {
+  id?: string;
+  kind?: DomainEntitiesStpRevisionsStpSectionKind;
+  order?: number;
+  text?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpStepDto = {
+  id?: string;
+  order?: number;
+  kind?: DomainEntitiesStpRevisionsStpStepKind;
+  number?: string | null;
+  heading?: string | null;
+  text?: string | null;
+  referenceCode?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpTestDto = {
+  id?: string;
+  testKey?: string | null;
+  number?: string | null;
+  title?: string | null;
+  order?: number;
+  steps?: DomainEntitiesStpRevisionsStpStepDto[] | null;
+};
+export type DomainEntitiesStpRevisionsStpRevisionDto = {
+  id?: string;
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  stpNumber?: string | null;
+  revisionNumber?: number;
+  supersedesRevision?: number | null;
+  status?: DomainEntitiesStpRevisionsStpRevisionStatus;
+  reviewStatus?: DomainEntitiesReviewsDocumentReviewStatus;
+  title?: string | null;
+  testCount?: number;
+  preparedBy?: string | null;
+  createdAt?: string;
+  approvedAt?: string | null;
+  supersededAt?: string | null;
+  revisedFromId?: string | null;
+  reasonForChange?: string | null;
+  area?: string | null;
+  reference?: string | null;
+  effectiveDate?: string | null;
+  reviewDate?: string | null;
+  issueDate?: string | null;
+  source?: string | null;
+  version?: number;
+  reviewVersion?: number | null;
+  approvedFileSha256?: string | null;
+  preparedBySignatory?: DomainEntitiesStpRevisionsStpRevisionSignatoryDto;
+  checkedBy?: DomainEntitiesStpRevisionsStpRevisionSignatoryDto;
+  approvedBy?: DomainEntitiesStpRevisionsStpRevisionSignatoryDto;
+  sections?: DomainEntitiesStpRevisionsStpSectionDto[] | null;
+  tests?: DomainEntitiesStpRevisionsStpTestDto[] | null;
+};
+export type DomainEntitiesStpRevisionsUpdateStpRevisionRequest = {
+  revisionNumber?: number;
+  supersedesRevision?: number | null;
+  reasonForChange?: string | null;
+  title?: string | null;
+  area?: string | null;
+  reference?: string | null;
+  effectiveDate?: string | null;
+  reviewDate?: string | null;
+  issueDate?: string | null;
+  source?: string | null;
+  sections?: DomainEntitiesStpRevisionsStpSectionRequest[] | null;
+  tests?: DomainEntitiesStpRevisionsStpTestRequest[] | null;
+  version?: number | null;
+};
+export type DomainEntitiesStpRevisionsStpImportConfidence = 0 | 1 | 2;
+export type DomainEntitiesStpRevisionsStpImportField = {
+  value?: string | null;
+  confidence?: DomainEntitiesStpRevisionsStpImportConfidence;
+  flag?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpImportSection = {
+  kind?: DomainEntitiesStpRevisionsStpSectionKind;
+  text?: string | null;
+  confidence?: DomainEntitiesStpRevisionsStpImportConfidence;
+  flag?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpImportStep = {
+  kind?: DomainEntitiesStpRevisionsStpStepKind;
+  number?: string | null;
+  heading?: string | null;
+  text?: string | null;
+  referenceCode?: string | null;
+  confidence?: DomainEntitiesStpRevisionsStpImportConfidence;
+  flag?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpImportTest = {
+  testKey?: string | null;
+  number?: string | null;
+  title?: string | null;
+  confidence?: DomainEntitiesStpRevisionsStpImportConfidence;
+  flag?: string | null;
+  steps?: DomainEntitiesStpRevisionsStpImportStep[] | null;
+};
+export type DomainEntitiesStpRevisionsStpImportProposalDto = {
+  succeeded?: boolean;
+  failureReason?: string | null;
+  fileName?: string | null;
+  source?: string | null;
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  stpNumber?: DomainEntitiesStpRevisionsStpImportField;
+  title?: DomainEntitiesStpRevisionsStpImportField;
+  revisionNumber?: DomainEntitiesStpRevisionsStpImportField;
+  supersedesRevision?: DomainEntitiesStpRevisionsStpImportField;
+  area?: DomainEntitiesStpRevisionsStpImportField;
+  reference?: DomainEntitiesStpRevisionsStpImportField;
+  effectiveDate?: DomainEntitiesStpRevisionsStpImportField;
+  reviewDate?: DomainEntitiesStpRevisionsStpImportField;
+  issueDate?: DomainEntitiesStpRevisionsStpImportField;
+  sections?: DomainEntitiesStpRevisionsStpImportSection[] | null;
+  tests?: DomainEntitiesStpRevisionsStpImportTest[] | null;
+  warnings?: string[] | null;
+  flaggedCount?: number;
+};
+export type DomainEntitiesStpRevisionsImportStpDocumentRequest = {
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  stpId?: string;
+};
+export type DomainEntitiesStpRevisionsReviseStpRevisionRequest = {
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  stpNumber: string;
+  revisionNumber?: number;
+  reasonForChange: string;
+};
+export type DomainEntitiesStpRevisionsSaveStpRevisionDraftRequest = {
+  revisionNumber?: number;
+  supersedesRevision?: number | null;
+  reasonForChange?: string | null;
+  title?: string | null;
+  area?: string | null;
+  reference?: string | null;
+  effectiveDate?: string | null;
+  reviewDate?: string | null;
+  issueDate?: string | null;
+  source?: string | null;
+  sections?: DomainEntitiesStpRevisionsStpSectionRequest[] | null;
+  tests?: DomainEntitiesStpRevisionsStpTestRequest[] | null;
+  version?: number | null;
+};
+export type DomainEntitiesStpRevisionsSubmitStpRevisionRequest = {
+  version?: number | null;
+};
+export type DomainEntitiesStpRevisionsStpTestLinkDto = {
+  formSectionId?: string;
+  sectionName?: string | null;
+  stpNumber?: string | null;
+  testKey?: string | null;
+  testNumber?: string | null;
+  testTitle?: string | null;
+  revisionNumber?: number | null;
+  resolved?: boolean;
+};
+export type DomainEntitiesStpRevisionsStpTestOptionDto = {
+  stpNumber?: string | null;
+  revisionNumber?: number;
+  testKey?: string | null;
+  testNumber?: string | null;
+  testTitle?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpTestLinksDto = {
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  stpNumbers?: string[] | null;
+  tests?: DomainEntitiesStpRevisionsStpTestLinkDto[] | null;
+  options?: DomainEntitiesStpRevisionsStpTestOptionDto[] | null;
+};
+export type DomainEntitiesStpRevisionsSaveStpTestLinkRequest = {
+  stpNumber?: string | null;
+  testKey?: string | null;
+};
+export type DomainEntitiesFormsMicrobialLimitFieldDto = {
+  formFieldId?: string;
+  sectionName?: string | null;
+  questionLabel?: string | null;
+  questionType?: DomainEntitiesFormsQuestionType;
+  unit?: string | null;
+};
+export type DomainEntitiesFormsMicrobialLimitKind = 0 | 1;
+export type DomainEntitiesFormsMicrobialLimitDto = {
+  formFieldId?: string;
+  kind?: DomainEntitiesFormsMicrobialLimitKind;
+  value?: number | null;
+  unit?: string | null;
+  organism?: string | null;
+  quantity?: number | null;
+  quantityUnit?: string | null;
+  text?: string | null;
+};
+export type DomainEntitiesFormsSpecificationMicrobialLimitsDto = {
+  specificationId?: string;
+  microbialFormId?: string | null;
+  fields?: DomainEntitiesFormsMicrobialLimitFieldDto[] | null;
+  limits?: DomainEntitiesFormsMicrobialLimitDto[] | null;
+  organisms?: {
+    [key: string]: string | null;
+  } | null;
+  reason?: string | null;
+  savedAt?: string | null;
+};
+export type DomainEntitiesFormsMicrobialLimitRequest = {
+  formFieldId: string;
+  kind?: DomainEntitiesFormsMicrobialLimitKind;
+  value?: number | null;
+  unit?: string | null;
+  organism?: string | null;
+  quantity?: number | null;
+  quantityUnit?: string | null;
+};
+export type DomainEntitiesFormsSaveMicrobialLimitsRequest = {
+  reason: string;
+  limits?: DomainEntitiesFormsMicrobialLimitRequest[] | null;
+};
 export const {
   usePostApiV1QaAnalyticalTestsMutation,
   useGetApiV1QaAnalyticalTestsQuery,
@@ -4147,4 +4966,34 @@ export const {
   useGetProductAssayReportingQuery,
   useLazyGetProductAssayReportingQuery,
   useSaveProductAssayReportingMutation,
+  useGetApiV1StpRevisionsQuery,
+  useLazyGetApiV1StpRevisionsQuery,
+  usePostApiV1StpRevisionsMutation,
+  useGetApiV1StpRevisionsNumbersQuery,
+  useLazyGetApiV1StpRevisionsNumbersQuery,
+  useGetApiV1StpRevisionsByIdQuery,
+  useLazyGetApiV1StpRevisionsByIdQuery,
+  usePutApiV1StpRevisionsByIdMutation,
+  useDeleteApiV1StpRevisionsByIdMutation,
+  usePostApiV1StpRevisionsImportMutation,
+  usePostApiV1StpRevisionsImportDocumentMutation,
+  usePostApiV1StpRevisionsReviseMutation,
+  usePutApiV1StpRevisionsByIdDraftMutation,
+  usePostApiV1StpRevisionsByIdSubmitMutation,
+  useGetApiV1StpRevisionsByIdDocxQuery,
+  useLazyGetApiV1StpRevisionsByIdDocxQuery,
+  useGetApiV1StpRevisionsByIdPrintQuery,
+  useLazyGetApiV1StpRevisionsByIdPrintQuery,
+  useGetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdQuery,
+  useLazyGetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdQuery,
+  useGetApiV1StpTestLinksProductSpecificationByProductSpecificationIdQuery,
+  useLazyGetApiV1StpTestLinksProductSpecificationByProductSpecificationIdQuery,
+  usePutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdMutation,
+  usePutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdMutation,
+  useGetMaterialSpecificationMicrobialLimitsQuery,
+  useLazyGetMaterialSpecificationMicrobialLimitsQuery,
+  useSaveMaterialSpecificationMicrobialLimitsMutation,
+  useGetProductSpecificationMicrobialLimitsQuery,
+  useLazyGetProductSpecificationMicrobialLimitsQuery,
+  useSaveProductSpecificationMicrobialLimitsMutation,
 } = injectedRtkApi;

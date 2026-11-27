@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { FileText, ListTree, Pencil, Plus, Trash2 } from "lucide-react";
+import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog, TableMenu, TableMenuHeader } from "@/shared/actions";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
@@ -12,6 +12,7 @@ import { stpAudit } from "@/shared/stp/stp-document-api";
 import { stpRowsSchema, type Stp } from "@/shared/stp/stp-schema";
 import { productStpsApi } from "../api/product-stps-api";
 import { detailPath, documentPath, stpPermissions } from "../lib/product-stps";
+import { productRevisionRoutes, revisionKeys } from "../lib/product-stp-revisions";
 import { ProductStpDialog } from "./product-stp-dialog";
 
 const column = dataTableColumns<Stp>();
@@ -44,7 +45,8 @@ export function ProductStpListPage() {
 
   return <section className="page-fill">
     <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">QUALITY CONTROL</p><h1 className="text-xl font-semibold">Product standard test procedures</h1></div>
-      <PermissionGuard require={stpPermissions.create}><Button size="sm" onClick={() => setOpen({ action: "create" })}><Plus />New product STP</Button></PermissionGuard></div>
+      <div className="flex flex-wrap gap-2"><PermissionGuard require={revisionKeys.view}><Button asChild size="sm" variant="outline"><Link to={productRevisionRoutes.list()}><ListTree />Revisions</Link></Button></PermissionGuard>
+        <PermissionGuard require={stpPermissions.create}><Button size="sm" onClick={() => setOpen({ action: "create" })}><Plus />New product STP</Button></PermissionGuard></div></div>
     <ServerDataTable label="Product STPs" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows}
       onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange} loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()}
       onRowOpen={(row) => void navigate(detailPath(row.id))}

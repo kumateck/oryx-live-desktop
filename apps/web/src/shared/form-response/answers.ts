@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 import { QuestionType } from "@/shared/questions/question-types";
+import { organismName } from "@/shared/microbial/microbial-values";
 import { parseTableAnswer, tableAnswerFilled } from "@/shared/questions/table-question";
 import type { FormField } from "./form-model";
 
@@ -37,6 +38,7 @@ export function storedToAnswer(raw: string | null | undefined, type: QuestionTyp
     }
     case QuestionType.Checkbox: case QuestionType.Instrument: return optionList(raw);
     case QuestionType.Equipment: { const read = optionSchema.safeParse(json(raw)); return read.success ? read.data : option(raw); }
+    case QuestionType.Organism: return option(raw.trim(), organismName(raw.trim()));
     case QuestionType.Datepicker: { const date = new Date(raw); return Number.isNaN(date.getTime()) ? null : date; }
     case QuestionType.FileUpload: return null;
     default: return raw;
@@ -86,7 +88,7 @@ export function answerRule(field: FormField, stored: boolean): z.ZodType<AnswerV
     if (required && !answerFilled(value, type)) context.addIssue({ code: "custom", message: missing });
   });
 }
-const choiceType = (type: QuestionType) => ([QuestionType.SingleChoice, QuestionType.Dropdown, QuestionType.Checkbox, QuestionType.Specification, QuestionType.Equipment, QuestionType.Instrument] as readonly QuestionType[]).includes(type);
+const choiceType = (type: QuestionType) => ([QuestionType.SingleChoice, QuestionType.Dropdown, QuestionType.Checkbox, QuestionType.Specification, QuestionType.Equipment, QuestionType.Instrument, QuestionType.Organism, QuestionType.GrowthObservation] as readonly QuestionType[]).includes(type);
 
 /** Validation for a whole set of fields, keyed by field id. */
 export function answersSchema(fields: readonly FormField[], storedIds: ReadonlySet<string> = new Set()) {

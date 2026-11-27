@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pencil } from "lucide-react";
+import { ListTree, Pencil } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Link, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { stpSchema } from "@/shared/stp/stp-schema";
 import { StpDetail, StpDocumentPage } from "@/shared/stp/stp-views";
 import { productStpsApi } from "../api/product-stps-api";
 import { detailPath, documentPath, listPath, stpPermissions } from "../lib/product-stps";
+import { productRevisionRoutes, revisionKeys } from "../lib/product-stp-revisions";
 import { ProductStpDialog } from "./product-stp-dialog";
 
 function useProductStp() {
@@ -38,7 +39,10 @@ export function ProductStpDetailPage() {
   if (!stp || error) return <Unavailable message={error ?? "The STP could not be found."} retry={retry} back={listPath} />;
   return <>
     <StpDetail stp={stp} document={document} itemLabel="Product" documentPath={documentPath(stp.id)} crumbs={[{ label: "Product STPs", to: listPath }, { label: stp.number }]}
-      actions={<PermissionGuard require={stpPermissions.edit}><Button variant="outline" onClick={() => setEditing(true)}><Pencil />Edit STP</Button></PermissionGuard>} />
+      actions={<>
+        <PermissionGuard require={revisionKeys.view}><Button asChild variant="outline"><Link to={productRevisionRoutes.list(stp.number)}><ListTree />Structured content</Link></Button></PermissionGuard>
+        {document ? <PermissionGuard require={revisionKeys.import}><Button asChild variant="outline"><Link to={productRevisionRoutes.import(stp.number, stp.id)}>Import document content</Link></Button></PermissionGuard> : null}
+        <PermissionGuard require={stpPermissions.edit}><Button variant="outline" onClick={() => setEditing(true)}><Pencil />Edit STP</Button></PermissionGuard></>} />
     {editing ? <ProductStpDialog editing={stp} onClose={() => setEditing(false)} /> : null}
   </>;
 }

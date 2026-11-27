@@ -52,6 +52,11 @@ describe("formula draft completeness", () => {
     expect(formulaAnswerComplete(JSON.stringify(entered), gel)).toBe(true);
     const emptySample = entered.tableData.map(([standard, first]) => [standard ?? "", first ?? "", ""]);
     expect(formulaAnswerComplete(JSON.stringify({ ...entered, tableData: emptySample }), gel)).toBe(false);
+    // Each column needs at least two readings before its average is taken.
+    const oneReading = entered.tableData.map(([standard, first, second], row) => [standard ?? "", first ?? "", row === 0 ? second ?? "" : ""]);
+    expect(formulaAnswerComplete(JSON.stringify({ ...entered, tableData: oneReading }), gel)).toBe(false);
+    const oneRowTable = JSON.stringify({ ...JSON.parse(gel), numberOfReadings: 1 });
+    expect(formulaAnswerComplete(JSON.stringify({ ...entered, tableData: [["795.1", "820.1", "813.5"]] }), oneRowTable)).toBe(true);
     // Calculated table columns evaluate every cell, so those worksheets still need every reading.
     const calculated = JSON.stringify({ ...JSON.parse(gel), formulaInTable: true });
     expect(formulaAnswerComplete(JSON.stringify(entered), calculated)).toBe(false);

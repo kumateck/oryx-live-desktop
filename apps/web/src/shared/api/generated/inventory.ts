@@ -3808,7 +3808,27 @@ export type DomainEntitiesProductsEquipmentsQcEquipmentRead = {
   qualificationStatus?: DomainEntitiesProductsEquipmentsQcEquipmentQualificationStatus;
 };
 export type DomainEntitiesFormsQuestionType =
-  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20;
 export type DomainEntitiesFormsQuestionValidationType = 0 | 1 | 2 | 3;
 export type DomainEntitiesFormsQuestionOption = {
   id?: string;
@@ -5939,6 +5959,8 @@ export type DomainEntitiesMaterialSpecificationsMaterialSpecification = {
   isVerified?: boolean;
   verifiedAt?: string | null;
   verifiedById?: string | null;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsForm;
 };
 export type DomainEntitiesMaterialSpecificationsMaterialSpecificationRead = {
   id?: string;
@@ -5971,6 +5993,8 @@ export type DomainEntitiesMaterialSpecificationsMaterialSpecificationRead = {
   isVerified?: boolean;
   verifiedAt?: string | null;
   verifiedById?: string | null;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsForm;
 };
 export type DomainEntitiesProductSpecificationsProductSpecification = {
   id?: string;
@@ -6007,6 +6031,8 @@ export type DomainEntitiesProductSpecificationsProductSpecification = {
   isVerified?: boolean;
   verifiedAt?: string | null;
   verifiedById?: string | null;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsForm;
 };
 export type DomainEntitiesProductSpecificationsProductSpecificationRead = {
   id?: string;
@@ -6043,6 +6069,8 @@ export type DomainEntitiesProductSpecificationsProductSpecificationRead = {
   isVerified?: boolean;
   verifiedAt?: string | null;
   verifiedById?: string | null;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsForm;
 };
 export type DomainEntitiesFormsFormSection = {
   id?: string;

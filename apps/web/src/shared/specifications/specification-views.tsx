@@ -10,7 +10,7 @@ import type { PageCrumb } from "@/shared/navigation/page-breadcrumbs";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { specificationReferenceLabel } from "@/shared/questions/question-types";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
-import { groupSections, type Specification, type SpecificationSection } from "./specification-schema";
+import { byAnalysis, groupSections, type Specification, type SpecificationSection } from "./specification-schema";
 
 const cell = "border-b px-3 py-2 align-top text-sm";
 
@@ -36,8 +36,9 @@ export function SpecificationTests({ sections }: { sections: readonly Specificat
 }
 
 /** A specification's record page: header and facts, its dates and notes, its tests, and who created it. */
-export function SpecificationDetail({ specification, sections, crumbs, actions, facts, item }: {
+export function SpecificationDetail({ specification, sections, crumbs, actions, facts, item, children }: {
   specification: Specification; sections: readonly SpecificationSection[]; crumbs: readonly PageCrumb[]; actions?: ReactNode;
+  /** Panels owned by other features, shown after the tests (such as the STP test each test cites). */ children?: ReactNode;
   /** Extra facts at the top, such as the item's code. */ facts: ReactNode; /** What the specification is for, under the title. */ item: string | null;
 }) {
   return <article className="min-w-0 space-y-4">
@@ -54,7 +55,8 @@ export function SpecificationDetail({ specification, sections, crumbs, actions, 
         <DetailItem label="Revision" value={specification.revisionNumber} />
         <DetailItem label="Supersedes" value={specification.supersedesNumber} />
         <DetailItem label="Reference" value={specification.reference} />
-        <DetailItem label="Template" value={specification.form?.name} />
+        <DetailItem label="Chemical template" value={specification.form?.name} />
+        <DetailItem label="Microbial template" value={specification.microbialForm?.name ?? "None"} />
         <DetailItem label="Due" value={formatDate(specification.dueDate)} />
       </DetailGroup>
       <DetailGroup title="Record">
@@ -64,8 +66,13 @@ export function SpecificationDetail({ specification, sections, crumbs, actions, 
       </DetailGroup>
     </div>
     {specification.description ? <section aria-label="Notes" className="rounded-lg border bg-card p-4 text-sm"><h2 className="mb-1 text-sm font-semibold">Notes</h2><RichTextView html={specification.description} /></section> : null}
-    <section aria-label="Tests" className="space-y-2"><h2 className="text-sm font-semibold">Tests{specification.form ? <Badge variant="outline" className="ml-2 font-normal">{specification.form.name}</Badge> : null}</h2>
-      <SpecificationTests sections={sections} /></section>
+    {specification.microbialForm ? byAnalysis(sections).map((group) => {
+      const template = group.analysis === "microbial" ? specification.microbialForm : specification.form;
+      return <section key={group.analysis} aria-label={group.label} className="space-y-2"><h2 className="text-sm font-semibold">{group.label}{template ? <Badge variant="outline" className="ml-2 font-normal">{template.name}</Badge> : null}</h2>
+        <SpecificationTests sections={group.sections} /></section>;
+    }) : <section aria-label="Tests" className="space-y-2"><h2 className="text-sm font-semibold">Tests{specification.form ? <Badge variant="outline" className="ml-2 font-normal">{specification.form.name}</Badge> : null}</h2>
+      <SpecificationTests sections={sections} /></section>}
+    {children}
   </article>;
 }
 
