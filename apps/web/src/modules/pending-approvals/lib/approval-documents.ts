@@ -4,8 +4,11 @@ export const approvalListPath = (type: string) => `${approvalsPath}?type=${encod
 export const approvalPath = (type: string, id: string) => `${approvalsPath}/${encodeURIComponent(type)}/${encodeURIComponent(id)}`;
 /** Seeing the queue, approving and rejecting are three permissions. */
 export const approvalPermissions = { view: "CanViewPendingApprovals", approve: "CanApprovePendingApproval", reject: "CanRejectPendingApproval" } as const;
-export const decisionPermission = (type: string, decision: Decision, stockKind: 0 | 1 | null = null): string =>
-  type === "CostingPriceList" ? decision === "approve" ? "CanApproveCostingPriceList" : "CanRejectCostingPriceList"
+/** An STP revision's decision key follows its stored kind (0 raw, 1 packaging, 2 product), read from the evidence. */
+const stpVariant = { 0: "RawMaterial", 1: "PackagingMaterial", 2: "Product" } as const;
+export const decisionPermission = (type: string, decision: Decision, stockKind: 0 | 1 | null = null, stpKind: 0 | 1 | 2 | null = null): string | null =>
+  type === "StpRevision" ? stpKind === null ? null : `Can${decision === "approve" ? "Approve" : "Reject"}${stpVariant[stpKind]}StpRevision`
+    : type === "CostingPriceList" ? decision === "approve" ? "CanApproveCostingPriceList" : "CanRejectCostingPriceList"
     : decision === "reject" && stockKind !== null && ["StockRequisition", "RawStockRequisition", "PackageStockRequisition"].includes(type) ? stockRejectionPermissions[stockKind]
     : type === "StockDiscrepancy" ? decision === "approve" ? "CanApproveStockDiscrepancy" : "CanRejectStockDiscrepancy"
     : type === "ShipmentDiscrepancy" ? decision === "approve" ? "CanApproveShipmentDiscrepancy" : "CanRejectShipmentDiscrepancy"
@@ -18,7 +21,7 @@ export const audit = { module: "Quality Assurance", subModule: "Pending Approval
 /** Documents whose content this app can show, so they can be read before they are decided. The names are the server's. */
 const readable = ["PurchaseOrder", "BillingSheet", "ShipmentDocument", "PurchaseRequisition", "TrialRequisition", "StockRequisition", "StockRequisitionIssue", "RawStockRequisition", "PackageStockRequisition", "ProductionExtraPacking",
   "FinishedGoodsTransferNote", "LeaveRequest", "OvertimeRequest", "StaffRequisition", "JobRequest", "ProductionOrder", "ProformaInvoice", "AllocateProductionOrder", "StockAdjustment", "CustomerQuotation", "SupplierPricingAgreement", "PayrollRun", "PerformanceReview",
-  "RndProject", "RndFormulation", "RndTechnologyTransfer", "Response", "StockDiscrepancy", "ShipmentDiscrepancy", "ApprovedVendorList", "CostingPriceList"] as const;
+  "RndProject", "RndFormulation", "RndTechnologyTransfer", "Response", "StockDiscrepancy", "ShipmentDiscrepancy", "ApprovedVendorList", "CostingPriceList", "StpRevision"] as const;
 export type ReadableDocument = (typeof readable)[number];
 export const isReadable = (type: string): type is ReadableDocument => (readable as readonly string[]).includes(type);
 
@@ -34,7 +37,7 @@ export function decidedElsewhere(type: string): string | null {
 }
 
 const names: Record<string, string> = { ProductionExtraPacking: "Production extra material", RawStockRequisition: "Raw material stock requisition", PackageStockRequisition: "Packaging material stock requisition", StockRequisitionIssue: "Stock requisition issue check",
-  AllocateProductionOrder: "Production order allocation", Response: "Certificate of analysis", RndProject: "R&D project", RndFormulation: "R&D formulation", RndTechnologyTransfer: "R&D technology transfer", ApprovedVendorList: "Approved vendor list" };
+  AllocateProductionOrder: "Production order allocation", Response: "Certificate of analysis", RndProject: "R&D project", RndFormulation: "R&D formulation", RndTechnologyTransfer: "R&D technology transfer", ApprovedVendorList: "Approved vendor list", StpRevision: "STP revision" };
 /** A document type as people say it: "PurchaseOrder" is "Purchase order", "QcCoa" is "QC COA". */
 export function documentLabel(type: string | null | undefined): string {
   if (!type) return "Document";

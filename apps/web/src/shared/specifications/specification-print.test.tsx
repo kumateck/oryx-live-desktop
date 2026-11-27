@@ -35,3 +35,13 @@ it("heads a product specification like the master copy and lists one row per rev
   const history = within(screen.getByRole("table", { name: "Revision History" }));
   expect(history.getAllByRole("cell").map((cell) => cell.textContent)).toEqual(["1", "03", formatDate("2026-11-10T00:00:00Z"), "Folic acid assay added."]);
 });
+
+it("prints chemical and microbial tests as two tables when the specification has a microbial template", () => {
+  const withMicro = specificationSchema.parse({ id: "s2", specificationNumber: "NMP/FP/SPC/010", form: { id: "f1", name: "Chemical" }, microbialForm: { id: "f2", name: "Micro" } });
+  const test = (id: string, analysis: "chemical" | "microbial") => ({ id, name: id, description: "", value: null, group: null, order: 0, analysis });
+  render(<SpecificationPrint title="Product specification" kind="product" specification={withMicro} sections={[test("Assay", "chemical"), test("TAMC", "microbial")]}
+    history={{ revisedBy: null, revisedAt: null, historyAvailableFrom: null, revisions: [] }} />);
+  expect(within(screen.getByRole("table", { name: "Chemical tests" })).getByText("Assay")).toBeTruthy();
+  expect(within(screen.getByRole("table", { name: "Microbial tests" })).getByText("TAMC")).toBeTruthy();
+  expect(screen.queryByRole("table", { name: "Tests" })).toBeNull();
+});

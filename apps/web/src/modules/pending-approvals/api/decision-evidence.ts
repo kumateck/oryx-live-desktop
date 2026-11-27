@@ -17,7 +17,7 @@ const paths: Record<ReadableDocument, string> = {
   StockAdjustment: "stock-adjustment", CustomerQuotation: "customers/quotations", SupplierPricingAgreement: "suppliers",
   PayrollRun: "payroll/runs", PerformanceReview: "performance/reviews", RndProject: "rnd/projects",
   RndFormulation: "rnd/formulation-reviews", RndTechnologyTransfer: "rnd/technology-transfer-reviews", Response: "form/responses",
-  ApprovedVendorList: "approved-vendor-list",
+  ApprovedVendorList: "approved-vendor-list", StpRevision: "stp-revisions",
 };
 const responseSubject = z.object({ form: z.object({ id: z.string().min(1) }), materialBatch: z.object({ id: z.string().min(1) }).nullish(), batchManufacturingRecord: z.object({ id: z.string().min(1) }).nullish() });
 

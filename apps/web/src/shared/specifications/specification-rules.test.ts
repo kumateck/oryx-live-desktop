@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { documentReference, earliestRevisionDate, linkDelta, materialSpecificationPrefix, productSpecificationPrefix, serialNumber } from "./specification-rules";
+import { z } from "zod";
+import { checkRevisionDate, documentReference, earliestRevisionDate, linkDelta, materialSpecificationPrefix, productSpecificationPrefix, serialNumber, specificationBaseSchema, specificationBody, specificationDefaults } from "./specification-rules";
 
 describe("specification rules", () => {
   it("reads back the pharmacopoeia without its year", () => { expect(documentReference("In House 2024")).toEqual({ value: "In House", label: "In House" }); expect(documentReference("")).toBeNull(); });
@@ -15,4 +16,21 @@ describe("specification rules", () => {
     expect(productSpecificationPrefix(null, 0)).toBeNull();
     expect(linkDelta(["a", "b"], ["b", "c"])).toEqual({ add: ["c"], remove: ["a"] });
   });
+  it("sends the microbial template, or null when there is none", () => {
+    const values = { specificationNumber: "QCD/SPC/RM/001", revisionNumber: "01", supersedesNumber: "None", effectiveDate: new Date(2026, 10, 1), reviewDate: new Date(2029, 10, 1),
+      form: { value: "f1", label: "Assay" }, reference: null, description: "" };
+    expect(specificationBody({ ...values, microbialForm: { value: "f2", label: "Micro" } }).microbialFormId).toBe("f2");
+    expect(specificationBody(values).microbialFormId).toBeNull();
+    expect(specificationDefaults({ specificationNumber: null, revisionNumber: null, supersedesNumber: null, effectiveDate: null, reviewDate: null, form: null,
+      microbialForm: { id: "f2", name: "Micro" }, reference: null, description: null }).microbialForm).toEqual({ value: "f2", label: "Micro" });
+  });
+  it("refuses the chemical template in the microbial slot", () => {
+    const schema = specificationBaseSchema.superRefine(checkRevisionDate);
+    const base = { specificationNumber: "S", revisionNumber: "01", supersedesNumber: "None", effectiveDate: new Date(2099, 0, 1), reviewDate: new Date(2099, 5, 1), form: { value: "f1", label: "Assay" } };
+    const same = schema.safeParse({ ...base, microbialForm: { value: "f1", label: "Assay" } });
+    expect(same.success).toBe(false);
+    expect(z.flattenError(same.error!).fieldErrors).toHaveProperty("microbialForm");
+    expect(schema.safeParse({ ...base, microbialForm: { value: "f2", label: "Micro" } }).success).toBe(true);
+  });
 });
+

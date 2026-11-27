@@ -910,7 +910,10 @@ export const navigationCatalog = [
         "permissions": [
           "CanViewRawMaterialStps",
           "CanViewPackagingMaterialStps",
-          "CanViewProductStps"
+          "CanViewProductStps",
+          "CanViewRawMaterialStpRevisions",
+          "CanViewPackagingMaterialStpRevisions",
+          "CanViewProductStpRevisions"
         ],
         "children": [
           {
@@ -928,6 +931,23 @@ export const navigationCatalog = [
             "path": "/qc/products-stp",
             "permissions": [
               "CanViewProductStps"
+            ]
+          },
+          {
+            "id": "quality-control.standardtest-procedures.material-revisions",
+            "label": "Material revisions",
+            "path": "/qc/material-stp/revisions",
+            "permissions": [
+              "CanViewRawMaterialStpRevisions",
+              "CanViewPackagingMaterialStpRevisions"
+            ]
+          },
+          {
+            "id": "quality-control.standardtest-procedures.product-revisions",
+            "label": "Product revisions",
+            "path": "/qc/products-stp/revisions",
+            "permissions": [
+              "CanViewProductStpRevisions"
             ]
           }
         ]

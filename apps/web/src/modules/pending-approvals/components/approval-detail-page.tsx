@@ -1,4 +1,4 @@
-import { stockRejectionKind, isProductionStockDocument } from "../lib/stock-rejection";
+import { stockRejectionKind, stpRevisionKind, isProductionStockDocument } from "../lib/stock-rejection";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { decisionEvidenceApi, type DecisionEvidence } from "../api/decision-evidence";
 import { useMemo, useState } from "react";
@@ -21,6 +21,7 @@ import { DecisionDialog } from "./decision-dialog";
 function Detail({ type, id }: { type: string; id: string }) {
   const navigate = useNavigate();
   const { has } = useAccess();
+  const allowed = (key: string | null) => key !== null && has(key);
   const query = useGetApiV1ApprovalMyPendingByModelTypeAndModelIdQuery({ ...audit, modelType: type, modelId: id });
   const approval = useMemo(() => { const parsed = approvalSchema.safeParse(query.data ?? null); return parsed.success ? parsed.data : null; }, [query.data]);
   const [decision, setDecision] = useState<{ kind: Decision; evidence: DecisionEvidence } | null>(null);
@@ -39,8 +40,8 @@ function Detail({ type, id }: { type: string; id: string }) {
   const rejected = approval.logs.at(-1)?.status === 2 ? approval.logs.at(-1) : null;
   return <article className="min-w-0 space-y-4">
     <PageHeader title={`${label}${approval.code ? ` · ${approval.code}` : ""}`} crumbs={[{ label: "My pending approvals", to: approvalsPath }, { label, to: back }, { label: approval.code ?? "Request" }]}
-      actions={<>{has(decisionPermission(type, "reject", stockRejectionKind(evidence.data))) ? <Button type="button" variant="outline" className="text-destructive" disabled={block !== null || !evidence.data || evidence.isFetching || !!evidence.error || isProductionStockDocument(type) && stockRejectionKind(evidence.data) === null} onClick={() => { if (evidence.data) setDecision({ kind: "reject", evidence: evidence.data }); }}><X />Reject</Button> : null}
-        {has(decisionPermission(type, "approve")) ? <Button type="button" disabled={block !== null || !evidence.data || evidence.isFetching || !!evidence.error || isProductionStockDocument(type) && stockRejectionKind(evidence.data) === null} onClick={() => { if (evidence.data) setDecision({ kind: "approve", evidence: evidence.data }); }}><Check />Approve</Button> : null}</>} />
+      actions={<>{allowed(decisionPermission(type, "reject", stockRejectionKind(evidence.data), stpRevisionKind(evidence.data))) ? <Button type="button" variant="outline" className="text-destructive" disabled={block !== null || !evidence.data || evidence.isFetching || !!evidence.error || isProductionStockDocument(type) && stockRejectionKind(evidence.data) === null} onClick={() => { if (evidence.data) setDecision({ kind: "reject", evidence: evidence.data }); }}><X />Reject</Button> : null}
+        {allowed(decisionPermission(type, "approve", null, stpRevisionKind(evidence.data))) ? <Button type="button" disabled={block !== null || !evidence.data || evidence.isFetching || !!evidence.error || isProductionStockDocument(type) && stockRejectionKind(evidence.data) === null} onClick={() => { if (evidence.data) setDecision({ kind: "approve", evidence: evidence.data }); }}><Check />Approve</Button> : null}</>} />
     {evidence.error ? <p role="alert" className="text-sm text-destructive">Decision evidence could not be verified. <Button variant="outline" size="sm" onClick={() => void evidence.refetch()}>Retry evidence</Button></p> : null}
     {block ? <p role="status" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">{block}{type === "Payment" && has("CanApprovePayment") ? <> <Link className="underline" to={`/finance/payment-approvals/${encodeURIComponent(id)}`}>Review payment in Finance</Link></> : null}{type === "PerformanceReview" && has("CanViewPerformanceReviews") ? <> <Link className="underline" to={`/hr/performance-reviews/${encodeURIComponent(id)}`}>Review assessment in HR</Link></> : null}{type === "PayrollRun" && has("CanViewPayrollRuns") ? <> <Link className="underline" to={`/hr/payroll-runs/${encodeURIComponent(id)}`}>Review and reconcile payroll in HR</Link></> : null}</p> : null}
     {approval.onBehalfOf ? <p role="status" className="rounded-md border border-sky-500/50 bg-sky-500/10 p-3 text-sm">This request waits for {approval.onBehalfOf}, who delegated their approvals to you. Your decision is recorded as theirs, with a note that you made it.</p> : null}

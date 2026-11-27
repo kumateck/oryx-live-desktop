@@ -1,4 +1,5 @@
 import { VendorListApprovalEvidence } from "@/modules/approved-vendor-list/public";
+import { StpRevisionApprovalEvidence } from "@/shared/stp-content";
 import { CostingPriceListEvidence } from "@/modules/costing/public";
 import { StockDiscrepancyApprovalEvidence } from "@/modules/stock-discrepancies/public";
 import { ShipmentDiscrepancyApprovalEvidence } from "@/modules/shipment-discrepancies/public";
@@ -21,7 +22,7 @@ const views: Record<ReadableDocument, (id: string, context: Context) => ReactNod
   ProductionOrder: (id) => <ProductionOrderDetails id={id} />, ProformaInvoice: (id) => <ProformaInvoiceDetails id={id} />, AllocateProductionOrder: (id) => <AllocationDetails id={id} />, StockAdjustment: (id) => <StockAdjustmentDetails id={id} />,
   CustomerQuotation: (id) => <CustomerQuotationDetails id={id} />, SupplierPricingAgreement: (id, context) => <PricingAgreementDetails id={id} supplierId={context.supplierId} />,
   PayrollRun: (id) => <PayrollRunDetails id={id} />, PerformanceReview: (id) => <PerformanceReviewDetails id={id} />, RndProject: (id) => <RndProjectDetails id={id} />, RndFormulation: (id) => <RndFormulationDetails id={id} />,
-  RndTechnologyTransfer: (id) => <RndTransferDetails id={id} />, ApprovedVendorList: (id) => <VendorListApprovalEvidence id={id} />, Response: (id, context) => <ArdDetails id={id} rejection={context.rejection} />,
+  RndTechnologyTransfer: (id) => <RndTransferDetails id={id} />, ApprovedVendorList: (id) => <VendorListApprovalEvidence id={id} />, StpRevision: (id) => <StpRevisionApprovalEvidence id={id} />, Response: (id, context) => <ArdDetails id={id} rejection={context.rejection} />,
 };
 
 /** The document being decided, laid out for reading. Null for a type this app cannot show yet. */

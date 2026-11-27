@@ -103,6 +103,19 @@ const vendorApproval: CatalogItem[] = [
   { id: "quality-assurance.approved-vendor-list", label: "Approved Vendor List", path: "/qa/approved-vendor-list", permissions: ["CanViewApprovedVendorList"] },
 ];
 
+// Structured STP revisions (prepared, reviewed and approved content of each STP) sit under Test Procedures,
+// each behind its own view keys: raw or packaging for materials, product for products.
+const qualityControl = catalog.find((group) => group.id === "quality-control");
+const procedures = qualityControl?.items.find((item) => item.id === "quality-control.standardtest-procedures");
+if (!procedures?.children) throw new Error("Test Procedures navigation entry is missing.");
+procedures.children.push(
+  { id: "quality-control.standardtest-procedures.material-revisions", label: "Material revisions", path: "/qc/material-stp/revisions",
+    permissions: ["CanViewRawMaterialStpRevisions", "CanViewPackagingMaterialStpRevisions"] },
+  { id: "quality-control.standardtest-procedures.product-revisions", label: "Product revisions", path: "/qc/products-stp/revisions",
+    permissions: ["CanViewProductStpRevisions"] },
+);
+procedures.permissions = [...new Set([...(procedures.permissions ?? []), "CanViewRawMaterialStpRevisions", "CanViewPackagingMaterialStpRevisions", "CanViewProductStpRevisions"])];
+
 // Every supported collection is independently accessible, including units, sites,
 // and shifts. Keep the catalog and module guard on the same permission contract.
 settings?.items.push({ id: "system-settings.production-board-order", label: "Production board order", path: "/settings/production-board-order",
