@@ -1,6 +1,6 @@
 import { coaSections } from "@/shared/ard-view/raw-data/coa-sections";
 import { CertificateRequestButtons, PendingCertificateEditButton } from "@/shared/ard-view/pending-certificate-actions";
-import { recordedCoaCompliance } from "@/shared/ard-view/raw-data/coa-compliance";
+import { buildCoaCompliancePayload, recordedCoaCompliance } from "@/shared/ard-view/raw-data/coa-compliance";
 import { useNavigate } from "react-router";
 import { useMemo, useState } from "react";
 import { TriangleAlert } from "lucide-react";
@@ -48,6 +48,7 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
       <div className="flex flex-wrap items-center justify-end gap-2">
         <PendingCertificateEditButton response={query.data} sections={coaSections(query.data?.effectiveForm?.sections ?? [], query.data?.coaHiddenFieldIds)}
           compliance={recordedCoaCompliance(coaSections(query.data?.effectiveForm?.sections ?? [], query.data?.coaHiddenFieldIds), query.data?.formResponses ?? [])}
+          rechecked={buildCoaCompliancePayload(coaSections(query.data?.effectiveForm?.sections ?? [], query.data?.coaHiddenFieldIds), query.data?.formResponses ?? [])}
           onSaved={() => { void query.refetch(); }} />
         <CertificateRequestButtons response={query.data} onRequested={() => void navigate(approvalListPath("Response"))} />
         {rejection && has(oosPermission) ? <Button type="button" size="sm" variant="outline" className="text-destructive" onClick={() => setStartingOos(true)}><TriangleAlert />Start OOS investigation</Button> : null}
