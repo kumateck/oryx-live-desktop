@@ -189,8 +189,18 @@ function stripMicrobialTesting(document: ObjectValue) {
   if (Array.isArray(questionType.enum)) questionType.enum = questionType.enum.filter((value) => typeof value !== "number" || value < 15);
 }
 
+/** COA reported tests (2026-11-27): the product specification coa-reporting path, its four owned schemas, reportOnCoa on template fields and coaHiddenFieldIds on the response detail. */
+function stripCoaReportedTests(document: ObjectValue) {
+  delete object(document.paths ?? null)["/api/v1/product-specifications/{id}/coa-reporting/{analysisType}"];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of ["CoaReportingFieldDto", "CoaReportingOverrideRequest", "SaveCoaReportingRequest", "SpecificationCoaReportingDto"]) delete schemas[`DOMAIN.Entities.Forms.${name}`];
+  for (const name of ["FormFieldDto", "Request.CreateFormFieldRequest", "Request.UpdateFormFieldRequest"]) delete object(object(schemas[`DOMAIN.Entities.Forms.${name}`] ?? null).properties ?? null).reportOnCoa;
+  delete object(object(schemas["DOMAIN.Entities.Forms.ResponseDetailDto"] ?? null).properties ?? null).coaHiddenFieldIds;
+}
+
 function beforeProductionBoardOrder() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripCoaReportedTests(document);
   stripStpRevisions(document);
   stripMicrobialTesting(document);
   stripSpecificationMicrobialTemplate(document);
@@ -1645,6 +1655,7 @@ test("production board ordering adds only its department-scoped read and write c
 
 test("structured STP revisions and STP test links add only their own operations and schemas", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripCoaReportedTests(current);
   checkCompatibility(hostConfig, policy, contractDigest(current));
   const paths = Object.keys(object(current.paths ?? null)).filter(path => path.startsWith("/api/v1/stp-revisions") || path.startsWith("/api/v1/stp-test-links"));
   assert.deepEqual(paths.sort(), [
@@ -1663,6 +1674,7 @@ test("structured STP revisions and STP test links add only their own operations 
 
 test("specification microbial template adds only the optional microbial template on specifications", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripCoaReportedTests(current);
   const schemas = object(object(current.components ?? null).schemas ?? null);
   for (const kind of ["Material", "Product"]) {
     const prefix = `DOMAIN.Entities.${kind}Specifications.`;
@@ -1682,6 +1694,7 @@ test("specification microbial template adds only the optional microbial template
 
 test("microbial testing adds only its question types and specification limit paths", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripCoaReportedTests(current);
   const paths = object(current.paths ?? null);
   for (const subject of ["material", "product"])
     assert.deepEqual(Object.keys(object(paths[`/api/v1/${subject}-specifications/{id}/microbial-limits`] ?? null)).sort(), ["get", "put"]);
@@ -1693,4 +1706,19 @@ test("microbial testing adds only its question types and specification limit pat
   checkCompatibility(hostConfig, policy, digest);
   stripMicrobialTesting(current);
   assert.equal(contractDigest(current), "a4c38356a13b862fbec3ef7eb5f369b2c2acc8d4b6d3beb20d11a99a9875af05");
+});
+
+test("COA reported tests add only the specification override path, its schemas and two optional fields", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const path = object(object(current.paths ?? null)["/api/v1/product-specifications/{id}/coa-reporting/{analysisType}"] ?? null);
+  assert.deepEqual(Object.keys(path).sort(), ["get", "put"]);
+  assert.equal(object(path.get ?? null).operationId, "GetProductSpecificationCoaReporting");
+  assert.equal(object(path.put ?? null).operationId, "SaveProductSpecificationCoaReporting");
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  assert.deepEqual(object(object(schemas["DOMAIN.Entities.Forms.FormFieldDto"] ?? null).properties ?? null).reportOnCoa, { type: "boolean" });
+  const digest = contractDigest(current);
+  assert.equal(digest, "0e720b0d14b7eaad942d0b6498811849e8048e96a5175861c9f578db4a2ad142");
+  checkCompatibility(hostConfig, policy, digest);
+  stripCoaReportedTests(current);
+  assert.equal(contractDigest(current), "d4e3613c13eac5db34e18c33c544e858c842696227c5fef0ff708f149e415abe");
 });

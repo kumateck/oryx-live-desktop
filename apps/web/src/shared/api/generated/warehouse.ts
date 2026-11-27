@@ -3823,6 +3823,7 @@ export type DomainEntitiesFormsFormFieldDto = {
   description?: string | null;
   rank?: number;
   formulaConfigurationHash?: string | null;
+  reportOnCoa?: boolean;
 };
 export type DomainEntitiesFormsFormSectionDto = {
   id?: string;

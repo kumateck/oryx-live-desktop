@@ -1,3 +1,4 @@
+import { coaSections } from "@/shared/ard-view/raw-data/coa-sections";
 import { CertificateRequestButtons, PendingCertificateEditButton } from "@/shared/ard-view/pending-certificate-actions";
 import { recordedCoaCompliance } from "@/shared/ard-view/raw-data/coa-compliance";
 import { useNavigate } from "react-router";
@@ -37,7 +38,7 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
   const { has } = useAccess();
   const navigate = useNavigate();
   const [startingOos, setStartingOos] = useState(false);
-  const { query, response, state, loading, failures, approved, atr, atrQuery, coaTarget, sections, certificateSections, recorded, signatories, facts: loadedFacts,
+  const { query, response, state, loading, failures, approved, atr, atrQuery, coaTarget, sections, certificateSections, worksheetSections, recorded, signatories, facts: loadedFacts,
     material, batch, product, ard, materialBatchId } = useArdCertificate(id, { rejection: Boolean(rejection) });
   return <DetailState {...state} loading={loading} value={response} label="certificate of analysis">{(data) => { const unit = material?.materialBatch?.uoM?.symbol;
     const isMaterial = Boolean(materialBatchId);
@@ -45,15 +46,15 @@ export function ArdDetails({ id, rejection = null }: { id: string; rejection?: A
     const { name, batch: batchNumber } = facts;
     return <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
-        <PendingCertificateEditButton response={query.data} sections={query.data?.effectiveForm?.sections ?? []}
-          compliance={recordedCoaCompliance(query.data?.effectiveForm?.sections ?? [], query.data?.formResponses ?? [])}
+        <PendingCertificateEditButton response={query.data} sections={coaSections(query.data?.effectiveForm?.sections ?? [], query.data?.coaHiddenFieldIds)}
+          compliance={recordedCoaCompliance(coaSections(query.data?.effectiveForm?.sections ?? [], query.data?.coaHiddenFieldIds), query.data?.formResponses ?? [])}
           onSaved={() => { void query.refetch(); }} />
         <CertificateRequestButtons response={query.data} onRequested={() => void navigate(approvalListPath("Response"))} />
         {rejection && has(oosPermission) ? <Button type="button" size="sm" variant="outline" className="text-destructive" onClick={() => setStartingOos(true)}><TriangleAlert />Start OOS investigation</Button> : null}
         {coaTarget ? <GenerateCoaButton approved={approved} target={coaTarget} /> : null}
         {sections.length > 0 ? <>
           {has(printCertificatePermission) || isMaterial ? <PrintButton label="Print COA" preview={(close) => <ArdCertificate sections={certificateSections} recorded={recorded} signatories={signatories} onClose={close} facts={facts} />} /> : null}
-          <PrintButton label="Print Worksheet" preview={(close) => <ArdWorksheet sections={certificateSections} recorded={recorded} signatories={signatories} onClose={close} facts={facts} />} />
+          <PrintButton label="Print Worksheet" preview={(close) => <ArdWorksheet sections={worksheetSections} recorded={recorded} signatories={signatories} onClose={close} facts={facts} />} />
         </> : null}
       </div>
       {startingOos && rejection && query.data ? <StartOosDialog evidence={query.data} responseId={id} onClose={() => setStartingOos(false)} subject={{ kind: isMaterial ? "material" : "product", materialBatchId, analyticalTestRequestId: atr?.id ?? null,
