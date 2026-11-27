@@ -190,18 +190,19 @@ function stripMicrobialTesting(document: ObjectValue) {
 }
 
 /** COA reported tests (2026-11-27): the product specification coa-reporting path, its four owned schemas, reportOnCoa on template fields and coaHiddenFieldIds on the response detail. */
+/** Material sampling id (2026-11-27): the optional id on the material sampling DTO. */
 function stripMaterialSamplingId(document: ObjectValue) {
   const schemas = object(object(document.components ?? null).schemas ?? null);
   delete object(object(schemas["DOMAIN.Entities.MaterialSampling.MaterialSamplingDto"] ?? null).properties ?? null).id;
 }
 
-function stripCoaReportedTests(document: ObjectValue) {
-  stripMaterialSamplingId(document);
+/** Material COA reported tests (2026-11-27): the material specification coa-reporting path. */
 function stripMaterialCoaReportedTests(document: ObjectValue) {
   delete object(document.paths ?? null)["/api/v1/material-specifications/{id}/coa-reporting/{analysisType}"];
 }
 
 function stripCoaReportedTests(document: ObjectValue) {
+  stripMaterialSamplingId(document);
   stripMaterialCoaReportedTests(document);
   delete object(document.paths ?? null)["/api/v1/product-specifications/{id}/coa-reporting/{analysisType}"];
   const schemas = object(object(document.components ?? null).schemas ?? null);
@@ -1741,19 +1742,34 @@ test("Material sampling id adds only the optional id on the material sampling DT
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   const schemas = object(object(current.components ?? null).schemas ?? null);
   assert.equal(object(object(object(schemas["DOMAIN.Entities.MaterialSampling.MaterialSamplingDto"] ?? null).properties ?? null).id ?? null).format, "uuid");
+  stripMaterialCoaReportedTests(current);
   const digest = contractDigest(current);
   assert.equal(digest, "2b5e639f83a018ec5f37af5b3142cd804eb1cbd9a657bd129dbe24ab69fe1e4b");
   checkCompatibility(hostConfig, policy, digest);
   stripMaterialSamplingId(current);
+  assert.equal(contractDigest(current), "0e720b0d14b7eaad942d0b6498811849e8048e96a5175861c9f578db4a2ad142");
+});
+
 test("Material COA reported tests add only the material specification override path", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   const path = object(object(current.paths ?? null)["/api/v1/material-specifications/{id}/coa-reporting/{analysisType}"] ?? null);
   assert.deepEqual(Object.keys(path).sort(), ["get", "put"]);
   assert.equal(object(path.get ?? null).operationId, "GetMaterialSpecificationCoaReporting");
   assert.equal(object(path.put ?? null).operationId, "SaveMaterialSpecificationCoaReporting");
+  stripMaterialSamplingId(current);
   const digest = contractDigest(current);
   assert.equal(digest, "26bbe4f6f2ab2f33a50693297e280f8eeab0c969abe1199be90811133e4b5f15");
   checkCompatibility(hostConfig, policy, digest);
+  stripMaterialCoaReportedTests(current);
+  assert.equal(contractDigest(current), "0e720b0d14b7eaad942d0b6498811849e8048e96a5175861c9f578db4a2ad142");
+});
+
+test("The merged material contract combines only the sampling id and the material COA path", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const digest = contractDigest(current);
+  assert.equal(digest, "4e8382b95b2b1e63c874b8e43cfb107969bddbd7fa5074d276fbe9bb38b3e116");
+  checkCompatibility(hostConfig, policy, digest);
+  stripMaterialSamplingId(current);
   stripMaterialCoaReportedTests(current);
   assert.equal(contractDigest(current), "0e720b0d14b7eaad942d0b6498811849e8048e96a5175861c9f578db4a2ad142");
 });
