@@ -896,6 +896,9 @@ export const routes: RouteObject[] = [
             ] }
           ] }
         ] },
+        { path: "percentage-recalculation", Component: Outlet, children: [
+          { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/percentage-recalculation/page")).default }) }
+        ] },
         { path: "product-analytical-raw-data", Component: Outlet, children: [
           { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/product-analytical-raw-data/page")).default }) },
           { path: ":id", Component: Outlet, children: [
