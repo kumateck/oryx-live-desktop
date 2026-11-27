@@ -5,9 +5,10 @@ import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, Dia
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { parseCellKey, type ApplyScope, type AsyncSource, type CellConfig, type CellType, type TableConfig } from "./table-question";
+import { cellKey as keyOf, linkSourceColumns, parseCellKey, type ApplyScope, type AsyncSource, type CellConfig, type CellType, type LinkProperty, type TableConfig } from "./table-question";
 
-const cellTypes: { value: CellType; label: string }[] = [{ value: "empty", label: "Empty" }, { value: "label", label: "Label" }, { value: "input", label: "Text input" }, { value: "select", label: "Choice" }];
+const cellTypes: { value: CellType; label: string }[] = [{ value: "empty", label: "Empty" }, { value: "label", label: "Label" }, { value: "input", label: "Text input" }, { value: "select", label: "Choice" }, { value: "linked", label: "Linked field" }];
+const properties: { value: LinkProperty; label: string }[] = [{ value: "code", label: "Code" }, { value: "name", label: "Name" }];
 const scopes: { value: ApplyScope; label: string }[] = [{ value: "single", label: "This cell only" }, { value: "range", label: "A range of rows in this column" }, { value: "column", label: "The whole column" }];
 const sources: { value: AsyncSource; label: string }[] = [{ value: "equipments", label: "QC equipment" }, { value: "reagents", label: "Reagents (QC equipment list)" }];
 const whole = (value: string, fallback: number) => { const parsed = Number.parseInt(value, 10); return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback; };
@@ -25,6 +26,9 @@ export function CellConfigDialog({ cellKey, config, onSave, onClose }: { cellKey
   const [scope, setScope] = useState<ApplyScope>("single");
   const [range, setRange] = useState({ start: String(at.row + 1), end: String(at.row + 1) });
   const [option, setOption] = useState("");
+  const sourceColumns = linkSourceColumns(config, cellKey);
+  const columnName = (col: number) => { const heading = config.cellConfigs[keyOf(0, col)]; return `Column ${String(col + 1)}${heading?.type === "label" && heading.label?.trim() ? ` (${heading.label.trim()})` : ""} — same row`; };
+  const linkSource = cell.linkSource !== undefined && sourceColumns.includes(cell.linkSource) ? cell.linkSource : sourceColumns[0];
   const addOption = () => { const text = option.trim(); if (!text || cell.options?.some((item) => item.value === text)) return; setCell({ ...cell, options: [...(cell.options ?? []), { value: text, label: text }] }); setOption(""); };
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
     <DialogContent className="sm:max-w-lg">
@@ -43,6 +47,14 @@ export function CellConfigDialog({ cellKey, config, onSave, onClose }: { cellKey
         </div> : null}
         <Choice id="cell-type" label="Cell type" value={cell.type} options={cellTypes} onChange={(type) => setCell({ ...cell, type })} />
         {cell.type === "label" ? <div className="space-y-1.5"><Label htmlFor="cell-label">Label text</Label><Input id="cell-label" value={cell.label ?? ""} onChange={(event) => setCell({ ...cell, label: event.target.value })} /></div> : null}
+        {cell.type === "linked" ? sourceColumns.length === 0
+          ? <p role="alert" className="text-sm text-destructive">Set a cell in this row to a choice from a record list first; a linked field shows a property of the record chosen there.</p>
+          : <>
+            <Choice id="cell-link-source" label="Source cell" value={String(linkSource)} options={sourceColumns.map((col) => ({ value: String(col), label: columnName(col) }))}
+              onChange={(value) => setCell({ ...cell, linkSource: Number(value) })} />
+            <Choice id="cell-link-property" label="Record property" value={cell.linkProperty ?? "code"} options={properties} onChange={(linkProperty) => setCell({ ...cell, linkProperty })} />
+            <p className="text-xs text-muted-foreground">Read only. Filled in automatically when the source cell's record is chosen, and updated when it changes.</p>
+          </> : null}
         {cell.type === "input" ? <div className="space-y-1.5"><Label htmlFor="cell-placeholder">Placeholder</Label><Input id="cell-placeholder" value={cell.placeholder ?? ""} onChange={(event) => setCell({ ...cell, placeholder: event.target.value })} /></div> : null}
         {cell.type === "select" ? <>
           <Choice id="cell-source" label="Options come from" value={cell.dataSource ?? "sync"} options={[{ value: "sync", label: "A list written here" }, { value: "async", label: "A record list" }] as const}
@@ -57,7 +69,9 @@ export function CellConfigDialog({ cellKey, config, onSave, onClose }: { cellKey
         </> : null}
       </DialogBody>
       <DialogFooter><Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        <Button type="button" onClick={() => onSave(cell.type === "select" && cell.dataSource === "async" && !cell.asyncSource ? { ...cell, asyncSource: "equipments" } : cell, scope, { start: whole(range.start, 1), end: whole(range.end, 1) })}>Save cell</Button></DialogFooter>
+        <Button type="button" disabled={cell.type === "linked" && linkSource === undefined}
+          onClick={() => onSave(cell.type === "select" && cell.dataSource === "async" && !cell.asyncSource ? { ...cell, asyncSource: "equipments" }
+            : cell.type === "linked" && linkSource !== undefined ? { ...cell, linkSource, linkProperty: cell.linkProperty ?? "code" } : cell, scope, { start: whole(range.start, 1), end: whole(range.end, 1) })}>Save cell</Button></DialogFooter>
     </DialogContent>
   </Dialog>;
 }
