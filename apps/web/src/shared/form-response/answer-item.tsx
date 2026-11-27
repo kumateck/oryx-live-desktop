@@ -22,7 +22,7 @@ export function AnswerItem({ form, field, loadEquipment, drafts, label, disabled
   const state: DraftState = !drafts ? "empty" : drafts.saving.has(field.id) ? "saving" : drafts.failed.has(field.id) ? "failed" : current === null ? (field.question.type === QuestionType.FileUpload && saved !== null ? "saved" : "empty") : current === saved ? "saved" : "unsaved";
   return <div className={className}>
     <div className="flex min-w-0 items-end gap-2"><div className="min-w-0 flex-1"><FormWizard form={form} fields={fields} /></div>
-      {drafts && !disabled ? <div className="pb-1"><DraftButton state={state} label={field.question.label} onSave={() => drafts.save(field, value)} /></div> : null}</div>
+      {drafts && !disabled && field.question.type !== QuestionType.CfuCalculation ? <div className="pb-1"><DraftButton state={state} label={field.question.label} onSave={() => drafts.save(field, value)} /></div> : null}</div>
     {drafts?.failed.get(field.id) ? <p role="alert" className="mt-1 text-xs text-destructive">{drafts.failed.get(field.id)}</p> : null}
   </div>;
 }

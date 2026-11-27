@@ -12,7 +12,7 @@ import type { PageCrumb } from "@/shared/navigation/page-breadcrumbs";
 import { PageHeader } from "@/shared/navigation/page-header";
 import { specificationReferences } from "@/shared/questions/question-types";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
-import type { Specification, SpecificationSection } from "./specification-schema";
+import { byAnalysis, type Specification, type SpecificationSection } from "./specification-schema";
 
 const cell = "border-b px-3 py-2 align-top text-sm";
 const known = new Set<string>(specificationReferences.map((item) => item.value));
@@ -46,7 +46,7 @@ export function SpecificationCompletion({ specification, sections, item, crumbs,
       <Button type="button" disabled={saving || sections.length === 0} onClick={() => void submit()}>{saving ? <><Spinner />Saving…</> : "Save specification"}</Button></PermissionGuard>} />
     <KeyFacts>
       <KeyFact label="For" value={item ?? "–"} />
-      <KeyFact label="Template" value={specification.form?.name ?? "–"} />
+      <KeyFact label="Template" value={specification.form?.name ?? "–"} note={specification.microbialForm ? `Microbial: ${specification.microbialForm.name}` : undefined} />
       <KeyFact label="Revision" value={specification.revisionNumber ?? "–"} />
       <KeyFact label="Effective" value={formatDate(specification.effectiveDate) ?? "–"} />
       <KeyFact label="Tests" value={sections.length} note={missing > 0 ? `${String(missing)} without a reference` : "All set"} />
@@ -54,17 +54,20 @@ export function SpecificationCompletion({ specification, sections, item, crumbs,
     {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
     {tried && missing > 0 ? <p role="alert" className="text-sm text-destructive">Choose a reference for every test.</p> : null}
     {sections.length === 0 ? <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">The template has no tests, so there is nothing to complete. Add tests to the template first.</p>
-      : <div className="overflow-x-auto rounded-lg border bg-card"><table className="w-full min-w-[40rem] table-fixed border-collapse">
+      : byAnalysis(sections).map((group, _groupIndex, groups) => <section key={group.analysis} aria-label={group.label} className="space-y-2">
+        {groups.length > 1 || group.analysis === "microbial" ? <h2 className="text-sm font-semibold">{group.label}</h2> : null}
+        <div className="overflow-x-auto rounded-lg border bg-card"><table className="w-full min-w-[40rem] table-fixed border-collapse">
         <thead className="bg-muted/50 text-left text-xs font-semibold text-muted-foreground"><tr>
           <th className="w-12 border-b px-3 py-2">No.</th><th className="w-[30%] border-b px-3 py-2">Test</th><th className="border-b px-3 py-2">Specification</th><th className="w-48 border-b px-3 py-2">Reference</th>
         </tr></thead>
-        <tbody>{sections.map((section, index) => {
+        <tbody>{group.sections.map((section, index) => {
           const invalid = tried && !values[section.id];
+          const label = `${group.analysis === "microbial" ? "microbial " : ""}test ${String(index + 1)}`;
           return <tr key={section.id}><td className={cell}>{index + 1}</td><td className={cell}><RichTextView html={section.name} /></td><td className={cell}><RichTextView html={section.description} /></td>
             <td className={cell}><Select value={values[section.id] ?? ""} onValueChange={(value) => setValues((current) => ({ ...current, [section.id]: value }))}>
-              <SelectTrigger aria-label={`Reference for test ${String(index + 1)}`} aria-invalid={invalid} className="w-full"><SelectValue placeholder="Choose" /></SelectTrigger>
+              <SelectTrigger aria-label={`Reference for ${label}`} aria-invalid={invalid} className="w-full"><SelectValue placeholder="Choose" /></SelectTrigger>
               <SelectContent>{specificationReferences.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select></td></tr>;
         })}</tbody>
-      </table></div>}
+      </table></div></section>)}
   </article>;
 }

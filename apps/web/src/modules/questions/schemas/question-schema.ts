@@ -21,8 +21,11 @@ export const questionFormSchema = z.object({
   description: z.string().trim().max(2000, "Use no more than 2,000 characters."),
   isMultiSelect: z.boolean(),
   options: z.array(z.object({ id: z.string(), name: z.string() })),
+  /** The unit a CFU calculation reports in; sent as its one option. */
+  cfuUnit: z.object({ value: z.string(), label: z.string() }).nullish(),
 }).superRefine((values, context) => {
   const type = Number(values.type?.value);
+  if (type === QuestionType.CfuCalculation && !values.cfuUnit) context.addIssue({ code: "custom", path: ["cfuUnit"], message: "Choose the unit the result is reported in." });
   if (isChoiceQuestion(type) && !values.options.some((option) => option.name.trim())) context.addIssue({ code: "custom", path: ["options"], message: "Add at least one answer option." });
   const names = values.options.map((option) => option.name.trim().toLowerCase()).filter(Boolean);
   if (new Set(names).size !== names.length) context.addIssue({ code: "custom", path: ["options"], message: "Each option must be different." });
@@ -35,6 +38,7 @@ export function questionDefaults(row: QuestionRow | null): QuestionFormValues {
   return {
     label: row?.label ?? "", type: typeOption(row?.type ?? QuestionType.ShortAnswer), reference: row?.reference ?? "", description: row?.description ?? "",
     isMultiSelect: row?.isMultiSelect ?? false, options: row?.options.length ? row.options.map((name) => newOption(name)) : [newOption("Option 1")],
+    cfuUnit: row?.type === QuestionType.CfuCalculation && row.options[0] ? { value: row.options[0], label: row.options[0] } : null,
   };
 }
 /** An instrument question always takes several instruments; only choice questions keep their options. */
@@ -44,6 +48,7 @@ export function questionRequest(values: QuestionFormValues): DomainEntitiesForms
   return {
     label: values.label.trim(), type, description: values.description.trim() || null, reference: values.reference.trim() || null,
     isMultiSelect: type === QuestionType.Instrument ? true : choice && values.isMultiSelect,
-    options: choice ? values.options.map((option) => ({ name: option.name.trim() })).filter((option) => option.name) : null,
+    options: choice ? values.options.map((option) => ({ name: option.name.trim() })).filter((option) => option.name)
+      : type === QuestionType.CfuCalculation && values.cfuUnit ? [{ name: values.cfuUnit.value }] : null,
   };
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { FileText, ListTree, Pencil, Plus, Trash2 } from "lucide-react";
+import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog, TableMenu, TableMenuHeader } from "@/shared/actions";
 import { PermissionGuard } from "@/shared/auth/permission-guard";
@@ -14,6 +14,7 @@ import { stpAudit } from "@/shared/stp/stp-document-api";
 import { stpRowsSchema, type Stp } from "@/shared/stp/stp-schema";
 import { materialStpsApi } from "../api/material-stps-api";
 import { detailPath, documentPath, kindName, stpPermissions } from "../lib/material-stps";
+import { materialRevisionRoutes, revisionKeys } from "../lib/material-stp-revisions";
 import { MaterialStpDialog } from "./material-stp-dialog";
 
 const column = dataTableColumns<Stp>();
@@ -49,6 +50,7 @@ export function MaterialStpListPage() {
   return <section className="page-fill">
     <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">QUALITY CONTROL</p><h1 className="text-xl font-semibold">Material standard test procedures</h1></div>
       <div className="flex flex-wrap items-center gap-2"><KindSwitch tabs={tabs} kind={kind} onSelect={select} />
+        {kind !== null ? <PermissionGuard require={revisionKeys[kind].view}><Button asChild size="sm" variant="outline"><Link to={materialRevisionRoutes(kind).list()}><ListTree />Revisions</Link></Button></PermissionGuard> : null}
         {kind !== null ? <PermissionGuard require={stpPermissions.create[kind]}><Button size="sm" onClick={() => setOpen({ action: "create" })}><Plus />New {kindName(kind)} STP</Button></PermissionGuard> : null}</div></div>
     <ServerDataTable label="Material STPs" columns={columns} rows={rows} getRowId={(row) => row.id} page={table.page} pageSize={table.pageSize} totalRows={meta.totalRows}
       onPageChange={table.onPageChange} onPageSizeChange={table.onPageSizeChange} loading={query.isLoading} refreshing={query.isFetching && !query.isLoading} onRetry={() => void query.refetch()}

@@ -12,3 +12,11 @@ export function stockRejectionKind(evidence: DecisionEvidence | null | undefined
   }
   return null;
 }
+
+const stpRevision = z.object({ kind: z.union([z.literal(0), z.literal(1), z.literal(2)]), stpNumber: z.string(), revisionNumber: z.number() });
+/** An STP revision's stored kind, from the revision read as evidence; its decision key depends on it. */
+export function stpRevisionKind(evidence: DecisionEvidence | null | undefined): 0 | 1 | 2 | null {
+  const entry = evidence?.entries.find((item) => item.url.startsWith("/api/v1/stp-revisions/"));
+  const parsed = stpRevision.safeParse(entry?.data);
+  return parsed.success ? parsed.data.kind : null;
+}

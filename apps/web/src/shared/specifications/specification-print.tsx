@@ -4,7 +4,7 @@ import { PrintHeader, PrintTable, type PrintColumn } from "@/shared/print/print-
 import { specificationReferenceLabel } from "@/shared/questions/question-types";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import { testStageLabel } from "./specification-rules";
-import type { Specification, SpecificationSection } from "./specification-schema";
+import { byAnalysis, type Specification, type SpecificationSection } from "./specification-schema";
 
 const columns: readonly PrintColumn<SpecificationSection>[] = [
   { id: "number", header: "No.", width: "7%", cell: (_section, index) => index + 1 },
@@ -64,7 +64,9 @@ export function SpecificationPrint({ title, kind, specification, sections, histo
       <h2 className="print-section">Notes</h2>
       <RichTextView html={specification.description} />
     </section> : null}
-    <PrintTable caption="Tests" columns={columns} rows={sections} rowKey={(section) => section.id} empty="The template has no tests." />
+    {specification.microbialForm
+      ? byAnalysis(sections).map((group) => <PrintTable key={group.analysis} caption={group.label} columns={columns} rows={group.sections} rowKey={(section) => section.id} empty="The template has no tests." />)
+      : <PrintTable caption="Tests" columns={columns} rows={sections} rowKey={(section) => section.id} empty="The template has no tests." />}
     <PrintTable caption="Revision History" columns={revisionColumns} rows={history.revisions ?? []}
       rowKey={(row, index) => `${row.revisionNumber ?? ""}-${index}`} empty="No recorded revision history is available." />
     {history.historyAvailableFrom ? <p className="print-note">History capture began {formatDateTime(history.historyAvailableFrom)}.</p> : null}

@@ -19,6 +19,7 @@ import type { SelectLoader } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
 import { richTextToPlain } from "@/shared/rich-text/rich-text-view";
 import { useTemplateLoader } from "@/shared/specifications/use-template-loader";
+import { microbialSlotOf, type MicrobialSlot } from "../lib/microbial-slot";
 import { routinesApi, type CoaItemBody } from "../api/routines-api";
 import { coaItemsFor, coaProblems } from "../lib/coa-items";
 import { analysisOptions, cadenceOptions, RequirementSubject, routinePermissions, setupAudit, typeOptions } from "../lib/routines";
@@ -172,6 +173,11 @@ export function MicrobialArdDialog({ onClose }: { onClose: () => void }) {
   void form.formState.errors;
   const saving = useSaving(ardCreate[subject]);
   useEffect(() => { form.setValue("stp", null); }, [subject, form]);
+  const stp = useWatch({ control: form.control, name: "stp" });
+  const [loadMaterialSpec] = analyticalApi.useLazyGetApiV1MaterialSpecificationsMaterialByMaterialIdQuery();
+  const [loadProductSpecs] = analyticalApi.useLazyGetApiV1ProductSpecificationsProductByIdQuery();
+  // The specification's microbial template, when it names one: the server requires the ARD to use it.
+  const [slot, setSlot] = useState<MicrobialSlot | "loading" | null>(null);
   const [loadMaterialStps] = analyticalApi.useLazyGetApiV1MaterialStpsQuery();
   const [loadProductStps] = analyticalApi.useLazyGetApiV1ProductStpsQuery();
   const [owners] = useState(() => new Map<string, string>());
@@ -187,6 +193,22 @@ export function MicrobialArdDialog({ onClose }: { onClose: () => void }) {
       return [{ value: item.id, label: `${item.stpNumber ?? "STP"} · ${owner.name ?? "Unnamed"}` }];
     }), hasNext: current < (result.pageCount ?? current), hasPrevious: current > 1 };
   }, [subject, loadMaterialStps, loadProductStps, owners]);
+  const ownerId = stp?.value ? owners.get(stp.value) ?? null : null;
+  useEffect(() => {
+    if (!ownerId) { setSlot(null); return; }
+    let current = true;
+    setSlot("loading");
+    const lookup = subject === "product"
+      ? loadProductSpecs({ ...setupAudit, id: ownerId }).unwrap().then((specs) => microbialSlotOf(specs.find((spec) => spec.testStage === 2) ?? null))
+      : loadMaterialSpec({ ...setupAudit, materialId: ownerId }).unwrap().then((spec) => microbialSlotOf(spec));
+    void lookup.catch(() => null).then((found) => {
+      if (!current) return;
+      setSlot(found);
+      if (found) { form.setValue("form", { value: found.form.id, label: found.form.name }, { shouldValidate: true }); if (found.specNumber) form.setValue("specNumber", found.specNumber, { shouldValidate: true }); }
+    });
+    return () => { current = false; };
+  }, [ownerId, subject, loadMaterialSpec, loadProductSpecs, form]);
+  const fixed = slot !== null && slot !== "loading";
   const loadTemplates = useTemplateLoader();
   const rows = useCoaRows(chosen?.value ?? null, true);
   const [tried, setTried] = useState(false);
@@ -194,10 +216,11 @@ export function MicrobialArdDialog({ onClose }: { onClose: () => void }) {
   const fields = useMemo(() => [
     { type: InputTypes.SELECT, mode: "single", source: "sync", name: "subject", label: "Applies to", required: true, options: subjects },
     { type: InputTypes.SELECT, mode: "single", source: "async", name: "stp", label: "Standard test procedure", required: true, loadOptions: loadStps, placeholder: "Choose the STP", searchPlaceholder: "Search STPs" },
-    { type: InputTypes.SELECT, mode: "single", source: "async", name: "form", label: "Microbial worksheet", required: true, loadOptions: loadTemplates, placeholder: "Choose a template", searchPlaceholder: "Search templates" },
-    { type: InputTypes.TEXT, name: "specNumber", label: "Specification number", required: true },
+    { type: InputTypes.SELECT, mode: "single", source: "async", name: "form", label: "Microbial worksheet", required: true, loadOptions: loadTemplates, placeholder: "Choose a template", searchPlaceholder: "Search templates",
+      disabled: fixed, description: fixed ? "The microbial template named on the specification." : "Choose a template; a specification with a microbial template fills this in." },
+    { type: InputTypes.TEXT, name: "specNumber", label: "Specification number", required: true, disabled: fixed },
     { type: InputTypes.TEXTAREA, name: "description", label: "Description", rows: 2, className: "md:col-span-2" },
-  ] as const satisfies readonly WizardField<MicrobialValues>[], [loadStps, loadTemplates]);
+  ] as const satisfies readonly WizardField<MicrobialValues>[], [loadStps, loadTemplates, fixed]);
   const submit = form.handleSubmit(async (values) => {
     setTried(true);
     if (problems.overall) return;
@@ -211,6 +234,7 @@ export function MicrobialArdDialog({ onClose }: { onClose: () => void }) {
   return <Shell wide title="New microbial ARD" description="Created as a separate microbial worksheet; the finished product stage is used for products." busy={saving.busy} message={saving.message || (tried && problems.overall ? problems.overall : "")}
     onClose={onClose} onSubmit={(event) => void submit(event)} submitLabel="Create microbial ARD">
     <FormWizard form={form} fields={fields} className="md:grid-cols-2" />
+    {slot === "loading" ? <p className="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />Looking up the specification's microbial template…</p> : null}
     {chosen ? <section className="space-y-2"><h3 className="text-sm font-semibold">Rows on the combined certificate</h3>
       {rows.loading ? <p className="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />Loading the worksheet's fields…</p> : rows.error ? <p role="alert" className="text-sm text-destructive">{rows.error}</p>
         : <CoaItemsEditor items={rows.items} onChange={rows.setItems} problems={tried ? problems.rows : new Map()} />}</section> : null}
