@@ -24,7 +24,8 @@ it("keeps formatting but never renders scripts, handlers, styles, or unsafe link
 
 it("renders nothing for empty content and gives plain text when asked", () => {
   expect(render(<RichTextView html="  " />).container.innerHTML).toBe("");
-  expect(richTextToPlain("<p>Each tablet<br>contains <b>500 mg</b></p><script>x</script>")).toBe("Each tabletcontains 500 mg");
+  expect(richTextToPlain("<p>Each tablet<br>contains <b>500 mg</b></p><script>x</script>")).toBe("Each tablet contains 500 mg");
+  expect(richTextToPlain("<p><strong>Assay</strong></p><p>Diclofenac Diethylamine</p>")).toBe("Assay Diclofenac Diethylamine");
   expect(richTextToPlain(null)).toBe("");
 });
 
