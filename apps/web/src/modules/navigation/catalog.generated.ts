@@ -1199,6 +1199,32 @@ export const navigationCatalog = [
             ]
           }
         ]
+      },
+      {
+        "id": "quality-control.formulas",
+        "label": "Formulas",
+        "permissions": [
+          "CanViewReviewFormulaRevision",
+          "CanViewApproveFormulaRevision"
+        ],
+        "children": [
+          {
+            "id": "quality-control.formulas.formula-reviews",
+            "label": "Formula Reviews",
+            "path": "/qa/formula-reviews",
+            "permissions": [
+              "CanViewReviewFormulaRevision"
+            ]
+          },
+          {
+            "id": "quality-control.formulas.formula-approvals",
+            "label": "Formula Approvals",
+            "path": "/qa/formula-approvals",
+            "permissions": [
+              "CanViewApproveFormulaRevision"
+            ]
+          }
+        ]
       }
     ]
   },
@@ -1238,22 +1264,6 @@ export const navigationCatalog = [
         "path": "/qc/material-retests?tab=sample",
         "permissions": [
           "CanRecordMaterialRetestSample"
-        ]
-      },
-      {
-        "id": "quality-assurance.formula-reviews",
-        "label": "Formula Reviews",
-        "path": "/qa/formula-reviews",
-        "permissions": [
-          "CanViewReviewFormulaRevision"
-        ]
-      },
-      {
-        "id": "quality-assurance.formula-approvals",
-        "label": "Formula Approvals",
-        "path": "/qa/formula-approvals",
-        "permissions": [
-          "CanViewApproveFormulaRevision"
         ]
       },
       {

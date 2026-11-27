@@ -1,10 +1,14 @@
 import type { SelectOption } from "@/shared/forms/form-wizard-types";
 const standard = ["CostingPriceList", "CustomerQuotation", "SupplierPricingAgreement", "Payment", "StaffRequisition", "PayrollRun", "PerformanceReview", "JobRequest", "ProductionOrder", "TrialRequisition", "PurchaseRequisition", "StockRequisition", "PurchaseOrder", "BillingSheet", "LeaveRequest", "OvertimeRequest", "AllocateProductionOrder", "ShipmentDocument", "ProformaInvoice", "FinishedGoodsTransferNote", "StockAdjustment", "StockDiscrepancy", "ShipmentDiscrepancy", "RndProject", "RndFormulation", "RndTechnologyTransfer", "QcStandardTestProcedure", "QcWorksheetTemplate", "QcSpecification", "QcWorksheetInstance", "QcOosCase", "QcMaterialRetest"];
+// Test results go through the workflow for what was tested; one without a configured stage uses Test results (Response).
+const testResultRoutes: readonly SelectOption[] = [
+  { value: "ResponseMaterial", label: "Test results · Material (raw or packaging)" },
+  { value: "ResponseProductFinished", label: "Test results · Product, finished" },
+  { value: "ResponseProductIntermediateGeneral", label: "Test results · Intermediate or bulk, non-Beta (tablet, syrup, ointment)" },
+  { value: "ResponseProductIntermediateBeta", label: "Test results · Intermediate or bulk, Beta" },
+];
+// Saved under an Oryx Next key the backend does not read.
 const legacyOptions: readonly SelectOption[] = [
-  { value: "ResponseProductFinished", label: "Product ATR · Finished → QA GM" },
-  { value: "ResponseMaterial", label: "Material ATR · Raw or Packaging → QA GM" },
-  { value: "ResponseProductIntermediateGeneral", label: "Intermediate / Bulk · Tablet, Syrup, Ointment → QA Manager" },
-  { value: "ResponseProductIntermediateBeta", label: "Intermediate / Bulk · BETA → Deputy QA Manager" },
   { value: "ProductionExtraPackingQaGmAccess", label: "Extra material · QA GM all-department access" },
 ];
 const humanize = (value: string) => value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^Rnd /, "R&D ").replace(/^Qc /, "QC ");
@@ -13,6 +17,7 @@ export const approvalDocuments: readonly SelectOption[] = [
   { value: "ProductionExtraPacking", label: "Production extra material" },
   // The stock issue check is its document review now (Settings → Document reviews), not an approval workflow.
   { value: "Response", label: "Test results (Response)" },
+  ...testResultRoutes,
 ];
 export const isLegacyApprovalDocument = (value: string) => legacyOptions.some((option) => option.value === value);
 export const approvalDocumentLabel = (value: string) => {

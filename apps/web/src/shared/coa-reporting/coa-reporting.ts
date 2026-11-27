@@ -1,7 +1,12 @@
 import { z } from "zod";
 
-/** View and override which tests of a product specification's template print on the certificate. */
-export const coaReportingKeys = { view: "CanViewProductCoaReportedTests", edit: "CanEditProductCoaReportedTests" } as const;
+/** View and override which tests of a specification's template print on the certificate, per specification kind. */
+export const coaReportingKeys = {
+  product: { view: "CanViewProductCoaReportedTests", edit: "CanEditProductCoaReportedTests" },
+  raw: { view: "CanViewRawMaterialCoaReportedTests", edit: "CanEditRawMaterialCoaReportedTests" },
+  packaging: { view: "CanViewPackagingMaterialCoaReportedTests", edit: "CanEditPackagingMaterialCoaReportedTests" },
+} as const;
+export type CoaReportingKeys = { readonly view: string; readonly edit: string };
 
 /** AnalysisType on the backend. Only the microbial template has a screen so far; chemical uses the same endpoint. */
 export const AnalysisKind = { Chemical: 0, Microbial: 1 } as const;

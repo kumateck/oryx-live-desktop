@@ -1,6 +1,6 @@
 import { MicrobialLimitsDialog } from "@/shared/microbial/microbial-limits-dialog";
-import { CoaReportingDialog } from "./coa-reporting-dialog";
-import { coaReportingKeys } from "../lib/coa-reporting";
+import { CoaReportingDialog } from "@/shared/coa-reporting/coa-reporting-dialog";
+import { coaReportingKeys } from "@/shared/coa-reporting/coa-reporting";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { Skeleton } from "@/shared/skeleton/skeleton";
 import { assayReportingPermissions } from "../manifest";
@@ -64,7 +64,7 @@ export function ProductSpecificationDetailPage() {
         <SpecificationPrintAction kind="product" title="Product specification" specification={specification} sections={tests.sections} />
         <PermissionGuard require={assayReportingPermissions.view}><Button variant="outline" onClick={() => setReporting(true)}>COA assay reporting</Button></PermissionGuard>
         {specification.microbialForm ? <PermissionGuard require={microbialLimitKeys.view}><Button variant="outline" onClick={() => setLimits(true)}>Microbial limits</Button></PermissionGuard> : null}
-        {specification.microbialForm ? <PermissionGuard require={coaReportingKeys.view}><Button variant="outline" onClick={() => setCoaTests(true)}>Microbial tests on COA</Button></PermissionGuard> : null}
+        {specification.microbialForm ? <PermissionGuard require={coaReportingKeys.product.view}><Button variant="outline" onClick={() => setCoaTests(true)}>Microbial tests on COA</Button></PermissionGuard> : null}
         {!specification.isVerified ? <PermissionGuard require={specPermissions.verify}><Button variant="outline" onClick={() => setApproving(true)}><BadgeCheck />Approve</Button></PermissionGuard> : null}
         <PermissionGuard require={completePermission}><Button asChild variant="outline"><Link to={completePath(specification.id)}><ClipboardCheck />Set test references</Link></Button></PermissionGuard>
         <PermissionGuard require={specPermissions.edit}><Button asChild><Link to={editPath(specification.id)}><Pencil />Edit</Link></Button></PermissionGuard>
@@ -74,7 +74,7 @@ export function ProductSpecificationDetailPage() {
     </SpecificationDetail>
     {limits ? <MicrobialLimitsDialog subject="product" specificationId={specification.id} keys={microbialLimitKeys} onClose={() => setLimits(false)}
       onSaved={() => dispatch(productSpecificationChanged(specification.id))} /> : null}
-    {coaTests ? <CoaReportingDialog specificationId={specification.id} onClose={() => setCoaTests(false)} onSaved={() => dispatch(productSpecificationChanged(specification.id))} /> : null}
+    {coaTests ? <CoaReportingDialog subject="product" specificationId={specification.id} keys={coaReportingKeys.product} onClose={() => setCoaTests(false)} onSaved={() => dispatch(productSpecificationChanged(specification.id))} /> : null}
     {reporting ? <PermissionGuard require={assayReportingPermissions.view}><Suspense fallback={<Skeleton className="h-32" />}>
       <AssayReportingPanel specificationId={specification.id} onClose={() => setReporting(false)} />
     </Suspense></PermissionGuard> : null}

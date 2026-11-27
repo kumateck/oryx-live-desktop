@@ -28,7 +28,7 @@ function mount(element: React.ReactNode, permissions: string[]) {
 
 afterEach(() => { cleanup(); forgetSession(); vi.unstubAllGlobals(); });
 
-it("shows the request reason and lets the preparer submit only changed compliance and notes", async () => {
+it("shows the request reason and lets the preparer change compliance and notes", async () => {
   const response = { ...pending, coaReturnKind: 2 as const, coaReturnReason: "Check the pH decision.", certificateNotes: "Previous note" };
   const onSaved = vi.fn();
   const writes = mount(<><CertificateChangeRequestNotice response={response} />
@@ -47,6 +47,37 @@ it("shows the request reason and lets the preparer submit only changed complianc
   expect(writes[0]).toMatchObject({ path: "/api/v1/pending-certificates/response-1/product", method: "PUT" });
   expect(JSON.parse(writes[0]?.body ?? "{}")).toEqual({ version: 3, reason: "Rechecked the worksheet", notes: "Updated note",
     compliance: [{ formSectionId: "ph", complies: false }] });
+});
+
+it("re-runs the compliance check and saves its result even when the preparer changes nothing", async () => {
+  // pH was saved as not complying; the corrected specification now passes it, as generating the certificate would.
+  const saved = [{ formSectionId: "ph", complies: false }, { formSectionId: "assay", complies: true, reportingLocked: true }];
+  const rechecked = [{ formSectionId: "ph", complies: true, requiresReview: false }, { formSectionId: "assay", complies: false, requiresReview: false }];
+  const onSaved = vi.fn();
+  const writes = mount(<PendingCertificateEditButton response={pending} sections={sections} compliance={saved} rechecked={rechecked} onSaved={onSaved} />,
+    ["CanEditProductCertificateOfAnalysis"]);
+  fireEvent.click(await screen.findByRole("button", { name: "Edit COA" }));
+  const editor = within(await screen.findByRole("dialog", { name: "Edit certificate" }));
+  expect((editor.getByRole("radio", { name: "Complies" }) as HTMLButtonElement).getAttribute("aria-checked")).toBe("true");
+  expect(editor.getByText(/Re-checked against the specification: saved as does not comply/)).toBeTruthy();
+  fireEvent.change(editor.getByLabelText("Reason for resubmission"), { target: { value: "Specification corrected" } });
+  fireEvent.click(editor.getByRole("button", { name: "Save and resubmit" }));
+  await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
+  // The assay is locked by its reporting limits, so it is neither re-checked nor sent.
+  expect(JSON.parse(writes[0]?.body ?? "{}")).toMatchObject({ compliance: [{ formSectionId: "ph", complies: true }] });
+});
+
+it("keeps the saved decision where the check cannot assess the result", async () => {
+  const saved = [{ formSectionId: "ph", complies: false }];
+  const writes = mount(<PendingCertificateEditButton response={pending} sections={sections} compliance={saved}
+    rechecked={[{ formSectionId: "ph", complies: false, requiresReview: true }]} onSaved={() => {}} />, ["CanEditProductCertificateOfAnalysis"]);
+  fireEvent.click(await screen.findByRole("button", { name: "Edit COA" }));
+  const editor = within(await screen.findByRole("dialog", { name: "Edit certificate" }));
+  expect(editor.queryByText(/Re-checked against the specification/)).toBeNull();
+  fireEvent.change(editor.getByLabelText("Reason for resubmission"), { target: { value: "Resubmitting" } });
+  fireEvent.click(editor.getByRole("button", { name: "Save and resubmit" }));
+  await waitFor(() => expect(writes).toHaveLength(1));
+  expect(JSON.parse(writes[0]?.body ?? "{}")).toMatchObject({ compliance: [{ formSectionId: "ph", complies: false }] });
 });
 
 it("uses the matching review or correction permission and sends a reason with the reviewed version", async () => {

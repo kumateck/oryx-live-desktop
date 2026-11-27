@@ -197,6 +197,12 @@ function stripMaterialSamplingId(document: ObjectValue) {
 
 function stripCoaReportedTests(document: ObjectValue) {
   stripMaterialSamplingId(document);
+function stripMaterialCoaReportedTests(document: ObjectValue) {
+  delete object(document.paths ?? null)["/api/v1/material-specifications/{id}/coa-reporting/{analysisType}"];
+}
+
+function stripCoaReportedTests(document: ObjectValue) {
+  stripMaterialCoaReportedTests(document);
   delete object(document.paths ?? null)["/api/v1/product-specifications/{id}/coa-reporting/{analysisType}"];
   const schemas = object(object(document.components ?? null).schemas ?? null);
   for (const name of ["CoaReportingFieldDto", "CoaReportingOverrideRequest", "SaveCoaReportingRequest", "SpecificationCoaReportingDto"]) delete schemas[`DOMAIN.Entities.Forms.${name}`];
@@ -1723,6 +1729,7 @@ test("COA reported tests add only the specification override path, its schemas a
   const schemas = object(object(current.components ?? null).schemas ?? null);
   assert.deepEqual(object(object(schemas["DOMAIN.Entities.Forms.FormFieldDto"] ?? null).properties ?? null).reportOnCoa, { type: "boolean" });
   stripMaterialSamplingId(current);
+  stripMaterialCoaReportedTests(current);
   const digest = contractDigest(current);
   assert.equal(digest, "0e720b0d14b7eaad942d0b6498811849e8048e96a5175861c9f578db4a2ad142");
   checkCompatibility(hostConfig, policy, digest);
@@ -1738,5 +1745,15 @@ test("Material sampling id adds only the optional id on the material sampling DT
   assert.equal(digest, "2b5e639f83a018ec5f37af5b3142cd804eb1cbd9a657bd129dbe24ab69fe1e4b");
   checkCompatibility(hostConfig, policy, digest);
   stripMaterialSamplingId(current);
+test("Material COA reported tests add only the material specification override path", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const path = object(object(current.paths ?? null)["/api/v1/material-specifications/{id}/coa-reporting/{analysisType}"] ?? null);
+  assert.deepEqual(Object.keys(path).sort(), ["get", "put"]);
+  assert.equal(object(path.get ?? null).operationId, "GetMaterialSpecificationCoaReporting");
+  assert.equal(object(path.put ?? null).operationId, "SaveMaterialSpecificationCoaReporting");
+  const digest = contractDigest(current);
+  assert.equal(digest, "26bbe4f6f2ab2f33a50693297e280f8eeab0c969abe1199be90811133e4b5f15");
+  checkCompatibility(hostConfig, policy, digest);
+  stripMaterialCoaReportedTests(current);
   assert.equal(contractDigest(current), "0e720b0d14b7eaad942d0b6498811849e8048e96a5175861c9f578db4a2ad142");
 });

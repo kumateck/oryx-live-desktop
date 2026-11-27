@@ -161,6 +161,18 @@ qualityAssurance.items.unshift({ id: "quality-assurance.products", label: "Produ
 const qaAtrIndex = qualityAssurance.items.findIndex((item) => item.path === "/atr?type=0");
 if (qaAtrIndex < 0) throw new Error("QA Analytical Test Requests navigation entry is missing.");
 qualityAssurance.items.splice(qaAtrIndex + 1, 0, { id: "quality-assurance.material-retests", label: "Material Retests", path: "/qc/material-retests?tab=sample", permissions: ["CanRecordMaterialRetestSample"] });
+// Formula review and approval are QC work: the revisions are QC's worksheet formulas. They leave QA and sit in QC
+// under Formulas; their pages and permission keys are unchanged.
+const formulaPaths = ["/qa/formula-reviews", "/qa/formula-approvals"];
+const formulaEntries = formulaPaths.map((path) => {
+  const index = qualityAssurance.items.findIndex((item) => item.path === path);
+  if (index < 0) throw new Error(`QA navigation entry ${path} is missing.`);
+  const [entry] = qualityAssurance.items.splice(index, 1);
+  if (!entry) throw new Error(`QA navigation entry ${path} is missing.`);
+  return { ...entry, id: `quality-control.formulas.${entry.id.replace(/^quality-assurance\./, "")}` };
+});
+qualityControl?.items.push({ id: "quality-control.formulas", label: "Formulas",
+  permissions: [...new Set(formulaEntries.flatMap((entry) => entry.permissions ?? []))], children: formulaEntries });
 qualityAssurance.items.push({ id: "quality-assurance.issued-bmr-records", label: "Issued BMR records", path: "/qa/issued-bmrs", permissions: ["CanViewIssuedBmrRecords"] });
 qualityAssurance.items.push(...vendorApproval);
 
