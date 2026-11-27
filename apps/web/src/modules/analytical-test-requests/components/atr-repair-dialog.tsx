@@ -6,7 +6,7 @@ import { assignedFieldIds } from "@/shared/qc/assignments";
 import { QuestionType } from "@/shared/questions/question-types";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useAtrWorksheet } from "../hooks/use-atr-worksheet";
-import { AtrFormulaActions } from "./atr-formula-actions";
+import { TestFormulaActions } from "@/modules/questions/formula-repair";
 
 export function AtrRepairDialog({ atrId, onClose }: { atrId: string; onClose: () => void }) {
   const sheet = useAtrWorksheet(atrId);
@@ -18,7 +18,7 @@ export function AtrRepairDialog({ atrId, onClose }: { atrId: string; onClose: ()
       <DialogDescription>Choose an assigned formula to repair. Results can be entered and saved after the repair.</DialogDescription></DialogHeader>
     <DialogBody>
       {sheet.loading ? <DetailPageSkeleton label="Loading test formulas" /> : sheet.error ? <p role="alert">{sheet.error}</p>
-        : fields.length ? <AtrFormulaActions atrId={atrId} fields={fields} responses={sheet.responses} disabled={false} onReload={sheet.reload} />
+        : fields.length ? <TestFormulaActions testId={atrId} fields={fields} responses={sheet.responses} disabled={false} onReload={sheet.reload} />
           : <p className="text-sm text-muted-foreground">This test has no formula fields assigned to you.</p>}
     </DialogBody>
   </DialogContent></Dialog>;

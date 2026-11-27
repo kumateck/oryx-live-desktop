@@ -144,3 +144,31 @@ it("applies the approved revision to every field of the formula on the opened te
   expect(body.candidate.definition).toBe(approved);
   expect(body.candidate.targets).toEqual(fields.map(formFieldId => ({ atrId: atr, formFieldId })));
 });
+
+it("previews an approved Uniformity of Weight revision, which has no expression", async () => {
+  // Uniformity is configured by type, sample count and nominal weight. An empty expression must not block the preview.
+  const atr = "01a1bfc4-192f-7af3-b6de-8e2ae6d98dc0";
+  const field = "01a1c6a0-416f-7ff8-ac04-5b140d5b0009";
+  const uniformity = (extra: object) => JSON.stringify({ type: 2, mode: "capsule", percent: false, decimalPlaces: 4, sampleCount: 20, nominal: 622.5, ...extra });
+  const approved = uniformity({ variableScopes: {} });
+  const previews: string[] = [];
+  const { reads } = open(["CanViewQuestions", "CanRepairTestFormula"], [ok],
+    { definition: uniformity({}), canRepairQuestion: false, canRepairTests: true, approvedDefinition: approved, approvedRevision: 1,
+      tests: [{ atrId: atr, responseId: null, formFieldId: field, label: "QCD/BP/26/0001 · Uniformity of content weight", eligible: true, blocker: null, currentDefinition: uniformity({}) }] },
+    `/settings/questions/formula/${questionId}/repair?atr=${atr}&field=${field}`);
+  const fetcher = vi.mocked(globalThis.fetch);
+  await screen.findByRole("heading", { name: "Repair Assay" });
+  expect(reads).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button", { name: "Preview repair" }));
+  await screen.findByRole("region", { name: "Repair preview" });
+  for (const call of fetcher.mock.calls) if (call[0] instanceof Request && call[0].url.endsWith("/preview")) previews.push(call[0].url);
+  expect(previews.length).toBeGreaterThan(0);
+});
+
+it("says why when a hand-corrected formula has no expression, instead of doing nothing", async () => {
+  open(undefined, [ok], { definition: JSON.stringify({ type: 0, expression: "", decimalPlaces: 2 }) });
+  await screen.findByRole("heading", { name: "Repair Assay" });
+  fireEvent.click(screen.getByRole("button", { name: "Preview repair" }));
+  expect(await screen.findByText("Enter the corrected expression.")).toBeTruthy();
+  expect(screen.queryByRole("region", { name: "Repair preview" })).toBeNull();
+});

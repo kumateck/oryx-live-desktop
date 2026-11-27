@@ -10,7 +10,7 @@ import { QuestionType } from "@/shared/questions/question-types";
 import { sha256Hex } from "@/shared/formula/core/sha256";
 import { forgetSession, rememberSession, stubBackend } from "@/test/backend";
 import { SessionReady } from "@/test/session-ready";
-import { AtrFormulaActions } from "./atr-formula-actions";
+import { TestFormulaActions } from "./test-formula-actions";
 
 HTMLElement.prototype.hasPointerCapture = () => false;
 HTMLElement.prototype.setPointerCapture = () => {};
@@ -37,7 +37,7 @@ function open(disabled: boolean, fields = [assay], pendingFields = ["field-1"]) 
   rememberSession();
   const onReload = vi.fn();
   const page = (unsaved: boolean) => <SessionProvider><SessionReady><ApiProvider><MemoryRouter>
-    <AtrFormulaActions atrId="atr-1" fields={fields} responses={pendingFields.map(id => ({ formField: { id }, formulaRepairPending: true }))} disabled={unsaved} onReload={onReload} />
+    <TestFormulaActions testId="atr-1" fields={fields} responses={pendingFields.map(id => ({ formField: { id }, formulaRepairPending: true }))} disabled={unsaved} onReload={onReload} />
   </MemoryRouter></ApiProvider></SessionReady></SessionProvider>;
   const { rerender } = render(page(disabled));
   return { evaluations, onReload, setUnsaved: (unsaved: boolean) => rerender(page(unsaved)) };
@@ -91,7 +91,7 @@ it("repairs a test with no saved response in a dialog while keeping the workshee
     question: { id: questionId, type: QuestionType.Formula, label: "Assay", options: [{ name: definition }] } });
   render(<SessionProvider><SessionReady><ApiProvider><MemoryRouter>
     <input aria-label="Unsaved reading" defaultValue="1.2300" />
-    <AtrFormulaActions atrId={atrId} fields={[field]} responses={[]} disabled onReload={() => {}} onRepaired={onRepaired} />
+    <TestFormulaActions testId={atrId} fields={[field]} responses={[]} disabled onReload={() => {}} onRepaired={onRepaired} />
   </MemoryRouter></ApiProvider></SessionReady></SessionProvider>);
   const reading = await screen.findByRole("textbox", { name: "Unsaved reading" });
   const user = userEvent.setup();

@@ -18,6 +18,8 @@ export const specPermissions = {
   verify: { 0: "CanVerifyRawMaterialSpecification", 1: "CanVerifyPackagingMaterialSpecification" },
   viewMicrobialLimits: { 0: "CanViewRawMaterialMicrobialLimits", 1: "CanViewPackagingMaterialMicrobialLimits" },
   editMicrobialLimits: { 0: "CanEditRawMaterialMicrobialLimits", 1: "CanEditPackagingMaterialMicrobialLimits" },
+  viewCoaReportedTests: { 0: "CanViewRawMaterialCoaReportedTests", 1: "CanViewPackagingMaterialCoaReportedTests" },
+  editCoaReportedTests: { 0: "CanEditRawMaterialCoaReportedTests", 1: "CanEditPackagingMaterialCoaReportedTests" },
 } as const satisfies Record<string, Record<MaterialKind, string>>;
 /** Completing the tests follows creating or editing, so either permission allows it. */
 export const completePermission = (kind: MaterialKind) => ({ kind: "some" as const, permissions: [specPermissions.create[kind], specPermissions.edit[kind]] });
