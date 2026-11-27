@@ -3546,6 +3546,7 @@ export type DomainEntitiesFormsFormFieldDto = {
   description?: string | null;
   rank?: number;
   formulaConfigurationHash?: string | null;
+  reportOnCoa?: boolean;
 };
 export type DomainEntitiesQualityRoutinesAnalysisType = 0 | 1;
 export type DomainEntitiesFormsFormSectionDto = {

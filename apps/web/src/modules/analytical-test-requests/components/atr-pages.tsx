@@ -1,3 +1,4 @@
+import { coaSections } from "@/shared/ard-view/raw-data/coa-sections";
 import { CertificateChangeRequestNotice, PendingCertificateEditButton } from "@/shared/ard-view/pending-certificate-actions";
 import { TestCorrectionPanel } from "@/shared/qc/test-correction-panel";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -121,7 +122,8 @@ export function AtrResultsPage() {
   const [printing, setPrinting] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   const [message, setMessage] = useState("");
-  const sections = useMemo(() => sheet.rawForm?.sections ?? [], [sheet.rawForm]);
+  // The certificate shows only the tests reported on it; the worksheet below keeps them all.
+  const sections = useMemo(() => coaSections(sheet.rawForm?.sections ?? [], sheet.responseDetail?.coaHiddenFieldIds), [sheet.rawForm, sheet.responseDetail]);
   const submitted = Boolean(sheet.responseDetail?.checkedAt);
   const inferred = useMemo(() => submitted ? recordedCoaCompliance(sections, sheet.responses)
     : buildCoaCompliancePayload(sections, sheet.responses), [sections, sheet.responses, submitted]);
