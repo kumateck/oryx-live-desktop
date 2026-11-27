@@ -7,6 +7,7 @@ import { TableValue } from "@/shared/ard-view/response/table-value";
 import { parsedResponseValueOnly } from "./parsers/value";
 import { renderPrintAttachments } from "./attachments";
 import SelectableOptions from "@/shared/ard-view/response/selectable-options";
+import { describe } from "@/shared/microbial/microbial-values";
 
 export const renderStoredValue = (response?: FormResponseDto) => {
   if (!response) {
@@ -39,6 +40,9 @@ export const renderStoredValue = (response?: FormResponseDto) => {
       />
     );
   }
+
+  const microbial = describe(Number(questionType), response.value);
+  if (microbial !== null) return <span className="text-sm text-foreground print:text-black">{microbial}</span>;
 
   if (questionType === QuestionType.Table) {
     return <TableValue value={response.value} response={response} />;

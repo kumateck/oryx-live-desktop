@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pencil } from "lucide-react";
+import { ListTree, Pencil } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Link, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { stpSchema } from "@/shared/stp/stp-schema";
 import { StpDetail, StpDocumentPage } from "@/shared/stp/stp-views";
 import { materialStpsApi } from "../api/material-stps-api";
 import { detailPath, documentPath, listOf, stpPermissions } from "../lib/material-stps";
+import { materialRevisionRoutes, revisionKeys } from "../lib/material-stp-revisions";
 import { MaterialStpDialog } from "./material-stp-dialog";
 
 function useMaterialStp() {
@@ -40,7 +41,10 @@ export function MaterialStpDetailPage() {
   if (!stp || kind === null || error) return <Unavailable message={error ?? "The STP could not be found."} retry={retry} back={listOf(kind ?? 0)} />;
   return <>
     <StpDetail stp={stp} document={document} itemLabel="Material" documentPath={documentPath(stp.id, kind)} crumbs={[{ label: "Material STPs", to: listOf(kind) }, { label: stp.number }]}
-      actions={<PermissionGuard require={stpPermissions.edit[kind]}><Button variant="outline" onClick={() => setEditing(true)}><Pencil />Edit STP</Button></PermissionGuard>} />
+      actions={<>
+        <PermissionGuard require={revisionKeys[kind].view}><Button asChild variant="outline"><Link to={materialRevisionRoutes(kind).list(stp.number)}><ListTree />Structured content</Link></Button></PermissionGuard>
+        {document ? <PermissionGuard require={revisionKeys[kind].import}><Button asChild variant="outline"><Link to={materialRevisionRoutes(kind).import(stp.number, stp.id)}>Import document content</Link></Button></PermissionGuard> : null}
+        <PermissionGuard require={stpPermissions.edit[kind]}><Button variant="outline" onClick={() => setEditing(true)}><Pencil />Edit STP</Button></PermissionGuard></>} />
     {editing ? <MaterialStpDialog kind={kind} editing={stp} onClose={() => setEditing(false)} /> : null}
   </>;
 }

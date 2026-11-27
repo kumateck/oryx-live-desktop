@@ -19,7 +19,7 @@ import { useNextSerial } from "@/shared/qc/qc-numbers";
 import { useKindTabs, type MaterialKind } from "@/shared/reference-data/kind-tabs";
 import { FormPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import {
-  checkRevisionDate, requireRevisionReason, revisionReasonField, documentReferences, earliestRevisionDate, linkDelta, materialSpecificationPrefix, serialNumber, specificationBaseSchema, specificationBody, specificationDefaults,
+  checkRevisionDate, requireRevisionReason, revisionReasonField, documentReferences, earliestRevisionDate, linkDelta, materialSpecificationPrefix, serialNumber, specificationBaseSchema, specificationBody, specificationDefaults, microbialTemplateField,
 } from "@/shared/specifications/specification-rules";
 import { specificationRowsSchema, specificationSchema, type Specification } from "@/shared/specifications/specification-schema";
 import { SpecificationUnavailable } from "@/shared/specifications/specification-views";
@@ -41,7 +41,7 @@ function Editor({ kind, saved, linked }: { kind: MaterialKind; saved: Specificat
   const permission = usePermissionAction(require);
   const schema = useMemo(() => schemaFor(saved !== null), [saved]);
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: saved ? { ...specificationDefaults(saved), materials: [...linked] }
-    : { specificationNumber: "", revisionNumber: "", supersedesNumber: "", reference: null, description: "", materials: [] } });
+    : { specificationNumber: "", revisionNumber: "", supersedesNumber: "", reference: null, microbialForm: null, description: "", materials: [] } });
   const effectiveDate = useWatch({ control: form.control, name: "effectiveDate" });
   void form.formState.errors;
   const earliest = useMemo(() => earliestRevisionDate(effectiveDate), [effectiveDate]);
@@ -86,8 +86,9 @@ function Editor({ kind, saved, linked }: { kind: MaterialKind; saved: Specificat
     { type: InputTypes.DATE, name: "reviewDate", label: "Revision date", required: true, minDate: earliest, ...years, description: "After the effective date and after today." },
     { type: InputTypes.TEXT, name: "supersedesNumber", label: "Supersedes", required: true, placeholder: "The number this replaces, or None" },
     { type: InputTypes.SELECT, mode: "single", source: "sync", name: "reference", label: "Reference", options: documentReferences, placeholder: "Select a pharmacopoeia" },
-    { type: InputTypes.SELECT, mode: "single", source: "async", name: "form", label: "Template", required: true, loadOptions: loadTemplates, placeholder: "Select a template", searchPlaceholder: "Search templates",
-      description: "The tests of the specification come from this template.", className: "md:col-span-2" },
+    { type: InputTypes.SELECT, mode: "single", source: "async", name: "form", label: "Chemical template", required: true, loadOptions: loadTemplates, placeholder: "Select a template", searchPlaceholder: "Search templates",
+      description: "The chemical tests of the specification come from this template.", className: "md:col-span-2" },
+    { type: InputTypes.SELECT, mode: "single", source: "async", loadOptions: loadTemplates, ...microbialTemplateField, className: "md:col-span-2" },
     { type: InputTypes.RICHTEXT, name: "description", label: "Notes", rows: 4, className: "md:col-span-2" },
     ...(saved ? [revisionReasonField] : []),
   ] as const satisfies readonly WizardField<Values>[], [kind, earliest, loadOptions, loadTemplates, saved]);

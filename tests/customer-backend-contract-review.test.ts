@@ -157,8 +157,43 @@ function stripBinCardPage(document: ObjectValue) {
   };
 }
 
+/** Structured STP revisions and specification tests citing them (2026-11-27): only their own paths and DOMAIN.Entities.StpRevisions.* schemas. */
+function stripStpRevisions(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  for (const path of Object.keys(paths)) if (path.startsWith("/api/v1/stp-revisions") || path.startsWith("/api/v1/stp-test-links")) delete paths[path];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.StpRevisions.")) delete schemas[name];
+}
+
+/** Specification microbial template (2026-11-27): optional microbialFormId / microbialForm on specification requests, DTOs and entities. */
+function stripSpecificationMicrobialTemplate(document: ObjectValue) {
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const kind of ["Material", "Product"]) {
+    const prefix = `DOMAIN.Entities.${kind}Specifications.`;
+    for (const name of [`Create${kind}SpecificationRequest`, `Update${kind}SpecificationRequest`, `${kind}SpecificationDto`, `${kind}Specification`]) {
+      const properties = object(object(schemas[prefix + name] ?? null).properties ?? null);
+      delete properties.microbialFormId;
+      delete properties.microbialForm;
+    }
+  }
+}
+
+/** Microbial testing (2026-11-27): question types 15–20, the specification microbial-limits paths and their owned schemas. */
+function stripMicrobialTesting(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  for (const path of ["/api/v1/material-specifications/{id}/microbial-limits", "/api/v1/product-specifications/{id}/microbial-limits"]) delete paths[path];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of ["MicrobialLimitDto", "MicrobialLimitFieldDto", "MicrobialLimitKind", "MicrobialLimitRequest", "SaveMicrobialLimitsRequest", "SpecificationMicrobialLimitsDto"])
+    delete schemas[`DOMAIN.Entities.Forms.${name}`];
+  const questionType = object(schemas["DOMAIN.Entities.Forms.QuestionType"] ?? null);
+  if (Array.isArray(questionType.enum)) questionType.enum = questionType.enum.filter((value) => typeof value !== "number" || value < 15);
+}
+
 function beforeProductionBoardOrder() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStpRevisions(document);
+  stripMicrobialTesting(document);
+  stripSpecificationMicrobialTemplate(document);
   stripCountingUnit(document);
   stripBinCardPage(document);
   delete object(document.paths ?? null)["/api/v1/production-board-order/{departmentId}"];
@@ -435,6 +470,7 @@ function stripOperationDepartments(document: ObjectValue) {
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = beforeMaterialLookupContext();
+  stripStpRevisions(document);
   stripCountingUnit(document);
   stripBinCardPage(document);
   stripIssuedRegister(document);
@@ -1605,4 +1641,56 @@ test("production board ordering adds only its department-scoped read and write c
   assert.equal(object(path.put ?? null).operationId, "SaveDepartmentProductionBoardOrder");
   checkCompatibility(hostConfig, policy, contractDigest(current));
   assert.equal(contractDigest(beforeProductionBoardOrder()), "ed5a4dba5d3d9e8ff51a650289ef4ec833d8b457a9f859be7fd205af072faa93");
+});
+
+test("structured STP revisions and STP test links add only their own operations and schemas", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+  const paths = Object.keys(object(current.paths ?? null)).filter(path => path.startsWith("/api/v1/stp-revisions") || path.startsWith("/api/v1/stp-test-links"));
+  assert.deepEqual(paths.sort(), [
+    "/api/v1/stp-revisions", "/api/v1/stp-revisions/import", "/api/v1/stp-revisions/import/document", "/api/v1/stp-revisions/numbers",
+    "/api/v1/stp-revisions/revise", "/api/v1/stp-revisions/{id}", "/api/v1/stp-revisions/{id}/docx", "/api/v1/stp-revisions/{id}/draft",
+    "/api/v1/stp-revisions/{id}/print", "/api/v1/stp-revisions/{id}/submit",
+    "/api/v1/stp-test-links/material-specification/{materialSpecificationId}", "/api/v1/stp-test-links/material-specification/{materialSpecificationId}/{formSectionId}",
+    "/api/v1/stp-test-links/product-specification/{productSpecificationId}", "/api/v1/stp-test-links/product-specification/{productSpecificationId}/{formSectionId}",
+  ]);
+  stripStpRevisions(current);
+  // Removing only these additions (and the microbial specification additions also in this contract) restores the previously approved contract.
+  stripMicrobialTesting(current);
+  stripSpecificationMicrobialTemplate(current);
+  assert.equal(contractDigest(current), "8c11b59e53c09375328ce898ab3e6f96034990f0683a7125cef186fe62746961");
+});
+
+test("specification microbial template adds only the optional microbial template on specifications", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const kind of ["Material", "Product"]) {
+    const prefix = `DOMAIN.Entities.${kind}Specifications.`;
+    for (const name of [`Create${kind}SpecificationRequest`, `Update${kind}SpecificationRequest`]) {
+      const schema = object(schemas[prefix + name] ?? null);
+      assert.deepEqual(object(object(schema.properties ?? null).microbialFormId ?? null), { type: "string", format: "uuid", nullable: true });
+      assert.ok(!(Array.isArray(schema.required) && schema.required.includes("microbialFormId")));
+    }
+    assert.ok(object(object(schemas[`${prefix}${kind}SpecificationDto`] ?? null).properties ?? null).microbialForm);
+  }
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+  stripMicrobialTesting(current);
+  stripSpecificationMicrobialTemplate(current);
+  stripStpRevisions(current);
+  assert.equal(contractDigest(current), "8c11b59e53c09375328ce898ab3e6f96034990f0683a7125cef186fe62746961");
+});
+
+test("microbial testing adds only its question types and specification limit paths", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const paths = object(current.paths ?? null);
+  for (const subject of ["material", "product"])
+    assert.deepEqual(Object.keys(object(paths[`/api/v1/${subject}-specifications/{id}/microbial-limits`] ?? null)).sort(), ["get", "put"]);
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  assert.deepEqual(object(schemas["DOMAIN.Entities.Forms.QuestionType"] ?? null).enum, Array.from({ length: 21 }, (_, index) => index));
+  // The combined STP revisions + microbial testing contract of this release.
+  const digest = contractDigest(current);
+  assert.equal(digest, "d4e3613c13eac5db34e18c33c544e858c842696227c5fef0ff708f149e415abe");
+  checkCompatibility(hostConfig, policy, digest);
+  stripMicrobialTesting(current);
+  assert.equal(contractDigest(current), "a4c38356a13b862fbec3ef7eb5f369b2c2acc8d4b6d3beb20d11a99a9875af05");
 });

@@ -876,6 +876,24 @@ export const routes: RouteObject[] = [
             { path: "document", Component: Outlet, children: [
               { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-stp/[id]/document/page")).default }) }
             ] }
+          ] },
+          { path: "revisions", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-stp/revisions/page")).default }) },
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-stp/revisions/[id]/page")).default }) },
+              { path: "draft", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-stp/revisions/[id]/draft/page")).default }) }
+              ] },
+              { path: "edit", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-stp/revisions/[id]/edit/page")).default }) }
+              ] }
+            ] },
+            { path: "import", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-stp/revisions/import/page")).default }) }
+            ] },
+            { path: "new", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/material-stp/revisions/new/page")).default }) }
+            ] }
           ] }
         ] },
         { path: "product-analytical-raw-data", Component: Outlet, children: [
@@ -907,6 +925,24 @@ export const routes: RouteObject[] = [
             { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/products-stp/[id]/page")).default }) },
             { path: "document", Component: Outlet, children: [
               { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/products-stp/[id]/document/page")).default }) }
+            ] }
+          ] },
+          { path: "revisions", Component: Outlet, children: [
+            { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/products-stp/revisions/page")).default }) },
+            { path: ":id", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/products-stp/revisions/[id]/page")).default }) },
+              { path: "draft", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/products-stp/revisions/[id]/draft/page")).default }) }
+              ] },
+              { path: "edit", Component: Outlet, children: [
+                { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/products-stp/revisions/[id]/edit/page")).default }) }
+              ] }
+            ] },
+            { path: "import", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/products-stp/revisions/import/page")).default }) }
+            ] },
+            { path: "new", Component: Outlet, children: [
+              { index: true, lazy: async () => ({ Component: (await import("../pages/(workspace)/qc/products-stp/revisions/new/page")).default }) }
             ] }
           ] }
         ] },

@@ -14,14 +14,23 @@ export const specificationSchema = z.object({
   effectiveDate: text, reviewDate: text, dueDate: text, createdAt: text, isVerified: z.boolean().nullish().transform((value) => value === true),
   testStage: z.number().nullish().transform((value) => value ?? null),
   form: z.object({ id: z.string(), name: text }).nullish().transform((value) => value ? { id: value.id, name: value.name ?? "Unnamed template" } : null),
+  /** The microbial template, beside the chemical one in `form`. Older servers do not send it. */
+  microbialFormId: z.string().nullish(),
+  microbialForm: z.object({ id: z.string(), name: text }).nullish(),
   createdBy: person, material: item, product: item,
-}).transform(({ material, product, ...rest }) => ({ ...rest, number: rest.specificationNumber ?? "–", item: material ?? product ?? null }));
+}).transform(({ material, product, microbialFormId, microbialForm, ...rest }) => ({
+  ...rest, number: rest.specificationNumber ?? "–", item: material ?? product ?? null,
+  microbialForm: microbialForm ? { id: microbialForm.id, name: microbialForm.name ?? "Unnamed template" } : microbialFormId ? { id: microbialFormId, name: "Microbial template" } : null,
+}));
 export type Specification = z.infer<typeof specificationSchema>;
 export const specificationRowsSchema = z.array(specificationSchema);
 
+/** Which of the specification's two templates a test comes from. */
+export type SpecificationAnalysis = "chemical" | "microbial";
 /** One test (section) of the specification's template, with the reference value QC set for it. */
 export const sectionSchema = z.object({ id: z.string(), name: text, description: text, value: text, groupName: text, order: z.number().nullish() })
-  .transform((value) => ({ id: value.id, name: value.name ?? "", description: value.description ?? "", value: value.value, group: value.groupName, order: value.order ?? 0 }));
+  .transform((value) => ({ id: value.id, name: value.name ?? "", description: value.description ?? "", value: value.value, group: value.groupName, order: value.order ?? 0,
+    analysis: "chemical" as SpecificationAnalysis }));
 export type SpecificationSection = z.infer<typeof sectionSchema>;
 export const sectionPageSchema = z.object({ data: z.array(sectionSchema).nullish() }).transform((value) => value.data ?? []);
 export const templateSectionsSchema = z.object({ name: text, sections: z.array(sectionSchema).nullish() }).transform((value) => ({ name: value.name, sections: value.sections ?? [] }));
@@ -50,3 +59,12 @@ export function groupSections(sections: readonly SpecificationSection[]): Sectio
   }
   return rows;
 }
+
+export const analysisLabels: Record<SpecificationAnalysis, string> = { chemical: "Chemical tests", microbial: "Microbial tests" };
+/** The tests split by template, chemical first; a template with no tests is left out. */
+export function byAnalysis(sections: readonly SpecificationSection[]) {
+  return (["chemical", "microbial"] as const).map((analysis) => ({ analysis, label: analysisLabels[analysis], sections: sections.filter((section) => section.analysis === analysis) }))
+    .filter((group) => group.sections.length > 0);
+}
+/** Tags each test with the template it comes from. */
+export const asAnalysis = (sections: readonly SpecificationSection[], analysis: SpecificationAnalysis) => sections.map((section) => ({ ...section, analysis }));
