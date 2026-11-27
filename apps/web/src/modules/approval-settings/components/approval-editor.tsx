@@ -60,8 +60,7 @@ export function ApprovalEditor({ record, onClose, repairing = false }: { record?
     busy={creating.isLoading || updating.isLoading || reading.isFetching} dirty={form.formState.isDirty} error={error} onSave={save} onClose={onClose}>
     {repairing ? <p role="alert" className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">Review every retained stage and choose its approver. Required flags and the escalation delay are retained. Saving numbers stages in the displayed order, starting at 1, and keeps the same document key. Existing document approvals are unchanged.</p> : null}
     {record && isLegacyApprovalDocument(record.itemType) ? <p role="note" className="text-sm text-muted-foreground">
-      This saved workflow uses a legacy document key. To route test results, configure Test results (Response).
-      If that workflow already exists, edit it from the approvals list.
+      This saved workflow uses a legacy document key that the server does not read.
     </p> : null}
     <FormWizard form={form} fields={fields} />
     <div><h3 className="mb-2 font-medium">Escalation delay</h3><FormWizard form={form} fields={delayFields} className="grid-cols-2" /></div>

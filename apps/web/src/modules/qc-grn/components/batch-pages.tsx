@@ -18,6 +18,8 @@ import { WorksheetProgress } from "@/shared/qc/worksheet-progress";
 import { assignedFieldIds } from "@/shared/qc/assignments";
 import { issueNumber, useNextSerial } from "@/shared/qc/qc-numbers";
 import { TestEntry, TestEntryEmpty } from "@/shared/qc/test-entry";
+import { formFields } from "@/shared/form-response/form-model";
+import { TestFormulaActions } from "@/modules/questions/formula-repair";
 import { DetailPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import { useBatchRoute } from "../hooks/use-batch-route";
 import { useBatchWorksheet } from "../hooks/use-batch-worksheet";
@@ -91,11 +93,18 @@ export function BatchTestPage() {
   const subject = material(sheet);
   const details = [{ label: "Form", value: sheet.form?.name ?? null }, { label: "You", value: user?.name ?? null }, { label: "Material", value: [subject.name, subject.code].filter(Boolean).join(" · ") }];
   const context = useMemo(() => ({ materialBatchId: route.batchId }), [route.batchId]);
+  // The material test is the sample drawn from the batch; formula repair names it by the sampling's id.
+  const sampling = qcGrnAnalyticalApi.useGetApiV1MaterialSamplingsByGrnIdAndBatchIdQuery(
+    route.grnId && !route.sampling?.id ? { ...qcGrnAudit, grnId: route.grnId, batchId: route.batchId } : skipToken);
+  const testId = route.sampling?.id ?? sampling.currentData?.id ?? null;
+  const repair = testId && sheet.form ? { formulaActions: (disabled: boolean, onRepaired: (fieldId: string, configurationHash: string) => void) =>
+    <TestFormulaActions testId={testId} fields={sheet.form ? formFields(sheet.form).filter(field => mine.has(field.id)) : []}
+      responses={sheet.responses} disabled={disabled} onRepaired={onRepaired} onReload={sheet.reload} /> } : {};
   return <Frame sheet={sheet} title="Enter results" crumb="Enter results">
     {sheet.responseId ? <TestCorrectionPanel responseId={sheet.responseId} kind={route.kind === 0 ? "raw" : "packaging"} canReturn={false} onReturned={sheet.reload} /> : null}
     {!sheet.form ? <TestEntryEmpty kind="no-form" details={details} onBack={() => void navigate(route.notePath)} />
       : mine.size === 0 ? <>{summary(sheet, route.kind)}<TestEntryEmpty kind="not-assigned" details={details} onBack={() => void navigate(route.notePath)} /></>
-      : <TestEntry progressTo={route.path("progress")} form={sheet.form} mine={mine} stored={sheet.stored} context={context} audit={qcGrnAudit} require={qcPermissions.test[route.kind]} summary={summary(sheet, route.kind)} onReload={sheet.reload} onDone={() => void navigate(route.notePath)} />}
+      : <TestEntry progressTo={route.path("progress")} form={sheet.form} mine={mine} stored={sheet.stored} context={context} audit={qcGrnAudit} require={qcPermissions.test[route.kind]} summary={summary(sheet, route.kind)} onReload={sheet.reload} onDone={() => void navigate(route.notePath)} {...repair} />}
   </Frame>;
 }
 /** Check note membership and the stored kind before reading any worksheet answers. */

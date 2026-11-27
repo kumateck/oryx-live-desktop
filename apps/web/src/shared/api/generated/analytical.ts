@@ -1815,6 +1815,34 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getMaterialSpecificationCoaReporting: build.query<
+      GetMaterialSpecificationCoaReportingApiResponse,
+      GetMaterialSpecificationCoaReportingApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-specification", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/material-specifications/${queryArg.id}/coa-reporting/${queryArg.analysisType}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    saveMaterialSpecificationCoaReporting: build.mutation<
+      SaveMaterialSpecificationCoaReportingApiResponse,
+      SaveMaterialSpecificationCoaReportingApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-specification", id: "LIST" }, { type: "material-specification", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/material-specifications/${queryArg.id}/coa-reporting/${queryArg.analysisType}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesFormsSaveCoaReportingRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2983,6 +3011,27 @@ export type SaveProductSpecificationCoaReportingApiArg = {
   subModule?: string;
   domainEntitiesFormsSaveCoaReportingRequest: DomainEntitiesFormsSaveCoaReportingRequest;
 };
+export type GetMaterialSpecificationCoaReportingApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationCoaReportingDto;
+export type GetMaterialSpecificationCoaReportingApiArg = {
+  id: string;
+  analysisType: DomainEntitiesQualityRoutinesAnalysisType;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type SaveMaterialSpecificationCoaReportingApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationCoaReportingDto;
+export type SaveMaterialSpecificationCoaReportingApiArg = {
+  id: string;
+  analysisType: DomainEntitiesQualityRoutinesAnalysisType;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsSaveCoaReportingRequest: DomainEntitiesFormsSaveCoaReportingRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -3811,6 +3860,7 @@ export type DomainEntitiesMaterialSamplingMaterialSamplingDto = {
   issueNumber?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   issuedAt?: string | null;
+  id?: string;
 };
 export type DomainEntitiesMaterialSamplingMaterialSamplingDtoRead = {
   grnDto?: DomainEntitiesGrnsGrnListDtoRead;
@@ -3822,6 +3872,7 @@ export type DomainEntitiesMaterialSamplingMaterialSamplingDtoRead = {
   issueNumber?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   issuedAt?: string | null;
+  id?: string;
 };
 export type DomainEntitiesChecklistsPackingCleanliness = 0 | 1;
 export type DomainEntitiesChecklistsQuarantinedLabel = 0 | 1;
@@ -5075,4 +5126,7 @@ export const {
   useGetProductSpecificationCoaReportingQuery,
   useLazyGetProductSpecificationCoaReportingQuery,
   useSaveProductSpecificationCoaReportingMutation,
+  useGetMaterialSpecificationCoaReportingQuery,
+  useLazyGetMaterialSpecificationCoaReportingQuery,
+  useSaveMaterialSpecificationCoaReportingMutation,
 } = injectedRtkApi;

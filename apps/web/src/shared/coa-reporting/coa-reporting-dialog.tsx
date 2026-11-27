@@ -11,21 +11,32 @@ import { useAccess } from "@/shared/auth/use-access";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { formatDateTime } from "@/shared/format/dates";
-import { AnalysisKind, coaReportingKeys, coaReportingSchema, overridesFor, sectionsOf } from "../lib/coa-reporting";
+import { AnalysisKind, coaReportingSchema, overridesFor, sectionsOf, type CoaReportingKeys } from "./coa-reporting";
 
-const audit = { module: "Quality Control", subModule: "Product Specification" } as const;
+const audits = {
+  product: { module: "Quality Control", subModule: "Product Specification" },
+  material: { module: "Quality Control", subModule: "Material Specification" },
+} as const;
 
 /**
  * Which tests of the specification's microbial template print on the certificate of analysis. Each starts from the template's
  * "Report on COA" choice; the specification can override it. Unreported tests are still tested and kept on the worksheet.
- * Saving needs a reason, applies to every product sharing the specification number, and sends the specification for approval again.
+ * Saving needs a reason, applies to every product or material sharing the specification number, and sends the specification for approval again.
  */
-export function CoaReportingDialog({ specificationId, onClose, onSaved }: { specificationId: string; onClose: () => void; onSaved: () => void }) {
+export function CoaReportingDialog({ subject, specificationId, keys, onClose, onSaved }: {
+  subject: "product" | "material"; specificationId: string;
+  /** The keys for this specification's kind: product, raw material or packaging material. */
+  keys: CoaReportingKeys; onClose: () => void; onSaved: () => void;
+}) {
   const access = useAccess();
-  const args = { ...audit, id: specificationId, analysisType: AnalysisKind.Microbial };
-  const query = analyticalApi.useGetProductSpecificationCoaReportingQuery(args, { refetchOnMountOrArgChange: true });
-  const [saveReporting] = analyticalApi.useSaveProductSpecificationCoaReportingMutation();
-  const permission = usePermissionAction(coaReportingKeys.edit);
+  const args = { ...audits[subject], id: specificationId, analysisType: AnalysisKind.Microbial };
+  const productQuery = analyticalApi.useGetProductSpecificationCoaReportingQuery(args, { refetchOnMountOrArgChange: true, skip: subject !== "product" });
+  const materialQuery = analyticalApi.useGetMaterialSpecificationCoaReportingQuery(args, { refetchOnMountOrArgChange: true, skip: subject !== "material" });
+  const query = subject === "product" ? productQuery : materialQuery;
+  const [saveProduct] = analyticalApi.useSaveProductSpecificationCoaReportingMutation();
+  const [saveMaterial] = analyticalApi.useSaveMaterialSpecificationCoaReportingMutation();
+  const saveReporting = subject === "product" ? saveProduct : saveMaterial;
+  const permission = usePermissionAction(keys.edit);
   const parsed = useMemo(() => query.currentData ? coaReportingSchema.safeParse(query.currentData) : null, [query.currentData]);
   const data = parsed?.success ? parsed.data : null;
   const sections = useMemo(() => sectionsOf(data?.fields ?? []), [data]);
@@ -43,7 +54,8 @@ export function CoaReportingDialog({ specificationId, onClose, onSaved }: { spec
     const result = await saveReporting({ ...args, domainEntitiesFormsSaveCoaReportingRequest: { reason: reason.trim(), overrides: overridesFor(data.fields, choices) } });
     setSaving(false);
     if ("error" in result) { setMessage(apiErrorMessage(result.error)); return; }
-    toast.success("Reported tests saved. Approve the specification again before testing against it.");
+    toast.success(subject === "product" ? "Reported tests saved. Approve the specification again before testing against it."
+      : "Reported tests saved. Verify the specification again before testing against it.");
     setChoices(null); setReason(""); void query.refetch(); onSaved();
   };
   const error = query.error ? apiErrorMessage(query.error) : parsed && !parsed.success ? "The reported tests could not be read." : null;
@@ -79,7 +91,7 @@ export function CoaReportingDialog({ specificationId, onClose, onSaved }: { spec
         {editing ? <><Button type="button" variant="outline" disabled={saving} onClick={() => { setChoices(null); setMessage(""); }}>Cancel</Button>
           <Button type="button" disabled={saving} onClick={() => void save()}>{saving ? <><Spinner />Saving…</> : "Save reported tests"}</Button></>
           : <><Button type="button" variant="outline" onClick={onClose}>Close</Button>
-            {access.has(coaReportingKeys.edit) && data?.formId && data.fields.length > 0 ? <Button type="button" onClick={() => { setChoices({}); setMessage(""); }}>Edit reported tests</Button> : null}</>}
+            {access.has(keys.edit) && data?.formId && data.fields.length > 0 ? <Button type="button" onClick={() => { setChoices({}); setMessage(""); }}>Edit reported tests</Button> : null}</>}
       </DialogFooter>
     </DialogContent>
   </Dialog>;

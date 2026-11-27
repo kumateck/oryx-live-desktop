@@ -19,6 +19,7 @@ import { useApproveSpecification, VerifiableSpecification } from "@/shared/speci
 import { useSpecificationTests } from "@/shared/specifications/use-specification-tests";
 import { useDispatch } from "react-redux";
 import { MicrobialLimitsDialog } from "@/shared/microbial/microbial-limits-dialog";
+import { CoaReportingDialog } from "@/shared/coa-reporting/coa-reporting-dialog";
 import { materialSpecificationsApi, specificationApproved } from "../api/material-specifications-api";
 import { asKind, audit, completePath, completePermission, detailPath, editPath, listOf, specPermissions } from "../lib/material-specifications";
 
@@ -41,6 +42,7 @@ export function MaterialSpecificationDetailPage() {
   const { specification, tests, kind, refreshing, unavailable } = useSpecification();
   const [approving, setApproving] = useState(false);
   const [limits, setLimits] = useState(false);
+  const [coaTests, setCoaTests] = useState(false);
   const dispatch = useDispatch();
   const approval = useApproveSpecification(VerifiableSpecification.Material, specificationApproved, audit);
   if (refreshing) return <DetailPageSkeleton label="Loading specification" />;
@@ -54,6 +56,7 @@ export function MaterialSpecificationDetailPage() {
         {asKind(specification.item?.kind) !== null ? <SpecificationPrintAction
           kind={kind === 1 ? "packaging" : "raw"} title="Material specification" specification={specification} sections={tests.sections} /> : null}
         {specification.microbialForm ? <PermissionGuard require={specPermissions.viewMicrobialLimits[kind]}><Button variant="outline" onClick={() => setLimits(true)}>Microbial limits</Button></PermissionGuard> : null}
+        {specification.microbialForm ? <PermissionGuard require={specPermissions.viewCoaReportedTests[kind]}><Button variant="outline" onClick={() => setCoaTests(true)}>Microbial tests on COA</Button></PermissionGuard> : null}
         {!specification.isVerified ? <PermissionGuard require={specPermissions.verify[kind]}><Button variant="outline" onClick={() => setApproving(true)}><BadgeCheck />Approve</Button></PermissionGuard> : null}
         <PermissionGuard require={completePermission(kind)}><Button asChild variant="outline"><Link to={completePath(specification.id)}><ClipboardCheck />Set test references</Link></Button></PermissionGuard>
         <PermissionGuard require={specPermissions.edit[kind]}><Button asChild><Link to={editPath(specification.id)}><Pencil />Edit</Link></Button></PermissionGuard>
@@ -63,6 +66,8 @@ export function MaterialSpecificationDetailPage() {
     </SpecificationDetail>
     {limits ? <MicrobialLimitsDialog subject="material" specificationId={specification.id} onClose={() => setLimits(false)} onSaved={() => dispatch(specificationApproved(specification.id))}
       keys={{ view: specPermissions.viewMicrobialLimits[kind], edit: specPermissions.editMicrobialLimits[kind] }} /> : null}
+    {coaTests ? <CoaReportingDialog subject="material" specificationId={specification.id} onClose={() => setCoaTests(false)} onSaved={() => dispatch(specificationApproved(specification.id))}
+      keys={{ view: specPermissions.viewCoaReportedTests[kind], edit: specPermissions.editCoaReportedTests[kind] }} /> : null}
     {approving ? <ConfirmActionDialog require={specPermissions.verify[kind]} destructive={false} title={`Approve ${specification.number}?`}
       description="Approving marks the specification as checked. Analysts test against it from then on." confirmLabel="Approve" busyLabel="Approving…" onClose={() => setApproving(false)}
       onConfirm={async () => { const error = await approval.approve(specification.id); if (!error) { setApproving(false); toast.success("Specification approved"); } return error; }} /> : null}
