@@ -2,12 +2,14 @@
 export const QuestionType = {
   ShortAnswer: 0, LongAnswer: 1, Paragraph: 2, Datepicker: 3, SingleChoice: 4, Dropdown: 5, Checkbox: 6, FileUpload: 7,
   Signature: 8, Reference: 9, Formula: 10, Specification: 11, Equipment: 12, Table: 13, Instrument: 14,
+  Organism: 15, Dilution: 16, Incubation: 17, ColonyCount: 18, CfuCalculation: 19, GrowthObservation: 20,
 } as const;
 export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType];
 
 export const questionTypeLabels: Record<QuestionType, string> = {
   0: "Short answer", 1: "Long answer", 2: "Paragraph", 3: "Date", 4: "Single choice", 5: "Dropdown", 6: "Checkboxes", 7: "File upload",
   8: "Signature", 9: "Reference", 10: "Formula", 11: "Specification", 12: "Equipment", 13: "Table", 14: "Instrument",
+  15: "Organism", 16: "Dilution", 17: "Incubation", 18: "Colony count", 19: "CFU calculation", 20: "Growth observation",
 };
 const all = Object.values(QuestionType);
 export const isQuestionType = (value: number | null | undefined): value is QuestionType => typeof value === "number" && (all as readonly number[]).includes(value);
@@ -29,3 +31,7 @@ export const FormulaType = { Simple: 0, Uniformity: 2, Universal: 3 } as const;
 export type FormulaType = (typeof FormulaType)[keyof typeof FormulaType];
 export const formulaTypeLabels: Record<FormulaType, string> = { 0: "Simple", 2: "Uniformity", 3: "Universal" };
 export const formulaTypeName = (type: FormulaType) => (["Simple", "Complex", "Uniformity", "Universal"] as const)[type];
+
+/** Microbial question types: their answers are structured (see shared/microbial) and a CFU result is calculated by the server. */
+export const microbialQuestionTypes: readonly QuestionType[] = [QuestionType.Organism, QuestionType.Dilution, QuestionType.Incubation, QuestionType.ColonyCount, QuestionType.CfuCalculation, QuestionType.GrowthObservation];
+export const isMicrobialQuestion = (type: number | null | undefined) => isQuestionType(type) && microbialQuestionTypes.includes(type);

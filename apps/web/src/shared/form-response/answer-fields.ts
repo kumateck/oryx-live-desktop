@@ -2,11 +2,13 @@ import type { FieldValues } from "react-hook-form";
 import type { PersistedAttachment, SelectLoader, WizardField } from "@/shared/forms/form-wizard-types";
 import { InputTypes } from "@/shared/forms/input-types";
 import { QuestionType, specificationReferences } from "@/shared/questions/question-types";
+import { growthOptions, organisms } from "@/shared/microbial/microbial-values";
 import { acceptedAnswerFiles } from "./answers";
 import type { FormField } from "./form-model";
 
 const loadTable = () => import("./fields/table-answer-field");
 const loadFormula = () => import("./fields/formula-answer-field");
+const loadMicrobial = () => import("./fields/microbial-answer-field");
 
 /** The control an analyst answers a question with. Choices are offered as the option text, which is what is stored. */
 export function answerWizardField(field: FormField, loadEquipment: SelectLoader, options: { label?: string; disabled?: boolean; persisted?: readonly PersistedAttachment[] } = {}): WizardField<FieldValues> {
@@ -26,6 +28,11 @@ export function answerWizardField(field: FormField, loadEquipment: SelectLoader,
     case QuestionType.Instrument: return { ...base, type: InputTypes.SELECT, mode: "multiple", source: "async", loadOptions: loadEquipment, placeholder: "Select instruments" };
     case QuestionType.Table: return { ...base, type: InputTypes.CUSTOM, load: loadTable };
     case QuestionType.Formula: return { ...base, type: InputTypes.CUSTOM, load: loadFormula };
+    case QuestionType.Organism: return { ...base, type: InputTypes.SELECT, mode: "single", source: "sync", options: organisms.map((item) => ({ value: item.value, label: item.label })) };
+    case QuestionType.GrowthObservation: return { ...base, type: InputTypes.RADIO, options: growthOptions.map((item) => ({ ...item })) };
+    case QuestionType.Dilution: case QuestionType.Incubation: case QuestionType.ColonyCount: return { ...base, type: InputTypes.CUSTOM, load: loadMicrobial };
+    // Calculated by the server; shown, never typed.
+    case QuestionType.CfuCalculation: return { ...base, required: false, disabled: true, type: InputTypes.CUSTOM, load: loadMicrobial };
     default: return { ...base, type: InputTypes.TEXT, placeholder: question.label };
   }
 }

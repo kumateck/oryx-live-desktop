@@ -178,9 +178,21 @@ function stripSpecificationMicrobialTemplate(document: ObjectValue) {
   }
 }
 
+/** Microbial testing (2026-11-27): question types 15–20, the specification microbial-limits paths and their owned schemas. */
+function stripMicrobialTesting(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  for (const path of ["/api/v1/material-specifications/{id}/microbial-limits", "/api/v1/product-specifications/{id}/microbial-limits"]) delete paths[path];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of ["MicrobialLimitDto", "MicrobialLimitFieldDto", "MicrobialLimitKind", "MicrobialLimitRequest", "SaveMicrobialLimitsRequest", "SpecificationMicrobialLimitsDto"])
+    delete schemas[`DOMAIN.Entities.Forms.${name}`];
+  const questionType = object(schemas["DOMAIN.Entities.Forms.QuestionType"] ?? null);
+  if (Array.isArray(questionType.enum)) questionType.enum = questionType.enum.filter((value) => typeof value !== "number" || value < 15);
+}
+
 function beforeProductionBoardOrder() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripStpRevisions(document);
+  stripMicrobialTesting(document);
   stripSpecificationMicrobialTemplate(document);
   stripCountingUnit(document);
   stripBinCardPage(document);
@@ -1644,6 +1656,7 @@ test("structured STP revisions and STP test links add only their own operations 
   ]);
   stripStpRevisions(current);
   // Removing only these additions (and the microbial specification additions also in this contract) restores the previously approved contract.
+  stripMicrobialTesting(current);
   stripSpecificationMicrobialTemplate(current);
   assert.equal(contractDigest(current), "8c11b59e53c09375328ce898ab3e6f96034990f0683a7125cef186fe62746961");
 });
@@ -1661,7 +1674,23 @@ test("specification microbial template adds only the optional microbial template
     assert.ok(object(object(schemas[`${prefix}${kind}SpecificationDto`] ?? null).properties ?? null).microbialForm);
   }
   checkCompatibility(hostConfig, policy, contractDigest(current));
+  stripMicrobialTesting(current);
   stripSpecificationMicrobialTemplate(current);
   stripStpRevisions(current);
   assert.equal(contractDigest(current), "8c11b59e53c09375328ce898ab3e6f96034990f0683a7125cef186fe62746961");
+});
+
+test("microbial testing adds only its question types and specification limit paths", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const paths = object(current.paths ?? null);
+  for (const subject of ["material", "product"])
+    assert.deepEqual(Object.keys(object(paths[`/api/v1/${subject}-specifications/{id}/microbial-limits`] ?? null)).sort(), ["get", "put"]);
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  assert.deepEqual(object(schemas["DOMAIN.Entities.Forms.QuestionType"] ?? null).enum, Array.from({ length: 21 }, (_, index) => index));
+  // The combined STP revisions + microbial testing contract of this release.
+  const digest = contractDigest(current);
+  assert.equal(digest, "d4e3613c13eac5db34e18c33c544e858c842696227c5fef0ff708f149e415abe");
+  checkCompatibility(hostConfig, policy, digest);
+  stripMicrobialTesting(current);
+  assert.equal(contractDigest(current), "a4c38356a13b862fbec3ef7eb5f369b2c2acc8d4b6d3beb20d11a99a9875af05");
 });

@@ -1731,6 +1731,62 @@ const injectedRtkApi = api.injectEndpoints({
           },
         }),
       }),
+    getMaterialSpecificationMicrobialLimits: build.query<
+      GetMaterialSpecificationMicrobialLimitsApiResponse,
+      GetMaterialSpecificationMicrobialLimitsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "material-specification", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/material-specifications/${queryArg.id}/microbial-limits`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    saveMaterialSpecificationMicrobialLimits: build.mutation<
+      SaveMaterialSpecificationMicrobialLimitsApiResponse,
+      SaveMaterialSpecificationMicrobialLimitsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "material-specification", id: "LIST" }, { type: "material-specification", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/material-specifications/${queryArg.id}/microbial-limits`,
+        method: "PUT",
+        body: queryArg.domainEntitiesFormsSaveMicrobialLimitsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getProductSpecificationMicrobialLimits: build.query<
+      GetProductSpecificationMicrobialLimitsApiResponse,
+      GetProductSpecificationMicrobialLimitsApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-specification", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/product-specifications/${queryArg.id}/microbial-limits`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    saveProductSpecificationMicrobialLimits: build.mutation<
+      SaveProductSpecificationMicrobialLimitsApiResponse,
+      SaveProductSpecificationMicrobialLimitsApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-specification", id: "LIST" }, { type: "product-specification", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/product-specifications/${queryArg.id}/microbial-limits`,
+        method: "PUT",
+        body: queryArg.domainEntitiesFormsSaveMicrobialLimitsRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2840,6 +2896,44 @@ export type PutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndF
     subModule?: string;
     domainEntitiesStpRevisionsSaveStpTestLinkRequest: DomainEntitiesStpRevisionsSaveStpTestLinkRequest;
   };
+export type GetMaterialSpecificationMicrobialLimitsApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationMicrobialLimitsDto;
+export type GetMaterialSpecificationMicrobialLimitsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type SaveMaterialSpecificationMicrobialLimitsApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationMicrobialLimitsDto;
+export type SaveMaterialSpecificationMicrobialLimitsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsSaveMicrobialLimitsRequest: DomainEntitiesFormsSaveMicrobialLimitsRequest;
+};
+export type GetProductSpecificationMicrobialLimitsApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationMicrobialLimitsDto;
+export type GetProductSpecificationMicrobialLimitsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type SaveProductSpecificationMicrobialLimitsApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationMicrobialLimitsDto;
+export type SaveProductSpecificationMicrobialLimitsApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsSaveMicrobialLimitsRequest: DomainEntitiesFormsSaveMicrobialLimitsRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -3107,7 +3201,27 @@ export type DomainEntitiesProductsEquipmentsQcEquipmentDto = {
   qualificationStatus?: DomainEntitiesProductsEquipmentsQcEquipmentQualificationStatus;
 };
 export type DomainEntitiesFormsQuestionType =
-  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14;
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20;
 export type DomainEntitiesFormsQuestionValidationType = 0 | 1 | 2 | 3;
 export type DomainEntitiesFormsQuestionOptionDto = {
   id?: string;
@@ -4663,6 +4777,48 @@ export type DomainEntitiesStpRevisionsSaveStpTestLinkRequest = {
   stpNumber?: string | null;
   testKey?: string | null;
 };
+export type DomainEntitiesFormsMicrobialLimitFieldDto = {
+  formFieldId?: string;
+  sectionName?: string | null;
+  questionLabel?: string | null;
+  questionType?: DomainEntitiesFormsQuestionType;
+  unit?: string | null;
+};
+export type DomainEntitiesFormsMicrobialLimitKind = 0 | 1;
+export type DomainEntitiesFormsMicrobialLimitDto = {
+  formFieldId?: string;
+  kind?: DomainEntitiesFormsMicrobialLimitKind;
+  value?: number | null;
+  unit?: string | null;
+  organism?: string | null;
+  quantity?: number | null;
+  quantityUnit?: string | null;
+  text?: string | null;
+};
+export type DomainEntitiesFormsSpecificationMicrobialLimitsDto = {
+  specificationId?: string;
+  microbialFormId?: string | null;
+  fields?: DomainEntitiesFormsMicrobialLimitFieldDto[] | null;
+  limits?: DomainEntitiesFormsMicrobialLimitDto[] | null;
+  organisms?: {
+    [key: string]: string | null;
+  } | null;
+  reason?: string | null;
+  savedAt?: string | null;
+};
+export type DomainEntitiesFormsMicrobialLimitRequest = {
+  formFieldId: string;
+  kind?: DomainEntitiesFormsMicrobialLimitKind;
+  value?: number | null;
+  unit?: string | null;
+  organism?: string | null;
+  quantity?: number | null;
+  quantityUnit?: string | null;
+};
+export type DomainEntitiesFormsSaveMicrobialLimitsRequest = {
+  reason: string;
+  limits?: DomainEntitiesFormsMicrobialLimitRequest[] | null;
+};
 export const {
   usePostApiV1QaAnalyticalTestsMutation,
   useGetApiV1QaAnalyticalTestsQuery,
@@ -4834,4 +4990,10 @@ export const {
   useLazyGetApiV1StpTestLinksProductSpecificationByProductSpecificationIdQuery,
   usePutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdMutation,
   usePutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdMutation,
+  useGetMaterialSpecificationMicrobialLimitsQuery,
+  useLazyGetMaterialSpecificationMicrobialLimitsQuery,
+  useSaveMaterialSpecificationMicrobialLimitsMutation,
+  useGetProductSpecificationMicrobialLimitsQuery,
+  useLazyGetProductSpecificationMicrobialLimitsQuery,
+  useSaveProductSpecificationMicrobialLimitsMutation,
 } = injectedRtkApi;
