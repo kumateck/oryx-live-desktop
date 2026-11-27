@@ -1787,6 +1787,34 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getProductSpecificationCoaReporting: build.query<
+      GetProductSpecificationCoaReportingApiResponse,
+      GetProductSpecificationCoaReportingApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "product-specification", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/product-specifications/${queryArg.id}/coa-reporting/${queryArg.analysisType}`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    saveProductSpecificationCoaReporting: build.mutation<
+      SaveProductSpecificationCoaReportingApiResponse,
+      SaveProductSpecificationCoaReportingApiArg
+    >({
+      invalidatesTags: (_result, error, queryArg) => (error ? [] : [{ type: "product-specification", id: "LIST" }, { type: "product-specification", id: queryArg.id }]),
+      query: (queryArg) => ({
+        url: `/api/v1/product-specifications/${queryArg.id}/coa-reporting/${queryArg.analysisType}`,
+        method: "PUT",
+        body: queryArg.domainEntitiesFormsSaveCoaReportingRequest,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -2934,6 +2962,27 @@ export type SaveProductSpecificationMicrobialLimitsApiArg = {
   subModule?: string;
   domainEntitiesFormsSaveMicrobialLimitsRequest: DomainEntitiesFormsSaveMicrobialLimitsRequest;
 };
+export type GetProductSpecificationCoaReportingApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationCoaReportingDto;
+export type GetProductSpecificationCoaReportingApiArg = {
+  id: string;
+  analysisType: DomainEntitiesQualityRoutinesAnalysisType;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type SaveProductSpecificationCoaReportingApiResponse =
+  /** status 200 OK */ DomainEntitiesFormsSpecificationCoaReportingDto;
+export type SaveProductSpecificationCoaReportingApiArg = {
+  id: string;
+  analysisType: DomainEntitiesQualityRoutinesAnalysisType;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+  domainEntitiesFormsSaveCoaReportingRequest: DomainEntitiesFormsSaveCoaReportingRequest;
+};
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -3252,6 +3301,7 @@ export type DomainEntitiesFormsFormFieldDto = {
   description?: string | null;
   rank?: number;
   formulaConfigurationHash?: string | null;
+  reportOnCoa?: boolean;
 };
 export type DomainEntitiesFormsFormSectionDto = {
   id?: string;
@@ -4819,6 +4869,32 @@ export type DomainEntitiesFormsSaveMicrobialLimitsRequest = {
   reason: string;
   limits?: DomainEntitiesFormsMicrobialLimitRequest[] | null;
 };
+export type DomainEntitiesFormsCoaReportingFieldDto = {
+  formFieldId?: string;
+  formSectionId?: string;
+  sectionName?: string | null;
+  questionLabel?: string | null;
+  questionType?: DomainEntitiesFormsQuestionType;
+  templateReportOnCoa?: boolean;
+  override?: boolean | null;
+  reportOnCoa?: boolean;
+};
+export type DomainEntitiesFormsSpecificationCoaReportingDto = {
+  specificationId?: string;
+  analysisType?: DomainEntitiesQualityRoutinesAnalysisType;
+  formId?: string | null;
+  fields?: DomainEntitiesFormsCoaReportingFieldDto[] | null;
+  reason?: string | null;
+  savedAt?: string | null;
+};
+export type DomainEntitiesFormsCoaReportingOverrideRequest = {
+  formFieldId: string;
+  reportOnCoa?: boolean;
+};
+export type DomainEntitiesFormsSaveCoaReportingRequest = {
+  reason: string;
+  overrides?: DomainEntitiesFormsCoaReportingOverrideRequest[] | null;
+};
 export const {
   usePostApiV1QaAnalyticalTestsMutation,
   useGetApiV1QaAnalyticalTestsQuery,
@@ -4996,4 +5072,7 @@ export const {
   useGetProductSpecificationMicrobialLimitsQuery,
   useLazyGetProductSpecificationMicrobialLimitsQuery,
   useSaveProductSpecificationMicrobialLimitsMutation,
+  useGetProductSpecificationCoaReportingQuery,
+  useLazyGetProductSpecificationCoaReportingQuery,
+  useSaveProductSpecificationCoaReportingMutation,
 } = injectedRtkApi;

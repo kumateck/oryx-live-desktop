@@ -1816,6 +1816,7 @@ export type DomainEntitiesFormsRequestCreateFormFieldRequest = {
   required?: boolean;
   rank?: number;
   description?: string | null;
+  reportOnCoa?: boolean;
 };
 export type DomainEntitiesQualityRoutinesAnalysisType = 0 | 1;
 export type DomainEntitiesFormsRequestCreateFormSectionRequest = {
@@ -1966,6 +1967,7 @@ export type DomainEntitiesFormsFormFieldDto = {
   description?: string | null;
   rank?: number;
   formulaConfigurationHash?: string | null;
+  reportOnCoa?: boolean;
 };
 export type DomainEntitiesFormsFormSectionDto = {
   id?: string;
@@ -2073,6 +2075,7 @@ export type DomainEntitiesFormsRequestUpdateFormFieldRequest = {
   required?: boolean;
   rank?: number;
   description?: string | null;
+  reportOnCoa?: boolean;
 };
 export type DomainEntitiesFormsRequestSaveResponseDraftRequest = {
   responseId?: string | null;
@@ -2132,6 +2135,7 @@ export type DomainEntitiesFormsResponseDetailDto = {
   coaReturnKind?: DomainEntitiesFormsCertificateReturnKind;
   coaReturnReason?: string | null;
   certificateNotes?: string | null;
+  coaHiddenFieldIds?: string[] | null;
 };
 export type DomainEntitiesFormsRequestCreateQuestionOptionsRequest = {
   name?: string | null;
