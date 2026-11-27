@@ -293,19 +293,19 @@ export const UniformityPreview: React.FC<Props> = ({ settings, response, inputsO
     };
   }, [parsedResponse, mode, sampleCount, inputs, nominal, inputsOnly]);
 
-  const nominalToken = mode === "capsule" ? "nominal_content_wt" : "nominal_wt";
+  const nominalToken = mode === "capsule" ? "nominalContentWeight" : "nominalWeight";
   const nominalExpr =
     fmtExprNum(nominal ?? null, decimalPlaces) ?? `:${nominalToken}`;
 
   const plusExpr =
     mode === "capsule"
-      ? `(${fmtExprNum(results.maxContent, decimalPlaces) ?? ":max_content_wt"} - ${nominalExpr}) / ${nominalExpr}`
-      : `(${fmtExprNum(results.maxW, decimalPlaces) ?? ":max_wt"} - ${nominalExpr}) / ${nominalExpr}`;
+      ? `(${fmtExprNum(results.maxContent, decimalPlaces) ?? ":maxContentWeight"} - ${nominalExpr}) / ${nominalExpr}`
+      : `(${fmtExprNum(results.maxW, decimalPlaces) ?? ":maxWeight"} - ${nominalExpr}) / ${nominalExpr}`;
 
   const minusExpr =
     mode === "capsule"
-      ? `(${fmtExprNum(results.minContent, decimalPlaces) ?? ":min_content_wt"} - ${nominalExpr}) / ${nominalExpr}`
-      : `(${fmtExprNum(results.minW, decimalPlaces) ?? ":min_wt"} - ${nominalExpr}) / ${nominalExpr}`;
+      ? `(${fmtExprNum(results.minContent, decimalPlaces) ?? ":minContentWeight"} - ${nominalExpr}) / ${nominalExpr}`
+      : `(${fmtExprNum(results.minW, decimalPlaces) ?? ":minWeight"} - ${nominalExpr}) / ${nominalExpr}`;
 
   return (
     <div className="space-y-3 w-full">
