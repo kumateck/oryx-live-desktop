@@ -1,6 +1,6 @@
 import { CertificateResult, CertificateSpecification } from "./certificate-result";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Droplets, Printer } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -35,17 +35,19 @@ function CertificateSheet({ certificate, heading, subtitle, showPoint }: { certi
   </div>;
 }
 
-export function CertificatePage({ query, crumbs, heading, subtitle, showPoint, coverage }: {
+export function CertificatePage({ query, crumbs, heading, subtitle, showPoint, coverage, renderSheet }: {
   query: { data?: Certificate | undefined; isLoading: boolean; error?: Parameters<typeof apiErrorMessage>[0]; refetch: () => unknown };
   crumbs: (certificate: Certificate) => readonly PageCrumb[]; heading: (certificate: Certificate) => string; subtitle: (certificate: Certificate) => string; showPoint: boolean;
   /** Offer to start water coverage from a combined water certificate. */ coverage?: boolean;
+  /** The printed sheet, when the certificate has its own layout. */ renderSheet?: ((certificate: Certificate) => ReactNode) | undefined;
 }) {
   const [printing, setPrinting] = useState(false);
   if (query.isLoading) return <DetailPageSkeleton label="Loading certificate" />;
   const certificate = query.data;
   if (!certificate) return <div role="alert" className="mx-auto max-w-md space-y-3 py-12 text-center"><h1 className="text-lg font-semibold">Certificate unavailable</h1>
     <p className="text-sm text-muted-foreground">{query.error ? apiErrorMessage(query.error) : "The certificate could not be found."}</p><Button size="sm" variant="outline" onClick={() => void query.refetch()}>Retry</Button></div>;
-  const sheet = <CertificateSheet certificate={certificate} heading={heading(certificate)} subtitle={subtitle(certificate)} showPoint={showPoint} />;
+  const sheet = renderSheet ? renderSheet(certificate)
+    : <CertificateSheet certificate={certificate} heading={heading(certificate)} subtitle={subtitle(certificate)} showPoint={showPoint} />;
   return <article className="min-w-0 space-y-4">
     <PageHeader title={certificate.certificateCode ?? "Certificate"} crumbs={crumbs(certificate)} actions={<>
       {coverage && certificate.combined ? <PermissionGuard require={routinePermissions.waterManage}><Button asChild variant="outline"><Link to={`${waterPath}?certificateId=${certificate.id}`}><Droplets />Activate water coverage</Link></Button></PermissionGuard> : null}
