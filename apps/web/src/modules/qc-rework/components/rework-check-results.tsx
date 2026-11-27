@@ -1,3 +1,4 @@
+import { coaSections } from "@/shared/ard-view/raw-data/coa-sections";
 import { useMemo, useState } from "react";
 import { formsApi, type DomainEntitiesFormsFormDto, type DomainEntitiesFormsResponseDetailDto } from "@/shared/api/generated/forms";
 import { qcApi } from "@/shared/api/generated/qc";
@@ -20,12 +21,13 @@ export function ReworkCheckResults({ record, response, form, kind, onDone }: {
   const [generateMaterial] = formsApi.usePostApiV1FormGenerateCertificateByMaterialBatchIdMutation();
   const [generateProduct] = formsApi.usePostApiV1FormGenerateCertificateProductByBatchManufacturingRecordIdAndProductionActivityStepIdMutation();
   const [confirm, setConfirm] = useState(false);
-  const inferred = useMemo(() => buildCoaCompliancePayload(form.sections ?? [], response.formResponses ?? []), [form, response]);
+  const sections = useMemo(() => coaSections(form.sections ?? [], response.coaHiddenFieldIds), [form, response]);
+  const inferred = useMemo(() => buildCoaCompliancePayload(sections, response.formResponses ?? []), [sections, response]);
   const [compliance, setCompliance] = useState(inferred);
   if (response.checkedAt || response.approved || response.rejected) return <p role="status">This response has already been checked or decided.</p>;
   return <PermissionGuard require={require}><section className="space-y-3"><h2 className="font-semibold">Check the new test for QA</h2>
     <CertificatePreview kind={material ? "Material" : "Product"} facts={{ batchNumber: record.task.batchNumber ?? null, made: null, expires: null, arNumber: null, sampled: null, analysed: null, subject: record.task.batchNumber ?? "Rework test" }}
-      sections={form.sections ?? []} responses={response.formResponses ?? []} compliance={compliance}
+      sections={sections} responses={response.formResponses ?? []} compliance={compliance}
       onCompliance={(id, complies) => setCompliance((rows) => rows.map((row) => row.formSectionId === id ? { ...row, complies, requiresReview: false } : row))} />
     <Button disabled={!compliance.length || compliance.some((row) => row.requiresReview)} onClick={() => setConfirm(true)}>Send checked results to QA</Button>
     {confirm ? <ConfirmActionDialog title="Send checked rework results to QA?" description="Only this new response is submitted. Its current values and test definition are verified again." confirmLabel="Send to QA" busyLabel="Verifying…" destructive={false} require={require} onClose={() => setConfirm(false)} onConfirm={async () => {

@@ -865,7 +865,8 @@ export const navigationCatalog = [
           "CanViewRawMaterialGoodsReceiptNotes",
           "CanViewPackagingMaterialGoodsReceiptNotes",
           "CanViewMaterialRetests",
-          "CanViewResponseReworkTasks"
+          "CanViewResponseReworkTasks",
+          "CanRecalculatePercentageFormulaResults"
         ],
         "children": [
           {
@@ -900,6 +901,14 @@ export const navigationCatalog = [
             "path": "/qc/rework-tasks",
             "permissions": [
               "CanViewResponseReworkTasks"
+            ]
+          },
+          {
+            "id": "quality-control.testing.percentage-recalculation",
+            "label": "Percentage Recalculation",
+            "path": "/qc/percentage-recalculation",
+            "permissions": [
+              "CanRecalculatePercentageFormulaResults"
             ]
           }
         ]
