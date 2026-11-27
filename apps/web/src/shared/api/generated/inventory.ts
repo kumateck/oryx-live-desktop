@@ -5939,6 +5939,8 @@ export type DomainEntitiesMaterialSpecificationsMaterialSpecification = {
   isVerified?: boolean;
   verifiedAt?: string | null;
   verifiedById?: string | null;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsForm;
 };
 export type DomainEntitiesMaterialSpecificationsMaterialSpecificationRead = {
   id?: string;
@@ -5971,6 +5973,8 @@ export type DomainEntitiesMaterialSpecificationsMaterialSpecificationRead = {
   isVerified?: boolean;
   verifiedAt?: string | null;
   verifiedById?: string | null;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsForm;
 };
 export type DomainEntitiesProductSpecificationsProductSpecification = {
   id?: string;
@@ -6007,6 +6011,8 @@ export type DomainEntitiesProductSpecificationsProductSpecification = {
   isVerified?: boolean;
   verifiedAt?: string | null;
   verifiedById?: string | null;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsForm;
 };
 export type DomainEntitiesProductSpecificationsProductSpecificationRead = {
   id?: string;
@@ -6043,6 +6049,8 @@ export type DomainEntitiesProductSpecificationsProductSpecificationRead = {
   isVerified?: boolean;
   verifiedAt?: string | null;
   verifiedById?: string | null;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsForm;
 };
 export type DomainEntitiesFormsFormSection = {
   id?: string;

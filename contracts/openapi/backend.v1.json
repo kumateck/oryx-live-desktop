@@ -149614,6 +149614,11 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "microbialFormId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -149743,6 +149748,14 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "microbialFormId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "microbialForm": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Forms.Form"
           }
         },
         "additionalProperties": false
@@ -149822,6 +149835,14 @@
           },
           "isVerified": {
             "type": "boolean"
+          },
+          "microbialFormId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "microbialForm": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Forms.FormDto"
           }
         },
         "additionalProperties": false
@@ -149905,6 +149926,11 @@
           },
           "reference": {
             "type": "string",
+            "nullable": true
+          },
+          "microbialFormId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           }
         },
@@ -157361,6 +157387,11 @@
           "reference": {
             "type": "string",
             "nullable": true
+          },
+          "microbialFormId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -157505,6 +157536,14 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "microbialFormId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "microbialForm": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Forms.Form"
           }
         },
         "additionalProperties": false
@@ -157603,6 +157642,14 @@
           },
           "isVerified": {
             "type": "boolean"
+          },
+          "microbialFormId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "microbialForm": {
+            "$ref": "#/components/schemas/DOMAIN.Entities.Forms.FormDto"
           }
         },
         "additionalProperties": false
@@ -157676,6 +157723,11 @@
           },
           "reference": {
             "type": "string",
+            "nullable": true
+          },
+          "microbialFormId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           }
         },

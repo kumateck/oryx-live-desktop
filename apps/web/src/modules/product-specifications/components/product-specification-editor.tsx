@@ -18,7 +18,7 @@ import { PageHeader } from "@/shared/navigation/page-header";
 import { useNextSerial } from "@/shared/qc/qc-numbers";
 import { FormPageSkeleton } from "@/shared/skeleton/page-skeletons";
 import {
-  checkRevisionDate, requireRevisionReason, revisionReasonField, documentReferences, earliestRevisionDate, linkDelta, productSpecificationPrefix, serialNumber, specificationBaseSchema, specificationBody, specificationDefaults, testStages,
+  checkRevisionDate, requireRevisionReason, revisionReasonField, documentReferences, earliestRevisionDate, linkDelta, productSpecificationPrefix, serialNumber, specificationBaseSchema, specificationBody, specificationDefaults, microbialTemplateField, testStages,
 } from "@/shared/specifications/specification-rules";
 import { specificationRowsSchema, specificationSchema, type Specification } from "@/shared/specifications/specification-schema";
 import { SpecificationUnavailable } from "@/shared/specifications/specification-views";
@@ -47,7 +47,7 @@ function Editor({ saved, linked }: { saved: Specification | null; linked: readon
   const savedStage = saved ? testStages.find((stage) => stage.value === String(saved.testStage)) ?? null : null;
   const schema = useMemo(() => schemaFor(saved !== null), [saved]);
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: saved ? { ...specificationDefaults(saved), products: [...linked], testStage: savedStage }
-    : { specificationNumber: "", revisionNumber: "", supersedesNumber: "", reference: null, description: "", products: [], testStage: null } });
+    : { specificationNumber: "", revisionNumber: "", supersedesNumber: "", reference: null, microbialForm: null, description: "", products: [], testStage: null } });
   const effectiveDate = useWatch({ control: form.control, name: "effectiveDate" });
   const stage = useWatch({ control: form.control, name: "testStage" });
   const products = useWatch({ control: form.control, name: "products" });
@@ -100,8 +100,9 @@ function Editor({ saved, linked }: { saved: Specification | null; linked: readon
     { type: InputTypes.TEXT, name: "revisionNumber", label: "Revision", required: true },
     { type: InputTypes.TEXT, name: "supersedesNumber", label: "Supersedes", required: true, placeholder: "The number this replaces, or None" },
     { type: InputTypes.SELECT, mode: "single", source: "sync", name: "reference", label: "Reference", options: documentReferences, placeholder: "Select a pharmacopoeia" },
-    { type: InputTypes.SELECT, mode: "single", source: "async", name: "form", label: "Template", required: true, loadOptions: loadTemplates, placeholder: "Select a template", searchPlaceholder: "Search templates",
-      description: "The tests of the specification come from this template." },
+    { type: InputTypes.SELECT, mode: "single", source: "async", name: "form", label: "Chemical template", required: true, loadOptions: loadTemplates, placeholder: "Select a template", searchPlaceholder: "Search templates",
+      description: "The chemical tests of the specification come from this template." },
+    { type: InputTypes.SELECT, mode: "single", source: "async", loadOptions: loadTemplates, ...microbialTemplateField },
     { type: InputTypes.RICHTEXT, name: "description", label: "Notes", rows: 4, className: "md:col-span-2" },
     ...(saved ? [revisionReasonField] : []),
   ] as const satisfies readonly WizardField<Values>[], [earliest, loadOptions, loadTemplates, saved]);

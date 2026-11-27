@@ -165,9 +165,23 @@ function stripStpRevisions(document: ObjectValue) {
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.StpRevisions.")) delete schemas[name];
 }
 
+/** Specification microbial template (2026-11-27): optional microbialFormId / microbialForm on specification requests, DTOs and entities. */
+function stripSpecificationMicrobialTemplate(document: ObjectValue) {
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const kind of ["Material", "Product"]) {
+    const prefix = `DOMAIN.Entities.${kind}Specifications.`;
+    for (const name of [`Create${kind}SpecificationRequest`, `Update${kind}SpecificationRequest`, `${kind}SpecificationDto`, `${kind}Specification`]) {
+      const properties = object(object(schemas[prefix + name] ?? null).properties ?? null);
+      delete properties.microbialFormId;
+      delete properties.microbialForm;
+    }
+  }
+}
+
 function beforeProductionBoardOrder() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   stripStpRevisions(document);
+  stripSpecificationMicrobialTemplate(document);
   stripCountingUnit(document);
   stripBinCardPage(document);
   delete object(document.paths ?? null)["/api/v1/production-board-order/{departmentId}"];
@@ -1629,6 +1643,25 @@ test("structured STP revisions and STP test links add only their own operations 
     "/api/v1/stp-test-links/product-specification/{productSpecificationId}", "/api/v1/stp-test-links/product-specification/{productSpecificationId}/{formSectionId}",
   ]);
   stripStpRevisions(current);
-  // Removing only these additions restores the previously approved contract.
+  // Removing only these additions (and the microbial specification additions also in this contract) restores the previously approved contract.
+  stripSpecificationMicrobialTemplate(current);
+  assert.equal(contractDigest(current), "8c11b59e53c09375328ce898ab3e6f96034990f0683a7125cef186fe62746961");
+});
+
+test("specification microbial template adds only the optional microbial template on specifications", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  for (const kind of ["Material", "Product"]) {
+    const prefix = `DOMAIN.Entities.${kind}Specifications.`;
+    for (const name of [`Create${kind}SpecificationRequest`, `Update${kind}SpecificationRequest`]) {
+      const schema = object(schemas[prefix + name] ?? null);
+      assert.deepEqual(object(object(schema.properties ?? null).microbialFormId ?? null), { type: "string", format: "uuid", nullable: true });
+      assert.ok(!(Array.isArray(schema.required) && schema.required.includes("microbialFormId")));
+    }
+    assert.ok(object(object(schemas[`${prefix}${kind}SpecificationDto`] ?? null).properties ?? null).microbialForm);
+  }
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+  stripSpecificationMicrobialTemplate(current);
+  stripStpRevisions(current);
   assert.equal(contractDigest(current), "8c11b59e53c09375328ce898ab3e6f96034990f0683a7125cef186fe62746961");
 });

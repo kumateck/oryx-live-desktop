@@ -3742,6 +3742,7 @@ export type DomainEntitiesMaterialSpecificationsCreateMaterialSpecificationReque
     reference?: string | null;
     userId: string;
     materialIds: string[];
+    microbialFormId?: string | null;
   };
 export type DomainEntitiesMaterialSpecificationsMaterialSpecificationDto = {
   id?: string;
@@ -3763,6 +3764,8 @@ export type DomainEntitiesMaterialSpecificationsMaterialSpecificationDto = {
   material?: DomainEntitiesMaterialsMaterialDto;
   formSections?: DomainEntitiesFormsFormSectionDto[] | null;
   isVerified?: boolean;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsFormDto;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesMaterialSpecificationsMaterialSpecificationDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -3792,6 +3795,7 @@ export type DomainEntitiesMaterialSpecificationsUpdateMaterialSpecificationReque
     dueDate?: string;
     description?: string | null;
     reference?: string | null;
+    microbialFormId?: string | null;
   };
 export type AppUtilsPaginateable601SystemCollectionsGenericList601DomainEntitiesMaterialsMaterialDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -3977,6 +3981,7 @@ export type DomainEntitiesProductSpecificationsCreateProductSpecificationRequest
     dueDate?: string;
     description?: string | null;
     reference?: string | null;
+    microbialFormId?: string | null;
   };
 export type DomainEntitiesBillOfMaterialsBillOfMaterialItemSubstituteDto = {
   id?: string;
@@ -4187,6 +4192,8 @@ export type DomainEntitiesProductSpecificationsProductSpecificationDto = {
   response?: DomainEntitiesFormsResponseDto;
   formSections?: DomainEntitiesFormsFormSectionDto[] | null;
   isVerified?: boolean;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsFormDto;
 };
 export type DomainEntitiesProductSpecificationsProductSpecificationDtoRead = {
   id?: string;
@@ -4213,6 +4220,8 @@ export type DomainEntitiesProductSpecificationsProductSpecificationDtoRead = {
   response?: DomainEntitiesFormsResponseDto;
   formSections?: DomainEntitiesFormsFormSectionDto[] | null;
   isVerified?: boolean;
+  microbialFormId?: string | null;
+  microbialForm?: DomainEntitiesFormsFormDto;
 };
 export type AppUtilsPaginateable601SystemCollectionsGenericIEnumerable601DomainEntitiesProductSpecificationsProductSpecificationDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
@@ -4253,6 +4262,7 @@ export type DomainEntitiesProductSpecificationsUpdateProductSpecificationRequest
     dueDate?: string;
     description?: string | null;
     reference?: string | null;
+    microbialFormId?: string | null;
   };
 export type AppUtilsPaginateable601SystemCollectionsGenericList601DomainEntitiesProductsProductListDto20Domain20Version100020CultureNeutral20PublicKeyTokenNull20SystemPrivateCoreLib20Version900020CultureNeutral20PublicKeyToken7Cec85D7Bea7798E =
   {
