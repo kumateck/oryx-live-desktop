@@ -35,6 +35,13 @@ import {
 
 const FORMULA_NUMERIC_POLICY_V1 = "oryx-decimal-v1-half-up";
 
+/**
+ * "Percentage" means the formula gives a fraction and the result is reported in percent, as Oryx Next showed it:
+ * the governed result is the expression times 100. Without this the server stored 1.03 for a 103% assay.
+ */
+export const percentageExpression = (expression: string, percentage: boolean) =>
+  percentage ? `(${expression}) * 100` : expression;
+
 const makeResult = (
   key: string,
   label: string,
@@ -44,7 +51,7 @@ const makeResult = (
 ): FormulaResultDefinition => ({
   key,
   label,
-  expression,
+  expression: percentageExpression(expression, percentage),
   unit: percentage ? "%" : null,
   numericScale: percentage
     ? FormulaNumericScale.PercentagePoints
