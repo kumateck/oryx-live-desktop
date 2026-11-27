@@ -1,3 +1,4 @@
+import { coaSections } from "@/shared/ard-view/raw-data/coa-sections";
 import { CertificateChangeRequestNotice, PendingCertificateEditButton } from "@/shared/ard-view/pending-certificate-actions";
 import { TestCorrectionPanel } from "@/shared/qc/test-correction-panel";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -39,7 +40,8 @@ export function BatchResultsPage() {
   const [message, setMessage] = useState("");
   const responseId = sheet.responses.find(answer => answer.responseId)?.responseId;
   const responseDetail = qcGrnFormsApi.useGetApiV1FormResponsesByFormResponseIdQuery(responseId ? { ...qcGrnAudit, formResponseId: responseId } : skipToken);
-  const sections = useMemo(() => sheet.rawForm?.sections ?? [], [sheet.rawForm]);
+  // The certificate shows only the tests reported on it; the worksheet keeps them all.
+  const sections = useMemo(() => coaSections(sheet.rawForm?.sections ?? [], responseDetail.currentData?.coaHiddenFieldIds), [sheet.rawForm, responseDetail.currentData]);
   const submitted = Boolean(responseDetail.currentData?.checkedAt);
   const canGenerate = Boolean(responseDetail.currentData && !submitted && !responseDetail.currentData.approved && !responseDetail.currentData.rejected);
   const inferred = useMemo(() => submitted ? recordedCoaCompliance(sections, sheet.responses)

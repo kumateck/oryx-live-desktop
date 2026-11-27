@@ -11,7 +11,7 @@ import { QuestionType, questionTypeLabel } from "@/shared/questions/question-typ
 import { RichTextEditor } from "@/shared/rich-text/rich-text-editor";
 import type { TemplateQuestion } from "../lib/template-model";
 
-/** A question in a test: drag to reorder; set whether it must be answered and the answer it starts with. */
+/** A question in a test: drag to reorder; set whether it must be answered, whether it prints on the certificate, and the answer it starts with. */
 export function QuestionCard({ question, onChange, onRemove }: { question: TemplateQuestion; onChange: (next: TemplateQuestion) => void; onRemove: () => void }) {
   const id = useId();
   const sortable = useSortable({ id: question.key });
@@ -22,6 +22,7 @@ export function QuestionCard({ question, onChange, onRemove }: { question: Templ
       <div className="min-w-0 flex-1"><p className="break-words text-sm font-medium">{question.label}</p><p className="text-xs text-muted-foreground">{questionTypeLabel(question.type)}{question.options.length && question.type !== QuestionType.Formula && question.type !== QuestionType.Table ? ` · ${question.options.join(", ")}` : ""}</p>
         {preview?.expression ? <ExpressionView expression={preview.expression} print className="justify-start text-left text-xs" /> : null}</div>
       <div className="flex items-center gap-2"><Switch id={`${id}-required`} checked={question.required} onCheckedChange={(required) => onChange({ ...question, required })} /><Label htmlFor={`${id}-required`} className="text-xs">Required</Label></div>
+      <div className="flex items-center gap-2"><Switch id={`${id}-coa`} checked={question.reportOnCoa} onCheckedChange={(reportOnCoa) => onChange({ ...question, reportOnCoa })} /><Label htmlFor={`${id}-coa`} className="text-xs" title="Print this test on the certificate of analysis. A specification can override it. Unreported tests stay on the worksheet.">Report on COA</Label></div>
       <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove ${question.label}`} onClick={onRemove}><Trash2 className="text-destructive" /></Button>
     </div>
     <details className="mt-2 pl-8"><summary className="cursor-pointer text-xs text-muted-foreground">Default answer{question.description ? " (set)" : ""}</summary>

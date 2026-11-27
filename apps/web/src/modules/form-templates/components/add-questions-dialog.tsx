@@ -27,7 +27,7 @@ export function AddQuestionsDialog({ current, formType, onConfirm, onClose }: { 
   const rows: Pickable[] = (query.data?.data ?? []).flatMap((row) => { const parsed = questionSchema.safeParse(row); return parsed.success && parsed.data.id ? [{ ...parsed.data, id: parsed.data.id }] : []; });
   const pages = query.data?.pageCount ?? 1;
   const toggle = (question: Pickable) => setChosen((list) => list.some((entry) => entry.questionId === question.id) ? list.filter((entry) => entry.questionId !== question.id)
-    : [...list, { key: localKey("field"), fieldId: null, questionId: question.id, label: question.label, type: question.type, options: question.options, required: false, description: "" }]);
+    : [...list, { key: localKey("field"), fieldId: null, questionId: question.id, label: question.label, type: question.type, options: question.options, required: false, reportOnCoa: true, description: "" }]);
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
     <DialogContent className="sm:max-w-2xl">
       <DialogHeader><DialogTitle>Questions for this test</DialogTitle><DialogDescription>{chosen.length} selected. Only questions that suit this kind of template are listed.</DialogDescription></DialogHeader>

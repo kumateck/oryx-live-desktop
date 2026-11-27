@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { createRequest, editPlan, type LoadedTemplate, type TemplateSection } from "./template-model";
 
 const loaded: LoadedTemplate = { id: "f", name: "Paracetamol ARD", type: 0, sections: [
-  { id: "s1", name: "<p>Assay</p>", description: "", groupName: "", instrumentId: null, analysisType: null, order: 0, fields: [{ id: "f1", questionId: "q1", required: true, description: "", rank: 0 }, { id: "f2", questionId: "q2", required: false, description: "", rank: 1 }] },
+  { id: "s1", name: "<p>Assay</p>", description: "", groupName: "", instrumentId: null, analysisType: null, order: 0, fields: [{ id: "f1", questionId: "q1", required: true, reportOnCoa: true, description: "", rank: 0 }, { id: "f2", questionId: "q2", required: false, reportOnCoa: true, description: "", rank: 1 }] },
   { id: "s2", name: "<p>pH</p>", description: "", groupName: "", instrumentId: null, analysisType: null, order: 1, fields: [] },
 ] };
 const section = (overrides: Partial<TemplateSection>): TemplateSection => ({ key: "k", sectionId: null, name: "", description: "", groupName: "", instrumentId: null, analysisType: null, questions: [], ...overrides });
-const question = (fieldId: string | null, questionId: string, required = false) => ({ key: questionId, fieldId, questionId, label: questionId, type: 0 as const, options: [], required, description: "" });
+const question = (fieldId: string | null, questionId: string, required = false) => ({ key: questionId, fieldId, questionId, label: questionId, type: 0 as const, options: [], required, reportOnCoa: true, description: "" });
 
 describe("template edits", () => {
   it("makes no writes when nothing changed", () => {
@@ -19,6 +19,10 @@ describe("template edits", () => {
   });
   it("creates a template with ordered sections and ranked fields", () => {
     expect(createRequest(" New ", 1, [section({ name: "<p>A</p>", groupName: " G ", questions: [question(null, "q1", true)] })])).toEqual({ name: "New", type: 1,
-      sections: [{ name: "<p>A</p>", description: null, order: 0, instrumentId: null, groupName: "G", fields: [{ questionId: "q1", required: true, description: null, rank: 0 }] }] });
+      sections: [{ name: "<p>A</p>", description: null, order: 0, instrumentId: null, groupName: "G", fields: [{ questionId: "q1", required: true, reportOnCoa: true, description: null, rank: 0 }] }] });
+  });
+  it("saves a changed Report on COA choice as a field update", () => {
+    const plan = editPlan(loaded, "Paracetamol ARD", 0, [section({ sectionId: "s1", name: "<p>Assay</p>", questions: [question("f1", "q1", true), { ...question("f2", "q2"), reportOnCoa: false }] }), section({ sectionId: "s2", name: "<p>pH</p>" })]);
+    expect(plan).toEqual([{ kind: "update-field", fieldId: "f2", body: { questionId: "q2", required: false, reportOnCoa: false, description: null, rank: 1 } }]);
   });
 });

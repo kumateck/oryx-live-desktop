@@ -1,3 +1,4 @@
+import { coaSections } from "@/shared/ard-view/raw-data/coa-sections";
 import { useMemo } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { z } from "zod";
@@ -76,8 +77,10 @@ export function useArdCertificate(id: string, options: { rejection?: boolean } =
   // An investigation or certificate is made only once the results are rejected or approved.
   const atr = options.rejection || approved ? parsedAtr : null;
   const coaTarget = materialBatchId ? { materialBatchId } : atr?.id ? { analyticalTestRequestId: atr.id } : null;
-  const certificateSections = sections.map((section) => ({ id: section.id, name: section.name, description: section.description, value: section.value, groupName: section.groupName,
+  const worksheetSections = sections.map((section) => ({ id: section.id, name: section.name, description: section.description, value: section.value, groupName: section.groupName,
     fields: [...(section.fields ?? [])].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0)) }));
+  // The certificate shows only the tests reported on it; the worksheet keeps them all.
+  const certificateSections = coaSections(worksheetSections, query.data?.coaHiddenFieldIds);
 
   const isMaterial = Boolean(materialBatchId);
   const facts: CertificateFacts | null = response ? (() => {
@@ -91,6 +94,6 @@ export function useArdCertificate(id: string, options: { rejection?: boolean } =
           sampled: isMaterial ? material?.sampledDate : product?.sampledDate, analysed: (isMaterial ? material?.materialBatch?.analysedDate : product?.analysedDate) ?? response.checkedAt };
     return facts;
   })() : null;
-  return { query, response, state, loading, failures, approved, atr, atrQuery, coaTarget, sections, certificateSections, recorded, signatories, facts, isMaterial,
+  return { query, response, state, loading, failures, approved, atr, atrQuery, coaTarget, sections, certificateSections, worksheetSections, recorded, signatories, facts, isMaterial,
     material, batch, product, ard, materialBatchId };
 }
