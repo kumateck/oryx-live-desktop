@@ -21,7 +21,7 @@ export interface BatchRoute {
   path: (step: BatchStep) => string;
   crumbs: readonly { label: string; to?: string }[];
   /** The sample's AR number and date when the page cannot read them from the note. */
-  sampling?: { arNumber: string | null; sampleDate: string | null } | undefined;
+  sampling?: { arNumber: string | null; sampleDate: string | null; /** The material test (sampling) id. */ id?: string | null | undefined } | undefined;
   /** Whether results were submitted, when the batch status cannot say (a retest batch stays held throughout). */
   submitted?: boolean | undefined;
 }

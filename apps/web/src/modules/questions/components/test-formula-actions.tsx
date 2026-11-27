@@ -8,14 +8,16 @@ import { anyFormulaRepairPermission } from "@/shared/formula/repairs/access";
 import { sha256Hex } from "@/shared/formula/core/sha256";
 import { QuestionType } from "@/shared/questions/question-types";
 
-const RepairPanel = lazy(() => import("@/modules/questions/formula-repair").then(module => ({ default: module.FormulaRepairPanel })));
+const RepairPanel = lazy(() => import("./formula-repair-page").then(module => ({ default: module.FormulaRepairPanel })));
 
 /**
- * Formula repair for the analyst's assigned fields. A repaired field needs no separate recalculation step: saving its
- * readings recalculates it on the server, and submission recalculates anything still pending and finalizes the results.
+ * Formula repair for the analyst's assigned fields on a product ATR or a raw or packaging material test. A repaired field needs
+ * no separate recalculation step: saving its readings recalculates it on the server, and submission recalculates anything
+ * still pending and finalizes the results.
  */
-export function AtrFormulaActions({ atrId, fields, onReload, onRepaired }: {
-  atrId: string; fields: readonly FormField[]; responses: readonly FormResponseDto[]; disabled: boolean; onReload: () => void;
+export function TestFormulaActions({ testId, fields, onReload, onRepaired }: {
+  /** The product ATR's id, or the material test's sampling id. The server reads which it is. */
+  testId: string; fields: readonly FormField[]; responses: readonly FormResponseDto[]; disabled: boolean; onReload: () => void;
   onRepaired?: (fieldId: string, configurationHash: string) => void;
 }) {
   const [repairing, setRepairing] = useState<FormField | null>(null);
@@ -38,7 +40,7 @@ export function AtrFormulaActions({ atrId, fields, onReload, onRepaired }: {
         <DialogHeader><DialogTitle>Repair formula</DialogTitle>
           <DialogDescription>Repair this test's formula before saving results. Readings entered in the worksheet stay available.</DialogDescription></DialogHeader>
         <DialogBody><Suspense fallback={<p role="status">Loading formula repair…</p>}>
-          <RepairPanel questionId={repairing.question.id} atr={atrId} field={repairing.id} onBack={() => setRepairing(null)}
+          <RepairPanel questionId={repairing.question.id} atr={testId} field={repairing.id} onBack={() => setRepairing(null)}
             onApplied={(definition, fieldIds) => { const hash = sha256Hex(definition); for (const id of fieldIds) onRepaired?.(id, hash); onReload(); }} />
         </Suspense></DialogBody>
       </DialogContent>

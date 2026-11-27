@@ -22,7 +22,7 @@ function RetestTest({ children }: { children: ReactNode }) {
     grnId: null, batchId: record.materialBatchId, kind: record.materialKind, ready: Boolean(record.materialSamplingId),
     notePath: retestPath(record.id), backLabel: "Back to the retest", path: (step) => retestTestPath(record.id, steps[step]),
     crumbs: [{ label: "Material retests", to: root }, { label: record.batchNumber ?? "Retest", to: retestPath(record.id) }],
-    sampling: { arNumber: record.arNumber ?? null, sampleDate: record.sampleTakenAt ?? null }, submitted: resultsSubmitted(record.status),
+    sampling: { arNumber: record.arNumber ?? null, sampleDate: record.sampleTakenAt ?? null, id: record.materialSamplingId ?? null }, submitted: resultsSubmitted(record.status),
   } : null, [record]);
   if (query.isLoading) return <DetailPageSkeleton label="Loading retest" />;
   if (!route || !record) return <p role="alert" className="text-sm text-muted-foreground">{query.error ? apiErrorMessage(query.error) : "This retest could not be read."}</p>;
