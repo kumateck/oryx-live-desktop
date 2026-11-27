@@ -168,3 +168,19 @@ export function recordedCoaCompliance(sections: FormSectionDto[], responses: For
     return saved.length ? { ...item, complies: saved.every(Boolean), requiresReview: false } : item;
   });
 }
+
+/** A pending certificate's decision for a test: what it says now, and what it was saved as when that differs. */
+export type RecheckedCompliance = CoaComplianceItem & { saved?: boolean | undefined };
+
+/**
+ * Runs the certificate's compliance check again, as generating it does, over the saved decisions. A test the check
+ * can assess takes the new result, so a corrected specification or result is picked up; a test it cannot assess keeps
+ * the preparer's saved decision. Tests locked by assay reporting are left as they are.
+ */
+export function recheckCompliance(saved: readonly CoaComplianceItem[], rechecked: readonly CoaComplianceItem[]): RecheckedCompliance[] {
+  return saved.map((item) => {
+    const fresh = rechecked.find((entry) => entry.formSectionId === item.formSectionId);
+    if (item.reportingLocked || !fresh || fresh.requiresReview || fresh.complies === undefined || fresh.complies === item.complies) return item;
+    return { ...item, complies: fresh.complies, saved: item.complies === true };
+  });
+}

@@ -2,7 +2,9 @@ import { z } from "zod";
 
 /** The reason is entered after the preview, so it is checked only when applying (see `repairReasonSchema`). */
 export const formulaRepairValuesSchema = z.object({
-  expression: z.string().trim().min(1, "Enter the corrected expression.").max(4000),
+  // Required only when the expression is corrected by hand (see useFormulaRepair): an approved revision is applied as
+  // approved, and Uniformity of Weight has no expression at all.
+  expression: z.string().trim().max(4000),
   labels: z.record(z.string(), z.string().trim().max(200)),
   updateQuestion: z.boolean(), selectedTests: z.array(z.string()),
   reason: z.string().max(1000, "Keep the reason to 1000 characters."),

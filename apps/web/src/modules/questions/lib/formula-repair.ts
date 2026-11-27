@@ -35,6 +35,12 @@ export function formulaRepairDefaults(raw: string) {
   return { expression: typeof payload.expression === "string" ? payload.expression : "", labels };
 }
 
+/** Uniformity of Weight is configured by type, sample count and nominal weight; it has no expression to correct. */
+export function isUniformityRepair(raw: string): boolean {
+  const { payload } = decode(read(raw));
+  return Number(payload.type ?? 0) === 2 || payload.mode === "capsule" || payload.mode === "tablet" || payload.mode === "tube";
+}
+
 export function manualRepairVariables(raw: string, expression: string): string[] {
   const { payload } = decode(read(raw));
   if (Number(payload.type ?? 0) !== 3) return [];
