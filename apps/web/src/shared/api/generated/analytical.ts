@@ -3811,6 +3811,7 @@ export type DomainEntitiesMaterialSamplingMaterialSamplingDto = {
   issueNumber?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   issuedAt?: string | null;
+  id?: string;
 };
 export type DomainEntitiesMaterialSamplingMaterialSamplingDtoRead = {
   grnDto?: DomainEntitiesGrnsGrnListDtoRead;
@@ -3822,6 +3823,7 @@ export type DomainEntitiesMaterialSamplingMaterialSamplingDtoRead = {
   issueNumber?: string | null;
   issuedBy?: DomainEntitiesUsersUserDto;
   issuedAt?: string | null;
+  id?: string;
 };
 export type DomainEntitiesChecklistsPackingCleanliness = 0 | 1;
 export type DomainEntitiesChecklistsQuarantinedLabel = 0 | 1;

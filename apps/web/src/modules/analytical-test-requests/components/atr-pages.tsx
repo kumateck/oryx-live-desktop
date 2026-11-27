@@ -29,7 +29,7 @@ import { atrFormsApi } from "../api/atr-api";
 import { useAtrWorksheet } from "../hooks/use-atr-worksheet";
 import { atrAudit, atrListPath, atrPermissions, atrPrintsFilled, atrStepPath, stageLabels } from "../lib/atr";
 import { AtrWorksheet, AtrWorksheetPreview } from "./atr-worksheet";
-import { AtrFormulaActions } from "./atr-formula-actions";
+import { TestFormulaActions } from "@/modules/questions/formula-repair";
 import { formFields } from "@/shared/form-response/form-model";
 
 type Sheet = ReturnType<typeof useAtrWorksheet>;
@@ -96,7 +96,7 @@ export function AtrTestPage() {
     {!sheet.form || !sheet.context ? <TestEntryEmpty kind="no-form" details={details} onBack={() => void navigate(back(sheet))} />
       : mine.size === 0 ? <>{summary(sheet)}<TestEntryEmpty kind="not-assigned" details={details} onBack={() => void navigate(back(sheet))} /></>
       : <TestEntry progressTo={atrStepPath(sheet.atr?.id ?? "", "progress")} form={sheet.form} mine={mine} stored={sheet.stored} context={sheet.context} audit={atrAudit} require={atrPermissions.start} summary={summary(sheet)} onReload={noReload} onDone={() => void navigate(back(sheet))}
-        formulaActions={(disabled, onRepaired) => <AtrFormulaActions atrId={sheet.atr?.id ?? ""} fields={sheet.form ? formFields(sheet.form).filter(field => mine.has(field.id)) : []}
+        formulaActions={(disabled, onRepaired) => <TestFormulaActions testId={sheet.atr?.id ?? ""} fields={sheet.form ? formFields(sheet.form).filter(field => mine.has(field.id)) : []}
           responses={sheet.responses} disabled={disabled} onRepaired={onRepaired} onReload={sheet.reload} />} />}
   </Frame>;
 }

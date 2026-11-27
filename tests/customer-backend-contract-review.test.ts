@@ -190,7 +190,13 @@ function stripMicrobialTesting(document: ObjectValue) {
 }
 
 /** COA reported tests (2026-11-27): the product specification coa-reporting path, its four owned schemas, reportOnCoa on template fields and coaHiddenFieldIds on the response detail. */
+function stripMaterialSamplingId(document: ObjectValue) {
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  delete object(object(schemas["DOMAIN.Entities.MaterialSampling.MaterialSamplingDto"] ?? null).properties ?? null).id;
+}
+
 function stripCoaReportedTests(document: ObjectValue) {
+  stripMaterialSamplingId(document);
   delete object(document.paths ?? null)["/api/v1/product-specifications/{id}/coa-reporting/{analysisType}"];
   const schemas = object(object(document.components ?? null).schemas ?? null);
   for (const name of ["CoaReportingFieldDto", "CoaReportingOverrideRequest", "SaveCoaReportingRequest", "SpecificationCoaReportingDto"]) delete schemas[`DOMAIN.Entities.Forms.${name}`];
@@ -1716,9 +1722,21 @@ test("COA reported tests add only the specification override path, its schemas a
   assert.equal(object(path.put ?? null).operationId, "SaveProductSpecificationCoaReporting");
   const schemas = object(object(current.components ?? null).schemas ?? null);
   assert.deepEqual(object(object(schemas["DOMAIN.Entities.Forms.FormFieldDto"] ?? null).properties ?? null).reportOnCoa, { type: "boolean" });
+  stripMaterialSamplingId(current);
   const digest = contractDigest(current);
   assert.equal(digest, "0e720b0d14b7eaad942d0b6498811849e8048e96a5175861c9f578db4a2ad142");
   checkCompatibility(hostConfig, policy, digest);
   stripCoaReportedTests(current);
   assert.equal(contractDigest(current), "d4e3613c13eac5db34e18c33c544e858c842696227c5fef0ff708f149e415abe");
+});
+
+test("Material sampling id adds only the optional id on the material sampling DTO", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  const schemas = object(object(current.components ?? null).schemas ?? null);
+  assert.equal(object(object(object(schemas["DOMAIN.Entities.MaterialSampling.MaterialSamplingDto"] ?? null).properties ?? null).id ?? null).format, "uuid");
+  const digest = contractDigest(current);
+  assert.equal(digest, "2b5e639f83a018ec5f37af5b3142cd804eb1cbd9a657bd129dbe24ab69fe1e4b");
+  checkCompatibility(hostConfig, policy, digest);
+  stripMaterialSamplingId(current);
+  assert.equal(contractDigest(current), "0e720b0d14b7eaad942d0b6498811849e8048e96a5175861c9f578db4a2ad142");
 });
