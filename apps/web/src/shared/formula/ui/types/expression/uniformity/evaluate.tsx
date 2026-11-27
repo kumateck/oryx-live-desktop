@@ -449,7 +449,7 @@ export const UniformityOfWeightEvaluate: React.FC<Props> = ({
   };
 
   // Expressions
-  const nominalToken = mode === "capsule" ? "nominal_content_wt" : "nominal_wt";
+  const nominalToken = mode === "capsule" ? "nominalContentWeight" : "nominalWeight";
   const nominalExpr = useMemo(
     () => fmtExprNum(nominal ?? null, decimalPlaces) ?? `:${nominalToken}`,
     [nominal, decimalPlaces, nominalToken],
@@ -458,19 +458,19 @@ export const UniformityOfWeightEvaluate: React.FC<Props> = ({
   const plusExpr = useMemo(() => {
     if (mode === "capsule") {
       const maxContent = results.maxContent ?? null;
-      return `(${fmtExprNum(maxContent, decimalPlaces) ?? ":max_content_wt"} - ${nominalExpr}) / ${nominalExpr}`;
+      return `(${fmtExprNum(maxContent, decimalPlaces) ?? ":maxContentWeight"} - ${nominalExpr}) / ${nominalExpr}`;
     }
     const maxW = results.maxW ?? null;
-    return `(${fmtExprNum(maxW, decimalPlaces) ?? ":max_wt"} - ${nominalExpr}) / ${nominalExpr}`;
+    return `(${fmtExprNum(maxW, decimalPlaces) ?? ":maxWeight"} - ${nominalExpr}) / ${nominalExpr}`;
   }, [mode, results.maxContent, results.maxW, decimalPlaces, nominalExpr]);
 
   const minusExpr = useMemo(() => {
     if (mode === "capsule") {
       const minContent = results.minContent ?? null;
-      return `(${fmtExprNum(minContent, decimalPlaces) ?? ":min_content_wt"} - ${nominalExpr}) / ${nominalExpr}`;
+      return `(${fmtExprNum(minContent, decimalPlaces) ?? ":minContentWeight"} - ${nominalExpr}) / ${nominalExpr}`;
     }
     const minW = results.minW ?? null;
-    return `(${fmtExprNum(minW, decimalPlaces) ?? ":min_wt"} - ${nominalExpr}) / ${nominalExpr}`;
+    return `(${fmtExprNum(minW, decimalPlaces) ?? ":minWeight"} - ${nominalExpr}) / ${nominalExpr}`;
   }, [mode, results.minContent, results.minW, decimalPlaces, nominalExpr]);
 
   return (

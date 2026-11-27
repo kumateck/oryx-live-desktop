@@ -232,9 +232,9 @@ export const UniformityOfWeightConfig: React.FC<
   }, [mode, percent, decimalPlaces, sampleCount, nominal]);
 
   // Expression preview strings
-  const nominalToken = mode === "capsule" ? "nominal_wt" : "nominal_wt";
-  const maxToken = mode === "capsule" ? "max_wt" : "max_wt";
-  const minToken = mode === "capsule" ? "min_wt" : "min_wt";
+  const nominalToken = "nominalWeight";
+  const maxToken = "maxWeight";
+  const minToken = "minWeight";
 
   const nominalExpr = useMemo(
     () => fmtExprNum(nominal, decimalPlaces) ?? `:${nominalToken}`,

@@ -12,22 +12,26 @@ const numeric = (value: JsonValue | undefined) => (typeof value === "number" || 
 const numbers = (value: JsonValue | undefined, count: number) => Array.isArray(value) && value.length >= count && value.every(numeric);
 
 const blank = (value: JsonValue | undefined) => value === null || value === undefined || typeof value === "string" && value.trim() === "";
+/** Fewest readings a column needs before its average is taken. */
+export const MINIMUM_READINGS = 2;
+
 /**
- * Every column has at least one reading and every filled cell is a number. Columns may hold fewer readings than
- * the table has rows (for example five standard injections and two per sample): column statistics use the filled
- * cells only. Mirrors the server.
+ * Every column has at least two readings (or every row, when the table has fewer than two) and every filled cell is a
+ * number. The remaining rows are optional, for example five standard injections and two per sample: column statistics
+ * use the filled cells only. Mirrors the server.
  */
 function readingsComplete(table: JsonValue[], rows: number, columns: number): boolean {
   if (table.length < rows || !table.every(Array.isArray)) return false;
-  const filled = Array.from({ length: columns }, () => false);
+  const required = Math.max(Math.min(MINIMUM_READINGS, rows), 1);
+  const filled = Array.from({ length: columns }, () => 0);
   for (const row of table) {
     for (const [index, cell] of array(row).slice(0, columns).entries()) {
       if (blank(cell)) continue;
       if (!numeric(cell)) return false;
-      filled[index] = true;
+      filled[index] = (filled[index] ?? 0) + 1;
     }
   }
-  return filled.every(Boolean);
+  return filled.every((count) => count >= required);
 }
 
 function read(raw: string): JsonValue {

@@ -19,7 +19,7 @@ import type { FormulaTestCaseV1 } from "../core/test-contracts";
 import { buildDefaultFormulaTestCasesV1 } from "../core/test-suite";
 import { assertScalarAdapterSupported } from "./scalar-adapter-guard";
 import { buildUniformityDefinition } from "./uniformity-definition-adapter";
-import { buildUniversalDefinition } from "./universal-definition-adapter";
+import { buildUniversalDefinition, percentageExpression } from "./universal-definition-adapter";
 import { variableScopeFor } from "./variable-scope";
 
 export const FORMULA_NUMERIC_POLICY_V1 = "oryx-decimal-v1-half-up";
@@ -98,7 +98,7 @@ const buildScalarDefinition = (
       {
         key: "result",
         label: "Result",
-        expression,
+        expression: percentageExpression(expression, percentage),
         unit: percentage ? "%" : null,
         numericScale: percentage
           ? FormulaNumericScale.PercentagePoints
