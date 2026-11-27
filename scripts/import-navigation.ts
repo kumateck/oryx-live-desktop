@@ -116,6 +116,14 @@ procedures.children.push(
 );
 procedures.permissions = [...new Set([...(procedures.permissions ?? []), "CanViewRawMaterialStpRevisions", "CanViewPackagingMaterialStpRevisions", "CanViewProductStpRevisions"])];
 
+// Repaired Percentage results stored as fractions before the × 100 fix are recalculated from QC Testing. The key is granted
+// to nobody until an administrator assigns it.
+const testing = qualityControl?.items.find((item) => item.id === "quality-control.testing");
+if (!testing?.children) throw new Error("QC Testing navigation entry is missing.");
+testing.children.push({ id: "quality-control.testing.percentage-recalculation", label: "Percentage Recalculation", path: "/qc/percentage-recalculation",
+  permissions: ["CanRecalculatePercentageFormulaResults"] });
+testing.permissions = [...new Set([...(testing.permissions ?? []), "CanRecalculatePercentageFormulaResults"])];
+
 // Every supported collection is independently accessible, including units, sites,
 // and shifts. Keep the catalog and module guard on the same permission contract.
 settings?.items.push({ id: "system-settings.production-board-order", label: "Production board order", path: "/settings/production-board-order",

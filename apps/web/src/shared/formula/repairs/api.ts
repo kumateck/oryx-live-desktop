@@ -31,6 +31,17 @@ export const formulaRepairsApi = formsApi.enhanceEndpoints({ endpoints: {
     }),
     providesTags: (_result, _error, arg) => [{ type: "formula-repair/question", id: arg.questionId }],
   }),
+  /** Repaired Percentage results stored as fractions (before the × 100 fix), with any reason one cannot be recalculated now. */
+  readPercentageRecalculation: build.query<unknown, { module: string; subModule: string }>({
+    query: ({ module, subModule }) => ({ url: "/api/v1/formula-repairs/percentage-recalculation", headers: { Module: module, SubModule: subModule } }),
+  }),
+  /** Recalculates the chosen results in percent under an audited repair; the earlier results stay in the history. */
+  applyPercentageRecalculation: build.mutation<unknown, { module: string; subModule: string; reason: string;
+    targets: { responseId: string; formFieldId: string }[] }>({
+    query: ({ module, subModule, reason, targets }) => ({ url: "/api/v1/formula-repairs/percentage-recalculation", method: "POST",
+      body: { reason, targets }, headers: { Module: module, SubModule: subModule } }),
+  }),
 }) });
+export const { useReadPercentageRecalculationQuery, useApplyPercentageRecalculationMutation } = formulaRepairsApi;
 export const { useReadFormulaRepairContextQuery, usePreviewFormulaRepairMutation, useApplyFormulaRepairMutation,
   useGetFormulaRepairHistoryQuery, useEvaluateRepairedFormulaMutation } = formulaRepairsApi;
