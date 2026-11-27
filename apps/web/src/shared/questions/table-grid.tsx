@@ -5,15 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SearchableSelect } from "@/shared/forms/searchable-select";
 import type { SelectLoader } from "@/shared/forms/form-wizard-types";
-import { cellKey, type CellConfig, type TableAnswer, type TableConfig } from "./table-question";
+import { cellKey, type AsyncSource, type CellConfig, type TableAnswer, type TableConfig } from "./table-question";
 
 export type GridMode = "configure" | "preview" | "answer";
 interface GridProps {
-  config: TableConfig; mode: GridMode; answer: TableAnswer; labels: Record<string, string>; loadEquipment: SelectLoader; disabled?: boolean;
+  config: TableConfig; mode: GridMode; answer: TableAnswer; labels: Record<string, string>; loadRecords: (source: AsyncSource) => SelectLoader; disabled?: boolean;
   onConfigure?: (key: string) => void; onRemove?: (line: { kind: "row" | "column"; index: number }) => void; onAnswer?: (key: string, value: string, label?: string) => void;
 }
 
-const Cell = memo(function Cell({ row, col, cell, mode, value, label, loadEquipment, disabled, onConfigure, onRemove, onAnswer }: Omit<GridProps, "config" | "answer" | "labels"> & {
+const Cell = memo(function Cell({ row, col, cell, mode, value, label, loadRecords, disabled, onConfigure, onRemove, onAnswer }: Omit<GridProps, "config" | "answer" | "labels"> & {
   row: number; col: number; cell: CellConfig | undefined; value: string; label: string | undefined;
 }) {
   if (cell?.isMerged) return null;
@@ -36,8 +36,10 @@ const Cell = memo(function Cell({ row, col, cell, mode, value, label, loadEquipm
   const name = `Row ${row + 1}, column ${col + 1}`;
   if (cell.type === "input") return <td {...span} className="border p-1.5"><Input aria-label={name} value={value} placeholder={cell.placeholder || "Enter value"} disabled={Boolean(disabled)}
     readOnly={mode === "preview"} onChange={(event) => onAnswer?.(key, event.target.value)} className="h-8" /></td>;
+  // Filled from the record chosen in its source cell; never typed.
+  if (cell.type === "linked") return <td {...span} className="border bg-muted/40 p-1.5"><Input aria-label={name} value={value} placeholder="Automatic" readOnly tabIndex={-1} className="h-8 border-dashed" /></td>;
   if (cell.dataSource === "async" && cell.asyncSource) return <td {...span} className="border p-1.5">
-    <SearchableSelect clearable={false} label={name} loadOptions={loadEquipment} disabled={readOnly} value={value ? { value, label: label ?? value } : null} onChange={(option) => { if (option) onAnswer?.(key, option.value, option.label); }} /></td>;
+    <SearchableSelect clearable={false} label={name} loadOptions={loadRecords(cell.asyncSource)} disabled={readOnly} value={value ? { value, label: label ?? value } : null} onChange={(option) => { if (option) onAnswer?.(key, option.value, option.label); }} /></td>;
   return <td {...span} className="border p-1.5"><Select value={value} disabled={readOnly} onValueChange={(next) => onAnswer?.(key, next)}>
     <SelectTrigger aria-label={name} className="h-8 w-full"><SelectValue placeholder="Select an option" /></SelectTrigger>
     <SelectContent>{(cell.options ?? []).map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
