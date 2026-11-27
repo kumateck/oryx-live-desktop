@@ -29,6 +29,9 @@ it("renders the issued COA route and print preview from its frozen result rows",
   const { container } = render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
   expect(await screen.findByText("99.87")).toBeTruthy();
   expect(screen.getByText("Assay")).toBeTruthy();
+  // The issued COA reads as the printed certificate: numbered tests and a conclusion.
+  expect(screen.getByRole("table", { name: "Certificate results" }).textContent).toContain("1.Assay");
+  expect(screen.getByText(/complies with specification/)).toBeTruthy();
   expect(container.textContent).not.toContain("<p>");
   expect(container.textContent).not.toContain('"result"');
   expect(screen.getByText("Final formula result is not included in this issued snapshot.")).toBeTruthy();

@@ -12,7 +12,7 @@ import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { RichTextView } from "@/shared/rich-text/rich-text-view";
 import type { FormSectionDto } from "./dto";
-import type { CoaComplianceItem } from "./raw-data/coa-compliance";
+import { recheckCompliance, type CoaComplianceItem, type RecheckedCompliance } from "./raw-data/coa-compliance";
 import CoaComplianceControl from "./raw-data/coa-compliance-control";
 
 const edits = [
@@ -42,10 +42,13 @@ export function CertificateChangeRequestNotice({ response }: { response: Respons
   </div>;
 }
 
-export function PendingCertificateEditButton({ response, sections, compliance, onSaved }: {
+export function PendingCertificateEditButton({ response, sections, compliance, rechecked = [], onSaved }: {
   response: ResponseDetail | null | undefined;
   sections: readonly FormSectionDto[];
+  /** The decisions saved on the certificate. */
   compliance: readonly CoaComplianceItem[];
+  /** The compliance check run again on the current results and specification, as generating the certificate does. */
+  rechecked?: readonly CoaComplianceItem[];
   onSaved: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -59,14 +62,14 @@ export function PendingCertificateEditButton({ response, sections, compliance, o
   </p>;
   return <>
     <Button type="button" onClick={() => setOpen(true)}>{response.coaReturnKind ? "Review and resubmit" : "Edit COA"}</Button>
-    {open ? <CertificateEditDialog response={response} id={response.id} subject={subject} sections={sections} compliance={compliance}
+    {open ? <CertificateEditDialog response={response} id={response.id} subject={subject} sections={sections} compliance={recheckCompliance(compliance, rechecked)}
       onClose={() => setOpen(false)} onSaved={onSaved} /> : null}
   </>;
 }
 
 function CertificateEditDialog({ response, id, subject, sections, compliance, onClose, onSaved }: {
   response: ResponseDetail; id: string; subject: CertificateKind; sections: readonly FormSectionDto[];
-  compliance: readonly CoaComplianceItem[]; onClose: () => void; onSaved: () => void;
+  compliance: readonly RecheckedCompliance[]; onClose: () => void; onSaved: () => void;
 }) {
   const action = edits[subject];
   const permission = usePermissionAction(action.permission);
@@ -76,6 +79,8 @@ function CertificateEditDialog({ response, id, subject, sections, compliance, on
   const [notes, setNotes] = useState(response.certificateNotes ?? "");
   const [reason, setReason] = useState("");
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const editable = compliance.filter((item): item is RecheckedCompliance & { formSectionId: string } =>
+    Boolean(item.formSectionId) && !item.reportingLocked && sections.some(section => section.id === item.formSectionId));
   return <ConfirmActionDialog require={action.permission} destructive={false} title="Edit certificate"
     description="Saving sends the certificate back through approval."
     confirmLabel="Save and resubmit" busyLabel="Saving…" onClose={onClose} onConfirm={async () => {
@@ -84,7 +89,8 @@ function CertificateEditDialog({ response, id, subject, sections, compliance, on
       if (!reason.trim()) return "Enter a reason for the resubmission.";
       const result = await dispatch(action.endpoint.initiate({ responseId: id, domainEntitiesFormsSavePendingCertificate: {
         version, reason: reason.trim(), notes: notes.trim(),
-        compliance: Object.entries(overrides).map(([formSectionId, complies]) => ({ formSectionId, complies })),
+        // Every test shown is sent, so the re-checked decisions are saved even when nobody changes them.
+        compliance: editable.map(item => ({ formSectionId: item.formSectionId, complies: overrides[item.formSectionId] ?? item.complies ?? false })),
       } }, { track: false }));
       if ("error" in result) return apiErrorMessage(result.error);
       refreshCertificate(dispatch, id);
@@ -103,6 +109,8 @@ function CertificateEditDialog({ response, id, subject, sections, compliance, on
           <legend className="px-1 text-sm font-semibold"><RichTextView html={section.name || "Test"} /></legend>
           <CoaComplianceControl formSectionId={`${fields}-${sectionId}`} complies={overrides[sectionId] ?? item.complies ?? false}
             onComplianceChange={(_, complies) => setOverrides(current => ({ ...current, [sectionId]: complies }))} />
+          {item.saved !== undefined && overrides[sectionId] === undefined ? <p className="text-xs text-muted-foreground">
+            Re-checked against the specification: saved as {item.saved ? "complies" : "does not comply"}.</p> : null}
         </fieldset>];
       })}
       <div className="space-y-2"><Label htmlFor={`${fields}-notes`}>Certificate notes</Label>

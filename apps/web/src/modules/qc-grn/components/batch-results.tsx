@@ -79,7 +79,8 @@ export function BatchResultsPage() {
         onCompliance={(sectionId, complies) => setCompliance((list) => list.map((item) => item.formSectionId === sectionId ? { ...item, complies, requiresReview: false } : item))} />
         {message ? <p role="alert" className="mt-2 text-sm text-destructive">{message}</p> : null}</DialogBody>
       <DialogFooter><Button type="button" variant="outline" disabled={generating.isLoading} onClick={() => setPreviewing(false)}>Cancel</Button>
-        <PendingCertificateEditButton response={responseDetail.currentData} sections={sections} compliance={inferred} onSaved={sheet.reload} />
+        <PendingCertificateEditButton response={responseDetail.currentData} sections={sections} compliance={inferred}
+          rechecked={buildCoaCompliancePayload(sections, sheet.responses)} onSaved={sheet.reload} />
         {canGenerate ? <Button type="button" disabled={generating.isLoading || compliance.length === 0} onClick={() => void issue()}>{generating.isLoading ? <><Spinner />Generating…</> : "Generate certificate"}</Button> : null}</DialogFooter>
     </DialogContent></Dialog> : null}
   </BatchFrame>;

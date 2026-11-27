@@ -10,7 +10,7 @@ import { apiErrorCode, apiErrorMessage } from "@/shared/errors/api-error-message
 import { useApplyFormulaRepairMutation, usePreviewFormulaRepairMutation } from "@/shared/formula/repairs/api";
 import { formulaRepairPermissions } from "@/shared/formula/repairs/access";
 import { randomId } from "@/shared/ids/random-id";
-import { formulaRepairDefaults, manualRepairVariables, repairedFormulaDefinition } from "../lib/formula-repair";
+import { formulaRepairDefaults, isUniformityRepair, manualRepairVariables, repairedFormulaDefinition } from "../lib/formula-repair";
 import { compareFormulaSettings } from "../lib/formula-settings-comparison";
 import { formulaRepairValuesSchema, repairPreviewSchema, repairReasonSchema, repairReceiptSchema, repairTestKey,
   type FormulaRepairValues, type RepairContext, type RepairPreview, type RepairProblem, type RepairReceipt } from "../schemas/formula-repair-schema";
@@ -76,7 +76,10 @@ export function useFormulaRepair(context: RepairContext, atr: string | null, fie
     if (!input.updateQuestion && selected.length === 0) { setProblem({ kind: "invalid", message: "Choose the shared question or at least one open test." }); return; }
     const check = () => input.updateQuestion && question.check() || selected.length > 0 && tests.check() || null;
     const denied = check(); if (denied) { fail({ kind: "denied", message: denied }); return; }
-    const candidate = { definition: context.approvedDefinition ?? repairedFormulaDefinition(context.definition, input.expression, input.labels), updateQuestion: input.updateQuestion,
+    const corrected = !context.approvedDefinition && !isUniformityRepair(context.definition);
+    if (corrected && !input.expression.trim()) { form.setError("expression", { message: "Enter the corrected expression." }); return; }
+    const definition = context.approvedDefinition ?? (corrected ? repairedFormulaDefinition(context.definition, input.expression, input.labels) : context.definition);
+    const candidate = { definition, updateQuestion: input.updateQuestion,
       targets: selected.map(t => ({ atrId: t.atrId, formFieldId: t.formFieldId })) };
     if (mode === "apply") {
       if (!current || current.blockers.length) { setProblem({ kind: "stale", message: "Review a current, successful preview before applying." }); return; }
@@ -110,6 +113,10 @@ export function useFormulaRepair(context: RepairContext, atr: string | null, fie
     } catch (error) {
       setProblem({ kind: "unconfirmed", message: error instanceof Error ? error.message : "The repair could not be confirmed. Retry the same reviewed request." });
     } finally { pending.current = false; }
+  }, (errors) => {
+    // A field that is not on screen must never block the repair silently.
+    const first = Object.values(errors).find((error) => typeof error?.message === "string")?.message;
+    setProblem({ kind: "invalid", message: typeof first === "string" ? first : "Check the repair details and try again." });
   });
   return { form, approved, current: currentExpression, settings, manualKeys: manualRepairVariables(context.approvedDefinition ?? context.definition, approved?.expression ?? expression), preview: current, problem, receipt, submit,
     busy: previewing.isLoading || applying.isLoading, applying: applying.isLoading,
