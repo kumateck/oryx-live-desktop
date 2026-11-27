@@ -157,8 +157,17 @@ function stripBinCardPage(document: ObjectValue) {
   };
 }
 
+/** Structured STP revisions (2026-11-27): only their own paths and DOMAIN.Entities.StpRevisions.* schemas. */
+function stripStpRevisions(document: ObjectValue) {
+  const paths = object(document.paths ?? null);
+  for (const path of Object.keys(paths)) if (path.startsWith("/api/v1/stp-revisions")) delete paths[path];
+  const schemas = object(object(document.components ?? null).schemas ?? null);
+  for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.StpRevisions.")) delete schemas[name];
+}
+
 function beforeProductionBoardOrder() {
   const document = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  stripStpRevisions(document);
   stripCountingUnit(document);
   stripBinCardPage(document);
   delete object(document.paths ?? null)["/api/v1/production-board-order/{departmentId}"];
@@ -435,6 +444,7 @@ function stripOperationDepartments(document: ObjectValue) {
 /** The current contract without the latest additions, which the earlier reviews below compare against. */
 function reviewedHead() {
   const document = beforeMaterialLookupContext();
+  stripStpRevisions(document);
   stripCountingUnit(document);
   stripBinCardPage(document);
   stripIssuedRegister(document);
@@ -1605,4 +1615,17 @@ test("production board ordering adds only its department-scoped read and write c
   assert.equal(object(path.put ?? null).operationId, "SaveDepartmentProductionBoardOrder");
   checkCompatibility(hostConfig, policy, contractDigest(current));
   assert.equal(contractDigest(beforeProductionBoardOrder()), "ed5a4dba5d3d9e8ff51a650289ef4ec833d8b457a9f859be7fd205af072faa93");
+});
+
+test("structured STP revisions add only their own typed operations and schemas", () => {
+  const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
+  checkCompatibility(hostConfig, policy, contractDigest(current));
+  const paths = Object.keys(object(current.paths ?? null)).filter(path => path.startsWith("/api/v1/stp-revisions"));
+  assert.deepEqual(paths.sort(), [
+    "/api/v1/stp-revisions", "/api/v1/stp-revisions/import", "/api/v1/stp-revisions/import/document", "/api/v1/stp-revisions/numbers",
+    "/api/v1/stp-revisions/revise", "/api/v1/stp-revisions/{id}", "/api/v1/stp-revisions/{id}/draft", "/api/v1/stp-revisions/{id}/submit",
+  ]);
+  stripStpRevisions(current);
+  // Removing only these additions restores the previously approved contract.
+  assert.equal(contractDigest(current), "8c11b59e53c09375328ce898ab3e6f96034990f0683a7125cef186fe62746961");
 });

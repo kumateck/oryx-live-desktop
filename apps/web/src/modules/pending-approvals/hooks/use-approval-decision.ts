@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isProductionStockDocument, stockRejectionKind } from "../lib/stock-rejection";
+import { isProductionStockDocument, stockRejectionKind, stpRevisionKind } from "../lib/stock-rejection";
 import { useVerifiedMutation } from "@/shared/workflows/use-verified-mutation";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
 import { decisionEvidenceApi, type DecisionEvidence } from "../api/decision-evidence";
@@ -9,7 +9,8 @@ import { approvalSchema, type PendingApproval } from "../schemas/approval-schema
 
 export function useApprovalDecision(approval: PendingApproval, decision: Decision, evidence: DecisionEvidence) {
   const stockKind = stockRejectionKind(evidence);
-  const guard = useVerifiedMutation<{ approval: PendingApproval; evidence: DecisionEvidence }>({ kind: "all", permissions: [decisionPermission(approval.type, decision, stockKind), decisionViewPermission(approval.type)] }, { approval, evidence });
+  const decisionKey = decisionPermission(approval.type, decision, stockKind, stpRevisionKind(evidence));
+  const guard = useVerifiedMutation<{ approval: PendingApproval; evidence: DecisionEvidence }>({ kind: "all", permissions: decisionKey === null ? [decisionViewPermission(approval.type)] : [decisionKey, decisionViewPermission(approval.type)] }, { approval, evidence });
   const [read] = approvalApi.useLazyGetApiV1ApprovalMyPendingByModelTypeAndModelIdQuery();
   const [readEvidence] = decisionEvidenceApi.useLazyDecisionEvidenceQuery();
   const [rejectRawStock] = approvalApi.useRejectProductionRawStockRequisitionMutation();
@@ -21,6 +22,7 @@ export function useApprovalDecision(approval: PendingApproval, decision: Decisio
     if (isProductionStockDocument(type) && decision === "reject" && stockKind === null) return "The stock requisition's material kind could not be verified. Reload its details.";
     if (isProductionStockDocument(type) && decision === "reject" && comments.trim().length > 1000) return "Keep the stock rejection reason under 1000 characters.";
     if (!isReadable(type) || decidedElsewhere(type)) return "This document must be decided in its dedicated workflow.";
+    if (decisionKey === null) return "The STP revision's kind could not be verified. Reload its details.";
     if (type === "Response" && decision === "reject" && outcome === null) return "Choose rework testing or disposal.";
     return guard.run({ approval, evidence }, async () => {
       const [record, currentEvidence] = await Promise.all([
