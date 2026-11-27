@@ -56,7 +56,7 @@ const proposal = {
 };
 
 const links = { kind: 2, stpNumbers: ["QCD/STP/FP/009"],
-  tests: [{ formSectionId: "f1", sectionName: "Assay", stpNumber: "QCD/STP/FP/009", testKey: "assay", testNumber: "5.1", testTitle: "Assay", revisionNumber: 2, resolved: true },
+  tests: [{ formSectionId: "f1", sectionName: '<p><span style="color: rgb(0, 0, 0); font-size: 12pt;"><strong>Assay</strong></span></p><p><span style="font-size: 12pt;">Diclofenac Diethylamine</span></p>', stpNumber: "QCD/STP/FP/009", testKey: "assay", testNumber: "5.1", testTitle: "Assay", revisionNumber: 2, resolved: true },
     { formSectionId: "f2", sectionName: "pH", stpNumber: null, testKey: null, testNumber: null, testTitle: null, revisionNumber: null, resolved: false }],
   options: [{ stpNumber: "QCD/STP/FP/009", revisionNumber: 2, testKey: "assay", testNumber: "5.1", testTitle: "Assay" },
     { stpNumber: "QCD/STP/FP/009", revisionNumber: 2, testKey: "ph", testNumber: "5.2", testTitle: "pH" }] };
@@ -210,10 +210,13 @@ it("cites an STP test from a specification test only with the specification's ed
   open(<StpTestLinksPanel specification={{ kind: "product", id: "ps1" }} />, ["CanViewProductSpecifications"]);
   expect(await screen.findByText("Not cited")).toBeTruthy();
   expect(screen.getByText(/5.1 Assay/)).toBeTruthy();
+  // Specification test names are saved rich text: shown formatted, never as markup.
+  expect(screen.getByText("Diclofenac Diethylamine")).toBeTruthy();
+  expect(screen.queryByText(/<p>|<span|<strong>/)).toBeNull();
   expect(screen.queryByRole("button", { name: /STP test for/ })).toBeNull();
   cleanup(); forgetSession();
   const allowed = open(<StpTestLinksPanel specification={{ kind: "product", id: "ps1" }} />, ["CanViewProductSpecifications", "CanEditProductSpecification"]);
-  await openMenu(/STP test for Assay/);
+  await openMenu("STP test for Assay Diclofenac Diethylamine");
   fireEvent.click(screen.getByRole("menuitem", { name: "Remove citation" }));
   fireEvent.click(await screen.findByRole("button", { name: "Remove citation" }));
   await waitFor(() => expect(allowed.writes()).toMatchObject([{ path: "/api/v1/stp-test-links/product-specification/ps1/f1", method: "PUT", body: { stpNumber: null, testKey: null } }]));

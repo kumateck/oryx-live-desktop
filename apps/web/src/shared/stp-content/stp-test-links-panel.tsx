@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ConfirmActionDialog, TableMenu } from "@/shared/actions";
 import { usePermissionAction } from "@/shared/auth/use-permission-action";
 import { apiErrorMessage } from "@/shared/errors/api-error-message";
+import { RichTextView, richTextToPlain } from "@/shared/rich-text/rich-text-view";
 import { Skeleton } from "@/shared/skeleton/skeleton";
 import { linksSchema, type StpTestLinks } from "./stp-content";
 import { specificationLinkKeys, stpRevisionAudit } from "./stp-keys";
@@ -14,6 +15,8 @@ import { useMaterialSpecStpLinksQuery, useProductSpecStpLinksQuery, useSaveMater
 
 export interface LinkedSpecification { kind: "material" | "product"; id: string }
 type Test = StpTestLinks["tests"][number];
+/** Specification test names are saved as rich text; menus and dialog titles need them as one line. */
+const testName = (test: Test, fallback: string) => richTextToPlain(test.sectionName) || fallback;
 
 function useLinks(specification: LinkedSpecification) {
   const material = useMaterialSpecStpLinksQuery({ ...stpRevisionAudit, materialSpecificationId: specification.id }, { skip: specification.kind !== "material" });
@@ -52,13 +55,13 @@ export function StpTestLinksPanel({ specification }: { specification: LinkedSpec
     {links.tests.length === 0 ? <p className="text-sm text-muted-foreground">This specification has no tests.</p>
       : <table className="w-full text-sm"><thead className="text-left text-xs text-muted-foreground"><tr><th className="py-1">Specification test</th><th className="py-1">STP test</th><th className="w-12" /></tr></thead>
         <tbody>{links.tests.map((test) => <tr key={test.formSectionId} className="border-t align-top">
-          <td className="py-2 pr-2">{test.sectionName ?? "Unnamed test"}</td><td className="py-2 pr-2">{cited(test)}</td>
-          <td className="py-1 text-right"><TableMenu label={`STP test for ${test.sectionName ?? "test"}`} items={[
+          <td className="py-2 pr-2">{test.sectionName?.trim() ? <RichTextView html={test.sectionName} /> : <span className="text-muted-foreground">Unnamed test</span>}</td><td className="py-2 pr-2">{cited(test)}</td>
+          <td className="py-1 text-right"><TableMenu label={`STP test for ${testName(test, "test")}`} items={[
             { id: "cite", label: test.testKey ? "Change STP test" : "Cite STP test", icon: Link2, require: keys.edit, onSelect: () => setEditing(test) },
             ...(test.testKey ? [{ id: "clear", label: "Remove citation", icon: Unlink, destructive: true, require: keys.edit, onSelect: () => setClearing(test) }] : []),
           ]} /></td></tr>)}</tbody></table>}
     {editing ? <CiteDialog test={editing} links={links} editKey={keys.edit} onClose={() => setEditing(null)} save={save} /> : null}
-    {clearing ? <ConfirmActionDialog require={keys.edit} title={`Remove the STP test from ${clearing.sectionName ?? "this test"}?`}
+    {clearing ? <ConfirmActionDialog require={keys.edit} title={`Remove the STP test from ${testName(clearing, "this test")}?`}
       description="The specification test will no longer cite an STP test. Its limits and results are not changed." confirmLabel="Remove citation" busyLabel="Removing…"
       onClose={() => setClearing(null)} onConfirm={async () => { const failed = await save(clearing.formSectionId, null, null); if (!failed) toast.success("Citation removed"); return failed; }} /> : null}
   </section>;
@@ -69,7 +72,7 @@ function CiteDialog({ test, links, editKey, onClose, save }: {
 }) {
   const [choice, setChoice] = useState(test.stpNumber && test.testKey ? `${test.stpNumber}|${test.testKey}` : "");
   const permission = usePermissionAction(editKey);
-  return <ConfirmActionDialog require={editKey} destructive={false} title={`STP test for ${test.sectionName ?? "this test"}`}
+  return <ConfirmActionDialog require={editKey} destructive={false} title={`STP test for ${testName(test, "this test")}`}
     description="Choose the test of an approved STP revision that this specification test is performed by." confirmLabel="Save" busyLabel="Saving…"
     onClose={onClose} onConfirm={async () => {
       const denied = permission.check();
