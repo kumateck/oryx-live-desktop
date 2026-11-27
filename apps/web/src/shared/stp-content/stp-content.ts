@@ -47,7 +47,7 @@ const stepSchema = z.object({ id: z.string(), kind: stepKind, number: text, head
 const testSchema = z.object({ id: z.string(), testKey: z.string(), number: text, title: z.string(), steps: z.array(stepSchema).nullish().transform((v) => v ?? []) });
 export const detailSchema = summarySchema.extend({
   revisedFromId: text, reasonForChange: text, area: text, reference: text, effectiveDate: text, reviewDate: text, issueDate: text,
-  source: text, version: z.number().int().nonnegative(), reviewVersion: number,
+  source: text, version: z.number().int().nonnegative(), reviewVersion: number, approvedFileSha256: text,
   preparedBySignatory: signatory, checkedBy: signatory, approvedBy: signatory,
   sections: z.array(z.object({ id: z.string(), kind: sectionKind, text })).nullish().transform((v) => v ?? []),
   tests: z.array(testSchema).nullish().transform((v) => v ?? []),
@@ -71,3 +71,12 @@ export const proposalSchema = z.object({
   warnings: z.array(z.string()).nullish().transform((v) => v ?? []), flaggedCount: z.number().catch(0),
 });
 export type ImportProposal = z.infer<typeof proposalSchema>;
+
+export const linksSchema = z.object({
+  kind, stpNumbers: z.array(z.string()).nullish().transform((v) => v ?? []),
+  tests: z.array(z.object({ formSectionId: z.string(), sectionName: text, stpNumber: text, testKey: text, testNumber: text, testTitle: text,
+    revisionNumber: number, resolved: z.boolean().catch(false) })).nullish().transform((v) => v ?? []),
+  options: z.array(z.object({ stpNumber: z.string(), revisionNumber: z.number(), testKey: z.string(), testNumber: text, testTitle: z.string() }))
+    .nullish().transform((v) => v ?? []),
+});
+export type StpTestLinks = z.infer<typeof linksSchema>;

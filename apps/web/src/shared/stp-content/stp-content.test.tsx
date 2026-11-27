@@ -19,6 +19,7 @@ import { proposalFlags } from "./stp-proposal-view";
 import { StpRevisionDetailPage } from "./stp-revision-detail";
 import { StpRevisionEditorPage } from "./stp-revision-editor";
 import { StpImportPage } from "./stp-import-page";
+import { StpTestLinksPanel } from "./stp-test-links-panel";
 
 HTMLElement.prototype.hasPointerCapture = () => false;
 HTMLElement.prototype.setPointerCapture = () => {};
@@ -54,6 +55,12 @@ const proposal = {
   warnings: ["Test numbers skip from 5.7 to 5.9."], flaggedCount: 2,
 };
 
+const links = { kind: 2, stpNumbers: ["QCD/STP/FP/009"],
+  tests: [{ formSectionId: "f1", sectionName: "Assay", stpNumber: "QCD/STP/FP/009", testKey: "assay", testNumber: "5.1", testTitle: "Assay", revisionNumber: 2, resolved: true },
+    { formSectionId: "f2", sectionName: "pH", stpNumber: null, testKey: null, testNumber: null, testTitle: null, revisionNumber: null, resolved: false }],
+  options: [{ stpNumber: "QCD/STP/FP/009", revisionNumber: 2, testKey: "assay", testNumber: "5.1", testTitle: "Assay" },
+    { stpNumber: "QCD/STP/FP/009", revisionNumber: 2, testKey: "ph", testNumber: "5.2", testTitle: "pH" }] };
+
 function open(element: ReactNode, granted: string[], data: { revision?: unknown; revisions?: unknown[] } = {}, path = "/x/r1") {
   const backend = stubBackend({ permissions: granted });
   const auth = backend.fetcher.getMockImplementation();
@@ -64,6 +71,8 @@ function open(element: ReactNode, granted: string[], data: { revision?: unknown;
     const body = input.method === "GET" ? null : input.headers.get("content-type")?.includes("multipart") ? "multipart" : await input.clone().json().catch(() => null);
     calls.push({ path: url.pathname, method: input.method, body });
     if (url.pathname === "/api/v1/stp-revisions/import") return Response.json(proposal);
+    if (url.pathname === "/api/v1/stp-revisions/r1/docx") return new Response(new Blob(["docx"]), { status: 200 });
+    if (url.pathname === "/api/v1/stp-test-links/product-specification/ps1" && input.method === "GET") return Response.json(links);
     if (url.pathname.endsWith("/draft") || url.pathname.endsWith("/submit") || input.method === "PUT") return new Response(null, { status: 204 });
     if (input.method === "POST") return Response.json("r9", { status: 201 });
     if (url.pathname === "/api/v1/stp-revisions") return Response.json(data.revisions ?? []);
@@ -179,4 +188,33 @@ it("reads a Word STP into a proposal, lists what to check, and creates the first
   await screen.findByText("Draft editor");
   expect(allowed.writes()[1]).toMatchObject({ path: "/api/v1/stp-revisions", method: "POST", body: {
     kind: 2, stpNumber: "QCD/STP/FP/009", revisionNumber: 2, supersedesRevision: 1, source: "009 Xzole susp.docx", tests: [{ testKey: "assay" }] } });
+});
+
+it("downloads the Word file and prints only with their keys", async () => {
+  URL.createObjectURL = vi.fn(() => "blob:stp");
+  URL.revokeObjectURL = vi.fn();
+  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  open(<StpRevisionDetailPage kinds={[2]} routes={routesFor} crumbs={[]} />, [product.view], { revision: revision(1, { approvedFileSha256: "ab".repeat(32) }) });
+  expect(await screen.findByText(/Approved Word file SHA-256/)).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /Actions for/ })).toBeNull();
+  cleanup(); forgetSession();
+  open(<StpRevisionDetailPage kinds={[2]} routes={routesFor} crumbs={[]} />, [product.view, product.export, product.print], { revision: revision(1) });
+  await openMenu(/Actions for QCD\/STP\/FP\/009/);
+  expect(screen.getByRole("menuitem", { name: "Print" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("menuitem", { name: "Download Word file" }));
+  await waitFor(() => expect(click).toHaveBeenCalled());
+  click.mockRestore();
+});
+
+it("cites an STP test from a specification test only with the specification's edit key", async () => {
+  open(<StpTestLinksPanel specification={{ kind: "product", id: "ps1" }} />, ["CanViewProductSpecifications"]);
+  expect(await screen.findByText("Not cited")).toBeTruthy();
+  expect(screen.getByText(/5.1 Assay/)).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /STP test for/ })).toBeNull();
+  cleanup(); forgetSession();
+  const allowed = open(<StpTestLinksPanel specification={{ kind: "product", id: "ps1" }} />, ["CanViewProductSpecifications", "CanEditProductSpecification"]);
+  await openMenu(/STP test for Assay/);
+  fireEvent.click(screen.getByRole("menuitem", { name: "Remove citation" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Remove citation" }));
+  await waitFor(() => expect(allowed.writes()).toMatchObject([{ path: "/api/v1/stp-test-links/product-specification/ps1/f1", method: "PUT", body: { stpNumber: null, testKey: null } }]));
 });

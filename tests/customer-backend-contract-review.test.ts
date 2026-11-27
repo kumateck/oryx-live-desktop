@@ -157,10 +157,10 @@ function stripBinCardPage(document: ObjectValue) {
   };
 }
 
-/** Structured STP revisions (2026-11-27): only their own paths and DOMAIN.Entities.StpRevisions.* schemas. */
+/** Structured STP revisions and specification tests citing them (2026-11-27): only their own paths and DOMAIN.Entities.StpRevisions.* schemas. */
 function stripStpRevisions(document: ObjectValue) {
   const paths = object(document.paths ?? null);
-  for (const path of Object.keys(paths)) if (path.startsWith("/api/v1/stp-revisions")) delete paths[path];
+  for (const path of Object.keys(paths)) if (path.startsWith("/api/v1/stp-revisions") || path.startsWith("/api/v1/stp-test-links")) delete paths[path];
   const schemas = object(object(document.components ?? null).schemas ?? null);
   for (const name of Object.keys(schemas)) if (name.startsWith("DOMAIN.Entities.StpRevisions.")) delete schemas[name];
 }
@@ -1617,13 +1617,16 @@ test("production board ordering adds only its department-scoped read and write c
   assert.equal(contractDigest(beforeProductionBoardOrder()), "ed5a4dba5d3d9e8ff51a650289ef4ec833d8b457a9f859be7fd205af072faa93");
 });
 
-test("structured STP revisions add only their own typed operations and schemas", () => {
+test("structured STP revisions and STP test links add only their own operations and schemas", () => {
   const current = object(parse(readFileSync("contracts/openapi/backend.v1.json", "utf8")));
   checkCompatibility(hostConfig, policy, contractDigest(current));
-  const paths = Object.keys(object(current.paths ?? null)).filter(path => path.startsWith("/api/v1/stp-revisions"));
+  const paths = Object.keys(object(current.paths ?? null)).filter(path => path.startsWith("/api/v1/stp-revisions") || path.startsWith("/api/v1/stp-test-links"));
   assert.deepEqual(paths.sort(), [
     "/api/v1/stp-revisions", "/api/v1/stp-revisions/import", "/api/v1/stp-revisions/import/document", "/api/v1/stp-revisions/numbers",
-    "/api/v1/stp-revisions/revise", "/api/v1/stp-revisions/{id}", "/api/v1/stp-revisions/{id}/draft", "/api/v1/stp-revisions/{id}/submit",
+    "/api/v1/stp-revisions/revise", "/api/v1/stp-revisions/{id}", "/api/v1/stp-revisions/{id}/docx", "/api/v1/stp-revisions/{id}/draft",
+    "/api/v1/stp-revisions/{id}/print", "/api/v1/stp-revisions/{id}/submit",
+    "/api/v1/stp-test-links/material-specification/{materialSpecificationId}", "/api/v1/stp-test-links/material-specification/{materialSpecificationId}/{formSectionId}",
+    "/api/v1/stp-test-links/product-specification/{productSpecificationId}", "/api/v1/stp-test-links/product-specification/{productSpecificationId}/{formSectionId}",
   ]);
   stripStpRevisions(current);
   // Removing only these additions restores the previously approved contract.

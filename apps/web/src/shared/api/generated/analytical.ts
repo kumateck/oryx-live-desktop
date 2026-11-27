@@ -1649,6 +1649,88 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getApiV1StpRevisionsByIdDocx: build.query<
+      GetApiV1StpRevisionsByIdDocxApiResponse,
+      GetApiV1StpRevisionsByIdDocxApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stp-revision", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/${queryArg.id}/docx`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1StpRevisionsByIdPrint: build.query<
+      GetApiV1StpRevisionsByIdPrintApiResponse,
+      GetApiV1StpRevisionsByIdPrintApiArg
+    >({
+      providesTags: (_result, _error, queryArg) => [{ type: "stp-revision", id: queryArg.id }],
+      query: (queryArg) => ({
+        url: `/api/v1/stp-revisions/${queryArg.id}/print`,
+        headers: {
+          Module: queryArg["module"],
+          SubModule: queryArg.subModule,
+        },
+      }),
+    }),
+    getApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationId:
+      build.query<
+        GetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdApiResponse,
+        GetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/stp-test-links/material-specification/${queryArg.materialSpecificationId}`,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
+    getApiV1StpTestLinksProductSpecificationByProductSpecificationId:
+      build.query<
+        GetApiV1StpTestLinksProductSpecificationByProductSpecificationIdApiResponse,
+        GetApiV1StpTestLinksProductSpecificationByProductSpecificationIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/stp-test-links/product-specification/${queryArg.productSpecificationId}`,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
+    putApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionId:
+      build.mutation<
+        PutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdApiResponse,
+        PutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/stp-test-links/material-specification/${queryArg.materialSpecificationId}/${queryArg.formSectionId}`,
+          method: "PUT",
+          body: queryArg.domainEntitiesStpRevisionsSaveStpTestLinkRequest,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
+    putApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionId:
+      build.mutation<
+        PutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdApiResponse,
+        PutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/stp-test-links/product-specification/${queryArg.productSpecificationId}/${queryArg.formSectionId}`,
+          method: "PUT",
+          body: queryArg.domainEntitiesStpRevisionsSaveStpTestLinkRequest,
+          headers: {
+            Module: queryArg["module"],
+            SubModule: queryArg.subModule,
+          },
+        }),
+      }),
   }),
   overrideExisting: false,
 });
@@ -2699,6 +2781,65 @@ export type PostApiV1StpRevisionsByIdSubmitApiArg = {
   subModule?: string;
   domainEntitiesStpRevisionsSubmitStpRevisionRequest: DomainEntitiesStpRevisionsSubmitStpRevisionRequest;
 };
+export type GetApiV1StpRevisionsByIdDocxApiResponse = /** status 200 OK */ Blob;
+export type GetApiV1StpRevisionsByIdDocxApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1StpRevisionsByIdPrintApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpRevisionDto;
+export type GetApiV1StpRevisionsByIdPrintApiArg = {
+  id: string;
+  /** The module this request falls under */
+  module?: string;
+  /** The sub module this request falls under */
+  subModule?: string;
+};
+export type GetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpTestLinksDto;
+export type GetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdApiArg =
+  {
+    materialSpecificationId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+  };
+export type GetApiV1StpTestLinksProductSpecificationByProductSpecificationIdApiResponse =
+  /** status 200 OK */ DomainEntitiesStpRevisionsStpTestLinksDto;
+export type GetApiV1StpTestLinksProductSpecificationByProductSpecificationIdApiArg =
+  {
+    productSpecificationId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+  };
+export type PutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdApiResponse = void;
+export type PutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdApiArg =
+  {
+    materialSpecificationId: string;
+    formSectionId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+    domainEntitiesStpRevisionsSaveStpTestLinkRequest: DomainEntitiesStpRevisionsSaveStpTestLinkRequest;
+  };
+export type PutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdApiResponse = void;
+export type PutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdApiArg =
+  {
+    productSpecificationId: string;
+    formSectionId: string;
+    /** The module this request falls under */
+    module?: string;
+    /** The sub module this request falls under */
+    subModule?: string;
+    domainEntitiesStpRevisionsSaveStpTestLinkRequest: DomainEntitiesStpRevisionsSaveStpTestLinkRequest;
+  };
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue | undefined };
 export type MicrosoftAspNetCoreMvcProblemDetails = {
   type?: string | null;
@@ -4386,6 +4527,7 @@ export type DomainEntitiesStpRevisionsStpRevisionDto = {
   source?: string | null;
   version?: number;
   reviewVersion?: number | null;
+  approvedFileSha256?: string | null;
   preparedBySignatory?: DomainEntitiesStpRevisionsStpRevisionSignatoryDto;
   checkedBy?: DomainEntitiesStpRevisionsStpRevisionSignatoryDto;
   approvedBy?: DomainEntitiesStpRevisionsStpRevisionSignatoryDto;
@@ -4483,6 +4625,33 @@ export type DomainEntitiesStpRevisionsSaveStpRevisionDraftRequest = {
 };
 export type DomainEntitiesStpRevisionsSubmitStpRevisionRequest = {
   version?: number | null;
+};
+export type DomainEntitiesStpRevisionsStpTestLinkDto = {
+  formSectionId?: string;
+  sectionName?: string | null;
+  stpNumber?: string | null;
+  testKey?: string | null;
+  testNumber?: string | null;
+  testTitle?: string | null;
+  revisionNumber?: number | null;
+  resolved?: boolean;
+};
+export type DomainEntitiesStpRevisionsStpTestOptionDto = {
+  stpNumber?: string | null;
+  revisionNumber?: number;
+  testKey?: string | null;
+  testNumber?: string | null;
+  testTitle?: string | null;
+};
+export type DomainEntitiesStpRevisionsStpTestLinksDto = {
+  kind?: DomainEntitiesStpRevisionsStpRevisionKind;
+  stpNumbers?: string[] | null;
+  tests?: DomainEntitiesStpRevisionsStpTestLinkDto[] | null;
+  options?: DomainEntitiesStpRevisionsStpTestOptionDto[] | null;
+};
+export type DomainEntitiesStpRevisionsSaveStpTestLinkRequest = {
+  stpNumber?: string | null;
+  testKey?: string | null;
 };
 export const {
   usePostApiV1QaAnalyticalTestsMutation,
@@ -4645,4 +4814,14 @@ export const {
   usePostApiV1StpRevisionsReviseMutation,
   usePutApiV1StpRevisionsByIdDraftMutation,
   usePostApiV1StpRevisionsByIdSubmitMutation,
+  useGetApiV1StpRevisionsByIdDocxQuery,
+  useLazyGetApiV1StpRevisionsByIdDocxQuery,
+  useGetApiV1StpRevisionsByIdPrintQuery,
+  useLazyGetApiV1StpRevisionsByIdPrintQuery,
+  useGetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdQuery,
+  useLazyGetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdQuery,
+  useGetApiV1StpTestLinksProductSpecificationByProductSpecificationIdQuery,
+  useLazyGetApiV1StpTestLinksProductSpecificationByProductSpecificationIdQuery,
+  usePutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdMutation,
+  usePutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdMutation,
 } = injectedRtkApi;

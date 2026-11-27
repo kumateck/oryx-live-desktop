@@ -7,8 +7,20 @@ const list = { type: "stp-revision" as const, id: "LIST" };
 const review = (id: string) => [{ type: "DocumentReview" as const, id: `${stpRevisionModelType}:${id}` }, { type: "PendingReviews" as const, id: "all" }];
 
 const revisionApi = analyticalApi.enhanceEndpoints({
-  addTagTypes: ["DocumentReview", "PendingReviews", "PendingApprovals"],
+  addTagTypes: ["DocumentReview", "PendingReviews", "PendingApprovals", "StpTestLinks"],
   endpoints: {
+    getApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationId: (definition) => {
+      definition.providesTags = addTags(definition.providesTags, (_r, _e, { materialSpecificationId }) => [{ type: "StpTestLinks", id: materialSpecificationId }]);
+    },
+    getApiV1StpTestLinksProductSpecificationByProductSpecificationId: (definition) => {
+      definition.providesTags = addTags(definition.providesTags, (_r, _e, { productSpecificationId }) => [{ type: "StpTestLinks", id: productSpecificationId }]);
+    },
+    putApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionId: (definition) => {
+      definition.invalidatesTags = addTags(definition.invalidatesTags, (_r, error, { materialSpecificationId }) => error ? [] : [{ type: "StpTestLinks", id: materialSpecificationId }]);
+    },
+    putApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionId: (definition) => {
+      definition.invalidatesTags = addTags(definition.invalidatesTags, (_r, error, { productSpecificationId }) => error ? [] : [{ type: "StpTestLinks", id: productSpecificationId }]);
+    },
     // The numbers overview changes with every revision write.
     getApiV1StpRevisionsNumbers: (definition) => { definition.providesTags = addTags(definition.providesTags, [list]); },
     postApiV1StpRevisionsRevise: (definition) => { definition.invalidatesTags = addTags(definition.invalidatesTags, (_r, error) => error ? [] : [list]); },
@@ -33,6 +45,12 @@ const revisionApi = analyticalApi.enhanceEndpoints({
     },
     transformResponse: (response: unknown) => proposalSchema.parse(response),
   }),
+  /** The revision's Word file as an object URL (the caller revokes it); once approved, the file kept at approval. */
+  downloadStpRevisionFile: build.mutation<string, { id: string }>({
+    query: ({ id }) => ({ url: `/api/v1/stp-revisions/${id}/docx`, headers: { Module: stpRevisionAudit.module, SubModule: stpRevisionAudit.subModule },
+      responseHandler: (response: Response) => response.blob() }),
+    transformResponse: (blob: Blob) => URL.createObjectURL(blob),
+  }),
 }) });
 
 // Only the STP content components import these.
@@ -47,5 +65,11 @@ export const {
   usePutApiV1StpRevisionsByIdMutation: useCorrectStpRevisionMutation,
   useDeleteApiV1StpRevisionsByIdMutation: useDeleteStpRevisionMutation,
   usePostApiV1StpRevisionsImportDocumentMutation: useImportStpDocumentMutation,
+  useGetApiV1StpRevisionsByIdPrintQuery: useStpRevisionPrintQuery,
+  useGetApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdQuery: useMaterialSpecStpLinksQuery,
+  useGetApiV1StpTestLinksProductSpecificationByProductSpecificationIdQuery: useProductSpecStpLinksQuery,
+  usePutApiV1StpTestLinksMaterialSpecificationByMaterialSpecificationIdAndFormSectionIdMutation: useSaveMaterialSpecStpLinkMutation,
+  usePutApiV1StpTestLinksProductSpecificationByProductSpecificationIdAndFormSectionIdMutation: useSaveProductSpecStpLinkMutation,
   useImportStpRevisionFileMutation,
+  useDownloadStpRevisionFileMutation,
 } = revisionApi;

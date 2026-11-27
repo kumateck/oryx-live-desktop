@@ -16,10 +16,17 @@ Date: 2026-11-27. The desktop side of the backend's structured STP revisions (`o
 - **Editor**: running header, sections 1.0 to 4.0, reagents (one per line) and procedure notes, then the 5.N tests with their steps, conditions blocks and notes, each movable. A test keeps its key; a new one gets its key on save. Saving a draft and correcting send the version the page read.
 - **Detail**: running header with Prepared / Checked / Approved by, the content as printed, the Review panel, and the actions for the revision's state.
 
+## Word file, print and specification links
+
+- **Download Word file** (export key) saves the revision as the client's STP layout. Once approved it is the file kept at approval, byte for byte; the detail page shows its SHA-256. Before approval the file is marked as a draft.
+- **Print** (print key) reads the revision through its print endpoint and shows it in the print preview with Prepared / Checked / Approved by.
+- `StpTestLinksPanel` (`shared/stp-content`) lists a specification's tests with the STP test each cites and lets someone with the specification's edit key cite or remove one (view key to read). It is not yet placed on the specification pages: that waits for the microbial template slot work on those pages to merge, then it is one line on each detail page.
+- The sidebar's Test Procedures group has **Material revisions** and **Product revisions**, each behind its view keys (added in `scripts/import-navigation.ts` and in the generated catalog).
+
 ## Keys
 
 Each task has a key per kind (`stpRevisionKeys(kind)`), checked with `usePermissionAction` before each write and on menu items with `require`. The manifests guard each page with its task's key; the material pages accept either kind's key and the record's stored kind decides the rest. All keys are granted to nobody on deploy.
 
-## Not done yet (step 4)
+## Still open
 
-Word export and print, the specification ↔ STP test link, and sidebar entries for the revisions pages (they are reached from the STP lists).
+Placing the STP test links panel on the specification detail pages, and showing the cited STP test on the analytical raw data pages.

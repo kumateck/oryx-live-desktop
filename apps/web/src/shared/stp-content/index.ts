@@ -5,3 +5,5 @@ export { StpRevisionEditorPage, type StpEditorMode } from "./stp-revision-editor
 export { StpImportPage } from "./stp-import-page";
 export { StpRevisionApprovalEvidence } from "./stp-approval-evidence";
 export { isStpKind, stpKindLabel, stpRevisionKeys, stpRevisionModelType, type StpKind, type StpRevisionKeys, type StpRevisionRoutes, type StpRoutesFor } from "./stp-keys";
+export { StpTestLinksPanel, type LinkedSpecification } from "./stp-test-links-panel";
+export { specificationLinkKeys } from "./stp-keys";
