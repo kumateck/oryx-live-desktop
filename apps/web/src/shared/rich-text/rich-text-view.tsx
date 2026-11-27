@@ -10,6 +10,7 @@ const allowed = new Set(["p", "br", "strong", "b", "em", "i", "u", "s", "sub", "
   "blockquote", "code", "pre", "span", "div", "a", "table", "thead", "tbody", "tr", "th", "td", "hr"]);
 const dropped = new Set(["script", "style", "iframe", "object", "embed", "template", "noscript"]);
 const empty = new Set(["br", "hr"]);
+const blocks = "p, br, div, li, h1, h2, h3, h4, blockquote, pre, tr, td, th, hr";
 
 function convert(node: Node, key: number): ReactNode {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent;
@@ -35,6 +36,8 @@ export function richTextToPlain(html: string | null | undefined): string {
   if (!html) return "";
   const body = new DOMParser().parseFromString(html, "text/html").body;
   for (const element of body.querySelectorAll([...dropped].join(","))) element.remove();
+  // Paragraphs, line breaks, list items and cells are separate words on one line, not run together.
+  for (const element of body.querySelectorAll(blocks)) element.after(" ");
   return (body.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
