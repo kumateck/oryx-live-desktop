@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { fgLayout } from "@/shared/packing/fg-quantity";
+import { fgStockLayout } from "@/shared/packing/fg-quantity";
 import type { OrderStatus } from "../lib/orders";
 
 const text = z.string().nullish().transform((value) => value?.trim() || null);
@@ -33,8 +33,8 @@ export type OrderLine = ProductionOrder["lines"][number];
 const date = z.string().nullish().transform((value) => value && new Date(value).getFullYear() >= 1900 ? value : null);
 /**
  * The approved batches of a product and the whole packs each still has free. Stock is held as yield (base units),
- * so it is turned into packs with the units per pack saved on the transfer note (or its packing style for older
- * notes), the same rule the server uses. Free stock already excludes packing lists waiting for approval: the
+ * so it is turned into packs and shippers with the packing style as it is now; the units per pack and shipper size
+ * saved on the transfer note count only when it has no linked style. This is the rule the server allocates with. Free stock already excludes packing lists waiting for approval: the
  * server takes stock when a packing list is created.
  */
 export const batchesSchema = z.object({ finishedGoodsTransferNotes: z.array(z.object({ id: z.string().nullish(), isApproved: z.boolean().nullish(), approved: z.boolean().nullish(), qualityReleased: z.boolean().nullish(), isOnHold: z.boolean().nullish(), requiresStockReconciliation: z.boolean().nullish(), availableQuantity: amount, packingStyleSnapshot: text, packsPerShipperSnapshot: z.number().nullish(), totalQuantity: amount, remainingQuantity: amount, quantityPerPack: amount,
@@ -42,11 +42,13 @@ export const batchesSchema = z.object({ finishedGoodsTransferNotes: z.array(z.ob
     packingLists: z.array(z.object({ uom: z.object({ name: z.string().nullish(), symbol: z.string().nullish() }).nullish(), quantity: z.number().nullish(), order: z.number().nullish() })).nullish() }).nullish(),
   batchManufacturingRecord: z.object({ id: z.string().nullish(), batchNumber: text, manufacturingDate: date, expiryDate: date }).nullish() })).nullish() }).nullish()
   .transform((value) => (value?.finishedGoodsTransferNotes ?? []).flatMap((note) => { if (!note.id || note.isApproved !== true) return [];
-    const layout = fgLayout(note.productPacking);
-    const perPack = note.quantityPerPack > 0 ? note.quantityPerPack : layout.baseUnitsPerPack;
+    // Counted with the packing style as it is now, as the server allocates (oryx-backend FinishedGoodsUnits);
+    // the note's saved units per pack and shipper size only count when it has no linked style.
+    const layout = fgStockLayout(note.productPacking, { unitsPerPack: note.quantityPerPack, packsPerShipper: note.packsPerShipperSnapshot });
+    const perPack = layout.baseUnitsPerPack;
     return [{ noteId: note.id, batchNumber: note.batchManufacturingRecord?.batchNumber ?? null,
       made: note.batchManufacturingRecord?.manufacturingDate ?? null, expires: note.batchManufacturingRecord?.expiryDate ?? null, packingId: note.productPacking?.id ?? null, packing: note.packingStyleSnapshot ?? note.productPacking?.name ?? null,
-      perShipper: note.packsPerShipperSnapshot ?? layout.perShipper ?? 0, perPack,
+      perShipper: layout.perShipper ?? 0, perPack,
       eligible: note.approved === true && note.qualityReleased === true && note.isOnHold !== true && note.requiresStockReconciliation !== true && Boolean(note.batchManufacturingRecord?.expiryDate && note.batchManufacturingRecord.expiryDate.slice(0, 10) > new Date().toISOString().slice(0, 10)),
       // Whole packs only: units short of a pack cannot go on a packing list.
       free: perPack ? Math.floor(Math.max(0, note.availableQuantity) / perPack + 1e-9) : 0 }]; }));

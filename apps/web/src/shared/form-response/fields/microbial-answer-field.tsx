@@ -3,6 +3,7 @@ import { useController, type FieldValues } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/shared/date-pickers/date-picker";
 import type { CustomFieldProps } from "@/shared/forms/form-wizard-types";
 import { averageCount, describe, quantityUnits, readColonyCount, readDilution, readIncubation } from "@/shared/microbial/microbial-values";
 import { QuestionType } from "@/shared/questions/question-types";
@@ -13,9 +14,25 @@ import { useAnswerField } from "../answer-context";
 
 const toNumber = (text: string) => text.trim() === "" || !Number.isFinite(Number(text)) ? null : Number(text);
 const shown = (value: number | null | undefined) => value === null || value === undefined ? "" : String(value);
-const localDateTime = (iso: string | null | undefined) => { if (!iso) return ""; const date = new Date(iso); if (Number.isNaN(date.getTime())) return ""; const pad = (n: number) => String(n).padStart(2, "0");
-  return `${String(date.getFullYear())}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`; };
-const isoFromLocal = (text: string) => { if (!text) return null; const date = new Date(text); return Number.isNaN(date.getTime()) ? null : date.toISOString(); };
+const pad = (n: number) => String(n).padStart(2, "0");
+/** A moment split into the app date picker's day and an "HH:mm" time; joined back as an ISO instant. */
+export const splitMoment = (iso: string | null | undefined): { day: Date | null; time: string } => {
+  const date = iso ? new Date(iso) : null;
+  if (!date || Number.isNaN(date.getTime())) return { day: null, time: "" };
+  return { day: new Date(date.getFullYear(), date.getMonth(), date.getDate()), time: `${pad(date.getHours())}:${pad(date.getMinutes())}` };
+};
+export const joinMoment = (day: Date | null, time: string): string | null => {
+  if (!day) return null;
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+  const at = new Date(day.getFullYear(), day.getMonth(), day.getDate(), match ? Number(match[1]) : 0, match ? Number(match[2]) : 0);
+  return Number.isNaN(at.getTime()) ? null : at.toISOString();
+};
+
+function Moment({ id, label, value, invalid, onChange }: { id: string; label: string; value: { day: Date | null; time: string }; invalid?: boolean; onChange: (value: { day: Date | null; time: string }) => void }) {
+  return <div className="min-w-0 space-y-1 sm:col-span-2"><Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
+    <div className="flex min-w-0 gap-2"><div className="min-w-0 flex-1"><DatePicker id={id} label={label} value={value.day} invalid={invalid} onChange={(day) => onChange({ ...value, day })} /></div>
+      <Input aria-label={`${label} time`} type="time" className="w-28" value={value.time} disabled={!value.day} onChange={(event) => onChange({ ...value, time: event.target.value })} /></div></div>;
+}
 
 function Part({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
   return <div className="min-w-0 space-y-1"><Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>{children}</div>;
@@ -61,19 +78,20 @@ function DilutionInput({ id, raw, disabled, onChange }: { id: string; raw: strin
 
 function IncubationInput({ id, raw, disabled, onChange }: { id: string; raw: string | null; disabled: boolean | undefined; onChange: (value: Record<string, unknown> | null) => void }) {
   const saved = readIncubation(raw);
-  const [parts, setParts] = useState({ temperature: shown(saved?.temperature), hours: shown(saved?.hours), startedAt: localDateTime(saved?.startedAt), endedAt: localDateTime(saved?.endedAt) });
+  const [parts, setParts] = useState({ temperature: shown(saved?.temperature), hours: shown(saved?.hours), started: splitMoment(saved?.startedAt), ended: splitMoment(saved?.endedAt) });
   const update = (next: Partial<typeof parts>) => {
     const merged = { ...parts, ...next };
     setParts(merged);
-    const temperature = toNumber(merged.temperature); const hours = toNumber(merged.hours); const startedAt = isoFromLocal(merged.startedAt);
-    onChange(temperature !== null && hours && hours > 0 && startedAt ? { temperature, hours, startedAt, endedAt: isoFromLocal(merged.endedAt) } : null);
+    const temperature = toNumber(merged.temperature); const hours = toNumber(merged.hours); const startedAt = joinMoment(merged.started.day, merged.started.time);
+    onChange(temperature !== null && hours && hours > 0 && startedAt ? { temperature, hours, startedAt, endedAt: joinMoment(merged.ended.day, merged.ended.time) } : null);
   };
-  const early = parts.endedAt && parts.startedAt && parts.endedAt < parts.startedAt;
+  const start = joinMoment(parts.started.day, parts.started.time); const end = joinMoment(parts.ended.day, parts.ended.time);
+  const early = Boolean(start && end && end < start);
   return <fieldset disabled={disabled} className="grid min-w-0 gap-2 sm:grid-cols-4">
     <Part id={`${id}-temperature`} label="Temperature (°C)"><Input id={`${id}-temperature`} inputMode="decimal" value={parts.temperature} onChange={(event) => update({ temperature: event.target.value })} /></Part>
     <Part id={`${id}-hours`} label="Period (hours)"><Input id={`${id}-hours`} inputMode="decimal" value={parts.hours} onChange={(event) => update({ hours: event.target.value })} /></Part>
-    <Part id={`${id}-start`} label="Started"><Input id={`${id}-start`} type="datetime-local" value={parts.startedAt} onChange={(event) => update({ startedAt: event.target.value })} /></Part>
-    <Part id={`${id}-end`} label="Ended"><Input id={`${id}-end`} type="datetime-local" value={parts.endedAt} aria-invalid={early ? true : undefined} onChange={(event) => update({ endedAt: event.target.value })} /></Part>
+    <Moment id={`${id}-start`} label="Started" value={parts.started} onChange={(started) => update({ started })} />
+    <Moment id={`${id}-end`} label="Ended" value={parts.ended} invalid={early} onChange={(ended) => update({ ended })} />
     {early ? <p role="alert" className="text-xs text-destructive sm:col-span-4">The end cannot be before the start.</p>
       : <p className="text-xs text-muted-foreground sm:col-span-4">Save the start now; record the end when the plates come out.</p>}
   </fieldset>;

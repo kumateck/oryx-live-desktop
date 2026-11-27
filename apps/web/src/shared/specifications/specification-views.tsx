@@ -36,8 +36,9 @@ export function SpecificationTests({ sections }: { sections: readonly Specificat
 }
 
 /** A specification's record page: header and facts, its dates and notes, its tests, and who created it. */
-export function SpecificationDetail({ specification, sections, crumbs, actions, facts, item }: {
+export function SpecificationDetail({ specification, sections, crumbs, actions, facts, item, children }: {
   specification: Specification; sections: readonly SpecificationSection[]; crumbs: readonly PageCrumb[]; actions?: ReactNode;
+  /** Panels owned by other features, shown after the tests (such as the STP test each test cites). */ children?: ReactNode;
   /** Extra facts at the top, such as the item's code. */ facts: ReactNode; /** What the specification is for, under the title. */ item: string | null;
 }) {
   return <article className="min-w-0 space-y-4">
@@ -71,6 +72,7 @@ export function SpecificationDetail({ specification, sections, crumbs, actions, 
         <SpecificationTests sections={group.sections} /></section>;
     }) : <section aria-label="Tests" className="space-y-2"><h2 className="text-sm font-semibold">Tests{specification.form ? <Badge variant="outline" className="ml-2 font-normal">{specification.form.name}</Badge> : null}</h2>
       <SpecificationTests sections={sections} /></section>}
+    {children}
   </article>;
 }
 
