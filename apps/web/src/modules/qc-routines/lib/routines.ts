@@ -89,7 +89,7 @@ export function certificateRows(json: string | null): CertificateRow[] | null {
   try { const parsed = z.array(rowSchema).safeParse(JSON.parse(json)); return parsed.success ? parsed.data : null; } catch { return null; }
 }
 export const certificateSchema = z.object({ id: z.string(), routineExecutionId: text, routineSampleId: text, certificateCode: text,
-  combined: z.boolean().nullish().transform((value) => value === true), rowsJson: text, issuedAt: text, target: num, materialSamplingId: text, analyticalTestRequestId: text });
+  combined: z.boolean().nullish().transform((value) => value === true), rowsJson: text, headerJson: text, issuedAt: text, target: num, materialSamplingId: text, analyticalTestRequestId: text });
 export type Certificate = z.infer<typeof certificateSchema>;
 
 export const WaterStatus = { Active: 0, Held: 1 } as const;
