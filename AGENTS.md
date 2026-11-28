@@ -58,6 +58,10 @@ For the desktop application, each ERP module also owns a small typed manifest un
 - Measure startup, route transition, bundle weight, and memory on target-class laptops before setting hard budgets. Test with realistic long names, dense records, restricted permissions, slow network, and server outages.
 - Ensure keyboard navigation, visible focus, accessible labels, readable text, and usable controls at display scaling. Motion must be subtle and respect reduced-motion preferences.
 
+## Finished goods quantities
+
+Follow `oryx-backend/docs/finished-goods-live-packing.md`. Finished goods stock is held in base units. Until dispatch, every screen (FGTN, stock, order, packing list, proforma, invoice, prints) shows packs and shippers from the packing style as it is now, through one shared resolver in `shared/packing`. Do not fall back to FGTN snapshot fields or stored shipper/loose counts while a record has a linked style. Dispatched and delivered records show their pinned layout. Match batches to order lines by packing style id, never by a per-shipper number.
+
 ## ERP integrity and security
 
 - Guard every ERP page through its module manifest before its data hooks mount. Declare specific create/edit/department rules and per-choice query access when a tab has separate permissions. Personal authenticated roots must explicitly declare their children. Keep the workspace route coverage test and targeted deny/allow tests passing.
