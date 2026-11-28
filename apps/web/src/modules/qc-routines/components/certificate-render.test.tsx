@@ -69,3 +69,39 @@ it("prints the issued product certificate's frozen conversion instead of its ori
   expect(screen.getByText("2.32–2.52 % w/v")).toBeTruthy();
   expect(screen.queryByText(/Sample 1|Average|101\.39|98–102%/)).toBeNull();
 });
+
+it("prints the issued header and signature table, and leaves them out on certificates issued without one", async () => {
+  const header = { subject: "Product", name: "Paracetamol 120 Syrup BP", code: "NL-001", batchNumber: "L001K076",
+    manufacturingDate: "2026-11-01T00:00:00Z", expiryDate: "2029-10-01T00:00:00Z", arNumber: "LQC/FP/26/0503",
+    sampledAt: "2026-11-06T00:00:00Z", analysedAt: "2026-11-06T00:00:00Z",
+    composition: "Each 5ml contains: Paracetamol BP 120mg", packStyle: "100 ml amber glass bottle with measuring cup", shelfLife: "36 Months",
+    analysedBy: [{ name: "Richmond Ocran Danso", designation: "Analyst" }], checkedBy: [{ name: "Michael Arthur", designation: "QC Head" }],
+    approvedBy: [{ name: "Nandkumar Chavan", designation: "GM-QA" }] };
+  const open = (headerJson: string | null) => {
+    const backend = stubBackend();
+    const session = backend.fetcher.getMockImplementation();
+    rememberSession();
+    backend.fetcher.mockImplementation(async (input, init) => {
+      if (!(input instanceof Request)) return session ? session(input, init) : new Response(null, { status: 404 });
+      if (new URL(input.url).pathname === "/api/v1/qc/commercial-certificates/c2") return Response.json({ id: "c2", certificateCode: "COA-2", target: 1,
+        issuedAt: "2026-11-07T12:00:00Z", headerJson, rowsJson: JSON.stringify([{ AnalysisType: 0, FormFieldId: "ph", DisplayLabel: "pH", SpecificationText: "4.0 – 6.0", result: "4.99" }]) });
+      return new Response(null, { status: 404 });
+    });
+    const router = createMemoryRouter([{ path: "/qc/commercial-certificates/:id", element: <CommercialCertificatePage /> }], { initialEntries: ["/qc/commercial-certificates/c2"] });
+    render(<SessionProvider><ApiProvider><RouterProvider router={router} /></ApiProvider></SessionProvider>);
+  };
+  open(JSON.stringify(header));
+  const details = await screen.findByRole("table", { name: "Certificate details" });
+  expect(details.textContent).toContain("L001K076");
+  expect(details.textContent).toContain("LQC/FP/26/0503");
+  expect(within(details).getByText(/Paracetamol 120 Syrup BP/)).toBeTruthy();
+  expect(screen.getByRole("table", { name: "Product details" }).textContent).toContain("36 Months");
+  const signatures = screen.getByRole("table", { name: "Certificate signatures" });
+  expect(signatures.textContent).toContain("Nandkumar Chavan");
+  expect(signatures.textContent).toContain("GM-QA");
+  cleanup(); forgetSession();
+  open(null);
+  expect(await screen.findByText("4.99")).toBeTruthy();
+  expect(screen.queryByRole("table", { name: "Certificate details" })).toBeNull();
+  expect(screen.queryByRole("table", { name: "Certificate signatures" })).toBeNull();
+});
